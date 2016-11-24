@@ -13,7 +13,7 @@ before_install:
   - export PATH=/home/travis/miniconda2/bin:$PATH
   - conda update --yes conda
   - pip install --upgrade pip
-  - pip install pep8
+  - pip3 install coala
 install:
   - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
   - source activate gensim-test
@@ -24,5 +24,4 @@ install:
 
 script:
   - python setup.py test
-  - pep8 --ignore=E501,E241,E701 .
 
