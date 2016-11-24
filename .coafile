@@ -1,0 +1,15 @@
+[default]
+bears = coalaBear, InvalidLinkBear, FilenameBear, LineCountBear
+files = *.py, gensim/**/*.py
+ignore=ignore =
+    tests/bearlib/languages/documentation/documentation_extraction_testdata/*.py,
+tests/collecting/collectors_test_dir/bears/incorrect_bear.py
+
+max_line_length = 120
+use_spaces = True
+
+[python]
+bears = PEP8Bear
+pep_ignore = E701,E241
+
+
