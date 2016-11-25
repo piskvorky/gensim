@@ -454,6 +454,21 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         hdp_formatter = HdpTopicFormatter(self.id2word, betas)
         return hdp_formatter.show_topics(num_topics, num_words, log, formatted)
 
+    def show_topic(self, topic_id, num_words=20, log=False, formatted=False):
+        """
+        Print the `num_words` most probable words for `topics` number of topics.
+        Set `topics=-1` to print all topics.
+
+        Set `formatted=True` to return the topics as a list of strings, or
+        `False` as lists of (weight, word) pairs.
+
+        """
+        if not self.m_status_up_to_date:
+            self.update_expectations()
+        betas = self.m_lambda + self.m_eta
+        hdp_formatter = HdpTopicFormatter(self.id2word, betas)
+        return hdp_formatter.show_topic(topic_id, num_words, log, formatted)
+
     def save_topics(self, doc_count=None):
         """legacy method; use `self.save()` instead"""
         if not self.outputdir:
@@ -599,6 +614,32 @@ class HdpTopicFormatter(object):
             shown.append(topic)
 
         return shown
+
+    def print_topic(self, topic_id, num_words):
+        return self.show_topic(topic_id, num_words, formatted=True)
+
+    def show_topic(self, topic_id, num_words, log=False, formatted=False):
+
+        lambdak = list(self.data[topic_id, :])
+        lambdak = lambdak / sum(lambdak)
+
+        temp = zip(lambdak, xrange(len(lambdak)))
+        temp = sorted(temp, key=lambda x: x[0], reverse=True)
+
+        topic_terms = self.show_topic_terms(temp, num_words)
+
+        if formatted:
+            topic = self.format_topic(topic_id, topic_terms)
+
+            # assuming we only output formatted topics
+            if log:
+                logger.info(topic)
+        else:
+            topic = (topic_id, topic_terms)
+        
+        # we only return the topic_terms
+        return topic[1]
+
 
     def show_topic_terms(self, topic_data, num_words):
         return [(self.dictionary[wid], weight) for (weight, wid) in topic_data[:num_words]]
