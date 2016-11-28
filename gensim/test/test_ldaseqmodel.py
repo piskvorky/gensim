@@ -4,7 +4,7 @@ Tests to check DTM math functions and Topic-Word, Doc-Topic proportions.
 
 """
 
-import numpy  # for arrays, array broadcasting etc.
+import numpy as np  # for arrays, array broadcasting etc.
 from gensim.models import ldaseqmodel, ldamodel
 from gensim.corpora import Dictionary
 import os.path
@@ -25,7 +25,7 @@ class TestLdaSeq(unittest.TestCase):
         ['river','water','mud','tree'],['money','transaction','bank','finance'],
         ['bank','borrow','money'], ['bank','finance'], ['finance','money','sell','bank'],['borrow','sell'],['bank','loan','sell']]
         # initializing using own LDA sufficient statistics so that we get same results each time.
-        sstats = numpy.loadtxt(datapath('sstats_test.txt'))
+        sstats = np.loadtxt(datapath('sstats_test.txt'))
         dictionary = Dictionary(texts)
         corpus = [dictionary.doc2bow(text) for text in texts]
         self.ldaseq = ldaseqmodel.LdaSeqModel(corpus = corpus , id2word= dictionary, num_topics=2, time_slice=[10, 10, 11], initialize='own', sstats=sstats)

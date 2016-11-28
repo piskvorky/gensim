@@ -10,7 +10,7 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
-import logging
+import logging, warnings
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ import scipy.sparse
 if sys.version_info[0] >= 3:
     unicode = str
 
-from six import iteritems, u, string_types, unichr
+from six import iterkeys, iteritems, u, string_types, unichr
 from six.moves import xrange
 
 try:
@@ -78,7 +78,6 @@ except ImportError:
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
-
 
 
 def synchronous(tlockname):
@@ -247,6 +246,7 @@ class SaveLoad(object):
 
         obj = unpickle(fname)
         obj._load_specials(fname, mmap, compress, subname)
+        logger.info("loaded %s", fname)
         return obj
 
 
@@ -256,7 +256,6 @@ class SaveLoad(object):
         opportunity to recursively included SaveLoad instances.
 
         """
-
         mmap_error = lambda x, y: IOError(
             'Cannot mmap compressed object %s in file %s. ' % (x, y) +
             'Use `load(fname, mmap=None)` or uncompress files manually.')
@@ -354,6 +353,7 @@ class SaveLoad(object):
             for obj, asides in restores:
                 for attrib, val in iteritems(asides):
                     setattr(obj, attrib, val)
+        logger.info("saved %s", fname)
 
 
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
@@ -836,7 +836,7 @@ class InputQueue(multiprocessing.Process):
 
 
 if os.name == 'nt':
-    logger.info("detected Windows; aliasing chunkize to chunkize_serial")
+    warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
 
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
@@ -1004,15 +1004,13 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf={}):
 
 def has_pattern():
     """
-    Function to check if there is installed pattern library
+    Function which returns a flag indicating whether pattern is installed or not
     """
-    pattern = False
     try:
         from pattern.en import parse
-        pattern = True
+        return True
     except ImportError:
-        logger.info("Pattern library is not installed, lemmatization won't be available.")
-    return pattern
+        return False
 
 
 def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
@@ -1037,8 +1035,7 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
 
     """
     if not has_pattern():
-        raise ImportError("Pattern library is not installed. Pattern library is needed in order  \
-         to use lemmatize function")
+        raise ImportError("Pattern library is not installed. Pattern library is needed in order to use lemmatize function")
     from pattern.en import parse
 
     if light:
@@ -1153,3 +1150,12 @@ def check_output(*popenargs, **kwargs):
     except KeyboardInterrupt:
         process.terminate()
         raise
+
+def sample_dict(d, n=10, use_random=True):
+     """
+     Pick `n` items from dictionary `d` and return them as a list.
+     The items are picked randomly if `use_random` is True, otherwise picked
+     according to natural dict iteration.
+     """
+     selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
+     return [(key, d[key]) for key in selected_keys]

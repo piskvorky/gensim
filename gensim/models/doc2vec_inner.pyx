@@ -268,7 +268,7 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.syn0
+       word_vectors = model.wv.syn0
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
        doctag_vectors = model.docvecs.doctag_syn0
@@ -405,7 +405,7 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.syn0
+       word_vectors = model.wv.syn0
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
        doctag_vectors = model.docvecs.doctag_syn0
@@ -567,7 +567,7 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.syn0
+       word_vectors = model.wv.syn0
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
        doctag_vectors = model.docvecs.doctag_syn0

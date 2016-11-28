@@ -130,7 +130,7 @@ except ImportError:
 
         """
         if word_vectors is None:
-            word_vectors = model.syn0
+            word_vectors = model.wv.syn0
         if word_locks is None:
             word_locks = model.syn0_lockf
         if doctag_vectors is None:
@@ -138,8 +138,8 @@ except ImportError:
         if doctag_locks is None:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        word_vocabs = [model.vocab[w] for w in doc_words if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
+                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
 
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original doc2vec code
@@ -185,7 +185,7 @@ except ImportError:
 
         """
         if word_vectors is None:
-            word_vectors = model.syn0
+            word_vectors = model.wv.syn0
         if word_locks is None:
             word_locks = model.syn0_lockf
         if doctag_vectors is None:
@@ -193,13 +193,13 @@ except ImportError:
         if doctag_locks is None:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        word_vocabs = [model.vocab[w] for w in doc_words if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
+                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         doctag_len = len(doctag_indexes)
         if doctag_len != model.dm_tag_count:
             return 0  # skip doc without expected number of doctag(s) (TODO: warn/pad?)
 
-        null_word = model.vocab['\0']
+        null_word = model.wv.vocab['\0']
         pre_pad_count = model.window
         post_pad_count = model.window
         padded_document_indexes = (
@@ -214,7 +214,7 @@ except ImportError:
                 + padded_document_indexes[(pos + 1):(pos + 1 + post_pad_count)]  # following words
             )
             word_context_len = len(word_context_indexes)
-            predict_word = model.vocab[model.index2word[padded_document_indexes[pos]]]
+            predict_word = model.wv.vocab[model.wv.index2word[padded_document_indexes[pos]]]
             # numpy advanced-indexing copies; concatenate, flatten to 1d
             l1 = concatenate((doctag_vectors[doctag_indexes], word_vectors[word_context_indexes])).ravel()
             neu1e = train_cbow_pair(model, predict_word, None, l1, alpha,
@@ -460,7 +460,7 @@ class DocvecsArray(utils.SaveLoad):
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_docs), reverse=True)
         # ignore (don't return) docs from the input
-        result = [(self.index_to_doctag(sim), float(dists[sim])) for sim in best if sim not in all_docs]
+        result = [(self.index_to_doctag(sim + clip_start), float(dists[sim])) for sim in best if (sim + clip_start) not in all_docs]
         return result[:topn]
 
     def doesnt_match(self, docs):
@@ -508,8 +508,8 @@ class DocvecsArray(utils.SaveLoad):
         d1 = model.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
         d2 = model.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
         return dot(matutils.unitvec(d1), matutils.unitvec(d2))
-        
-        
+
+
 class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
     """A string document tag discovered during the initial vocabulary
     scan. (The document-vector equivalent of a Vocab object.)
@@ -529,9 +529,8 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
 
 class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
-    def __init__(self, documents=None, size=300, alpha=0.025, window=8, min_count=5,
-                 max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
-                 dm=1, hs=1, negative=0, dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
+    def __init__(self, documents=None, dm_mean=None,
+                 dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, **kwargs):
         """
         Initialize the model from an iterable of `documents`. Each document is a
@@ -553,7 +552,7 @@ class Doc2Vec(Word2Vec):
 
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
 
-        `seed` = for the random number generator. 
+        `seed` = for the random number generator.
         Note that for a fully deterministically-reproducible run, you must also limit the model to
         a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
         3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
@@ -570,7 +569,7 @@ class Doc2Vec(Word2Vec):
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
-        `iter` = number of iterations (epochs) over the corpus. The default inherited from Word2Vec is 5, 
+        `iter` = number of iterations (epochs) over the corpus. The default inherited from Word2Vec is 5,
         but values of 10 or 20 are common in published 'Paragraph Vector' experiments.
 
         `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0).
@@ -600,18 +599,20 @@ class Doc2Vec(Word2Vec):
           of the model.
 
         """
+
         super(Doc2Vec, self).__init__(
-            size=size, alpha=alpha, window=window, min_count=min_count, max_vocab_size=max_vocab_size,
-            sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
-            sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean,
+            sg=(1 + dm) % 2,
             null_word=dm_concat, **kwargs)
+
+        if dm_mean is not None:
+            self.cbow_mean = dm_mean
+
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
         if self.dm and self.dm_concat:
             self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
-        else:
-            self.layer1_size = size
+
         self.docvecs = docvecs or DocvecsArray(docvecs_mapfile)
         self.comment = comment
         if documents is not None:
@@ -643,7 +644,7 @@ class Doc2Vec(Word2Vec):
         self.docvecs.borrow_from(other_model.docvecs)
         super(Doc2Vec, self).reset_from(other_model)
 
-    def scan_vocab(self, documents, progress_per=10000, trim_rule=None):
+    def scan_vocab(self, documents, progress_per=10000, trim_rule=None, update=False):
         logger.info("collecting all words and their counts")
         document_no = -1
         total_words = 0
@@ -778,6 +779,19 @@ class Doc2Vec(Word2Vec):
             segments.append('t%d' % self.workers)
         return '%s(%s)' % (self.__class__.__name__, ','.join(segments))
 
+    def delete_temporary_training_data(self, keep_doctags_vectors=True, keep_inference=True):
+        """
+        Discard parameters that are used in training and score. Use if you're sure you're done training a model.
+        Set `keep_doctags_vectors` to False if you don't want to save doctags vectors,
+        in this case you can't to use docvecs's most_similar, similarity etc. methods.
+        Set `keep_inference` to False if you don't want to store parameters that is used for infer_vector method
+        """
+        if not keep_inference:
+            self._minimize_model(False, False, False)
+        if self.docvecs and hasattr(self.docvecs, 'doctag_syn0') and not keep_doctags_vectors:
+            del self.docvecs.doctag_syn0
+        if self.docvecs and hasattr(self.docvecs, 'doctag_syn0_lockf'):
+            del self.docvecs.doctag_syn0_lockf
 
 class TaggedBrownCorpus(object):
     """Iterate over documents from the Brown corpus (part of NLTK data), yielding
