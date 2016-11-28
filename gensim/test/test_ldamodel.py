@@ -193,13 +193,16 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertTrue(all(model.eta == np.array([0.3] * num_terms)))
 
         # all should raise an exception for being wrong shape
-        kwargs['eta'] = [0.3, 0.3, 0.3]
+        kwargs['eta'] = [0.3] * num_terms
         self.assertRaises(AssertionError, self.class_, **kwargs)
 
         kwargs['eta'] = [0.3]
         self.assertRaises(AssertionError, self.class_, **kwargs)
 
         kwargs['eta'] = "gensim is cool"
+        self.assertRaises(ValueError, self.class_, **kwargs)
+
+        kwargs['eta'] = "asymmetric"
         self.assertRaises(ValueError, self.class_, **kwargs)
 
     def testTopTopics(self):
