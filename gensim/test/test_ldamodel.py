@@ -204,6 +204,9 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         kwargs['eta'] = [0.3]
         self.assertRaises(AssertionError, self.class_, **kwargs)
 
+        kwargs['eta'] = [0.3] * (num_terms + 1)
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
         kwargs['eta'] = "gensim is cool"
         self.assertRaises(ValueError, self.class_, **kwargs)
 
