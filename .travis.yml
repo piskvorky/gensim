@@ -24,4 +24,5 @@ install:
 
 script:
   - python setup.py test
+  - coala-ci
 
