@@ -198,8 +198,8 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.class_(**kwargs)
 
         # all should raise an exception for being wrong shape
-	kwargs['eta'] = testeta.reshape(tuple(reversed(testeta.shape)))
-	self.assertRaises(AssertionError, self.class_, **kwargs)
+        kwargs['eta'] = testeta.reshape(tuple(reversed(testeta.shape)))
+        self.assertRaises(AssertionError, self.class_, **kwargs)
 
         kwargs['eta'] = [0.3]
         self.assertRaises(AssertionError, self.class_, **kwargs)
