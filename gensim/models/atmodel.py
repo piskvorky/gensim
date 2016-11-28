@@ -139,12 +139,12 @@ class AuthorTopicModel(LdaModel):
     def rho(self, t):
         return pow(self.offset + t, -self.decay)
 
-    def compute_phinorm(self, ids, authors_d, expElogtheta, expElogbeta):
+    def compute_phinorm(self, ids, authors_d, expElogthetad, expElogbetad):
         phinorm = numpy.zeros(len(ids))
         expElogtheta_sum = numpy.zeros(self.num_topics)
-        for a in authors_d:
-            expElogtheta_sum += expElogtheta[a, :]
-        phinorm = expElogtheta_sum.dot(expElogbeta[:, ids])
+        for a in xrange(len(authors_d)):
+            expElogtheta_sum += expElogthetad[a, :]
+        phinorm = expElogtheta_sum.dot(expElogbetad)
 
         return phinorm
 
@@ -221,7 +221,7 @@ class AuthorTopicModel(LdaModel):
                     cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
                     authors_d = self.doc2author[doc_no]  # List of author IDs for the current document.
 
-                    phinorm = self.compute_phinorm(ids, authors_d, expElogtheta, expElogbeta)
+                    phinorm = self.compute_phinorm(ids, authors_d, expElogtheta[authors_d, :], expElogbeta[:, ids])
 
                     # TODO: if not used, get rid of these.
                     expElogthetad = expElogtheta[authors_d, :]
@@ -250,7 +250,7 @@ class AuthorTopicModel(LdaModel):
                         else:
                             expElogtheta[authors_d, :] = numpy.exp(Elogtheta[authors_d, :])
 
-                        phinorm = self.compute_phinorm(ids, authors_d, expElogtheta, expElogbeta)
+                        phinorm = self.compute_phinorm(ids, authors_d, expElogtheta[authors_d, :], expElogbeta[:, ids])
 
                         # Check for convergence.
                         # Criterion is mean change in "local" gamma and lambda.
@@ -355,27 +355,20 @@ class AuthorTopicModel(LdaModel):
         """
 
         # TODO: allow for evaluating test corpus. This will require inferring on unseen documents.
-        # NOTE: computing bound is very very computationally intensive. I could, for example,
+        # NOTE: computing bound is very very computationally intensive. We could, for example,
         # only use a portion of the data to do that (even a held-out set).
 
-        # NOTE: computing the bound this way may be numerically unstable, which is why
-        # "logsumexp" is used in the LDA code.
+        # TODO: same optimized computation as in phinorm can be used.
         bound= 0.0
         for d, doc in enumerate(docs):
             authors_d = self.doc2author[d]
             ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
             cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
             bound_d = 0.0
-            for vi, v in enumerate(ids):
-                bound_v = 0.0
-                for k in xrange(self.num_topics):
-                    for a in authors_d:
-                        bound_v += expElogtheta[a, k] * expElogbeta[k, v]
-                bound_v = numpy.log(bound_v)
-                if maxElogtheta is not None:
-                    bound_v += maxElogtheta + maxElogbeta
-                bound_d += cts[vi] * bound_v
-            bound += numpy.log(1.0 / len(authors_d)) + bound_d
+            # Computing the bound requires summing over expElogtheta[a, k] * expElogbeta[k, v], which
+            # is the same computation as in normalizing phi.
+            phinorm = self.compute_phinorm(ids, authors_d, expElogtheta[authors_d, :], expElogbeta[:, ids])
+            bound += numpy.log(1.0 / len(authors_d)) + cts.dot(numpy.log(phinorm))
 
         # TODO: consider using per-word bound, i.e.
         # bound *= 1 /sum(len(doc) for doc in docs)
@@ -434,6 +427,7 @@ class AuthorTopicModel(LdaModel):
             cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
             authors_d = self.doc2author[d]
             logprob_d = 0.0
+            #phinorm = self.compute_phinorm(ids, authors_d, expElogtheta, expElogbeta)
             for vi, v in enumerate(ids):
                 logprob_v = 0.0
                 for k in xrange(self.num_topics):
