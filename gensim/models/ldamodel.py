@@ -239,12 +239,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         prior directly from your data.
 
         `eta` can be a scalar for a symmetric prior over topic/word
-        distributions, or a matrix of shape num_topics x num_words, which can
-        be used to impose asymmetric priors over the word distribution on a
-        per-topic basis. This may be useful if you want to seed certain topics
-        with particular words by boosting the priors for those words.  It also
-        supports the special value 'auto', which learns an asymmetric prior
-        directly from your data.
+        distributions, or a vector of shape num_words, which can be used to 
+        impose (user defined) asymmetric priors over the word distribution. 
+        It also supports the special value 'auto', which learns an asymmetric
+        prior over words directly from your data. `eta` can also be a matrix
+        of shape num_topics x num_words, which can be used to impose 
+        asymmetric priors over the word distribution on a per-topic basis
+        (can not be learned from data).
 
         Turn on `distributed` to force distributed computing (see the `web tutorial <http://radimrehurek.com/gensim/distributed.html>`_
         on how to set up a cluster of machines for gensim).
@@ -270,7 +271,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> lda = LdaModel(corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
-        # FIXME: update docstring w.r.t. changes done to eta param.
 
         # store user-supplied parameters
         self.id2word = id2word
@@ -315,9 +315,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.random_state = get_random_state(random_state)
 
-        assert (self.eta.shape == (self.num_terms,)), (
-                "Invalid alpha shape. Got shape %s, but expected (%d, )" %
-                (str(self.eta.shape), self.num_terms))
+        assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
+                "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
+                (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
 
         # VB constants
         self.iterations = iterations
