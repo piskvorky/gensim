@@ -160,8 +160,8 @@ def _get_combined_keywords(_keywords, split_text):
         word = _strip_word(split_text[i])
         if word in _keywords:
             combined_word = [word]
-            if i + 1 == len_text: 
-                result.append(word) # appends last word if keyword and doesn't iterate
+            if i + 1 == len_text:
+                result.append(word)  # appends last word if keyword and doesn't iterate
             for j in xrange(i + 1, len_text):
                 other_word = _strip_word(split_text[j])
                 if other_word in _keywords and other_word == split_text[j] and not other_word in combined_word:
@@ -197,16 +197,7 @@ def _format_results(_keywords, combined_keywords, split, scores):
     return "\n".join(combined_keywords)
 
 
-def keywords(
-        text,
-        ratio=0.2,
-        words=None,
-        split=False,
-        scores=False,
-        pos_filter=[
-            'NN',
-            'JJ'],
-        lemmatize=False):
+def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=['NN', 'JJ'], lemmatize=False):
     # Gets a dict of word -> lemma
     text = to_unicode(text)
     tokens = _clean_text_by_word(text)

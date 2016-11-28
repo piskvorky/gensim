@@ -110,17 +110,12 @@ def _get_sentences_with_word_count(sentences, word_count):
     return selected_sentences
 
 
-def _extract_important_sentences(
-        sentences,
-        corpus,
-        important_docs,
-        word_count):
+def _extract_important_sentences(sentences, corpus, important_docs, word_count):
     important_sentences = _get_important_sentences(sentences, corpus, important_docs)
 
     # If no "word_count" option is provided, the number of sentences is
     # reduced by the provided ratio. Else, the ratio is ignored.
-    return important_sentences if word_count is None else _get_sentences_with_word_count(
-        important_sentences, word_count)
+    return important_sentences if word_count is None else _get_sentences_with_word_count(important_sentences, word_count)
 
 
 def _format_results(extracted_sentences, split):
