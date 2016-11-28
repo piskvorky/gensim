@@ -303,8 +303,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.minimum_phi_value = minimum_phi_value
         self.per_word_topics = per_word_topics
 
-        self.random_state = get_random_state(random_state)
-
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
         assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
@@ -315,7 +313,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
-        assert self.eta.shape == (self.num_terms,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.eta.shape), self.num_terms)
+        self.random_state = get_random_state(random_state)
+
+        assert (self.eta.shape == (self.num_terms,)), (
+                "Invalid alpha shape. Got shape %s, but expected (%d, )" %
+                (str(self.eta.shape), self.num_terms))
 
         # VB constants
         self.iterations = iterations
@@ -378,7 +380,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             elif prior == 'auto':
                 is_auto = True
                 init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)])
-                logger.info("using autotuned %s, starting with %s", name, list(init_prior))
+                if name == 'alpha':
+                    logger.info("using autotuned %s, starting with %s", name, list(init_prior))
             else:
                 raise ValueError("Unable to determine proper %s value given '%s'" % (name, prior))
         elif isinstance(prior, list):
@@ -531,7 +534,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
-        logger.info("optimized eta %s", list(self.eta.reshape((self.num_terms))))
 
         return self.eta
 
