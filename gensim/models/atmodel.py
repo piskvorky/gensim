@@ -141,8 +141,10 @@ class AuthorTopicModel(LdaModel):
 
     def compute_phinorm(self, ids, authors_d, expElogtheta, expElogbeta):
         phinorm = numpy.zeros(len(ids))
+        expElogtheta_sum = numpy.zeros(self.num_topics)
         for a in authors_d:
-            phinorm += expElogtheta[a, :].dot(expElogbeta[:, ids])
+            expElogtheta_sum += expElogtheta[a, :]
+        phinorm = expElogtheta_sum.dot(expElogbeta[:, ids])
 
         return phinorm
 
