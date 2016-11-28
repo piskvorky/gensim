@@ -84,7 +84,7 @@ def update_dir_prior(prior, N, logphat, rho):
 
     dprior = -(gradf - b) / q
 
-    if (rho * dprior + prior > 0).all():
+    if all(rho * dprior + prior > 0):
         prior += rho * dprior
     else:
         logger.warning("updated prior not positive")
