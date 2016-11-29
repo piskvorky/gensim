@@ -239,12 +239,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         prior directly from your data.
 
         `eta` can be a scalar for a symmetric prior over topic/word
-        distributions, or a matrix of shape num_topics x num_words, which can
-        be used to impose asymmetric priors over the word distribution on a
-        per-topic basis. This may be useful if you want to seed certain topics
-        with particular words by boosting the priors for those words.  It also
-        supports the special value 'auto', which learns an asymmetric prior
-        directly from your data.
+        distributions, or a vector of shape num_words, which can be used to 
+        impose (user defined) asymmetric priors over the word distribution. 
+        It also supports the special value 'auto', which learns an asymmetric
+        prior over words directly from your data. `eta` can also be a matrix
+        of shape num_topics x num_words, which can be used to impose 
+        asymmetric priors over the word distribution on a per-topic basis
+        (can not be learned from data).
 
         Turn on `distributed` to force distributed computing (see the `web tutorial <http://radimrehurek.com/gensim/distributed.html>`_
         on how to set up a cluster of machines for gensim).
@@ -270,6 +271,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> lda = LdaModel(corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
+
         # store user-supplied parameters
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -305,13 +307,17 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
+        if isinstance(eta, six.string_types):
+            if eta == 'asymmetric':
+                raise ValueError("The 'asymmetric' option cannot be used for eta")
+
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
         self.random_state = get_random_state(random_state)
 
-        assert (self.eta.shape == (self.num_topics, 1) or self.eta.shape == (self.num_topics, self.num_terms)), (
-            "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
-            (str(self.eta.shape), self.num_topics, self.num_topics, self.num_terms))
+        assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
+                "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
+                (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
 
         # VB constants
         self.iterations = iterations
@@ -354,20 +360,28 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if prior is None:
             prior = 'symmetric'
 
+        if name == 'alpha':
+            prior_shape = self.num_topics
+        elif name == 'eta':
+            prior_shape = self.num_terms
+        else:
+            raise ValueError("'name' must be 'alpha' or 'eta'")
+
         is_auto = False
 
         if isinstance(prior, six.string_types):
             if prior == 'symmetric':
-                logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+                logger.info("using symmetric %s at %s", name, 1.0 / prior_shape)
+                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)])
             elif prior == 'asymmetric':
-                init_prior = np.asarray([1.0 / (i + np.sqrt(self.num_topics)) for i in xrange(self.num_topics)])
+                init_prior = np.asarray([1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)])
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
                 is_auto = True
-                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
-                logger.info("using autotuned %s, starting with %s", name, list(init_prior))
+                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)])
+                if name == 'alpha':
+                    logger.info("using autotuned %s, starting with %s", name, list(init_prior))
             else:
                 raise ValueError("Unable to determine proper %s value given '%s'" % (name, prior))
         elif isinstance(prior, list):
@@ -375,17 +389,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         elif isinstance(prior, np.ndarray):
             init_prior = prior
         elif isinstance(prior, np.number) or isinstance(prior, numbers.Real):
-            init_prior = np.asarray([prior] * self.num_topics)
+            init_prior = np.asarray([prior] * prior_shape)
         else:
             raise ValueError("%s must be either a np array of scalars, list of scalars, or scalar" % name)
-
-        if name == 'eta':
-            # please note the difference in shapes between alpha and eta:
-            # alpha is a row: [0.1, 0.1]
-            # eta is a column: [[0.1],
-            #                   [0.1]]
-            if init_prior.shape == (self.num_topics,) or init_prior.shape == (1, self.num_topics):
-                init_prior = init_prior.reshape((self.num_topics, 1))  # this statement throws ValueError if eta did not match self.num_topics
 
         return init_prior, is_auto
 
@@ -522,13 +528,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Update parameters for the Dirichlet prior on the per-topic
         word weights `eta` given the last `lambdat`.
         """
-        if self.eta.shape[1] != 1:
-            raise ValueError("Can't use update_eta with eta matrices, only column vectors.")
-        N = float(lambdat.shape[1])
-        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape((self.num_topics, 1))
+        N = float(lambdat.shape[0])
+        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
-        logger.info("optimized eta %s", list(self.eta.reshape((self.num_topics))))
 
         return self.eta
 
@@ -767,9 +770,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if np.ndim(self.eta) == 0:
             sum_eta = self.eta * self.num_terms
         else:
-            sum_eta = np.sum(self.eta, 1)
+            sum_eta = np.sum(self.eta)
 
         score += np.sum(gammaln(sum_eta) - gammaln(np.sum(_lambda, 1)))
+
         return score
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
