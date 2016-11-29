@@ -528,8 +528,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Update parameters for the Dirichlet prior on the per-topic
         word weights `eta` given the last `lambdat`.
         """
-        #if self.eta.shape[1] != 1:
-        #    raise ValueError("Can't use update_eta with eta matrices, only column vectors.")
         N = float(lambdat.shape[0])
         logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
 
