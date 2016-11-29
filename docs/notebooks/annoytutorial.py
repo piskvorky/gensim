@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
+r"""
+=================================================
+This is annoying
+=================================================
+
+Modified annoytutorial
 """
-Gallery of Examples
-===================
-
-
-.. _general_examples:
-
-General examples
-----------------
-
-General-purpose and introductory examples from the sphinx-gallery
-"""
-
 # # Similarity Queries using Annoy Tutorial
 
 # This tutorial is about using the [Annoy(Approximate Nearest Neighbors Oh Yeah)]((https://github.com/spotify/annoy "Link to annoy repo") library for similarity queries in gensim
@@ -66,12 +60,12 @@ annoy_index = AnnoyIndexer(model, 500)
 
 # In[108]:
 
-get_ipython().run_cell_magic(u'time', u'', u'#Traditional implementation:\nmodel.most_similar([vector], topn=5)')
+# get_ipython().run_cell_magic(u'time', u'', u'#Traditional implementation:\nmodel.most_similar([vector], topn=5)')
 
 
 # In[109]:
 
-get_ipython().run_cell_magic(u'time', u'', u'#Annoy implementation:\nneighbors = model.most_similar([vector], topn=5, indexer=annoy_index)\nfor neighbor in neighbors:\n    print(neighbor)')
+# get_ipython().run_cell_magic(u'time', u'', u'#Annoy implementation:\nneighbors = model.most_similar([vector], topn=5, indexer=annoy_index)\nfor neighbor in neighbors:\n    print(neighbor)')
 
 
 #
@@ -156,7 +150,7 @@ if os.path.exists(fname):
 vector = model["science"]
 approximate_neighbors = model.most_similar([vector], topn=5, indexer=annoy_index2)
 for neighbor in approximate_neighbors:
-    print neighbor
+    print (neighbor)
 
 
 # Be sure to use the same model at load that was used originally, otherwise you will get unexpected behaviors.
@@ -169,19 +163,19 @@ for neighbor in approximate_neighbors:
 
 # In[115]:
 
-get_ipython().run_cell_magic(u'time', u'', u'\n# Bad example. Two processes load the Word2vec model from disk and create there own Annoy indices from that model. \n\nfrom gensim import models\nfrom gensim.similarities.index import AnnoyIndexer\nfrom multiprocessing import Process\nimport os\nimport psutil\n\nmodel.save(\'/tmp/mymodel\')\n\ndef f(process_id):\n    print \'Process Id: \', os.getpid()\n    process = psutil.Process(os.getpid())\n    new_model = models.Word2Vec.load(\'/tmp/mymodel\')\n    vector = new_model["science"]\n    annoy_index = AnnoyIndexer(new_model,100)\n    approximate_neighbors = new_model.most_similar([vector], topn=5, indexer=annoy_index)\n    for neighbor in approximate_neighbors:\n        print neighbor\n    print \'Memory used by process \'+str(os.getpid())+\'=\', process.memory_info()\n\n# Creating and running two parallel process to share the same index file.\np1 = Process(target=f, args=(\'1\',))\np1.start()\np1.join()\np2 = Process(target=f, args=(\'2\',))\np2.start()\np2.join()')
+# get_ipython().run_cell_magic(u'time', u'', u'\n# Bad example. Two processes load the Word2vec model from disk and create there own Annoy indices from that model. \n\nfrom gensim import models\nfrom gensim.similarities.index import AnnoyIndexer\nfrom multiprocessing import Process\nimport os\nimport psutil\n\nmodel.save(\'/tmp/mymodel\')\n\ndef f(process_id):\n    print \'Process Id: \', os.getpid()\n    process = psutil.Process(os.getpid())\n    new_model = models.Word2Vec.load(\'/tmp/mymodel\')\n    vector = new_model["science"]\n    annoy_index = AnnoyIndexer(new_model,100)\n    approximate_neighbors = new_model.most_similar([vector], topn=5, indexer=annoy_index)\n    for neighbor in approximate_neighbors:\n        print neighbor\n    print \'Memory used by process \'+str(os.getpid())+\'=\', process.memory_info()\n\n# Creating and running two parallel process to share the same index file.\np1 = Process(target=f, args=(\'1\',))\np1.start()\np1.join()\np2 = Process(target=f, args=(\'2\',))\np2.start()\np2.join()')
 
 
 # In[116]:
 
-get_ipython().run_cell_magic(u'time', u'', u'\n# Good example. Two processes load both the Word2vec model and index from disk and memory-map the index\n\nfrom gensim import models\nfrom gensim.similarities.index import AnnoyIndexer\nfrom multiprocessing import Process\nimport os\nimport psutil\n\nmodel.save(\'/tmp/mymodel\')\n\ndef f(process_id):\n    print \'Process Id: \', os.getpid()\n    process = psutil.Process(os.getpid())\n    new_model = models.Word2Vec.load(\'/tmp/mymodel\')\n    vector = new_model["science"]\n    annoy_index = AnnoyIndexer()\n    annoy_index.load(\'index\')\n    annoy_index.model = new_model\n    approximate_neighbors = new_model.most_similar([vector], topn=5, indexer=annoy_index)\n    for neighbor in approximate_neighbors:\n        print neighbor\n    print \'Memory used by process \'+str(os.getpid()), process.memory_info()\n\n# Creating and running two parallel process to share the same index file.\np1 = Process(target=f, args=(\'1\',))\np1.start()\np1.join()\np2 = Process(target=f, args=(\'2\',))\np2.start()\np2.join()')
+# get_ipython().run_cell_magic(u'time', u'', u'\n# Good example. Two processes load both the Word2vec model and index from disk and memory-map the index\n\nfrom gensim import models\nfrom gensim.similarities.index import AnnoyIndexer\nfrom multiprocessing import Process\nimport os\nimport psutil\n\nmodel.save(\'/tmp/mymodel\')\n\ndef f(process_id):\n    print \'Process Id: \', os.getpid()\n    process = psutil.Process(os.getpid())\n    new_model = models.Word2Vec.load(\'/tmp/mymodel\')\n    vector = new_model["science"]\n    annoy_index = AnnoyIndexer()\n    annoy_index.load(\'index\')\n    annoy_index.model = new_model\n    approximate_neighbors = new_model.most_similar([vector], topn=5, indexer=annoy_index)\n    for neighbor in approximate_neighbors:\n        print neighbor\n    print \'Memory used by process \'+str(os.getpid()), process.memory_info()\n\n# Creating and running two parallel process to share the same index file.\np1 = Process(target=f, args=(\'1\',))\np1.start()\np1.join()\np2 = Process(target=f, args=(\'2\',))\np2.start()\np2.join()')
 
 
 # # Relationship between num_trees and initialization time
 
 # In[117]:
 
-get_ipython().magic(u'matplotlib inline')
+# get_ipython().magic(u'matplotlib inline')
 import matplotlib.pyplot as plt, time
 x_cor = []
 y_cor = []
@@ -213,6 +207,9 @@ for x in range(1,30):
     top_words = [result[0] for result in approximate_results]
     x_axis.append(x)
     y_axis.append(len(set(top_words).intersection(exact_results)))
+
+# The next line sets the thumbnail for the second figure in the gallery
+# sphinx_gallery_thumbnail_number = 2
 
 plt.plot(x_axis, y_axis)
 plt.title("num_trees vs accuracy")
