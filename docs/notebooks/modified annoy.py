@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 =================================
-Plotting the exponential function1
+Modified annoy (modified annoy.py)
 =================================
 
-A simple example for ploting two figures of a exponential
-function in order to test the autonomy of the gallery
-stacking multiple images.
+Modified annoy
 """
 import gensim, os
 from gensim.models.word2vec import Word2Vec
