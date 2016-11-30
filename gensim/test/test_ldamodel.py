@@ -159,49 +159,40 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             num_topics=2,
             eta=None
         )
-        expected_shape = (2, 1)
+        num_terms = len(dictionary)
+        expected_shape = (num_terms,)
 
         # should not raise anything
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == np.array([[0.5], [0.5]])))
+        self.assertTrue(all(model.eta == np.array([0.5] * num_terms)))
 
         kwargs['eta'] = 'symmetric'
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == np.array([[0.5], [0.5]])))
-
-        kwargs['eta'] = 'asymmetric'
-        model = self.class_(**kwargs)
-        self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(np.allclose(model.eta, [[0.630602], [0.369398]]))
+        self.assertTrue(all(model.eta == np.array([0.5] * num_terms)))
 
         kwargs['eta'] = 0.3
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == np.array([[0.3], [0.3]])))
+        self.assertTrue(all(model.eta == np.array([0.3] * num_terms)))
 
         kwargs['eta'] = 3
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == np.array([[3], [3]])))
+        self.assertTrue(all(model.eta == np.array([3] * num_terms)))
 
-        kwargs['eta'] = [[0.3], [0.3]]
+        kwargs['eta'] = [0.3] * num_terms
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == np.array([[0.3], [0.3]])))
+        self.assertTrue(all(model.eta == np.array([0.3] * num_terms)))
 
-        kwargs['eta'] = [0.3, 0.3]
+        kwargs['eta'] = np.array([0.3] * num_terms)
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == np.array([[0.3], [0.3]])))
+        self.assertTrue(all(model.eta == np.array([0.3] * num_terms)))
 
-        kwargs['eta'] = np.array([0.3, 0.3])
-        model = self.class_(**kwargs)
-        self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == np.array([[0.3], [0.3]])))
-
-        # should be ok with num_topics x num_terms
+	# should be ok with num_topics x num_terms
         testeta = np.array([[0.5] * len(dictionary)] * 2)
         kwargs['eta'] = testeta
         self.class_(**kwargs)
@@ -210,13 +201,16 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         kwargs['eta'] = testeta.reshape(tuple(reversed(testeta.shape)))
         self.assertRaises(AssertionError, self.class_, **kwargs)
 
-        kwargs['eta'] = [0.3, 0.3, 0.3]
-        self.assertRaises(AssertionError, self.class_, **kwargs)
-
         kwargs['eta'] = [0.3]
         self.assertRaises(AssertionError, self.class_, **kwargs)
 
+        kwargs['eta'] = [0.3] * (num_terms + 1)
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
         kwargs['eta'] = "gensim is cool"
+        self.assertRaises(ValueError, self.class_, **kwargs)
+
+        kwargs['eta'] = "asymmetric"
         self.assertRaises(ValueError, self.class_, **kwargs)
 
     def testTopTopics(self):
