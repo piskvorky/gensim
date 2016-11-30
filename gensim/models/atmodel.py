@@ -34,6 +34,12 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+class AuthorTopicState:
+    def __init__(self, atmodel):
+        self.atmodel = atmodel
+
+    def get_lambda(self):
+        return self.atmodel.var_lambda
 
 class AuthorTopicModel(LdaModel):
     """
@@ -128,6 +134,8 @@ class AuthorTopicModel(LdaModel):
         self.eta = numpy.asarray([1.0 / self.num_terms for i in xrange(self.num_terms)])
 
         self.random_state = get_random_state(random_state)
+
+        self.state = AuthorTopicState(self)
 
         if corpus is not None:
             self.inference(corpus, var_lambda=var_lambda)
