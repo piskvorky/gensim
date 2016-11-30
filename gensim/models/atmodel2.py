@@ -39,23 +39,6 @@ except ImportError:
 
 logger = logging.getLogger('gensim.models.atmodel')
 
-# TODO: should there be an AuthorTopicState, instead of just using the LdaState?
-#class AutorTopicState(utils.SaveLoad):
-#    """
-#    Encapsulate information for distributed computation of AuthorTopicModel objects.
-#
-#    Objects of this class are sent over the network, so try to keep them lean to
-#    reduce traffic.
-#    """
-#
-#    def __init__(self, eta, shape):
-#        self.eta = eta
-#        self.sstats = np.zeros(shape)
-#        self.numdocs = 0
-#        self.lda_state = LdaState(self.eta, shape)
-#
-#    def reset(self):
-#        self.lda_state.reset()
 
 class AuthorTopicModel(LdaModel):
     """
@@ -149,37 +132,194 @@ class AuthorTopicModel(LdaModel):
         self.per_word_topics = per_word_topics
 
         self.corpus = corpus
-        self.iterations = iterations
-        self.threshold = threshold
         self.num_authors = len(author2doc)
-        self.random_state = random_state
 
-        # NOTE: this is not necessarily a good way to initialize the topics.
-        self.alpha = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
-        self.eta = numpy.asarray([1.0 / self.num_terms for i in xrange(self.num_terms)])
+        self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
+
+        assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
+
+        if isinstance(eta, six.string_types):
+            if eta == 'asymmetric':
+                raise ValueError("The 'asymmetric' option cannot be used for eta")
+
+        self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
         self.random_state = get_random_state(random_state)
 
-        if corpus is not None:
-            self.update(corpus)
+        assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
+                "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
+                (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
 
-    def init_dir_prior(self, prior, name):
-        # TODO: all of this
-        init_prior = None
-        is_auto = None
-        return init_prior, is_auto
+        if not distributed:
+            self.dispatcher = None
+            self.numworkers = 1
+        else:
+            # TODO: implement distributed version.
+            pass
+
+        # VB constants
+        self.iterations = iterations
+        self.gamma_threshold = gamma_threshold
+
+        # Initialize the variational distribution q(beta|lambda)
+        self.state = LdaState(self.eta, (self.num_topics, self.num_terms))
+        self.state.sstats = self.random_state.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
+        self.expElogbeta = np.exp(dirichlet_expectation(self.state.sstats))
+
+        # if a training corpus was provided, start estimating the model right away
+        if corpus is not None:
+            use_numpy = self.dispatcher is not None
+            self.update(corpus, chunks_as_numpy=use_numpy)
 
     def __str__(self):
-        return "AuthorTopicModel(num_terms=%s, num_topics=%s, num_authors=%s, decay=%s)" % \
-            (self.num_terms, self.num_topics, self.num_authors, self.decay)
+        return "AuthorTopicModel(num_terms=%s, num_topics=%s, num_authors=%s, decay=%s, chunksize=%s)" % \
+            (self.num_terms, self.num_topics, self.num_authors, self.decay, self.chunksize)
 
-    def sync_state(self):
-        """sync_state not implemented for AuthorTopicModel."""
-        pass
+    def compute_phinorm(self, ids, authors_d, expElogthetad, expElogbetad):
+        """Efficiently computes the normalizing factor in phi."""
+        phinorm = numpy.zeros(len(ids))
+        expElogtheta_sum = numpy.zeros(self.num_topics)
+        for a in xrange(len(authors_d)):
+            expElogtheta_sum += expElogthetad[a, :]
+        phinorm = expElogtheta_sum.dot(expElogbetad)
 
-    def clear(self):
-        """clear not implemented for AuthorTopicModel."""
-        pass
+        return phinorm
+
+    def inference(self, chunk, collect_sstats=False):
+        """
+        Given a chunk of sparse document vectors, estimate gamma (parameters
+        controlling the topic weights) for each document in the chunk.
+
+        This function does not modify the model (=is read-only aka const). The
+        whole input chunk of document is assumed to fit in RAM; chunking of a
+        large corpus must be done earlier in the pipeline.
+
+        If `collect_sstats` is True, also collect sufficient statistics needed
+        to update the model's topic-word distributions, and return a 2-tuple
+        `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
+        `len(chunk) x self.num_topics`.
+
+        Avoids computing the `phi` variational parameter directly using the
+        optimization presented in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
+
+        """
+        try:
+            _ = len(chunk)
+        except:
+            # convert iterators/generators to plain list, so we have len() etc.
+            chunk = list(chunk)
+        if len(chunk) > 1:
+            logger.debug("performing inference on a chunk of %i documents", len(chunk))
+
+        # Initialize the variational distribution q(theta|gamma) for the chunk
+        # FIXME:
+        # num_authors_chunk = ???
+        gamma = self.random_state.gamma(100., 1. / 100., (num_authors_chunk, self.num_topics))
+        Elogtheta = dirichlet_expectation(gamma)
+        expElogtheta = np.exp(Elogtheta)
+        if collect_sstats:
+            sstats = np.zeros_like(self.expElogbeta)
+        else:
+            sstats = None
+        converged = 0
+
+        # Now, for each document d update that document's gamma and phi
+        for d, doc in enumerate(chunk):
+            # FIXME:
+            # doc_no = ???
+            if doc and not isinstance(doc[0][0], six.integer_types):
+                # make sure the term IDs are ints, otherwise np will get upset
+                ids = [int(id) for id, _ in doc]
+            else:
+                ids = [id for id, _ in doc]
+            cts = np.array([cnt for _, cnt in doc])
+            authors_d = self.doc2author[doc_no]  # List of author IDs for the current document.
+
+            gammad = state.get_gamma(authors_d)  # FIXME: implement this method.
+            tilde_gammad = np.zeros(gammad.shape)
+
+	    Elogthetad = dirichlet_expectation(tilde_gammad)
+	    expElogthetad = numpy.exp(Elogthetad)
+	    expElogbetad = expElogbeta[:, ids]
+
+            phinorm = self.compute_phinorm(ids, authors_d, expElogtheta[authors_d, :], expElogbeta[:, ids])
+
+            # Iterate between gamma and phi until convergence
+	    for iteration in xrange(self.iterations):
+		#logger.info('iteration %i', iteration)
+
+		lastgamma = gammad
+
+		# Update gamma.
+		for a in authors_d:
+		    tilde_gammad[a, :] = self.alpha + len(self.author2doc[a]) * expElogthetad[a, :] * numpy.dot(cts / phinorm, expElogbetad.T)
+
+		# Update gamma and lambda.
+		# Interpolation between document d's "local" gamma (tilde_gamma),
+		# and "global" gamma (var_gamma). Same goes for lambda.
+		tilde_gamma = (1 - rhot) * gammad + rhot * tilde_gamma
+
+		# Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
+		Elogthetad = dirichlet_expectation(tilde_gammad)
+                expElogthetad = numpy.exp(Elogtheta[authors_d, :])
+
+		phinorm = self.compute_phinorm(ids, authors_d, expElogthetad, expElogbetad)
+
+		# Check for convergence.
+		# Criterion is mean change in "local" gamma and lambda.
+		if iteration > 0:
+		    meanchange_gamma = numpy.mean(abs(tilde_gamma - lastgamma))
+		    gamma_condition = meanchange_gamma < self.threshold
+		    # logger.info('Mean change in gamma: %.3e', meanchange_gamma)
+		    if gamma_condition:
+			# logger.info('Converged after %d iterations.', iteration)
+			converged += 1
+			break
+	    # End of iterations loop.
+
+            for _ in xrange(self.iterations):
+                lastgamma = gammad
+                # We represent phi implicitly to save memory and time.
+                # Substituting the value of the optimal phi back into
+                # the update for gamma gives this update. Cf. Lee&Seung 2001.
+                gammad = self.alpha + expElogthetad * np.dot(cts / phinorm, expElogbetad.T)
+                Elogthetad = dirichlet_expectation(gammad)
+                expElogthetad = np.exp(Elogthetad)
+                phinorm = np.dot(expElogthetad, expElogbetad) + 1e-100
+                # If gamma hasn't changed much, we're done.
+                meanchange = np.mean(abs(gammad - lastgamma))
+                if (meanchange < self.gamma_threshold):
+                    converged += 1
+                    break
+            if collect_sstats:
+                # Contribution of document d to the expected sufficient
+                # statistics for the M step.
+                sstats[:, ids] += np.outer(expElogthetad.T, cts / phinorm)
+
+        if len(chunk) > 1:
+            logger.debug("%i/%i documents converged within %i iterations",
+                         converged, len(chunk), self.iterations)
+
+        if collect_sstats:
+            # This step finishes computing the sufficient statistics for the
+            # M step, so that
+            # sstats[k, w] = \sum_d n_{dw} * phi_{dwk}
+            # = \sum_d n_{dw} * exp{Elogtheta_{dk} + Elogbeta_{kw}} / phinorm_{dw}.
+            sstats *= self.expElogbeta
+        return gamma, sstats
+
+    def do_estep(self, chunk, state=None):
+        """
+        Perform inference on a chunk of documents, and accumulate the collected
+        sufficient statistics in `state` (or `self.state` if None).
+
+        """
+        if state is None:
+            state = self.state
+        gamma, sstats = self.inference(chunk, collect_sstats=True)
+        state.sstats += sstats
+        state.numdocs += gamma.shape[0]  # avoids calling len(chunk) on a generator
+        return gamma
 
     def inference(self, chunk, collect_sstats=False):
         """
@@ -188,19 +328,17 @@ class AuthorTopicModel(LdaModel):
 
     def do_estep(self, chunk, state=None):
         """
+        Perform inference on a chunk of documents, and accumulate the collected
+        sufficient statistics in `state` (or `self.state` if None).
+
         """
+        if state is None:
+            state = self.state
+        gamma, sstats = self.inference(chunk, collect_sstats=True)
+        state.sstats += sstats
+        # NOTE: why not use chunksize here?
+        state.numdocs += len(chunk)
         return gamma
-
-    # TODO: probably just use LdaModel's update_alpha and update_eta (once my PR fixing eta is merged).
-    def update_alpha(self, gammat, rho):
-        """
-        """
-        return self.alpha
-
-    def update_eta(self, lambdat, rho):
-        """
-        """
-        return self.eta
 
     # NOTE: this method can be used directly, but self.bound needs to be updated slightly.
     # def log_perplexity(self, chunk, total_docs=None):
@@ -221,43 +359,69 @@ class AuthorTopicModel(LdaModel):
 
     def bound(self, corpus, gamma=None, subsample_ratio=1.0):
         """
-        """
-        # TODO: this
-        pass
+        Estimate the variational bound of documents from `corpus`:
+        E_q[log p(corpus)] - E_q[log q(corpus)]
 
-    def print_topics(self, num_topics=10, num_words=10):
-        # TODO: this
-        pass
+        `gamma` are the variational parameters on topic weights for each `corpus`
+        document (=2d matrix=what comes out of `inference()`).
+        If not supplied, will be inferred from the model.
 
-    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """
-        """
-        # TODO: this
-        pass
 
-    def show_topic(self, topicid, topn=10):
-        """
-        """
-        # TODO: this
-        pass
+        _lambda = self.state.get_lambda()
+        Elogbeta = dirichlet_expectation(_lambda)
 
-    def get_topic_terms(self, topicid, topn=10):
-        """
-        """
-        # TODO: this
-        pass
+        word_score = 0.0
+        authors_set = set()  # Used in computing theta bound.
+        theta_score = 0.0
+        for d, doc in enumerate(corpus):  # stream the input doc-by-doc, in case it's too large to fit in RAM
+            authors_d = self.doc2author[d]
+            ids = np.array([id for id, _ in doc])  # Word IDs in doc.
+            cts = np.array([cnt for _, cnt in doc])  # Word counts.
 
-    def print_topic(self, topicid, topn=10):
-        # TODO: this
-        pass
+            if d % self.chunksize == 0:
+                logger.debug("bound: at document #%i", d)
+            if gamma is None:
+                gammad, _ = self.inference([doc])
+            else:
+                gammad = gamma[d]
+            Elogthetad = dirichlet_expectation(gammad)  # Shape (len(authors_d), self.num_topics).
 
-    def top_topics(self, corpus, num_words=20):
-        # TODO: this
-        pass
+            # Computing the bound requires summing over expElogtheta[a, k] * expElogbeta[k, v], which
+            # is the same computation as in normalizing phi.
+            phinorm = self.compute_phinorm(ids, authors_d, np.exp(Elogthetad), np.exp(Elogbeta[:, ids]))
+            word_score += np.log(1.0 / len(authors_d)) + cts.dot(np.log(phinorm))
 
-    def get_term_topics(self, word_id, minimum_probability=None):
-        # TODO: this
-        pass
+            # E[log p(theta | alpha) - log q(theta | gamma)]
+            # The code blow ensure we compute the score of each author only once.
+            for ai, a in enumerate(authors_d):
+                if a not in authors_set:
+                    theta_score += numpy.sum((self.alpha - gammad[ai, :]) * Elogthetad[ai])
+                    theta_score += numpy.sum(gammaln(gammad[ai, :]) - gammaln(self.alpha))
+                    theta_score += gammaln(numpy.sum(self.alpha)) - gammaln(numpy.sum(gammad[ai, :]))
+                    authors_set.add(a)
+
+        # compensate likelihood for when `corpus` above is only a sample of the whole corpus
+        word_score *= subsample_ratio
+
+        # TODO: theta_score should probably be multiplied by subsample ratio as well. Maybe it
+        # has to be a different subsample ratio, for example something along the lines of:
+        # theta_score *= self.num_authors / len(authors_set)
+
+        # E[log p(beta | eta) - log q (beta | lambda)]
+        beta_score = 0.0
+        beta_score += np.sum((self.eta - _lambda) * Elogbeta)
+        beta_score += np.sum(gammaln(_lambda) - gammaln(self.eta))
+        sum_eta = np.sum(self.eta)
+        beta_score += np.sum(gammaln(sum_eta) - gammaln(np.sum(_lambda, 1)))
+
+        total_score = word_score + theta_score + beta_score
+
+        return total_score
+
+    # NOTE: method `top_topics` is used directly. There is no topic coherence measure for 
+    # the author-topic model. c_v topic coherence is a valid measure of topic quality in 
+    # the author-topic model, although it does not take authorship information into account.
 
     def __getitem__(self, bow, eps=None):
         """
@@ -274,8 +438,8 @@ class AuthorTopicModel(LdaModel):
         `separately` can be used to define which arrays should be stored in separate files.
 
         `ignore` parameter can be used to define which variables should be ignored, i.e. left
-        out from the pickled lda model. By default the internal `state` is ignored as it uses
-        its own serialisation not the one provided by `LdaModel`. The `state` and `dispatcher`
+        out from the pickled author-topic model. By default the internal `state` is ignored as it uses
+        its own serialisation not the one provided by `AuthorTopicModel`. The `state` and `dispatcher`
         will be added to any ignore parameter defined.
 
 
@@ -305,7 +469,10 @@ class AuthorTopicModel(LdaModel):
             ignore = list(set(['state', 'dispatcher']) | set(ignore))
         else:
             ignore = ['state', 'dispatcher']
-        super(LdaModel, self).save(fname, *args, ignore=ignore, **kwargs)
+        # TODO: the only difference between this save method and LdaModel's is the use of
+        # "AuthorTopicModel" below. This should be an easy refactor.
+        # Same goes for load method below.
+        super(AuthorTopicModel, self).save(fname, *args, ignore=ignore, **kwargs)
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
@@ -314,12 +481,12 @@ class AuthorTopicModel(LdaModel):
 
         Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
 
-            >>> LdaModel.load(fname, mmap='r')
+            >>> AuthorTopicModel.load(fname, mmap='r')
 
         """
         # TODO: this
         kwargs['mmap'] = kwargs.get('mmap', None)
-        result = super(LdaModel, cls).load(fname, *args, **kwargs)
+        result = super(AuthorTopicModel, cls).load(fname, *args, **kwargs)
         state_fname = utils.smart_extension(fname, '.state')
         try:
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
