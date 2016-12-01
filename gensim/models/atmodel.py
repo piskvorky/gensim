@@ -129,9 +129,9 @@ class AuthorTopicModel(LdaModel):
         self.random_state = random_state
         self.chunksize = chunksize
 
-        # NOTE: this is not necessarily a good way to initialize the topics.
         self.alpha = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
-        self.eta = numpy.asarray([1.0 / self.num_terms for i in xrange(self.num_terms)])
+        #self.eta = numpy.asarray([1.0 / self.num_terms for i in xrange(self.num_terms)])
+        self.eta = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_terms)])
 
         self.random_state = get_random_state(random_state)
 
@@ -162,6 +162,8 @@ class AuthorTopicModel(LdaModel):
             corpus = self.corpus.copy()
 
         self.num_docs = len(corpus)  # TODO: this needs to be different if the algorithm is truly online.
+
+        corpus_words = sum(cnt for document in corpus for _, cnt in document)
 
         logger.info('Starting inference. Training on %d documents.', len(corpus))
 
@@ -200,7 +202,8 @@ class AuthorTopicModel(LdaModel):
 
         # Initialize dirichlet expectations.
         Elogtheta = dirichlet_expectation(var_gamma)
-        Elogbeta = dirichlet_expectation(var_lambda)
+        #Elogbeta = dirichlet_expectation(var_lambda)
+        Elogbeta = dirichlet_expectation(var_lambda + self.eta)
         if numstable_sm:
             maxElogtheta = Elogtheta.max()
             maxElogbeta = Elogbeta.max()
@@ -215,7 +218,8 @@ class AuthorTopicModel(LdaModel):
             theta_bound = self.theta_bound(Elogtheta)
             beta_bound = self.beta_bound(Elogbeta)
             bound = word_bound + theta_bound + beta_bound
-            logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+            perwordbound = bound / corpus_words
+            logger.info('Total bound: %.3e. Per-word total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, perwordbound, word_bound, theta_bound, beta_bound)
         for _pass in xrange(self.passes):
             converged = 0  # Number of documents converged for current pass over corpus.
             for chunk_no, chunk in enumerate(utils.grouper(corpus, self.chunksize, as_numpy=False)):
@@ -316,7 +320,8 @@ class AuthorTopicModel(LdaModel):
                 theta_bound = self.theta_bound(Elogtheta)
                 beta_bound = self.beta_bound(Elogbeta)
                 bound = word_bound + theta_bound + beta_bound
-                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+                perwordbound = bound / corpus_words
+                logger.info('Total bound: %.3e. Per-word total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, perwordbound, word_bound, theta_bound, beta_bound)
                 # NOTE: bound can be computed as below. We compute each term for now because it can be useful for debugging.
                 # bound = eval_bound(corpus, Elogtheta, Elogbeta, expElogtheta, expElogtheta, maxElogtheta=maxElogtheta, maxElogbeta=maxElogbeta):
 

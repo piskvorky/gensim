@@ -407,7 +407,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.state = None
         self.Elogbeta = None
 
-    def inference(self, chunk, collect_sstats=False):
+    def inference(self, chunk, collect_sstats=False, chunk_no=None):
         """
         Given a chunk of sparse document vectors, estimate gamma (parameters
         controlling the topic weights) for each document in the chunk.
@@ -497,7 +497,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             sstats *= self.expElogbeta
         return gamma, sstats
 
-    def do_estep(self, chunk, state=None):
+    def do_estep(self, chunk, state=None, chunk_no=None):
         """
         Perform inference on a chunk of documents, and accumulate the collected
         sufficient statistics in `state` (or `self.state` if None).
@@ -505,7 +505,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         if state is None:
             state = self.state
-        gamma, sstats = self.inference(chunk, collect_sstats=True)
+        gamma, sstats = self.inference(chunk, collect_sstats=True, chunk_no=None)
         state.sstats += sstats
         state.numdocs += gamma.shape[0]  # avoids calling len(chunk) on a generator
         return gamma
@@ -535,7 +535,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return self.eta
 
-    def log_perplexity(self, chunk, total_docs=None):
+    def log_perplexity(self, chunk, chunk_no=None, total_docs=None):
         """
         Calculate and return per-word likelihood bound, using the `chunk` of
         documents as evaluation corpus. Also output the calculated statistics. incl.
@@ -546,7 +546,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             total_docs = len(chunk)
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         subsample_ratio = 1.0 * total_docs / len(chunk)
-        perwordbound = self.bound(chunk, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
+        perwordbound = self.bound(chunk, chunk_no, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
         logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
@@ -652,10 +652,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             reallen = 0
             for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=chunks_as_numpy)):
+                self.rho = rho()
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 
                 if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
-                    self.log_perplexity(chunk, total_docs=lencorpus)
+                    self.log_perplexity(chunk, chunk_no, total_docs=lencorpus)
 
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
@@ -666,7 +667,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 else:
                     logger.info('PROGRESS: pass %i, at document #%i/%i',
                                 pass_, chunk_no * chunksize + len(chunk), lencorpus)
-                    gammat = self.do_estep(chunk, other)
+                    gammat = self.do_estep(chunk, other, chunk_no)
 
                     if self.optimize_alpha:
                         self.update_alpha(gammat, rho())
@@ -729,7 +730,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # only update if this isn't an additional pass
             self.num_updates += other.numdocs
 
-    def bound(self, corpus, gamma=None, subsample_ratio=1.0):
+    def bound(self, corpus, chunk_no=None, gamma=None, subsample_ratio=1.0):
         """
         Estimate the variational bound of documents from `corpus`:
         E_q[log p(corpus)] - E_q[log q(corpus)]
@@ -760,7 +761,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             score += np.sum(gammaln(gammad) - gammaln(self.alpha))
             score += gammaln(np.sum(self.alpha)) - gammaln(np.sum(gammad))
 
-        # compensate likelihood for when `corpus` above is only a sample of the whole corpus
+        # Compensate likelihood for when `corpus` above is only a sample of the whole corpus. This ensures
+        # that the likelihood is always rougly on the same scale.
         score *= subsample_ratio
 
         # E[log p(beta | eta) - log q (beta | lambda)]; assumes eta is a scalar
