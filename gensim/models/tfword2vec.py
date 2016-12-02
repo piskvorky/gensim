@@ -4,6 +4,7 @@ from gensim.models.word2vec import Word2Vec as GensimWord2Vec, Vocab
 from gensim import utils
 from six import string_types
 import os
+import tempfile
 import logging
 logger = logging.getLogger(__name__)
 
@@ -192,12 +193,13 @@ class TfWord2Vec(GensimWord2VecNoTraining):
         """
         #assumes that the string represents a file extension
         if not isinstance(corpus, string_types):
-            with utils.smart_open(os.path.join('/tmp/','converted_corpus'), 'w+') as fout:
-                for line in corpus:
-                    for word in line:
-                        fout.write(utils.to_utf8(str(word) + " "))
-                    fout.write("\n")
-            self.options.train_data = os.path.join('/tmp/','converted_corpus')
+            fout = tempfile.TemporaryFile()
+            for line in corpus:
+                for word in line:
+                    fout.write(utils.to_utf8(str(word) + " "))
+                fout.write("\n")
+            fout.seek(0)
+            self.options.train_data = fout
 
     def __getitem__(self, words):
         if isinstance(words, string_types):
