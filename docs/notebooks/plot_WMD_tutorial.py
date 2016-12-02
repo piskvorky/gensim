@@ -103,7 +103,7 @@ print('Cell took %.2f seconds to run.' % (time() - start))
 # In[6]:
 
 distance = model.wmdistance(sentence_obama, sentence_president)
-print 'distance = %.4f' % distance
+print ('distance = %.4f' % distance)
 
 
 # Let's try the same thing with two completely unrelated sentences. Notice that the distance is larger.
@@ -115,7 +115,7 @@ sentence_orange = sentence_orange.lower().split()
 sentence_orange = [w for w in sentence_orange if w not in stop_words]
 
 distance = model.wmdistance(sentence_obama, sentence_orange)
-print 'distance = %.4f' % distance
+print ('distance = %.4f' % distance)
 
 
 # ### Normalizing word2vec vectors
@@ -137,7 +137,7 @@ model.init_sims(replace=True)  # Normalizes the vectors in the word2vec class.
 
 distance = model.wmdistance(sentence_obama, sentence_president)  # Compute WMD as normal.
 
-print 'Cell took %.2f seconds to run.' %(time() - start)
+print ('Cell took %.2f seconds to run.' %(time() - start))
 
 
 # ## Part 2: Similarity queries using `WmdSimilarity`
@@ -215,7 +215,7 @@ with open('/data/yelp_academic_dataset_review.json') as data_file:
             wmd_corpus.append(text)
             documents.append(json_line['text'])
 
-print 'Cell took %.2f seconds to run.' %(time() - start)
+print ('Cell took %.2f seconds to run.' %(time() - start))
 
 
 # Below is a plot with a histogram of document lengths and includes the average document length as well. Note that these are the pre-processed documents, meaning stopwords are removed, punctuation is removed, etc. Document lengths have a high impact on the running time of WMD, so when comparing running times with this experiment, the number of documents in query corpus (about 4000) and the length of the documents (about 62 words on average) should be taken into account.
@@ -275,7 +275,7 @@ query = preprocess(sent)
 
 sims = instance[query]  # A query is simply a "look-up" in the similarity class.
 
-print 'Cell took %.2f seconds to run.' %(time() - start)
+print ('Cell took %.2f seconds to run.' %(time() - start))
 
 
 # The query and the most similar documents, together with the similarities, are printed below. We see that the retrieved documents are discussing the same thing as the query, although using different words. The query talks about getting a seat "outdoor", while the results talk about sitting "outside", and one of them says the restaurant has a "nice view".
@@ -283,12 +283,12 @@ print 'Cell took %.2f seconds to run.' %(time() - start)
 # In[16]:
 
 # Print the query and the retrieved documents, together with their similarities.
-print 'Query:'
-print sent
+print ('Query:')
+print (sent)
 for i in range(num_best):
-    print
-    print 'sim = %.4f' % sims[i][1]
-    print documents[sims[i][0]]
+    print ("")
+    print ('sim = %.4f' % sims[i][1])
+    print (documents[sims[i][0]])
 
 
 # Let's try a different query, also taken directly from one of the reviews in the corpus.
@@ -302,14 +302,14 @@ query = preprocess(sent)
 
 sims = instance[query]  # A query is simply a "look-up" in the similarity class.
 
-print 'Query:'
-print sent
+print ('Query:')
+print (sent)
 for i in range(num_best):
-    print
-    print 'sim = %.4f' % sims[i][1]
-    print documents[sims[i][0]]
+    print ("")
+    print ('sim = %.4f' % sims[i][1])
+    print (documents[sims[i][0]])
 
-print '\nCell took %.2f seconds to run.' %(time() - start)
+print ('\nCell took %.2f seconds to run.' %(time() - start))
 
 
 # This time around, the results are more straight forward; the retrieved documents basically contain the same words as the query.
@@ -318,7 +318,7 @@ print '\nCell took %.2f seconds to run.' %(time() - start)
 
 # In[36]:
 
-print 'Notebook took %.2f seconds to run.' %(time() - start_nb)
+print ('Notebook took %.2f seconds to run.' %(time() - start_nb))
 
 
 # ## References

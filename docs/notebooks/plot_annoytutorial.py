@@ -157,7 +157,7 @@ if os.path.exists(fname):
 vector = model["science"]
 approximate_neighbors = model.most_similar([vector], topn=5, indexer=annoy_index2)
 for neighbor in approximate_neighbors:
-    print neighbor
+    print (neighbor)
 
 
 # Be sure to use the same model at load that was used originally, otherwise you will get unexpected behaviors.

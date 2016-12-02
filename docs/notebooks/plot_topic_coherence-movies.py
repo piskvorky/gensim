@@ -69,7 +69,7 @@ start = datetime.now()
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 end = datetime.now()
-print "Time taken: %s" % (end - start)
+print ("Time taken: %s" % (end - start))
 
 
 # ### Cross validate the numbers
@@ -78,8 +78,8 @@ print "Time taken: %s" % (end - start)
 
 # In[13]:
 
-print len(corpus)
-print dictionary
+print (len(corpus))
+print (dictionary)
 
 
 # In[14]:
@@ -111,7 +111,7 @@ for n, topic in enumerate(topics):
     except KeyError:
         flags.append(n)
 end = datetime.now()
-print "Time taken: %s" % (end - start)
+print ("Time taken: %s" % (end - start))
 
 
 # ### Start c_v coherence measure
@@ -128,7 +128,7 @@ for n, topic in enumerate(topics):
     except KeyError:
         pass
 end = datetime.now()
-print "Time taken: %s" % (end - start)
+print ("Time taken: %s" % (end - start))
 
 
 # ### Start c_uci and c_npmi coherence measures
@@ -146,7 +146,7 @@ for n, topic in enumerate(topics):
     except KeyError:
         flags.append(n)
 end = datetime.now()
-print "Time taken: %s" % (end - start)
+print ("Time taken: %s" % (end - start))
 
 
 # In[20]:
@@ -154,14 +154,14 @@ print "Time taken: %s" % (end - start)
 start = datetime.now()
 c_npmi = []
 for n, topic in enumerate(topics):
-    print n
+    print (n)
     try:
         cm = CoherenceModel(topics=topic, texts=texts, dictionary=dictionary, coherence='c_npmi')
         c_npmi.append(cm.get_coherence())
     except KeyError:
         pass
 end = datetime.now()
-print "Time taken: %s" % (end - start)
+print ("Time taken: %s" % (end - start))
 
 
 # In[21]:
@@ -176,7 +176,7 @@ for n, score in enumerate(human_scores):
 
 # In[22]:
 
-print len(u_mass), len(c_v), len(c_uci), len(c_npmi), len(final_scores)
+print (len(u_mass), len(c_v), len(c_uci), len(c_npmi), len(final_scores))
 # 1 topic has word(s) that is not in the dictionary. Probably some difference
 # in preprocessing
 
@@ -195,10 +195,10 @@ print len(u_mass), len(c_v), len(c_uci), len(c_npmi), len(final_scores)
 
 # In[23]:
 
-print pearsonr(u_mass, final_scores)[0]
-print pearsonr(c_v, final_scores)[0]
-print pearsonr(c_uci, final_scores)[0]
-print pearsonr(c_npmi, final_scores)[0]
+print (pearsonr(u_mass, final_scores)[0])
+print (pearsonr(c_v, final_scores)[0])
+print (pearsonr(c_uci, final_scores)[0])
+print (pearsonr(c_npmi, final_scores)[0])
 
 
 # ### Where do we go now?
