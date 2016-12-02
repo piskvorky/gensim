@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+
+# coding: utf-8
 """
 Gallery of Examples
 ===================
@@ -12,7 +13,7 @@ General examples
 General-purpose and introductory examples from the sphinx-gallery
 """
 
-# ## New Distance Metrics for Probability Distribution and Bag of Words 
+# ## New Distance Metrics for Probability Distribution and Bag of Words
 
 # A small tutorial to illustrate the new distance functions.
 #

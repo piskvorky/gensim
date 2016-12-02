@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+
+# coding: utf-8
 """
 Gallery of Examples
 ===================
@@ -11,7 +12,6 @@ General examples
 
 General-purpose and introductory examples from the sphinx-gallery
 """
-
 
 # # News classification with topic models in gensim
 # News article classification is a task which is performed on a huge scale by news agencies all over the world. We will be looking into how topic modeling can be used to accurately classify news articles into different categories such as sports, technology, politics etc.

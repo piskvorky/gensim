@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+
+# coding: utf-8
 """
 Gallery of Examples
 ===================
@@ -11,7 +12,6 @@ General examples
 
 General-purpose and introductory examples from the sphinx-gallery
 """
-
 
 # # Doc2Vec to wikipedia articles
 

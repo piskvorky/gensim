@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+
+# coding: utf-8
 """
 Gallery of Examples
 ===================
@@ -11,7 +12,6 @@ General examples
 
 General-purpose and introductory examples from the sphinx-gallery
 """
-
 
 # # Word2Vec Tutorial
 # This tutorial follows a [blog post](http://rare-technologies.com/word2vec-tutorial/) written by the creator of gensim.

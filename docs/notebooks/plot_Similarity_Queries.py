@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+
+# coding: utf-8
 """
 Gallery of Examples
 ===================
@@ -12,6 +13,11 @@ General examples
 General-purpose and introductory examples from the sphinx-gallery
 """
 
+# # Similarity Queries
+
+# Don't forget to set:
+
+# In[2]:
 
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)

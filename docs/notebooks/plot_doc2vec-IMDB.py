@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+
+# coding: utf-8
 """
 Gallery of Examples
 ===================
@@ -396,7 +397,7 @@ for model in word_models:
 
 # In[ ]:
 
-# This cell left intentionally erroneous.
+This cell left intentionally erroneous.
 
 
 # To mix the Google dataset (if locally available) into the word tests...
