@@ -10,13 +10,13 @@ Automated tests for checking transformation algorithms (the models package).
 
 
 import logging
-import unittest
+import unittest2 as unittest
 import os
 import os.path
 import tempfile
 
 import six
-import numpy
+import numpy as np
 import scipy.linalg
 
 
@@ -24,7 +24,7 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models.wrappers import ldamallet
 from gensim import matutils
 from gensim.models import ldamodel
-
+from gensim.test import basetests
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -49,11 +49,16 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
-class TestLdaMallet(unittest.TestCase):
+class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         mallet_home = os.environ.get('MALLET_HOME', None)
         self.mallet_path = os.path.join(mallet_home, 'bin', 'mallet') if mallet_home else None
+        if not self.mallet_path:
+            raise unittest.SkipTest("MALLET_HOME not specified. Skipping Mallet tests.")
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+
+        # self.model is used in TestBaseTopicModel
+        self.model = ldamallet.LdaMallet(self.mallet_path, corpus, id2word=dictionary, num_topics=2, iterations=1)
 
 
     def testTransform(self):
@@ -68,7 +73,7 @@ class TestLdaMallet(unittest.TestCase):
             transformed = model[doc]
             vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
             expected = [0.49, 0.51]
-            passed = numpy.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
             if passed:
                 break
             logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
@@ -88,7 +93,7 @@ class TestLdaMallet(unittest.TestCase):
             transformed = model[doc]
             vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
             expected = [1.0, 0.0]
-            passed = numpy.allclose(sorted(vec), sorted(expected), atol=1e-2) # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-2) # must contain the same values, up to re-ordering
             if passed:
                 break
             logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
@@ -116,9 +121,9 @@ class TestLdaMallet(unittest.TestCase):
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
+        self.assertTrue(np.allclose(model.word_topics, model2.word_topics))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testPersistenceCompressed(self):
         if not self.mallet_path:
@@ -128,9 +133,9 @@ class TestLdaMallet(unittest.TestCase):
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
+        self.assertTrue(np.allclose(model.word_topics, model2.word_topics))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testLargeMmap(self):
         if not self.mallet_path:
@@ -144,10 +149,10 @@ class TestLdaMallet(unittest.TestCase):
         # test loading the large model arrays with mmap
         model2 = ldamodel.LdaModel.load(testfile(), mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(isinstance(model2.word_topics, numpy.memmap))
-        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
+        self.assertTrue(isinstance(model2.word_topics, np.memmap))
+        self.assertTrue(np.allclose(model.word_topics, model2.word_topics))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testLargeMmapCompressed(self):
         if not self.mallet_path:
