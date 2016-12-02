@@ -31,7 +31,7 @@ import gensim, os
 from gensim.models.word2vec import Word2Vec
 
 # Set file names for train and test data
-test_data_dir = '{}'.format(os.sep).join([gensim.__path__[0], 'test', 'test_data']) + os.sep
+test_data_dir = '{0}'.format(os.sep).join([gensim.__path__[0], 'test', 'test_data']) + os.sep
 lee_train_file = test_data_dir + 'lee_background.cor'
 
 class MyText(object):
@@ -67,12 +67,12 @@ annoy_index = AnnoyIndexer(model, 500)
 
 # In[108]:
 
-get_ipython().run_cell_magic(u'time', u'', u'#Traditional implementation:\nmodel.most_similar([vector], topn=5)')
+# get_ipython().run_cell_magic(u'time', u'', u'#Traditional implementation:\nmodel.most_similar([vector], topn=5)')
 
 
 # In[109]:
 
-get_ipython().run_cell_magic(u'time', u'', u'#Annoy implementation:\nneighbors = model.most_similar([vector], topn=5, indexer=annoy_index)\nfor neighbor in neighbors:\n    print(neighbor)')
+# get_ipython().run_cell_magic(u'time', u'', u'#Annoy implementation:\nneighbors = model.most_similar([vector], topn=5, indexer=annoy_index)\nfor neighbor in neighbors:\n    print(neighbor)')
 
 
 #
@@ -170,19 +170,19 @@ for neighbor in approximate_neighbors:
 
 # In[115]:
 
-get_ipython().run_cell_magic(u'time', u'', u'\n# Bad example. Two processes load the Word2vec model from disk and create there own Annoy indices from that model. \n\nfrom gensim import models\nfrom gensim.similarities.index import AnnoyIndexer\nfrom multiprocessing import Process\nimport os\nimport psutil\n\nmodel.save(\'/tmp/mymodel\')\n\ndef f(process_id):\n    print \'Process Id: \', os.getpid()\n    process = psutil.Process(os.getpid())\n    new_model = models.Word2Vec.load(\'/tmp/mymodel\')\n    vector = new_model["science"]\n    annoy_index = AnnoyIndexer(new_model,100)\n    approximate_neighbors = new_model.most_similar([vector], topn=5, indexer=annoy_index)\n    for neighbor in approximate_neighbors:\n        print neighbor\n    print \'Memory used by process \'+str(os.getpid())+\'=\', process.memory_info()\n\n# Creating and running two parallel process to share the same index file.\np1 = Process(target=f, args=(\'1\',))\np1.start()\np1.join()\np2 = Process(target=f, args=(\'2\',))\np2.start()\np2.join()')
+# get_ipython().run_cell_magic(u'time', u'', u'\n# Bad example. Two processes load the Word2vec model from disk and create there own Annoy indices from that model. \n\nfrom gensim import models\nfrom gensim.similarities.index import AnnoyIndexer\nfrom multiprocessing import Process\nimport os\nimport psutil\n\nmodel.save(\'/tmp/mymodel\')\n\ndef f(process_id):\n    print \'Process Id: \', os.getpid()\n    process = psutil.Process(os.getpid())\n    new_model = models.Word2Vec.load(\'/tmp/mymodel\')\n    vector = new_model["science"]\n    annoy_index = AnnoyIndexer(new_model,100)\n    approximate_neighbors = new_model.most_similar([vector], topn=5, indexer=annoy_index)\n    for neighbor in approximate_neighbors:\n        print neighbor\n    print \'Memory used by process \'+str(os.getpid())+\'=\', process.memory_info()\n\n# Creating and running two parallel process to share the same index file.\np1 = Process(target=f, args=(\'1\',))\np1.start()\np1.join()\np2 = Process(target=f, args=(\'2\',))\np2.start()\np2.join()')
 
 
 # In[116]:
 
-get_ipython().run_cell_magic(u'time', u'', u'\n# Good example. Two processes load both the Word2vec model and index from disk and memory-map the index\n\nfrom gensim import models\nfrom gensim.similarities.index import AnnoyIndexer\nfrom multiprocessing import Process\nimport os\nimport psutil\n\nmodel.save(\'/tmp/mymodel\')\n\ndef f(process_id):\n    print \'Process Id: \', os.getpid()\n    process = psutil.Process(os.getpid())\n    new_model = models.Word2Vec.load(\'/tmp/mymodel\')\n    vector = new_model["science"]\n    annoy_index = AnnoyIndexer()\n    annoy_index.load(\'index\')\n    annoy_index.model = new_model\n    approximate_neighbors = new_model.most_similar([vector], topn=5, indexer=annoy_index)\n    for neighbor in approximate_neighbors:\n        print neighbor\n    print \'Memory used by process \'+str(os.getpid()), process.memory_info()\n\n# Creating and running two parallel process to share the same index file.\np1 = Process(target=f, args=(\'1\',))\np1.start()\np1.join()\np2 = Process(target=f, args=(\'2\',))\np2.start()\np2.join()')
+# get_ipython().run_cell_magic(u'time', u'', u'\n# Good example. Two processes load both the Word2vec model and index from disk and memory-map the index\n\nfrom gensim import models\nfrom gensim.similarities.index import AnnoyIndexer\nfrom multiprocessing import Process\nimport os\nimport psutil\n\nmodel.save(\'/tmp/mymodel\')\n\ndef f(process_id):\n    print \'Process Id: \', os.getpid()\n    process = psutil.Process(os.getpid())\n    new_model = models.Word2Vec.load(\'/tmp/mymodel\')\n    vector = new_model["science"]\n    annoy_index = AnnoyIndexer()\n    annoy_index.load(\'index\')\n    annoy_index.model = new_model\n    approximate_neighbors = new_model.most_similar([vector], topn=5, indexer=annoy_index)\n    for neighbor in approximate_neighbors:\n        print neighbor\n    print \'Memory used by process \'+str(os.getpid()), process.memory_info()\n\n# Creating and running two parallel process to share the same index file.\np1 = Process(target=f, args=(\'1\',))\np1.start()\np1.join()\np2 = Process(target=f, args=(\'2\',))\np2.start()\np2.join()')
 
 
 # # Relationship between num_trees and initialization time
 
 # In[117]:
 
-get_ipython().magic(u'matplotlib inline')
+# get_ipython().magic(u'matplotlib inline')
 import matplotlib.pyplot as plt, time
 x_cor = []
 y_cor = []

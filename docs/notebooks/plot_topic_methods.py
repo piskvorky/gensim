@@ -20,7 +20,7 @@ General-purpose and introductory examples from the sphinx-gallery
 from gensim.corpora import Dictionary
 from gensim.models import ldamodel
 import numpy
-get_ipython().magic(u'matplotlib inline')
+# get_ipython().magic(u'matplotlib inline')
 
 
 # We're setting up our corpus now. We want to show off the new `get_term_topics` and `get_document_topics` functionalities, and a good way to do so is to play around with words which might have different meanings in different context.

@@ -48,7 +48,7 @@ import random
 # In[2]:
 
 # Set file names for train and test data
-test_data_dir = '{}'.format(os.sep).join([gensim.__path__[0], 'test', 'test_data'])
+test_data_dir = '{0}'.format(os.sep).join([gensim.__path__[0], 'test', 'test_data'])
 lee_train_file = test_data_dir + os.sep + 'lee_background.cor'
 lee_test_file = test_data_dir + os.sep + 'lee.cor'
 
@@ -118,7 +118,7 @@ model.build_vocab(train_corpus)
 
 # In[9]:
 
-get_ipython().magic(u'time model.train(train_corpus)')
+# get_ipython().magic(u'time model.train(train_corpus)')
 
 
 # ### Inferring a Vector
@@ -158,7 +158,7 @@ collections.Counter(ranks)  #96% accuracy
 
 # In[13]:
 
-print('Document ({}): «{}»\n'.format(doc_id, ' '.join(train_corpus[doc_id].words)))
+print('Document ({0}): «{1}»\n'.format(doc_id, ' '.join(train_corpus[doc_id].words)))
 print(u'SIMILAR/DISSIMILAR DOCS PER MODEL %s:\n' % model)
 for label, index in [('MOST', 0), ('MEDIAN', len(sims)//2), ('LEAST', len(sims) - 1)]:
     print(u'%s %s: «%s»\n' % (label, sims[index], ' '.join(train_corpus[sims[index][0]].words)))
@@ -172,9 +172,9 @@ for label, index in [('MOST', 0), ('MEDIAN', len(sims)//2), ('LEAST', len(sims) 
 doc_id = random.randint(0, len(train_corpus))
 
 # Compare and print the most/median/least similar documents from the train corpus
-print('Train Document ({}): «{}»\n'.format(doc_id, ' '.join(train_corpus[doc_id].words)))
+print('Train Document ({0}): «{1}»\n'.format(doc_id, ' '.join(train_corpus[doc_id].words)))
 sim_id = second_ranks[doc_id]
-print('Similar Document {}: «{}»\n'.format(sim_id, ' '.join(train_corpus[sim_id[0]].words)))
+print('Similar Document {0}: «{1}»\n'.format(sim_id, ' '.join(train_corpus[sim_id[0]].words)))
 
 
 # ## Testing the Model
@@ -189,7 +189,7 @@ inferred_vector = model.infer_vector(test_corpus[doc_id])
 sims = model.docvecs.most_similar([inferred_vector], topn=len(model.docvecs))
 
 # Compare and print the most/median/least similar documents from the train corpus
-print('Test Document ({}): «{}»\n'.format(doc_id, ' '.join(test_corpus[doc_id])))
+print('Test Document ({0}): «{1}»\n'.format(doc_id, ' '.join(test_corpus[doc_id])))
 print(u'SIMILAR/DISSIMILAR DOCS PER MODEL %s:\n' % model)
 for label, index in [('MOST', 0), ('MEDIAN', len(sims)//2), ('LEAST', len(sims) - 1)]:
     print(u'%s %s: «%s»\n' % (label, sims[index], ' '.join(train_corpus[sims[index][0]].words)))

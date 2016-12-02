@@ -223,7 +223,7 @@ print ('Cell took %.2f seconds to run.' %(time() - start))
 # In[12]:
 
 from matplotlib import pyplot as plt
-get_ipython().magic(u'matplotlib inline')
+# get_ipython().magic(u'matplotlib inline')
 
 # Document lengths.
 lens = [len(doc) for doc in wmd_corpus]

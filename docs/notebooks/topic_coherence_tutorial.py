@@ -100,7 +100,7 @@ badcm = CoherenceModel(model=badLdaModel, corpus=corpus, dictionary=dictionary, 
 
 # In[16]:
 
-print goodcm
+print (goodcm)
 
 
 # ### Interpreting the topics
@@ -134,12 +134,12 @@ pyLDAvis.gensim.prepare(badLdaModel, corpus, dictionary)
 
 # In[20]:
 
-print goodcm.get_coherence()
+print (goodcm.get_coherence())
 
 
 # In[21]:
 
-print badcm.get_coherence()
+print (badcm.get_coherence())
 
 
 # ### Using C_V coherence
@@ -158,19 +158,19 @@ badcm = CoherenceModel(model=badLdaModel, texts=texts, dictionary=dictionary, co
 
 # In[27]:
 
-print goodcm
+print (goodcm)
 
 
 # ### Print coherence values
 
 # In[28]:
 
-print goodcm.get_coherence()
+print (goodcm.get_coherence())
 
 
 # In[29]:
 
-print badcm.get_coherence()
+print (badcm.get_coherence())
 
 
 # ### Support for wrappers
@@ -191,8 +191,8 @@ cm2 = CoherenceModel(model=model2, corpus=corpus, coherence='u_mass')
 
 # In[8]:
 
-print cm1.get_coherence()
-print cm2.get_coherence()
+print (cm1.get_coherence())
+print (cm2.get_coherence())
 
 
 # In[20]:
@@ -209,8 +209,8 @@ cm2 = CoherenceModel(model=model2, texts=texts, coherence='c_v')
 
 # In[22]:
 
-print cm1.get_coherence()
-print cm2.get_coherence()
+print (cm1.get_coherence())
+print (cm2.get_coherence())
 
 
 # ### Support for other topic models

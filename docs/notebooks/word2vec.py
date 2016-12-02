@@ -105,7 +105,7 @@ print(model.vocab)
 # In[8]:
 
 # Set file names for train and test data
-test_data_dir = '{}'.format(os.sep).join([gensim.__path__[0], 'test', 'test_data']) + os.sep
+test_data_dir = '{0}'.format(os.sep).join([gensim.__path__[0], 'test', 'test_data']) + os.sep
 lee_train_file = test_data_dir + 'lee_background.cor'
 
 

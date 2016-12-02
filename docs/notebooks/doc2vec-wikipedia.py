@@ -74,7 +74,7 @@ pre.scan_vocab(documents)
 # In[6]:
 
 for num in range(0, 20):
-    print('min_count: {}, size of vocab: '.format(num), pre.scale_vocab(min_count=num, dry_run=True)['memory']['vocab']/700)
+    print('min_count: {0}, size of vocab: '.format(num), pre.scale_vocab(min_count=num, dry_run=True)['memory']['vocab']/700)
 
 
 # In the original paper, they set the vocabulary size 915,715. It seems similar size of vocabulary if we set min_count = 19. (size of vocab = 898,725)
@@ -106,8 +106,8 @@ print(str(models[1]))
 
 # In[9]:
 
-for model in models:
-    get_ipython().magic(u'%time model.train(documents)')
+# for model in models:
+#     get_ipython().magic(u'%time model.train(documents)')
 
 
 # ## Similarity interface

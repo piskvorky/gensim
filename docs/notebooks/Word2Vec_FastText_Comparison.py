@@ -37,13 +37,19 @@ FT_HOME = 'fastText/'
 # download the text8 corpus (a 100 MB sample of cleaned wikipedia text)
 import os.path
 if not os.path.isfile('text8'):
-    get_ipython().system(u'wget -c http://mattmahoney.net/dc/text8.zip')
-    get_ipython().system(u'unzip text8.zip')
+    # get_ipython().system(u'wget -c http://mattmahoney.net/dc/text8.zip')
+    # get_ipython().system(u'unzip text8.zip')
+    os.system(u'wget -c http://mattmahoney.net/dc/text8.zip')
+    os.system(u'unzip text8.zip')
+
 # download and preprocess the text9 corpus
 if not os.path.isfile('text9'):
-  get_ipython().system(u'wget -c http://mattmahoney.net/dc/enwik9.zip')
-  get_ipython().system(u'unzip enwik9.zip')
-  get_ipython().system(u'perl {FT_HOME}wikifil.pl enwik9 > text9')
+  # get_ipython().system(u'wget -c http://mattmahoney.net/dc/enwik9.zip')
+  # get_ipython().system(u'unzip enwik9.zip')
+  # get_ipython().system(u'perl {FT_HOME}wikifil.pl enwik9 > text9')
+  os.system(u'wget -c http://mattmahoney.net/dc/enwik9.zip')
+  os.system(u'unzip enwik9.zip')
+  os.system(u'perl {FT_HOME}wikifil.pl enwik9 > text9')
 
 
 # # Train models
@@ -53,7 +59,8 @@ if not os.path.isfile('text9'):
 # In[2]:
 
 MODELS_DIR = 'models/'
-get_ipython().system(u'mkdir -p {MODELS_DIR}')
+# get_ipython().system(u'mkdir -p {MODELS_DIR}')
+# os.system(u'mkdir -p {MODELS_DIR}')
 
 lr = 0.05
 dim = 100
@@ -81,31 +88,31 @@ params = {
 }
 
 def train_models(corpus_file, output_name):
-    output_file = '{:s}_ft'.format(output_name)
-    if not os.path.isfile(os.path.join(MODELS_DIR, '{:s}.vec'.format(output_file))):
-        print('Training fasttext on {:s} corpus..'.format(corpus_file))
-        get_ipython().magic(u'time !{FT_HOME}fasttext skipgram -input {corpus_file} -output {MODELS_DIR+output_file}  -lr {lr} -dim {dim} -ws {ws} -epoch {epoch} -minCount {minCount} -neg {neg} -loss {loss} -t {t}')
+    output_file = '{0:s}_ft'.format(output_name)
+    if not os.path.isfile(os.path.join(MODELS_DIR, '{0:s}.vec'.format(output_file))):
+        print('Training fasttext on {0:s} corpus..'.format(corpus_file))
+        # get_ipython().magic(u'time !{FT_HOME}fasttext skipgram -input {corpus_file} -output {MODELS_DIR+output_file}  -lr {lr} -dim {dim} -ws {ws} -epoch {epoch} -minCount {minCount} -neg {neg} -loss {loss} -t {t}')
     else:
-        print('\nUsing existing model file {:s}.vec'.format(output_file))
+        print('\nUsing existing model file {0:s}.vec'.format(output_file))
 
-    output_file = '{:s}_ft_no_ng'.format(output_name)
-    if not os.path.isfile(os.path.join(MODELS_DIR, '{:s}.vec'.format(output_file))):
-        print('\nTraining fasttext on {:s} corpus (without char n-grams)..'.format(corpus_file))
-        get_ipython().magic(u'time !{FT_HOME}fasttext skipgram -input {corpus_file} -output {MODELS_DIR+output_file}  -lr {lr} -dim {dim} -ws {ws} -epoch {epoch} -minCount {minCount} -neg {neg} -loss {loss} -t {t} -maxn 0')
+    output_file = '{0:s}_ft_no_ng'.format(output_name)
+    if not os.path.isfile(os.path.join(MODELS_DIR, '{0:s}.vec'.format(output_file))):
+        print('\nTraining fasttext on {0:s} corpus (without char n-grams)..'.format(corpus_file))
+        # get_ipython().magic(u'time !{FT_HOME}fasttext skipgram -input {corpus_file} -output {MODELS_DIR+output_file}  -lr {lr} -dim {dim} -ws {ws} -epoch {epoch} -minCount {minCount} -neg {neg} -loss {loss} -t {t} -maxn 0')
     else:
-        print('\nUsing existing model file {:s}.vec'.format(output_file))
+        print('\nUsing existing model file {0:s}.vec'.format(output_file))
 
-    output_file = '{:s}_gs'.format(output_name)
-    if not os.path.isfile(os.path.join(MODELS_DIR, '{:s}.vec'.format(output_file))):
-        print('\nTraining word2vec on {:s} corpus..'.format(corpus_file))
+    output_file = '{0:s}_gs'.format(output_name)
+    if not os.path.isfile(os.path.join(MODELS_DIR, '{0:s}.vec'.format(output_file))):
+        print('\nTraining word2vec on {0:s} corpus..'.format(corpus_file))
 
         # Text8Corpus class for reading space-separated words file
-        get_ipython().magic(u'time gs_model = Word2Vec(Text8Corpus(corpus_file), **params); gs_model')
+        # get_ipython().magic(u'time gs_model = Word2Vec(Text8Corpus(corpus_file), **params); gs_model')
         # Direct local variable lookup doesn't work properly with magic statements (%time)
-        locals()['gs_model'].save_word2vec_format(os.path.join(MODELS_DIR, '{:s}.vec'.format(output_file)))
-        print('\nSaved gensim model as {:s}.vec'.format(output_file))
+        locals()['gs_model'].save_word2vec_format(os.path.join(MODELS_DIR, '{0:s}.vec'.format(output_file)))
+        print('\nSaved gensim model as {0:s}.vec'.format(output_file))
     else:
-        print('\nUsing existing model file {:s}.vec'.format(output_file))
+        print('\nUsing existing model file {0:s}.vec'.format(output_file))
 
 evaluation_data = {}
 train_models('brown_corp.txt', 'brown')
@@ -126,7 +133,8 @@ train_models(corpus_file='text9', output_name='text9')
 # In[15]:
 
 # download the file questions-words.txt to be used for comparing word embeddings
-get_ipython().system(u'wget https://raw.githubusercontent.com/tmikolov/word2vec/master/questions-words.txt')
+# get_ipython().system(u'wget https://raw.githubusercontent.com/tmikolov/word2vec/master/questions-words.txt')
+os.system(u'wget https://raw.githubusercontent.com/tmikolov/word2vec/master/questions-words.txt')
 
 
 # Once you have downloaded or trained the models and downloaded `questions-words.txt`, you're ready to run the comparison.
@@ -148,12 +156,12 @@ def print_accuracy(model, questions_file):
     sem_correct = sum((len(acc[i]['correct']) for i in range(5)))
     sem_total = sum((len(acc[i]['correct']) + len(acc[i]['incorrect'])) for i in range(5))
     sem_acc = 100*float(sem_correct)/sem_total
-    print('\nSemantic: {:d}/{:d}, Accuracy: {:.2f}%'.format(sem_correct, sem_total, sem_acc))
+    print('\nSemantic: {0:d}/{1:d}, Accuracy: {2:.2f}%'.format(sem_correct, sem_total, sem_acc))
 
     syn_correct = sum((len(acc[i]['correct']) for i in range(5, len(acc)-1)))
     syn_total = sum((len(acc[i]['correct']) + len(acc[i]['incorrect'])) for i in range(5,len(acc)-1))
     syn_acc = 100*float(syn_correct)/syn_total
-    print('Syntactic: {:d}/{:d}, Accuracy: {:.2f}%\n'.format(syn_correct, syn_total, syn_acc))
+    print('Syntactic: {0:d}/{1:d}, Accuracy: {2:.2f}%\n'.format(syn_correct, syn_total, syn_acc))
     return (sem_acc, syn_acc)
 
 word_analogies_file = 'questions-words.txt'
@@ -254,7 +262,7 @@ evaluation_data['text9'] += [[acc[0] for acc in accuracies], [acc[1] for acc in 
 
 # In[23]:
 
-get_ipython().magic(u'matplotlib inline')
+# get_ipython().magic(u'matplotlib inline')
 import matplotlib.pyplot as plt
 
 def plot(ax, data, corpus_name='brown'):

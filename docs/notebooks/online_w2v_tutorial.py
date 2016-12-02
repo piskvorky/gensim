@@ -23,7 +23,7 @@ General-purpose and introductory examples from the sphinx-gallery
 
 # In[ ]:
 
-get_ipython().run_cell_magic(u'bash', u'', u'git clone -b online-w2v git@github.com:isohyt/gensim.git')
+# get_ipython().run_cell_magic(u'bash', u'', u'git clone -b online-w2v git@github.com:isohyt/gensim.git')
 
 
 # In[1]:
@@ -41,7 +41,7 @@ from multiprocessing import cpu_count
 
 # In[ ]:
 
-get_ipython().run_cell_magic(u'bash', u'', u'wget https://dumps.wikimedia.org/archive/2010/2010-11/enwiki/20101011/enwiki-20101011-pages-articles.xml.bz2\nwget https://dumps.wikimedia.org/enwiki/20160820/enwiki-20160820-pages-articles.xml.bz2')
+# get_ipython().run_cell_magic(u'bash', u'', u'wget https://dumps.wikimedia.org/archive/2010/2010-11/enwiki/20101011/enwiki-20101011-pages-articles.xml.bz2\nwget https://dumps.wikimedia.org/enwiki/20160820/enwiki-20160820-pages-articles.xml.bz2')
 
 
 # ### Convert two wikipedia dump files
@@ -49,13 +49,13 @@ get_ipython().run_cell_magic(u'bash', u'', u'wget https://dumps.wikimedia.org/ar
 
 # In[2]:
 
-old, new = [WikiCorpus('enwiki-{}-pages-articles.xml.bz2'.format(ymd)) for ymd in ['20101011', '20160820']]
+old, new = [WikiCorpus('enwiki-{0}-pages-articles.xml.bz2'.format(ymd)) for ymd in ['20101011', '20160820']]
 
 
 # In[3]:
 
 def write_wiki(wiki, name, titles = []):
-    with open('{}.wiki'.format(name), 'wb') as f:
+    with open('{0}.wiki'.format(name), 'wb') as f:
         wiki.metadata = True
         for text, (page_id, title) in wiki.get_texts():
             if title not in titles:
@@ -80,7 +80,7 @@ oldwiki, newwiki = [LineSentence(f+'.wiki') for f in ['old', 'new']]
 
 # In[6]:
 
-get_ipython().run_cell_magic(u'time', u'', u"model = Word2Vec(oldwiki, min_count = 0, workers=cpu_count())\n# model = Word2Vec.load('oldmodel')\noldmodel = deepcopy(model)\noldmodel.save('oldmodel')")
+# get_ipython().run_cell_magic(u'time', u'', u"model = Word2Vec(oldwiki, min_count = 0, workers=cpu_count())\n# model = Word2Vec.load('oldmodel')\noldmodel = deepcopy(model)\noldmodel.save('oldmodel')")
 
 
 # #### Japanese new idol group, ["Babymetal"](https://en.wikipedia.org/wiki/Babymetal), weren't known worldwide in 2010, so that the word, "babymetal", is not in oldmodel vocaburary.
@@ -99,7 +99,7 @@ except KeyError as e:
 
 # In[8]:
 
-get_ipython().run_cell_magic(u'time', u'', u"model.build_vocab(newwiki, update=True)\nmodel.train(newwiki)\nmodel.save('newmodel')\n# model = Word2Vec.load('newmodel')")
+# get_ipython().run_cell_magic(u'time', u'', u"model.build_vocab(newwiki, update=True)\nmodel.train(newwiki)\nmodel.save('newmodel')\n# model = Word2Vec.load('newmodel')")
 
 
 # #### Model Comparison

@@ -56,12 +56,12 @@ from gensim.models.wrappers import LdaMallet
 from gensim.corpora import Dictionary
 from pprint import pprint
 
-get_ipython().magic(u'matplotlib inline')
+# get_ipython().magic(u'matplotlib inline')
 
 
 # In[2]:
 
-test_data_dir = '{}'.format(os.sep).join([gensim.__path__[0], 'test', 'test_data'])
+test_data_dir = '{0}'.format(os.sep).join([gensim.__path__[0], 'test', 'test_data'])
 lee_train_file = test_data_dir + os.sep + 'lee_background.cor'
 
 
@@ -287,7 +287,7 @@ def evaluate_graph(dictionary, corpus, texts, limit):
 
 # In[26]:
 
-get_ipython().run_cell_magic(u'time', u'', u'lmlist, c_v = evaluate_graph(dictionary=dictionary, corpus=corpus, texts=train_texts, limit=10)')
+# get_ipython().run_cell_magic(u'time', u'', u'lmlist, c_v = evaluate_graph(dictionary=dictionary, corpus=corpus, texts=train_texts, limit=10)')
 
 
 # In[97]:
