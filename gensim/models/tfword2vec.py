@@ -159,11 +159,12 @@ class TfWord2Vec(GensimWord2VecNoTraining):
                  num_neg_samples=25, batch_size=500, concurrent_steps=12,
                  window_size=5, min_count=5, subsample=1e-3):
 
-        self.options = Options(train_data, save_path=save_path, eval_data=eval_data,
-                               embedding_size=embedding_size, epochs_to_train=epochs_to_train,
-                               learning_rate=learning_rate, num_neg_samples=num_neg_samples,
-                               batch_size=batch_size, concurrent_steps=concurrent_steps,
-                               window_size=window_size, min_count=min_count, subsample=subsample)
+        self.options = Options(
+            train_data, save_path=save_path, eval_data=eval_data,
+            embedding_size=embedding_size, epochs_to_train=epochs_to_train,
+            learning_rate=learning_rate, num_neg_samples=num_neg_samples,
+            batch_size=batch_size, concurrent_steps=concurrent_steps,
+            window_size=window_size, min_count=min_count, subsample=subsample)
 
         self.convert_input(train_data)
         self.train()
@@ -176,7 +177,7 @@ class TfWord2Vec(GensimWord2VecNoTraining):
             for _ in xrange(self.options.epochs_to_train):
                 self.model.train()  # Process one epoch
                 if self.options.eval_data is not None:
-                    self.model.eval()  # Eval analogies.'''
+                    self.model.eval()  # Eval analogies.
 
             self.syn0 = self.model._w_in
             self.syn0norm = session.run(tf.nn.l2_normalize(self.model._w_in, 1))
@@ -194,9 +195,8 @@ class TfWord2Vec(GensimWord2VecNoTraining):
         #assumes that the string represents a file extension
         if not isinstance(corpus, string_types):
             fout = tempfile.TemporaryFile()
-            for line in corpus:
-                for word in line:
-                    fout.write(utils.to_utf8(str(word) + " "))
+            for sentences in corpus:
+                fout.write(u' '.join(sentences))
                 fout.write("\n")
             fout.seek(0)
             self.options.train_data = fout
