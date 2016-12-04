@@ -11,7 +11,7 @@ environment:
     WHEELHOUSE_UPLOADER_USERNAME: "Lev.Konstantinovskiy"
     WHEELHOUSE_UPLOADER_SECRET:
       secure: qXqY3dFmLOqvxa3Om2gQi/BjotTOK+EP2IPLolBNo0c61yDtNWxbmE4wH3up72Be
-    
+
   matrix:
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7.8"
@@ -59,7 +59,7 @@ test_script:
   # installed library.
   - "mkdir empty_folder"
   - "cd empty_folder"
-  - "pip install pyemd testfixtures"
+  - "pip install pyemd testfixtures unittest2"
 
   - "python -c \"import nose; nose.main()\" -s -v gensim"
   # Move back to the project folder
@@ -86,4 +86,3 @@ cache:
   # container, speed up the appveyor jobs and reduce bandwidth
   # usage on our rackspace account.
   - '%APPDATA%\pip\Cache'
-
