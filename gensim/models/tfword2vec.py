@@ -137,10 +137,10 @@ class Options(object):
 
 
 def modified_tfw2v_init(self, options, session):
-    self.options = options
-    self.session = session
-    self.word2id = {}
-    self.id2word = []
+    self._options = options
+    self._session = session
+    self._word2id = {}
+    self._id2word = []
     self.build_graph()
     self.build_eval_graph()
     if options.save_path is not None:
@@ -148,7 +148,9 @@ def modified_tfw2v_init(self, options, session):
     if options.eval_data is not None:
         self.read_analogies()
 
-#TODO take care of monkey patching.
+# TODO take care of monkey patching.
+
+
 Word2Vec.__init__ = modified_tfw2v_init
 
 
@@ -192,7 +194,7 @@ class TfWord2Vec(GensimWord2VecNoTraining):
         Converts gensim corpus to a file that can be used by tf word2vec
 
         """
-        #assumes that the string represents a file extension
+        # assumes that the string represents a file extension
         if not isinstance(corpus, string_types):
             fout = tempfile.TemporaryFile()
             for sentences in corpus:
