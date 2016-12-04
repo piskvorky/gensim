@@ -70,7 +70,6 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
 
-
 def _rule(word, count, min_count):
     if word == "human":
         return utils.RULE_DISCARD  # throw out
@@ -82,7 +81,6 @@ def load_on_instance():
     model.save(testfile())
     model = word2vec.Word2Vec() # should fail at this point
     return model.load(testfile())
-    
 
 class TestWord2VecModel(unittest.TestCase):
     def testOnlineLearning(self):
