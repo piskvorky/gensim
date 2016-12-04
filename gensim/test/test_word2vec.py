@@ -592,7 +592,6 @@ class TestWord2VecModel(unittest.TestCase):
         """
         gen = (s for s in sentences)
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
-
 #endclass TestWord2VecModel
 
 class TestWMD(unittest.TestCase):
