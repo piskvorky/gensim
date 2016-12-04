@@ -342,16 +342,7 @@ class TestDoc2VecModel(unittest.TestCase):
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
-
-    @log_capture()
-    def testLoadOnClassWarning(self):
-        """Test if logger warning is raised when loading doc2vec model on instance"""
-        model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
-        model.save(testfile())
-        load_on_instance = doc2vec.Doc2Vec()
-        model = load_on_instance.load(testfile())
-        warning = "Load methods should be called on a class object."
-        self.assertTrue(warning in str(l))
+        
 #endclass TestDoc2VecModel
 
 
