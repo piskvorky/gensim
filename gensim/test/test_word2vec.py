@@ -76,7 +76,13 @@ def _rule(word, count, min_count):
         return utils.RULE_DISCARD  # throw out
     else:
         return utils.RULE_DEFAULT  # apply default rule, i.e. min_count
-
+def load_on_instance():
+    # Save and load a Word2Vec Model on instance for test
+    model = word2vec.Word2Vec(sentences, min_count=1)
+    model.save(testfile())
+    model = word2vec.Word2Vec() # should fail at this point
+    return model.load(testfile())
+    
 
 class TestWord2VecModel(unittest.TestCase):
     def testOnlineLearning(self):
@@ -594,11 +600,8 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
         
     def testLoadOnClassError(self):
-        """Test if exception is raised when loading woc2vec model on instance"""
-        model = word2vec.Word2Vec(sentences, min_count=1)
-        model.save(testfile())
-        load_on_instance = word2vec.Word2Vec()
-        self.assertRaises(AttributeError, load_on_instance.load(testfile()))
+        """Test if exception is raised when loading word2vec model on instance"""
+        self.assertRaises(AttributeError, load_on_instance)
 #endclass TestWord2VecModel
 
 class TestWMD(unittest.TestCase):
