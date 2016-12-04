@@ -592,6 +592,13 @@ class TestWord2VecModel(unittest.TestCase):
         """
         gen = (s for s in sentences)
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
+        
+    def testLoadOnClassError(self):
+        """Test if exception is raised when loading woc2vec model on instance"""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.save(testfile())
+        load_on_instance = word2vec.Word2Vec()
+        assertRaises(AttributeError, load_on_instance.load(testfile()))
 #endclass TestWord2VecModel
 
 class TestWMD(unittest.TestCase):
