@@ -598,7 +598,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.save(testfile())
         load_on_instance = word2vec.Word2Vec()
-        assertRaises(AttributeError, load_on_instance.load(testfile()))
+        self.assertRaises(AttributeError, load_on_instance.load(testfile()))
 #endclass TestWord2VecModel
 
 class TestWMD(unittest.TestCase):
