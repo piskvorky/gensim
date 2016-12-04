@@ -20,24 +20,15 @@ import logging
 import numpy as np # for arrays, array broadcasting etc.
 import numbers
 
-from gensim import interfaces, utils, matutils
+from gensim import utils
 from gensim.models import LdaModel
 from gensim.models.ldamodel import dirichlet_expectation, get_random_state, LdaState
 from itertools import chain
-from scipy.special import gammaln, psi  # gamma function utils
-from scipy.special import polygamma
+from scipy.special import gammaln  # gamma function utils
 from six.moves import xrange
 import six
 
-# log(sum(exp(x))) that tries to avoid overflow
-try:
-    # try importing from here if older scipy is installed
-    from scipy.maxentropy import logsumexp
-except ImportError:
-    # maxentropy has been removed in recent releases, logsumexp now in misc
-    from scipy.misc import logsumexp
-
-logger = logging.getLogger('gensim.models.atmodel')
+logger = logging.getLogger('gensim.models.atmodel2')
 
 class AuthorTopicState(LdaState):
     """
@@ -53,19 +44,50 @@ class AuthorTopicState(LdaState):
         self.gamma = np.zeros(gamma_shape)
         self.numdocs = 0
 
+def construct_doc2author(corpus, author2doc):
+    """Make a mapping from document IDs to author IDs."""
+    doc2author = {}
+    for d, _ in enumerate(corpus):
+        author_ids = []
+        for a, a_doc_ids in author2doc.items():
+            if d in a_doc_ids:
+                author_ids.append(a)
+        doc2author[d] = author_ids
+    return doc2author
+
+def construct_author2doc(corpus, doc2author):
+    """Make a mapping from author IDs to document IDs."""
+
+    # First get a set of all authors.
+    authors_ids = set()
+    for d, a_doc_ids in doc2author.items():
+        for a in a_doc_ids:
+            authors_ids.add(a)
+
+    # Now construct the dictionary.
+    author2doc = {}
+    for a in range(len(authors_ids)):
+        author2doc[a] = []
+        for d, a_ids in doc2author.items():
+            if a in a_ids:
+                author2doc[a].append(d)
+    return author2doc
 
 class AuthorTopicModel2(LdaModel):
     """
     """
     def __init__(self, corpus=None, num_topics=100, id2word=None,
                 author2doc=None, doc2author=None, id2author=None, var_lambda=None,
-                 distributed=False, chunksize=2000, passes=1, update_every=1,
+                 chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta='symmetric', decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, ns_conf={},
                  minimum_phi_value=0.01, per_word_topics=False):
         """
         """
+
+        distributed = False  # TODO: implement distributed version.
+
         self.id2word = id2word
         if corpus is None and self.id2word is None:
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
@@ -87,33 +109,13 @@ class AuthorTopicModel2(LdaModel):
         if doc2author is None and author2doc is None:
             raise ValueError('at least one of author2doc/doc2author must be specified, to establish input space dimensionality')
 
-        # TODO: consider whether there is a more elegant way of doing this (more importantly, a more efficient way).
         # If either doc2author or author2doc is missing, construct them from the other.
+        # FIXME: make the code below into methods, so the user can construct either doc2author or author2doc *once* and then not worry about it.
+        # TODO: consider whether there is a more elegant way of doing this (more importantly, a more efficient way).
         if doc2author is None:
-            # Make a mapping from document IDs to author IDs.
-            doc2author = {}
-            for d, _ in enumerate(corpus):
-                author_ids = []
-                for a, a_doc_ids in author2doc.items():
-                    if d in a_doc_ids:
-                        author_ids.append(a)
-                doc2author[d] = author_ids
+            doc2author = construct_doc2author(corpus, author2doc)
         elif author2doc is None:
-            # Make a mapping from author IDs to document IDs.
-
-            # First get a set of all authors.
-            authors_ids = set()
-            for d, a_doc_ids in doc2author.items():
-                for a in a_doc_ids:
-                    authors_ids.add(a)
-
-            # Now construct the dictionary.
-            author2doc = {}
-            for a in range(len(authors_ids)):
-                author2doc[a] = []
-                for d, a_ids in doc2author.items():
-                    if a in a_ids:
-                        author2doc[a].append(d)
+            author2doc = construct_author2doc(corpus, doc2author)
 
         self.author2doc = author2doc
         self.doc2author = doc2author
@@ -130,7 +132,7 @@ class AuthorTopicModel2(LdaModel):
         # Make the reverse mapping, from author names to author IDs.
         self.author2id = dict(zip(self.id2author.values(), self.id2author.keys()))
 
-        self.distributed = False  # NOTE: distributed not yet implemented.
+        self.distributed = distributed
         self.num_topics = num_topics
         self.chunksize = chunksize
         self.decay = decay
@@ -212,7 +214,8 @@ class AuthorTopicModel2(LdaModel):
         If `collect_sstats` is True, also collect sufficient statistics needed
         to update the model's topic-word distributions, and return a 2-tuple
         `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
-        `len(chunk) x self.num_topics`.
+        `len(chunk_authors) x self.num_topics`, where `chunk_authors` is the number
+        of authors in the documents in the current chunk.
 
         Avoids computing the `phi` variational parameter directly using the
         optimization presented in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
@@ -278,21 +281,19 @@ class AuthorTopicModel2(LdaModel):
 
                 # Check for convergence.
                 # Criterion is mean change in "local" gamma and lambda.
-                # TODO: this if statement shouldn't be necessary. Isn't used in LDA.
-                if iteration > 0:  
-                    meanchange_gamma = np.mean(abs(tilde_gamma - lastgamma))
-                    gamma_condition = meanchange_gamma < self.gamma_threshold
-                    # logger.info('Mean change in gamma: %.3e', meanchange_gamma)
-                    if gamma_condition:
-                        # logger.info('Converged after %d iterations.', iteration)
-                        converged += 1
-                        break
+                meanchange_gamma = np.mean(abs(tilde_gamma - lastgamma))
+                gamma_condition = meanchange_gamma < self.gamma_threshold
+                # logger.info('Mean change in gamma: %.3e', meanchange_gamma)
+                if gamma_condition:
+                    # logger.info('Converged after %d iterations.', iteration)
+                    converged += 1
+                    break
             # End of iterations loop.
 
             self.state.gamma[authors_d, :] = tilde_gamma
 
-            # NOTE: this may be slow. Especially when there are many authors per document.
-            # It is imporant to find a faster way to handle this.
+            # NOTE: this may be slow. Especially when there are many authors per document. It is
+            # imporant to find a faster way to handle this.
             chunk_authors = chunk_authors.union(set(authors_d))
 
             if collect_sstats:
@@ -327,7 +328,7 @@ class AuthorTopicModel2(LdaModel):
         state.numdocs += len(chunk)
         return gamma
 
-    def bound(self, corpus, chunk_no=None, gamma=None, subsample_ratio=1.0):
+    def bound(self, corpus, chunk_no=None, gamma=None, subsample_ratio=1.0, doc2author=None, ):
         """
         Estimate the variational bound of documents from `corpus`:
         E_q[log p(corpus)] - E_q[log q(corpus)]
@@ -336,15 +337,31 @@ class AuthorTopicModel2(LdaModel):
         document (=2d matrix=what comes out of `inference()`).
         If not supplied, will be inferred from the model.
 
+        Computing the bound of unseen data is not recommended, unless one knows what one is doing.
+        In this case, gamma must be inferred in advance, and doc2author for this new data must be
+        provided.
+
         """
 
         _lambda = self.state.get_lambda()
         Elogbeta = dirichlet_expectation(_lambda)
+        expElogbeta = np.exp(dirichlet_expectation(_lambda))
 
-        if gamma is None:
+        if gamma is not None:
+            logger.warning('bound() assumes gamma to be None and uses the gamma provided is self.state.')
+            # NOTE: alternatively:
+            #assert gamma is None, 'bound() assumes gamma to be None and uses the gamma provided is self.state.'
+        else:
             gamma = self.state.gamma
 
+        if chunk_no is None:
+            logger.warning('No chunk_no provided to bound().')
+            # NOTE: alternatively:
+            #assert chunk_no is not None, 'chunk_no must be provided to bound().'
+            chunk_no = 0
+
         Elogtheta = dirichlet_expectation(gamma)
+        expElogtheta = np.exp(dirichlet_expectation(gamma))
 
         word_score = 0.0
         authors_set = set()  # Used in computing theta bound.
@@ -357,24 +374,19 @@ class AuthorTopicModel2(LdaModel):
 
             if d % self.chunksize == 0:
                 logger.debug("bound: at document #%i", d)
-            if gamma is None:
-                gammad, _ = self.inference([doc], chunk_no=chunk_no)
-            else:
-                gammad = gamma[authors_d, :]
-            Elogthetad = Elogtheta[authors_d, :]  # Shape (len(authors_d), self.num_topics).
 
             # Computing the bound requires summing over expElogtheta[a, k] * expElogbeta[k, v], which
             # is the same computation as in normalizing phi.
-            phinorm = self.compute_phinorm(ids, authors_d, np.exp(Elogthetad), np.exp(Elogbeta[:, ids]))
+            phinorm = self.compute_phinorm(ids, authors_d, expElogtheta[authors_d, :], expElogbeta[:, ids])
             word_score += np.log(1.0 / len(authors_d)) + cts.dot(np.log(phinorm))
 
             # E[log p(theta | alpha) - log q(theta | gamma)]
             # The code blow ensure we compute the score of each author only once.
-            for ai, a in enumerate(authors_d):
+            for a in authors_d:
                 if a not in authors_set:
-                    theta_score += np.sum((self.alpha - gammad[ai, :]) * Elogthetad[ai])
-                    theta_score += np.sum(gammaln(gammad[ai, :]) - gammaln(self.alpha))
-                    theta_score += gammaln(np.sum(self.alpha)) - gammaln(np.sum(gammad[ai, :]))
+                    theta_score += np.sum((self.alpha - gamma[a, :]) * Elogtheta[a, :])
+                    theta_score += np.sum(gammaln(gamma[a, :]) - gammaln(self.alpha))
+                    theta_score += gammaln(np.sum(self.alpha)) - gammaln(np.sum(gamma[a, :]))
                     authors_set.add(a)
 
         # Compensate likelihood for when `corpus` above is only a sample of the whole corpus. This ensures
@@ -392,6 +404,8 @@ class AuthorTopicModel2(LdaModel):
         beta_score += np.sum(gammaln(sum_eta) - gammaln(np.sum(_lambda, 1)))
 
         total_score = word_score + theta_score + beta_score
+
+        #print("%.3e\t%.3e\t%.3e\t%.3e" %(total_score, word_score, theta_score, beta_score))
 
         return total_score
 
@@ -419,7 +433,10 @@ class AuthorTopicModel2(LdaModel):
     def __getitem__(self, bow, eps=None):
         """
         """
-        # TODO: this
+        # TODO: this.
+        # E.g. assume bow is a list of documents for this particular author, and that the author 
+        # is not in the corpus beforehand. Then add an author to doc2author and author2doc,
+        # and call self.update to infer the new author's topic distribution.
         pass
 
     def save(self, fname, ignore=['state', 'dispatcher'], *args, **kwargs):

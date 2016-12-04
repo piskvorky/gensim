@@ -652,6 +652,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             reallen = 0
             for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=chunks_as_numpy)):
+                # FIXME: replace rho() in e.g. self.do_estep by self.rho? Needed for AuthorTopicModel.
                 self.rho = rho()
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 

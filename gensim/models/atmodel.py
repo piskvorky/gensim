@@ -197,13 +197,16 @@ class AuthorTopicModel(LdaModel):
             self.norm_lambda = var_lambda.copy()
             for k in xrange(self.num_topics):
                 self.norm_lambda[k, :] = var_lambda[k, :] / var_lambda.sum(axis=1)[k]
+
+        #var_lambda += self.eta
         
+        sstats_global = var_lambda.copy()
+
         self.var_lambda = var_lambda
 
         # Initialize dirichlet expectations.
         Elogtheta = dirichlet_expectation(var_gamma)
-        #Elogbeta = dirichlet_expectation(var_lambda)
-        Elogbeta = dirichlet_expectation(var_lambda + self.eta)
+        Elogbeta = dirichlet_expectation(var_lambda)
         if numstable_sm:
             maxElogtheta = Elogtheta.max()
             maxElogbeta = Elogbeta.max()
@@ -220,6 +223,9 @@ class AuthorTopicModel(LdaModel):
             bound = word_bound + theta_bound + beta_bound
             perwordbound = bound / corpus_words
             logger.info('Total bound: %.3e. Per-word total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, perwordbound, word_bound, theta_bound, beta_bound)
+        #var_lambda -= self.eta
+        #Elogbeta = dirichlet_expectation(var_lambda)
+        #expElogbeta = numpy.exp(Elogbeta)
         for _pass in xrange(self.passes):
             converged = 0  # Number of documents converged for current pass over corpus.
             for chunk_no, chunk in enumerate(utils.grouper(corpus, self.chunksize, as_numpy=False)):
@@ -266,14 +272,13 @@ class AuthorTopicModel(LdaModel):
 
                         # Check for convergence.
                         # Criterion is mean change in "local" gamma and lambda.
-                        if iteration > 0:
-                            meanchange_gamma = numpy.mean(abs(tilde_gamma[authors_d, :] - lastgamma))
-                            gamma_condition = meanchange_gamma < self.threshold
-                            # logger.info('Mean change in gamma: %.3e', meanchange_gamma)
-                            if gamma_condition:
-                                # logger.info('Converged after %d iterations.', iteration)
-                                converged += 1
-                                break
+                        meanchange_gamma = numpy.mean(abs(tilde_gamma[authors_d, :] - lastgamma))
+                        gamma_condition = meanchange_gamma < self.threshold
+                        # logger.info('Mean change in gamma: %.3e', meanchange_gamma)
+                        if gamma_condition:
+                            # logger.info('Converged after %d iterations.', iteration)
+                            converged += 1
+                            break
                     # End of iterations loop.
 
                     var_gamma = tilde_gamma.copy()
@@ -284,6 +289,11 @@ class AuthorTopicModel(LdaModel):
 
                 if self.optimize_lambda:
                     # Update lambda.
+                    #sstats *= expElogbeta
+                    #sstats_global = (1 - rhot) * sstats_global + rhot * sstats
+                    #var_lambda = sstats + self.eta
+                    #Elogbeta = dirichlet_expectation(var_lambda)
+                    #expElogbeta = numpy.exp(Elogbeta)
 
                     sstats *= expElogbeta
                     # Find the ids of the words that are to be updated per this chunk, and update 
@@ -305,7 +315,7 @@ class AuthorTopicModel(LdaModel):
                         expElogbeta = numpy.exp(Elogbeta - maxElogbeta)
                     else:
                         expElogbeta = numpy.exp(Elogbeta)
-                    var_lambda = var_lambda.copy()
+                    #var_lambda = var_lambda.copy()
 
                 # Print topics:
                 # pprint(self.show_topics())
