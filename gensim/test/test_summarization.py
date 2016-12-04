@@ -97,7 +97,7 @@ class TestSummarizationTest(unittest.TestCase):
         # Keeps the first sentence only.
         text = text.split('\n')[0]
 
-        self.assertRaises(ValueError,summarize,text)
+        self.assertRaises(ValueError, summarize, text)
 
     def test_corpus_summarization_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -107,7 +107,7 @@ class TestSummarizationTest(unittest.TestCase):
 
         # Keeps the first 8 sentences to make the text shorter.
         sentences = text.split('\n')[:8]
-
+        
         # Generate the corpus.
         tokens = [sentence.split() for sentence in sentences]
         dictionary = Dictionary(tokens)
