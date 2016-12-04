@@ -611,7 +611,7 @@ class Doc2Vec(Word2Vec):
 
         if dm_mean is not None:
             self.cbow_mean = dm_mean
-            
+        
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
