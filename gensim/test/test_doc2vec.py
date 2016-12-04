@@ -342,7 +342,6 @@ class TestDoc2VecModel(unittest.TestCase):
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
-        
 #endclass TestDoc2VecModel
 
 
