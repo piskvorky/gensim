@@ -605,14 +605,13 @@ class Doc2Vec(Word2Vec):
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
             null_word=dm_concat, **kwargs)
-       
+        
         self.load = call_on_class_only
         self.load_word2vec_format = call_on_class_only
 
         if dm_mean is not None:
             self.cbow_mean = dm_mean
->>>>>>> 54871ba162edb4726b9a2b35b10f947c0dfdda1f
-
+            
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
