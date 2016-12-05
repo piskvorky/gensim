@@ -7,7 +7,8 @@
 
 
 """
-Author-topic model.
+Author-topic model in Python.
+
 """
 
 # TODO: write proper docstrings.
@@ -28,7 +29,7 @@ from scipy.special import gammaln  # gamma function utils
 from six.moves import xrange
 import six
 
-logger = logging.getLogger('gensim.models.atmodel2')
+logger = logging.getLogger('gensim.models.atmodel')
 
 class AuthorTopicState(LdaState):
     """
@@ -327,6 +328,161 @@ class AuthorTopicModel2(LdaModel):
         state.sstats += sstats
         state.numdocs += len(chunk)
         return gamma
+
+    def update(self, corpus, chunksize=None, decay=None, offset=None,
+            passes=None, update_every=None, eval_every=None, iterations=None,
+            gamma_threshold=None, chunks_as_numpy=False):
+        """
+        Train the model with new documents, by EM-iterating over `corpus` until
+        the topics converge (or until the maximum number of allowed iterations
+        is reached). `corpus` must be an iterable (repeatable stream of documents),
+
+        In distributed mode, the E step is distributed over a cluster of machines.
+
+        This update also supports updating an already trained model (`self`)
+        with new documents from `corpus`; the two models are then merged in
+        proportion to the number of old vs. new documents. This feature is still
+        experimental for non-stationary input streams.
+
+        For stationary input (no topic drift in new documents), on the other hand,
+        this equals the online update of Hoffman et al. and is guaranteed to
+        converge for any `decay` in (0.5, 1.0>. Additionally, for smaller
+        `corpus` sizes, an increasing `offset` may be beneficial (see
+        Table 1 in Hoffman et al.)
+
+        Args:
+            corpus (gensim corpus): The corpus with which the LDA model should be updated.
+
+            chunks_as_numpy (bool): Whether each chunk passed to `.inference` should be a np
+                array of not. np can in some settings turn the term IDs
+                into floats, these will be converted back into integers in
+                inference, which incurs a performance hit. For distributed
+                computing it may be desirable to keep the chunks as np
+                arrays.
+
+        For other parameter settings, see :class:`LdaModel` constructor.
+
+        """
+        # use parameters given in constructor, unless user explicitly overrode them
+        if decay is None:
+            decay = self.decay
+        if offset is None:
+            offset = self.offset
+        if passes is None:
+            passes = self.passes
+        if update_every is None:
+            update_every = self.update_every
+        if eval_every is None:
+            eval_every = self.eval_every
+        if iterations is None:
+            iterations = self.iterations
+        if gamma_threshold is None:
+            gamma_threshold = self.gamma_threshold
+
+        try:
+            lencorpus = len(corpus)
+        except:
+            logger.warning("input corpus stream has no len(); counting documents")
+            lencorpus = sum(1 for _ in corpus)
+        if lencorpus == 0:
+            logger.warning("LdaModel.update() called with an empty corpus")
+            return
+
+        if chunksize is None:
+            chunksize = min(lencorpus, self.chunksize)
+
+        self.state.numdocs += lencorpus
+
+        if update_every:
+            updatetype = "online"
+            updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
+        else:
+            updatetype = "batch"
+            updateafter = lencorpus
+        evalafter = min(lencorpus, (eval_every or 0) * self.numworkers * chunksize)
+
+        updates_per_pass = max(1, lencorpus / updateafter)
+        logger.info("running %s LDA training, %s topics, %i passes over "
+                "the supplied corpus of %i documents, updating model once "
+                "every %i documents, evaluating perplexity every %i documents, "
+                "iterating %ix with a convergence threshold of %f",
+                updatetype, self.num_topics, passes, lencorpus,
+                updateafter, evalafter, iterations,
+                gamma_threshold)
+
+        if updates_per_pass * passes < 10:
+            logger.warning("too few updates, training might not converge; consider "
+                    "increasing the number of passes or iterations to improve accuracy")
+
+            # rho is the "speed" of updating; TODO try other fncs
+        # pass_ + num_updates handles increasing the starting t for each pass,
+        # while allowing it to "reset" on the first pass of each update
+        def rho():
+            return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
+
+        for pass_ in xrange(passes):
+            if self.dispatcher:
+                logger.info('initializing %s workers' % self.numworkers)
+                self.dispatcher.reset(self.state)
+            else:
+                other = LdaState(self.eta, self.state.sstats.shape)
+            dirty = False
+
+            reallen = 0
+            for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=chunks_as_numpy)):
+                # FIXME: replace rho() in e.g. self.do_estep by self.rho? self.rho is needed for AuthorTopicModel.
+                self.rho = rho()
+                reallen += len(chunk)  # keep track of how many documents we've processed so far
+
+                if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
+                    self.log_perplexity(chunk, chunk_no, total_docs=lencorpus)
+
+                if self.dispatcher:
+                    # add the chunk to dispatcher's job queue, so workers can munch on it
+                    logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i',
+                            pass_, chunk_no * chunksize + len(chunk), lencorpus)
+                    # this will eventually block until some jobs finish, because the queue has a small finite length
+                    self.dispatcher.putjob(chunk)
+                else:
+                    logger.info('PROGRESS: pass %i, at document #%i/%i',
+                            pass_, chunk_no * chunksize + len(chunk), lencorpus)
+                    gammat = self.do_estep(chunk, other, chunk_no)
+
+                    if self.optimize_alpha:
+                        self.update_alpha(gammat, rho())
+
+                dirty = True
+                del chunk
+
+                # perform an M step. determine when based on update_every, don't do this after every chunk
+                if update_every and (chunk_no + 1) % (update_every * self.numworkers) == 0:
+                    if self.dispatcher:
+                        # distributed mode: wait for all workers to finish
+                        logger.info("reached the end of input; now waiting for all remaining jobs to finish")
+                        other = self.dispatcher.getstate()
+                    self.do_mstep(rho(), other, pass_ > 0)
+                    del other  # frees up memory
+
+                    if self.dispatcher:
+                        logger.info('initializing workers')
+                        self.dispatcher.reset(self.state)
+                    else:
+                        other = LdaState(self.eta, self.state.sstats.shape)
+                    dirty = False
+            # endfor single corpus iteration
+            if reallen != lencorpus:
+                raise RuntimeError("input corpus size changed during training (don't use generators as input)")
+
+            if dirty:
+                # finish any remaining updates
+                if self.dispatcher:
+                    # distributed mode: wait for all workers to finish
+                    logger.info("reached the end of input; now waiting for all remaining jobs to finish")
+                    other = self.dispatcher.getstate()
+                self.do_mstep(rho(), other, pass_ > 0)
+                del other
+                dirty = False
+        # endfor entire corpus update
 
     def bound(self, corpus, chunk_no=None, gamma=None, subsample_ratio=1.0, doc2author=None, ):
         """
