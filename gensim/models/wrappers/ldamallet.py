@@ -45,11 +45,12 @@ from smart_open import smart_open
 from gensim import utils, matutils
 from gensim.utils import check_output
 from gensim.models.ldamodel import LdaModel
+from gensim.models import basemodel
 
 logger = logging.getLogger(__name__)
 
 
-class LdaMallet(utils.SaveLoad):
+class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
     """
     Class for LDA training using MALLET. Communication between MALLET and Python
     takes place by passing around data files on disk and calling Java with subprocess.call().
@@ -205,9 +206,6 @@ class LdaMallet(utils.SaveLoad):
                 word_topics[int(topic), tokenid] += 1.0
         return word_topics
 
-    def print_topics(self, num_topics=10, num_words=10):
-        return self.show_topics(num_topics, num_words, log=True)
-
     def load_document_topics(self):
         """
         Return an iterator over the topic distribution of training corpus, by reading
@@ -230,14 +228,14 @@ class LdaMallet(utils.SaveLoad):
             num_topics = min(num_topics, self.num_topics)
             sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha)) # add a little random jitter, to randomize results around the same alpha
             sorted_topics = list(matutils.argsort(sort_alpha))
-            chosen_topics = sorted_topics[ : num_topics//2] + sorted_topics[-num_topics//2 : ]
+            chosen_topics = sorted_topics[:num_topics//2] + sorted_topics[-num_topics//2 : ]
         shown = []
         for i in chosen_topics:
             if formatted:
-                topic = self.print_topic(i, num_words=num_words)
+                topic = self.print_topic(i, topn=num_words)
             else:
-                topic = self.show_topic(i, num_words=num_words)
-            shown.append(topic)
+                topic = self.show_topic(i, topn=num_words)
+            shown.append((i, topic))
             if log:
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
         return shown
@@ -248,12 +246,8 @@ class LdaMallet(utils.SaveLoad):
         topic = self.word_topics[topicid]
         topic = topic / topic.sum()  # normalize to probability dist
         bestn = matutils.argsort(topic, num_words, reverse=True)
-        beststr = [(topic[id], self.id2word[id]) for id in bestn]
+        beststr = [(self.id2word[id], topic[id]) for id in bestn]
         return beststr
-
-    def print_topic(self, topicid, num_words=10):
-        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, num_words)])
-
 
     def get_version(self, direc_path):
         """"
