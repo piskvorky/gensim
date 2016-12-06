@@ -1,7 +1,7 @@
 
 # coding: utf-8
 """
-Gallery of Examples
+word2vec.py
 ===================
 
 

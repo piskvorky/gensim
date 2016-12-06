@@ -1,7 +1,7 @@
 
 # coding: utf-8
 """
-Gallery of Examples
+plot_Corpora_and_Vector_Spaces.py
 ===================
 
 

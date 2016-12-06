@@ -1,7 +1,7 @@
 
 # coding: utf-8
 """
-Gallery of Examples
+plot_Topics_and_Transformations.py
 ===================
 
 

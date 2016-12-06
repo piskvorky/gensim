@@ -1,7 +1,7 @@
 
 # coding: utf-8
 """
-Gallery of Examples
+doc2vec-lee.py
 ===================
 
 

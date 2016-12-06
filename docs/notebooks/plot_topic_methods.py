@@ -1,7 +1,7 @@
 
 # coding: utf-8
 """
-Gallery of Examples
+plot_topic_methods.py
 ===================
 
 

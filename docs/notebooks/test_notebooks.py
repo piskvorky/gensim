@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Gallery of Examples
+test_notebooks.py
 ===================
 
 

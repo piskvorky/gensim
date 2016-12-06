@@ -1,7 +1,7 @@
 
 # coding: utf-8
 """
-Gallery of Examples
+Word2Vec_FastText_Comparison.py
 ===================
 
 

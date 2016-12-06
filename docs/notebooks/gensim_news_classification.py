@@ -1,7 +1,7 @@
 
 # coding: utf-8
 """
-Gallery of Examples
+gensim_news_classification.py
 ===================
 
 

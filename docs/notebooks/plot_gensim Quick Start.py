@@ -1,7 +1,7 @@
 
 # coding: utf-8
 """
-Gallery of Examples
+plot_gensim Quick Start.py
 ===================
 
 

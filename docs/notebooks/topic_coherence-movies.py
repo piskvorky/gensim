@@ -1,7 +1,7 @@
 
 # coding: utf-8
 """
-Gallery of Examples
+topic_coherence-movies.py
 ===================
 
 
