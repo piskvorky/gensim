@@ -180,10 +180,6 @@ setup(
         'smart_open >= 1.2.1',
         python_2_6_backports,
     ],
-    tests_require=[
-    	'testfixtures',
-        'unittest2'
-    ],
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
         'wmd': ['pyemd >= 0.2.0'],
