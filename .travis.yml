@@ -18,8 +18,9 @@ install:
   - pip install pyemd
   - pip install annoy
   - pip install testfixtures
+  - pip install sphinx==1.4.8
   - pip install --user travis-sphinx
-  - pip install sphinx-gallery==0.1.5
+  - pip install sphinx-gallery
   - pip install Pillow
   - python setup.py install
 script:
