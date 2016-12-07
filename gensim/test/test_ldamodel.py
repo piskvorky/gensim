@@ -422,9 +422,9 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         fname_model_3_5 = datapath('ldamodel_python_3_5')
         model_3_5 = self.class_.load(fname_model_3_5)
         self.assertEqual(model_2_7.num_topics, model_3_5.num_topics)
-        self.assertTrue(numpy.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
+        self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
         tstvec = []
-        self.assertTrue(numpy.allclose(model_2_7[tstvec], model_3_5[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec])) # try projecting an empty vector
 
     def testPersistenceIgnore(self):
         fname = testfile()
