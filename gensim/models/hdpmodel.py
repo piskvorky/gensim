@@ -113,9 +113,16 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     on a training corpus:
 
     >>> hdp = HdpModel(corpus, id2word)
-    >>> hdp.print_topics(show_topics=20, num_words=10)
+
+    You can infer topic distributions on new, unseen documents with
+
+    >>> doc_hdp = hdp[doc_bow]
 
     Inference on new documents is based on the approximately LDA-equivalent topics.
+
+    To print 20 topics with top 10 most probable words
+
+    >>> hdp.print_topics(show_topics=20, num_words=10)
 
     Model persistency is achieved through its `load`/`save` methods.
 
