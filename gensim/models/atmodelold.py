@@ -238,6 +238,7 @@ class AuthorTopicModelOld(LdaModel):
                     ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
                     cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
                     authors_d = self.doc2author[doc_no]  # List of author IDs for the current document.
+                    authors_d = [self.author2id[a] for a in authors_d]
 
                     phinorm = self.compute_phinorm(ids, authors_d, expElogtheta[authors_d, :], expElogbeta[:, ids])
 
@@ -252,7 +253,7 @@ class AuthorTopicModelOld(LdaModel):
 
                         # Update gamma.
                         for a in authors_d:
-                            tilde_gamma[a, :] = self.alpha + len(self.author2doc[a]) * expElogtheta[a, :] * numpy.dot(cts / phinorm, expElogbetad.T)
+                            tilde_gamma[a, :] = self.alpha + len(self.author2doc[self.id2author[a]]) * expElogtheta[a, :] * numpy.dot(cts / phinorm, expElogbetad.T)
 
                         # Update gamma and lambda.
                         # Interpolation between document d's "local" gamma (tilde_gamma),
@@ -385,6 +386,7 @@ class AuthorTopicModelOld(LdaModel):
         bound= 0.0
         for d, doc in enumerate(docs):
             authors_d = self.doc2author[d]
+            authors_d = [self.author2id[a] for a in authors_d]
             ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
             cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
             bound_d = 0.0
