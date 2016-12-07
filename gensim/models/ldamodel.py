@@ -1042,13 +1042,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # If id2word is not already in ignore, then saving it separately in json.
         id2word = None
         if self.id2word is not None and 'id2word' not in ignore:
-            id2word = dict((k,v) for k,v in self.id2word.iteritems())
+            id2word = dict((k,v) for k, v in self.id2word.iteritems())
         self.id2word = None # remove the dictionary from model
         super(LdaModel, self).save(fname, ignore=ignore, separately = separately, *args, **kwargs)
         self.id2word = id2word # restore the dictionary.
 
         # Save the dictionary separately in json.
-        id2word_fname = utils.smart_extension(fname, '.json')   
+        id2word_fname = utils.smart_extension(fname, '.bin')   
         try:
             with utils.smart_open(id2word_fname, 'w', encoding='utf-8') as fout:
                 json.dump(id2word, fout)
@@ -1068,7 +1068,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
         # Load the separately stored id2word dictionary saved in json.
-        id2word_fname = utils.smart_extension(fname, '.json')
+        id2word_fname = utils.smart_extension(fname, '.bin')
         try:
             with utils.smart_open(id2word_fname, 'r') as fin:
                 id2word = json.load(fin)

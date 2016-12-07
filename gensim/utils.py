@@ -909,7 +909,7 @@ def unpickle(fname):
     """Load pickled object from `fname`"""
     with smart_open(fname, 'rb') as f:
         # Because of loading from S3 load can't be used (missing readline in smart_open)
-        if sys.version_info > (3,0):
+        if sys.version_info > (3, 0):
             return _pickle.load(f, encoding='latin1')
         else:
             return _pickle.loads(f.read())
