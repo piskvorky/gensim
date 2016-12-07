@@ -1,60 +1,13 @@
 import tensorflow as tf
 from tensorflow.models.embedding.word2vec_optimized import Word2Vec
-from gensim.models.word2vec import Word2Vec as GensimWord2Vec, Vocab
+from gensim.models.keyedvectors import KeyedVectors
+from gensim.models.word2vec import Vocab
 from gensim import utils
 from six import string_types
 import os
 import tempfile
 import logging
 logger = logging.getLogger(__name__)
-
-
-class GensimWord2VecNoTraining(GensimWord2Vec):
-    """
-    Gensim word2vec without training methods
-
-    """
-
-    def make_cum_table(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    def create_binary_tree(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    def build_vocab(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    def scan_vocab(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    def scale_vocab(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    def finalize_vocab(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    def sort_vocab(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    def _do_train_job(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    def train(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    def score(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    def save_word2vec_format(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    @classmethod
-    def load_word2vec_format(cls, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
-    def intersect_word2vec_format(self, *args, **kwargs):
-        raise Exception("Cannot call a gensim training method on a tf trained model")
-
 
 class Options(object):
     """Options class that doesn't use FLAGS"""
@@ -154,7 +107,7 @@ def modified_tfw2v_init(self, options, session):
 Word2Vec.__init__ = modified_tfw2v_init
 
 
-class TfWord2Vec(GensimWord2VecNoTraining):
+class TfWord2Vec(KeyedVectors):
 
     def __init__(self, train_data=None, save_path=None, eval_data=None,
                  embedding_size=200, epochs_to_train=15, learning_rate=0.025,
