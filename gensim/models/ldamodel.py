@@ -996,7 +996,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         return self.get_document_topics(bow, eps, self.minimum_phi_value, self.per_word_topics)
 
-    def save(self, fname, ignore=['state', 'dispatcher'], separately = None, *args, **kwargs):
+    def save(self, fname, ignore=['state', 'dispatcher'], separately=None, *args, **kwargs):
         """
         Save the model to file.
 
@@ -1036,9 +1036,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         else:
             ignore = ['state', 'dispatcher']
         
-        # make sure 'expElogbeta' and 'sstats' are ignored from the pickled object, even if
+        # make sure 'expElogbeta', 'sstats' and 'id2word' are ignored from the pickled object, even if
         # someone sets the separately list themselves.
-        separately_explicit = ['expElogbeta', 'sstats']
+        separately_explicit = ['expElogbeta', 'sstats', 'id2word']
         # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some 
         # array manually.
         if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or len(self.alpha.shape) != 1:
@@ -1054,23 +1054,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         else:
             separately = separately_explicit
         
-        # id2word needs to saved separately. 
-        # If id2word is not already in ignore, then saving it separately in json.
-        id2word = None
-        if self.id2word is not None and 'id2word' not in ignore:
-            id2word = dict((k,v) for k, v in self.id2word.iteritems())
-        self.id2word = None # remove the dictionary from model
         super(LdaModel, self).save(fname, ignore=ignore, separately = separately, *args, **kwargs)
-        self.id2word = id2word # restore the dictionary.
-
-        # Save the dictionary separately in json.
-        id2word_fname = utils.smart_extension(fname, '.bin')   
-        try:
-            with utils.smart_open(id2word_fname, 'w', encoding='utf-8') as fout:
-                json.dump(id2word, fout)
-        except Exception as e:
-            logging.warning("failed to save id2words dictionary in %s: %s", id2word_fname, e)
-
+        
     @classmethod
     def load(cls, fname, *args, **kwargs):
         """
@@ -1083,18 +1068,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
-        # Load the separately stored id2word dictionary saved in json.
-        id2word_fname = utils.smart_extension(fname, '.bin')
-        try:
-            with utils.smart_open(id2word_fname, 'r') as fin:
-                id2word = json.load(fin)
-            if id2word is not None:
-                result.id2word = utils.FakeDict(id2word)
-            else:
-                result.id2word = None
-        except Exception as e:
-            logging.warning("failed to load id2words from %s: %s", id2word_fname, e)
-
         state_fname = utils.smart_extension(fname, '.state')
         try:
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)

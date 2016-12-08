@@ -410,7 +410,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     #    # Method used to save LDA models in Python 2.7 and 3.5 environments.
     # def testSaveModelsForPythonVersion(self):
-    #     fname = datapath('ldamodel_python_3_5')
+    #     fname = datapath('ldamodel_python_2_7')
     #     corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
     #     model = ldamodel.LdaModel(corpus, id2word=dictionary, num_topics=2, passes=100, random_state = 1000007)
     #     model.save(fname)
