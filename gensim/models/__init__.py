@@ -17,7 +17,6 @@ from .ldamulticore import LdaMulticore
 from .phrases import Phrases
 from .normmodel import NormModel
 from .atmodel import AuthorTopicModel
-from .atmodelold import AuthorTopicModelOld
 from .ldaseqmodel import LdaSeqModel
 
 from . import wrappers

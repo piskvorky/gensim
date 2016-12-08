@@ -115,6 +115,9 @@ class AuthorTopicModelOld(LdaModel):
 
         # Make the reverse mapping, from author names to author IDs.
         self.author2id = dict(zip(self.id2author.values(), self.id2author.keys()))
+        #self.author2id = dict(zip(self.author2doc.keys(), xrange(self.num_authors)))
+        #self.id2author = dict(zip(xrange(self.num_authors), self.author2doc.keys()))
+
 
         self.corpus = corpus
         self.iterations = iterations
@@ -222,6 +225,7 @@ class AuthorTopicModelOld(LdaModel):
             beta_bound = self.beta_bound(Elogbeta)
             bound = word_bound + theta_bound + beta_bound
             perwordbound = bound / corpus_words
+            print(perwordbound)
             logger.info('Total bound: %.3e. Per-word total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, perwordbound, word_bound, theta_bound, beta_bound)
         #var_lambda -= self.eta
         #Elogbeta = dirichlet_expectation(var_lambda)
@@ -332,6 +336,7 @@ class AuthorTopicModelOld(LdaModel):
                 beta_bound = self.beta_bound(Elogbeta)
                 bound = word_bound + theta_bound + beta_bound
                 perwordbound = bound / corpus_words
+                print(perwordbound)
                 logger.info('Total bound: %.3e. Per-word total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, perwordbound, word_bound, theta_bound, beta_bound)
                 # NOTE: bound can be computed as below. We compute each term for now because it can be useful for debugging.
                 # bound = eval_bound(corpus, Elogtheta, Elogbeta, expElogtheta, expElogtheta, maxElogtheta=maxElogtheta, maxElogbeta=maxElogbeta):
@@ -354,6 +359,8 @@ class AuthorTopicModelOld(LdaModel):
             theta_bound = self.theta_bound(Elogtheta)
             beta_bound = self.beta_bound(Elogbeta)
             bound = word_bound + theta_bound + beta_bound
+            perwordbound = bound / corpus_words
+            print(perwordbound)
             logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
 
 
