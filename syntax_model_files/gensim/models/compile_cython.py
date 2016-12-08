@@ -10,4 +10,4 @@ from Cython.Build import cythonize
 import numpy
 
 
-setup(ext_modules=cythonize('/run/media/robert/1TB-1/linuxfolder/anaconda3/lib/python3.5/site-packages/gensim/models/word2vec_inner_synt2.pyx'), include_dirs=[numpy.get_include()])
+setup(ext_modules=cythonize('/run/media/robert/1TB-1/linuxfolder/gitlair/word2vec_syntax/gensim/models/word2vec_inner_in_works.pyx'), include_dirs=[numpy.get_include()])

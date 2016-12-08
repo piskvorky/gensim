@@ -97,9 +97,9 @@ from types import GeneratorType
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.word2vec_inner_synt2 import train_batch_sg, train_batch_cbow
-    from gensim.models.word2vec_inner_synt2 import score_sentence_sg, score_sentence_cbow
-    from gensim.models.word2vec_inner_synt2 import FAST_VERSION, MAX_WORDS_IN_BATCH
+    from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
+    from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
+    from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
@@ -344,7 +344,7 @@ class Word2Vec(utils.SaveLoad):
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-            sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
+            sg=0, hs=0, negative=5, cbow_mean=1, synt_cont=0, hashfxn=hash, iter=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
@@ -390,6 +390,9 @@ class Word2Vec(utils.SaveLoad):
 
         `cbow_mean` = if 0, use the sum of the context word vectors. If 1 (default), use the mean.
         Only applies when cbow is used.
+		
+        'synt_cont' = if 1, syntax-based context approach is used, and the input corpora
+        is expected to be formatted accordingly. If 0 (default), standard bag-of-words is expected.
 
         `hashfxn` = hash function to use to randomly initialize weights, for increased
         training reproducibility. Default is Python's rudimentary built in hash function.
@@ -431,6 +434,7 @@ class Word2Vec(utils.SaveLoad):
         self.hs = hs
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
+        self.synt_cont = int(synt_cont)
         self.hashfxn = hashfxn
         self.iter = iter
         self.null_word = null_word

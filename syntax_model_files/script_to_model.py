@@ -83,8 +83,10 @@ downsampling = 1e-3   # Downsample setting for frequent words
 #            synt_cash = ContIterable())
 
 sentences = ContIterable()
-from gensim.models import word2vec_synt
+from gensim.models import word2vec
+# Add synt_cont=1 to word2vec call if syntax-based context
+print('Dont forget to add synt_cont=1 if you want so!')
 print("Training model...")
-model = word2vec_synt.Word2Vec(sentences, workers=num_workers, \
+model = word2vec.Word2Vec(sentences, workers=num_workers, \
             size=num_features, min_count = min_word_count, \
             window = context, sample = downsampling, sg = 1)
