@@ -87,7 +87,6 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testAlphaAuto(self):
         model1 = self.class_(corpus, id2word=dictionary, alpha='symmetric', passes=10)
-        logging.warning("id2word type: %s", type(model1.id2word))
         modelauto = self.class_(corpus, id2word=dictionary, alpha='auto', passes=10)
 
         # did we learn something?
@@ -409,14 +408,6 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
-
-    #  #  Method used to save LDA models in Python 2.7 and 3.5 environments.
-    # def testSaveModelsForPythonVersion(self):
-    #     fname = datapath('ldamodel_python_2_7')
-    #     corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
-    #     model = ldamodel.LdaModel(corpus, id2word=dictionary, num_topics=2, passes=100, random_state = 1000007)
-    #     model.save(fname)
-    #     logging.warning("LDA Model saved")
 
     def testModelCompatibilityWithPythonVersions(self):
         fname_model_2_7 = datapath('ldamodel_python_2_7')
