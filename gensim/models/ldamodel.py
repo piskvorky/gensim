@@ -43,7 +43,6 @@ from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
 from six.moves import xrange
 import six
-import json
 
 # log(sum(exp(x))) that tries to avoid overflow
 try:
@@ -1025,20 +1024,24 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         if self.state is not None:
             self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
-
-        # make sure 'state' and 'dispatcher' are ignored from the pickled object, even if
+        # Save the dictionary separately if not in 'ignore'.
+        id2word = None
+        if self.id2word is not None and 'id2word' not in ignore:
+            id2word = dict((k,v) for k,v in self.id2word.iteritems())
+            
+        # make sure 'state', 'ignore' and 'dispatcher' are ignored from the pickled object, even if
         # someone sets the ignore list themselves
         if ignore is not None and ignore:
             if isinstance(ignore, six.string_types):
                 ignore = [ignore]
             ignore = [e for e in ignore if e] # make sure None and '' are not in the list
-            ignore = list(set(['state', 'dispatcher']) | set(ignore))
+            ignore = list(set(['state', 'dispatcher', 'id2word']) | set(ignore))
         else:
-            ignore = ['state', 'dispatcher']
+            ignore = ['state', 'dispatcher', 'id2word']
         
-        # make sure 'expElogbeta', 'sstats' and 'id2word' are ignored from the pickled object, even if
+        # make sure 'expElogbeta' and 'sstats' are ignored from the pickled object, even if
         # someone sets the separately list themselves.
-        separately_explicit = ['expElogbeta', 'sstats', 'id2word']
+        separately_explicit = ['expElogbeta', 'sstats']
         # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some 
         # array manually.
         if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or len(self.alpha.shape) != 1:
@@ -1053,8 +1056,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             separately = list(set(separately_explicit) | set(separately))
         else:
             separately = separately_explicit
-        
         super(LdaModel, self).save(fname, ignore=ignore, separately = separately, *args, **kwargs)
+        # Save the id2word dictionary separately.
+        utils.pickle(id2word, utils.smart_extension(fname, '.id2word'))
         
     @classmethod
     def load(cls, fname, *args, **kwargs):
@@ -1073,5 +1077,14 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
         except Exception as e:
             logging.warning("failed to load state from %s: %s", state_fname, e)
+        id2word_fname = utils.smart_extension(fname, '.id2word')
+        try:
+            id2word = utils.unpickle(id2word_fname)
+            if id2word is not None:
+                result.id2word = id2word
+            else:
+                result.id2word = None
+        except Exception as e:
+            logging.warning("failed to load id2word dictionary from %s: %s", state_fname, e)
         return result
 # endclass LdaModel

@@ -61,6 +61,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.class_ = ldamodel.LdaModel
         self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
 
+
     def testTransform(self):
         passed = False
         # sometimes, LDA training gets stuck at a local minimum
@@ -86,6 +87,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testAlphaAuto(self):
         model1 = self.class_(corpus, id2word=dictionary, alpha='symmetric', passes=10)
+        logging.warning("id2word type: %s", type(model1.id2word))
         modelauto = self.class_(corpus, id2word=dictionary, alpha='auto', passes=10)
 
         # did we learn something?
@@ -408,7 +410,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
-    #    # Method used to save LDA models in Python 2.7 and 3.5 environments.
+    #  #  Method used to save LDA models in Python 2.7 and 3.5 environments.
     # def testSaveModelsForPythonVersion(self):
     #     fname = datapath('ldamodel_python_2_7')
     #     corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
@@ -425,6 +427,10 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
         tstvec = []
         self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec])) # try projecting an empty vector
+        id2word_2_7 = dict((k,v) for k,v in model_2_7.id2word.iteritems())
+        id2word_3_5 = dict((k,v) for k,v in model_3_5.id2word.iteritems())
+        self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
+
 
     def testPersistenceIgnore(self):
         fname = testfile()
