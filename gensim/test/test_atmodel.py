@@ -34,6 +34,9 @@ from gensim.test import basetests
 # Perhaps test that the bound increases, in general (i.e. in several of the tests below where it makes
 # sense.
 
+logger = logging.getLogger('gensim')
+logger.propagate = False
+
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
@@ -56,11 +59,13 @@ doc2author = {0: ['john', 'jack'], 1: ['john', 'jill'], 2: ['john', 'jane', 'jac
         4: ['john', 'jane', 'jack'], 5: ['john', 'jane', 'jill'], 6: ['john', 'jane', 'jack'], 7: ['jane', 'jill'],
         8: ['jane', 'jack']}
 
-# Make mappings from author names to integer IDs and vice versa.
-# Note that changing these may change everything, as it influences
-# the random intialization (basically reordering gamma).
-id2author = dict(zip(range(4), ['john', 'jane', 'jack', 'jill']))
-author2id = dict(zip(['john', 'jane', 'jack', 'jill'], range(4)))
+# More data with new and old authors (to test update method).
+# Although the text is just a subset of the previous, the model
+# just sees it as completely new data.
+texts_new = texts[0:3]
+author2doc_new = {'jill': [0], 'bob': [0, 1], 'sally': [1, 2]}
+dictionary_new = Dictionary(texts_new)
+corpus_new = [dictionary_new.doc2bow(text) for text in texts_new]
 
 def testfile():
     # temporary data will be stored to this file
@@ -84,7 +89,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
             model = self.class_(id2word=dictionary, num_topics=2, passes=100, random_state=0)
             model.update(self.corpus, author2doc)
 
-            jill_topics = model.get_author_topics(author2id['jill'])
+            jill_topics = model.get_author_topics(model.author2id['jill'])
 
             # NOTE: this test may easily fail if the author-topic model is altered in any way. The model's
             # output is sensitive to a lot of things, like the scheduling of the updates, or like the
@@ -100,33 +105,84 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
                             (i, sorted(vec), sorted(expected)))
         self.assertTrue(passed)
 
+    def testBasic(self):
+        # Check that training the model produces a positive topic vector for some author
+        # Otherwise, many of the other tests are invalid.
+
+        model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2)
+
+        jill_topics = model.get_author_topics(model.author2id['jill'])
+        jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
+        self.assertTrue(all(jill_topics > 0))
+
     def testAuthor2docMissing(self):
         # Check that the results are the same if author2doc is constructed automatically from doc2author.
-        model = self.class_(corpus, author2doc=author2doc, doc2author=doc2author, id2word=dictionary, alpha='symmetric', passes=10, random_state=0)
-        model2 = self.class_(corpus, doc2author=doc2author, id2word=dictionary, alpha='symmetric', passes=10, random_state=0)
+        model = self.class_(corpus, author2doc=author2doc, doc2author=doc2author, id2word=dictionary, num_topics=2, random_state=0)
+        model2 = self.class_(corpus, doc2author=doc2author, id2word=dictionary, num_topics=2, random_state=0)
 
-        # Compare Jill's topics before after save/load.
-        jill_topics = model.get_author_topics(author2id['jill'])
-        jill_topics2 = model2.get_author_topics(author2id['jill'])
+        # Compare Jill's topics before in both models.
+        jill_topics = model.get_author_topics(model.author2id['jill'])
+        jill_topics2 = model2.get_author_topics(model.author2id['jill'])
         jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
         jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
         self.assertTrue(np.allclose(jill_topics, jill_topics2))
 
     def testDoc2authorMissing(self):
         # Check that the results are the same if doc2author is constructed automatically from author2doc.
-        model = self.class_(corpus, author2doc=author2doc, doc2author=doc2author, id2word=dictionary, alpha='symmetric', passes=10, random_state=0)
-        model2 = self.class_(corpus, author2doc=author2doc, id2word=dictionary, alpha='symmetric', passes=10, random_state=0)
+        model = self.class_(corpus, author2doc=author2doc, doc2author=doc2author, id2word=dictionary, num_topics=2, random_state=0)
+        model2 = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, random_state=0)
 
-        # Compare Jill's topics before after save/load.
-        jill_topics = model.get_author_topics(author2id['jill'])
-        jill_topics2 = model2.get_author_topics(author2id['jill'])
+        # Compare Jill's topics before in both models.
+        jill_topics = model.get_author_topics(model.author2id['jill'])
+        jill_topics2 = model2.get_author_topics(model.author2id['jill'])
         jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
         jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
         self.assertTrue(np.allclose(jill_topics, jill_topics2))
 
+    def testUpdate(self):
+        # Check that calling update after the model already has been trained works.
+        model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2)
+
+        jill_topics = model.get_author_topics(model.author2id['jill'])
+        jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
+
+        model.update()
+        jill_topics2 = model.get_author_topics(model.author2id['jill'])
+        jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
+
+        # Did we learn something?
+        self.assertFalse(all(np.equal(jill_topics, jill_topics2)))
+
+    def testUpdateNewData(self):
+        # Check that calling update with new documents and/or authors after the model already has 
+        # been trained works.
+        model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2)
+
+        jill_topics = model.get_author_topics(model.author2id['jill'])
+        jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
+
+        model.update(corpus_new, author2doc_new)
+        jill_topics2 = model.get_author_topics(model.author2id['jill'])
+        jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
+
+        # Did we learn more about Jill?
+        self.assertFalse(all(np.equal(jill_topics, jill_topics2)))
+
+    def testUpdateNewData(self):
+        # Check that calling update with new documents and/or authors after the model already has 
+        # been trained works.
+        model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2)
+
+        model.update(corpus_new, author2doc_new)
+
+        # Did we learn something about Sally?
+        sally_topics = model.get_author_topics(model.author2id['sally'])
+        sally_topics = matutils.sparse2full(sally_topics, model.num_topics)
+        self.assertTrue(all(sally_topics > 0))
+
     def testAlphaAuto(self):
-        model1 = self.class_(corpus, author2doc=author2doc, id2word=dictionary, alpha='symmetric', passes=10)
-        modelauto = self.class_(corpus, author2doc=author2doc, id2word=dictionary, alpha='auto', passes=10)
+        model1 = self.class_(corpus, author2doc=author2doc, id2word=dictionary, alpha='symmetric', passes=10, num_topics=2)
+        modelauto = self.class_(corpus, author2doc=author2doc, id2word=dictionary, alpha='auto', passes=10, num_topics=2)
 
         # did we learn something?
         self.assertFalse(all(np.equal(model1.alpha, modelauto.alpha)))
@@ -190,8 +246,8 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
 
     def testEtaAuto(self):
-        model1 = self.class_(corpus, author2doc=author2doc, id2word=dictionary, eta='symmetric', passes=10)
-        modelauto = self.class_(corpus, author2doc=author2doc, id2word=dictionary, eta='auto', passes=10)
+        model1 = self.class_(corpus, author2doc=author2doc, id2word=dictionary, eta='symmetric', passes=10, num_topics=2)
+        modelauto = self.class_(corpus, author2doc=author2doc, id2word=dictionary, eta='auto', passes=10, num_topics=2)
 
         # did we learn something?
         self.assertFalse(all(np.equal(model1.eta, modelauto.eta)))
@@ -280,7 +336,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         model = self.class_(self.corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, passes= 100, random_state=np.random.seed(0))
 
         author_topics = []
-        for a in id2author.keys():
+        for a in model.id2author.keys():
             author_topics.append(model.get_author_topics(a))
 
         for topic in author_topics:
@@ -358,9 +414,9 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
 
-        # Compare Jill's topics before after save/load.
-        jill_topics = model.get_author_topics(author2id['jill'])
-        jill_topics2 = model2.get_author_topics(author2id['jill'])
+        # Compare Jill's topics before after and save/load.
+        jill_topics = model.get_author_topics(model.author2id['jill'])
+        jill_topics2 = model2.get_author_topics(model.author2id['jill'])
         jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
         jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
         self.assertTrue(np.allclose(jill_topics, jill_topics2))
@@ -384,9 +440,9 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
 
-        # Compare Jill's topics before after save/load.
-        jill_topics = model.get_author_topics(author2id['jill'])
-        jill_topics2 = model2.get_author_topics(author2id['jill'])
+        # Compare Jill's topics before and after save/load.
+        jill_topics = model.get_author_topics(model.author2id['jill'])
+        jill_topics2 = model2.get_author_topics(model.author2id['jill'])
         jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
         jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
         self.assertTrue(np.allclose(jill_topics, jill_topics2))
@@ -404,9 +460,9 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertTrue(isinstance(model2.expElogbeta, np.memmap))
         self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
 
-        # Compare Jill's topics before after save/load.
-        jill_topics = model.get_author_topics(author2id['jill'])
-        jill_topics2 = model2.get_author_topics(author2id['jill'])
+        # Compare Jill's topics before and after save/load.
+        jill_topics = model.get_author_topics(model.author2id['jill'])
+        jill_topics2 = model2.get_author_topics(model.author2id['jill'])
         jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
         jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
         self.assertTrue(np.allclose(jill_topics, jill_topics2))
