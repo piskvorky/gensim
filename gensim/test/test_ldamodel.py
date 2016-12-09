@@ -418,8 +418,8 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
         tstvec = []
         self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec])) # try projecting an empty vector
-        id2word_2_7 = dict((k,v) for k,v in model_2_7.id2word.iteritems())
-        id2word_3_5 = dict((k,v) for k,v in model_3_5.id2word.iteritems())
+        id2word_2_7 = dict((k,v) for k,v in model_2_7.id2word.items())
+        id2word_3_5 = dict((k,v) for k,v in model_3_5.id2word.items())
         self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
 
 
