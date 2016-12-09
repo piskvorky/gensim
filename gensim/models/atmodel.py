@@ -414,7 +414,6 @@ class AuthorTopicModel(LdaModel):
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         subsample_ratio = 1.0 * total_docs / len(chunk)
         perwordbound = self.bound(chunk, chunk_doc_idx, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
-        print(perwordbound)
         logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
@@ -528,8 +527,10 @@ class AuthorTopicModel(LdaModel):
 
             self.total_docs += len_input_corpus
 
-            # FIXME: don't treat the corpus as a list. It's either a list or an MmCorpus instance.
-            # Perhaps if it is some sort of other iterable, it can be stored as an MmCorpus anyway.
+            # FIXME: consider initializing self.corpus as an MmCorpus, and adding documents to it
+            # as they arrive (using itertools.chain and MmCorpus.serialize). It should also be an
+            # option that self.corpus is just a list, and input corpora to update simply extend
+            # self.corpus.
             self.corpus.extend(corpus)
 
             # Obtain a list of new authors.
@@ -543,7 +544,7 @@ class AuthorTopicModel(LdaModel):
             # Add new authors do author2id/id2author dictionaries.
             for a_id, a_name in enumerate(new_authors):
                 self.author2id[a_name] = a_id + self.num_authors
-                self.id2author[a_id] = a_name
+                self.id2author[a_id + self.num_authors] = a_name
 
             # Increment the number of total authors seen.
             self.num_authors += num_new_authors
@@ -831,7 +832,14 @@ class AuthorTopicModel(LdaModel):
         Return topic distribution the given author, as a list of
         (topic_id, topic_probability) 2-tuples.
         Ignore topics with very low probability (below `minimum_probability`).
+
+        Obtaining topic probabilities as in LDA (via `per_word_topics`) is not supported.
+
         """
+
+        # FIXME: makes more sense to accept author name and then:
+        # author_id = self.author2id[author_name]
+
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
         minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
