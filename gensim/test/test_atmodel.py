@@ -35,8 +35,9 @@ from gensim.test import basetests
 # Perhaps test that the bound increases, in general (i.e. in several of the tests below where it makes
 # sense.
 
-logger = logging.getLogger('gensim')
-logger.propagate = False
+# FIXME: remember to remove this, once done using it:
+#logger = logging.getLogger('gensim')
+#logger.propagate = False
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
