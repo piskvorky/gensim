@@ -37,10 +37,14 @@ import logging
 import numpy as np # for arrays, array broadcasting etc.
 import numbers
 from copy import deepcopy
+from shutil import copyfile
+from os.path import isfile
+from os import remove
 
 from gensim import utils
 from gensim.models import LdaModel
 from gensim.models.ldamodel import dirichlet_expectation, get_random_state, LdaState
+from gensim.corpora import MmCorpus
 from itertools import chain
 from scipy.special import gammaln  # gamma function utils
 from six.moves import xrange
@@ -108,13 +112,12 @@ class AuthorTopicModel(LdaModel):
     Model persistency is achieved through its `load`/`save` methods.
     """
 
-    def __init__(self, corpus=None, num_topics=100, id2word=None,
-                author2doc=None, doc2author=None, id2author=None, var_lambda=None,
-                 chunksize=2000, passes=1, update_every=1,
-                 alpha='symmetric', eta='symmetric', decay=0.5, offset=1.0,
-                 eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01, random_state=None, ns_conf={},
-                 minimum_phi_value=0.01, per_word_topics=False):
+    def __init__(self, corpus=None, num_topics=100, id2word=None, author2doc=None, doc2author=None,
+                 chunksize=2000, passes=1, iterations=50, decay=0.5, offset=1.0,
+                 alpha='symmetric', eta='symmetric', update_every=1, eval_every=10, 
+                 gamma_threshold=0.001, serialized=False, serialization_path=None,
+                 minimum_probability=0.01, random_state=None, var_lambda=None,
+                 ns_conf={}, minimum_phi_value=0.01):
         """
         If the iterable corpus and one of author2doc/doc2author dictionaries are given,
         start training straight away. If not given, the model is left untrained 
@@ -134,6 +137,14 @@ class AuthorTopicModel(LdaModel):
         and the values are lists of author names. I.e. this is the reverse mapping of
         `author2doc`. Only one of the two, `author2doc` and `doc2author` have to be
         supplied.
+
+        `passes` is the number of times the model makes a pass over the entire trianing
+        data.
+
+        `iterations` is the maximum number of times the model loops over each document 
+        (M-step). The iterations stop when convergence is reached.
+
+        `chunksize` controls the size of the mini-batches.
 
         `alpha` and `eta` are hyperparameters that affect sparsity of the author-topic
         (theta) and topic-word (lambda) distributions. Both default to a symmetric
@@ -157,11 +168,28 @@ class AuthorTopicModel(LdaModel):
         `eval_every` model updates. Set to None to disable perplexity estimation.
 
         `decay` and `offset` parameters are the same as Kappa and Tau_0 in
-        Hoffman et al, respectively.
+        Hoffman et al, respectively. `decay` controls how quickly old documents are
+        forgotten, while `offset` down-weights early iterations.
 
         `minimum_probability` controls filtering the topics returned for a document (bow).
 
-        `random_state` can be a np.random.RandomState object or the seed for one
+        `random_state` can be an integer or a numpy.random.RandomState object. Set the 
+        state of the random number generator inside the author-topic model, to ensure
+        reproducibility of your experiments, for example.
+
+        `serialized` indicates whether the input corpora to the model are simple
+        in-memory lists (`serialized = False`) or saved to the hard-drive 
+        (`serialized = True`). Note that this behaviour is quite different from
+        other Gensim models. If your data is too large to fit in to memory, use
+        this functionality. Note that calling `AuthorTopicModel.update` with new 
+        data may be cumbersome as it requires all the existing data to be 
+        re-serialized.
+
+        `serialization_path` must be set to a filepath, if `serialized = True` is
+        used. Use, for example, `serialization_path = /tmp/serialized_model.mm` or use your
+        working directory by setting `serialization_path = serialized_model.mm`. An existing
+        file *cannot* be overwritten; either delete the old file or choose a different
+        name. 
 
         Example:
 
@@ -172,7 +200,10 @@ class AuthorTopicModel(LdaModel):
 
         """
 
-        distributed = False  # TODO: implement distributed version.
+        # NOTE: as distributed version of this model is not implemented, "distributed" is set to false. Some of the
+        # infrastructure to implement a distributed author-topic model is already in place, such as the AuthorTopicState.
+        # As the "ns_conf" input variable is only used in the distributed version, it is simply ignored here.
+        distributed = False
 
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -192,10 +223,8 @@ class AuthorTopicModel(LdaModel):
 
         logger.info('Vocabulary consists of %d words.', self.num_terms)
 
-        self.id2author = id2author
         self.author2doc = {}
         self.doc2author = {}
-        self.corpus = []  # FIXME: should be either a list or an MmCorpus instance.
 
         self.distributed = distributed
         self.num_topics = num_topics
@@ -211,10 +240,19 @@ class AuthorTopicModel(LdaModel):
         self.update_every = update_every
         self.eval_every = eval_every
         self.minimum_phi_value = minimum_phi_value
-        self.per_word_topics = per_word_topics
 
         self.author2id = {}
         self.id2author = {}
+
+        self.serialized = serialized
+        if serialized and not serialization_path:
+            raise ValueError("If serialized corpora are used, a the path to a folder where the corpus should be saved must be provided (serialized_path).")
+        if serialization_path:
+            assert not isfile(serialization_path), "A file already exists at the serialization_path path; choose a different serialization_path, or delete the file."
+        self.serialization_path = serialization_path
+
+        # Initialize an empty self.corpus.
+        self.init_empty_corpus()
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
@@ -256,6 +294,48 @@ class AuthorTopicModel(LdaModel):
     def __str__(self):
         return "AuthorTopicModel(num_terms=%s, num_topics=%s, num_authors=%s, decay=%s, chunksize=%s)" % \
             (self.num_terms, self.num_topics, self.num_authors, self.decay, self.chunksize)
+
+    def init_empty_corpus(self):
+        """
+        Initialize an empty corpus. If the corpora are to be treated as lists, simply
+        initialize an empty list. If serialization is used, initialize an empty corpus
+        of the class `gensim.corpora.MmCorpus`.
+
+        """
+        if self.serialized:
+            # Tnitialize the corpus as a serialized empty list.
+            # This corpus will be extended in self.update.
+            MmCorpus.serialize(self.serialization_path, [])  # Serialize empty corpus.
+            self.corpus = MmCorpus(self.serialization_path)  # Store serialized corpus object in self.corpus.
+        else:
+            # All input corpora are assumed to just be lists.
+            self.corpus = []
+
+    def extend_corpus(self, corpus):
+        """
+        Add new documents in `corpus` to `self.corpus`. If serialization is used,
+        then the entire corpus (`self.corpus`) is re-serialized and the new documents
+        are added in the process. If serialization is not used, the corpus, as a list
+        of documents, is simply extended.
+        
+        """
+        if self.serialized:
+            # Re-serialize the entire corpus while appending the new documents.
+            if isinstance(corpus, MmCorpus):
+                # Check that we are not attempting to overwrite the serialized corpus.
+                assert self.corpus.input != corpus.input, 'Input corpus cannot have the same file path as the model corpus (serialization_path).'
+            corpus_chain = chain(self.corpus, corpus)  # A generator with the old and new documents.
+            copyfile(self.serialization_path, self.serialization_path + '.tmp')  # Make a temporary copy of the file where the corpus is serialized.
+            self.corpus.input = self.serialization_path + '.tmp'  # Point the old corpus at this temporary file.
+            MmCorpus.serialize(self.serialization_path, corpus_chain)  # Re-serialize the old corpus, and extend it with the new corpus.
+            self.corpus = MmCorpus(self.serialization_path)  # Store the new serialized corpus object in self.corpus.
+            remove(self.serialization_path + '.tmp')  # Remove the temporary file again.
+        else:
+            # self.corpus and corpus are just lists, just extend the list.
+            # First check that corpus is actually a list.
+            assert isinstance(corpus, list), "If serialized == False, all input corpora must be lists."
+            self.corpus.extend(corpus)
+
 
     def compute_phinorm(self, ids, authors_d, expElogthetad, expElogbetad):
         """Efficiently computes the normalizing factor in phi."""
@@ -414,6 +494,7 @@ class AuthorTopicModel(LdaModel):
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         subsample_ratio = 1.0 * total_docs / len(chunk)
         perwordbound = self.bound(chunk, chunk_doc_idx, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
+        #print(perwordbound)
         logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
@@ -527,15 +608,13 @@ class AuthorTopicModel(LdaModel):
 
             self.total_docs += len_input_corpus
 
-            # FIXME: consider initializing self.corpus as an MmCorpus, and adding documents to it
-            # as they arrive (using itertools.chain and MmCorpus.serialize). It should also be an
-            # option that self.corpus is just a list, and input corpora to update simply extend
-            # self.corpus.
-            self.corpus.extend(corpus)
+            # Add new documents in corpus to self.corpus.
+            self.extend_corpus(corpus)
 
             # Obtain a list of new authors.
             new_authors = []
-            for a in author2doc.keys():
+            # Sorting the author names makes the model more reproducible.
+            for a in sorted(author2doc.keys()):
                 if not self.author2doc.get(a):
                     new_authors.append(a)
 

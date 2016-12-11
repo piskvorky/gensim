@@ -16,6 +16,7 @@ import os
 import os.path
 import tempfile
 import numbers
+from os import remove
 
 import six
 import numpy as np
@@ -87,7 +88,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
             # create the transformation model
             # NOTE: LdaModel tests do not use set random_state. Is it necessary?
             model = self.class_(id2word=dictionary, num_topics=2, passes=100, random_state=0)
-            model.update(self.corpus, author2doc)
+            model.update(corpus, author2doc)
 
             jill_topics = model.get_author_topics(model.author2id['jill'])
 
@@ -153,9 +154,10 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         # Did we learn something?
         self.assertFalse(all(np.equal(jill_topics, jill_topics2)))
 
-    def testUpdateNewData(self):
+    def testUpdateNewDataOldAuthor(self):
         # Check that calling update with new documents and/or authors after the model already has 
         # been trained works.
+        # Test an author that already existed in the old dataset.
         model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2)
 
         jill_topics = model.get_author_topics(model.author2id['jill'])
@@ -168,9 +170,10 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         # Did we learn more about Jill?
         self.assertFalse(all(np.equal(jill_topics, jill_topics2)))
 
-    def testUpdateNewData(self):
+    def testUpdateNewDataNewAuthor(self):
         # Check that calling update with new documents and/or authors after the model already has 
         # been trained works.
+        # Test a new author, that didn't exist in the old dataset.
         model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2)
 
         model.update(corpus_new, author2doc_new)
@@ -179,6 +182,63 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         sally_topics = model.get_author_topics(model.author2id['sally'])
         sally_topics = matutils.sparse2full(sally_topics, model.num_topics)
         self.assertTrue(all(sally_topics > 0))
+
+    def testSerialized(self):
+        # Test the model using serialized corpora. Basic tests, plus test of update functionality.
+
+        model = self.class_(self.corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, serialized=True, serialization_path=datapath('testcorpus_serialization.mm'))
+
+        jill_topics = model.get_author_topics(model.author2id['jill'])
+        jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
+        self.assertTrue(all(jill_topics > 0))
+
+        model.update()
+        jill_topics2 = model.get_author_topics(model.author2id['jill'])
+        jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
+
+        # Did we learn more about Jill?
+        self.assertFalse(all(np.equal(jill_topics, jill_topics2)))
+
+        model.update(corpus_new, author2doc_new)
+
+        # Did we learn something about Sally?
+        sally_topics = model.get_author_topics(model.author2id['sally'])
+        sally_topics = matutils.sparse2full(sally_topics, model.num_topics)
+        self.assertTrue(all(sally_topics > 0))
+
+        # Delete the MmCorpus used for serialization inside the author-topic model.
+        remove(datapath('testcorpus_serialization.mm'))
+
+    def testTransformSerialized(self):
+        # Same as testTransform, using serialized corpora.
+        passed = False
+        # sometimes, training gets stuck at a local minimum
+        # in that case try re-training the model from scratch, hoping for a
+        # better random initialization
+        for i in range(25): # restart at most 5 times
+            # create the transformation model
+            # NOTE: LdaModel tests do not use set random_state. Is it necessary?
+            model = self.class_(id2word=dictionary, num_topics=2, passes=100, random_state=0, serialized=True, serialization_path=datapath('testcorpus_serialization.mm'))
+            model.update(self.corpus, author2doc)
+
+            jill_topics = model.get_author_topics(model.author2id['jill'])
+
+            # NOTE: this test may easily fail if the author-topic model is altered in any way. The model's
+            # output is sensitive to a lot of things, like the scheduling of the updates, or like the
+            # author2id (because the random initialization changes when author2id changes). If it does
+            # fail, simply be aware of whether we broke something, or if it just naturally changed the
+            # output of the model slightly.
+            vec = matutils.sparse2full(jill_topics, 2) # convert to dense vector, for easier equality tests
+            expected = [0.91, 0.08]
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
+
+            # Delete the MmCorpus used for serialization inside the author-topic model.
+            remove(datapath('testcorpus_serialization.mm'))
+            if passed:
+                break
+            logging.warning("Author-topic model failed to converge on attempt %i (got %s, expected %s)" %
+                            (i, sorted(vec), sorted(expected)))
+        self.assertTrue(passed)
 
     def testAlphaAuto(self):
         model1 = self.class_(corpus, author2doc=author2doc, id2word=dictionary, alpha='symmetric', passes=10, num_topics=2)
@@ -314,7 +374,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertRaises(ValueError, self.class_, **kwargs)
 
     def testTopTopics(self):
-        top_topics = self.model.top_topics(self.corpus)
+        top_topics = self.model.top_topics(corpus)
 
         for topic, score in top_topics:
             self.assertTrue(isinstance(topic, list))
@@ -333,7 +393,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testGetAuthorTopics(self):
 
-        model = self.class_(self.corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, passes= 100, random_state=np.random.seed(0))
+        model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, passes= 100, random_state=np.random.seed(0))
 
         author_topics = []
         for a in model.id2author.keys():
@@ -352,7 +412,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         # Test case to check the filtering effect of minimum_probability
         #author_topic_count_na = 0
 
-        #all_topics = model.get_document_topics(self.corpus, minimum_probability=0.8)
+        #all_topics = model.get_document_topics(corpus, minimum_probability=0.8)
         #
         #for topic in all_topics:
         #    self.assertTrue(isinstance(topic, tuple))
@@ -366,7 +426,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testTermTopics(self):
 
-        model = self.class_(self.corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
+        model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
 
         # check with word_type
         result = model.get_term_topics(2)
@@ -390,7 +450,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
         # generate 5 updates to test rhot on
         for x in range(5):
-            model.update(self.corpus, author2doc)
+            model.update(corpus, author2doc)
             test_rhots.append(final_rhot())
 
         for passes in [1, 5, 10, 50, 100]:
@@ -398,7 +458,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
             self.assertEqual(final_rhot(), 1.0)
             # make sure the rhot matches the test after each update
             for test_rhot in test_rhots:
-                model.update(self.corpus, author2doc)
+                model.update(corpus, author2doc)
 
                 msg = ", ".join(map(str, [passes, model.num_updates, model.state.numdocs]))
                 self.assertAlmostEqual(final_rhot(), test_rhot, msg=msg)
@@ -423,7 +483,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testPersistenceIgnore(self):
         fname = testfile()
-        model = atmodel.AuthorTopicModel(self.corpus, author2doc=author2doc, num_topics=2)
+        model = atmodel.AuthorTopicModel(corpus, author2doc=author2doc, num_topics=2)
         model.save(fname, ignore='id2word')
         model2 = atmodel.AuthorTopicModel.load(fname)
         self.assertTrue(model2.id2word is None)
