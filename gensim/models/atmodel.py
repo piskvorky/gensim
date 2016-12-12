@@ -21,14 +21,6 @@ class is likewise similar to the usage of the LdaModel class.
 
 """
 
-# FIXME: at the moment the input corpus is treated as a list. It must be possible to treat 
-# it as an MmCorpus. The reason for this is that the corpus must be indexable, so that it
-# is possible to find out what authors correspond to a particular document (variables
-# author2doc and doc2author). If the input corpus is a list, just keep treating it as a list.
-# If the input document is an MmCorpus, just keep treating it as an MmCorpus. If the input 
-# document is something else, for example some sort of iterable, it should be saved as an 
-# MmCorpus (and it should be checked that it is actually indexable, i.e. corpus[d] is possible).
-
 import pdb
 from pdb import set_trace as st
 from pprint import pprint
@@ -247,7 +239,7 @@ class AuthorTopicModel(LdaModel):
         self.serialized = serialized
         if serialized and not serialization_path:
             raise ValueError("If serialized corpora are used, a the path to a folder where the corpus should be saved must be provided (serialized_path).")
-        if serialization_path:
+        if serialized and serialization_path:
             assert not isfile(serialization_path), "A file already exists at the serialization_path path; choose a different serialization_path, or delete the file."
         self.serialization_path = serialization_path
 
