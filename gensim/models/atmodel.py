@@ -898,18 +898,28 @@ class AuthorTopicModel(LdaModel):
 
         return total_score
 
-    def get_author_topics(self, author_id, minimum_probability=None):
+    def get_document_topics(self, word_id, minimum_probability=None):
+        '''
+        This method overwrites `LdaModel.get_document_topics` and simply raises an
+        exception. `get_document_topics` is not valid for the author-topic model,
+        use `get_author_topics` instead.
+
+        '''
+
+        raise NotImplementedError('Method "get_document_topics" is not valid for the author-topic model. Use the "get_author_topics" method.')
+
+    def get_author_topics(self, author_name, minimum_probability=None):
         """
         Return topic distribution the given author, as a list of
         (topic_id, topic_probability) 2-tuples.
         Ignore topics with very low probability (below `minimum_probability`).
 
-        Obtaining topic probabilities as in LDA (via `per_word_topics`) is not supported.
+        Obtaining topic probabilities of each word, as in LDA (via `per_word_topics`),
+        is not supported.
 
         """
 
-        # FIXME: makes more sense to accept author name and then:
-        # author_id = self.author2id[author_name]
+        author_id = self.author2id[author_name]
 
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
