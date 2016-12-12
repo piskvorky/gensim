@@ -521,7 +521,7 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
 
         """
-        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule, update=update)  # initial survey
+        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
         self.finalize_vocab(update=update)  # build tables & arrays
 
