@@ -7,58 +7,50 @@
 """
 scikit learn interface for gensim for easy use of gensim with scikit-learn
 """
-import numpy as np
-import gensim.models.ldamodel
+from gensim import models
 
 
-class BaseClass(object):
-    def __init__(self):
-        """init
-        base class to be always inherited
-        to be used in the future
-        """
-    def run(self):   # to test
-        return np.array([0, 0, 0])
-
-
-class LdaModel(object):
+class LdaModel(models.LdaModel,object):
     """
     Base LDA module
     """
-    def __init__(self, n_topics=5, n_iter=2000, alpha=0.1, eta=0.01, random_state=None,
-                 refresh=10, lda_model=None, id2word=None, passes=20, ex=None):
+    def __init__(self, corpus=None, num_topics=100, id2word=None,
+                 distributed=False, chunksize=2000, passes=1, update_every=1,
+                 alpha='symmetric', eta=None, decay=0.5, offset=1.0,
+                 eval_every=10, iterations=50, gamma_threshold=0.001,
+                 minimum_probability=0.01, random_state=None):
         """
-        base LDA code . Uses mapper function
-        n_topics : num_topics
-        .fit  : init call // corpus not used
-        //none : id2word
-        n_iter : passes // assumed
-        random_state : random_state
-        alpha : alpha
-        eta : eta
-        refresh : update_every
-        id2word: id2word
+        base LDA code.
         """
-        self.n_topics = n_topics
-        self.n_iter = n_iter
+        self.corpus = corpus
+        self.num_topics = num_topics
+        self.id2word = id2word
+        self.distributed = distributed
+        self.chunksize = chunksize
+        self.passes = passes
+        self.update_every = update_every
         self.alpha = alpha
         self.eta = eta
+        self.decay = decay
+        self.offset = offset
+        self.eval_every = eval_every
+        self.iterations = iterations
+        self.gamma_threshold = gamma_threshold
+        self.minimum_probability = minimum_probability
         self.random_state = random_state
-        self.refresh = refresh
-        self.id2word = id2word
-        self.passes = passes
-        # use lda_model variable as object
-        self.lda_model = lda_model
-        # perform appropriate checks
-        if alpha <= 0:
-            raise ValueError("alpha value must be larger than zero")
-        if eta <= 0:
-            raise ValueError("eta value must be larger than zero")
+        if self.corpus is not None:
+            models.LdaModel.__init__(
+                                     self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
+                                     distributed=self.distributed, chunksize=self.chunksize, passes=self.passes,
+                                     update_every=self.update_every,alpha=self.alpha, eta=self.eta, decay=self.decay,
+                                     offset=self.offset,eval_every=self.eval_every, iterations=self.iterations,
+                                     gamma_threshold=self.gamma_threshold,minimum_probability=self.minimum_probability,
+                                     random_state=self.random_state)
 
     def get_params(self, deep=True):
         if deep:
-            return {"alpha": self.alpha, "n_iter": self.n_iter, "eta": self.eta, "random_state": self.random_state,
-                    "lda_model": self.lda_model, "id2word": self.id2word, "passes": self.passes}
+            return {"alpha": self.alpha, "n_iter": self.iterations, "eta": self.eta, "random_state": self.random_state,
+                    "id2word": self.id2word, "passes": self.passes}
 
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
@@ -72,46 +64,26 @@ class LdaModel(object):
         calling :
         >>>gensim.models.LdaModel(corpus=corpus,num_topics=n_topics,id2word=None,passes=n_iter,update_every=refresh,alpha=alpha,iterations=n_iter,eta=eta,random_state=random_state)
         """
-        if X is None:
-            raise AttributeError("Corpus defined as none")
-        self.lda_model = gensim.models.LdaModel(
-                         corpus=X, num_topics=self.n_topics, id2word=self.id2word, passes=self.passes,
-                         update_every=self.refresh, alpha=self.alpha, iterations=self.n_iter,
-                         eta=self.eta, random_state=self.random_state)
-        return self.lda_model
+        models.LdaModel.__init__(
+                                 self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
+                                 distributed=self.distributed, chunksize=self.chunksize, passes=self.passes,
+                                 update_every=self.update_every,alpha=self.alpha, eta=self.eta, decay=self.decay,
+                                 offset=self.offset,eval_every=self.eval_every, iterations=self.iterations,
+                                 gamma_threshold=self.gamma_threshold,minimum_probability=self.minimum_probability,
+                                 random_state=self.random_state)
+        return self
 
-    def print_topics(self, n_topics, num_words, log):
-        """
-        print all the topics
-        using the object lda_model
-        """
-        return self.lda_model.show_topics(num_topics=n_topics, num_words=num_words, log=log)
-
-    def transform(self, bow, minimum_probability, minimum_phi_value, per_word_topics):
+    def transform(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
         """
         takes as an input a new document (bow) and
         Return topic distribution for the given document bow, as a list of (topic_id, topic_probability) 2-tuples.
         """
-        return self.lda_model.get_document_topics(bow, minimum_probability=minimum_probability,
-                                                  minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
-
-    def get_term_topics(self, wordid, minimum_probability):
-        """
-        returns the most likely topic associated with a particular word
-        use wordid or simply pass the word itself
-        """
-        return self.lda_model.get_term_topics(wordid, minimum_probability=minimum_probability)
-
-    def get_topic_terms(self, topicid, topn):
-        """
-        return a tuple of (wordid,probability) for given topic
-        topn can be used to restrict
-        """
-        return self.lda_model.get_topic_terms(topicid=topicid, topn=topn)
+        return self.get_document_topics(
+                                        bow, minimum_probability=minimum_probability,
+                                        minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
 
     def partial_fit(self, X, y=None):
         """
         train model over X
         """
-        self.lda_model.update(corpus=X)
-
+        self.update(corpus=X)
