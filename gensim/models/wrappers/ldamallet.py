@@ -44,11 +44,13 @@ from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.utils import check_output
+from gensim.models.ldamodel import LdaModel
+from gensim.models import basemodel
 
 logger = logging.getLogger(__name__)
 
 
-class LdaMallet(utils.SaveLoad):
+class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
     """
     Class for LDA training using MALLET. Communication between MALLET and Python
     takes place by passing around data files on disk and calling Java with subprocess.call().
@@ -94,7 +96,6 @@ class LdaMallet(utils.SaveLoad):
         self.workers = workers
         self.optimize_interval = optimize_interval
         self.iterations = iterations
-
         if corpus is not None:
             self.train(corpus)
 
@@ -144,7 +145,7 @@ class LdaMallet(utils.SaveLoad):
                 self.corpus2mallet(corpus, fout)
 
         # convert the text file above into MALLET's internal format
-        cmd = self.mallet_path + " import-file --preserve-case --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
+        cmd = self.mallet_path + ' import-file --preserve-case --keep-sequence --remove-stopwords --token-regex "\S+" --input %s --output %s'
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
@@ -165,6 +166,9 @@ class LdaMallet(utils.SaveLoad):
         logger.info("training MALLET LDA with %s", cmd)
         check_output(cmd, shell=True)
         self.word_topics = self.load_word_topics()
+        # NOTE - we are still keeping the wordtopics variable to not break backward compatibility.
+        # word_topics has replaced wordtopics throughout the code; wordtopics just stores the values of word_topics when train is called.
+        self.wordtopics = self.word_topics
 
     def __getitem__(self, bow, iterations=100):
         is_corpus, corpus = utils.is_corpus(bow)
@@ -182,7 +186,7 @@ class LdaMallet(utils.SaveLoad):
 
     def load_word_topics(self):
         logger.info("loading assigned topics from %s", self.fstate())
-        wordtopics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
+        word_topics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
         if hasattr(self.id2word, 'token2id'):
             word2id = self.id2word.token2id
         else:
@@ -199,13 +203,8 @@ class LdaMallet(utils.SaveLoad):
                 if token not in word2id:
                     continue
                 tokenid = word2id[token]
-                wordtopics[int(topic), tokenid] += 1.0
-        logger.info("loaded assigned topics for %i tokens", wordtopics.sum())
-        self.wordtopics = wordtopics
-        self.print_topics(15)
-
-    def print_topics(self, num_topics=10, num_words=10):
-        return self.show_topics(num_topics, num_words, log=True)
+                word_topics[int(topic), tokenid] += 1.0
+        return word_topics
 
     def load_document_topics(self):
         """
@@ -229,28 +228,26 @@ class LdaMallet(utils.SaveLoad):
             num_topics = min(num_topics, self.num_topics)
             sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha)) # add a little random jitter, to randomize results around the same alpha
             sorted_topics = list(matutils.argsort(sort_alpha))
-            chosen_topics = sorted_topics[ : num_topics//2] + sorted_topics[-num_topics//2 : ]
+            chosen_topics = sorted_topics[:num_topics//2] + sorted_topics[-num_topics//2 : ]
         shown = []
         for i in chosen_topics:
             if formatted:
                 topic = self.print_topic(i, topn=num_words)
             else:
                 topic = self.show_topic(i, topn=num_words)
-            shown.append(topic)
+            shown.append((i, topic))
             if log:
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
         return shown
 
-    def show_topic(self, topicid, topn=10):
-        topic = self.wordtopics[topicid]
+    def show_topic(self, topicid, num_words=10):
+        if self.word_topics is None:
+            logger.warn("Run train or load_word_topics before showing topics.")
+        topic = self.word_topics[topicid]
         topic = topic / topic.sum()  # normalize to probability dist
-        bestn = matutils.argsort(topic, topn, reverse=True)
-        beststr = [(topic[id], self.id2word[id]) for id in bestn]
+        bestn = matutils.argsort(topic, num_words, reverse=True)
+        beststr = [(self.id2word[id], topic[id]) for id in bestn]
         return beststr
-
-    def print_topic(self, topicid, topn=10):
-        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
-
 
     def get_version(self, direc_path):
         """"
@@ -263,12 +260,12 @@ class LdaMallet(utils.SaveLoad):
             Check version of mallet via jar file
             """
             archive = zipfile.ZipFile(direc_path, 'r')
-            if u'cc/mallet/regression/' not in archive.namelist():     
+            if u'cc/mallet/regression/' not in archive.namelist():
                 return '2.0.7'
             else:
                 return '2.0.8RC3'
         except Exception:
-            
+
             xml_path = direc_path.split("bin")[0]
             try:
                 doc = et.parse(xml_path + "pom.xml").getroot()
@@ -276,7 +273,7 @@ class LdaMallet(utils.SaveLoad):
                 return doc.find(namespace + 'version').text.split("-")[0]
             except Exception:
                 return "Can't parse pom.xml version file"
-        
+
 
 
     def read_doctopics(self, fname, eps=1e-6, renorm=True):
@@ -307,7 +304,7 @@ class LdaMallet(utils.SaveLoad):
                     if mallet_version == "2.0.7":
                         """
 
-                            1   1   0   1.0780612802674239  30.005575655428533364   2   0.005575655428533364    1   0.005575655428533364    
+                            1   1   0   1.0780612802674239  30.005575655428533364   2   0.005575655428533364    1   0.005575655428533364
                             2   2   0   0.9184413079632608  40.009062076892971008   3   0.009062076892971008    2   0.009062076892971008    1   0.009062076892971008
                             In the above example there is a mix of the above if and elif statement. There are neither `2*num_topics` nor `num_topics` elements.
                             It has 2 formats 40.009062076892971008 and 0   1.0780612802674239 which cannot be handled by above if elif.
@@ -319,14 +316,14 @@ class LdaMallet(utils.SaveLoad):
                         doc = []
                         if len(parts) > 0:
                             while count < len(parts):
-                                """ 
+                                """
                                 if section is to deal with formats of type 2 0.034
                                 so if count reaches index of 2 and since int(2) == float(2) so if block is executed
                                 now  there is one extra element afer 2, so count + 1 access should not give an error
 
                                 else section handles  formats of type 20.034
                                 now count is there on index of 20.034 since float(20.034) != int(20.034) so else block
-                                is executed 
+                                is executed
 
                                 """
                                 if float(parts[count]) == int(parts[count]):
@@ -346,3 +343,27 @@ class LdaMallet(utils.SaveLoad):
                     if total_weight:
                         doc = [(id_, float(weight) / total_weight) for id_, weight in doc]
                 yield doc
+
+
+def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
+    """
+    Function to convert mallet model to gensim LdaModel. This works by copying the
+    training model weights (alpha, beta...) from a trained mallet model into the
+    gensim model.
+
+    Args:
+    ----
+    mallet_model : Trained mallet model
+    gamma_threshold : To be used for inference in the new LdaModel.
+    iterations : number of iterations to be used for inference in the new LdaModel.
+
+    Returns:
+    -------
+    model_gensim : LdaModel instance; copied gensim LdaModel
+    """
+    model_gensim = LdaModel(
+        id2word=mallet_model.id2word, num_topics=mallet_model.num_topics,
+        alpha=mallet_model.alpha, iterations=iterations,
+        gamma_threshold=gamma_threshold)
+    model_gensim.expElogbeta[:] = mallet_model.wordtopics
+    return model_gensim

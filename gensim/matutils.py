@@ -238,7 +238,7 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
         return []
     vec = numpy.asarray(vec, dtype=float)
     nnz = numpy.nonzero(abs(vec) > eps)[0]
-    biggest = nnz.take(argsort(vec.take(nnz), topn, reverse=True))
+    biggest = nnz.take(argsort(abs(vec).take(nnz), topn, reverse=True))
     return list(zip(biggest, vec.take(biggest)))
 
 
@@ -325,6 +325,29 @@ def ret_normalized_vec(vec, length):
         return [(termid, val / length) for termid, val in vec]
     else:
         return list(vec)
+
+def ret_log_normalize_vec(vec, axis=1):
+    log_max = 100.0
+    if len(vec.shape) == 1:
+        max_val = numpy.max(vec)
+        log_shift = log_max - numpy.log(len(vec) + 1.0) - max_val
+        tot = numpy.sum(numpy.exp(vec + log_shift))
+        log_norm = numpy.log(tot) - log_shift
+        vec = vec - log_norm
+    else:
+        if axis == 1:  # independently normalize each sample
+            max_val = numpy.max(vec, 1)
+            log_shift = log_max - numpy.log(vec.shape[1] + 1.0) - max_val
+            tot = numpy.sum(numpy.exp(vec + log_shift[:, numpy.newaxis]), 1)
+            log_norm = numpy.log(tot) - log_shift
+            vec = vec - log_norm[:, numpy.newaxis]
+        elif axis == 0:  # normalize each feature
+            k = ret_log_normalize_vec(vec.T)
+            return (k[0].T, k[1])
+        else:
+            raise ValueError("'%s' is not a supported axis" % axis)
+    return (vec, log_norm)
+
 
 blas_nrm2 = blas('nrm2', numpy.array([], dtype=float))
 blas_scal = blas('scal', numpy.array([], dtype=float))

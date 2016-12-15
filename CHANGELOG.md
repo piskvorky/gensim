@@ -1,12 +1,62 @@
 Changes
 =======
-0.13.2
 
-* topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, #747)
+* Fix automatic learning of eta (prior over words) in LDA (@olavurmortensen, [#1024](https://github.com/RaRe-Technologies/gensim/pull/1024#)).
+    * eta should have dimensionality V (size of vocab) not K (number of topics). eta with shape K x V is still allowed, as the user may want to impose specific prior information to each topic.
+    * eta is no longer allowed the "asymmetric" option. Asymmetric priors over words in general are fine (learned or user defined).
+    * As a result, the eta update (`update_eta`) was simplified some. It also no longer logs eta when updated, because it is too large for that.
+    * Unit tests were updated accordingly. The unit tests expect a different shape than before; some unit tests were redundant after the change; `eta='asymmetric'` now should raise an error.
+
+0.13.5, 2016-11-12
+* Add delete_temporary_training_data() function to word2vec and doc2vec models. (@deepmipt-VladZhukov, [#987](https://github.com/RaRe-Technologies/gensim/pull/987))
+
+0.13.4, 2016-10-25
+* Passed all the params through the apply call in lda.get_document_topics(), test case to use the per_word_topics through the corpus in test_ldamodel (@parthoiiitm, [#978](https://github.com/RaRe-Technologies/gensim/pull/978))
+
+0.13.3, 2016-10-20
+
+* Add vocabulary expansion feature to word2vec. (@isohyt, [#900](https://github.com/RaRe-Technologies/gensim/pull/900))
+* Tutorial: Reproducing Doc2vec paper result on wikipedia. (@isohyt, [#654](https://github.com/RaRe-Technologies/gensim/pull/654))
+* Add Save/Load interface to AnnoyIndexer for index persistence (@fortiema, [#845](https://github.com/RaRe-Technologies/gensim/pull/845))
+* Fixed issue [#938](https://github.com/RaRe-Technologies/gensim/issues/938),Creating a unified base class for all topic models. ([@markroxor](https://github.com/markroxor), [#946](https://github.com/RaRe-Technologies/gensim/pull/946))
+    -  _breaking change in HdpTopicFormatter.show_\__topics_
+* Add Phraser for Phrases optimization. ( @gojomo & @anujkhare , [#837](https://github.com/RaRe-Technologies/gensim/pull/837))
+* Fix issue #743, in word2vec's n_similarity method if at least one empty list is passed ZeroDivisionError is raised (@pranay360, [#883](https://github.com/RaRe-Technologies/gensim/pull/883))
+* Change export_phrases in Phrases model. Fix issue #794 (@AadityaJ, [#879](https://github.com/RaRe-Technologies/gensim/pull/879))
+    - bigram construction can now support multiple bigrams within one sentence
+* Fix issue [#838](https://github.com/RaRe-Technologies/gensim/issues/838), RuntimeWarning: overflow encountered in exp  ([@markroxor](https://github.com/markroxor), [#895](https://github.com/RaRe-Technologies/gensim/pull/895))
+*  Change some log messages to warnings as suggested in issue #828. (@rhnvrm, [#884](https://github.com/RaRe-Technologies/gensim/pull/884))
+*  Fix issue #851, In summarizer.py, RunTimeError is raised if single sentence input is provided to avoid ZeroDivionError. (@metalaman, #887)
+* Fix issue [#791](https://github.com/RaRe-Technologies/gensim/issues/791), correct logic for iterating over SimilarityABC interface. ([@MridulS](https://github.com/MridulS), [#839](https://github.com/RaRe-Technologies/gensim/pull/839))
+* Fix RP model loading for large Fortran-order arrays (@piskvorky, [#605](https://github.com/RaRe-Technologies/gensim/issues/938))
+* Remove ShardedCorpus from init because of Theano dependency (@tmylk, [#919](https://github.com/RaRe-Technologies/gensim/pull/919))
+* Documentation improvements ( @dsquareindia & @tmylk, [#914](https://github.com/RaRe-Technologies/gensim/pull/914), [#906](https://github.com/RaRe-Technologies/gensim/pull/906) )
+* Add Annoy memory-mapping example (@harshul1610, [#899](https://github.com/RaRe-Technologies/gensim/pull/899))
+* Fixed issue [#601](https://github.com/RaRe-Technologies/gensim/issues/601), correct docID in most_similar for clip range (@parulsethi, [#994](https://github.com/RaRe-Technologies/gensim/pull/994))
+
+0.13.2, 2016-08-19
+
+* wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771))
+  - assigning wordtopics value of word_topics to keep backward compatibility, for now
+* topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, [#755](https://github.com/RaRe-Technologies/gensim/pull/755))
   - In hdpmodel and dtmmodel
   - NOT BACKWARDS COMPATIBLE!
-* Added random_state parameter to LdaState initializer and check_random_state() (@droudy, #113)
-* Implemented LsiModel.docs_processed attribute
+* Added random_state parameter to LdaState initializer and check_random_state() (@droudy, [#113](https://github.com/RaRe-Technologies/gensim/pull/113))
+* Topic coherence update with `c_uci`, `c_npmi` measures.  LdaMallet, LdaVowpalWabbit support. Add `topics` parameter to coherencemodel. Can now provide tokenized topics to calculate coherence value. Faster backtracking. (@dsquareindia, [#750](https://github.com/RaRe-Technologies/gensim/pull/750), [#793](https://github.com/RaRe-Technologies/gensim/pull/793))
+* Added a check for empty (no words) documents before starting to run the DTM wrapper if model = "fixed" is used (DIM model) as this    causes the an error when such documents are reached in training. (@eickho, [#806](https://github.com/RaRe-Technologies/gensim/pull/806))
+* New parameters `limit`, `datatype` for load_word2vec_format(); `lockf` for intersect_word2vec_format (@gojomo, [#817](https://github.com/RaRe-Technologies/gensim/pull/817))
+* Changed `use_lowercase` option in word2vec accuracy to `case_insensitive` to account for case variations in training vocabulary (@jayantj, [#804](https://github.com/RaRe-Technologies/gensim/pull/804)
+* Link to Doc2Vec on airline tweets example in tutorials page (@544895340 , [#823](https://github.com/RaRe-Technologies/gensim/pull/823))
+* Small error on Doc2vec notebook tutorial (@charlessutton, [#816](https://github.com/RaRe-Technologies/gensim/pull/816))
+* Bugfix: Full2sparse clipped to use abs value (@tmylk, [#811](https://github.com/RaRe-Technologies/gensim/pull/811))
+* WMD docstring: add tutorial link and query example (@tmylk, [#813](https://github.com/RaRe-Technologies/gensim/pull/813))
+* Annoy integration to speed word2vec and doc2vec similarity. Tutorial update (@droudy, [#799](https://github.com/RaRe-Technologies/gensim/pull/799),[#792](https://github.com/RaRe-Technologies/gensim/pull/799) )
+* Add converter of LDA model between Mallet, Vowpal Wabit and gensim (@dsquareindia, [#798](https://github.com/RaRe-Technologies/gensim/pull/798), [#766](https://github.com/RaRe-Technologies/gensim/pull/766))
+* Distributed LDA in different network segments without broadcast (@menshikh-iv , [#782](https://github.com/RaRe-Technologies/gensim/pull/782))
+* Update Corpora_and_Vector_Spaces.ipynb (@megansquire, [#772](https://github.com/RaRe-Technologies/gensim/pull/772))
+* DTM wrapper bug fixes caused by renaming num_words in #755 (@bhargavvader,  [#770](https://github.com/RaRe-Technologies/gensim/pull/770))
+* Add LsiModel.docs_processed attribute (@hobson, [#763](https://github.com/RaRe-Technologies/gensim/pull/763))
+* Dynamic Topic Modelling in Python. Google Summer of Code 2016 project. (@bhargavvader, [#739, #831](https://github.com/RaRe-Technologies/gensim/pull/739))
 
 0.13.1, 2016-06-22
 
@@ -22,13 +72,13 @@ Changes
 * SparseMatrixSimilarity returns a sparse matrix if `maintain_sparsity` is True (@davechallis, #590)
 * added functionality for Topics of Words in document - i.e, dynamic topics. (@bhargavvader, #704)
   - also included tutorial which explains new functionalities, and document word-topic colring.
-* Made normalization an explicit transformation. Added 'l1' norm support (@squareindia, #649)
+* Made normalization an explicit transformation. Added 'l1' norm support (@dsquareindia, #649)
 * added term-topics API for most probable topic for word in vocab. (@bhargavvader, #706)
 * build_vocab takes progress_per parameter for smaller output (@zer0n, #624)
 * Control whether to use lowercase for computing word2vec accuracy. (@alantian, #607)
 * Easy import of GloVe vectors using Gensim (Manas Ranjan Kar, #625)
   - Allow easy port of GloVe vectors into Gensim
-  - Standalone script with command line arguments, compatible with Python>=2.6 
+  - Standalone script with command line arguments, compatible with Python>=2.6
   - Usage: python -m gensim.scripts.glove2word2vec -i glove_vectors.txt -o output_word2vec_compatible.txt
 * Add `similar_by_word()` and `similar_by_vector()` to word2vec (@isohyt, #381)
 * Convenience method for similarity of two out of training sentences to doc2vec (@ellolo, #707)

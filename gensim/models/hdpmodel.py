@@ -8,9 +8,6 @@
 # Chong Wang (chongw at cs.princeton.edu).
 # http://www.cs.princeton.edu/~chongw/software/onlinehdp.tar.gz
 #
-# Some show/print topics code is adapted from Dr. Hoffman's online lda sample code,
-# (C) 2010  Matthew D. Hoffman, GNU GPL 3.0
-# http://www.cs.princeton.edu/~mdhoffma/code/onlineldavb.tar
 
 
 """
@@ -41,31 +38,13 @@ import numpy as np
 import scipy.special as sp
 
 from gensim import interfaces, utils, matutils
+from gensim.models import basemodel
 from six.moves import xrange
 
 logger = logging.getLogger(__name__)
 
 meanchangethresh = 0.00001
 rhot_bound = 0.0
-
-
-def log_normalize(v):
-    log_max = 100.0
-    if len(v.shape) == 1:
-        max_val = np.max(v)
-        log_shift = log_max - np.log(len(v) + 1.0) - max_val
-        tot = np.sum(np.exp(v + log_shift))
-        log_norm = np.log(tot) - log_shift
-        v = v - log_norm
-    else:
-        max_val = np.max(v, 1)
-        log_shift = log_max - np.log(v.shape[1] + 1.0) - max_val
-        tot = np.sum(np.exp(v + log_shift[:, np.newaxis]), 1)
-
-        log_norm = np.log(tot) - log_shift
-        v = v - log_norm[:, np.newaxis]
-
-    return (v, log_norm)
 
 
 def dirichlet_expectation(alpha):
@@ -128,15 +107,22 @@ class SuffStats(object):
         self.m_var_beta_ss.fill(0.0)
 
 
-class HdpModel(interfaces.TransformationABC):
+class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
     The constructor estimates Hierachical Dirichlet Process model parameters based
     on a training corpus:
 
     >>> hdp = HdpModel(corpus, id2word)
-    >>> hdp.print_topics(topics=20, topn=10)
+
+    You can infer topic distributions on new, unseen documents with
+
+    >>> doc_hdp = hdp[doc_bow]
 
     Inference on new documents is based on the approximately LDA-equivalent topics.
+
+    To print 20 topics with top 10 most probable words
+
+    >>> hdp.print_topics(show_topics=20, num_words=10)
 
     Model persistency is achieved through its `load`/`save` methods.
 
@@ -342,21 +328,21 @@ class HdpModel(interfaces.TransformationABC):
             # var_phi
             if iter < 3:
                 var_phi = np.dot(phi.T,  (Elogbeta_doc * doc_word_counts).T)
-                (log_var_phi, log_norm) = log_normalize(var_phi)
+                (log_var_phi, log_norm) = matutils.ret_log_normalize_vec(var_phi)
                 var_phi = np.exp(log_var_phi)
             else:
                 var_phi = np.dot(phi.T,  (Elogbeta_doc * doc_word_counts).T) + Elogsticks_1st
-                (log_var_phi, log_norm) = log_normalize(var_phi)
+                (log_var_phi, log_norm) = matutils.ret_log_normalize_vec(var_phi)
                 var_phi = np.exp(log_var_phi)
 
             # phi
             if iter < 3:
                 phi = np.dot(var_phi, Elogbeta_doc).T
-                (log_phi, log_norm) = log_normalize(phi)
+                (log_phi, log_norm) = matutils.ret_log_normalize_vec(phi)
                 phi = np.exp(log_phi)
             else:
                 phi = np.dot(var_phi, Elogbeta_doc).T + Elogsticks_2nd
-                (log_phi, log_norm) = log_normalize(phi)
+                (log_phi, log_norm) = matutils.ret_log_normalize_vec(phi)
                 phi = np.exp(log_phi)
 
             # v
@@ -456,15 +442,9 @@ class HdpModel(interfaces.TransformationABC):
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
 
-    def print_topics(self, topics=20, topn=20):
-        """Alias for `show_topics()` that prints the `topn` most
-        probable words for `topics` number of topics to log.
-        Set `topics=-1` to print all topics."""
-        return self.show_topics(topics=topics, topn=topn, log=True)
-
-    def show_topics(self, topics=20, topn=20, log=False, formatted=True):
+    def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
         """
-        Print the `topN` most probable words for `topics` number of topics.
+        Print the `num_words` most probable words for `topics` number of topics.
         Set `topics=-1` to print all topics.
 
         Set `formatted=True` to return the topics as a list of strings, or
@@ -475,7 +455,7 @@ class HdpModel(interfaces.TransformationABC):
             self.update_expectations()
         betas = self.m_lambda + self.m_eta
         hdp_formatter = HdpTopicFormatter(self.id2word, betas)
-        return hdp_formatter.show_topics(topics, topn, log, formatted)
+        return hdp_formatter.show_topics(num_topics, num_words, log, formatted)
 
     def save_topics(self, doc_count=None):
         """legacy method; use `self.save()` instead"""
@@ -578,24 +558,24 @@ class HdpTopicFormatter(object):
 
         self.style = style
 
-    def print_topics(self, topics=10, topn=10):
-        return self.show_topics(topics, topn, True)
+    def print_topics(self, num_topics=10, num_words=10):
+        return self.show_topics(num_topics, num_words, True)
 
-    def show_topics(self, topics=10, topn=10, log=False, formatted=True):
+    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         shown = []
-        if topics < 0:
-            topics = len(self.data)
+        if num_topics < 0:
+            num_topics = len(self.data)
 
-        topics = min(topics, len(self.data))
+        num_topics = min(num_topics, len(self.data))
 
-        for k in xrange(topics):
+        for k in xrange(num_topics):
             lambdak = list(self.data[k, :])
             lambdak = lambdak / sum(lambdak)
 
             temp = zip(lambdak, xrange(len(lambdak)))
             temp = sorted(temp, key=lambda x: x[0], reverse=True)
 
-            topic_terms = self.show_topic_terms(temp, topn)
+            topic_terms = self.show_topic_terms(temp, num_words)
 
             if formatted:
                 topic = self.format_topic(k, topic_terms)
@@ -609,16 +589,15 @@ class HdpTopicFormatter(object):
 
         return shown
 
-    def show_topic_terms(self, topic_data, topn):
-        return [(self.dictionary[wid], weight) for (weight, wid) in topic_data[:topn]]
+    def show_topic_terms(self, topic_data, num_words):
+        return [(self.dictionary[wid], weight) for (weight, wid) in topic_data[:num_words]]
 
     def format_topic(self, topic_id, topic_terms):
         if self.STYLE_GENSIM == self.style:
             fmt = ' + '.join(['%.3f*%s' % (weight, word) for (word, weight) in topic_terms])
-            fmt = 'topic %i: %s' % (topic_id, fmt)
         else:
             fmt = '\n'.join(['    %20s    %.8f' % (word, weight) for (word, weight) in topic_terms])
-            fmt = 'topic %i:\n%s' % (topic_id, fmt)
 
+        fmt = (topic_id, fmt)
         return fmt
-#endclass HdpTopicFormatter
+# endclass HdpTopicFormatter
