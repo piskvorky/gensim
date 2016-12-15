@@ -2,23 +2,26 @@
 # -*- coding: utf-8 -*-
 
 """
-Python wrapper around word representation learning from FastText, a library for efficient learning
-of word representations and sentence classification [1].
-This module allows training a word embedding from a training corpus with the additional ability
-to obtain word vectors for out-of-vocabulary words, using the fastText C implementation.
+Python wrapper around word representation learning from Wordrank.
+This module is useful, when the training set is limited (i.e., sparse and noisy).
 The wrapped model can NOT be updated with new documents for online training -- use gensim's
 `Word2Vec` for that.
+
 Example:
->>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/fastText/fasttext', corpus_file='text8')
+>>> model = gensim.models.wrappers.Wordrank('/Users/dummy/wordrank', corpus_file='text8')
 >>> print model[word]  # prints vector for given words
-.. [1] https://github.com/facebookresearch/fastText#enriching-word-vectors-with-subword-information
+
+Note: give the path to wordrank's directory not wordrank binary.
+
+.. [1] https://bitbucket.org/shihaoji/wordrank/
+.. [2] https://arxiv.org/pdf/1506.02761v3.pdf
 """
 
 
 import logging
 import tempfile
 import os
-import struct
+import sys
 import copy
 import multiprocessing
 
@@ -32,6 +35,7 @@ from gensim.scripts.glove2word2vec import glove2word2vec
 from six import string_types
 from collections import Counter
 from smart_open import smart_open
+from shutil import copyfile, rmtree
 
 if os.name == 'posix' and sys.version_info[0] < 3:
     import subprocess32 as subprocess
@@ -41,62 +45,43 @@ else:
 logger = logging.getLogger(__name__)
 
 
-class Wordrank(Word2Vec):
+class wordrank(Word2Vec):
     """
-    Class for word vector training using Wordrank. Communication between FastText and Python
-    takes place by working with data files on disk and calling the FastText binary with
-    subprocess.call().
-    Implements functionality similar to [fasttext.py](https://github.com/salestock/fastText.py),
-    improving speed and scope of functionality like `most_similar`, `accuracy` by extracting vectors
-    into numpy matrix.
+    Class for word vector training using Wordrank. Communication between Wordrank and Python
+    takes place by working with data files on disk and calling the Wordrank binary and glove's
+    helper binaries (for preparing training data) with subprocess module.
     """
     
     @classmethod
-    def train(cls, wr_path, corpus_file, out_path=None, size=100, window=5, min_count=5, 
-                 max_vocab_size=10000000, sgd_num=100, lrate=0.025, period=10, iter=11, epsilon=0.75, 
-                 dump_period=10, reg=0, alpha=100, beta=99, loss='hinge', memory=4.0, sorted_vocab=1, ensemble=0):
+    def train(cls, wr_path, corpus_file, size=100, window=5, symmetric=0, min_count=5, max_vocab_size=0,
+              sgd_num=100, lrate=0.001, period=10, iter=11, epsilon=0.75, dump_period=10, reg=0, alpha=100,
+              beta=99, loss='hinge', memory=8.0, cleanup_files=False, sorted_vocab=1, ensemble=0):
         """
-        `ft_path` is the path to the Wordrank directory, e.g. `/home/kofola/fastText/fasttext`.
-        `corpus_file` is the filename of the text file to be used for training the FastText model.
+        `wr_path` is the path to the Wordrank directory.
+        `corpus_file` is the filename of the text file to be used for training the Wordrank model.
         Expects file to contain space-separated tokens in a single line
-        `model` defines the training algorithm. By default, cbow is used. Accepted values are
-        cbow, skipgram.
         `size` is the dimensionality of the feature vectors.
-        `window` is the maximum distance between the current and predicted word within a sentence.
+        `window` is the number of context words to the left (and to the right, if symmetric = 1).
+        `symmetric` if 0 (default), only use left context words, else use left and right both.
         `alpha` is the initial learning rate (will linearly drop to `min_alpha` as training progresses).
         `min_count` = ignore all words with total frequency lower than this.
-        `loss` = defines training objective. Allowed values are `hs` (hierarchical softmax),
-        `ns` (negative sampling) and `softmax`. Defaults to `ns`
-        `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-            default is 1e-3, useful range is (0, 1e-5).
-        `negative` = the value for negative specifies how many "noise words" should be drawn
-        (usually between 5-20). Default is 5. If set to 0, no negative samping is used.
-        Only relevant when `loss` is set to `ns`
+        `max_vocab_size` upper bound on vocabulary size, i.e. keep the <int> most frequent words. Default is 0 for no limit.
+        `sgd_num` number of SGD taken for each data point.
+        `lrate` is the learning rate.
+        `period` is the period of xi variable updates
         `iter` = number of iterations (epochs) over the corpus. Default is 5.
-        `min_n` = min length of char ngrams to be used for training word representations. Default is 1.
-        `max_n` = max length of char ngrams to be used for training word representations. Set `max_n` to be
-        greater than `min_n` to avoid char ngrams being used. Default is 5.
+        `epsilon` is the power scaling value for weighting function.
+        `dump_period` is the period after which parameters should be dumped.
+        `reg` is the value of regularization parameter.
+        `alpha` is the alpha parameter of gamma distribution.
+        `beta` is the beta parameter of gamma distribution.
+        `loss` = name of the loss (logistic, hinge).
+        `memory` = soft limit for memory consumption, in GB.
+        `cleanup_files` whether or not to delete temporary directory and files used by this wrapper, setting to False can be useful for debugging
         `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
         assigning word indexes.
+        `ensemble` = 1 (default), use ensemble of word and context vectors
         """
-        # self.path = out_path
-        # self.sgd_num = sgd_num
-        # self.lrate = lrate
-        # self.iter = iter
-        # self.epsilon = epsilon
-        # self.dim = size
-        # self.reg = reg
-        # self.alpha = alpha
-        # self.beta = beta
-        # self.loss = loss
-        # self.min_count = min_count
-        # self.max_vocab_size = max_vocab_size
-        # self.memory = memory
-        # self.window = window
-        # self.sorted_vocab = sorted_vocab
-        # self.ensemble = ensemble
-
-        # wr_path = 'Users/parul/Desktop/'+wr_path
 
         meta_data_path = 'matrix.meta'
         vocab_file = 'vocab.txt'
@@ -105,37 +90,30 @@ class Wordrank(Word2Vec):
         cooccurrence_shuf_file = 'wiki.toy'
         meta_file = 'meta'
 
-        cmd0 = [wr_path+'/glove/vocab_count', '-min-count', str(min_count), '-max-vocab', str(max_vocab_size)]
-        cmd1 = [wr_path+'/glove/cooccur', '-memory', str(memory), '-vocab-file', temp_vocab_file, '-window-size', str(window)]
-        cmd2 = [wr_path+'/glove/shuffle', '-memory', str(memory)]
+        cmd0 = ['../../glove/vocab_count', '-min-count', str(min_count), '-max-vocab', str(max_vocab_size)]
+        cmd1 = ['../../glove/cooccur', '-memory', str(memory), '-vocab-file', temp_vocab_file, '-window-size', str(window), '-symmetric', str(symmetric)]
+        cmd2 = ['../../glove/shuffle', '-memory', str(memory)]
+        cmd3 = ['cut', '-d', " ", '-f', '1', temp_vocab_file]
 
+        cmds = [cmd0, cmd1, cmd2, cmd3]
+        inputs = [corpus_file, corpus_file, cooccurrence_file, None]
+        outputs = [temp_vocab_file, cooccurrence_file, cooccurrence_shuf_file, vocab_file]
         
-        # utils.check_output(args=['rm', '-rf', out_path+';', 'mkdir', out_path+';', 'cd', out_path])
-        os.makedirs(out_path+'/'+meta_data_path)
-        os.rename(corpus_file, out_path+'/'+meta_data_path+'/'+corpus_file)
-        cmds = [cmd0, cmd1, cmd2]
-        ins = [corpus_file, corpus_file, cooccurrence_file]
-        outs = [temp_vocab_file, cooccurrence_file, cooccurrence_shuf_file]
-        
-        os.chdir(out_path+'/'+meta_data_path)
-        e = [excecute_command(cmd, inp, out) for cmd, inp, out in zip(cmds, ins, outs)]
-
-        outp = open(vocab_file, 'w')
-        process = subprocess.Popen(args=['cut', '-d', " ", '-f', '1', temp_vocab_file], stdout=outp)
-        output, err = process.communicate()
-        outp.flush()
-
+        # prepare training data (cooccurrence matrix and vocab)
+        model_dir = tempfile.mkdtemp(dir=wr_path)
+        meta_dir = tempfile.mkdtemp(dir=model_dir)
+        copyfile(corpus_file, os.path.join(meta_dir, corpus_file))
+        os.chdir(meta_dir)
+        prepare_train_data = [excecute_command(cmd, inp, out) for cmd, inp, out in zip(cmds, inputs, outputs)]
         with smart_open(vocab_file) as f:
             numwords = sum(1 for line in f)
         with smart_open(cooccurrence_shuf_file) as f:
             numlines = sum(1 for line in f)
-
-        meta_content = "{} {}\n{} {}\n{} {}".format(numwords, numwords, numlines, cooccurrence_shuf_file, numwords, vocab_file)
-        with open(meta_file, 'w') as fin:
-            fin.write(meta_content)
+        with smart_open(meta_file, 'w') as f:
+            f.write("{} {}\n{} {}\n{} {}".format(numwords, numwords, numlines, cooccurrence_shuf_file, numwords, vocab_file))
 
         wr_args = {
-            'path': meta_data_path,
+            'path': meta_dir.split('/')[2],
             'nthread': multiprocessing.cpu_count(),
             'sgd_num': sgd_num,
             'lrate': lrate,
@@ -152,26 +130,30 @@ class Wordrank(Word2Vec):
         }
 
         os.chdir('..')
-        cmd = ['mpirun', '-np', '1', '../'+wr_path+'/wordrank']
+        # run wordrank executable with wr_args
+        cmd = ['mpirun', '-np', '1', '../wordrank']
         for option, value in wr_args.items():
             cmd.append("--%s" % option)
             cmd.append(str(value))
-
         output = utils.check_output(args=cmd)
-        p = utils.check_output(args=['cp', '$model_word_$1.txt', '$wordrank.words'])
-        p = utils.check_output(args=['cp', '$model_context_$1.txt', '$wordrank.contexts'])
 
-        # model = cls.load_wordrank_model(out_path+'/wordrank.words', out_path+'/'+vocab_file, out_path+'/wordrank.contexts', sorted_vocab, ensemble)
-        model = cls.load_wordrank_model('wordrank.words', vocab_file, 'wordrank.contexts', sorted_vocab, ensemble)
+        max_iter_dump = iter/dump_period*dump_period
+        copyfile('model_word_%d.txt' % max_iter_dump, 'wordrank.words')
+        copyfile('model_context_%d.txt' % max_iter_dump, 'wordrank.contexts')
+        model = cls.load_wordrank_model('wordrank.words', os.path.join(meta_dir.split('/')[2], vocab_file), 'wordrank.contexts', sorted_vocab, ensemble)
+        os.chdir('../..')
+
+        if cleanup_files:
+            rmtree(model_dir)
         return model
 
     @classmethod
-    def load_wordrank_model(cls, model_file, vocab_file=None, context_file=None, sort=1, ensemble=1):
+    def load_wordrank_model(cls, model_file, vocab_file=None, context_file=None, sorted_vocab=1, ensemble=1):
         glove2word2vec(model_file, model_file+'.w2vformat')
         model = cls.load_word2vec_format('%s.w2vformat' % model_file)
         if ensemble and context_file:
             model.ensemble_embedding(model_file, context_file)
-        if sort and vocab_file:
+        if sorted_vocab and vocab_file:
             model.sort_embeddings(vocab_file)
         return model
 
@@ -208,10 +190,14 @@ class Wordrank(Word2Vec):
         self.wv.syn0 = new_emb
 
 
-def excecute_command(cmd, stdin, stdout):
-    inp = open(stdin)
-    out = open(stdout, 'w')
+def excecute_command(cmd, inp=None, out=None):
+    """Execute given commands, to prepare training data."""
+    if inp:
+        inp = open(inp)
+    out = open(out, 'w')
     process = subprocess.Popen(cmd, stdin=inp, stdout=out)
     output, err = process.communicate()
+    if process.returncode != 0:
+        raise subprocess.CalledProcessError(process.returncode, process.args, output=output)
     out.flush()
 
