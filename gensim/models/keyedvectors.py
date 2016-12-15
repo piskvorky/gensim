@@ -24,6 +24,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.corpora.dictionary import Dictionary
 from six import string_types
 from six.moves import xrange
+from scipy import stats
 
 
 logger = logging.getLogger(__name__)
