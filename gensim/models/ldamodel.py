@@ -34,9 +34,11 @@ The algorithm:
 import logging
 import numpy as np  # for arrays, array broadcasting etc.
 import numbers
+import os
 
 from gensim import interfaces, utils, matutils
 from gensim.models import basemodel
+from gensim.corpora import Dictionary
 
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
@@ -239,11 +241,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         prior directly from your data.
 
         `eta` can be a scalar for a symmetric prior over topic/word
-        distributions, or a vector of shape num_words, which can be used to 
-        impose (user defined) asymmetric priors over the word distribution. 
+        distributions, or a vector of shape num_words, which can be used to
+        impose (user defined) asymmetric priors over the word distribution.
         It also supports the special value 'auto', which learns an asymmetric
         prior over words directly from your data. `eta` can also be a matrix
-        of shape num_topics x num_words, which can be used to impose 
+        of shape num_topics x num_words, which can be used to impose
         asymmetric priors over the word distribution on a per-topic basis
         (can not be learned from data).
 
@@ -1025,11 +1027,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if self.state is not None:
             self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
         # Save the dictionary separately if not in 'ignore'.
-        id2word = None
-        if self.id2word is not None and 'id2word' not in ignore:
-            id2word = dict((k,v) for k,v in self.id2word.iteritems())
-            
-        # make sure 'state', 'ignore' and 'dispatcher' are ignored from the pickled object, even if
+        if 'id2word' not in ignore:
+            utils.pickle(self.id2word, utils.smart_extension(fname, '.id2word'))
+
+        # make sure 'state', 'id2word' and 'dispatcher' are ignored from the pickled object, even if 
         # someone sets the ignore list themselves
         if ignore is not None and ignore:
             if isinstance(ignore, six.string_types):
@@ -1042,7 +1043,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # make sure 'expElogbeta' and 'sstats' are ignored from the pickled object, even if
         # someone sets the separately list themselves.
         separately_explicit = ['expElogbeta', 'sstats']
-        # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some 
+        # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some
         # array manually.
         if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or len(self.alpha.shape) != 1:
             separately_explicit.append('alpha')
@@ -1057,9 +1058,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         else:
             separately = separately_explicit
         super(LdaModel, self).save(fname, ignore=ignore, separately = separately, *args, **kwargs)
-        # Save the id2word dictionary separately.
-        utils.pickle(id2word, utils.smart_extension(fname, '.id2word'))
-        
+       
     @classmethod
     def load(cls, fname, *args, **kwargs):
         """
@@ -1078,13 +1077,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         except Exception as e:
             logging.warning("failed to load state from %s: %s", state_fname, e)
         id2word_fname = utils.smart_extension(fname, '.id2word')
-        try:
-            id2word = utils.unpickle(id2word_fname)
-            if id2word is not None:
-                result.id2word = id2word
-            else:
-                result.id2word = None
-        except Exception as e:
-            logging.warning("failed to load id2word dictionary from %s: %s", state_fname, e)
+        if (os.path.isfile(id2word_fname)):
+            try:
+                result.id2word = utils.unpickle(id2word_fname)
+            except Exception as e:
+                logging.warning("failed to load id2word dictionary from %s: %s", id2word_fname, e)
+        else:
+            result.id2word = None
         return result
 # endclass LdaModel
