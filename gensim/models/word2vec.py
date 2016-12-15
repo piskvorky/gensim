@@ -99,6 +99,7 @@ from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
+from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -1391,6 +1392,13 @@ class Word2Vec(utils.SaveLoad):
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
         most_similar = most_similar or KeyedVectors.most_similar
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
+
+    @staticmethod
+    def log_evaluation(pearson, spearman, oov, pairs):
+        return KeyedVectors.log_evaluation(pearson, spearman, oov, pairs)
+
+    def evaluation(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+        return self.wv.evaluation(self, pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
 
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha)
