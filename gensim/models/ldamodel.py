@@ -38,7 +38,6 @@ import os
 
 from gensim import interfaces, utils, matutils
 from gensim.models import basemodel
-from gensim.corpora import Dictionary
 
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils

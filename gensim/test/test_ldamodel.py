@@ -44,13 +44,10 @@ dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
 
-def testfile(test_name=None):
+def testfile(test_fname=''):
     # temporary data will be stored to this file
-    if test_name is None:
-        return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
-    else:
-        fname = 'gensim_models_' + test_name + '.tst' 
-        return os.path.join(tempfile.gettempdir(), fname)
+    fname = 'gensim_models_' + test_fname + '.tst' 
+    return os.path.join(tempfile.gettempdir(), fname)
 
 
 def testRandomState():
