@@ -1,1 +1,0 @@
-# word2vec_syntax
