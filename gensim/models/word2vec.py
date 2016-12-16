@@ -1394,11 +1394,11 @@ class Word2Vec(utils.SaveLoad):
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
 
     @staticmethod
-    def log_evaluation(pearson, spearman, oov, pairs):
-        return KeyedVectors.log_evaluation(pearson, spearman, oov, pairs)
+    def log_evaluate_word_pairs(pearson, spearman, oov, pairs):
+        return KeyedVectors.log_evaluate_word_pairs(pearson, spearman, oov, pairs)
 
-    def evaluation(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
-        return self.wv.evaluation(self, pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
+    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+        return self.wv.evaluate_word_pairs(self, pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
 
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha)
@@ -1625,4 +1625,4 @@ if __name__ == "__main__":
         model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)
-    
+
