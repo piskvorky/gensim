@@ -45,7 +45,7 @@ else:
 logger = logging.getLogger(__name__)
 
 
-class wordrank(Word2Vec):
+class Wordrank(Word2Vec):
     """
     Class for word vector training using Wordrank. Communication between Wordrank and Python
     takes place by working with data files on disk and calling the Wordrank binary and glove's
@@ -53,9 +53,9 @@ class wordrank(Word2Vec):
     """
     
     @classmethod
-    def train(cls, wr_path, corpus_file, size=100, window=5, symmetric=0, min_count=5, max_vocab_size=0,
-              sgd_num=100, lrate=0.001, period=10, iter=11, epsilon=0.75, dump_period=10, reg=0, alpha=100,
-              beta=99, loss='hinge', memory=8.0, cleanup_files=False, sorted_vocab=1, ensemble=0):
+    def train(cls, wr_path, corpus_file, size=100, window=15, symmetric=0, min_count=5, max_vocab_size=0,
+              sgd_num=100, lrate=0.001, period=10, iter=10, epsilon=0.75, dump_period=10, reg=0, alpha=100,
+              beta=99, loss='hinge', memory=4.0, cleanup_files=False, sorted_vocab=1, ensemble=0):
         """
         `wr_path` is the path to the Wordrank directory.
         `corpus_file` is the filename of the text file to be used for training the Wordrank model.
@@ -158,6 +158,7 @@ class wordrank(Word2Vec):
         return model
 
     def sort_embeddings(self, vocab_file):
+        """Sort embeddings according to word frequency."""
         counts = {}
         vocab_size = len(self.wv.vocab)
         prev_syn0 = copy.deepcopy(self.wv.syn0)
@@ -177,6 +178,7 @@ class wordrank(Word2Vec):
             self.wv.vocab[word].count = counts[word]
 
     def ensemble_embedding(self, word_embedding, context_embedding):
+        """Addition of two embeddings."""
         glove2word2vec(word_embedding, word_embedding+'.w2vformat')
         glove2word2vec(context_embedding, context_embedding+'.w2vformat')
         w_emb = self.load_word2vec_format('%s.w2vformat' % word_embedding)
