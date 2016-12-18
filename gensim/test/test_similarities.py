@@ -433,6 +433,15 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         # to be mmaped!
 
 
+    def testChunksize(self):
+        index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        expected = [sim for sim in index]
+        index.chunksize = len(index) - 1
+        sims = [sim for sim in index]
+        self.assertTrue(numpy.allclose(expected, sims))
+        index.destroy()
+
+
 class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
     def setUp(self):
@@ -451,6 +460,8 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
         self.assertVectorIsSimilarToItself(model, index)
         self.assertApproxNeighborsMatchExact(model, index)
+        self.assertIndexSaved(index)
+        self.assertLoadedIndexEqual(index, model)
 
     def testFastText(self):
         ft_home = os.environ.get('FT_HOME', None)
@@ -464,6 +475,14 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
         self.assertVectorIsSimilarToItself(model, index)
         self.assertApproxNeighborsMatchExact(model, index)
+        self.assertIndexSaved(index)
+        self.assertLoadedIndexEqual(index, model)
+
+    def testLoadMissingRaisesError(self):
+        from gensim.similarities.index import AnnoyIndexer
+        test_index = AnnoyIndexer()
+
+        self.assertRaises(IOError, test_index.load, fname='test-index')
 
     def assertVectorIsSimilarToItself(self, model, index):
         vector = model.syn0norm[0]
@@ -483,6 +502,24 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
 
         self.assertEqual(approx_words, exact_words)
+
+    def assertIndexSaved(self, index):
+        index.save('index')
+        self.assertTrue(os.path.exists('index'))
+        self.assertTrue(os.path.exists('index.d'))
+
+    def assertLoadedIndexEqual(self, index, model):
+        from gensim.similarities.index import AnnoyIndexer
+
+        index.save('index')
+
+        index2 = AnnoyIndexer()
+        index2.load('index')
+        index2.model = model
+
+        self.assertEqual(index.index.f, index2.index.f)
+        self.assertEqual(index.labels, index2.labels)
+        self.assertEqual(index.num_trees, index2.num_trees)
 
 
 class TestDoc2VecAnnoyIndexer(unittest.TestCase):
@@ -516,6 +553,30 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
 
         self.assertEqual(approx_words, exact_words)
+
+    def testSave(self):
+        self.index.save('index')
+        self.assertTrue(os.path.exists('index'))
+        self.assertTrue(os.path.exists('index.d'))
+
+    def testLoadNotExist(self):
+        from gensim.similarities.index import AnnoyIndexer
+        self.test_index = AnnoyIndexer()
+
+        self.assertRaises(IOError, self.test_index.load, fname='test-index')
+
+    def testSaveLoad(self):
+        from gensim.similarities.index import AnnoyIndexer
+
+        self.index.save('index')
+
+        self.index2 = AnnoyIndexer()
+        self.index2.load('index')
+        self.index2.model = self.model
+
+        self.assertEqual(self.index.index.f, self.index2.index.f)
+        self.assertEqual(self.index.labels, self.index2.labels)
+        self.assertEqual(self.index.num_trees, self.index2.num_trees)
 
 
 if __name__ == '__main__':

@@ -171,6 +171,10 @@ class KeyedVectors(utils.SaveLoad):
         dictionary = Dictionary(documents=[document1, document2])
         vocab_len = len(dictionary)
 
+        if vocab_len == 1:
+            # Both documents are composed by a single unique token
+            return 0.0
+
         # Sets for faster look-up.
         docset1 = set(document1)
         docset2 = set(document2)
@@ -376,9 +380,12 @@ class KeyedVectors(utils.SaveLoad):
           True
 
         """
+        if not(len(ws1) and len(ws2)):
+            raise ZeroDivisionError('Atleast one of the passed list is empty.')
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
-        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
+        return dot(matutils.unitvec(array(v1).mean(axis=0)),
+                   matutils.unitvec(array(v2).mean(axis=0)))
 
     @staticmethod
     def log_accuracy(section):
