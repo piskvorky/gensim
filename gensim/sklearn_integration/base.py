@@ -20,7 +20,8 @@ class LdaModel(models.LdaModel,object):
                  eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None):
         """
-        base LDA code.
+        base LDA code.Use corpus=corpus when fit is not involved. Otherwise leave corpus as None and use fit to give
+        the parameter as corpus.
         """
         self.corpus = corpus
         self.num_topics = num_topics
@@ -49,23 +50,27 @@ class LdaModel(models.LdaModel,object):
 
     def get_params(self, deep=True):
         if deep:
-            return {"alpha": self.alpha, "n_iter": self.iterations, "eta": self.eta, "random_state": self.random_state,
-                    "id2word": self.id2word, "passes": self.passes}
+            return {"corpus":self.corpus,"num_topics":self.num_topics,"id2word":self.id2word,
+                    "distributed":self.distributed,"chunksize":self.chunksize,"passes":self.passes,
+                    "update_every":self.update_every,"alpha":self.alpha," eta":self.eta," decay":self.decay,
+                    "offset":self.offset,"eval_every":self.eval_every," iterations":self.iterations,
+                    "gamma_threshold":self.gamma_threshold,"minimum_probability":self.minimum_probability,
+                    "random_state":self.random_state}
 
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
             self.setattr(parameter, value)
         return self
 
-    def fit(self, X, y=None):
+    def fit(self, X):
         """
         call gensim.model.LdaModel from this
-        // todo: convert fit and relevant,corpus still requires gensim preprocessing
         calling :
-        >>>gensim.models.LdaModel(corpus=corpus,num_topics=n_topics,id2word=None,passes=n_iter,update_every=refresh,alpha=alpha,iterations=n_iter,eta=eta,random_state=random_state)
+        >>>gensim.models.LdaModel(corpus=corpus,num_topics=num_topics,id2word=id2word,passes=passes,update_every=update_every,alpha=alpha,iterations=iterations,eta=eta,random_state=random_state)
         """
+        self.corpus=X
         models.LdaModel.__init__(
-                                 self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
+                                 self, corpus=X, num_topics=self.num_topics, id2word=self.id2word,
                                  distributed=self.distributed, chunksize=self.chunksize, passes=self.passes,
                                  update_every=self.update_every,alpha=self.alpha, eta=self.eta, decay=self.decay,
                                  offset=self.offset,eval_every=self.eval_every, iterations=self.iterations,
@@ -82,7 +87,7 @@ class LdaModel(models.LdaModel,object):
                                         bow, minimum_probability=minimum_probability,
                                         minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
 
-    def partial_fit(self, X, y=None):
+    def partial_fit(self, X):
         """
         train model over X
         """
