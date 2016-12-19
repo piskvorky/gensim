@@ -55,7 +55,7 @@ class Wordrank(Word2Vec):
     @classmethod
     def train(cls, wr_path, corpus_file, size=100, window=15, symmetric=1, min_count=5, max_vocab_size=0,
               sgd_num=100, lrate=0.001, period=10, iter=90, epsilon=0.75, dump_period=10, reg=0, alpha=100,
-              beta=99, loss='hinge', memory=4.0, cleanup_files=False, sorted_vocab=1, ensemble=0):
+              beta=99, loss='hinge', memory=4.0, cleanup_files=False, sorted_vocab=1, ensemble=1):
         """
         `wr_path` is the path to the Wordrank directory.
         `corpus_file` is the filename of the text file to be used for training the Wordrank model.
@@ -69,7 +69,7 @@ class Wordrank(Word2Vec):
         `sgd_num` number of SGD taken for each data point.
         `lrate` is the learning rate (too high diverges, give Nan).
         `period` is the period of xi variable updates
-        `iter` = number of iterations (epochs) over the corpus. Default is 5.
+        `iter` = number of iterations (epochs) over the corpus.
         `epsilon` is the power scaling value for weighting function.
         `dump_period` is the period after which parameters should be dumped.
         `reg` is the value of regularization parameter.
