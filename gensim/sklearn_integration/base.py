@@ -6,11 +6,12 @@
 #
 """
 scikit learn interface for gensim for easy use of gensim with scikit-learn
+follows on scikit learn API conventions
 """
 from gensim import models
 
 
-class LdaModel(models.LdaModel,object):
+class SklearnWrapperLdaModel(models.LdaModel,object):
     """
     Base LDA module
     """
@@ -20,8 +21,7 @@ class LdaModel(models.LdaModel,object):
                  eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None):
         """
-        base LDA code.Use corpus=corpus when fit is not involved. Otherwise leave corpus as None and use fit to give
-        the parameter as corpus.
+        sklearn wrapper for LDA model.derived class for gensim.model.LdaModel
         """
         self.corpus = corpus
         self.num_topics = num_topics
@@ -39,7 +39,10 @@ class LdaModel(models.LdaModel,object):
         self.gamma_threshold = gamma_threshold
         self.minimum_probability = minimum_probability
         self.random_state = random_state
-        if self.corpus is not None:
+        """
+        if no fit function is used , then corpus is given in init
+        """
+        if self.corpus:
             models.LdaModel.__init__(
                                      self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
                                      distributed=self.distributed, chunksize=self.chunksize, passes=self.passes,
@@ -49,6 +52,10 @@ class LdaModel(models.LdaModel,object):
                                      random_state=self.random_state)
 
     def get_params(self, deep=True):
+        """
+        returns all parameters as dictionary.
+        Warnings: Must for sklearn API.Do not Remove.
+        """
         if deep:
             return {"corpus":self.corpus,"num_topics":self.num_topics,"id2word":self.id2word,
                     "distributed":self.distributed,"chunksize":self.chunksize,"passes":self.passes,
@@ -58,15 +65,20 @@ class LdaModel(models.LdaModel,object):
                     "random_state":self.random_state}
 
     def set_params(self, **parameters):
+        """
+        set all parameters.
+        Warnings: Must for sklearn API.Do not Remove.
+        """
         for parameter, value in parameters.items():
             self.setattr(parameter, value)
         return self
 
     def fit(self, X):
         """
-        call gensim.model.LdaModel from this
-        calling :
+        For fitting corpus into the class object.
+        calls gensim.model.LdaModel:
         >>>gensim.models.LdaModel(corpus=corpus,num_topics=num_topics,id2word=id2word,passes=passes,update_every=update_every,alpha=alpha,iterations=iterations,eta=eta,random_state=random_state)
+        Warnings: Must for sklearn API.Do not Remove.
         """
         self.corpus=X
         models.LdaModel.__init__(
@@ -82,6 +94,7 @@ class LdaModel(models.LdaModel,object):
         """
         takes as an input a new document (bow) and
         Return topic distribution for the given document bow, as a list of (topic_id, topic_probability) 2-tuples.
+        Warnings: Must for sklearn API.Do not Remove.
         """
         return self.get_document_topics(
                                         bow, minimum_probability=minimum_probability,
@@ -89,6 +102,6 @@ class LdaModel(models.LdaModel,object):
 
     def partial_fit(self, X):
         """
-        train model over X
+        train model over X.
         """
         self.update(corpus=X)
