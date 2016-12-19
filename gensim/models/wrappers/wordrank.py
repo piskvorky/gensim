@@ -53,8 +53,8 @@ class Wordrank(Word2Vec):
     """
     
     @classmethod
-    def train(cls, wr_path, corpus_file, size=100, window=15, symmetric=0, min_count=5, max_vocab_size=0,
-              sgd_num=100, lrate=0.001, period=10, iter=10, epsilon=0.75, dump_period=10, reg=0, alpha=100,
+    def train(cls, wr_path, corpus_file, size=100, window=15, symmetric=1, min_count=5, max_vocab_size=0,
+              sgd_num=100, lrate=0.001, period=10, iter=90, epsilon=0.75, dump_period=10, reg=0, alpha=100,
               beta=99, loss='hinge', memory=4.0, cleanup_files=False, sorted_vocab=1, ensemble=0):
         """
         `wr_path` is the path to the Wordrank directory.
@@ -62,12 +62,12 @@ class Wordrank(Word2Vec):
         Expects file to contain space-separated tokens in a single line
         `size` is the dimensionality of the feature vectors.
         `window` is the number of context words to the left (and to the right, if symmetric = 1).
-        `symmetric` if 0 (default), only use left context words, else use left and right both.
+        symmetric` if 0, only use left context words, else use left and right both.
         `alpha` is the initial learning rate (will linearly drop to `min_alpha` as training progresses).
         `min_count` = ignore all words with total frequency lower than this.
         `max_vocab_size` upper bound on vocabulary size, i.e. keep the <int> most frequent words. Default is 0 for no limit.
         `sgd_num` number of SGD taken for each data point.
-        `lrate` is the learning rate.
+        `lrate` is the learning rate (too high diverges, give Nan).
         `period` is the period of xi variable updates
         `iter` = number of iterations (epochs) over the corpus. Default is 5.
         `epsilon` is the power scaling value for weighting function.
@@ -78,8 +78,7 @@ class Wordrank(Word2Vec):
         `loss` = name of the loss (logistic, hinge).
         `memory` = soft limit for memory consumption, in GB.
         `cleanup_files` whether or not to delete temporary directory and files used by this wrapper, setting to False can be useful for debugging
-        `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
-        assigning word indexes.
+        `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before assigning word indexes.
         `ensemble` = 1 (default), use ensemble of word and context vectors
         """
 
