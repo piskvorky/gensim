@@ -27,13 +27,12 @@ import gensim
 
 logger = logging.getLogger(__name__)
 
-'''
+def word2vec2tensor(word2vec_model_path,tensor_filename):
+    '''
     Convert Word2Vec mode to 2D tensor TSV file and metadata file 
     @word2vec_model_path word2vec model
     @tensor_filename tensor filename prefix
-'''
-def word2vec2tensor(word2vec_model_path,tensor_filename):
-    
+    '''    
     model = gensim.models.Word2Vec.load_word2vec_format(word2vec_model_path, binary=True)
     outfiletsv = tensor_filename + '_tensor.tsv'
     outfiletsvmeta = tensor_filename + '_metadata.tsv'
