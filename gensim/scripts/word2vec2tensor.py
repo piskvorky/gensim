@@ -47,7 +47,7 @@ def word2vec2tensor(word2vec_model_path,tensor_filename):
     
     with open(outfiletsv, 'w+') as file_vector:
         with open(outfiletsvmeta, 'w+') as file_metadata:
-            for word in model.index2word:
+            for word in model.wv.index2word:
                 file_metadata.write(word.encode('utf-8') + '\n')
                 vector_row = '\t'.join(map(str, model[word]))
                 file_vector.write(vector_row + '\n')
