@@ -51,6 +51,9 @@ def word2vec2tensor(word2vec_model_path,tensor_filename):
                 file_metadata.write(word.encode('utf-8') + '\n')
                 vector_row = '\t'.join(map(str, model[word]))
                 file_vector.write(vector_row + '\n')
+    
+    logger.info("2D tensor file saved to %s" % outfiletsv)
+    logger.info("Tensor metadata file saved to %s" % outfiletsvmeta)
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
