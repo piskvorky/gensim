@@ -6,10 +6,11 @@
 # Copyright (C) 2016 Radim Rehurek <radim@rare-technologies.com>
 
 """
-USAGE: $ python -m gensim.scripts.word2vec2tensor --input <Word2Vec model file> --output <TSV tensor filename prefix>
+USAGE: $ python -m gensim.scripts.word2vec2tensor --input <Word2Vec model file> --output <TSV tensor filename prefix> [--binary] <Word2Vec binary flag>
 Where:
     <Word2Vec model file>: Input Word2Vec model
     <TSV tensor filename prefix>: 2D tensor TSV output file name prefix
+    <Word2Vec binary flag>: Set True if Word2Vec model is binary. Defaults to False.
 Output:
     The script will create two TSV files. A 2d tensor format file, and a Word Embedding metadata file. Both files will
     us the --output file name as prefix
