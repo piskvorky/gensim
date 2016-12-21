@@ -3,7 +3,7 @@
 #
 # Copyright (C) 2016 Loreto Parisi <loretoparisi@gmail.com>
 # Copyright (C) 2016 Silvio Ogliastri <silvio.olivastri@gmail.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Copyright (C) 2016 Radim Rehurek <radim@rare-technologies.com>
 
 """
 USAGE: $ python -m gensim.scripts.word2vec2tensor --input <Word2Vec model file> --output <TSV tensor filename prefix>
