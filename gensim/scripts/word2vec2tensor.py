@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2016 Loreto Parisi <loretoparisi@gmail.com>
-# Copyright (C) 2016 Silvio Ogliastri <silvio.olivastri@gmail.com>
+# Copyright (C) 2016 Silvio Olivastri <silvio.olivastri@gmail.com>
 # Copyright (C) 2016 Radim Rehurek <radim@rare-technologies.com>
 
 """
