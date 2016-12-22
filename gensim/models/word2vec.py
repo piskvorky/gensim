@@ -968,7 +968,9 @@ class Word2Vec(utils.SaveLoad):
             raise RuntimeError("you must first build vocabulary before scoring new data")
 
         if not self.hs:
-            raise RuntimeError("we have only implemented score for hs")
+            raise RuntimeError("We have currently only implemented score \
+                    for the hierarchical softmax scheme, so you need to have \
+                    run word2vec with hs=1 and negative=0 for this to work.")
 
         def worker_loop():
             """Train the model, lifting lists of sentences from the jobs queue."""
