@@ -182,7 +182,11 @@ setup(
     ],
     tests_require=[
     	'testfixtures',
-        'unittest2'
+        'unittest2',
+        'nbconvert',
+        'jupyter_client',
+        'ipykernel',
+        'pyldavis',
     ],
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
