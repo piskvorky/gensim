@@ -43,6 +43,7 @@ from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
 from six.moves import xrange
 import six
+import json
 
 # log(sum(exp(x))) that tries to avoid overflow
 try:
@@ -995,7 +996,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         return self.get_document_topics(bow, eps, self.minimum_phi_value, self.per_word_topics)
 
-    def save(self, fname, ignore=['state', 'dispatcher'], *args, **kwargs):
+    def save(self, fname, ignore=['state', 'dispatcher'], separately = None, *args, **kwargs):
         """
         Save the model to file.
 
@@ -1034,7 +1035,41 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             ignore = list(set(['state', 'dispatcher']) | set(ignore))
         else:
             ignore = ['state', 'dispatcher']
-        super(LdaModel, self).save(fname, *args, ignore=ignore, **kwargs)
+        
+        # make sure 'expElogbeta' and 'sstats' are ignored from the pickled object, even if
+        # someone sets the separately list themselves.
+        separately_explicit = ['expElogbeta', 'sstats']
+        # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some 
+        # array manually.
+        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or len(self.alpha.shape) != 1:
+            separately_explicit.append('alpha')
+        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or len(self.eta.shape) != 1:
+            separately_explicit.append('eta')
+        # Merge separately_explicit with separately.
+        if separately:
+            if isinstance(separately, six.string_types):
+                separately = [separately]
+            separately = [e for e in separately if e] # make sure None and '' are not in the list
+            separately = list(set(separately_explicit) | set(separately))
+        else:
+            separately = separately_explicit
+        
+        # id2word needs to saved separately. 
+        # If id2word is not already in ignore, then saving it separately in json.
+        id2word = None
+        if self.id2word is not None and 'id2word' not in ignore:
+            id2word = dict((k,v) for k,v in self.id2word.iteritems())
+        self.id2word = None # remove the dictionary from model
+        super(LdaModel, self).save(fname, ignore=ignore, separately = separately, *args, **kwargs)
+        self.id2word = id2word # restore the dictionary.
+
+        # Save the dictionary separately in json.
+        id2word_fname = utils.smart_extension(fname, '.json')   
+        try:
+            with utils.smart_open(id2word_fname, 'w', encoding='utf-8') as fout:
+                json.dump(id2word, fout)
+        except Exception as e:
+            logging.warning("failed to save id2words dictionary in %s: %s", id2word_fname, e)
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
@@ -1048,6 +1083,18 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
+        # Load the separately stored id2word dictionary saved in json.
+        id2word_fname = utils.smart_extension(fname, '.json')
+        try:
+            with utils.smart_open(id2word_fname, 'r') as fin:
+                id2word = json.load(fin)
+            if id2word is not None:
+                result.id2word = utils.FakeDict(id2word)
+            else:
+                result.id2word = None
+        except Exception as e:
+            logging.warning("failed to load id2words from %s: %s", id2word_fname, e)
+
         state_fname = utils.smart_extension(fname, '.state')
         try:
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)

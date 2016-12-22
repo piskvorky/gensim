@@ -284,6 +284,19 @@ class TestWord2VecModel(unittest.TestCase):
         binary_model_with_vocab.save(testfile())
         binary_model_with_vocab = word2vec.Word2Vec.load(testfile())
         self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
+    
+    # def testSaveModelsForPythonVersion(self):
+    #     fname = os.path.join(os.path.dirname(__file__), 'word2vecmodel_python_3_5')
+    #     model = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=1, negative=0)
+    #     model.save(fname)
+    #     logging.warning("Word2Vec model saved")
+    
+    def testModelCompatibilityWithPythonVersions(self):
+        fname_model_2_7 = os.path.join(os.path.dirname(__file__), 'word2vecmodel_python_2_7')
+        model_2_7 = word2vec.Word2Vec.load(fname_model_2_7)
+        fname_model_3_5 = os.path.join(os.path.dirname(__file__), 'word2vecmodel_python_3_5')
+        model_3_5 = word2vec.Word2Vec.load(fname_model_3_5)
+        self.models_equal(model_2_7, model_3_5)
 
     def testLargeMmap(self):
         """Test storing/loading the entire model."""

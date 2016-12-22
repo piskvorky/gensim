@@ -408,6 +408,24 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
+    #     Method used to save LDA models in Python 2.7 and 3.5 environments.
+    # def testSaveModelsForPythonVersion(self):
+    #     fname = os.path.join(os.path.dirname(__file__), 'ldamodel_python_2_7')
+    #     corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+    #     model = ldamodel.LdaModel(corpus, id2word=dictionary, num_topics=2, passes=100, random_state = 1000007)
+    #     model.save(fname)
+    #     logging.warning("LDA Model saved")
+
+    def testModelCompatibilityWithPythonVersions(self):
+        fname_model_2_7 = os.path.join(os.path.dirname(__file__), 'ldamodel_python_2_7')
+        model_2_7 = self.class_.load(fname_model_2_7)
+        fname_model_3_5 = os.path.join(os.path.dirname(__file__), 'ldamodel_python_3_5')
+        model_3_5 = self.class_.load(fname_model_3_5)
+        self.assertEqual(model_2_7.num_topics, model_3_5.num_topics)
+        self.assertTrue(numpy.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model_2_7[tstvec], model_3_5[tstvec])) # try projecting an empty vector
+
     def testPersistenceIgnore(self):
         fname = testfile()
         model = ldamodel.LdaModel(self.corpus, num_topics=2)
