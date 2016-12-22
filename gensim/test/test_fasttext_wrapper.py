@@ -40,7 +40,7 @@ class TestFastText(unittest.TestCase):
     def model_sanity(self, model):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
         self.assertEqual(model.wv.syn0.shape, (len(model.vocab), model.size))
-        self.assertEqual(model.syn0_all.shape, (model.num_ngram_vectors, model.size))
+        self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model.size))
         sims = model.most_similar('war', topn=len(model.index2word))
 
     def testTraining(self):
@@ -50,7 +50,7 @@ class TestFastText(unittest.TestCase):
         vocab_size, model_size = 1762, 10
         self.assertEqual(self.test_model.wv.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(self.test_model.wv.vocab), vocab_size)
-        self.assertEqual(self.test_model.syn0_all.shape[1], model_size)
+        self.assertEqual(self.test_model.wv.syn0_all.shape[1], model_size)
         self.model_sanity(self.test_model)
 
     def testMinCount(self):
@@ -64,7 +64,7 @@ class TestFastText(unittest.TestCase):
                 self.ft_path, self.corpus_file, output_file=self.test_model_file, size=20)
         self.assertEqual(test_model_size_20.size, 20)
         self.assertEqual(test_model_size_20.syn0.shape[1], 20)
-        self.assertEqual(test_model_size_20.syn0_all.shape[1], 20)
+        self.assertEqual(test_model_size_20.wv.syn0_all.shape[1], 20)
 
     def testPersistence(self):
         """Test storing/loading the entire model."""
@@ -85,7 +85,7 @@ class TestFastText(unittest.TestCase):
         vocab_size, model_size = 1762, 10
         self.assertEqual(self.test_model.wv.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(self.test_model.wv.vocab), vocab_size, model_size)
-        self.assertEqual(self.test_model.syn0_all.shape, (self.test_model.num_ngram_vectors, model_size))
+        self.assertEqual(self.test_model.wv.syn0_all.shape, (self.test_model.num_ngram_vectors, model_size))
         self.model_sanity(model)
 
     def testNSimilarity(self):
@@ -142,18 +142,6 @@ class TestFastText(unittest.TestCase):
         self.assertFalse('nights' in self.test_model)
         self.assertTrue(numpy.allclose(self.test_model['nights'], self.test_model[['nights']]))
 
-    def testDoesntMatch(self):
-        if self.test_model is None:
-            return
-        oov_words = ['nights', 'forests', 'payments']
-        # Out of vocab check
-        for word in oov_words:
-            self.assertFalse(word in self.test_model)
-        try:
-            self.test_model.doesnt_match(oov_words)
-        except Exception:
-            self.fail('model.doesnt_match raises exception for oov words')
-
     def testHash(self):
         # Tests FastText.ft_hash method return values to those obtained from original C implementation
         ft_hash = fasttext.FastText.ft_hash('test')
@@ -168,7 +156,7 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(len(model.vocab), len(model2.vocab))
         self.assertEqual(set(model.vocab.keys()), set(model2.vocab.keys()))
         self.assertTrue(numpy.allclose(model.wv.syn0, model2.wv.syn0))
-        self.assertTrue(numpy.allclose(model.syn0_all, model2.syn0_all))
+        self.assertTrue(numpy.allclose(model.wv.syn0_all, model2.wv.syn0_all))
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

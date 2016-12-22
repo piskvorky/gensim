@@ -39,7 +39,20 @@ logger = logging.getLogger(__name__)
 
 
 class FastTextKeyedVectors(KeyedVectors):
-    pass
+    def word_vec(self, word, use_norm=False):
+        if word in self.vocab:
+            return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
+        else:
+            word_vec = np.zeros(self.syn0_all.shape[1])
+            ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
+            for ngram in ngrams:
+                if ngram in self.ngrams:
+                    word_vec += self.syn0_all[self.ngrams[ngram]]
+            if word_vec.any():
+                return word_vec/len(ngrams)
+            else: # No ngrams of the word are present in self.ngrams
+                raise KeyError('all ngrams for word %s absent from model' % word)
+
 
 class FastText(Word2Vec):
     """
@@ -144,8 +157,8 @@ class FastText(Word2Vec):
         self.loss = loss
         self.sg = model == 'skipgram'
         self.bucket = bucket
-        self.min_n = minn
-        self.max_n = maxn
+        self.wv.min_n = minn
+        self.wv.max_n = maxn
         self.sample = t
 
     def load_dict(self, f):
@@ -174,8 +187,8 @@ class FastText(Word2Vec):
             dtype = np.dtype(np.float64)
 
         self.num_original_vectors = num_vectors
-        self.syn0_all = np.fromstring(f.read(num_vectors * dim * float_size), dtype=dtype)
-        self.syn0_all = self.syn0_all.reshape((num_vectors, dim))
+        self.wv.syn0_all = np.fromstring(f.read(num_vectors * dim * float_size), dtype=dtype)
+        self.wv.syn0_all = self.wv.syn0_all.reshape((num_vectors, dim))
         self.init_ngrams()
 
     def struct_unpack(self, f, fmt):
@@ -183,18 +196,18 @@ class FastText(Word2Vec):
         return struct.unpack(fmt, f.read(num_bytes))
 
     def init_ngrams(self):
-        self.ngrams = {}
+        self.wv.ngrams = {}
         all_ngrams = []
         for w, v in self.vocab.items():
-            all_ngrams += self.compute_ngrams(w, self.min_n, self.max_n)
+            all_ngrams += self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
         all_ngrams = set(all_ngrams)
         self.num_ngram_vectors = len(all_ngrams)
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
             ngram_hash = self.ft_hash(ngram)
             ngram_indices.append((len(self.wv.vocab) + ngram_hash) % self.bucket)
-            self.ngrams[ngram] = i
-        self.syn0_all = self.syn0_all.take(ngram_indices, axis=0)
+            self.wv.ngrams[ngram] = i
+        self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
 
     @staticmethod
     def compute_ngrams(word, min_n, max_n):
@@ -216,26 +229,3 @@ class FastText(Word2Vec):
             h = h * np.uint32(16777619)
         return h
 
-    def __getitem__(self, words):
-        if isinstance(words, string_types):
-            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
-            return self.word_vector(words)
-
-        return np.vstack([self.word_vector(word) for word in words])
-
-    def word_vector(self, word):
-        if word in self.wv.vocab:
-            return self.wv[word]
-        else:
-            return self.oov_vector(word)
-
-    def oov_vector(self, word):
-        word_vec = np.zeros(self.size)
-        ngrams = self.compute_ngrams(word, self.min_n, self.max_n)
-        for ngram in ngrams:
-            if ngram in self.ngrams:
-                word_vec += self.syn0_all[self.ngrams[ngram]]
-        if word_vec.any():
-            return word_vec/len(ngrams)
-        else: # No ngrams of the word are present in self.ngrams
-            raise KeyError('all ngrams for word %s absent from model' % word)
