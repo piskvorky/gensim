@@ -37,7 +37,11 @@ from collections import Counter
 from smart_open import smart_open
 from shutil import copyfile, rmtree
 
-import subprocess
+
+if sys.version_info > (2, 6):
+    import subprocess
+else:
+    import subprocess32 as subprocess
 
 logger = logging.getLogger(__name__)
 
