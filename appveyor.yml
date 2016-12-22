@@ -11,7 +11,7 @@ environment:
     WHEELHOUSE_UPLOADER_USERNAME: "Lev.Konstantinovskiy"
     WHEELHOUSE_UPLOADER_SECRET:
       secure: qXqY3dFmLOqvxa3Om2gQi/BjotTOK+EP2IPLolBNo0c61yDtNWxbmE4wH3up72Be
-    
+
   matrix:
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7.8"
@@ -49,7 +49,7 @@ install:
   - ps: "ls dist"
 
   # Install the genreated wheel package to test it
-  - "pip install --pre --no-index --find-links dist/ gensim"
+  - "pip install --pre --no-index --find-links dist/ gensim[test]"
 
 # Not a .NET project, we build scikit-learn in the install step instead
 build: false
@@ -86,4 +86,3 @@ cache:
   # container, speed up the appveyor jobs and reduce bandwidth
   # usage on our rackspace account.
   - '%APPDATA%\pip\Cache'
-
