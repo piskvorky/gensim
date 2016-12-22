@@ -1,6 +1,7 @@
 Changes
 =======
 
+* Add suggested_lda_model to HDP class and clean HDP class. (@bhargavvader, #996)
 * Fix automatic learning of eta (prior over words) in LDA (@olavurmortensen, [#1024](https://github.com/RaRe-Technologies/gensim/pull/1024#)).
     * eta should have dimensionality V (size of vocab) not K (number of topics). eta with shape K x V is still allowed, as the user may want to impose specific prior information to each topic.
     * eta is no longer allowed the "asymmetric" option. Asymmetric priors over words in general are fine (learned or user defined).
