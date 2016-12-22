@@ -37,10 +37,7 @@ from collections import Counter
 from smart_open import smart_open
 from shutil import copyfile, rmtree
 
-if os.name == 'posix' and sys.version_info[0] < 3:
-    import subprocess32 as subprocess
-else:
-    import subprocess
+import subprocess
 
 logger = logging.getLogger(__name__)
 
