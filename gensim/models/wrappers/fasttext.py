@@ -38,6 +38,9 @@ from six import string_types
 logger = logging.getLogger(__name__)
 
 
+class FastTextKeyedVectors(KeyedVectors):
+    pass
+
 class FastText(Word2Vec):
     """
     Class for word vector training using FastText. Communication between FastText and Python
@@ -48,6 +51,10 @@ class FastText(Word2Vec):
     into numpy matrix.
 
     """
+
+    def initialize_word_vectors(self):
+        self.wv = FastTextKeyedVectors()  # wv --> word vectors
+
     @classmethod
     def train(cls, ft_path, corpus_file, output_file=None, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
             loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
@@ -166,7 +173,7 @@ class FastText(Word2Vec):
         elif float_size == 8:
             dtype = np.dtype(np.float64)
 
-        self.num_vectors = num_vectors
+        self.num_original_vectors = num_vectors
         self.syn0_all = np.fromstring(f.read(num_vectors * dim * float_size), dtype=dtype)
         self.syn0_all = self.syn0_all.reshape((num_vectors, dim))
         self.init_ngrams()
@@ -179,24 +186,35 @@ class FastText(Word2Vec):
         self.ngrams = {}
         all_ngrams = []
         for w, v in self.vocab.items():
-            all_ngrams += self.compute_ngrams(w)
+            all_ngrams += self.compute_ngrams(w, self.min_n, self.max_n)
         all_ngrams = set(all_ngrams)
+        self.num_ngram_vectors = len(all_ngrams)
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
-            ngram_hash = ft_hash(ngram)
+            ngram_hash = self.ft_hash(ngram)
             ngram_indices.append((len(self.wv.vocab) + ngram_hash) % self.bucket)
             self.ngrams[ngram] = i
         self.syn0_all = self.syn0_all.take(ngram_indices, axis=0)
 
-    def compute_ngrams(self, word):
+    @staticmethod
+    def compute_ngrams(word, min_n, max_n):
         ngram_indices = []
         BOW, EOW = ('<','>')
         extended_word = BOW + word + EOW
         ngrams = set()
-        for i in range(len(extended_word) - self.min_n + 1):
-            for j in range(self.min_n, max(len(extended_word) - self.max_n, self.max_n + 1)):
+        for i in range(len(extended_word) - min_n + 1):
+            for j in range(min_n, max(len(extended_word) - max_n, max_n + 1)):
                 ngrams.add(extended_word[i:i+j])
         return ngrams
+
+    @staticmethod
+    def ft_hash(string):
+        # Reproduces hash method used in fastText
+        h = np.uint32(2166136261)
+        for c in string:
+            h = h ^ np.uint32(ord(c))
+            h = h * np.uint32(16777619)
+        return h
 
     def __getitem__(self, words):
         if isinstance(words, string_types):
@@ -213,7 +231,7 @@ class FastText(Word2Vec):
 
     def oov_vector(self, word):
         word_vec = np.zeros(self.size)
-        ngrams = self.compute_ngrams(word)
+        ngrams = self.compute_ngrams(word, self.min_n, self.max_n)
         for ngram in ngrams:
             if ngram in self.ngrams:
                 word_vec += self.syn0_all[self.ngrams[ngram]]
@@ -221,12 +239,3 @@ class FastText(Word2Vec):
             return word_vec/len(ngrams)
         else: # No ngrams of the word are present in self.ngrams
             raise KeyError('all ngrams for word %s absent from model' % word)
-
-
-def ft_hash(string):
-    # Reproduces hash method used in fastText
-    h = np.uint32(2166136261)
-    for c in string:
-        h = h ^ np.uint32(ord(c))
-        h = h * np.uint32(16777619)
-    return h

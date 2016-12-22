@@ -426,7 +426,7 @@ class Word2Vec(utils.SaveLoad):
         else:
             logger.debug('Fast version of {0} is being used'.format(__name__))
 
-        self.wv = KeyedVectors()  # wv --> KeyedVectors
+        self.initialize_word_vectors()
         self.sg = int(sg)
         self.cum_table = None  # for negative sampling
         self.vector_size = int(size)
@@ -459,6 +459,9 @@ class Word2Vec(utils.SaveLoad):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences)
+
+    def initialize_word_vectors(self):
+        self.wv = KeyedVectors()  # wv --> word vectors
 
     def make_cum_table(self, power=0.75, domain=2**31 - 1):
         """
