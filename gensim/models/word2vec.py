@@ -78,6 +78,7 @@ from collections import defaultdict
 import threading
 import itertools
 
+from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.utils import keep_vocab_item
 from gensim.models.keyedvectors import KeyedVectors
 
@@ -420,6 +421,9 @@ class Word2Vec(utils.SaveLoad):
         texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
 
         """
+
+        self.load = call_on_class_only
+        self.load_word2vec_format = call_on_class_only        
 
         if FAST_VERSION == -1:
             logger.warning('Slow version of {0} is being used'.format(__name__))

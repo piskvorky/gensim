@@ -216,6 +216,10 @@ def any2unicode(text, encoding='utf8', errors='strict'):
     return unicode(text, encoding, errors=errors)
 to_unicode = any2unicode
 
+def call_on_class_only(*args, **kwargs):
+    """Raise exception when load methods are called on instance"""
+    raise AttributeError('This method should be called on a class object.')
+
 
 class SaveLoad(object):
     """
