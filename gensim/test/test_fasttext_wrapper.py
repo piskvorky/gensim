@@ -29,59 +29,145 @@ class TestFastText(unittest.TestCase):
     def setUp(self):
         ft_home = os.environ.get('FT_HOME', None)
         self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
-        self.corpus_file = datapath('lee.cor')
+        self.corpus_file = datapath('lee_background.cor')
+        self.test_model_file = os.path.join(tempfile.gettempdir(), 'ft_model')
         if self.ft_path:
-            self.test_model = fasttext.FastText.train(self.ft_path, self.corpus_file)
+            self.test_model = fasttext.FastText.train(
+                self.ft_path, self.corpus_file, output_file=self.test_model_file, size=10)
+        else:
+            self.test_model = None
+
+    def model_sanity(self, model):
+        """Even tiny models trained on LeeCorpus should pass these sanity checks"""
+        self.assertEqual(model.wv.syn0.shape, (len(model.vocab), model.size))
+        self.assertEqual(model.syn0_all.shape, (model.num_ngram_vectors, model.size))
+        sims = model.most_similar('war', topn=len(model.index2word))
 
     def testTraining(self):
-        """Test model successfully trained"""
-        if not self.ft_path:
+        """Test self.test_model successfully trained"""
+        if self.test_model is None:
             return
-        model = fasttext.FastText.train(self.ft_path, self.corpus_file)
-        self.assertEqual(model.kv.syn0.shape, (len(model.vocab), model.size))
-        self.assertEqual(model.syn0_all.shape, (model.num_vectors, model.size))
+        vocab_size, model_size = 1762, 10
+        self.assertEqual(self.test_model.wv.syn0.shape, (vocab_size, model_size))
+        self.assertEqual(len(self.test_model.wv.vocab), vocab_size)
+        self.assertEqual(self.test_model.syn0_all.shape[1], model_size)
+        self.model_sanity(self.test_model)
+
+    def testMinCount(self):
+        self.assertTrue('forests' not in self.test_model)
+        test_model_min_count_1 = fasttext.FastText.train(
+                self.ft_path, self.corpus_file, output_file=self.test_model_file, size=10, min_count=1)
+        self.assertTrue('forests' in test_model_min_count_1)
+
+    def testModelSize(self):
+        test_model_size_20 = fasttext.FastText.train(
+                self.ft_path, self.corpus_file, output_file=self.test_model_file, size=20)
+        self.assertEqual(test_model_size_20.size, 20)
+        self.assertEqual(test_model_size_20.syn0.shape[1], 20)
+        self.assertEqual(test_model_size_20.syn0_all.shape[1], 20)
 
     def testPersistence(self):
         """Test storing/loading the entire model."""
-        if not self.ft_path:
+        if self.test_model is None:
             return
-        model = fasttext.FastText.train(self.ft_path, self.corpus_file)
-        model.save(testfile())
+        self.test_model.save(testfile())
         loaded = fasttext.FastText.load(testfile())
-        self.models_equal(model, loaded)
+        self.models_equal(self.test_model, loaded)
+
+        self.test_model.save(testfile(), sep_limit=0)
+        self.models_equal(self.test_model, fasttext.FastText.load(testfile()))
 
     def testLoadFastTextFormat(self):
         """Test model successfully loaded from fastText .vec and .bin files"""
-        if not self.ft_path:
+        if self.test_model is None:
             return
-        fasttext.FastText.train(self.ft_path, self.corpus_file, output_file=testfile())
-        model = fasttext.FastText.load_fasttext_format(testfile())
-        self.assertEqual(model.kv.syn0.shape, (len(model.vocab), model.size))
-        self.assertEqual(model.syn0_all.shape, (model.num_vectors, model.size))
+        model = fasttext.FastText.load_fasttext_format(self.test_model_file)
+        vocab_size, model_size = 1762, 10
+        self.assertEqual(self.test_model.wv.syn0.shape, (vocab_size, model_size))
+        self.assertEqual(len(self.test_model.wv.vocab), vocab_size, model_size)
+        self.assertEqual(self.test_model.syn0_all.shape, (self.test_model.num_ngram_vectors, model_size))
+        self.model_sanity(model)
 
-    def testSimilarity(self):
+    def testNSimilarity(self):
         """Test n_similarity for in-vocab and out-of-vocab words"""
-        if not self.ft_path:
+        if self.test_model is None:
             return
         # In vocab, sanity check
         self.assertTrue(numpy.allclose(self.test_model.n_similarity(['the', 'and'], ['and', 'the']), 1.0))
-        self.assertEqual(self.test_model.similarity('the', 'and'), self.test_model.similarity('the', 'and'))
+        self.assertEqual(self.test_model.n_similarity(['the'], ['and']), self.test_model.n_similarity(['and'], ['the']))
         # Out of vocab check
         self.assertTrue(numpy.allclose(self.test_model.n_similarity(['night', 'nights'], ['nights', 'night']), 1.0))
-        self.assertEqual(self.test_model.similarity('night', 'nights'), self.test_model.similarity('nights', 'night'))
+        self.assertEqual(self.test_model.n_similarity(['night'], ['nights']), self.test_model.n_similarity(['nights'], ['night']))
 
-    def testLookup(self):
-        if not self.ft_path:
+    def testSimilarity(self):
+        """Test n_similarity for in-vocab and out-of-vocab words"""
+        if self.test_model is None:
             return
         # In vocab, sanity check
+        self.assertTrue(numpy.allclose(self.test_model.similarity('the', 'the'), 1.0))
+        self.assertEqual(self.test_model.similarity('the', 'and'), self.test_model.similarity('and', 'the'))
+        # Out of vocab check
+        self.assertTrue(numpy.allclose(self.test_model.similarity('nights', 'nights'), 1.0))
+        self.assertEqual(self.test_model.similarity('night', 'nights'), self.test_model.similarity('nights', 'night'))
+
+    def testMostSimilar(self):
+        """Test n_similarity for in-vocab and out-of-vocab words"""
+        if self.test_model is None:
+            return
+        # In vocab, sanity check
+        self.assertEqual(len(self.test_model.most_similar(positive=['the', 'and'], topn=5)), 5)
+        self.assertEqual(self.test_model.most_similar('the'), self.test_model.most_similar(positive=['the']))
+        # Out of vocab check
+        self.assertEqual(len(self.test_model.most_similar(['night', 'nights'], topn=5)), 5)
+        self.assertEqual(self.test_model.most_similar('nights'), self.test_model.most_similar(positive=['nights']))
+
+    def testMostSimilarCosmul(self):
+        """Test n_similarity for in-vocab and out-of-vocab words"""
+        if self.test_model is None:
+            return
+        # In vocab, sanity check
+        self.assertEqual(len(self.test_model.most_similar(positive=['the', 'and'], topn=5)), 5)
+        self.assertEqual(self.test_model.most_similar('the'), self.test_model.most_similar(positive=['the']))
+        # Out of vocab check
+        self.assertEqual(len(self.test_model.most_similar(['night', 'nights'], topn=5)), 5)
+        self.assertEqual(self.test_model.most_similar('nights'), self.test_model.most_similar(positive=['nights']))
+
+    def testLookup(self):
+        if self.test_model is None:
+            return
+        # In vocab, sanity check
+        self.assertTrue('night' in self.test_model)
         self.assertTrue(numpy.allclose(self.test_model['night'], self.test_model[['night']]))
         # Out of vocab check
+        self.assertFalse('nights' in self.test_model)
         self.assertTrue(numpy.allclose(self.test_model['nights'], self.test_model[['nights']]))
+
+    def testDoesntMatch(self):
+        if self.test_model is None:
+            return
+        oov_words = ['nights', 'forests', 'payments']
+        # Out of vocab check
+        for word in oov_words:
+            self.assertFalse(word in self.test_model)
+        try:
+            self.test_model.doesnt_match(oov_words)
+        except Exception:
+            self.fail('model.doesnt_match raises exception for oov words')
+
+    def testHash(self):
+        # Tests FastText.ft_hash method return values to those obtained from original C implementation
+        ft_hash = fasttext.FastText.ft_hash('test')
+        self.assertEqual(ft_hash, 2949673445)
+        ft_hash = fasttext.FastText.ft_hash('word')
+        self.assertEqual(ft_hash, 1788406269)
+
+    def testWordVectorEqualsFastTextCLIOutput(self):
+        pass
 
     def models_equal(self, model, model2):
         self.assertEqual(len(model.vocab), len(model2.vocab))
         self.assertEqual(set(model.vocab.keys()), set(model2.vocab.keys()))
-        self.assertTrue(numpy.allclose(model.kv.syn0, model2.kv.syn0))
+        self.assertTrue(numpy.allclose(model.wv.syn0, model2.wv.syn0))
         self.assertTrue(numpy.allclose(model.syn0_all, model2.syn0_all))
 
 if __name__ == '__main__':
