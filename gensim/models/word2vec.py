@@ -78,6 +78,7 @@ from collections import defaultdict
 import threading
 import itertools
 
+from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.utils import keep_vocab_item
 from gensim.models.keyedvectors import KeyedVectors
 
@@ -99,6 +100,7 @@ from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
+from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -420,7 +422,10 @@ class Word2Vec(utils.SaveLoad):
         texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
 
         """
-        
+
+        self.load = call_on_class_only
+        self.load_word2vec_format = call_on_class_only        
+
         if FAST_VERSION == -1:
             logger.warning('Slow version of {0} is being used'.format(__name__))
         else:
@@ -521,11 +526,11 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
 
         """
-        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule, update=update)  # initial survey
+        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
         self.finalize_vocab(update=update)  # build tables & arrays
 
-    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None, update=False):
+    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
         sentence_no = -1
@@ -1391,6 +1396,13 @@ class Word2Vec(utils.SaveLoad):
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
         most_similar = most_similar or KeyedVectors.most_similar
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
+
+    @staticmethod
+    def log_evaluate_word_pairs(pearson, spearman, oov, pairs):
+        return KeyedVectors.log_evaluate_word_pairs(pearson, spearman, oov, pairs)
+
+    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+        return self.wv.evaluate_word_pairs(self, pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
 
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha)
