@@ -8,7 +8,6 @@ None
 0.13.4, 2016-12-22
 
 * Evaluation of word2vec models against semantic similarity datasets like SimLex-999 (#1047) (@akutuzov, [#1047](https://github.com/RaRe-Technologies/gensim/pull/1047))
-* WordRank wrapper (@parulsethi, [#1049](https://github.com/RaRe-Technologies/gensim/pull/1051))
 * TensorBoard word embedding visualisation of Gensim Word2vec format (@loretoparisi, [#1051](https://github.com/RaRe-Technologies/gensim/pull/1051))
 * Throw exception if load() is called on instance rather than the class in word2vec and doc2vec (@dus0x,[(#889](https://github.com/RaRe-Technologies/gensim/pull/889))
 * Loading and Saving LDA Models across Python 2 and 3. Fix #853 (@anmolgulati, #913, [#1093](https://github.com/RaRe-Technologies/gensim/pull/1093))
