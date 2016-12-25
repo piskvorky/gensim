@@ -92,19 +92,6 @@ def update_dir_prior(prior, N, logphat, rho):
 
     return prior
 
-def get_random_state(seed):
-     """ Turn seed into a np.random.RandomState instance.
-
-         Method originally from maciejkula/glove-python, and written by @joshloyal
-     """
-     if seed is None or seed is np.random:
-         return np.random.mtrand._rand
-     if isinstance(seed, (numbers.Integral, np.integer)):
-         return np.random.RandomState(seed)
-     if isinstance(seed, np.random.RandomState):
-        return seed
-     raise ValueError('%r cannot be used to seed a np.random.RandomState'
-                      ' instance' % seed)
 
 class LdaState(utils.SaveLoad):
     """
@@ -314,7 +301,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
-        self.random_state = get_random_state(random_state)
+        self.random_state = utils.get_random_state(random_state)
 
         assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
                 "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
