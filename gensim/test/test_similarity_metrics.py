@@ -14,7 +14,7 @@ import unittest
 
 from gensim import matutils
 from scipy.sparse import csr_matrix
-import numpy
+import numpy as np
 import math
 import os
 from gensim.corpora import mmcorpus, Dictionary
@@ -84,8 +84,8 @@ class TestIsBow(unittest.TestCase):
         expected = True
         self.assertEqual(expected, result)
 
-        # checking numpy array format bag of words
-        potentialbow = numpy.array([[1, 0.4], [0, 0.2],[2, 0.2]])
+        # checking np array format bag of words
+        potentialbow = np.array([[1, 0.4], [0, 0.2],[2, 0.2]])
         result = matutils.isbow(potentialbow)
         expected = True
         self.assertEqual(expected, result)
@@ -105,8 +105,8 @@ class TestHellinger(unittest.TestCase):
         expected = 0.0
         self.assertEqual(expected, result)
 
-        # checking numpy array and list input
-        vec_1 = numpy.array([])
+        # checking np array and list input
+        vec_1 = np.array([])
         vec_2 = []
         result = matutils.hellinger(vec_1, vec_2)
         expected = 0.0
@@ -130,21 +130,21 @@ class TestHellinger(unittest.TestCase):
 
 
         # checking ndarray, csr_matrix as inputs
-        vec_1 = numpy.array([[1, 0.3], [0, 0.4], [2, 0.3]])
+        vec_1 = np.array([[1, 0.3], [0, 0.4], [2, 0.3]])
         vec_2 = csr_matrix([[1, 0.4], [0, 0.2], [2, 0.2]])
         result = matutils.hellinger(vec_1, vec_2)
         expected = 0.160618030536
         self.assertAlmostEqual(expected, result)
 
         # checking ndarray, list as inputs
-        vec_1 = numpy.array([0.6, 0.1, 0.1, 0.2])
+        vec_1 = np.array([0.6, 0.1, 0.1, 0.2])
         vec_2 = [0.2, 0.2, 0.1, 0.5]
         result = matutils.hellinger(vec_1, vec_2)
         expected = 0.309742984153
         self.assertAlmostEqual(expected, result)
 
          # testing LDA distribution vectors
-        numpy.random.seed(0)
+        np.random.seed(0)
         model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100)
         lda_vec1 = model[[(1, 2), (2, 3)]]
         lda_vec2 = model[[(2, 2), (1, 3)]]
@@ -167,8 +167,8 @@ class TestKL(unittest.TestCase):
         expected = 0.0
         self.assertEqual(expected, result)
 
-        # checking numpy array and list input
-        vec_1 = numpy.array([])
+        # checking np array and list input
+        vec_1 = np.array([])
         vec_2 = []
         result = matutils.kullback_leibler(vec_1, vec_2)
         expected = 0.0
@@ -197,21 +197,21 @@ class TestKL(unittest.TestCase):
         self.assertTrue(math.isinf(result))
 
         # checking ndarray, csr_matrix as inputs
-        vec_1 = numpy.array([[1, 0.3], [0, 0.4], [2, 0.3]])
+        vec_1 = np.array([[1, 0.3], [0, 0.4], [2, 0.3]])
         vec_2 = csr_matrix([[1, 0.4], [0, 0.2], [2, 0.2]])
         result = matutils.kullback_leibler(vec_1, vec_2, 3)
         expected = 0.0894502
         self.assertAlmostEqual(expected, result)
 
         # checking ndarray, list as inputs
-        vec_1 = numpy.array([0.6, 0.1, 0.1, 0.2])
+        vec_1 = np.array([0.6, 0.1, 0.1, 0.2])
         vec_2 = [0.2, 0.2, 0.1, 0.5]
         result = matutils.kullback_leibler(vec_1, vec_2)
         expected = 0.40659450877
         self.assertAlmostEqual(expected, result)
 
         # testing LDA distribution vectors
-        numpy.random.seed(0)
+        np.random.seed(0)
         model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100)
         lda_vec1 = model[[(1, 2), (2, 3)]]
         lda_vec2 = model[[(2, 2), (1, 3)]]
@@ -237,14 +237,14 @@ class TestJaccard(unittest.TestCase):
         self.assertAlmostEqual(expected, result)
 
         # checking ndarray, csr_matrix as inputs
-        vec_1 = numpy.array([[1, 3], [0, 4], [2, 3]])
+        vec_1 = np.array([[1, 3], [0, 4], [2, 3]])
         vec_2 = csr_matrix([[1, 4], [0, 2], [2, 2]])
         result = matutils.jaccard(vec_1, vec_2)
         expected = 1 - 0.388888888889
         self.assertAlmostEqual(expected, result)
 
         # checking ndarray, list as inputs
-        vec_1 = numpy.array([6, 1, 2, 3])
+        vec_1 = np.array([6, 1, 2, 3])
         vec_2 = [4, 3, 2, 5]
         result = matutils.jaccard(vec_1, vec_2)
         expected = 1 - 0.333333333333

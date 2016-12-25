@@ -80,7 +80,6 @@ PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
-
 def synchronous(tlockname):
     """
     A decorator to place an instance-based lock around a method.
@@ -216,6 +215,10 @@ def any2unicode(text, encoding='utf8', errors='strict'):
         return text
     return unicode(text, encoding, errors=errors)
 to_unicode = any2unicode
+
+def call_on_class_only(*args, **kwargs):
+    """Raise exception when load methods are called on instance"""
+    raise AttributeError('This method should be called on a class object.')
 
 
 class SaveLoad(object):
@@ -907,10 +910,12 @@ def pickle(obj, fname, protocol=2):
 
 def unpickle(fname):
     """Load pickled object from `fname`"""
-    with smart_open(fname) as f:
+    with smart_open(fname, 'rb') as f:
         # Because of loading from S3 load can't be used (missing readline in smart_open)
-        return _pickle.loads(f.read())
-
+        if sys.version_info > (3, 0):
+            return _pickle.load(f, encoding='latin1')
+        else:
+            return _pickle.loads(f.read())
 
 def revdict(d):
     """
@@ -1005,15 +1010,13 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf={}):
 
 def has_pattern():
     """
-    Function to check if there is installed pattern library
+    Function which returns a flag indicating whether pattern is installed or not
     """
-    pattern = False
     try:
         from pattern.en import parse
-        pattern = True
+        return True
     except ImportError:
-        warnings.warn("Pattern library is not installed, lemmatization won't be available.")
-    return pattern
+        return False
 
 
 def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
@@ -1038,8 +1041,7 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
 
     """
     if not has_pattern():
-        raise ImportError("Pattern library is not installed. Pattern library is needed in order  \
-         to use lemmatize function")
+        raise ImportError("Pattern library is not installed. Pattern library is needed in order to use lemmatize function")
     from pattern.en import parse
 
     if light:

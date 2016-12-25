@@ -15,7 +15,7 @@ import os
 import itertools
 import tempfile
 
-import numpy
+import numpy as np
 
 import gensim
 
@@ -35,12 +35,12 @@ class BigCorpus(object):
 
     def __iter__(self):
         for _ in range(self.num_docs):
-            doc_len = numpy.random.poisson(self.doc_len)
-            ids = numpy.random.randint(0, len(self.dictionary), doc_len)
+            doc_len = np.random.poisson(self.doc_len)
+            ids = np.random.randint(0, len(self.dictionary), doc_len)
             if self.words_only:
                 yield [str(id) for id in ids]
             else:
-                weights = numpy.random.poisson(3, doc_len)
+                weights = np.random.poisson(3, doc_len)
                 yield sorted(zip(ids, weights))
 
 

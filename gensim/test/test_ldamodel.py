@@ -17,7 +17,7 @@ import tempfile
 import numbers
 
 import six
-import numpy
+import numpy as np
 import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
@@ -44,15 +44,16 @@ dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
 
-def testfile():
+def testfile(test_fname=''):
     # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
+    fname = 'gensim_models_' + test_fname + '.tst' 
+    return os.path.join(tempfile.gettempdir(), fname)
 
 
 def testRandomState():
-    testcases = [numpy.random.seed(0), None, numpy.random.RandomState(0), 0]
+    testcases = [np.random.seed(0), None, np.random.RandomState(0), 0]
     for testcase in testcases:
-        assert(isinstance(ldamodel.get_random_state(testcase), numpy.random.RandomState))
+        assert(isinstance(ldamodel.get_random_state(testcase), np.random.RandomState))
 
 
 class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
@@ -60,6 +61,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamodel.LdaModel
         self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
+
 
     def testTransform(self):
         passed = False
@@ -77,7 +79,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
             vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
             expected = [0.13, 0.87]
-            passed = numpy.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
             if passed:
                 break
             logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
@@ -89,7 +91,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         modelauto = self.class_(corpus, id2word=dictionary, alpha='auto', passes=10)
 
         # did we learn something?
-        self.assertFalse(all(numpy.equal(model1.alpha, modelauto.alpha)))
+        self.assertFalse(all(np.equal(model1.alpha, modelauto.alpha)))
 
     def testAlpha(self):
         kwargs = dict(
@@ -105,32 +107,32 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         kwargs['alpha'] = 'symmetric'
         model = self.class_(**kwargs)
         self.assertEqual(model.alpha.shape, expected_shape)
-        self.assertTrue(all(model.alpha == numpy.array([0.5, 0.5])))
+        self.assertTrue(all(model.alpha == np.array([0.5, 0.5])))
 
         kwargs['alpha'] = 'asymmetric'
         model = self.class_(**kwargs)
         self.assertEqual(model.alpha.shape, expected_shape)
-        self.assertTrue(numpy.allclose(model.alpha, [0.630602, 0.369398]))
+        self.assertTrue(np.allclose(model.alpha, [0.630602, 0.369398]))
 
         kwargs['alpha'] = 0.3
         model = self.class_(**kwargs)
         self.assertEqual(model.alpha.shape, expected_shape)
-        self.assertTrue(all(model.alpha == numpy.array([0.3, 0.3])))
+        self.assertTrue(all(model.alpha == np.array([0.3, 0.3])))
 
         kwargs['alpha'] = 3
         model = self.class_(**kwargs)
         self.assertEqual(model.alpha.shape, expected_shape)
-        self.assertTrue(all(model.alpha == numpy.array([3, 3])))
+        self.assertTrue(all(model.alpha == np.array([3, 3])))
 
         kwargs['alpha'] = [0.3, 0.3]
         model = self.class_(**kwargs)
         self.assertEqual(model.alpha.shape, expected_shape)
-        self.assertTrue(all(model.alpha == numpy.array([0.3, 0.3])))
+        self.assertTrue(all(model.alpha == np.array([0.3, 0.3])))
 
-        kwargs['alpha'] = numpy.array([0.3, 0.3])
+        kwargs['alpha'] = np.array([0.3, 0.3])
         model = self.class_(**kwargs)
         self.assertEqual(model.alpha.shape, expected_shape)
-        self.assertTrue(all(model.alpha == numpy.array([0.3, 0.3])))
+        self.assertTrue(all(model.alpha == np.array([0.3, 0.3])))
 
         # all should raise an exception for being wrong shape
         kwargs['alpha'] = [0.3, 0.3, 0.3]
@@ -151,7 +153,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         modelauto = self.class_(corpus, id2word=dictionary, eta='auto', passes=10)
 
         # did we learn something?
-        self.assertFalse(all(numpy.equal(model1.eta, modelauto.eta)))
+        self.assertFalse(all(np.equal(model1.eta, modelauto.eta)))
 
     def testEta(self):
         kwargs = dict(
@@ -159,50 +161,41 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             num_topics=2,
             eta=None
         )
-        expected_shape = (2, 1)
+        num_terms = len(dictionary)
+        expected_shape = (num_terms,)
 
         # should not raise anything
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == numpy.array([[0.5], [0.5]])))
+        self.assertTrue(all(model.eta == np.array([0.5] * num_terms)))
 
         kwargs['eta'] = 'symmetric'
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == numpy.array([[0.5], [0.5]])))
-
-        kwargs['eta'] = 'asymmetric'
-        model = self.class_(**kwargs)
-        self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(numpy.allclose(model.eta, [[0.630602], [0.369398]]))
+        self.assertTrue(all(model.eta == np.array([0.5] * num_terms)))
 
         kwargs['eta'] = 0.3
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == numpy.array([[0.3], [0.3]])))
+        self.assertTrue(all(model.eta == np.array([0.3] * num_terms)))
 
         kwargs['eta'] = 3
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == numpy.array([[3], [3]])))
+        self.assertTrue(all(model.eta == np.array([3] * num_terms)))
 
-        kwargs['eta'] = [[0.3], [0.3]]
+        kwargs['eta'] = [0.3] * num_terms
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == numpy.array([[0.3], [0.3]])))
+        self.assertTrue(all(model.eta == np.array([0.3] * num_terms)))
 
-        kwargs['eta'] = [0.3, 0.3]
+        kwargs['eta'] = np.array([0.3] * num_terms)
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == numpy.array([[0.3], [0.3]])))
+        self.assertTrue(all(model.eta == np.array([0.3] * num_terms)))
 
-        kwargs['eta'] = numpy.array([0.3, 0.3])
-        model = self.class_(**kwargs)
-        self.assertEqual(model.eta.shape, expected_shape)
-        self.assertTrue(all(model.eta == numpy.array([[0.3], [0.3]])))
-
-        # should be ok with num_topics x num_terms
-        testeta = numpy.array([[0.5] * len(dictionary)] * 2)
+	# should be ok with num_topics x num_terms
+        testeta = np.array([[0.5] * len(dictionary)] * 2)
         kwargs['eta'] = testeta
         self.class_(**kwargs)
 
@@ -210,13 +203,16 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         kwargs['eta'] = testeta.reshape(tuple(reversed(testeta.shape)))
         self.assertRaises(AssertionError, self.class_, **kwargs)
 
-        kwargs['eta'] = [0.3, 0.3, 0.3]
-        self.assertRaises(AssertionError, self.class_, **kwargs)
-
         kwargs['eta'] = [0.3]
         self.assertRaises(AssertionError, self.class_, **kwargs)
 
+        kwargs['eta'] = [0.3] * (num_terms + 1)
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
         kwargs['eta'] = "gensim is cool"
+        self.assertRaises(ValueError, self.class_, **kwargs)
+
+        kwargs['eta'] = "asymmetric"
         self.assertRaises(ValueError, self.class_, **kwargs)
 
     def testTopTopics(self):
@@ -239,7 +235,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testGetDocumentTopics(self):
 
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100, random_state=numpy.random.seed(0))
+        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100, random_state=np.random.seed(0))
 
         doc_topics = model.get_document_topics(self.corpus)
 
@@ -248,6 +244,55 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             for k, v in topic:
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
+
+        #Test case to use the get_document_topic function for the corpus
+        all_topics = model.get_document_topics(self.corpus, per_word_topics=True)
+        
+        self.assertEqual(model.state.numdocs, len(corpus))
+        
+        for topic in all_topics:
+            self.assertTrue(isinstance(topic, tuple))
+            for k, v in topic[0]: # list of doc_topics
+                self.assertTrue(isinstance(k, int))
+                self.assertTrue(isinstance(v, float))
+
+            for w, topic_list in topic[1]: # list of word_topics
+                self.assertTrue(isinstance(w, int))
+                self.assertTrue(isinstance(topic_list, list))
+
+            for w, phi_values in topic[2]: # list of word_phis
+                self.assertTrue(isinstance(w, int))
+                self.assertTrue(isinstance(phi_values, list))
+
+        #Test case to check the filtering effect of minimum_probability and minimum_phi_value
+        doc_topic_count_na = 0
+        word_phi_count_na = 0
+
+        all_topics = model.get_document_topics(self.corpus, minimum_probability=0.8, minimum_phi_value=1.0, per_word_topics=True)
+        
+        self.assertEqual(model.state.numdocs, len(corpus))
+        
+        for topic in all_topics:
+            self.assertTrue(isinstance(topic, tuple))
+            for k, v in topic[0]: # list of doc_topics
+                self.assertTrue(isinstance(k, int))
+                self.assertTrue(isinstance(v, float))
+                if len(topic[0]) != 0:
+                    doc_topic_count_na += 1
+
+            for w, topic_list in topic[1]: # list of word_topics
+                self.assertTrue(isinstance(w, int))
+                self.assertTrue(isinstance(topic_list, list))
+
+            for w, phi_values in topic[2]: # list of word_phis
+                self.assertTrue(isinstance(w, int))
+                self.assertTrue(isinstance(phi_values, list))
+                if len(phi_values) != 0:
+                    word_phi_count_na += 1
+
+        self.assertTrue(model.state.numdocs > doc_topic_count_na)
+        self.assertTrue( sum([len(i) for i in corpus]) > word_phi_count_na)
+
 
         doc_topics, word_topics, word_phis = model.get_document_topics(self.corpus[1], per_word_topics=True)
 
@@ -272,7 +317,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testTermTopics(self):
 
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=numpy.random.seed(0))
+        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
 
         # check with word_type
         result = model.get_term_topics(2)
@@ -299,7 +344,6 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
     def testPasses(self):
         # long message includes the original error message with a custom one
         self.longMessage = True
-
         # construct what we expect when passes aren't involved
         test_rhots = list()
         model = self.class_(id2word=dictionary, chunksize=1, num_topics=2)
@@ -330,7 +374,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
     #             # try seeding it both ways round, check you get the same
     #             # topics out but with which way round they are depending
     #             # on the way round they're seeded
-    #             eta = numpy.ones((2, len(dictionary))) * 0.5
+    #             eta = np.ones((2, len(dictionary))) * 0.5
     #             system = dictionary.token2id[u'system']
     #             trees = dictionary.token2id[u'trees']
 
@@ -362,12 +406,26 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         model.save(fname)
         model2 = self.class_.load(fname)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
+        self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+    def testModelCompatibilityWithPythonVersions(self):
+        fname_model_2_7 = datapath('ldamodel_python_2_7')
+        model_2_7 = self.class_.load(fname_model_2_7)
+        fname_model_3_5 = datapath('ldamodel_python_3_5')
+        model_3_5 = self.class_.load(fname_model_3_5)
+        self.assertEqual(model_2_7.num_topics, model_3_5.num_topics)
+        self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
+        tstvec = []
+        self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec])) # try projecting an empty vector
+        id2word_2_7 = dict((k,v) for k,v in model_2_7.id2word.iteritems())
+        id2word_3_5 = dict((k,v) for k,v in model_3_5.id2word.iteritems())
+        self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
+
 
     def testPersistenceIgnore(self):
-        fname = testfile()
+        fname = testfile('testPersistenceIgnore')
         model = ldamodel.LdaModel(self.corpus, num_topics=2)
         model.save(fname, ignore='id2word')
         model2 = ldamodel.LdaModel.load(fname)
@@ -383,9 +441,9 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         model.save(fname)
         model2 = self.class_.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
+        self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testLargeMmap(self):
         fname = testfile()
@@ -397,10 +455,10 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         # test loading the large model arrays with mmap
         model2 = self.class_.load(testfile(), mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(isinstance(model2.expElogbeta, numpy.memmap))
-        self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
+        self.assertTrue(isinstance(model2.expElogbeta, np.memmap))
+        self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testLargeMmapCompressed(self):
         fname = testfile() + '.gz'
