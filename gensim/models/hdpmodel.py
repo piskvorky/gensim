@@ -56,20 +56,6 @@ def dirichlet_expectation(alpha):
     return(sp.psi(alpha) - sp.psi(np.sum(alpha, 1))[:, np.newaxis])
 
 
-def get_random_state(seed):
-     """ Turn seed into a np.random.RandomState instance.
-
-         Method originally from maciejkula/glove-python, and written by @joshloyal
-     """
-     if seed is None or seed is np.random:
-         return np.random.mtrand._rand
-     if isinstance(seed, (numbers.Integral, np.integer)):
-         return np.random.RandomState(seed)
-     if isinstance(seed, np.random.RandomState):
-        return seed
-     raise ValueError('%r cannot be used to seed a np.random.RandomState'
-                      ' instance' % seed)
-
 
 def expect_log_sticks(sticks):
     """
@@ -166,7 +152,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.max_time = max_time
         self.outputdir = outputdir
 
-        self.random_state = get_random_state(random_state)
+        self.random_state = utils.get_random_state(random_state)
 
         self.lda_alpha = None
         self.lda_beta = None
@@ -545,6 +531,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def suggested_lda_model(self):
         """
         Returns closest corresponding ldamodel object corresponding to current hdp model.
+        The hdp_to_lda method only returns corresponding alpha, beta values, and this method returns a trained ldamodel.
         The num_topics is m_T (default is 150) so as to preserve the matrice shapes when we assign alpha and beta.
         """
         alpha, beta = self.hdp_to_lda()

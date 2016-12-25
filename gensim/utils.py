@@ -80,6 +80,21 @@ PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
+def get_random_state(seed):
+     """ Turn seed into a np.random.RandomState instance.
+
+         Method originally from maciejkula/glove-python, and written by @joshloyal
+     """
+     if seed is None or seed is numpy.random:
+         return numpy.random.mtrand._rand
+     if isinstance(seed, (numbers.Integral, numpy.integer)):
+         return numpy.random.RandomState(seed)
+     if isinstance(seed, numpy.random.RandomState):
+        return seed
+     raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
+                      ' instance' % seed)
+
+
 def synchronous(tlockname):
     """
     A decorator to place an instance-based lock around a method.
