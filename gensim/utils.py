@@ -37,6 +37,7 @@ from contextlib import contextmanager
 import subprocess
 
 import numpy
+import numbers
 import scipy.sparse
 
 if sys.version_info[0] >= 3:
