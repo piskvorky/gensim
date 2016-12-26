@@ -1,8 +1,11 @@
 import six
 import unittest
+import numpy
 
-from gensim.sklearn_integration import base
+from gensim.sklearn_integration.SklearnWrapperGensimLdaModel import SklearnWrapperLdaModel
 from gensim.corpora import Dictionary
+from gensim import matutils
+
 texts = [['complier', 'system', 'computer'],
  ['eulerian', 'node', 'cycle', 'graph', 'tree', 'path'],
  ['graph', 'flow', 'network', 'graph'],
@@ -18,7 +21,7 @@ corpus = [dictionary.doc2bow(text) for text in texts]
 
 class TestLdaModel(unittest.TestCase):
     def setUp(self):
-        self.model=base.LdaModel(id2word=dictionary,num_topics=2,passes=100)
+        self.model=SklearnWrapperLdaModel(id2word=dictionary,num_topics=2,passes=100,minimum_probability=0,random_state=numpy.random.seed(0))
         self.model.fit(corpus)
 
     def testPrintTopic(self):
@@ -44,13 +47,14 @@ class TestLdaModel(unittest.TestCase):
             self.assertTrue(isinstance(k, int))
 
     def testPartialFit(self):
-        texts_update=[['graph','eulerian','maxflow'],
-                     ['graph','maxflow','graph'],
-                     ['graph','maxflow']]
-        dictionary_up = Dictionary(texts_update)
-        corpus_up = [dictionary_up.doc2bow(text) for text in texts_update]
-        self.model.partial_fit(corpus_up)
-        self.testPrintTopic()
+        for i in range(10):
+            self.model.partial_fit(X=corpus)  # fit against the model again
+            doc=list(corpus)[0]  # transform only the first document
+            transformed = self.model[doc]
+            transformed_approx = matutils.sparse2full(transformed, 2)  # better approximation
+        expected=[0.13, 0.87]
+        passed = numpy.allclose(sorted(transformed_approx), sorted(expected), atol=1e-1)
+        self.assertTrue(passed)
 
 if __name__ == '__main__':
     unittest.main()
