@@ -34,6 +34,7 @@ The algorithm:
 import logging
 import numpy as np  # for arrays, array broadcasting etc.
 import numbers
+import os
 
 from gensim import interfaces, utils, matutils
 from gensim.models import basemodel
@@ -239,11 +240,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         prior directly from your data.
 
         `eta` can be a scalar for a symmetric prior over topic/word
-        distributions, or a vector of shape num_words, which can be used to 
-        impose (user defined) asymmetric priors over the word distribution. 
+        distributions, or a vector of shape num_words, which can be used to
+        impose (user defined) asymmetric priors over the word distribution.
         It also supports the special value 'auto', which learns an asymmetric
         prior over words directly from your data. `eta` can also be a matrix
-        of shape num_topics x num_words, which can be used to impose 
+        of shape num_topics x num_words, which can be used to impose
         asymmetric priors over the word distribution on a per-topic basis
         (can not be learned from data).
 
@@ -995,7 +996,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         return self.get_document_topics(bow, eps, self.minimum_phi_value, self.per_word_topics)
 
-    def save(self, fname, ignore=['state', 'dispatcher'], *args, **kwargs):
+    def save(self, fname, ignore=['state', 'dispatcher'], separately=None, *args, **kwargs):
         """
         Save the model to file.
 
@@ -1024,18 +1025,39 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         if self.state is not None:
             self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
+        # Save the dictionary separately if not in 'ignore'.
+        if 'id2word' not in ignore:
+            utils.pickle(self.id2word, utils.smart_extension(fname, '.id2word'))
 
-        # make sure 'state' and 'dispatcher' are ignored from the pickled object, even if
+        # make sure 'state', 'id2word' and 'dispatcher' are ignored from the pickled object, even if 
         # someone sets the ignore list themselves
         if ignore is not None and ignore:
             if isinstance(ignore, six.string_types):
                 ignore = [ignore]
             ignore = [e for e in ignore if e] # make sure None and '' are not in the list
-            ignore = list(set(['state', 'dispatcher']) | set(ignore))
+            ignore = list(set(['state', 'dispatcher', 'id2word']) | set(ignore))
         else:
-            ignore = ['state', 'dispatcher']
-        super(LdaModel, self).save(fname, *args, ignore=ignore, **kwargs)
-
+            ignore = ['state', 'dispatcher', 'id2word']
+        
+        # make sure 'expElogbeta' and 'sstats' are ignored from the pickled object, even if
+        # someone sets the separately list themselves.
+        separately_explicit = ['expElogbeta', 'sstats']
+        # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some
+        # array manually.
+        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or len(self.alpha.shape) != 1:
+            separately_explicit.append('alpha')
+        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or len(self.eta.shape) != 1:
+            separately_explicit.append('eta')
+        # Merge separately_explicit with separately.
+        if separately:
+            if isinstance(separately, six.string_types):
+                separately = [separately]
+            separately = [e for e in separately if e] # make sure None and '' are not in the list
+            separately = list(set(separately_explicit) | set(separately))
+        else:
+            separately = separately_explicit
+        super(LdaModel, self).save(fname, ignore=ignore, separately = separately, *args, **kwargs)
+       
     @classmethod
     def load(cls, fname, *args, **kwargs):
         """
@@ -1053,5 +1075,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
         except Exception as e:
             logging.warning("failed to load state from %s: %s", state_fname, e)
+        id2word_fname = utils.smart_extension(fname, '.id2word')
+        if (os.path.isfile(id2word_fname)):
+            try:
+                result.id2word = utils.unpickle(id2word_fname)
+            except Exception as e:
+                logging.warning("failed to load id2word dictionary from %s: %s", id2word_fname, e)
+        else:
+            result.id2word = None
         return result
 # endclass LdaModel

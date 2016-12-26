@@ -216,6 +216,10 @@ def any2unicode(text, encoding='utf8', errors='strict'):
     return unicode(text, encoding, errors=errors)
 to_unicode = any2unicode
 
+def call_on_class_only(*args, **kwargs):
+    """Raise exception when load methods are called on instance"""
+    raise AttributeError('This method should be called on a class object.')
+
 
 class SaveLoad(object):
     """
@@ -906,10 +910,12 @@ def pickle(obj, fname, protocol=2):
 
 def unpickle(fname):
     """Load pickled object from `fname`"""
-    with smart_open(fname) as f:
+    with smart_open(fname, 'rb') as f:
         # Because of loading from S3 load can't be used (missing readline in smart_open)
-        return _pickle.loads(f.read())
-
+        if sys.version_info > (3, 0):
+            return _pickle.load(f, encoding='latin1')
+        else:
+            return _pickle.loads(f.read())
 
 def revdict(d):
     """
