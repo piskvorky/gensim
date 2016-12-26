@@ -26,16 +26,17 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_fasttext.tst')
 
 class TestFastText(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         ft_home = os.environ.get('FT_HOME', None)
-        self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
-        self.corpus_file = datapath('lee_background.cor')
-        self.test_model_file = os.path.join(tempfile.gettempdir(), 'ft_model')
-        if self.ft_path:
-            self.test_model = fasttext.FastText.train(
-                self.ft_path, self.corpus_file, output_file=self.test_model_file, size=10)
+        cls.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
+        cls.corpus_file = datapath('lee_background.cor')
+        cls.test_model_file = os.path.join(tempfile.gettempdir(), 'ft_model')
+        if cls.ft_path:
+            cls.test_model = fasttext.FastText.train(
+                cls.ft_path, cls.corpus_file, output_file=cls.test_model_file, size=10)
         else:
-            self.test_model = None
+            cls.skipTest(cls, "FT_HOME env variable not set, skipping test")
 
     def model_sanity(self, model):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
@@ -45,8 +46,6 @@ class TestFastText(unittest.TestCase):
 
     def testTraining(self):
         """Test self.test_model successfully trained"""
-        if self.test_model is None:
-            return
         vocab_size, model_size = 1762, 10
         self.assertEqual(self.test_model.wv.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(self.test_model.wv.vocab), vocab_size)
@@ -68,8 +67,6 @@ class TestFastText(unittest.TestCase):
 
     def testPersistence(self):
         """Test storing/loading the entire model."""
-        if self.test_model is None:
-            return
         self.test_model.save(testfile())
         loaded = fasttext.FastText.load(testfile())
         self.models_equal(self.test_model, loaded)
@@ -79,8 +76,6 @@ class TestFastText(unittest.TestCase):
 
     def testLoadFastTextFormat(self):
         """Test model successfully loaded from fastText .vec and .bin files"""
-        if self.test_model is None:
-            return
         model = fasttext.FastText.load_fasttext_format(self.test_model_file)
         vocab_size, model_size = 1762, 10
         self.assertEqual(self.test_model.wv.syn0.shape, (vocab_size, model_size))
@@ -90,8 +85,6 @@ class TestFastText(unittest.TestCase):
 
     def testNSimilarity(self):
         """Test n_similarity for in-vocab and out-of-vocab words"""
-        if self.test_model is None:
-            return
         # In vocab, sanity check
         self.assertTrue(numpy.allclose(self.test_model.n_similarity(['the', 'and'], ['and', 'the']), 1.0))
         self.assertEqual(self.test_model.n_similarity(['the'], ['and']), self.test_model.n_similarity(['and'], ['the']))
@@ -101,8 +94,6 @@ class TestFastText(unittest.TestCase):
 
     def testSimilarity(self):
         """Test n_similarity for in-vocab and out-of-vocab words"""
-        if self.test_model is None:
-            return
         # In vocab, sanity check
         self.assertTrue(numpy.allclose(self.test_model.similarity('the', 'the'), 1.0))
         self.assertEqual(self.test_model.similarity('the', 'and'), self.test_model.similarity('and', 'the'))
@@ -112,8 +103,6 @@ class TestFastText(unittest.TestCase):
 
     def testMostSimilar(self):
         """Test n_similarity for in-vocab and out-of-vocab words"""
-        if self.test_model is None:
-            return
         # In vocab, sanity check
         self.assertEqual(len(self.test_model.most_similar(positive=['the', 'and'], topn=5)), 5)
         self.assertEqual(self.test_model.most_similar('the'), self.test_model.most_similar(positive=['the']))
@@ -123,8 +112,6 @@ class TestFastText(unittest.TestCase):
 
     def testMostSimilarCosmul(self):
         """Test n_similarity for in-vocab and out-of-vocab words"""
-        if self.test_model is None:
-            return
         # In vocab, sanity check
         self.assertEqual(len(self.test_model.most_similar(positive=['the', 'and'], topn=5)), 5)
         self.assertEqual(self.test_model.most_similar('the'), self.test_model.most_similar(positive=['the']))
@@ -133,8 +120,6 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(self.test_model.most_similar('nights'), self.test_model.most_similar(positive=['nights']))
 
     def testLookup(self):
-        if self.test_model is None:
-            return
         # In vocab, sanity check
         self.assertTrue('night' in self.test_model)
         self.assertTrue(numpy.allclose(self.test_model['night'], self.test_model[['night']]))
