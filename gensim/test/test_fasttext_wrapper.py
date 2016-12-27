@@ -66,7 +66,7 @@ class TestFastText(unittest.TestCase):
     def testMinCount(self):
         if self.ft_path is None:
             self.skipTest("FT_HOME env variable not set, skipping test")
-        self.assertTrue('forests' not in self.test_model)
+        self.assertTrue('forests' not in self.test_model.wv.vocab)
         test_model_min_count_1 = fasttext.FastText.train(
                 self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=1)
         self.assertTrue('forests' in test_model_min_count_1)
@@ -150,19 +150,41 @@ class TestFastText(unittest.TestCase):
 
     def testLookup(self):
         # In vocab, sanity check
-        self.assertTrue('night' in self.test_model)
+        self.assertTrue('night' in self.test_model.wv.vocab)
         self.assertTrue(numpy.allclose(self.test_model['night'], self.test_model[['night']]))
         # Out of vocab check
-        self.assertFalse('nights' in self.test_model)
+        self.assertFalse('nights' in self.test_model.wv.vocab)
         self.assertTrue(numpy.allclose(self.test_model['nights'], self.test_model[['nights']]))
+        # Word with no ngrams in model
+        with self.assertRaises(KeyError):
+            vector = self.test_model['a!@']
+
+    def testContains(self):
+        # In vocab, sanity check
+        self.assertTrue('night' in self.test_model.wv.vocab)
+        self.assertTrue('night' in self.test_model)
+        # Out of vocab check
+        self.assertFalse('nights' in self.test_model.wv.vocab)
+        self.assertTrue('night' in self.test_model)
+        # Word with no ngrams in model
+        self.assertFalse('a!@' in self.test_model.wv.vocab)
+        self.assertFalse('a!@' in self.test_model)
+
+    def testWmdistance(self):
+        doc = ['night', 'payment']
+        oov_doc = ['nights', 'forests', 'payments']
+        ngrams_absent_doc = ['a!@', 'b#$']
+
+        dist = self.test_model.wmdistance(doc, oov_doc)
+        self.assertNotEqual(float('inf'), dist)
+        dist = self.test_model.wmdistance(doc, ngrams_absent_doc)
+        self.assertEqual(float('inf'), dist)
 
     def testDoesntMatch(self):
-        if self.test_model is None:
-            return
         oov_words = ['nights', 'forests', 'payments']
         # Out of vocab check
         for word in oov_words:
-            self.assertFalse(word in self.test_model)
+            self.assertFalse(word in self.test_model.wv.vocab)
         try:
             self.test_model.doesnt_match(oov_words)
         except Exception:

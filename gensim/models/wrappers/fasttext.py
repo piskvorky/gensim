@@ -63,7 +63,7 @@ class FastTextKeyedVectors(KeyedVectors):
                 if ngram in self.ngrams:
                     word_vec += ngram_weights[self.ngrams[ngram]]
             if word_vec.any():
-                return word_vec/len(ngrams)
+                return word_vec / len(ngrams)
             else: # No ngrams of the word are present in self.ngrams
                 raise KeyError('all ngrams for word %s absent from model' % word)
 
@@ -77,6 +77,16 @@ class FastTextKeyedVectors(KeyedVectors):
                 self.syn0_all_norm = self.syn0_all
             else:
                 self.syn0_all_norm = (self.syn0_all / sqrt((self.syn0_all ** 2).sum(-1))[..., newaxis]).astype(REAL)
+
+    def __contains__(self, word):
+        if word in self.vocab:
+            return True
+        else:
+            word_ngrams = set(FastText.compute_ngrams(word, self.min_n, self.max_n))
+            if len(word_ngrams & set(self.ngrams.keys())):
+                return True
+            else:
+                return False
 
 
 class FastText(Word2Vec):
