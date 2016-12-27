@@ -32,12 +32,8 @@ class TestFastText(unittest.TestCase):
         ft_home = os.environ.get('FT_HOME', None)
         cls.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
         cls.corpus_file = datapath('lee_background.cor')
-        cls.test_model_file = os.path.join(tempfile.gettempdir(), 'ft_model')
-        if cls.ft_path:
-            cls.test_model = fasttext.FastText.train(
-                cls.ft_path, cls.corpus_file, output_file=cls.test_model_file, size=10)
-        else:
-            cls.skipTest(cls, "FT_HOME env variable not set, skipping test")
+        cls.test_model_file = datapath('lee_fasttext')
+        cls.test_model = fasttext.FastText.load_fasttext_format(cls.test_model_file)
 
     def model_sanity(self, model):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
@@ -53,21 +49,33 @@ class TestFastText(unittest.TestCase):
 
     def testTraining(self):
         """Test self.test_model successfully trained"""
+        if self.ft_path is None:
+            self.skipTest("FT_HOME env variable not set, skipping test")
         vocab_size, model_size = 1762, 10
-        self.assertEqual(self.test_model.wv.syn0.shape, (vocab_size, model_size))
-        self.assertEqual(len(self.test_model.wv.vocab), vocab_size)
-        self.assertEqual(self.test_model.wv.syn0_all.shape[1], model_size)
-        self.model_sanity(self.test_model)
+        trained_model = fasttext.FastText.train(
+            self.ft_path, self.corpus_file, size=model_size, output_file=testfile())
+
+        self.assertEqual(trained_model.wv.syn0.shape, (vocab_size, model_size))
+        self.assertEqual(len(trained_model.wv.vocab), vocab_size)
+        self.assertEqual(trained_model.wv.syn0_all.shape[1], model_size)
+        self.model_sanity(trained_model)
+
+        self.assertFalse(os.path.exists('%s.vec' % testfile()))
+        self.assertFalse(os.path.exists('%s.bin' % testfile()))
 
     def testMinCount(self):
+        if self.ft_path is None:
+            self.skipTest("FT_HOME env variable not set, skipping test")
         self.assertTrue('forests' not in self.test_model)
         test_model_min_count_1 = fasttext.FastText.train(
-                self.ft_path, self.corpus_file, output_file=self.test_model_file, size=10, min_count=1)
+                self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=1)
         self.assertTrue('forests' in test_model_min_count_1)
 
     def testModelSize(self):
+        if self.ft_path is None:
+            self.skipTest("FT_HOME env variable not set, skipping test")
         test_model_size_20 = fasttext.FastText.train(
-                self.ft_path, self.corpus_file, output_file=self.test_model_file, size=20)
+                self.ft_path, self.corpus_file, output_file=testfile(), size=20)
         self.assertEqual(test_model_size_20.size, 20)
         self.assertEqual(test_model_size_20.syn0.shape[1], 20)
         self.assertEqual(test_model_size_20.wv.syn0_all.shape[1], 20)

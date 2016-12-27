@@ -158,6 +158,7 @@ class FastText(Word2Vec):
 
         output = utils.check_output(args=cmd)
         model = cls.load_fasttext_format(output_file)
+        cls.delete_training_files(output_file)
         return model
 
     def save(self, *args, **kwargs):
@@ -170,6 +171,15 @@ class FastText(Word2Vec):
         model = cls.load_word2vec_format('%s.vec' % model_file)
         model.load_binary_data('%s.bin' % model_file)
         return model
+
+    @classmethod
+    def delete_training_files(cls, model_file):
+        try:
+            os.remove('%s.vec' % model_file)
+            os.remove('%s.bin' % model_file)
+        except FileNotFoundError:
+            logger.debug('Training files %s not found when attempting to delete', model_file)
+            pass
 
     def load_binary_data(self, model_file):
         with open(model_file, 'rb') as f:
