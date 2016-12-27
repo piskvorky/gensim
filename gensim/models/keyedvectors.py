@@ -47,6 +47,16 @@ class KeyedVectors(utils.SaveLoad):
         super(KeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
+        """
+        Accept a single word as input.
+        Returns the word's representations in vector space, as a 1D numpy array.
+
+        Example::
+
+          >>> trained_model['office']
+          array([ -1.40128313e-02, ...])
+
+        """
         if word in self.vocab:
             if use_norm:
                 return self.syn0norm[self.vocab[word].index]

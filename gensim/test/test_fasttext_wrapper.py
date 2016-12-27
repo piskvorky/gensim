@@ -33,13 +33,13 @@ class TestFastText(unittest.TestCase):
         cls.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
         cls.corpus_file = datapath('lee_background.cor')
         cls.test_model_file = datapath('lee_fasttext')
+        # Load pre-trained model to perform tests in case FastText binary isn't available in test environment
         cls.test_model = fasttext.FastText.load_fasttext_format(cls.test_model_file)
 
     def model_sanity(self, model):
-        """Even tiny models trained on LeeCorpus should pass these sanity checks"""
+        """Even tiny models trained on any corpus should pass these sanity checks"""
         self.assertEqual(model.wv.syn0.shape, (len(model.vocab), model.size))
         self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model.size))
-        sims = model.most_similar('war', topn=len(model.index2word))
 
     def models_equal(self, model1, model2):
         self.assertEqual(len(model1.vocab), len(model2.vocab))
@@ -48,7 +48,7 @@ class TestFastText(unittest.TestCase):
         self.assertTrue(numpy.allclose(model1.wv.syn0_all, model2.wv.syn0_all))
 
     def testTraining(self):
-        """Test self.test_model successfully trained"""
+        """Test self.test_model successfully trained, parameters and weights correctly loaded"""
         if self.ft_path is None:
             self.skipTest("FT_HOME env variable not set, skipping test")
         vocab_size, model_size = 1762, 10
@@ -60,18 +60,21 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(trained_model.wv.syn0_all.shape[1], model_size)
         self.model_sanity(trained_model)
 
+        # Tests temporary training files deleted
         self.assertFalse(os.path.exists('%s.vec' % testfile()))
         self.assertFalse(os.path.exists('%s.bin' % testfile()))
 
     def testMinCount(self):
+        """Tests words with frequency less than `min_count` absent from vocab"""
         if self.ft_path is None:
             self.skipTest("FT_HOME env variable not set, skipping test")
         self.assertTrue('forests' not in self.test_model.wv.vocab)
         test_model_min_count_1 = fasttext.FastText.train(
                 self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=1)
-        self.assertTrue('forests' in test_model_min_count_1)
+        self.assertTrue('forests' in test_model_min_count_1.wv.vocab)
 
     def testModelSize(self):
+        """Tests output vector dimensions are the same as the value for `size` param"""
         if self.ft_path is None:
             self.skipTest("FT_HOME env variable not set, skipping test")
         test_model_size_20 = fasttext.FastText.train(
@@ -90,7 +93,7 @@ class TestFastText(unittest.TestCase):
         self.models_equal(self.test_model, fasttext.FastText.load(testfile()))
 
     def testNormalizedVectorsNotSaved(self):
-        """Test syn0norm isn't saved in model file"""
+        """Test syn0norm/syn0_all_norm aren't saved in model file"""
         self.test_model.init_sims()
         self.test_model.save(testfile())
         loaded = fasttext.FastText.load(testfile())
@@ -122,7 +125,7 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(self.test_model.n_similarity(['night'], ['nights']), self.test_model.n_similarity(['nights'], ['night']))
 
     def testSimilarity(self):
-        """Test n_similarity for in-vocab and out-of-vocab words"""
+        """Test similarity for in-vocab and out-of-vocab words"""
         # In vocab, sanity check
         self.assertTrue(numpy.allclose(self.test_model.similarity('the', 'the'), 1.0))
         self.assertEqual(self.test_model.similarity('the', 'and'), self.test_model.similarity('and', 'the'))
@@ -131,7 +134,7 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(self.test_model.similarity('night', 'nights'), self.test_model.similarity('nights', 'night'))
 
     def testMostSimilar(self):
-        """Test n_similarity for in-vocab and out-of-vocab words"""
+        """Test most_similar for in-vocab and out-of-vocab words"""
         # In vocab, sanity check
         self.assertEqual(len(self.test_model.most_similar(positive=['the', 'and'], topn=5)), 5)
         self.assertEqual(self.test_model.most_similar('the'), self.test_model.most_similar(positive=['the']))
@@ -140,7 +143,7 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(self.test_model.most_similar('nights'), self.test_model.most_similar(positive=['nights']))
 
     def testMostSimilarCosmul(self):
-        """Test n_similarity for in-vocab and out-of-vocab words"""
+        """Test most_similar_cosmul for in-vocab and out-of-vocab words"""
         # In vocab, sanity check
         self.assertEqual(len(self.test_model.most_similar(positive=['the', 'and'], topn=5)), 5)
         self.assertEqual(self.test_model.most_similar('the'), self.test_model.most_similar(positive=['the']))
@@ -149,6 +152,7 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(self.test_model.most_similar('nights'), self.test_model.most_similar(positive=['nights']))
 
     def testLookup(self):
+        """Tests word vector lookup for in-vocab and out-of-vocab words"""
         # In vocab, sanity check
         self.assertTrue('night' in self.test_model.wv.vocab)
         self.assertTrue(numpy.allclose(self.test_model['night'], self.test_model[['night']]))
@@ -160,6 +164,7 @@ class TestFastText(unittest.TestCase):
             vector = self.test_model['a!@']
 
     def testContains(self):
+        """Tests __contains__ for in-vocab and out-of-vocab words"""
         # In vocab, sanity check
         self.assertTrue('night' in self.test_model.wv.vocab)
         self.assertTrue('night' in self.test_model)
@@ -171,6 +176,7 @@ class TestFastText(unittest.TestCase):
         self.assertFalse('a!@' in self.test_model)
 
     def testWmdistance(self):
+        """Tests wmdistance for docs with in-vocab and out-of-vocab words"""
         doc = ['night', 'payment']
         oov_doc = ['nights', 'forests', 'payments']
         ngrams_absent_doc = ['a!@', 'b#$']
@@ -181,6 +187,7 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(float('inf'), dist)
 
     def testDoesntMatch(self):
+        """Tests doesnt_match for list of out-of-vocab words"""
         oov_words = ['nights', 'forests', 'payments']
         # Out of vocab check
         for word in oov_words:
@@ -196,9 +203,6 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(ft_hash, 2949673445)
         ft_hash = fasttext.FastText.ft_hash('word')
         self.assertEqual(ft_hash, 1788406269)
-
-    def testWordVectorEqualsFastTextCLIOutput(self):
-        pass
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

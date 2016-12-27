@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
 """
@@ -14,8 +17,9 @@ The wrapped model can NOT be updated with new documents for online training -- u
 
 Example:
 
->>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/fastText/fasttext', corpus_file='text8')
->>> print model[word]  # prints vector for given words
+>>> from gensim.models.wrappers import FastText
+>>> model = fasttext.FastText.train('/Users/kofola/fastText/fasttext', corpus_file='text8')
+>>> print model['forests']  # prints vector for given out-of-vocabulary word
 
 .. [1] https://github.com/facebookresearch/fastText#enriching-word-vectors-with-subword-information
 
@@ -39,6 +43,12 @@ logger = logging.getLogger(__name__)
 
 
 class FastTextKeyedVectors(KeyedVectors):
+    """
+    Class to contain vectors, vocab and ngrams for the FastText training class and other methods not directly
+    involved in training such as most_similar().
+    Subclasses KeyedVectors to implement oov lookups, storing ngrams and other FastText specific methods
+
+    """
     def __init__(self):
         super(FastTextKeyedVectors, self).__init__()
         self.syn0_all_norm = None
@@ -50,6 +60,19 @@ class FastTextKeyedVectors(KeyedVectors):
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
+        """
+        Accept a single word as input.
+        Returns the word's representations in vector space, as a 1D numpy array.
+
+        The word can be out-of-vocabulary as long as ngrams for the word are present.
+        For words with all ngrams absent, a KeyError is raised.
+
+        Example::
+
+          >>> trained_model['office']
+          array([ -1.40128313e-02, ...])
+
+        """
         if word in self.vocab:
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
         else:
@@ -68,6 +91,16 @@ class FastTextKeyedVectors(KeyedVectors):
                 raise KeyError('all ngrams for word %s absent from model' % word)
 
     def init_sims(self, replace=False):
+        """
+        Precompute L2-normalized vectors.
+
+        If `replace` is set, forget the original vectors and only keep the normalized
+        ones = saves lots of memory!
+
+        Note that you **cannot continue training** after doing a replace. The model becomes
+        effectively read-only = you can only call `most_similar`, `similarity` etc.
+
+        """
         super(FastTextKeyedVectors, self).init_sims(replace)
         if getattr(self, 'syn0_all_norm', None) is None or replace:
             logger.info("precomputing L2-norms of ngram weight vectors")
@@ -79,6 +112,11 @@ class FastTextKeyedVectors(KeyedVectors):
                 self.syn0_all_norm = (self.syn0_all / sqrt((self.syn0_all ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
     def __contains__(self, word):
+        """
+        Check if word is present in the vocabulary, or if any word ngrams are present. A vector for the word is
+        guaranteed to exist if `__contains__` returns True.
+
+        """
         if word in self.vocab:
             return True
         else:
@@ -95,7 +133,7 @@ class FastText(Word2Vec):
     takes place by working with data files on disk and calling the FastText binary with
     subprocess.call().
     Implements functionality similar to [fasttext.py](https://github.com/salestock/fastText.py),
-    improving speed and scope of functionality like `most_similar`, `accuracy` by extracting vectors
+    improving speed and scope of functionality like `most_similar`, `similarity` by extracting vectors
     into numpy matrix.
 
     """
@@ -110,10 +148,10 @@ class FastText(Word2Vec):
         `ft_path` is the path to the FastText executable, e.g. `/home/kofola/fastText/fasttext`.
 
         `corpus_file` is the filename of the text file to be used for training the FastText model.
-        Expects file to contain space-separated tokens in a single line
+        Expects file to contain utf-8 encoded text.
 
         `model` defines the training algorithm. By default, cbow is used. Accepted values are
-        cbow, skipgram.
+        'cbow', 'skipgram'.
 
         `size` is the dimensionality of the feature vectors.
 
@@ -135,10 +173,10 @@ class FastText(Word2Vec):
 
         `iter` = number of iterations (epochs) over the corpus. Default is 5.
 
-        `min_n` = min length of char ngrams to be used for training word representations. Default is 1.
+        `min_n` = min length of char ngrams to be used for training word representations. Default is 3.
 
         `max_n` = max length of char ngrams to be used for training word representations. Set `max_n` to be
-        greater than `min_n` to avoid char ngrams being used. Default is 5.
+        greater than `min_n` to avoid char ngrams being used. Default is 6.
 
         `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
         assigning word indexes.
@@ -178,12 +216,24 @@ class FastText(Word2Vec):
 
     @classmethod
     def load_fasttext_format(cls, model_file):
+        """
+        Load the input-hidden weight matrix from the fast text output files.
+
+        Note that due to limitations in the FastText API, you cannot continue training
+        with a model loaded this way, though you can query for word similarity etc.
+
+        `model_file` is the path to the FastText output files.
+        FastText outputs two training files - `/path/to/train.vec` and `/path/to/train.bin`
+        Expected value for this example: `/path/to/train`
+
+        """
         model = cls.load_word2vec_format('%s.vec' % model_file)
         model.load_binary_data('%s.bin' % model_file)
         return model
 
     @classmethod
     def delete_training_files(cls, model_file):
+        """Deletes the files created by FastText training"""
         try:
             os.remove('%s.vec' % model_file)
             os.remove('%s.bin' % model_file)
@@ -192,6 +242,7 @@ class FastText(Word2Vec):
             pass
 
     def load_binary_data(self, model_binary_file):
+        """Loads data from the output binary file created by FastText training"""
         with open(model_binary_file, 'rb') as f:
             self.load_model_params(f)
             self.load_dict(f)
@@ -199,6 +250,7 @@ class FastText(Word2Vec):
 
     def load_model_params(self, file_handle):
         (dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t) = self.struct_unpack(file_handle, '@12i1d')
+        # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
         self.size = dim
         self.window = ws
         self.iter = epoch
@@ -213,6 +265,7 @@ class FastText(Word2Vec):
 
     def load_dict(self, file_handle):
         (vocab_size, nwords, _) = self.struct_unpack(file_handle, '@3i')
+        # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
         assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
         assert len(self.wv.vocab) == vocab_size, 'mismatch between vocab sizes'
         ntokens, = self.struct_unpack(file_handle, '@q')
@@ -220,6 +273,7 @@ class FastText(Word2Vec):
             word = ''
             char, = self.struct_unpack(file_handle, '@c')
             char = char.decode()
+            # Read vocab word
             while char != '\x00':
                 word += char 
                 char, = self.struct_unpack(file_handle, '@c')
@@ -231,6 +285,7 @@ class FastText(Word2Vec):
 
     def load_vectors(self, file_handle):
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
+        # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.size == dim, 'mismatch between model sizes'
         float_size = struct.calcsize('@f')
         if float_size == 4:
@@ -250,6 +305,12 @@ class FastText(Word2Vec):
         return struct.unpack(fmt, file_handle.read(num_bytes))
 
     def init_ngrams(self):
+        """
+        Computes ngrams of all words present in vocabulary and stores vectors for only those ngrams.
+        Vectors for other ngrams are initialized with a random uniform distribution in FastText. These
+        vectors are discarded here to save space.
+
+        """
         self.wv.ngrams = {}
         all_ngrams = []
         for w, v in self.vocab.items():
@@ -266,7 +327,7 @@ class FastText(Word2Vec):
     @staticmethod
     def compute_ngrams(word, min_n, max_n):
         ngram_indices = []
-        BOW, EOW = ('<','>')
+        BOW, EOW = ('<','>')  # Used by FastText to attach to all words as prefix and suffix
         extended_word = BOW + word + EOW
         ngrams = set()
         for i in range(len(extended_word) - min_n + 1):
@@ -276,7 +337,11 @@ class FastText(Word2Vec):
 
     @staticmethod
     def ft_hash(string):
-        # Reproduces hash method used in fastText
+        """
+        Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+        used in fastText.
+
+        """
         h = np.uint32(2166136261)
         for c in string:
             h = h ^ np.uint32(ord(c))
