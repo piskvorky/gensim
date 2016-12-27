@@ -156,6 +156,18 @@ class TestFastText(unittest.TestCase):
         self.assertFalse('nights' in self.test_model)
         self.assertTrue(numpy.allclose(self.test_model['nights'], self.test_model[['nights']]))
 
+    def testDoesntMatch(self):
+        if self.test_model is None:
+            return
+        oov_words = ['nights', 'forests', 'payments']
+        # Out of vocab check
+        for word in oov_words:
+            self.assertFalse(word in self.test_model)
+        try:
+            self.test_model.doesnt_match(oov_words)
+        except Exception:
+            self.fail('model.doesnt_match raises exception for oov words')
+
     def testHash(self):
         # Tests FastText.ft_hash method return values to those obtained from original C implementation
         ft_hash = fasttext.FastText.ft_hash('test')

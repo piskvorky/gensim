@@ -311,11 +311,18 @@ class KeyedVectors(utils.SaveLoad):
         """
         self.init_sims()
 
-        words = [word for word in words if word in self.vocab]  # filter out OOV words
-        logger.debug("using words %s" % words)
         if not words:
             raise ValueError("cannot select a word from an empty list")
-        vectors = vstack(self.word_vec(word, use_norm=True) for word in words).astype(REAL)
+        logger.debug("using words %s" % words)
+        vectors = []
+        for word in words:
+            try:
+                vectors.append(self.word_vec(word))
+            except KeyError:
+                logger.debug("vector for word %s not present, ignoring the word", word)
+        if not vectors:
+            raise ValueError("vector for all given words absent")
+        vectors = vstack(vectors).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
         return sorted(zip(dists, words))[0][1]
