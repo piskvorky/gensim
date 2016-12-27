@@ -1,3 +1,4 @@
+# The WordSimilarity-353 Test Collection (http://www.cs.technion.ac.il/~gabr/resources/data/wordsim353/)
 # Word 1	Word 2	Human (mean)
 love	sex	6.77
 tiger	cat	7.35
