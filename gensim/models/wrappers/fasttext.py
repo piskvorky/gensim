@@ -181,45 +181,47 @@ class FastText(Word2Vec):
             logger.debug('Training files %s not found when attempting to delete', model_file)
             pass
 
-    def load_binary_data(self, model_file):
-        with open(model_file, 'rb') as f:
+    def load_binary_data(self, model_binary_file):
+        with open(model_binary_file, 'rb') as f:
             self.load_model_params(f)
             self.load_dict(f)
             self.load_vectors(f)
 
-    def load_model_params(self, f):
-        (dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t) = self.struct_unpack(f, '@12i1d')
+    def load_model_params(self, file_handle):
+        (dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t) = self.struct_unpack(file_handle, '@12i1d')
         self.size = dim
         self.window = ws
         self.iter = epoch
         self.min_count = minCount
         self.negative = neg
-        self.loss = loss
-        self.sg = model == 'skipgram'
+        self.hs = loss == 1
+        self.sg = model == 2
         self.bucket = bucket
         self.wv.min_n = minn
         self.wv.max_n = maxn
         self.sample = t
 
-    def load_dict(self, f):
-        (dim, nwords, _) = self.struct_unpack(f, '@3i') 
+    def load_dict(self, file_handle):
+        (vocab_size, nwords, _) = self.struct_unpack(file_handle, '@3i')
         assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
-        ntokens, = self.struct_unpack(f, '@q') 
+        assert len(self.wv.vocab) == vocab_size, 'mismatch between vocab sizes'
+        ntokens, = self.struct_unpack(file_handle, '@q')
         for i in range(nwords):
             word = ''
-            char, = self.struct_unpack(f, '@c')
+            char, = self.struct_unpack(file_handle, '@c')
             char = char.decode()
             while char != '\x00':
                 word += char 
-                char, = self.struct_unpack(f, '@c')
+                char, = self.struct_unpack(file_handle, '@c')
                 char = char.decode()
-            count, _ = self.struct_unpack(f, '@ib')
-            _ = self.struct_unpack(f, '@i')
+            count, _ = self.struct_unpack(file_handle, '@ib')
+            _ = self.struct_unpack(file_handle, '@i')
             assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
             self.wv.vocab[word].count = count
 
-    def load_vectors(self, f):
-        num_vectors, dim = self.struct_unpack(f, '@2q')
+    def load_vectors(self, file_handle):
+        num_vectors, dim = self.struct_unpack(file_handle, '@2q')
+        assert self.size == dim, 'mismatch between model sizes'
         float_size = struct.calcsize('@f')
         if float_size == 4:
             dtype = np.dtype(np.float32)
@@ -227,13 +229,15 @@ class FastText(Word2Vec):
             dtype = np.dtype(np.float64)
 
         self.num_original_vectors = num_vectors
-        self.wv.syn0_all = np.fromstring(f.read(num_vectors * dim * float_size), dtype=dtype)
+        self.wv.syn0_all = np.fromstring(file_handle.read(num_vectors * dim * float_size), dtype=dtype)
         self.wv.syn0_all = self.wv.syn0_all.reshape((num_vectors, dim))
+        assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.size), \
+            'mismatch between weight matrix shape and vocab/model size'
         self.init_ngrams()
 
-    def struct_unpack(self, f, fmt):
+    def struct_unpack(self, file_handle, fmt):
         num_bytes = struct.calcsize(fmt)
-        return struct.unpack(fmt, f.read(num_bytes))
+        return struct.unpack(fmt, file_handle.read(num_bytes))
 
     def init_ngrams(self):
         self.wv.ngrams = {}
