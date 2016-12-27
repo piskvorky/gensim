@@ -17,6 +17,7 @@ import tempfile
 import numpy
 
 from gensim.models.wrappers import fasttext
+from gensim.models import keyedvectors
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -43,6 +44,12 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(model.wv.syn0.shape, (len(model.vocab), model.size))
         self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model.size))
         sims = model.most_similar('war', topn=len(model.index2word))
+
+    def models_equal(self, model1, model2):
+        self.assertEqual(len(model1.vocab), len(model2.vocab))
+        self.assertEqual(set(model1.vocab.keys()), set(model2.vocab.keys()))
+        self.assertTrue(numpy.allclose(model1.wv.syn0, model2.wv.syn0))
+        self.assertTrue(numpy.allclose(model1.wv.syn0_all, model2.wv.syn0_all))
 
     def testTraining(self):
         """Test self.test_model successfully trained"""
@@ -73,6 +80,20 @@ class TestFastText(unittest.TestCase):
 
         self.test_model.save(testfile(), sep_limit=0)
         self.models_equal(self.test_model, fasttext.FastText.load(testfile()))
+
+    def testNormalizedVectorsNotSaved(self):
+        """Test syn0norm isn't saved in model file"""
+        self.test_model.init_sims()
+        self.test_model.save(testfile())
+        loaded = fasttext.FastText.load(testfile())
+        self.assertTrue(loaded.wv.syn0norm is None)
+        self.assertTrue(loaded.wv.syn0_all_norm is None)
+
+        wv = self.test_model.wv
+        wv.save(testfile())
+        loaded_kv = keyedvectors.KeyedVectors.load(testfile())
+        self.assertTrue(loaded_kv.syn0norm is None)
+        self.assertTrue(loaded_kv.syn0_all_norm is None)
 
     def testLoadFastTextFormat(self):
         """Test model successfully loaded from fastText .vec and .bin files"""
@@ -136,12 +157,6 @@ class TestFastText(unittest.TestCase):
 
     def testWordVectorEqualsFastTextCLIOutput(self):
         pass
-
-    def models_equal(self, model, model2):
-        self.assertEqual(len(model.vocab), len(model2.vocab))
-        self.assertEqual(set(model.vocab.keys()), set(model2.vocab.keys()))
-        self.assertTrue(numpy.allclose(model.wv.syn0, model2.wv.syn0))
-        self.assertTrue(numpy.allclose(model.wv.syn0_all, model2.wv.syn0_all))
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

@@ -100,7 +100,7 @@ class KeyedVectors(utils.SaveLoad):
             if isinstance(word, ndarray):
                 mean.append(weight * word)
             else:
-                mean.append(weight * self.word_vec(word))
+                mean.append(weight * self.word_vec(word, use_norm=True))
                 if word in self.vocab:
                     all_words.add(self.vocab[word].index)
         if not mean:
@@ -315,7 +315,7 @@ class KeyedVectors(utils.SaveLoad):
         logger.debug("using words %s" % words)
         if not words:
             raise ValueError("cannot select a word from an empty list")
-        vectors = vstack(self.word_vec(word) for word in words).astype(REAL)
+        vectors = vstack(self.word_vec(word, use_norm=True) for word in words).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
         return sorted(zip(dists, words))[0][1]

@@ -28,7 +28,7 @@ import os
 import struct
 
 import numpy as np
-
+from numpy import float32 as REAL, sqrt, newaxis
 from gensim import utils
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.models.word2vec import Word2Vec
@@ -39,19 +39,44 @@ logger = logging.getLogger(__name__)
 
 
 class FastTextKeyedVectors(KeyedVectors):
+    def __init__(self):
+        super(FastTextKeyedVectors, self).__init__()
+        self.syn0_all_norm = None
+        self.ngrams = {}
+
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
+        super(FastTextKeyedVectors, self).save(*args, **kwargs)
+
     def word_vec(self, word, use_norm=False):
         if word in self.vocab:
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
         else:
             word_vec = np.zeros(self.syn0_all.shape[1])
             ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
+            if use_norm:
+                ngram_weights = self.syn0_all_norm
+            else:
+                ngram_weights = self.syn0_all
             for ngram in ngrams:
                 if ngram in self.ngrams:
-                    word_vec += self.syn0_all[self.ngrams[ngram]]
+                    word_vec += ngram_weights[self.ngrams[ngram]]
             if word_vec.any():
                 return word_vec/len(ngrams)
             else: # No ngrams of the word are present in self.ngrams
                 raise KeyError('all ngrams for word %s absent from model' % word)
+
+    def init_sims(self, replace=False):
+        super(FastTextKeyedVectors, self).init_sims(replace)
+        if getattr(self, 'syn0_all_norm', None) is None or replace:
+            logger.info("precomputing L2-norms of ngram weight vectors")
+            if replace:
+                for i in xrange(self.syn0_all.shape[0]):
+                    self.syn0_all[i, :] /= sqrt((self.syn0_all[i, :] ** 2).sum(-1))
+                self.syn0_all_norm = self.syn0_all
+            else:
+                self.syn0_all_norm = (self.syn0_all / sqrt((self.syn0_all ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
 
 class FastText(Word2Vec):
@@ -134,6 +159,11 @@ class FastText(Word2Vec):
         output = utils.check_output(args=cmd)
         model = cls.load_fasttext_format(output_file)
         return model
+
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
+        super(FastText, self).save(*args, **kwargs)
 
     @classmethod
     def load_fasttext_format(cls, model_file):
