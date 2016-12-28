@@ -95,7 +95,7 @@ class AuthorTopicModel(LdaModel):
     The constructor estimates the author-topic model parameters based
     on a training corpus:
 
-    >>> model = AuthorTopicModel(corpus, num_topics=10, author2doc=author2doc)
+    >>> model = AuthorTopicModel(corpus, num_topics=10, author2doc=author2doc, id2word=id2word)
 
     The model can be updated (trained) with new documents via
 
@@ -109,7 +109,7 @@ class AuthorTopicModel(LdaModel):
                  alpha='symmetric', eta='symmetric', update_every=1, eval_every=10, 
                  gamma_threshold=0.001, serialized=False, serialization_path=None,
                  minimum_probability=0.01, random_state=None, var_lambda=None,
-                 ns_conf={}, minimum_phi_value=0.01):
+                 ns_conf={}):
         """
         If the iterable corpus and one of author2doc/doc2author dictionaries are given,
         start training straight away. If not given, the model is left untrained 
@@ -185,10 +185,10 @@ class AuthorTopicModel(LdaModel):
 
         Example:
 
-        >>> model = AuthorTopicModel(corpus, num_topics=100, author2doc=author2doc)  # train model
+        >>> model = AuthorTopicModel(corpus, num_topics=100, author2doc=author2doc, id2word=id2word)  # train model
         >>> model.update(corpus2) # update the author-topic model with additional documents
 
-        >>> model = AuthorTopicModel(corpus, num_topics=50, author2doc=author2doc, alpha='auto', eval_every=5)  # train asymmetric alpha from data
+        >>> model = AuthorTopicModel(corpus, num_topics=50, author2doc=author2doc, id2word=id2word, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
 
@@ -231,7 +231,6 @@ class AuthorTopicModel(LdaModel):
         self.passes = passes
         self.update_every = update_every
         self.eval_every = eval_every
-        self.minimum_phi_value = minimum_phi_value
 
         self.author2id = {}
         self.id2author = {}
@@ -923,7 +922,9 @@ class AuthorTopicModel(LdaModel):
 
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
-        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
+
+        # NOTE: this is used in LdaModel:
+        # minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
 
         topic_dist = self.state.gamma[author_id, :] / sum(self.state.gamma[author_id, :])
 
@@ -932,40 +933,24 @@ class AuthorTopicModel(LdaModel):
 
         return author_topics
 
-    def __getitem__(self, data):
-        """
-        `data` must be a list consisting of two elements: `bow` and `author_name`, described below.
+    def __getitem__(self, author_names, eps=None):
+        '''
+        Return topic distribution for input author as a list of
+        (topic_id, topic_probabiity) 2-tuples.
 
-        `bow` is a list of documents in BOW representation.
+        Ingores topics with probaility less than `eps`.
 
-        `author_name` is the name of the author of the documents in `bow`.
-        
-        If `author_name`
-        already exists in model (e.g. self.author2doc), the model will be updated w.r.t. all
-        the documents that the author is responsible.
+        Do not call this method directly, instead use `model[author_names]`.
 
-        """
+        '''
+        if isinstance(author_names, list):
+            items = []
+            for a in author_names:
+                items.append(self.get_author_topics(a, minimum_probability=eps))
+        else:
+            items = self.get_author_topics(author_names, minimum_probability=eps)
 
-        assert False, '__getitem__ (model[data]) is not ready for use.'
-
-        # FIXME: it is not clear at all what a __getitem__ method should accomplish in the author-topic
-        # model. In the attempt below, it assumed that multiple documents corresponding to a single 
-        # author is passed to this method, and then update is called on that data. Then, get_author_topics
-        # is called on the author.
-
-        bow = data[0]
-        author_name = data[1]
-
-        # TODO: perhaps this method should assume author_name if it is not provided. This is problematic
-        # if the author names are strings, though.
-
-        assert author_name not in self.author2doc, '__getitem__ (model[data]) called on an existing author.'
-
-        author2doc = {author_name: list(xrange(len(bow)))}
-
-        self.update(bow, author2doc)
-
-        return self.get_author_topics(self.author2id[author_name])
+        return items
 
     def save(self, fname, ignore=['state', 'dispatcher'], *args, **kwargs):
         """
