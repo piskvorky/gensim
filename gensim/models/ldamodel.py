@@ -37,6 +37,7 @@ import numbers
 import os
 
 from gensim import interfaces, utils, matutils
+from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
 
 from itertools import chain
@@ -55,18 +56,6 @@ except ImportError:
 
 
 logger = logging.getLogger('gensim.models.ldamodel')
-
-
-def dirichlet_expectation(alpha):
-    """
-    For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
-
-    """
-    if (len(alpha.shape) == 1):
-        result = psi(alpha) - psi(np.sum(alpha))
-    else:
-        result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
-    return result.astype(alpha.dtype)  # keep the same precision as input
 
 
 def update_dir_prior(prior, N, logphat, rho):
