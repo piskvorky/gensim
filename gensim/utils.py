@@ -341,7 +341,7 @@ class SaveLoad(object):
         Save the object to file (also see `load`).
 
         If `separately` is None, automatically detect large
-        np/scipy.sparse arrays in the object being stored, and store
+        numpy/scipy.sparse arrays in the object being stored, and store
         them into separate files. This avoids pickle memory errors and
         allows mmap'ing large arrays back on load efficiently.
 
@@ -473,7 +473,7 @@ class SaveLoad(object):
         performed; all attributes will be saved to the same file.
 
         If `separately` is None, automatically detect large
-        np/scipy.sparse arrays in the object being stored, and store
+        numpy/scipy.sparse arrays in the object being stored, and store
         them into separate files. This avoids pickle memory errors and
         allows mmap'ing large arrays back on load efficiently.
 
@@ -607,7 +607,7 @@ def is_corpus(obj):
             doc1 = next(iter(obj))  # empty corpus is resolved to False here
         if len(doc1) == 0:  # sparse documents must have a __len__ function (list, tuple...)
             return True, obj  # the first document is empty=>assume this is a corpus
-        id1, val1 = next(iter(doc1))  # if obj is a np array, it resolves to False here
+        id1, val1 = next(iter(doc1))  # if obj is a numpy array, it resolves to False here
         id1, val1 = int(id1), float(val1)  # must be a 2-tuple (integer, float)
     except Exception:
         return False, obj
@@ -804,7 +804,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
     it = iter(iterable)
     while True:
         if as_numpy:
-            # convert each document to a 2d np array (~6x faster when transmitting
+            # convert each document to a 2d numpy array (~6x faster when transmitting
             # chunk data over the wire, in Pyro)
             wrapped_chunk = [[np.array(doc) for doc in itertools.islice(it, int(chunksize))]]
         else:
@@ -828,12 +828,12 @@ class InputQueue(multiprocessing.Process):
 
     def run(self):
         if self.as_numpy:
-            import np # don't clutter the global namespace with a dependency on np
+            import np # don't clutter the global namespace with a dependency on numpy
         it = iter(self.corpus)
         while True:
             chunk = itertools.islice(it, self.chunksize)
             if self.as_numpy:
-                # HACK XXX convert documents to np arrays, to save memory.
+                # HACK XXX convert documents to numpy arrays, to save memory.
                 # This also gives a scipy warning at runtime:
                 # "UserWarning: indices array has non-integer dtype (float64)"
                 wrapped_chunk = [[np.asarray(doc) for doc in chunk]]
