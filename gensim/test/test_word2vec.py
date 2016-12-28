@@ -385,8 +385,10 @@ class TestWord2VecModel(unittest.TestCase):
         correlation = model.evaluate_word_pairs(datapath('wordsim353.tsv'))
         pearson = correlation[0][0]
         spearman = correlation[1][0]
+        oov = correlation[2]
         self.assertTrue(0.1 < pearson < 1.0)
         self.assertTrue(0.1 < spearman < 1.0)
+        self.assertTrue(0.0 <= oov < 90.0)
 
     def model_sanity(self, model, train=True):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
