@@ -38,7 +38,7 @@ import numpy as np
 import scipy.special as sp
 
 from gensim import interfaces, utils, matutils
-from gensim.models import basemodel
+from gensim.models import basemodel, ldamodel
 from six.moves import xrange
 
 logger = logging.getLogger(__name__)
@@ -54,6 +54,7 @@ def dirichlet_expectation(alpha):
     if (len(alpha.shape) == 1):
         return(sp.psi(alpha) - sp.psi(np.sum(alpha)))
     return(sp.psi(alpha) - sp.psi(np.sum(alpha, 1))[:, np.newaxis])
+
 
 
 def expect_log_sticks(sticks):
@@ -130,7 +131,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def __init__(self, corpus, id2word, max_chunks=None, max_time=None,
                  chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
                  gamma=1, eta=0.01, scale=1.0, var_converge=0.0001,
-                 outputdir=None):
+                 outputdir=None, random_state=None):
         """
         `gamma`: first level concentration
         `alpha`: second level concentration
@@ -151,6 +152,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.max_time = max_time
         self.outputdir = outputdir
 
+        self.random_state = utils.get_random_state(random_state)
+
         self.lda_alpha = None
         self.lda_beta = None
 
@@ -169,7 +172,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_var_sticks[1] = range(T - 1, 0, -1)
         self.m_varphi_ss = np.zeros(T)
 
-        self.m_lambda = np.random.gamma(1.0, 1.0, (T, self.m_W)) * self.m_D * 100 / (T * self.m_W) - eta
+        self.m_lambda = self.random_state.gamma(1.0, 1.0, (T, self.m_W)) * self.m_D * 100 / (T * self.m_W) - eta
         self.m_eta = eta
         self.m_Elogbeta = dirichlet_expectation(self.m_eta + self.m_lambda)
 
@@ -442,6 +445,21 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
 
+    def show_topic(self, topic_id, num_words=20, log=False, formatted=False):
+        """
+        Print the `num_words` most probable words for `topics` number of topics.
+        Set `topics=-1` to print all topics.
+
+        Set `formatted=True` to return the topics as a list of strings, or
+        `False` as lists of (weight, word) pairs.
+
+        """
+        if not self.m_status_up_to_date:
+            self.update_expectations()
+        betas = self.m_lambda + self.m_eta
+        hdp_formatter = HdpTopicFormatter(self.id2word, betas)
+        return hdp_formatter.show_topic(topic_id, num_words, log, formatted)
+        
     def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
         """
         Print the `num_words` most probable words for `topics` number of topics.
@@ -509,6 +527,17 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self.m_lambda_sum[:, np.newaxis])
 
         return (alpha, beta)
+
+    def suggested_lda_model(self):
+        """
+        Returns closest corresponding ldamodel object corresponding to current hdp model.
+        The hdp_to_lda method only returns corresponding alpha, beta values, and this method returns a trained ldamodel.
+        The num_topics is m_T (default is 150) so as to preserve the matrice shapes when we assign alpha and beta.
+        """
+        alpha, beta = self.hdp_to_lda()
+        ldam = ldamodel.LdaModel(num_topics=self.m_T, alpha=alpha, id2word=self.id2word, random_state=self.random_state)
+        ldam.expElogbeta[:] = beta
+        return ldam
 
     def evaluate_test_corpus(self, corpus):
         logger.info('TEST: evaluating test corpus')
@@ -588,6 +617,32 @@ class HdpTopicFormatter(object):
             shown.append(topic)
 
         return shown
+
+    def print_topic(self, topic_id, num_words):
+        return self.show_topic(topic_id, num_words, formatted=True)
+
+    def show_topic(self, topic_id, num_words, log=False, formatted=False):
+
+        lambdak = list(self.data[topic_id, :])
+        lambdak = lambdak / sum(lambdak)
+
+        temp = zip(lambdak, xrange(len(lambdak)))
+        temp = sorted(temp, key=lambda x: x[0], reverse=True)
+
+        topic_terms = self.show_topic_terms(temp, num_words)
+
+        if formatted:
+            topic = self.format_topic(topic_id, topic_terms)
+
+            # assuming we only output formatted topics
+            if log:
+                logger.info(topic)
+        else:
+            topic = (topic_id, topic_terms)
+        
+        # we only return the topic_terms
+        return topic[1]
+
 
     def show_topic_terms(self, topic_data, num_words):
         return [(self.dictionary[wid], weight) for (weight, wid) in topic_data[:num_words]]
