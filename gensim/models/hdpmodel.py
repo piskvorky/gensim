@@ -38,6 +38,7 @@ import numpy as np
 from scipy.special import gammaln, psi  # gamma function utils
 
 from gensim import interfaces, utils, matutils
+from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel, ldamodel
 from six.moves import xrange
 
@@ -64,7 +65,7 @@ def expect_log_sticks(sticks):
 
 def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
     gamma = np.ones(len(alpha))
-    expElogtheta = np.exp(matutils.dirichlet_expectation(gamma))
+    expElogtheta = np.exp(dirichlet_expectation(gamma))
     betad = beta[:, doc_word_ids]
     phinorm = np.dot(expElogtheta, betad) + 1e-100
     counts = np.array(doc_word_counts)
@@ -72,7 +73,7 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
         lastgamma = gamma
 
         gamma = alpha + expElogtheta * np.dot(counts / phinorm, betad.T)
-        Elogtheta = matutils.dirichlet_expectation(gamma)
+        Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = np.exp(Elogtheta)
         phinorm = np.dot(expElogtheta, betad) + 1e-100
         meanchange = np.mean(abs(gamma - lastgamma))
@@ -164,7 +165,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.m_lambda = self.random_state.gamma(1.0, 1.0, (T, self.m_W)) * self.m_D * 100 / (T * self.m_W) - eta
         self.m_eta = eta
-        self.m_Elogbeta = matutils.dirichlet_expectation(self.m_eta + self.m_lambda)
+        self.m_Elogbeta = dirichlet_expectation(self.m_eta + self.m_lambda)
 
         self.m_tau = tau + 1
         self.m_kappa = kappa

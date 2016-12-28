@@ -37,6 +37,7 @@ import numbers
 import os
 
 from gensim import interfaces, utils, matutils
+from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
 
 from itertools import chain
@@ -167,7 +168,7 @@ class LdaState(utils.SaveLoad):
         return self.eta + self.sstats
 
     def get_Elogbeta(self):
-        return matutils.dirichlet_expectation(self.get_lambda())
+        return dirichlet_expectation(self.get_lambda())
 # endclass LdaState
 
 
@@ -325,7 +326,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Initialize the variational distribution q(beta|lambda)
         self.state = LdaState(self.eta, (self.num_topics, self.num_terms))
         self.state.sstats = self.random_state.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
-        self.expElogbeta = np.exp(matutils.dirichlet_expectation(self.state.sstats))
+        self.expElogbeta = np.exp(dirichlet_expectation(self.state.sstats))
 
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
@@ -411,7 +412,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
         gamma = self.random_state.gamma(100., 1. / 100., (len(chunk), self.num_topics))
-        Elogtheta = matutils.dirichlet_expectation(gamma)
+        Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = np.exp(Elogtheta)
         if collect_sstats:
             sstats = np.zeros_like(self.expElogbeta)
@@ -447,7 +448,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 # Substituting the value of the optimal phi back into
                 # the update for gamma gives this update. Cf. Lee&Seung 2001.
                 gammad = self.alpha + expElogthetad * np.dot(cts / phinorm, expElogbetad.T)
-                Elogthetad = matutils.dirichlet_expectation(gammad)
+                Elogthetad = dirichlet_expectation(gammad)
                 expElogthetad = np.exp(Elogthetad)
                 phinorm = np.dot(expElogthetad, expElogbetad) + 1e-100
                 # If gamma hasn't changed much, we're done.
@@ -492,7 +493,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         topic weights `alpha` given the last `gammat`.
         """
         N = float(len(gammat))
-        logphat = sum(matutils.dirichlet_expectation(gamma) for gamma in gammat) / N
+        logphat = sum(dirichlet_expectation(gamma) for gamma in gammat) / N
 
         self.alpha = update_dir_prior(self.alpha, N, logphat, rho)
         logger.info("optimized alpha %s", list(self.alpha))
@@ -505,7 +506,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         word weights `eta` given the last `lambdat`.
         """
         N = float(lambdat.shape[0])
-        logphat = (sum(matutils.dirichlet_expectation(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
+        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
 
@@ -717,7 +718,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         score = 0.0
         _lambda = self.state.get_lambda()
-        Elogbeta = matutils.dirichlet_expectation(_lambda)
+        Elogbeta = dirichlet_expectation(_lambda)
 
         for d, doc in enumerate(corpus):  # stream the input doc-by-doc, in case it's too large to fit in RAM
             if d % self.chunksize == 0:
@@ -726,7 +727,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 gammad, _ = self.inference([doc])
             else:
                 gammad = gamma[d]
-            Elogthetad = matutils.dirichlet_expectation(gammad)
+            Elogthetad = dirichlet_expectation(gammad)
 
             # E[log p(doc | theta, beta)]
             score += np.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, id]) for id, cnt in doc)
