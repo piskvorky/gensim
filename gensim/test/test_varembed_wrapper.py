@@ -29,21 +29,10 @@ def testfile():
 
 class TestVarembed(unittest.TestCase):
     def setUp(self):
-        wr_home = os.environ.get('WR_HOME', None)
-        self.wr_path = wr_home if wr_home else None
-        self.corpus_file = datapath('lee.cor')
-        if self.wr_path:
-            self.test_model = wordrank.Wordrank.train(
-                self.wr_path, self.corpus_file)
+        raise NotImplementedError
 
     def testPersistence(self):
         """Test storing/loading the entire model."""
-        # if not self.wr_path:
-        #     return
-        # model = wordrank.Wordrank.train(self.wr_path, self.corpus_file)
-        # model.save(testfile())
-        # loaded = wordrank.Wordrank.load(testfile())
-        # self.models_equal(model, loaded)
         raise NotImplementedError
 
     def testLoadVarembed(self):
@@ -52,18 +41,9 @@ class TestVarembed(unittest.TestCase):
 
     def testSimilarity(self):
         """Test n_similarity for vocab words"""
-        # if not self.wr_path:
-        #     return
-        # In vocab, sanity check
-        # self.assertTrue(numpy.allclose(self.test_model.n_similarity(['the', 'and'], ['and', 'the']), 1.0))
-        # self.assertEqual(self.test_model.similarity('the', 'and'), self.test_model.similarity('the', 'and'))
         raise NotImplementedError
 
     def testLookup(self):
-        # if not self.wr_path:
-        #     return
-        # In vocab, sanity check
-        # self.assertTrue(numpy.allclose(self.test_model['night'], self.test_model[['night']]))
         raise NotImplementedError
 
 if __name__ == '__main__':
