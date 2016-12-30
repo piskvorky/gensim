@@ -18,11 +18,14 @@ import numpy
 
 from gensim.models.wrappers import wordrank
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+# needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+
 
 def testfile():
     raise NotImplementedError
+
 
 class TestVarembed(unittest.TestCase):
     def setUp(self):
@@ -30,7 +33,8 @@ class TestVarembed(unittest.TestCase):
         self.wr_path = wr_home if wr_home else None
         self.corpus_file = datapath('lee.cor')
         if self.wr_path:
-            self.test_model = wordrank.Wordrank.train(self.wr_path, self.corpus_file)
+            self.test_model = wordrank.Wordrank.train(
+                self.wr_path, self.corpus_file)
 
     def testPersistence(self):
         """Test storing/loading the entire model."""
@@ -63,5 +67,6 @@ class TestVarembed(unittest.TestCase):
         raise NotImplementedError
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
