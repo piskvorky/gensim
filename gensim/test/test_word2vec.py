@@ -378,6 +378,18 @@ class TestWord2VecModel(unittest.TestCase):
         kv_accuracy = model.wv.accuracy(datapath('questions-words.txt'))
         self.assertEqual(w2v_accuracy, kv_accuracy)
 
+    def testEvaluateWordPairs(self):
+        """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""
+        corpus = word2vec.LineSentence(datapath('head500.noblanks.cor.bz2'))
+        model = word2vec.Word2Vec(corpus, min_count=3, iter=10)
+        correlation = model.evaluate_word_pairs(datapath('wordsim353.tsv'))
+        pearson = correlation[0][0]
+        spearman = correlation[1][0]
+        oov = correlation[2]
+        self.assertTrue(0.1 < pearson < 1.0)
+        self.assertTrue(0.1 < spearman < 1.0)
+        self.assertTrue(0.0 <= oov < 90.0)
+
     def model_sanity(self, model, train=True):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
         # run extra before/after training tests if train=True
