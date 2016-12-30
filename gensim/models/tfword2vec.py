@@ -129,7 +129,7 @@ class TfWord2Vec(KeyedVectors):
     def train(self):
         with tf.Graph().as_default(), tf.Session() as session:
             self.model = Word2Vec(self.options, session)
-            for _ in xrange(self.options.epochs_to_train):
+            for _ in range(self.options.epochs_to_train):
                 self.model.train()  # Process one epoch
                 if self.options.eval_data is not None:
                     self.model.eval()  # Eval analogies.
