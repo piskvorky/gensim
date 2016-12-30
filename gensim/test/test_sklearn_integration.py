@@ -19,7 +19,7 @@ dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
 
-class TestLdaModel(unittest.TestCase):
+class TestSklearnLDAWrapper(unittest.TestCase):
     def setUp(self):
         self.model=SklearnWrapperLdaModel(id2word=dictionary,num_topics=2,passes=100,minimum_probability=0,random_state=numpy.random.seed(0))
         self.model.fit(corpus)
