@@ -105,8 +105,10 @@ class CorpusABC(utils.SaveLoad):
 
 
 class TransformedCorpus(CorpusABC):
-    def __init__(self, obj, corpus, chunksize=None):
+    def __init__(self, obj, corpus, chunksize=None, **kwargs):
         self.obj, self.corpus, self.chunksize = obj, corpus, chunksize
+        for key, value in kwargs.items(): #add the new parameters like per_word_topics to base class object of LdaModel
+            setattr(self.obj, key, value)
         self.metadata = False
 
     def __len__(self):
@@ -156,12 +158,12 @@ class TransformationABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
 
-    def _apply(self, corpus, chunksize=None):
+    def _apply(self, corpus, chunksize=None, **kwargs):
         """
         Apply the transformation to a whole corpus (as opposed to a single document)
         and return the result as another corpus.
         """
-        return TransformedCorpus(self, corpus, chunksize)
+        return TransformedCorpus(self, corpus, chunksize, **kwargs)
 #endclass TransformationABC
 
 
@@ -261,11 +263,8 @@ class SimilarityABC(utils.SaveLoad):
                 # scipy.sparse happy
                 chunk_end = min(self.index.shape[0], chunk_start + self.chunksize)
                 chunk = self.index[chunk_start : chunk_end]
-                if chunk.shape[0] > 1:
-                    for sim in self[chunk]:
-                        yield sim
-                else:
-                    yield self[chunk]
+                for sim in self[chunk]:
+                    yield sim
         else:
             for doc in self.index:
                 yield self[doc]

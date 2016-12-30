@@ -16,13 +16,14 @@ import os.path
 import tempfile
 
 import six
-import numpy
 import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import hdpmodel
 from gensim import matutils
+from gensim.test import basetests
 
+import numpy as np
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -47,23 +48,31 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-
-class TestHdpModel(unittest.TestCase):
+class TestHdpModel(unittest.TestCase, basetests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = hdpmodel.HdpModel
-        self.model = self.class_(corpus, id2word=dictionary)
+        self.model = self.class_(corpus, id2word=dictionary, random_state=np.random.seed(0))
 
-    def testShowTopics(self):
-        topics = self.model.show_topics(formatted=False, num_topics=20, num_words=20)
+    def testTopicValues(self):
+        """
+        Check show topics method
+        """
+        results = self.model.show_topics()[0]
+        expected_prob, expected_word = '0.264', 'trees '
+        prob, word = results[1].split('+')[0].split('*')
+        self.assertEqual(results[0], 0)
+        self.assertEqual(prob, expected_prob)
+        self.assertEqual(word, expected_word)        
+ 
+        return
 
-        for topic_no, topic in topics:
-            self.assertTrue(isinstance(topic_no, int))
-            self.assertTrue(isinstance(topic, list))
-            for k, v in topic:
-                self.assertTrue(isinstance(k, six.string_types))
-                self.assertTrue(isinstance(v, float))
-
+    def testLDAmodel(self):
+        """
+        Create ldamodel object, and check if the corresponding alphas are equal.
+        """
+        ldam = self.model.suggested_lda_model()
+        self.assertEqual(ldam.alpha[0], self.model.lda_alpha[0])
 
 
 if __name__ == '__main__':
