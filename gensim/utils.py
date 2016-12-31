@@ -800,7 +800,6 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
 
     """
-    import numpy as np
     it = iter(iterable)
     while True:
         if as_numpy:
@@ -827,8 +826,6 @@ class InputQueue(multiprocessing.Process):
         self.as_numpy = as_numpy
 
     def run(self):
-        if self.as_numpy:
-            import np # don't clutter the global namespace with a dependency on numpy
         it = iter(self.corpus)
         while True:
             chunk = itertools.islice(it, self.chunksize)
