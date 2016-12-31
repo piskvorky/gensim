@@ -5,9 +5,12 @@ Unreleased:
 
 None
 
-0.13.4, 2016-12-22
+0.13.5, 2016-12-31
 
 * Added sklearn wrapper for LdaModel (Basic LDA Model) along with relevant test cases and ipynb draft. (@AadityaJ,[#932](https://github.com/RaRe-Technologies/gensim/pull/932))
+
+0.13.4, 2016-12-22
+
 * Added suggested lda model method and print methods to HDP class (@bhargavvader, [#1055](https://github.com/RaRe-Technologies/gensim/pull/1055))
 * New class KeyedVectors to store embedding separate from training code (@anmol01gulati and @droudy, [#980](https://github.com/RaRe-Technologies/gensim/pull/980))
 * Evaluation of word2vec models against semantic similarity datasets like SimLex-999 (@akutuzov, [#1047](https://github.com/RaRe-Technologies/gensim/pull/1047))
