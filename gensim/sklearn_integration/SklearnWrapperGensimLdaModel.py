@@ -9,6 +9,7 @@ scikit learn interface for gensim for easy use of gensim with scikit-learn
 follows on scikit learn API conventions
 """
 from gensim import models
+from gensim import matutils
 
 
 class SklearnWrapperLdaModel(models.LdaModel,object):
@@ -78,7 +79,7 @@ class SklearnWrapperLdaModel(models.LdaModel,object):
         For fitting corpus into the class object.
         calls gensim.model.LdaModel:
         >>>gensim.models.LdaModel(corpus=corpus,num_topics=num_topics,id2word=id2word,passes=passes,update_every=update_every,alpha=alpha,iterations=iterations,eta=eta,random_state=random_state)
-        Warnings: Must for sklearn API.Do not Remove.
+        Warnings: Must for sklearn API. Do not Remove.
         """
         self.corpus=X
         models.LdaModel.__init__(
@@ -94,7 +95,7 @@ class SklearnWrapperLdaModel(models.LdaModel,object):
         """
         takes as an input a new document (bow) and
         Return topic distribution for the given document bow, as a list of (topic_id, topic_probability) 2-tuples.
-        Warnings: Must for sklearn API.Do not Remove.
+        Warnings: Must for sklearn API. Do not Remove.
         """
         return self.get_document_topics(
                                         bow, minimum_probability=minimum_probability,
@@ -105,3 +106,11 @@ class SklearnWrapperLdaModel(models.LdaModel,object):
         train model over X.
         """
         self.update(corpus=X)
+
+    def fit_predict(self,X):
+        """
+        predict topics for given numpy array.
+        Warnings: Important for sklearn Pipeline API. Do not Remove.
+        """
+        corpus = matutils.Sparse2Corpus(X)
+        return SklearnWrapperLdaModel.fit(self, corpus)
