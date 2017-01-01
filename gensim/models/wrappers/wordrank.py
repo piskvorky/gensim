@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Python wrapper around word representation learning from Wordrank.
 The wrapped model can NOT be updated with new documents for online training -- use gensim's
