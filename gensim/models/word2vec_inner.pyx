@@ -152,7 +152,7 @@ cdef void fast_sentence_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, int cbow_mean, REAL_t *word_locks, same_vocab=True) nogil:
+    int i, int j, int k, int cbow_mean, REAL_t *word_locks, check_index=True) nogil:
 
     cdef long long a, b
     cdef long long row2
@@ -162,7 +162,7 @@ cdef void fast_sentence_cbow_hs(
     memset(neu1, 0, size * cython.sizeof(REAL_t))
     count = <REAL_t>0.0
     for m in range(j, k):
-        if same_vocab and m == i:
+        if check_index and m == i:
             continue
         else:
             count += ONEF
@@ -187,7 +187,7 @@ cdef void fast_sentence_cbow_hs(
         sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     for m in range(j, k):
-        if same_vocab and m == i:
+        if check_index and m == i:
             continue
         else:
             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m] * size], &ONE)
@@ -197,7 +197,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks, same_vocab=True) nogil:
+    int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks, check_index=True) nogil:
 
     cdef long long a
     cdef long long row2
@@ -211,7 +211,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
     memset(neu1, 0, size * cython.sizeof(REAL_t))
     count = <REAL_t>0.0
     for m in range(j, k):
-        if same_vocab and m == i:
+        if check_index and m == i:
             continue
         else:
             count += ONEF
@@ -247,7 +247,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
         sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     for m in range(j,k):
-        if same_vocab and m == i:
+        if check_index and m == i:
             continue
         else:
             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m]*size], &ONE)
@@ -609,9 +609,9 @@ def train_batch_labeled_cbow(model, sentences, alpha, _work, _neu1):
             label_end = sentence_labels[sent_idx + 1]
             for i in range(label_start, label_end):
                 if hs:
-                    fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, idx_start, idx_end, cbow_mean, word_locks)
+                    fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, idx_start, idx_end, cbow_mean, word_locks, check_index=False)
                 if negative:
-                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, label_indexes[i], _alpha, work, i, idx_start, idx_end, cbow_mean, next_random, word_locks)
+                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, label_indexes[i], _alpha, work, i, idx_start, idx_end, cbow_mean, next_random, word_locks, check_index=False)
                 if softmax:
                     fast_sentence_cbow_softmax(codelens, neu1, syn0, syn1neg, size, label_count, indexes, label_indexes[i], _alpha, work, i, idx_start, idx_end, cbow_mean, word_locks)
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
+# Copyright (C) 2017 Giacomo Berardi <giacbrd.com>
+# Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
@@ -86,6 +88,8 @@ from numpy import exp, dot, zeros, outer, float32 as REAL, \
 from scipy.special import expit
 
 from gensim import matutils  # utility fnc for pickling, common scipy operations etc
+
+from six import string_types
 
 logger = logging.getLogger(__name__)
 
@@ -334,7 +338,7 @@ class LabeledWord2Vec(Word2Vec):
             for i in range(len(self.wv.syn0), len(self.wv.vocab)):
                 # construct deterministic seed from word AND seed argument
                 newsyn0[i - len(self.wv.syn0)] = self.seeded_vector(
-                    (self.wv.index2word[i] if isinstance(self.wv.index2word[i], basestring) else
+                    (self.wv.index2word[i] if isinstance(self.wv.index2word[i], string_types) else
                         str(self.wv.index2word[i])) + str(self.seed))
             self.wv.syn0 = vstack([self.wv.syn0, newsyn0])
             self.wv.syn0norm = None
@@ -358,7 +362,7 @@ class LabeledWord2Vec(Word2Vec):
             for i in range(len(self.wv.vocab)):
                 # construct deterministic seed from word AND seed argument
                 self.wv.syn0[i] = self.seeded_vector(
-                    (self.wv.index2word[i] if isinstance(self.wv.index2word[i], basestring) else
+                    (self.wv.index2word[i] if isinstance(self.wv.index2word[i], string_types) else
                         str(self.wv.index2word[i])) + str(self.seed))
             self.wv.syn0norm = None
             self.syn0_lockf = ones(len(self.wv.vocab), dtype=REAL)  # zeros suppress learning
