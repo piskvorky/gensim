@@ -28,13 +28,13 @@ def testfile():
 
 class TestFastText(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         ft_home = os.environ.get('FT_HOME', None)
-        cls.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
-        cls.corpus_file = datapath('lee_background.cor')
-        cls.test_model_file = datapath('lee_fasttext')
+        self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
+        self.corpus_file = datapath('lee_background.cor')
+        self.test_model_file = datapath('lee_fasttext')
         # Load pre-trained model to perform tests in case FastText binary isn't available in test environment
-        cls.test_model = fasttext.FastText.load_fasttext_format(cls.test_model_file)
+        self.test_model = fasttext.FastText.load_fasttext_format(self.test_model_file)
 
     def model_sanity(self, model):
         """Even tiny models trained on any corpus should pass these sanity checks"""
