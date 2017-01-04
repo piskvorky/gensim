@@ -40,12 +40,12 @@ class TestFastText(unittest.TestCase):
 
     def model_sanity(self, model):
         """Even tiny models trained on any corpus should pass these sanity checks"""
-        self.assertEqual(model.wv.syn0.shape, (len(model.vocab), model.size))
+        self.assertEqual(model.wv.syn0.shape, (len(model.wv.vocab), model.size))
         self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model.size))
 
     def models_equal(self, model1, model2):
-        self.assertEqual(len(model1.vocab), len(model2.vocab))
-        self.assertEqual(set(model1.vocab.keys()), set(model2.vocab.keys()))
+        self.assertEqual(len(model1.wv.vocab), len(model2.wv.vocab))
+        self.assertEqual(set(model1.wv.vocab.keys()), set(model2.wv.vocab.keys()))
         self.assertTrue(numpy.allclose(model1.wv.syn0, model2.wv.syn0))
         self.assertTrue(numpy.allclose(model1.wv.syn0_all, model2.wv.syn0_all))
 
@@ -85,7 +85,7 @@ class TestFastText(unittest.TestCase):
         test_model_size_20 = fasttext.FastText.train(
                 self.ft_path, self.corpus_file, output_file=testfile(), size=20)
         self.assertEqual(test_model_size_20.size, 20)
-        self.assertEqual(test_model_size_20.syn0.shape[1], 20)
+        self.assertEqual(test_model_size_20.wv.syn0.shape[1], 20)
         self.assertEqual(test_model_size_20.wv.syn0_all.shape[1], 20)
 
     def testPersistence(self):
