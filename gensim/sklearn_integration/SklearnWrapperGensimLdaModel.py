@@ -10,6 +10,7 @@ follows on scikit learn API conventions
 """
 from gensim import models
 from gensim import matutils
+from scipy.sparse.csr import csr_matrix
 
 
 class SklearnWrapperLdaModel(models.LdaModel,object):
@@ -81,7 +82,11 @@ class SklearnWrapperLdaModel(models.LdaModel,object):
         >>>gensim.models.LdaModel(corpus=corpus,num_topics=num_topics,id2word=id2word,passes=passes,update_every=update_every,alpha=alpha,iterations=iterations,eta=eta,random_state=random_state)
         Warnings: Must for sklearn API. Do not Remove.
         """
-        self.corpus=X
+        if isinstance(X, csr_matrix):
+            self.corpus = matutils.Sparse2Corpus(X)
+        else:
+            self.corpus = X
+
         models.LdaModel.__init__(
                                  self, corpus=X, num_topics=self.num_topics, id2word=self.id2word,
                                  distributed=self.distributed, chunksize=self.chunksize, passes=self.passes,
