@@ -21,6 +21,8 @@ from gensim.models import keyedvectors
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+logger = logging.getLogger(__name__)
+
 
 def testfile():
     # temporary data will be stored to this file
@@ -50,7 +52,8 @@ class TestFastText(unittest.TestCase):
     def testTraining(self):
         """Test self.test_model successfully trained, parameters and weights correctly loaded"""
         if self.ft_path is None:
-            self.skipTest("FT_HOME env variable not set, skipping test")
+            logger.info("FT_HOME env variable not set, skipping test")
+            return  # Use self.skipTest once python < 2.7 is no longer supported
         vocab_size, model_size = 1762, 10
         trained_model = fasttext.FastText.train(
             self.ft_path, self.corpus_file, size=model_size, output_file=testfile())
@@ -67,7 +70,8 @@ class TestFastText(unittest.TestCase):
     def testMinCount(self):
         """Tests words with frequency less than `min_count` absent from vocab"""
         if self.ft_path is None:
-            self.skipTest("FT_HOME env variable not set, skipping test")
+            logger.info("FT_HOME env variable not set, skipping test")
+            return  # Use self.skipTest once python < 2.7 is no longer supported
         self.assertTrue('forests' not in self.test_model.wv.vocab)
         test_model_min_count_1 = fasttext.FastText.train(
                 self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=1)
@@ -76,7 +80,8 @@ class TestFastText(unittest.TestCase):
     def testModelSize(self):
         """Tests output vector dimensions are the same as the value for `size` param"""
         if self.ft_path is None:
-            self.skipTest("FT_HOME env variable not set, skipping test")
+            logger.info("FT_HOME env variable not set, skipping test")
+            return  # Use self.skipTest once python < 2.7 is no longer supported
         test_model_size_20 = fasttext.FastText.train(
                 self.ft_path, self.corpus_file, output_file=testfile(), size=20)
         self.assertEqual(test_model_size_20.size, 20)
@@ -160,8 +165,7 @@ class TestFastText(unittest.TestCase):
         self.assertFalse('nights' in self.test_model.wv.vocab)
         self.assertTrue(numpy.allclose(self.test_model['nights'], self.test_model[['nights']]))
         # Word with no ngrams in model
-        with self.assertRaises(KeyError):
-            vector = self.test_model['a!@']
+        self.assertRaises(KeyError, lambda: self.test_model['a!@'])
 
     def testContains(self):
         """Tests __contains__ for in-vocab and out-of-vocab words"""

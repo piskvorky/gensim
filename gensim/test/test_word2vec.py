@@ -34,8 +34,6 @@ except ImportError:
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
-logger = logging.getLogger()
-logger.level = logging.ERROR
 
 class LeeCorpus(object):
     def __iter__(self):
