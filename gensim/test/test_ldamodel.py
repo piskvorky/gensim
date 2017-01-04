@@ -22,7 +22,7 @@ import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import ldamodel, ldamulticore
-from gensim import matutils
+from gensim import matutils, utils
 from gensim.test import basetests
 
 
@@ -53,7 +53,7 @@ def testfile(test_fname=''):
 def testRandomState():
     testcases = [np.random.seed(0), None, np.random.RandomState(0), 0]
     for testcase in testcases:
-        assert(isinstance(ldamodel.get_random_state(testcase), np.random.RandomState))
+        assert(isinstance(utils.get_random_state(testcase), np.random.RandomState))
 
 
 class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
