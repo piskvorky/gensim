@@ -7,10 +7,12 @@ None
 
 0.13.4, 2016-12-22
 
-* Evaluation of word2vec models against semantic similarity datasets like SimLex-999 (#1047) (@akutuzov, [#1047](https://github.com/RaRe-Technologies/gensim/pull/1047))
+* Added suggested lda model method and print methods to HDP class (@bhargavvader, [#1055](https://github.com/RaRe-Technologies/gensim/pull/1055))
+* New class KeyedVectors to store embedding separate from training code (@anmol01gulati and @droudy, [#980](https://github.com/RaRe-Technologies/gensim/pull/980))
+* Evaluation of word2vec models against semantic similarity datasets like SimLex-999 (@akutuzov, [#1047](https://github.com/RaRe-Technologies/gensim/pull/1047))
 * TensorBoard word embedding visualisation of Gensim Word2vec format (@loretoparisi, [#1051](https://github.com/RaRe-Technologies/gensim/pull/1051))
-* Throw exception if load() is called on instance rather than the class in word2vec and doc2vec (@dus0x,[(#889](https://github.com/RaRe-Technologies/gensim/pull/889))
-* Loading and Saving LDA Models across Python 2 and 3. Fix #853 (@anmolgulati, #913, [#1093](https://github.com/RaRe-Technologies/gensim/pull/1093))
+* Throw exception if load() is called on instance rather than the class in word2vec and doc2vec (@dust0x,[(#889](https://github.com/RaRe-Technologies/gensim/pull/889))
+* Loading and Saving LDA Models across Python 2 and 3. Fix #853 (@anmolgulati, [#913](https://github.com/RaRe-Technologies/gensim/pull/913), [#1093](https://github.com/RaRe-Technologies/gensim/pull/1093))
 * Fix automatic learning of eta (prior over words) in LDA (@olavurmortensen, [#1024](https://github.com/RaRe-Technologies/gensim/pull/1024)).
     * eta should have dimensionality V (size of vocab) not K (number of topics). eta with shape K x V is still allowed, as the user may want to impose specific prior information to each topic.
     * eta is no longer allowed the "asymmetric" option. Asymmetric priors over words in general are fine (learned or user defined).
@@ -18,10 +20,9 @@ None
     * Unit tests were updated accordingly. The unit tests expect a different shape than before; some unit tests were redundant after the change; `eta='asymmetric'` now should raise an error.
 * Optimise show_topics to only call get_lambda once. Fix #1006. (@bhargavvader,  [#1028](https://github.com/RaRe-Technologies/gensim/pull/1028))
 * HdpModel doc improvement. Inference and print_topics (@dsquareindia, [#1029](https://github.com/RaRe-Technologies/gensim/pull/1029))
-* Removing Doc2Vec defaults so that it won't override Word2Vec defaults. Fix #795 (@markroxor, [#929](https://github.com/RaRe-Technologies/gensim/pull/929))
-Remove warning on gensim import "pattern not installed". Fix #1009 (@shashankg7, #1018)
+* Removing Doc2Vec defaults so that it won't override Word2Vec defaults. Fix #795. (@markroxor, [#929](https://github.com/RaRe-Technologies/gensim/pull/929))
+* Remove warning on gensim import "pattern not installed". Fix #1009 (@shashankg7, [#1018](https://github.com/RaRe-Technologies/gensim/pull/1018))
 * Add delete_temporary_training_data() function to word2vec and doc2vec models. (@deepmipt-VladZhukov, [#987](https://github.com/RaRe-Technologies/gensim/pull/987))
-* New class KeyedVectors to store embedding separate from training code (@anmol01gulati and @droudy, [#980](https://github.com/RaRe-Technologies/gensim/pull/980))
 * Documentation improvements (@IrinaGoloshchapova, [#1010](https://github.com/RaRe-Technologies/gensim/pull/1010), [#1011](https://github.com/RaRe-Technologies/gensim/pull/1011))
 * LDA tutorial by Olavur, tips and tricks (@olavurmortensen, [#779](https://github.com/RaRe-Technologies/gensim/pull/779)) 
 * Add double quote in commmand line to run on Windows (@akarazeev, [#1005](https://github.com/RaRe-Technologies/gensim/pull/1005)) 
