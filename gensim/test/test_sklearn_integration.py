@@ -2,6 +2,7 @@ import six
 import unittest
 import numpy
 
+from scipy import sparse
 from gensim.sklearn_integration.SklearnWrapperGensimLdaModel import SklearnWrapperLdaModel
 from gensim.corpora import Dictionary
 from gensim import matutils
@@ -21,7 +22,7 @@ corpus = [dictionary.doc2bow(text) for text in texts]
 
 class TestSklearnLDAWrapper(unittest.TestCase):
     def setUp(self):
-        self.model=SklearnWrapperLdaModel(id2word=dictionary,num_topics=2,passes=100,minimum_probability=0,random_state=numpy.random.seed(0))
+        self.model = SklearnWrapperLdaModel(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
         self.model.fit(corpus)
 
     def testPrintTopic(self):
@@ -32,7 +33,7 @@ class TestSklearnLDAWrapper(unittest.TestCase):
             self.assertTrue(isinstance(k, int))
 
     def testTransform(self):
-        texts_new=['graph','eulerian']
+        texts_new = ['graph','eulerian']
         bow = self.model.id2word.doc2bow(texts_new)
         doc_topics, word_topics, phi_values = self.model.transform(bow,per_word_topics=True)
 
@@ -55,6 +56,16 @@ class TestSklearnLDAWrapper(unittest.TestCase):
         expected=[0.13, 0.87]
         passed = numpy.allclose(sorted(transformed_approx), sorted(expected), atol=1e-1)
         self.assertTrue(passed)
+
+    def testCSRMatrixConversion(self):
+        Arr = numpy.array([[1, 2, 0], [0, 0, 3], [1, 0, 0]])
+        sArr = sparse.csr_matrix(Arr)
+        newmodel = SklearnWrapperLdaModel(num_topics=2, passes=100)
+        newmodel.fit(sArr)
+        topic = newmodel.print_topics()
+        for k, v in topic:
+            self.assertTrue(isinstance(v, six.string_types))
+            self.assertTrue(isinstance(k, int))
 
 if __name__ == '__main__':
     unittest.main()
