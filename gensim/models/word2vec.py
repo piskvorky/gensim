@@ -1486,7 +1486,6 @@ class Word2Vec(utils.SaveLoad):
         if not hasattr(model, 'train_count'):
             model.train_count = 0
             model.total_train_time = 0
-
         Word2Vec.enable_keyed_vectors_warnings()
         return model
 
