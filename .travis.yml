@@ -11,7 +11,7 @@ before_install:
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda2/bin:$PATH
-  - jupyter nbconvert --to html docs/notebooks/*.ipynb 
+  - nbconvert --to html docs/notebooks/*.ipynb 
   - conda update --yes conda
 install:
   - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
