@@ -28,7 +28,6 @@ from pprint import pprint
 import logging
 import numpy as np # for arrays, array broadcasting etc.
 import numbers
-from copy import deepcopy
 from shutil import copyfile
 from os.path import isfile
 from os import remove
@@ -334,7 +333,7 @@ class AuthorTopicModel(LdaModel):
         expElogtheta_sum = np.zeros(self.num_topics)
         for a in xrange(len(authors_d)):
             expElogtheta_sum += expElogthetad[a, :]
-        phinorm = expElogtheta_sum.dot(expElogbetad)
+        phinorm = expElogtheta_sum.dot(expElogbetad) + 1e-100
 
         return phinorm
 
@@ -390,9 +389,8 @@ class AuthorTopicModel(LdaModel):
                 ids = [id for id, _ in doc]
             cts = np.array([cnt for _, cnt in doc])
 
-            # Get all the authors in the current document.
-            authors_d = self.doc2author[doc_no]  # List of author names.
-            authors_d = [self.author2id[a] for a in authors_d]  # Convert names to integer IDs.
+            # Get all authors in current document, and convert the author names to integer IDs.
+            authors_d = [self.author2id[a] for a in self.doc2author[doc_no]]
 
             gammad = self.state.gamma[authors_d, :]  # gamma of document d before update.
             tilde_gamma = gammad.copy()  # gamma that will be updated.
@@ -486,6 +484,8 @@ class AuthorTopicModel(LdaModel):
         subsample_ratio = 1.0 * total_docs / len(chunk)
         perwordbound = self.bound(chunk, chunk_doc_idx, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
         #print(perwordbound)
+        # FIXME: the input to this function is not necessarily held-out data (as stated in the log below). The input is not
+        # held-out data when called from self.update(). It is also stated like this in LdaModel, and it is misleading.
         logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
@@ -574,10 +574,6 @@ class AuthorTopicModel(LdaModel):
         else:
             if doc2author is None and author2doc is None:
                 raise ValueError('at least one of author2doc/doc2author must be specified, to establish input space dimensionality')
-
-            # Avoid overwriting the user's dictionaries.
-            author2doc = deepcopy(author2doc)
-            doc2author = deepcopy(doc2author)
 
             # If either doc2author or author2doc is missing, construct them from the other.
             if doc2author is None:
@@ -801,7 +797,7 @@ class AuthorTopicModel(LdaModel):
 
         """
 
-        # NOTE: it may be possible to enable evaluation of documents with new authors. To
+        # TODO: it may be possible to enable evaluation of documents with new authors. To
         # do this, self.inference() has to be altered so that it uses gamma = self.state.gamma[a, :]
         # if author a is already trained on, but initializes gamma randomly if author a is
         # not already in the model.
@@ -832,10 +828,14 @@ class AuthorTopicModel(LdaModel):
             chunk_idx = []
             for d in xrange(len(chunk)):
                 authors_d = doc2author[d]
-                doc_new_authors = False
-                for a in authors_d:
-                    if not self.author2doc.get(a):
-                        doc_new_authors = True
+                # Check if there are any new authors (not seen during training).
+                if len(set(authors_d).intersection(self.author2doc)) < len(authors_d):
+                    # There are authors in authors_d that are not in self.author2doc,
+                    # i.e. new authors.
+                    doc_new_authors = True
+                else:
+                    doc_new_authors = False
+
                 if not doc_new_authors:
                     chunk_idx.append(d)
                 else:
@@ -848,16 +848,17 @@ class AuthorTopicModel(LdaModel):
         expElogtheta = np.exp(dirichlet_expectation(gamma))
 
         word_score = 0.0
-        authors_set = set()  # Used in computing theta bound.
         theta_score = 0.0
+        # Set of authors, used to keep track of which authors have been seen so far in the loop over documents below.
+        authors_set = set()
         for d in chunk_idx:
             if author2doc is None:
                 doc_no = chunk_doc_idx[d]
             else:
                 doc_no = d
             doc = chunk[d]
-            authors_d = doc2author[doc_no]
-            authors_d = [self.author2id[a] for a in authors_d]
+            # Get all authors in current document, and convert the author names to integer IDs.
+            authors_d = [self.author2id[a] for a in self.doc2author[doc_no]]
             ids = np.array([id for id, _ in doc])  # Word IDs in doc.
             cts = np.array([cnt for _, cnt in doc])  # Word counts.
 
@@ -870,7 +871,7 @@ class AuthorTopicModel(LdaModel):
             word_score += np.log(1.0 / len(authors_d)) + cts.dot(np.log(phinorm))
 
             # E[log p(theta | alpha) - log q(theta | gamma)]
-            # The code blow ensure we compute the score of each author only once.
+            # The code blow ensures we compute the score of each author only once.
             for a in authors_d:
                 if a not in authors_set:
                     theta_score += np.sum((self.alpha - gamma[a, :]) * Elogtheta[a, :])
@@ -1010,7 +1011,7 @@ class AuthorTopicModel(LdaModel):
         result = super(AuthorTopicModel, cls).load(fname, *args, **kwargs)
         state_fname = utils.smart_extension(fname, '.state')
         try:
-            result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
+            result.state = super(AuthorTopicModel, cls).load(state_fname, *args, **kwargs)
         except Exception as e:
             logging.warning("failed to load state from %s: %s", state_fname, e)
         return result
