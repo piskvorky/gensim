@@ -11,14 +11,15 @@ before_install:
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda2/bin:$PATH
-  - nbconvert --to html docs/notebooks/*.ipynb 
   - conda update --yes conda
 install:
-  - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
+  - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy jupyter
   - source activate gensim-test
   - pip install pyemd
   - pip install annoy
   - pip install testfixtures
   - pip install unittest2
   - python setup.py install
-script: python setup.py test
+script:
+  - python setup.py test
+  - jupyter nbconvert --to html docs/notebooks/*.ipynb    
