@@ -118,12 +118,12 @@ if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
 
 python_2_6_backports = ''
 if sys.version_info[:2] < (2, 7):
-    python_2_6_backports = 'argparse'
+    python_2_6_backports = ['argparse', 'subprocess32']
 
 
 setup(
     name='gensim',
-    version='0.13.3',
+    version='0.13.4.1',
     description='Python framework for fast Vector Space Modelling',
     long_description=readfile('README.md'),
 
