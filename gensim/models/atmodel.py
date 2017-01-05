@@ -28,6 +28,7 @@ from pprint import pprint
 import logging
 import numpy as np # for arrays, array broadcasting etc.
 import numbers
+from copy import deepcopy
 from shutil import copyfile
 from os.path import isfile
 from os import remove
@@ -560,7 +561,12 @@ class AuthorTopicModel(LdaModel):
         if gamma_threshold is None:
             gamma_threshold = self.gamma_threshold
 
-        # NOTE: it is not possible to add new authors to an existing document (all input documents are treated
+        # TODO: if deepcopy is not used here, something goes wrong. When unit tests are run (specifically "testPasses"),
+        # the process simply gets killed.
+        author2doc = deepcopy(author2doc)
+        doc2author = deepcopy(doc2author)
+
+        # TODO: it is not possible to add new authors to an existing document (all input documents are treated
         # as completely new documents). Perhaps this functionality could be implemented.
         # If it's absolutely necessary, the user can delete the documents that have new authors, and call update
         # on them with the new and old authors.
