@@ -88,11 +88,11 @@ class SklearnWrapperLdaModel(models.LdaModel,object):
             self.corpus = X
 
         models.LdaModel.__init__(
-                                 self, corpus=X, num_topics=self.num_topics, id2word=self.id2word,
+                                 self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
                                  distributed=self.distributed, chunksize=self.chunksize, passes=self.passes,
-                                 update_every=self.update_every,alpha=self.alpha, eta=self.eta, decay=self.decay,
-                                 offset=self.offset,eval_every=self.eval_every, iterations=self.iterations,
-                                 gamma_threshold=self.gamma_threshold,minimum_probability=self.minimum_probability,
+                                 update_every=self.update_every, alpha=self.alpha, eta=self.eta, decay=self.decay,
+                                 offset=self.offset, eval_every=self.eval_every, iterations=self.iterations,
+                                 gamma_threshold=self.gamma_threshold, minimum_probability=self.minimum_probability,
                                  random_state=self.random_state)
         return self
 
