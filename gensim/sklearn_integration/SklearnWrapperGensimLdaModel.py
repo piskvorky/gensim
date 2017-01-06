@@ -110,12 +110,7 @@ class SklearnWrapperLdaModel(models.LdaModel,object):
         """
         train model over X.
         """
-        self.update(corpus=X)
+        if isinstance(X, csr_matrix):
+            X = matutils.Sparse2Corpus(X)
 
-    def fit_predict(self,X):
-        """
-        predict topics for given numpy array.
-        Warnings: Important for sklearn Pipeline API. Do not Remove.
-        """
-        corpus = matutils.Sparse2Corpus(X)
-        return SklearnWrapperLdaModel.fit(self, corpus)
+        self.update(corpus=X)
