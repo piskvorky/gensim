@@ -7,7 +7,7 @@ None
 
 0.13.5, 2016-12-31
 
-* Added sklearn wrapper for LdaModel (Basic LDA Model) along with relevant test cases and ipynb draft. (@AadityaJ,[#932](https://github.com/RaRe-Technologies/gensim/pull/932))
+* Added sklearn wrapper for LdaModel along with relevant test cases, ipynb draft and rst docs. (@AadityaJ,[#932](https://github.com/RaRe-Technologies/gensim/pull/932))
 
 0.13.4.1, 2017-01-04
 
