@@ -315,7 +315,7 @@ class FastText(Word2Vec):
         """
         self.wv.ngrams = {}
         all_ngrams = []
-        for w, v in self.vocab.items():
+        for w, v in self.wv.vocab.items():
             all_ngrams += self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
         all_ngrams = set(all_ngrams)
         self.num_ngram_vectors = len(all_ngrams)
