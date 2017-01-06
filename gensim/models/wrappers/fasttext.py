@@ -157,9 +157,9 @@ class FastText(Word2Vec):
 
         `window` is the maximum distance between the current and predicted word within a sentence.
 
-        `alpha` is the initial learning rate (will linearly drop to `min_alpha` as training progresses).
+        `alpha` is the initial learning rate.
 
-        `min_count` = ignore all words with total frequency lower than this.
+        `min_count` = ignore all words with total occurrences lower than this.
 
         `loss` = defines training objective. Allowed values are `hs` (hierarchical softmax),
         `ns` (negative sampling) and `softmax`. Defaults to `ns`
@@ -176,10 +176,12 @@ class FastText(Word2Vec):
         `min_n` = min length of char ngrams to be used for training word representations. Default is 3.
 
         `max_n` = max length of char ngrams to be used for training word representations. Set `max_n` to be
-        greater than `min_n` to avoid char ngrams being used. Default is 6.
+        lesser than `min_n` to avoid char ngrams being used. Default is 6.
 
         `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
         assigning word indexes.
+
+        `threads` = number of threads to use. Default is 12.
 
         """
         ft_path = ft_path
