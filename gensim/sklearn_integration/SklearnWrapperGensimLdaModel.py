@@ -67,9 +67,7 @@ class SklearnWrapperLdaModel(models.LdaModel):
         Set all parameters.
         """
         for parameter, value in parameters.items():
-            # self.setattr(parameter, value)
             self.parameter = value
-        #self.parameter = value
         return self
 
     def fit(self, X):
