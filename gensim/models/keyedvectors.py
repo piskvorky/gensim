@@ -541,7 +541,7 @@ class KeyedVectors(utils.SaveLoad):
                         similarity_gold.append(sim)
                         continue
                     else:
-                        logger.debug('skipping line #{0:d} with OOV words: {1:s}'.format(line_no, line.strip()))
+                        logger.debug('skipping line #{0:d} with OOV words: {1:s}'.format(line_no, line.strip().encode('utf-8')))
                         continue
                 similarity_gold.append(sim)  # Similarity from the dataset
                 similarity_model.append(self.similarity(a, b))  # Similarity from the model
