@@ -8,14 +8,14 @@ from gensim.corpora import Dictionary
 from gensim import matutils
 
 texts = [['complier', 'system', 'computer'],
- ['eulerian', 'node', 'cycle', 'graph', 'tree', 'path'],
- ['graph', 'flow', 'network', 'graph'],
- ['loading', 'computer', 'system'],
- ['user', 'server', 'system'],
- ['tree','hamiltonian'],
- ['graph', 'trees'],
- ['computer', 'kernel', 'malfunction','computer'],
- ['server','system','computer']]
+         ['eulerian', 'node', 'cycle', 'graph', 'tree', 'path'],
+         ['graph', 'flow', 'network', 'graph'],
+         ['loading', 'computer', 'system'],
+         ['user', 'server', 'system'],
+         ['tree', 'hamiltonian'],
+         ['graph', 'trees'],
+         ['computer', 'kernel', 'malfunction', 'computer'],
+         ['server', 'system', 'computer']]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
