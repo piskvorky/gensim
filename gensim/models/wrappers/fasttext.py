@@ -344,9 +344,12 @@ class FastText(Word2Vec):
         used in fastText.
 
         """
+        # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
+        old_settings = np.seterr(all='ignore')
         h = np.uint32(2166136261)
         for c in string:
             h = h ^ np.uint32(ord(c))
             h = h * np.uint32(16777619)
+        np.seterr(**old_settings)
         return h
 
