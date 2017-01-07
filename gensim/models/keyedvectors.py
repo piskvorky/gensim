@@ -532,7 +532,7 @@ class KeyedVectors(utils.SaveLoad):
                         a, b, sim = [word for word in line.split(delimiter)]
                     sim = float(sim)
                 except:
-                    logger.info('skipping invalid line #{0:d} in {1:s}'.format(line_no, pairs.encode('utf-8')))
+                    logger.info(u'skipping invalid line #{0:d} in {1:s}'.format(line_no, pairs))
                     continue
                 if a not in ok_vocab or b not in ok_vocab:
                     oov += 1
@@ -541,7 +541,7 @@ class KeyedVectors(utils.SaveLoad):
                         similarity_gold.append(sim)
                         continue
                     else:
-                        logger.debug('skipping line #{0:d} with OOV words: {1:s}'.format(line_no, line.strip().encode('utf-8')))
+                        logger.debug(u'skipping line #{0:d} with OOV words: {1:s}'.format(line_no, line.strip()))
                         continue
                 similarity_gold.append(sim)  # Similarity from the dataset
                 similarity_model.append(self.similarity(a, b))  # Similarity from the model
