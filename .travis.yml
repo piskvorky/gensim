@@ -6,6 +6,7 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
+  - "3.6"
 before_install:
   - wget 'http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh' -O miniconda.sh
   - chmod +x miniconda.sh
@@ -18,5 +19,6 @@ install:
   - pip install pyemd
   - pip install annoy
   - pip install testfixtures
+  - pip install unittest2
   - python setup.py install
 script: python setup.py test

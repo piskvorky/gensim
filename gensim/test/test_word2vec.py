@@ -70,13 +70,17 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
 
-
 def _rule(word, count, min_count):
     if word == "human":
         return utils.RULE_DISCARD  # throw out
     else:
         return utils.RULE_DEFAULT  # apply default rule, i.e. min_count
-
+def load_on_instance():
+    # Save and load a Word2Vec Model on instance for test
+    model = word2vec.Word2Vec(sentences, min_count=1)
+    model.save(testfile())
+    model = word2vec.Word2Vec() # should fail at this point
+    return model.load(testfile())
 
 class TestWord2VecModel(unittest.TestCase):
     def testOnlineLearning(self):
@@ -374,6 +378,18 @@ class TestWord2VecModel(unittest.TestCase):
         kv_accuracy = model.wv.accuracy(datapath('questions-words.txt'))
         self.assertEqual(w2v_accuracy, kv_accuracy)
 
+    def testEvaluateWordPairs(self):
+        """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""
+        corpus = word2vec.LineSentence(datapath('head500.noblanks.cor.bz2'))
+        model = word2vec.Word2Vec(corpus, min_count=3, iter=10)
+        correlation = model.evaluate_word_pairs(datapath('wordsim353.tsv'))
+        pearson = correlation[0][0]
+        spearman = correlation[1][0]
+        oov = correlation[2]
+        self.assertTrue(0.1 < pearson < 1.0)
+        self.assertTrue(0.1 < spearman < 1.0)
+        self.assertTrue(0.0 <= oov < 90.0)
+
     def model_sanity(self, model, train=True):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
         # run extra before/after training tests if train=True
@@ -585,14 +601,18 @@ class TestWord2VecModel(unittest.TestCase):
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
-#endclass TestWord2VecModel
-
+    
     def test_sentences_should_not_be_a_generator(self):
         """
         Is sentences a generator object?
         """
         gen = (s for s in sentences)
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
+        
+    def testLoadOnClassError(self):
+        """Test if exception is raised when loading word2vec model on instance"""
+        self.assertRaises(AttributeError, load_on_instance)
+#endclass TestWord2VecModel
 
 class TestWMD(unittest.TestCase):
     def testNonzero(self):

@@ -22,7 +22,7 @@ import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import ldamodel, ldamulticore
-from gensim import matutils
+from gensim import matutils, utils
 from gensim.test import basetests
 
 
@@ -44,15 +44,16 @@ dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
 
-def testfile():
+def testfile(test_fname=''):
     # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
+    fname = 'gensim_models_' + test_fname + '.tst' 
+    return os.path.join(tempfile.gettempdir(), fname)
 
 
 def testRandomState():
     testcases = [np.random.seed(0), None, np.random.RandomState(0), 0]
     for testcase in testcases:
-        assert(isinstance(ldamodel.get_random_state(testcase), np.random.RandomState))
+        assert(isinstance(utils.get_random_state(testcase), np.random.RandomState))
 
 
 class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
@@ -60,6 +61,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamodel.LdaModel
         self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
+
 
     def testTransform(self):
         passed = False
@@ -408,8 +410,22 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
+    def testModelCompatibilityWithPythonVersions(self):
+        fname_model_2_7 = datapath('ldamodel_python_2_7')
+        model_2_7 = self.class_.load(fname_model_2_7)
+        fname_model_3_5 = datapath('ldamodel_python_3_5')
+        model_3_5 = self.class_.load(fname_model_3_5)
+        self.assertEqual(model_2_7.num_topics, model_3_5.num_topics)
+        self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
+        tstvec = []
+        self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec])) # try projecting an empty vector
+        id2word_2_7 = dict((k,v) for k,v in model_2_7.id2word.iteritems())
+        id2word_3_5 = dict((k,v) for k,v in model_3_5.id2word.iteritems())
+        self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
+
+
     def testPersistenceIgnore(self):
-        fname = testfile()
+        fname = testfile('testPersistenceIgnore')
         model = ldamodel.LdaModel(self.corpus, num_topics=2)
         model.save(fname, ignore='id2word')
         model2 = ldamodel.LdaModel.load(fname)
