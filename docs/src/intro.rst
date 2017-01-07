@@ -120,7 +120,7 @@ The whole `gensim` package revolves around the concepts of :term:`corpus`, :term
 
         Gensim does not prescribe any specific corpus format;
         a corpus is anything that, when iterated over, successively yields these sparse vectors.
-        For example, `set([(2, 2.0), (3, 5.0)], ([0, -1.0], [3, -1.0]))` is a trivial
+        For example, `set((((2, 2.0), (3, 5.0)), ((0, 1.0), (3, 1.0))))` is a trivial
         corpus of two documents, each with two non-zero `feature-answer` pairs.
 
 

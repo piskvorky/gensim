@@ -197,10 +197,10 @@ def _format_results(_keywords, combined_keywords, split, scores):
     return "\n".join(combined_keywords)
 
 
-def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=['NN', 'JJ'], lemmatize=False):
+def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=['NN', 'JJ'], lemmatize=False, deacc=True):
     # Gets a dict of word -> lemma
     text = to_unicode(text)
-    tokens = _clean_text_by_word(text)
+    tokens = _clean_text_by_word(text, deacc=deacc)
     split_text = list(_tokenize_by_word(text))
 
     # Creates the graph and adds the edges
