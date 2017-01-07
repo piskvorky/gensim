@@ -10,7 +10,7 @@ follows on scikit learn API conventions
 """
 from gensim import models
 from gensim import matutils
-from scipy.sparse.csr import csr_matrix
+from scipy import sparse
 
 
 class SklearnWrapperLdaModel(models.LdaModel):
@@ -67,7 +67,9 @@ class SklearnWrapperLdaModel(models.LdaModel):
         Set all parameters.
         """
         for parameter, value in parameters.items():
+            # self.setattr(parameter, value)
             self.parameter = value
+        #self.parameter = value
         return self
 
     def fit(self, X):
@@ -76,7 +78,7 @@ class SklearnWrapperLdaModel(models.LdaModel):
         Calls gensim.model.LdaModel:
         >>>gensim.models.LdaModel(corpus=corpus,num_topics=num_topics,id2word=id2word,passes=passes,update_every=update_every,alpha=alpha,iterations=iterations,eta=eta,random_state=random_state)
         """
-        if isinstance(X, csr_matrix):
+        if sparse.issparse(X):
             self.corpus = matutils.Sparse2Corpus(X)
         else:
             self.corpus = X
@@ -103,7 +105,7 @@ class SklearnWrapperLdaModel(models.LdaModel):
         """
         Train model over X.
         """
-        if isinstance(X, csr_matrix):
+        if sparse.issparse(X):
             X = matutils.Sparse2Corpus(X)
 
         self.update(corpus=X)
