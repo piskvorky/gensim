@@ -126,7 +126,7 @@ class LdaMulticore(LdaModel):
 
         `decay` and `offset` parameters are the same as Kappa and Tau_0 in
         Hoffman et al, respectively.
-        
+
         `random_state` can be a numpy.random.RandomState object or the seed for one
 
         Example:

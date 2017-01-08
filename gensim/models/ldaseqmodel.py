@@ -475,7 +475,7 @@ class sslm(utils.SaveLoad):
 
         Fwd_Variance(t) ≡ E((beta_{t,w} − mean_{t,w})^2 |beta_{t} for 1:t)
         = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * (fwd_variance[t - 1] + obs_variance)
-        
+
         Variance(t) ≡ E((beta_{t,w} − mean_cap{t,w})^2 |beta_cap{t} for 1:t)
         = fwd_variance[t - 1] + (fwd_variance[t - 1] / fwd_variance[t - 1] + obs_variance)^2 * (variance[t - 1] - (fwd_variance[t-1] + obs_variance))
 
@@ -513,7 +513,7 @@ class sslm(utils.SaveLoad):
 
         Fwd_Mean(t) ≡  E(beta_{t,w} | beta_ˆ 1:t )
         = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * fwd_mean[t - 1] + (1 - (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance)) * beta
-        
+
         Mean(t) ≡ E(beta_{t,w} | beta_ˆ 1:T )
         = fwd_mean[t - 1] + (obs_variance / fwd_variance[t - 1] + obs_variance) + (1 - obs_variance / fwd_variance[t - 1] + obs_variance)) * mean[t]
 
@@ -678,7 +678,7 @@ class sslm(utils.SaveLoad):
     def update_obs(self, sstats, totals):
         """
         Function to perform optimization of obs. Parameters are suff_stats set up in the fit_sslm method.
-        
+
         TODO:
         This is by far the slowest function in the whole algorithm.
         Replacing or improving the performance of this would greatly speed things up.
@@ -860,7 +860,7 @@ class LdaPost(utils.SaveLoad):
         Update variational multinomial parameters, based on a document and a time-slice.
         This is done based on the original Blei-LDA paper, where:
         log_phi := beta * exp(Ψ(gamma)), over every topic for every word.
-        
+
         TODO: incorporate lee-sueng trick used in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
         """
         num_topics = self.lda.num_topics

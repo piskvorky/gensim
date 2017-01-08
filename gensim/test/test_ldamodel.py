@@ -193,7 +193,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(model.eta.shape, expected_shape)
         self.assertTrue(all(model.eta == np.array([0.3] * num_terms)))
 
-	# should be ok with num_topics x num_terms
+        # should be ok with num_topics x num_terms
         testeta = np.array([[0.5] * len(dictionary)] * 2)
         kwargs['eta'] = testeta
         self.class_(**kwargs)
