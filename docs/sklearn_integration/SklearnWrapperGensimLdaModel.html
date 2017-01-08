@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta property="description" content="Efficient topic modelling of text semantics in Python." />
+    <meta property="og:title" content="gensim: topic modelling for humans" />
+    <meta property="og:description" content="Efficient topic modelling in Python" />
+
+    
+      <title>gensim: sklearn_integration.sklearn_wrapper_gensim_ldamodel.SklearnWrapperLdaModel – Scikit learn wrapper for Latent Dirichlet Allocation</title>
+
+    
+  <link rel="stylesheet" href="../_static/css/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/css/jquery.qtip.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/css/anythingslider.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-24066335-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+
+  </head>
+
+  <body>
+    <div id="topwrap">
+      
+      <div id="top1">
+        <div id="left1">
+          <h1 class="h1gensim">
+            <img src="../_static/images/logo-gensim_compact.png" alt="gensim logo" title="Gensim - topic modelling for humans" />
+          </h1>
+        </div>
+
+        <div id="middleright">
+          <div id="middle1">
+            <div id="gensim"><a href="../index.html"><img src="../_static/images/gensim_compact.png" alt="gensim" title="Gensim home" /></a></div>
+            <div id="tagline"><img src="../_static/images/tagline_compact.png" alt="gensim tagline" /></div>
+          </div>
+          <div id="right1">
+            <div class="consulting-banner">
+              <h3><a href="http://rare-technologies.com/">Get Expert Help</a></h3>
+              <p>• machine learning, NLP, data mining</p>
+              <p>• custom SW design, development, optimizations</p>
+              <p>• corporate trainings &amp; IT consulting</p>
+            </div>
+          </div>
+        </div>
+      </div>
+     
+
+      
+      <div id="menu">
+        <div id="indentation1">
+          <ul class="menubuttons">
+            <li class="menubutton"><a href="../index.html">Home</a></li>
+            <li class="menubutton"><a href="../tutorial.html">Tutorials</a></li>
+            <li class="menubutton"><a href="../install.html">Install</a></li>
+            <li class="menubutton"><a href="../support.html">Support</a></li>
+            <li class="menubutton"><a href="../apiref.html">API</a></li>
+            <li class="menubutton"><a href="../about.html">About</a></li>
+          </ul>
+        </div>
+      </div>
+      
+
+      <div class="clearer"></div>
+    </div>
+
+    
+  <script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+    URL_ROOT: '../',
+    VERSION: '0.13.4.1',
+    COLLAPSE_INDEX: false,
+    FILE_SUFFIX: '.html',
+    HAS_SOURCE: true
+  };
+  </script>
+    <script type="text/javascript" src="../_static/js/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery.qtip.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-migrate-1.1.1.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery.anythingslider.min.js"></script>
+
+    
+    <div class="document">
+      
+        <div id="thinbanner">
+          <div id="bodythinbanner">
+            <span class="h2gensim">sklearn_integration.sklearn_wrapper_gensim_ldamodel.SklearnWrapperLdaModel – Scikit learn wrapper for Latent Dirichlet Allocation</span>
+          </div>
+        </div>
+        <div class="obsah">
+          <div class="obsahwrapper">
+            
+  <div class="section" id="sklearn-integration-sklearn-wrapper-gensim-ldamodel-sklearnwrapperldamodel-scikit-learn-wrapper-for-latent-dirichlet-allocation">
+<h1><code class="xref py py-mod docutils literal"><span class="pre">sklearn_integration.sklearn_wrapper_gensim_ldamodel.SklearnWrapperLdaModel</span></code> &#8211; Scikit learn wrapper for Latent Dirichlet Allocation<a class="headerlink" href="#sklearn-integration-sklearn-wrapper-gensim-ldamodel-sklearnwrapperldamodel-scikit-learn-wrapper-for-latent-dirichlet-allocation" title="Permalink to this headline">¶</a></h1>
+</div>
+
+
+          </div>
+        </div>
+      
+
+      <div class="clearer"></div>
+    </div>
+    
+
+    
+    <div id="footer">
+      <div id="footerwrapper">
+        <div id="footerleft">
+          <img src="../_static/images/logo-gensim.png" class="smallerlogo" alt="smaller gensim logo" />
+          <a href="../index.html"><img src="../_static/images/gensim-footer.png" alt="gensim footer image" title="Gensim home" /></a>
+
+          <div class="copyright">
+            &copy; Copyright 2009-now, <a href="mailto:radimrehurek@seznam.cz" style="color:white"> Radim Řehůřek</a>
+            <br />
+              Last updated on Jan 08, 2017.
+          </div>
+        </div>
+
+        <div id="footermiddleright">
+          <div id="footermiddle">
+            <ul class="navigation">
+              <li><a href="../index.html">
+                Home
+              </a></li>
+              <li>|</li>
+              <li><a href="../tutorial.html">
+                Tutorials
+              </a></li>
+              <li>|</li>
+              <li><a href="../install.html">
+                Install
+              </a></li>
+              <li>|</li>
+              <li><a href="../support.html">
+                Support
+              </a></li>
+              <li>|</li>
+              <li><a href="../apiref.html">
+                API
+              </a></li>
+              <li>|</li>
+              <li><a href="../about.html">
+                About
+              </a></li>
+            </ul>
+
+            <div class="tweetodsazeni">
+              <div class="tweet">
+                <a href="https://twitter.com/radimrehurek" target="_blank" style="color: white">Tweet @RadimRehurek</a>
+              </div>
+            </div>
+
+          </div>
+
+          <div id="footerright">
+            <div class="footernadpis">
+              Support:
+            </div>
+            <div class="googlegroupsodsazeni">
+              <a href="https://groups.google.com/group/gensim" class="googlegroups">
+                Stay informed via gensim mailing list:
+              </a>
+
+              <form action="http://groups.google.com/group/gensim/boxsubscribe">
+                <input type="text" name="email" placeholder="your@email.com" size="28" />
+                <input type="submit" name="sub" value="Subscribe" />
+              </form>
+
+            </div>
+
+            <div class="addthis_toolbox addthis_default_style addthis_32x32_style"
+                addthis:title="#gensim"
+                addthis:description="Efficient Topic Modelling in Python"
+                style="margin:20px 0 0 0">
+              <a class="addthis_button_preferred_1"></a>
+              <a class="addthis_button_preferred_2"></a>
+              <a class="addthis_button_preferred_3"></a>
+              <a class="addthis_button_preferred_4"></a>
+              <a class="addthis_button_compact"></a>
+              <a class="addthis_counter addthis_bubble_style"></a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <script type="text/javascript">
+      (function() {
+      var at = document.createElement('script'); at.type = 'text/javascript'; at.async = true;
+      at.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 's7.addthis.com/js/250/addthis_widget.js#pubid=ra-4d738b9b1d31ccbd';
+      var sat = document.getElementsByTagName('script')[0]; sat.parentNode.insertBefore(at, sat);
+      })();
+    </script>
+
+  </body>
+</html>
