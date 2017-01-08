@@ -8,6 +8,9 @@ python:
   - "3.5"
   - "3.6"
 before_install:
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+        pip install pep8;
+    fi
   - wget 'http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh' -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
@@ -21,4 +24,8 @@ install:
   - pip install testfixtures
   - pip install unittest2
   - python setup.py install
-script: python setup.py test
+script:
+  - python setup.py test
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      pep8 gensim --show-source --ignore=E501,E731,E1,W503;
+    fi
