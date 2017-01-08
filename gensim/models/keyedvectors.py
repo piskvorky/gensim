@@ -177,7 +177,7 @@ class KeyedVectors(utils.SaveLoad):
         distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
         for i, t1 in dictionary.items():
             for j, t2 in dictionary.items():
-                if not t1 in docset1 or not t2 in docset2:
+                if t1 not in docset1 or t2 not in docset2:
                     continue
                 # Compute Euclidean distance between word vectors.
                 distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))

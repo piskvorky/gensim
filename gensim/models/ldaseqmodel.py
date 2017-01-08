@@ -398,7 +398,7 @@ class LdaSeqModel(utils.SaveLoad):
 
     def dtm_coherence(self, time):
         """
-        returns all topics of a particular time-slice without probabilitiy values for it to be used 
+        returns all topics of a particular time-slice without probabilitiy values for it to be used
         for either "u_mass" or "c_v" coherence.
         """
         coherence_topics = []
@@ -489,7 +489,7 @@ class sslm(utils.SaveLoad):
         = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * (fwd_variance[t - 1] + obs_variance)
         
         Variance(t) ≡ E((beta_{t,w} − mean_cap{t,w})^2 |beta_cap{t} for 1:t)
-        = fwd_variance[t - 1] + (fwd_variance[t - 1] / fwd_variance[t - 1] + obs_variance)^2 * (variance[t - 1] - (fwd_variance[t-1] + obs_variance))    
+        = fwd_variance[t - 1] + (fwd_variance[t - 1] / fwd_variance[t - 1] + obs_variance)^2 * (variance[t - 1] - (fwd_variance[t-1] + obs_variance))
 
         """
         INIT_VARIANCE_CONST = 1000
@@ -528,7 +528,7 @@ class sslm(utils.SaveLoad):
         = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * fwd_mean[t - 1] + (1 - (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance)) * beta
         
         Mean(t) ≡ E(beta_{t,w} | beta_ˆ 1:T )
-        = fwd_mean[t - 1] + (obs_variance / fwd_variance[t - 1] + obs_variance) + (1 - obs_variance / fwd_variance[t - 1] + obs_variance)) * mean[t]    
+        = fwd_mean[t - 1] + (obs_variance / fwd_variance[t - 1] + obs_variance) + (1 - obs_variance / fwd_variance[t - 1] + obs_variance)) * mean[t]
 
         """
         T = self.num_time_slices
@@ -644,7 +644,7 @@ class sslm(utils.SaveLoad):
 
     def compute_bound(self, sstats, totals):
         """
-        Compute log probability bound. 
+        Compute log probability bound.
         Forumula is as described in appendix of DTM by Blei. (formula no. 5)
         """
         W = self.vocab_len

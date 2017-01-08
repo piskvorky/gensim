@@ -329,10 +329,10 @@ class DtmModel(utils.SaveLoad):
 
     def dtm_coherence(self, time, num_words=20):
         """
-        returns all topics of a particular time-slice without probabilitiy values for it to be used 
+        returns all topics of a particular time-slice without probabilitiy values for it to be used
         for either "u_mass" or "c_v" coherence.
         TODO: because of print format right now can only return for 1st time-slice.
-              should we fix the coherence printing or make changes to the print statements to mirror DTM python?  
+              should we fix the coherence printing or make changes to the print statements to mirror DTM python?
         """
         coherence_topics = []
         for topic_no in range(0, self.num_topics):

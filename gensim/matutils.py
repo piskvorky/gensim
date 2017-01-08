@@ -449,7 +449,7 @@ def kullback_leibler(vec1, vec2, num_features=None):
     if scipy.sparse.issparse(vec2):
         vec2 = vec2.toarray() # converted both the vectors to dense in case they were in sparse matrix 
     if isbow(vec1) and isbow(vec2): # if they are in bag of words format we make it dense
-        if num_features != None: # if not None, make as large as the documents drawing from
+        if num_features is not None: # if not None, make as large as the documents drawing from
             dense1 = sparse2full(vec1, num_features)
             dense2 = sparse2full(vec2, num_features)
             return entropy(dense1, dense2)

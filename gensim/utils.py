@@ -12,17 +12,6 @@ from __future__ import with_statement
 
 import logging, warnings
 
-logger = logging.getLogger(__name__)
-
-try:
-    from html.entities import name2codepoint as n2cp
-except ImportError:
-    from htmlentitydefs import name2codepoint as n2cp
-try:
-    import cPickle as _pickle
-except ImportError:
-    import pickle as _pickle
-
 import re
 import unicodedata
 import os
@@ -40,11 +29,22 @@ import numpy as np
 import numbers
 import scipy.sparse
 
-if sys.version_info[0] >= 3:
-    unicode = str
-
 from six import iterkeys, iteritems, u, string_types, unichr
 from six.moves import xrange
+
+logger = logging.getLogger(__name__)
+
+try:
+    from html.entities import name2codepoint as n2cp
+except ImportError:
+    from htmlentitydefs import name2codepoint as n2cp
+try:
+    import cPickle as _pickle
+except ImportError:
+    import pickle as _pickle
+
+if sys.version_info[0] >= 3:
+    unicode = str
 
 try:
     from smart_open import smart_open

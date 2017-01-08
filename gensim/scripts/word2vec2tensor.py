@@ -15,8 +15,8 @@ Output:
     The script will create two TSV files. A 2d tensor format file, and a Word Embedding metadata file. Both files will
     us the --output file name as prefix
 This script is used to convert the word2vec format to Tensorflow 2D tensor and metadata formats for Embedding Visualization
-To use the generated TSV 2D tensor and metadata file in the Projector Visualizer, please 
-1) Open http://projector.tensorflow.org/. 
+To use the generated TSV 2D tensor and metadata file in the Projector Visualizer, please
+1) Open http://projector.tensorflow.org/.
 2) Choose "Load Data" from the left menu.
 3) Select "Choose file" in "Load a TSV file of vectors." and choose you local "_tensor.tsv" file
 4) Select "Choose file" in "Load a TSV file of metadata." and choose you local "_metadata.tsv" file

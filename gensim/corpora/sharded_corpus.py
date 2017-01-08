@@ -26,6 +26,12 @@ import numpy
 import scipy.sparse as sparse
 import time
 
+from six.moves import xrange
+
+import gensim
+from gensim.corpora import IndexedCorpus
+from gensim.interfaces import TransformedCorpus
+
 logger = logging.getLogger(__name__)
 
 #: Specifies which dtype should be used for serializing the shards.
@@ -35,13 +41,6 @@ try:
     _default_dtype = theano.config.floatX
 except ImportError:
     logger.info('Could not import Theano, will use standard float for default ShardedCorpus dtype.')
-
-
-from six.moves import xrange
-
-import gensim
-from gensim.corpora import IndexedCorpus
-from gensim.interfaces import TransformedCorpus
 
 
 class ShardedCorpus(IndexedCorpus):
