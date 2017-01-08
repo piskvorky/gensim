@@ -126,7 +126,7 @@ class TransformedCorpus(CorpusABC):
 
     def __getitem__(self, docno):
         if hasattr(self.corpus, '__getitem__'):
-           return self.obj[self.corpus[docno]]
+            return self.obj[self.corpus[docno]]
         else:
             raise RuntimeError('Type {} does not support slicing.'.format(type(self.corpus)))
 # endclass TransformedCorpus

@@ -83,17 +83,17 @@ RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
 def get_random_state(seed):
-     """ Turn seed into a np.random.RandomState instance.
+    """ Turn seed into a np.random.RandomState instance.
 
-         Method originally from maciejkula/glove-python, and written by @joshloyal
-     """
-     if seed is None or seed is np.random:
-         return np.random.mtrand._rand
-     if isinstance(seed, (numbers.Integral, np.integer)):
-         return np.random.RandomState(seed)
-     if isinstance(seed, np.random.RandomState):
+        Method originally from maciejkula/glove-python, and written by @joshloyal
+    """
+    if seed is None or seed is np.random:
+        return np.random.mtrand._rand
+    if isinstance(seed, (numbers.Integral, np.integer)):
+        return np.random.RandomState(seed)
+    if isinstance(seed, np.random.RandomState):
         return seed
-     raise ValueError('%r cannot be used to seed a np.random.RandomState instance' % seed)
+    raise ValueError('%r cannot be used to seed a np.random.RandomState instance' % seed)
 
 
 def synchronous(tlockname):
@@ -1182,10 +1182,10 @@ def check_output(*popenargs, **kwargs):
 
 
 def sample_dict(d, n=10, use_random=True):
-     """
-     Pick `n` items from dictionary `d` and return them as a list.
-     The items are picked randomly if `use_random` is True, otherwise picked
-     according to natural dict iteration.
-     """
-     selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
-     return [(key, d[key]) for key in selected_keys]
+    """
+    Pick `n` items from dictionary `d` and return them as a list.
+    The items are picked randomly if `use_random` is True, otherwise picked
+    according to natural dict iteration.
+    """
+    selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
+    return [(key, d[key]) for key in selected_keys]

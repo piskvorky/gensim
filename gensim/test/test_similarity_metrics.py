@@ -144,7 +144,7 @@ class TestHellinger(unittest.TestCase):
         expected = 0.309742984153
         self.assertAlmostEqual(expected, result)
 
-         # testing LDA distribution vectors
+        # testing LDA distribution vectors
         np.random.seed(0)
         model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100)
         lda_vec1 = model[[(1, 2), (2, 3)]]

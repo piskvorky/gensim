@@ -110,7 +110,7 @@ if __name__ == '__main__':
     input = MmCorpus(config.resultFile('_%s.mm' % method))
     assert len(input) == len(corpus), "corpus size mismatch (%i vs %i): run ./gensim_genmodel.py again" % (len(input), len(corpus))
 
-     # initialize structure for similarity queries
+    # initialize structure for similarity queries
     if method == 'lsi' or method == 'rp':  # for these methods, use dense vectors
         index = MatrixSimilarity(input, numBest=MAX_SIMILAR + 1, numFeatures=input.numTerms)
     else:

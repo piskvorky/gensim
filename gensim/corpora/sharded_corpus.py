@@ -232,8 +232,7 @@ class ShardedCorpus(IndexedCorpus):
         # The "state" of the dataset.
         self.current_shard = None    # The current shard itself (numpy ndarray)
         self.current_shard_n = None  # Current shard is the current_shard_n-th
-        self.current_offset = None   # The index into the dataset which
-                                     # corresponds to index 0 of current shard
+        self.current_offset = None   # The index into the dataset which corresponds to index 0 of current shard
 
         logger.info('Initializing sharded corpus with prefix '
                      '{0}'.format(output_prefix))

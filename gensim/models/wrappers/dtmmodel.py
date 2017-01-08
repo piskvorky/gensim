@@ -255,7 +255,7 @@ class DtmModel(utils.SaveLoad):
         else:
             num_topics = min(num_topics, self.num_topics)
             chosen_topics = range(num_topics)
-             # add a little random jitter, to randomize results around the same
+            # add a little random jitter, to randomize results around the same
             # alpha
             # sort_alpha = self.alpha + 0.0001 * \
             #     numpy.random.rand(len(self.alpha))

@@ -324,8 +324,8 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             self.assertTrue(isinstance(probability, float))
 
         # checks if topic '1' is in the result list
-         # FIXME: Fails on osx and win
-         # self.assertTrue(1 in result[0])
+        # FIXME: Fails on osx and win
+        # self.assertTrue(1 in result[0])
 
         # if user has entered word instead, check with word
         result = model.get_term_topics(str(model.id2word[2]))
@@ -334,8 +334,8 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             self.assertTrue(isinstance(probability, float))
 
         # checks if topic '1' is in the result list
-         # FIXME: Fails on osx and win
-         # self.assertTrue(1 in result[0])
+        # FIXME: Fails on osx and win
+        # self.assertTrue(1 in result[0])
 
     def testPasses(self):
         # long message includes the original error message with a custom one
