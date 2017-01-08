@@ -3,7 +3,7 @@ import unittest
 import numpy
 
 from scipy import sparse
-from gensim.sklearn_integration.SklearnWrapperGensimLdaModel import SklearnWrapperLdaModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklearnWrapperLdaModel
 from gensim.corpora import Dictionary
 from gensim import matutils
 
