@@ -36,25 +36,26 @@ import gensim
 
 logger = logging.getLogger(__name__)
 
-def word2vec2tensor(word2vec_model_path,tensor_filename, binary=False):
+
+def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
     '''
     Convert Word2Vec mode to 2D tensor TSV file and metadata file
     Args:
         param1 (str): word2vec model file path
         param2 (str): filename prefix
         param2 (bool): set True to use a binary Word2Vec model, defaults to False
-    '''    
+    '''
     model = gensim.models.Word2Vec.load_word2vec_format(word2vec_model_path, binary=binary)
     outfiletsv = tensor_filename + '_tensor.tsv'
     outfiletsvmeta = tensor_filename + '_metadata.tsv'
-    
+
     with open(outfiletsv, 'w+') as file_vector:
         with open(outfiletsvmeta, 'w+') as file_metadata:
             for word in model.index2word:
                 file_metadata.write(word.encode('utf-8') + '\n')
                 vector_row = '\t'.join(map(str, model[word]))
                 file_vector.write(vector_row + '\n')
-    
+
     logger.info("2D tensor file saved to %s" % outfiletsv)
     logger.info("Tensor metadata file saved to %s" % outfiletsvmeta)
 
@@ -76,8 +77,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "-o", "--output", required=True,
         help="Output tensor file name prefix")
-    parser.add_argument( "-b", "--binary", 
-                        required=False, 
+    parser.add_argument("-b", "--binary",
+                        required=False,
                         help="If word2vec model in binary format, set True, else False")
     args = parser.parse_args()
 

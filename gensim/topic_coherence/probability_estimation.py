@@ -17,6 +17,7 @@ from itertools import chain, islice
 
 logger = logging.getLogger(__name__)
 
+
 def _ret_top_ids(segmented_topics):
     """
     Helper function to return a set of all the unique topic ids in segmented topics.
@@ -30,6 +31,7 @@ def _ret_top_ids(segmented_topics):
             else:
                 top_ids.add(id)
     return top_ids
+
 
 def p_boolean_document(corpus, segmented_topics):
     """
@@ -58,6 +60,7 @@ def p_boolean_document(corpus, segmented_topics):
     num_docs = len(corpus)
     return (per_topic_postings, num_docs)
 
+
 def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     """
     This function performs the boolean sliding window probability estimation. Boolean sliding window
@@ -81,6 +84,7 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     window_id = 0  # Each window assigned a window id.
     per_topic_postings = {}
     token2id_dict = dictionary.token2id
+
     def add_topic_posting(top_ids, window, per_topic_postings, window_id, token2id_dict):
         for word in window:
             word_id = token2id_dict[word]

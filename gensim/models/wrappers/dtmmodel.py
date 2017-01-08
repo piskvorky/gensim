@@ -310,7 +310,7 @@ class DtmModel(utils.SaveLoad):
         all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
         input parameter is the year to do the visualisation.
         """
-        topic_term = np.exp(self.lambda_[:,:,time]) / np.exp(self.lambda_[:,:,time]).sum()
+        topic_term = np.exp(self.lambda_[:, :, time]) / np.exp(self.lambda_[:, :, time]).sum()
         topic_term = topic_term * self.num_topics
 
         doc_topic = self.gamma_

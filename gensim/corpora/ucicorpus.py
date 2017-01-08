@@ -29,6 +29,7 @@ logger = logging.getLogger('gensim.corpora.ucicorpus')
 
 
 class UciReader(MmReader):
+
     def __init__(self, input):
         """
         Initialize the reader.
@@ -118,7 +119,7 @@ class UciWriter(MmWriter):
                 offsets.append(posnow)
                 poslast = posnow
 
-            vector = [(x, int(y)) for (x, y) in bow if int(y) != 0] # integer count, not floating weights
+            vector = [(x, int(y)) for (x, y) in bow if int(y) != 0]  # integer count, not floating weights
             max_id, veclen = writer.write_vector(docno, vector)
             num_terms = max(num_terms, 1 + max_id)
             num_nnz += veclen
@@ -145,6 +146,7 @@ class UciCorpus(UciReader, IndexedCorpus):
     """
     Corpus in the UCI bag-of-words format.
     """
+
     def __init__(self, fname, fname_vocab=None):
         IndexedCorpus.__init__(self, fname)
         UciReader.__init__(self, fname)
@@ -165,7 +167,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         (yielding one document at a time).
         """
         for docId, doc in super(UciCorpus, self).__iter__():
-            yield doc # get rid of docId, return the sparse vector only
+            yield doc  # get rid of docId, return the sparse vector only
 
     def create_dictionary(self):
         """

@@ -10,7 +10,8 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
-import logging, warnings
+import logging
+import warnings
 
 import re
 import unicodedata
@@ -107,7 +108,7 @@ def synchronous(tlockname):
             tlock = getattr(self, tlockname)
             logger.debug("acquiring lock %r for %s" % (tlockname, func.__name__))
 
-            with tlock: # use lock as a context manager to perform safe acquire/release pairs
+            with tlock:  # use lock as a context manager to perform safe acquire/release pairs
                 logger.debug("acquired lock %r for %s" % (tlockname, func.__name__))
                 result = func(self, *args, **kwargs)
                 logger.debug("releasing lock %r for %s" % (tlockname, func.__name__))
@@ -117,12 +118,16 @@ def synchronous(tlockname):
 
 
 class NoCM(object):
+
     def acquire(self):
         pass
+
     def release(self):
         pass
+
     def __enter__(self):
         pass
+
     def __exit__(self, type, value, traceback):
         pass
 nocm = NoCM()
@@ -231,6 +236,7 @@ def any2unicode(text, encoding='utf8', errors='strict'):
     return unicode(text, encoding, errors=errors)
 to_unicode = any2unicode
 
+
 def call_on_class_only(*args, **kwargs):
     """Raise exception when load methods are called on instance"""
     raise AttributeError('This method should be called on a class object.')
@@ -267,7 +273,6 @@ class SaveLoad(object):
         obj._load_specials(fname, mmap, compress, subname)
         logger.info("loaded %s", fname)
         return obj
-
 
     def _load_specials(self, fname, mmap, compress, subname):
         """
@@ -322,7 +327,6 @@ class SaveLoad(object):
             logger.info("setting ignored attribute %s to None" % (attrib))
             setattr(self, attrib, None)
 
-
     @staticmethod
     def _adapt_by_suffix(fname):
         """Give appropriate compress setting and filename formula"""
@@ -333,7 +337,6 @@ class SaveLoad(object):
             compress = False
             subname = lambda *args: '.'.join(list(args) + ['npy'])
         return (compress, subname)
-
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2,
                     ignore=frozenset(), pickle_protocol=2):
@@ -374,7 +377,6 @@ class SaveLoad(object):
                     setattr(obj, attrib, val)
         logger.info("saved %s", fname)
 
-
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
         """
         Save aside any attributes that need to be handled separately, including
@@ -406,7 +408,7 @@ class SaveLoad(object):
         for attrib, val in iteritems(self.__dict__):
             if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
-                cfname = '.'.join((fname,attrib))
+                cfname = '.'.join((fname, attrib))
                 restores.extend(val._save_specials(cfname, None, sep_limit, ignore,
                                                    pickle_protocol, compress, subname))
 
@@ -461,7 +463,6 @@ class SaveLoad(object):
             raise
         return restores + [(self, asides)]
 
-
     def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
              ignore=frozenset(), pickle_protocol=2):
         """
@@ -495,7 +496,7 @@ class SaveLoad(object):
         except TypeError:  # `fname_or_handle` does not have write attribute
             self._smart_save(fname_or_handle, separately, sep_limit, ignore,
                              pickle_protocol=pickle_protocol)
-#endclass SaveLoad
+# endclass SaveLoad
 
 
 def identity(p):
@@ -512,7 +513,7 @@ def get_max_id(corpus):
     """
     maxid = -1
     for document in corpus:
-        maxid = max(maxid, max([-1] + [fieldid for fieldid, _ in document])) # [-1] to avoid exceptions from max(empty)
+        maxid = max(maxid, max([-1] + [fieldid for fieldid, _ in document]))  # [-1] to avoid exceptions from max(empty)
     return maxid
 
 
@@ -525,13 +526,12 @@ class FakeDict(object):
     is a waste of memory.
 
     """
+
     def __init__(self, num_terms):
         self.num_terms = num_terms
 
-
     def __str__(self):
         return "FakeDict(num_terms=%s)" % self.num_terms
-
 
     def __getitem__(self, val):
         if 0 <= val < self.num_terms:
@@ -650,6 +650,7 @@ class RepeatCorpus(SaveLoad):
     Used in the tutorial on distributed computing and likely not useful anywhere else.
 
     """
+
     def __init__(self, corpus, reps):
         """
         Wrap a `corpus` as another corpus of length `reps`. This is achieved by
@@ -667,6 +668,7 @@ class RepeatCorpus(SaveLoad):
 
     def __iter__(self):
         return itertools.islice(itertools.cycle(self.corpus), self.reps)
+
 
 class RepeatCorpusNTimes(SaveLoad):
 
@@ -686,7 +688,9 @@ class RepeatCorpusNTimes(SaveLoad):
             for document in self.corpus:
                 yield document
 
+
 class ClippedCorpus(SaveLoad):
+
     def __init__(self, corpus, max_docs=None):
         """
         Return a corpus that is the "head" of input iterable `corpus`.
@@ -705,7 +709,9 @@ class ClippedCorpus(SaveLoad):
     def __len__(self):
         return min(self.max_docs, len(self.corpus))
 
+
 class SlicedCorpus(SaveLoad):
+
     def __init__(self, corpus, slice_):
         """
         Return a corpus that is the slice of input iterable `corpus`.
@@ -742,6 +748,7 @@ class SlicedCorpus(SaveLoad):
 
         return self.length
 
+
 def safe_unichr(intval):
     try:
         return unichr(intval)
@@ -750,6 +757,7 @@ def safe_unichr(intval):
         s = "\\U%08x" % intval
         # return UTF16 surrogate pair
         return s.decode('unicode-escape')
+
 
 def decode_htmlentities(text):
     """
@@ -817,6 +825,7 @@ grouper = chunkize_serial
 
 
 class InputQueue(multiprocessing.Process):
+
     def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
         super(InputQueue, self).__init__()
         self.q = q
@@ -848,7 +857,7 @@ class InputQueue(multiprocessing.Process):
             logger.debug("prepared another chunk of %i documents (qsize=%s)" %
                         (len(wrapped_chunk[0]), qsize))
             self.q.put(wrapped_chunk.pop(), block=True)
-#endclass InputQueue
+# endclass InputQueue
 
 
 if os.name == 'nt':
@@ -929,6 +938,7 @@ def unpickle(fname):
         else:
             return _pickle.loads(f.read())
 
+
 def revdict(d):
     """
     Reverse a dictionary mapping.
@@ -951,11 +961,11 @@ def toptexts(query, texts, index, n=10):
     Return a list of 3-tuples (docid, doc's similarity to the query, texts[docid]).
 
     """
-    sims = index[query] # perform a similarity query against the corpus
+    sims = index[query]  # perform a similarity query against the corpus
     sims = sorted(enumerate(sims), key=lambda item: -item[1])
 
     result = []
-    for topid, topcosine in sims[:n]: # only consider top-n most similar docs
+    for topid, topcosine in sims[:n]:  # only consider top-n most similar docs
         result.append((topid, topcosine, texts[topid]))
     return result
 
@@ -1146,6 +1156,7 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
         else:
             return default_res
 
+
 def check_output(*popenargs, **kwargs):
     r"""Run command with arguments and return its output as a byte string.
     Backported from Python 2.7 as it's implemented as pure python on stdlib.
@@ -1168,6 +1179,7 @@ def check_output(*popenargs, **kwargs):
     except KeyboardInterrupt:
         process.terminate()
         raise
+
 
 def sample_dict(d, n=10, use_random=True):
      """

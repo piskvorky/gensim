@@ -35,6 +35,7 @@ def testfile():
 
 
 class DummyTransformer(object):
+
     def __getitem__(self, bow):
         if len(next(iter(bow))) == 2:
             # single bag of words
@@ -215,6 +216,7 @@ class CorpusTestCase(unittest.TestCase):
 
 
 class TestMmCorpus(CorpusTestCase):
+
     def setUp(self):
         self.corpus_class = mmcorpus.MmCorpus
         self.corpus = self.corpus_class(datapath('testcorpus.mm'))
@@ -232,12 +234,14 @@ class TestMmCorpus(CorpusTestCase):
 
 
 class TestSvmLightCorpus(CorpusTestCase):
+
     def setUp(self):
         self.corpus_class = svmlightcorpus.SvmLightCorpus
         self.file_extension = '.svmlight'
 
 
 class TestBleiCorpus(CorpusTestCase):
+
     def setUp(self):
         self.corpus_class = bleicorpus.BleiCorpus
         self.file_extension = '.blei'

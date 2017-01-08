@@ -43,7 +43,6 @@ dataset = map(lambda x: strip_punctuation2(x.lower()),
 classes = np.array([[1, 0], [1, 0], [0, 1], [0, 1]])
 
 
-
 class TestPreprocessing(unittest.TestCase):
 
     def testStripNumeric(self):

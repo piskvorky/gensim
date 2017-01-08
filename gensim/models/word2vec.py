@@ -190,7 +190,7 @@ except ImportError:
 
             # now go over all words from the window, predicting each one in turn
             start = max(0, pos - model.window)
-            for pos2, word2 in enumerate(word_vocabs[start : pos + model.window + 1], start):
+            for pos2, word2 in enumerate(word_vocabs[start: pos + model.window + 1], start):
                 # don't train on OOV words and on the `word` itself
                 if word2 is not None and pos2 != pos:
                     log_prob_sentence += score_sg_pair(model, word, word2)
@@ -328,6 +328,7 @@ class Vocab(object):
     and for constructing binary trees (incl. both word leaves and inner nodes).
 
     """
+
     def __init__(self, **kwargs):
         self.count = 0
         self.__dict__.update(kwargs)
@@ -428,7 +429,7 @@ class Word2Vec(utils.SaveLoad):
         """
 
         self.load = call_on_class_only
-        self.load_word2vec_format = call_on_class_only        
+        self.load_word2vec_format = call_on_class_only
 
         if FAST_VERSION == -1:
             logger.warning('Slow version of {0} is being used'.format(__name__))
@@ -1066,7 +1067,7 @@ class Word2Vec(utils.SaveLoad):
         # randomize the remaining words
         for i in xrange(len(self.wv.syn0), len(self.wv.vocab)):
             # construct deterministic seed from word AND seed argument
-            newsyn0[i-len(self.wv.syn0)] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
+            newsyn0[i - len(self.wv.syn0)] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
         self.wv.syn0 = vstack([self.wv.syn0, newsyn0])
 
         if self.hs:
@@ -1433,7 +1434,7 @@ class Word2Vec(utils.SaveLoad):
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha)
 
-    def _minimize_model(self, save_syn1 = False, save_syn1neg = False, save_syn0_lockf = False):
+    def _minimize_model(self, save_syn1=False, save_syn1neg=False, save_syn0_lockf=False):
         if hasattr(self, 'syn1') and not save_syn1:
             del self.syn1
         if hasattr(self, 'syn1neg') and not save_syn1neg:
@@ -1501,8 +1502,10 @@ class Word2Vec(utils.SaveLoad):
             self.wv = wv
         super(Word2Vec, self)._load_specials(*args, **kwargs)
 
+
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
+
     def __init__(self, dirname):
         self.dirname = dirname
 
@@ -1525,6 +1528,7 @@ class BrownCorpus(object):
 
 class Text8Corpus(object):
     """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
+
     def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
         self.fname = fname
         self.max_sentence_length = max_sentence_length
@@ -1585,7 +1589,7 @@ class LineSentence(object):
                 line = utils.to_unicode(line).split()
                 i = 0
                 while i < len(line):
-                    yield line[i : i + self.max_sentence_length]
+                    yield line[i: i + self.max_sentence_length]
                     i += self.max_sentence_length
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
@@ -1594,7 +1598,7 @@ class LineSentence(object):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
-                        yield line[i : i + self.max_sentence_length]
+                        yield line[i: i + self.max_sentence_length]
                         i += self.max_sentence_length
 
 

@@ -14,7 +14,9 @@ import unittest
 from gensim.topic_coherence import probability_estimation
 from gensim.corpora.hashdictionary import HashDictionary
 
+
 class TestProbabilityEstimation(unittest.TestCase):
+
     def setUp(self):
         self.texts = [['human', 'interface', 'computer'],
                       ['eps', 'user', 'interface', 'system'],

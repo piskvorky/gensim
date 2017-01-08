@@ -79,6 +79,7 @@ class Phrases(interfaces.TransformationABC):
     and `phrases[corpus]` syntax.
 
     """
+
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
                  max_vocab_size=40000000, delimiter=b'_', progress_per=10000):
         """
@@ -310,6 +311,7 @@ class Phraser(interfaces.TransformationABC):
     other values.)
 
     """
+
     def __init__(self, phrases_model):
         self.threshold = phrases_model.threshold
         self.min_count = phrases_model.min_count
@@ -326,7 +328,6 @@ class Phraser(interfaces.TransformationABC):
             if not count % 50000:
                 logger.info('Phraser added %i phrasegrams', count)
         logger.info('Phraser built with %i %i phrasegrams', count, len(self.phrasegrams))
-
 
     def __getitem__(self, sentence):
         """

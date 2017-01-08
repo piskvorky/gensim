@@ -35,6 +35,7 @@ class KeyedVectors(utils.SaveLoad):
     Class to contain vectors and vocab for the Word2Vec training class and other w2v methods not directly
     involved in training such as most_similar()
     """
+
     def __init__(self):
         self.syn0 = []
         self.syn0norm = None
@@ -321,7 +322,6 @@ class KeyedVectors(utils.SaveLoad):
         return sorted(zip(dists, words))[0][1]
 
     def __getitem__(self, words):
-
         """
         Accept a single word or a list of words as input.
 
@@ -557,7 +557,6 @@ class KeyedVectors(utils.SaveLoad):
         logger.debug('Pairs with unknown words: {0:d}'.format(oov))
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio
-
 
     def init_sims(self, replace=False):
         """

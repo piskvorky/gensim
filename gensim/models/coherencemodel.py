@@ -64,6 +64,7 @@ sliding_windows_dict = {
     'c_npmi': 10
 }
 
+
 class CoherenceModel(interfaces.TransformationABC):
     """
     Objects of this class allow for building and maintaining a model for topic
@@ -87,6 +88,7 @@ class CoherenceModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
+
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None, window_size=None, coherence='c_v', topn=10):
         """
         Args:

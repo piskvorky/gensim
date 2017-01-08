@@ -139,6 +139,7 @@ class ShardedCorpus(IndexedCorpus):
     the current shard, or opens a new one. The shard size is constant, except
     for the last shard.
     """
+
     def __init__(self, output_prefix, corpus, dim=None,
                  shardsize=4096, overwrite=False, sparse_serialization=False,
                  sparse_retrieval=False, gensim=False):
@@ -327,7 +328,7 @@ class ShardedCorpus(IndexedCorpus):
         """
         new_shard = False
         if n is None:
-            n = self.n_shards # Saving the *next* one by default.
+            n = self.n_shards  # Saving the *next* one by default.
             new_shard = True
 
         if not filename:
@@ -343,7 +344,7 @@ class ShardedCorpus(IndexedCorpus):
         """
         Load (unpickle) the n-th shard as the "live" part of the dataset
         into the Dataset object."""
-        #logger.debug('ShardedCorpus loading shard {0}, '
+        # logger.debug('ShardedCorpus loading shard {0}, '
         #              'current shard: {1}'.format(n, self.current_shard_n))
 
         # No-op if the shard is already open.
@@ -412,7 +413,7 @@ class ShardedCorpus(IndexedCorpus):
 
         """
         if self.current_shard_n == self.n_shards:
-            return False # There's no next shard.
+            return False  # There's no next shard.
         return (self.offsets[self.current_shard_n + 1] <= offset) \
                and (offset < self.offsets[self.current_shard_n + 2])
 
@@ -603,7 +604,7 @@ class ShardedCorpus(IndexedCorpus):
                 # This fails on one-past
                 # slice indexing; that's why there's a code branch here.
 
-            #logger.debug('ShardedCorpus: Retrieving slice {0}: '
+            # logger.debug('ShardedCorpus: Retrieving slice {0}: '
             #              'shard {1}'.format((offset.start, offset.stop),
             #                                 (first_shard, last_shard)))
 
@@ -648,13 +649,13 @@ class ShardedCorpus(IndexedCorpus):
             shard_stop = self.offsets[self.current_shard_n + 1] - \
                          self.current_offset
 
-            #s_result[result_start:result_stop] = self.current_shard[
+            # s_result[result_start:result_stop] = self.current_shard[
             #                                         shard_start:shard_stop]
             s_result = self.__add_to_slice(s_result, result_start, result_stop,
                                            shard_start, shard_stop)
 
             # First and last get special treatment, these are in between
-            for shard_n in xrange(first_shard+1, last_shard):
+            for shard_n in xrange(first_shard + 1, last_shard):
                 self.load_shard(shard_n)
 
                 result_start = result_stop
@@ -745,7 +746,7 @@ class ShardedCorpus(IndexedCorpus):
 
         """
         def row_sparse2gensim(row_idx, csr_matrix):
-            indices = csr_matrix.indices[csr_matrix.indptr[row_idx]:csr_matrix.indptr[row_idx+1]]
+            indices = csr_matrix.indices[csr_matrix.indptr[row_idx]:csr_matrix.indptr[row_idx + 1]]
             g_row = [(col_idx, csr_matrix[row_idx, col_idx]) for col_idx in indices]
             return g_row
 

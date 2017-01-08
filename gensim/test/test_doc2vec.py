@@ -30,6 +30,7 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 class DocsLeeCorpus(object):
+
     def __init__(self, string_tags=False):
         self.string_tags = string_tags
 
@@ -62,14 +63,17 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.tst')
 
+
 def load_on_instance():
     # Save and load a Doc2Vec Model on instance for test
     model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
     model.save(testfile())
-    model = doc2vec.Doc2Vec() # should fail at this point
+    model = doc2vec.Doc2Vec()  # should fail at this point
     return model.load(testfile())
 
+
 class TestDoc2VecModel(unittest.TestCase):
+
     def test_persistence(self):
         """Test storing/loading the entire model."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
@@ -348,11 +352,11 @@ class TestDoc2VecModel(unittest.TestCase):
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
-        
+
     def testLoadOnClassError(self):
         """Test if exception is raised when loading doc2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
-#endclass TestDoc2VecModel
+# endclass TestDoc2VecModel
 
 
 if not hasattr(TestDoc2VecModel, 'assertLess'):
@@ -371,6 +375,7 @@ class ConcatenatedDoc2Vec(object):
     Models must have exactly-matching vocabulary and document IDs. (Models should
     be trained separately; this wrapper just returns concatenated results.)
     """
+
     def __init__(self, models):
         self.models = models
         if hasattr(models[0], 'docvecs'):
@@ -387,6 +392,7 @@ class ConcatenatedDoc2Vec(object):
 
 
 class ConcatenatedDocvecs(object):
+
     def __init__(self, models):
         self.models = models
 

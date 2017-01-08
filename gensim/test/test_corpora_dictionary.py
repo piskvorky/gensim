@@ -31,6 +31,7 @@ def get_tmpfile(suffix):
 
 
 class TestDictionary(unittest.TestCase):
+
     def setUp(self):
         self.texts = [
                 ['human', 'interface', 'computer'],
@@ -126,8 +127,7 @@ class TestDictionary(unittest.TestCase):
     	d.filter_n_most_frequent(4)
     	expected = {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2}
     	self.assertEqual(d.dfs, expected)
-    	
-    	
+
     def testFilterTokens(self):
         self.maxDiff = 10000
         d = Dictionary(self.texts)
@@ -144,7 +144,6 @@ class TestDictionary(unittest.TestCase):
         expected[removed_word] = len(expected)
         d.add_documents([[removed_word]])
         self.assertEqual(sorted(d.token2id.keys()), sorted(expected.keys()))
-
 
     def test_doc2bow(self):
         d = Dictionary([["žluťoučký"], ["žluťoučký"]])
@@ -239,7 +238,7 @@ class TestDictionary(unittest.TestCase):
             self.assertTrue(isinstance(d.keys(), list))
             self.assertTrue(isinstance(d.values(), list))
 
-#endclass TestDictionary
+# endclass TestDictionary
 
 
 if __name__ == '__main__':

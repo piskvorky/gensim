@@ -28,6 +28,7 @@ logger = logging.getLogger('gensim.corpora.indexedcorpus')
 
 
 class IndexedCorpus(interfaces.CorpusABC):
+
     def __init__(self, fname, index_fname=None):
         """
         Initialize this abstract base class, by loading a previously saved index
@@ -127,7 +128,6 @@ class IndexedCorpus(interfaces.CorpusABC):
             return self.docbyoffset(self.index[docno])
         else:
             raise ValueError('Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')
-
 
 
 # endclass IndexedCorpus

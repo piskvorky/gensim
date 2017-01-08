@@ -40,14 +40,15 @@ LDA_WORKER_PREFIX = 'gensim.lda_worker'
 
 
 class Worker(object):
+
     def __init__(self):
         self.model = None
 
     @Pyro4.expose
     def initialize(self, myid, dispatcher, **model_params):
         self.lock_update = threading.Lock()
-        self.jobsdone = 0 # how many jobs has this worker completed?
-        self.myid = myid # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
+        self.jobsdone = 0  # how many jobs has this worker completed?
+        self.myid = myid  # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
         self.dispatcher = dispatcher
         self.finished = False
         logger.info("initializing worker #%s" % myid)
@@ -76,7 +77,6 @@ class Worker(object):
         else:
             logger.info("worker #%i stopping asking for jobs" % self.myid)
 
-
     @utils.synchronous('lock_update')
     def processjob(self, job):
         logger.debug("starting to process job #%i" % self.jobsdone)
@@ -94,7 +94,7 @@ class Worker(object):
                     (self.myid, self.jobsdone))
         result = self.model.state
         assert isinstance(result, ldamodel.LdaState)
-        self.model.clear() # free up mem in-between two EM cycles
+        self.model.clear()  # free up mem in-between two EM cycles
         self.finished = True
         return result
 
@@ -108,12 +108,11 @@ class Worker(object):
         self.model.state.reset()
         self.finished = False
 
-
     @Pyro4.oneway
     def exit(self):
         logger.info("terminating worker #%i" % self.myid)
         os._exit(0)
-#endclass Worker
+# endclass Worker
 
 
 def main():

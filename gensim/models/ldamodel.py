@@ -90,6 +90,7 @@ class LdaState(utils.SaveLoad):
     reduce traffic.
 
     """
+
     def __init__(self, eta, shape):
         self.eta = eta
         self.sstats = np.zeros(shape)
@@ -189,6 +190,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     Model persistency is achieved through its `load`/`save` methods.
     """
+
     def __init__(self, corpus=None, num_topics=100, id2word=None,
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
@@ -905,9 +907,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
             kwargs = dict(
-                per_word_topics = per_word_topics,
-                minimum_probability = minimum_probability,
-                minimum_phi_value = minimum_phi_value
+                per_word_topics=per_word_topics,
+                minimum_probability=minimum_probability,
+                minimum_phi_value=minimum_phi_value
             )
             return self._apply(corpus, **kwargs)
 
@@ -920,11 +922,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if not per_word_topics:
             return document_topics
         else:
-            word_topic = [] # contains word and corresponding topic
-            word_phi = [] # contains word and phi values
+            word_topic = []  # contains word and corresponding topic
+            word_phi = []  # contains word and phi values
             for word_type, weight in bow:
-                phi_values = [] # contains (phi_value, topic) pairing to later be sorted
-                phi_topic = [] # contains topic and corresponding phi value to be returned 'raw' to user
+                phi_values = []  # contains (phi_value, topic) pairing to later be sorted
+                phi_topic = []  # contains topic and corresponding phi value to be returned 'raw' to user
                 for topic_id in range(0, self.num_topics):
                     if phis[topic_id][word_type] >= minimum_phi_value:
                         # appends phi values for each topic for that word
@@ -939,7 +941,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 sorted_phi_values = sorted(phi_values, reverse=True)
                 topics_sorted = [x[1] for x in sorted_phi_values]
                 word_topic.append((word_type, topics_sorted))
-            return (document_topics, word_topic, word_phi) # returns 2-tuple
+            return (document_topics, word_topic, word_phi)  # returns 2-tuple
 
     def get_term_topics(self, word_id, minimum_probability=None):
         """
@@ -960,7 +962,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 values.append((topic_id, self.expElogbeta[topic_id][word_id]))
 
         return values
-
 
     def __getitem__(self, bow, eps=None):
         """
@@ -1005,16 +1006,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if 'id2word' not in ignore:
             utils.pickle(self.id2word, utils.smart_extension(fname, '.id2word'))
 
-        # make sure 'state', 'id2word' and 'dispatcher' are ignored from the pickled object, even if 
+        # make sure 'state', 'id2word' and 'dispatcher' are ignored from the pickled object, even if
         # someone sets the ignore list themselves
         if ignore is not None and ignore:
             if isinstance(ignore, six.string_types):
                 ignore = [ignore]
-            ignore = [e for e in ignore if e] # make sure None and '' are not in the list
+            ignore = [e for e in ignore if e]  # make sure None and '' are not in the list
             ignore = list(set(['state', 'dispatcher', 'id2word']) | set(ignore))
         else:
             ignore = ['state', 'dispatcher', 'id2word']
-        
+
         # make sure 'expElogbeta' and 'sstats' are ignored from the pickled object, even if
         # someone sets the separately list themselves.
         separately_explicit = ['expElogbeta', 'sstats']
@@ -1028,12 +1029,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if separately:
             if isinstance(separately, six.string_types):
                 separately = [separately]
-            separately = [e for e in separately if e] # make sure None and '' are not in the list
+            separately = [e for e in separately if e]  # make sure None and '' are not in the list
             separately = list(set(separately_explicit) | set(separately))
         else:
             separately = separately_explicit
-        super(LdaModel, self).save(fname, ignore=ignore, separately = separately, *args, **kwargs)
-       
+        super(LdaModel, self).save(fname, ignore=ignore, separately=separately, *args, **kwargs)
+
     @classmethod
     def load(cls, fname, *args, **kwargs):
         """
