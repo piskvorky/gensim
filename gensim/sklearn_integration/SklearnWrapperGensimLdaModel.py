@@ -17,11 +17,12 @@ class SklearnWrapperLdaModel(models.LdaModel):
     """
     Base LDA module
     """
-    def __init__(self, corpus=None, num_topics=100, id2word=None,
-                 chunksize=2000, passes=1, update_every=1,
-                 alpha='symmetric', eta=None, decay=0.5, offset=1.0,
-                 eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01, random_state=None):
+    def __init__(
+            self, corpus=None, num_topics=100, id2word=None,
+            chunksize=2000, passes=1, update_every=1,
+            alpha='symmetric', eta=None, decay=0.5, offset=1.0,
+            eval_every=10, iterations=50, gamma_threshold=0.001,
+            minimum_probability=0.01, random_state=None):
         """
         Sklearn wrapper for LDA model. derived class for gensim.model.LdaModel .
         """
@@ -43,33 +44,32 @@ class SklearnWrapperLdaModel(models.LdaModel):
         # if no fit function is used , then corpus is given in init
         if self.corpus:
             models.LdaModel.__init__(
-                                     self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
-                                     chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
-                                     alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
-                                     eval_every=self.eval_every, iterations=self.iterations,
-                                     gamma_threshold=self.gamma_threshold, minimum_probability=self.minimum_probability,
-                                     random_state=self.random_state)
+                                self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
+                                chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
+                                alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
+                                eval_every=self.eval_every, iterations=self.iterations,
+                                gamma_threshold=self.gamma_threshold, minimum_probability=self.minimum_probability,
+                                random_state=self.random_state)
 
     def get_params(self, deep=True):
         """
         Returns all parameters as dictionary.
         """
         if deep:
-            return {"corpus": self.corpus, "num_topics": self.num_topics, "id2word": self.id2word,
-                    "chunksize": self.chunksize, "passes": self.passes,
-                    "update_every": self.update_every, "alpha": self.alpha, " eta": self.eta, " decay": self.decay,
-                    "offset": self.offset, "eval_every": self.eval_every, " iterations": self.iterations,
-                    "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
-                    "random_state": self.random_state}
+            return {
+                "corpus": self.corpus, "num_topics": self.num_topics, "id2word": self.id2word,
+                "chunksize": self.chunksize, "passes": self.passes,
+                "update_every": self.update_every, "alpha": self.alpha, " eta": self.eta, " decay": self.decay,
+                "offset": self.offset, "eval_every": self.eval_every, " iterations": self.iterations,
+                "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
+                "random_state": self.random_state}
 
     def set_params(self, **parameters):
         """
         Set all parameters.
         """
         for parameter, value in parameters.items():
-            # self.setattr(parameter, value)
             self.parameter = value
-        #self.parameter = value
         return self
 
     def fit(self, X):
@@ -84,12 +84,12 @@ class SklearnWrapperLdaModel(models.LdaModel):
             self.corpus = X
 
         models.LdaModel.__init__(
-                                self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
-                                chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
-                                alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
-                                eval_every=self.eval_every, iterations=self.iterations,
-                                gamma_threshold=self.gamma_threshold, minimum_probability=self.minimum_probability,
-                                random_state=self.random_state)
+                            self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
+                            chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
+                            alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
+                            eval_every=self.eval_every, iterations=self.iterations,
+                            gamma_threshold=self.gamma_threshold, minimum_probability=self.minimum_probability,
+                            random_state=self.random_state)
         return self
 
     def transform(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
@@ -98,8 +98,8 @@ class SklearnWrapperLdaModel(models.LdaModel):
         Returns the topic distribution for the given document bow, as a list of (topic_id, topic_probability) 2-tuples.
         """
         return self.get_document_topics(
-                                        bow, minimum_probability=minimum_probability,
-                                        minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
+                                    bow, minimum_probability=minimum_probability,
+                                    minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
 
     def partial_fit(self, X):
         """
