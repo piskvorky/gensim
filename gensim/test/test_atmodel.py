@@ -404,25 +404,6 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
 
-        # FIXME: Not sure about the test below. In LDA it is: The number of document-topic distributions 
-        # with length 0 is less than the number of documents? Why? Commented out code below is the
-        # author-topic equivalent of this test (without the minimum_phi_value tests).
-
-        # Test case to check the filtering effect of minimum_probability
-        #author_topic_count_na = 0
-
-        #all_topics = model.get_document_topics(corpus, minimum_probability=0.8)
-        #
-        #for topic in all_topics:
-        #    self.assertTrue(isinstance(topic, tuple))
-        #    for k, v in topic: # list of doc_topics
-        #        self.assertTrue(isinstance(k, int))
-        #        self.assertTrue(isinstance(v, float))
-        #        if len(topic) != 0:
-        #            author_topic_count_na += 1
-
-        #self.assertTrue(model.num_authors > author_topic_count_na)
-
     def testTermTopics(self):
 
         model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
