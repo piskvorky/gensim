@@ -2,7 +2,7 @@
 ======================================================
 
 .. automodule:: gensim.models.atmodel
-    :synopsis: Author-topic models
+    :synopsis: Author-topic model
     :members:
     :inherited-members:
     :undoc-members:

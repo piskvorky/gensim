@@ -37,6 +37,7 @@ Modules:
     models/lsi_worker
     models/lda_dispatcher
     models/lda_worker
+    models/atmodel
     models/word2vec
     models/doc2vec
     models/phrases
