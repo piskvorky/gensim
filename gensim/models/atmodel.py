@@ -16,10 +16,15 @@ documents. The model is *not* constant in memory w.r.t. the number of authors.
 The model can be updated with additional documents after taining has been completed. It is
 also possible to continue training on the existing data.
 
-The model is closely related to Latent Dirichlet Allocation. Usage of the AuthorTopicModel
-class is likewise similar to the usage of the LdaModel class.
+The model is closely related to Latent Dirichlet Allocation. The AuthorTopicModel class 
+inherits the LdaModel class, and its usage is thus similar.
+
+Distributed compuation and multiprocessing is not implemented at the moment, but may be
+coming in the future.
 
 """
+
+# FIXME: link to tutorial in docstring above, once the tutorial is available.
 
 import pdb
 from pdb import set_trace as st
@@ -108,12 +113,11 @@ class AuthorTopicModel(LdaModel):
                  chunksize=2000, passes=1, iterations=50, decay=0.5, offset=1.0,
                  alpha='symmetric', eta='symmetric', update_every=1, eval_every=10, 
                  gamma_threshold=0.001, serialized=False, serialization_path=None,
-                 minimum_probability=0.01, random_state=None, var_lambda=None,
-                 ns_conf={}):
+                 minimum_probability=0.01, random_state=None):
         """
         If the iterable corpus and one of author2doc/doc2author dictionaries are given,
         start training straight away. If not given, the model is left untrained 
-        (presumably because you want to call `update()` manually).
+        (presumably because you want to call the `update` method manually).
 
         `num_topics` is the number of requested latent topics to be extracted from
         the training corpus.
@@ -194,7 +198,6 @@ class AuthorTopicModel(LdaModel):
 
         # NOTE: as distributed version of this model is not implemented, "distributed" is set to false. Some of the
         # infrastructure to implement a distributed author-topic model is already in place, such as the AuthorTopicState.
-        # As the "ns_conf" input variable is only used in the distributed version, it is simply ignored here.
         distributed = False
 
         self.id2word = id2word
@@ -383,6 +386,7 @@ class AuthorTopicModel(LdaModel):
             else:
                 doc_no = d
             # Get the IDs and counts of all the words in the current document.
+            # TODO: this is duplication of code in LdaModel. Refactor.
             if doc and not isinstance(doc[0][0], six.integer_types):
                 # make sure the term IDs are ints, otherwise np will get upset
                 ids = [int(id) for id, _ in doc]
@@ -798,6 +802,7 @@ class AuthorTopicModel(LdaModel):
         not seen; if this is the case, those documents will simply be discarded.
 
         To obtain the per-word bound, compute:
+
         >>> corpus_words = sum(cnt for document in corpus for _, cnt in document)
         >>> model.bound(corpus, author2doc=author2doc, doc2author=doc2author) / corpus_words
 
@@ -986,6 +991,10 @@ class AuthorTopicModel(LdaModel):
         Please refer to the wiki recipes section (https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q9-how-do-i-load-a-model-in-python-3-that-was-trained-and-saved-using-python-2)
         for an example on how to work around these issues.
         """
+
+        # TODO: this method and LdaModel's save method are very similar. Refactor. The only
+        # difference is that "AuthorTopicModel" is used in the last line in this method.
+
         if self.state is not None:
             self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
 
@@ -1013,6 +1022,10 @@ class AuthorTopicModel(LdaModel):
             >>> AuthorTopicModel.load(fname, mmap='r')
 
         """
+
+        # TODO: this method and LdaModel's load method are very similar. Refactor. The only
+        # difference is that "AuthorTopicModel" is used below.
+
         kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(AuthorTopicModel, cls).load(fname, *args, **kwargs)
         state_fname = utils.smart_extension(fname, '.state')
