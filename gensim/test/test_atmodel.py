@@ -453,6 +453,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         model2 = self.class_.load(fname)
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
+        self.assertTrue(np.allclose(model.state.gamma, model2.state.gamma))
 
         # Compare Jill's topics before after and save/load.
         jill_topics = model.get_author_topics('jill')
