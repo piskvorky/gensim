@@ -63,6 +63,4 @@ Modules:
     summarization/summariser
     summarization/syntactic_unit
     summarization/textcleaner
-
-
-
+    sklearn_integration/sklearn_wrapper_gensim_ldamodel
