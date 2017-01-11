@@ -33,6 +33,7 @@ import logging
 import random
 import tempfile
 import os
+import subprocess
 
 import numpy
 
@@ -234,7 +235,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             if formatted:
                 topic = self.print_topic(i, topn=num_words)
             else:
-                topic = self.show_topic(i, topn=num_words)
+                topic = self.show_topic(i, num_words=num_words)
             shown.append((i, topic))
             if log:
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)

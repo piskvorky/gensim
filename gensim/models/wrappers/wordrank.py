@@ -47,7 +47,7 @@ class Wordrank(Word2Vec):
     
     @classmethod
     def train(cls, wr_path, corpus_file, out_path, size=100, window=15, symmetric=1, min_count=5, max_vocab_size=0,
-              sgd_num=100, lrate=0.001, period=10, iter=90, epsilon=0.75, dump_period=10, reg=0, alpha=100,
+              sgd_num=100, lrate=0.001, period=10, iter=91, epsilon=0.75, dump_period=10, reg=0, alpha=100,
               beta=99, loss='hinge', memory=4.0, cleanup_files=True, sorted_vocab=1, ensemble=1):
         """
         `wr_path` is the path to the Wordrank directory.
@@ -64,7 +64,7 @@ class Wordrank(Word2Vec):
         `period` is the period of xi variable updates
         `iter` = number of iterations (epochs) over the corpus.
         `epsilon` is the power scaling value for weighting function.
-        `dump_period` is the period after which parameters should be dumped.
+        `dump_period` is the period after which embeddings should be dumped.
         `reg` is the value of regularization parameter.
         `alpha` is the alpha parameter of gamma distribution.
         `beta` is the beta parameter of gamma distribution.
@@ -190,11 +190,10 @@ class Wordrank(Word2Vec):
 
     def ensemble_embedding(self, word_embedding, context_embedding):
         """Addition of two embeddings."""
-        glove2word2vec(word_embedding, word_embedding+'.w2vformat')
         glove2word2vec(context_embedding, context_embedding+'.w2vformat')
         w_emb = Word2Vec.load_word2vec_format('%s.w2vformat' % word_embedding)
         c_emb = Word2Vec.load_word2vec_format('%s.w2vformat' % context_embedding)
-        assert Counter(w_emb.index2word) == Counter(c_emb.index2word), 'Vocabs are not same for both embeddings'
+        assert Counter(w_emb.wv.index2word) == Counter(c_emb.wv.index2word), 'Vocabs are not same for both embeddings'
 
         prev_c_emb = copy.deepcopy(c_emb.wv.syn0)
         for word_id, word in enumerate(w_emb.wv.index2word):
