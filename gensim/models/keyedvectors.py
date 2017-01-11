@@ -321,21 +321,16 @@ class KeyedVectors(utils.SaveLoad):
         """
         self.init_sims()
 
-        if not words:
+        used_words = [word for word in words if word in self]
+        if len(used_words) != len(words):
+            ignored_words = set(words) - set(used_words)
+            logger.warning("vectors for words %s are not present in the model, ignoring these words", ignored_words)
+        if not used_words:
             raise ValueError("cannot select a word from an empty list")
-        logger.debug("using words %s", words)
-        vectors = []
-        for word in words:
-            try:
-                vectors.append(self.word_vec(word))
-            except KeyError:
-                logger.debug("vector for word %s not present, ignoring the word", word)
-        if not vectors:
-            raise ValueError("vector for all given words absent")
-        vectors = vstack(vectors).astype(REAL)
+        vectors = vstack(self.word_vec(word, use_norm=True) for word in used_words).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
-        return sorted(zip(dists, words))[0][1]
+        return sorted(zip(dists, used_words))[0][1]
 
     def __getitem__(self, words):
 
