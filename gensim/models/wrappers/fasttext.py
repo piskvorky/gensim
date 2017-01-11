@@ -139,7 +139,7 @@ class FastText(Word2Vec):
     """
 
     def initialize_word_vectors(self):
-        self.wv = FastTextKeyedVectors()  # wv --> word vectors
+        self.wv = FastTextKeyedVectors()
 
     @classmethod
     def train(cls, ft_path, corpus_file, output_file=None, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
@@ -245,7 +245,7 @@ class FastText(Word2Vec):
 
     def load_binary_data(self, model_binary_file):
         """Loads data from the output binary file created by FastText training"""
-        with open(model_binary_file, 'rb') as f:
+        with utils.smart_open(model_binary_file, 'rb') as f:
             self.load_model_params(f)
             self.load_dict(f)
             self.load_vectors(f)
@@ -329,7 +329,7 @@ class FastText(Word2Vec):
     @staticmethod
     def compute_ngrams(word, min_n, max_n):
         ngram_indices = []
-        BOW, EOW = ('<','>')  # Used by FastText to attach to all words as prefix and suffix
+        BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
         extended_word = BOW + word + EOW
         ngrams = set()
         for i in range(len(extended_word) - min_n + 1):

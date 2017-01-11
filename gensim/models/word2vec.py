@@ -470,7 +470,7 @@ class Word2Vec(utils.SaveLoad):
             self.train(sentences)
 
     def initialize_word_vectors(self):
-        self.wv = KeyedVectors()  # wv --> word vectors
+        self.wv = KeyedVectors()
 
     def make_cum_table(self, power=0.75, domain=2**31 - 1):
         """

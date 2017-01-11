@@ -53,7 +53,7 @@ class KeyedVectors(utils.SaveLoad):
 
         Example::
 
-          >>> trained_model['office']
+          >>> trained_model.word_vec('office', use_norm=True)
           array([ -1.40128313e-02, ...])
 
         """
@@ -323,7 +323,7 @@ class KeyedVectors(utils.SaveLoad):
 
         if not words:
             raise ValueError("cannot select a word from an empty list")
-        logger.debug("using words %s" % words)
+        logger.debug("using words %s", words)
         vectors = []
         for word in words:
             try:
