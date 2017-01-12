@@ -62,6 +62,12 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.tst')
 
+def load_on_instance():
+    # Save and load a Doc2Vec Model on instance for test
+    model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
+    model.save(testfile())
+    model = doc2vec.Doc2Vec() # should fail at this point
+    return model.load(testfile())
 
 class TestDoc2VecModel(unittest.TestCase):
     def test_persistence(self):
@@ -342,6 +348,10 @@ class TestDoc2VecModel(unittest.TestCase):
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
+        
+    def testLoadOnClassError(self):
+        """Test if exception is raised when loading doc2vec model on instance"""
+        self.assertRaises(AttributeError, load_on_instance)
 #endclass TestDoc2VecModel
 
 
