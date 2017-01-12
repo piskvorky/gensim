@@ -1,3 +1,7 @@
+# Copyright (C) 2017 Parul Sethi <parul1sethi@gmail.com>
+# Copyright (C) 2017 Radim Rehurek <me@radimrehurek.com>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
 """
 Python wrapper around word representation learning from Wordrank.
 The wrapped model can NOT be updated with new documents for online training -- use gensim's
@@ -30,10 +34,6 @@ from six import string_types
 from smart_open import smart_open
 from shutil import copyfile, rmtree
 
-if sys.version_info[:2] == (2, 6):
-    from backport_collections import Counter
-else:
-    from collections import Counter
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class Wordrank(Word2Vec):
     @classmethod
     def train(cls, wr_path, corpus_file, out_path, size=100, window=15, symmetric=1, min_count=5, max_vocab_size=0,
               sgd_num=100, lrate=0.001, period=10, iter=91, epsilon=0.75, dump_period=10, reg=0, alpha=100,
-              beta=99, loss='hinge', memory=4.0, cleanup_files=True, sorted_vocab=1, ensemble=1):
+              beta=99, loss='hinge', memory=4.0, cleanup_files=True, sorted_vocab=1, ensemble=0):
         """
         `wr_path` is the path to the Wordrank directory.
         `corpus_file` is the filename of the text file to be used for training the Wordrank model.
@@ -56,7 +56,7 @@ class Wordrank(Word2Vec):
         `out_path` is the path to directory which will be created to save embeddings and training data.
         `size` is the dimensionality of the feature vectors.
         `window` is the number of context words to the left (and to the right, if symmetric = 1).
-        symmetric` if 0, only use left context words, else use left and right both.
+        `symmetric` if 0, only use left context words, else use left and right both.
         `min_count` = ignore all words with total frequency lower than this.
         `max_vocab_size` upper bound on vocabulary size, i.e. keep the <int> most frequent words. Default is 0 for no limit.
         `sgd_num` number of SGD taken for each data point.
@@ -90,37 +90,30 @@ class Wordrank(Word2Vec):
         copyfile(corpus_file, os.path.join(meta_dir, corpus_file.split('/')[-1]))
         os.chdir(meta_dir)
 
-        cmd0 = ['../../glove/vocab_count', '-min-count', str(min_count), '-max-vocab', str(max_vocab_size)]
-        cmd1 = ['../../glove/cooccur', '-memory', str(memory), '-vocab-file', temp_vocab_file, '-window-size', str(window), '-symmetric', str(symmetric)]
-        cmd2 = ['../../glove/shuffle', '-memory', str(memory)]
-        cmd3 = ['cut', '-d', " ", '-f', '1', temp_vocab_file]
-        cmds = [cmd0, cmd1, cmd2, cmd3]
-        logger.info("Preparing training data using glove code '%s'", cmds)
-        o0 = smart_open(temp_vocab_file, 'w')
-        o1 = smart_open(cooccurrence_file, 'w')
-        o2 = smart_open(cooccurrence_shuf_file, 'w')
-        o3 = smart_open(vocab_file, 'w')
-        i0 = smart_open(corpus_file.split('/')[-1])
-        i1 = smart_open(corpus_file.split('/')[-1])
-        i2 = smart_open(cooccurrence_file)
-        i3 = None
-        outputs = [o0, o1, o2, o3]
-        inputs = [i0, i1, i2, i3]
-        prepare_train_data = [utils.check_output(cmd, stdin=inp, stdout=out) for cmd, inp, out in zip(cmds, inputs, outputs)]
-        o0.close()
-        o1.close()
-        o2.close()
-        o3.close()
-        i0.close()
-        i1.close()
-        i2.close()
+        cmd_vocab_count = ['../../glove/vocab_count', '-min-count', str(min_count), '-max-vocab', str(max_vocab_size)]
+        cmd_cooccurence_count = ['../../glove/cooccur', '-memory', str(memory), '-vocab-file', temp_vocab_file, '-window-size', str(window), '-symmetric', str(symmetric)]
+        cmd_shuffle_cooccurences = ['../../glove/shuffle', '-memory', str(memory)]
+        cmd_del_vocab_freq = ['cut', '-d', " ", '-f', '1', temp_vocab_file]
 
-        with smart_open(vocab_file) as f:
+        commands = [cmd_vocab_count, cmd_cooccurence_count, cmd_shuffle_cooccurences]
+        logger.info("Prepare training data using glove code '%s'", commands)
+        input_fnames = [corpus_file.split('/')[-1], corpus_file.split('/')[-1], cooccurrence_file]
+        output_fnames = [temp_vocab_file, cooccurrence_file, cooccurrence_shuf_file]
+        
+        for command, input_fname, output_fname in zip(commands, input_fnames, output_fnames):
+            with smart_open(input_fname, 'rb') as r:
+                with smart_open(output_fname, 'wb') as w:
+                    utils.check_output(command, stdin=r, stdout=w)
+        with smart_open(vocab_file, 'wb') as w:
+            utils.check_output(cmd_del_vocab_freq, stdout=w)
+
+        with smart_open(vocab_file, 'rb') as f:
             numwords = sum(1 for line in f)
-        with smart_open(cooccurrence_shuf_file) as f:
+        with smart_open(cooccurrence_shuf_file, 'rb') as f:
             numlines = sum(1 for line in f)
-        with smart_open(meta_file, 'w') as f:
-            f.write("{0} {1}\n{2} {3}\n{4} {5}".format(numwords, numwords, numlines, cooccurrence_shuf_file, numwords, vocab_file))
+        with smart_open(meta_file, 'wb') as f:
+            meta_info = "{0} {1}\n{2} {3}\n{4} {5}".format(numwords, numwords, numlines, cooccurrence_shuf_file, numwords, vocab_file)
+            f.write(meta_info.encode('utf-8'))
 
         wr_args = {
             'path': 'meta',
@@ -189,11 +182,11 @@ class Wordrank(Word2Vec):
             self.wv.vocab[word].count = counts[word]
 
     def ensemble_embedding(self, word_embedding, context_embedding):
-        """Addition of two embeddings."""
+        """Replace syn0 with the sum of context and word embeddings."""
         glove2word2vec(context_embedding, context_embedding+'.w2vformat')
         w_emb = Word2Vec.load_word2vec_format('%s.w2vformat' % word_embedding)
         c_emb = Word2Vec.load_word2vec_format('%s.w2vformat' % context_embedding)
-        assert Counter(w_emb.wv.index2word) == Counter(c_emb.wv.index2word), 'Vocabs are not same for both embeddings'
+        assert set(w_emb.wv.index2word) == set(c_emb.wv.index2word), 'Vocabs are not same for both embeddings'
 
         prev_c_emb = copy.deepcopy(c_emb.wv.syn0)
         for word_id, word in enumerate(w_emb.wv.index2word):

@@ -33,7 +33,6 @@ import logging
 import random
 import tempfile
 import os
-import subprocess
 
 import numpy
 

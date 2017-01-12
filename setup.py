@@ -118,7 +118,7 @@ if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
 
 python_2_6_backports = ''
 if sys.version_info[:2] < (2, 7):
-    python_2_6_backports = ['argparse', 'backport_collections']
+    python_2_6_backports = ['argparse']
 
 
 setup(
