@@ -27,5 +27,5 @@ install:
 script:
   - python setup.py test
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      pep8 gensim --show-source --ignore=E501,E731,E1,W503;
+      pep8 gensim --show-source --ignore=E501,E731,E12,W503;
     fi

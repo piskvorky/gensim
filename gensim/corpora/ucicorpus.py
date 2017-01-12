@@ -126,11 +126,11 @@ class UciWriter(MmWriter):
         num_docs = docno + 1
 
         if num_docs * num_terms != 0:
-            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" %
-                         (num_docs, num_terms,
-                          100.0 * num_nnz / (num_docs * num_terms),
-                          num_nnz,
-                          num_docs * num_terms))
+            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" % (
+                num_docs, num_terms,
+                100.0 * num_nnz / (num_docs * num_terms),
+                num_nnz,
+                num_docs * num_terms))
 
         # now write proper headers, by seeking and overwriting the spaces written earlier
         writer.update_headers(num_docs, num_terms, num_nnz)
