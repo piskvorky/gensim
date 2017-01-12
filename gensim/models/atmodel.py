@@ -40,7 +40,8 @@ from os import remove
 
 from gensim import utils
 from gensim.models import LdaModel
-from gensim.models.ldamodel import dirichlet_expectation, get_random_state, LdaState
+from gensim.models.ldamodel import LdaState
+from gensim.matutils import dirichlet_expectation
 from gensim.corpora import MmCorpus
 from itertools import chain
 from scipy.special import gammaln  # gamma function utils
@@ -258,7 +259,7 @@ class AuthorTopicModel(LdaModel):
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
-        self.random_state = get_random_state(random_state)
+        self.random_state = utils.get_random_state(random_state)
 
         assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
                 "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %

@@ -67,9 +67,10 @@ author2doc_new = {'jill': [0], 'bob': [0, 1], 'sally': [1, 2]}
 dictionary_new = Dictionary(texts_new)
 corpus_new = [dictionary_new.doc2bow(text) for text in texts_new]
 
-def testfile():
+def testfile(test_fname=''):
     # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
+    fname = 'gensim_models_' + test_fname + '.tst'
+    return os.path.join(tempfile.gettempdir(), fname)
 
 
 class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
@@ -104,6 +105,20 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
             logging.warning("Author-topic model failed to converge on attempt %i (got %s, expected %s)" %
                             (i, sorted(vec), sorted(expected)))
         self.assertTrue(passed)
+
+    # TODO: test that models are compatiple across versions. Code below is copied from LdaModel tests.
+    #def testModelCompatibilityWithPythonVersions(self):
+    #    fname_model_2_7 = datapath('ldamodel_python_2_7')
+    #    model_2_7 = self.class_.load(fname_model_2_7)
+    #    fname_model_3_5 = datapath('ldamodel_python_3_5')
+    #    model_3_5 = self.class_.load(fname_model_3_5)
+    #    self.assertEqual(model_2_7.num_topics, model_3_5.num_topics)
+    #    self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
+    #    tstvec = []
+    #    self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec])) # try projecting an empty vector
+    #    id2word_2_7 = dict((k,v) for k,v in model_2_7.id2word.iteritems())
+    #    id2word_3_5 = dict((k,v) for k,v in model_3_5.id2word.iteritems())
+    #    self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
 
     def testBasic(self):
         # Check that training the model produces a positive topic vector for some author
@@ -456,7 +471,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model.state.gamma, model2.state.gamma))
 
     def testPersistenceIgnore(self):
-        fname = testfile()
+        fname = testfile('testPersistenceIgnore')
         model = atmodel.AuthorTopicModel(corpus, author2doc=author2doc, num_topics=2)
         model.save(fname, ignore='id2word')
         model2 = atmodel.AuthorTopicModel.load(fname)
