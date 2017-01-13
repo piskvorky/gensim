@@ -834,24 +834,28 @@ class AuthorTopicModel(LdaModel):
                 if not self.author2doc.get(a):
                     raise ValueError('bound cannot be called with authors not seen during training.')
 
-            chunk_doc_idx = xrange(len(chunk))
+            if chunk_doc_idx:
+                raise ValueError('Either author dictionaries or chunk_doc_idx must be prodivded, not both. Consult documentation of bound method.')
         else:
             raise ValueError('Either both author2doc and doc2author should be provided, or neither. Consult documentation of bound method.')
 
         Elogtheta = dirichlet_expectation(gamma)
-        expElogtheta = np.exp(dirichlet_expectation(gamma))
+        expElogtheta = np.exp(Elogtheta)
 
         word_score = 0.0
         theta_score = 0.0
-        for d in chunk_doc_idx:
-            doc = chunk[d]
+        for d, doc in enumerate(chunk):
+            if chunk_doc_idx:
+                doc_no = chunk_doc_idx[d]
+            else:
+                doc_no = d
             # Get all authors in current document, and convert the author names to integer IDs.
-            authors_d = [self.author2id[a] for a in self.doc2author[d]]
+            authors_d = [self.author2id[a] for a in self.doc2author[doc_no]]
             ids = np.array([id for id, _ in doc])  # Word IDs in doc.
             cts = np.array([cnt for _, cnt in doc])  # Word counts.
 
             if d % self.chunksize == 0:
-                logger.debug("bound: at document #%i", d)
+                logger.debug("bound: at document #%i in chunk", d)
 
             # Computing the bound requires summing over expElogtheta[a, k] * expElogbeta[k, v], which
             # is the same computation as in normalizing phi.
