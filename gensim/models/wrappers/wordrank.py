@@ -186,7 +186,7 @@ class Wordrank(Word2Vec):
         glove2word2vec(context_embedding, context_embedding+'.w2vformat')
         w_emb = Word2Vec.load_word2vec_format('%s.w2vformat' % word_embedding)
         c_emb = Word2Vec.load_word2vec_format('%s.w2vformat' % context_embedding)
-        assert set(w_emb.wv.index2word) == set(c_emb.wv.index2word), 'Vocabs are not same for both embeddings'
+        assert set(w_emb.wv.vocab) == set(c_emb.wv.vocab), 'Vocabs are not same for both embeddings'
 
         prev_c_emb = copy.deepcopy(c_emb.wv.syn0)
         for word_id, word in enumerate(w_emb.wv.index2word):
