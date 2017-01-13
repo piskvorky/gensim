@@ -338,9 +338,7 @@ class AuthorTopicModel(LdaModel):
     def compute_phinorm(self, ids, authors_d, expElogthetad, expElogbetad):
         """Efficiently computes the normalizing factor in phi."""
         phinorm = np.zeros(len(ids))
-        expElogtheta_sum = np.zeros(self.num_topics)
-        for a in xrange(len(authors_d)):
-            expElogtheta_sum += expElogthetad[a, :]
+        expElogtheta_sum = expElogthetad.sum(axis=0)
         phinorm = expElogtheta_sum.dot(expElogbetad) + 1e-100
 
         return phinorm
