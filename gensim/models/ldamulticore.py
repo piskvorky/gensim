@@ -79,10 +79,10 @@ class LdaMulticore(LdaModel):
     """
 
     def __init__(self, corpus=None, num_topics=100, id2word=None, workers=None,
-                 chunksize=2000, passes=1, batch=False, alpha='symmetric',
-                 eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
-                 gamma_threshold=0.001, random_state=None, minimum_probability=0.01,
-                 minimum_phi_value=0.01, per_word_topics=False):
+        chunksize=2000, passes=1, batch=False, alpha='symmetric',
+        eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
+        gamma_threshold=0.001, random_state=None, minimum_probability=0.01,
+        minimum_phi_value=0.01, per_word_topics=False):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).

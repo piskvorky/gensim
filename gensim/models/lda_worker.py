@@ -91,7 +91,7 @@ class Worker(object):
     @utils.synchronous('lock_update')
     def getstate(self):
         logger.info("worker #%i returning its state after %s jobs" %
-                    (self.myid, self.jobsdone))
+            (self.myid, self.jobsdone))
         result = self.model.state
         assert isinstance(result, ldamodel.LdaState)
         self.model.clear()  # free up mem in-between two EM cycles
@@ -120,19 +120,19 @@ def main():
     parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
     parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
     parser.add_argument("--no-broadcast", help="Disable broadcast (default: %(default)s)",
-                        action='store_const', default=True, const=False)
+        action='store_const', default=True, const=False)
     parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
     parser.add_argument('-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel",
-                        const=logging.INFO, default=logging.WARNING)
+        const=logging.INFO, default=logging.WARNING)
     args = parser.parse_args()
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
     logger.info("running %s", " ".join(sys.argv))
 
     ns_conf = {"broadcast": args.no_broadcast,
-               "host": args.host,
-               "port": args.port,
-               "hmac_key": args.hmac}
+        "host": args.host,
+        "port": args.port,
+        "hmac_key": args.hmac}
 
     utils.pyro_daemon(LDA_WORKER_PREFIX, Worker(), random_suffix=True, ns_conf=ns_conf)
 

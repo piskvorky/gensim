@@ -29,7 +29,7 @@ def precompute_idfs(wglobal, dfs, total_docs):
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
     return dict((termid, wglobal(df, total_docs))
-                for termid, df in iteritems(dfs))
+        for termid, df in iteritems(dfs))
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -51,7 +51,7 @@ class TfidfModel(interfaces.TransformationABC):
     """
 
     def __init__(self, corpus=None, id2word=None, dictionary=None,
-                 wlocal=utils.identity, wglobal=df2idf, normalize=True):
+        wlocal=utils.identity, wglobal=df2idf, normalize=True):
         """
         Compute tf-idf by multiplying a local component (term frequency) with a
         global component (inverse document frequency), and normalizing
@@ -89,7 +89,7 @@ class TfidfModel(interfaces.TransformationABC):
             # step that goes through the corpus (= an optimization).
             if corpus is not None:
                 logger.warning("constructor received both corpus and explicit "
-                               "inverse document frequencies; ignoring the corpus")
+                    "inverse document frequencies; ignoring the corpus")
             self.num_docs, self.num_nnz = dictionary.num_docs, dictionary.num_nnz
             self.dfs = dictionary.dfs.copy()
             self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
@@ -126,7 +126,7 @@ class TfidfModel(interfaces.TransformationABC):
         # and finally compute the idf weights
         n_features = max(dfs) if dfs else 0
         logger.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
-                     (self.num_docs, n_features, self.num_nnz))
+            (self.num_docs, n_features, self.num_nnz))
         self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
 
     def __getitem__(self, bow, eps=1e-12):
@@ -141,7 +141,7 @@ class TfidfModel(interfaces.TransformationABC):
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
         # as strict application of the IDF formula would dictate)
         vector = [(termid, self.wlocal(tf) * self.idfs.get(termid))
-                  for termid, tf in bow if self.idfs.get(termid, 0.0) != 0.0]
+            for termid, tf in bow if self.idfs.get(termid, 0.0) != 0.0]
 
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function

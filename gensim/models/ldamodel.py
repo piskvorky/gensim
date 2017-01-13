@@ -147,7 +147,7 @@ class LdaState(utils.SaveLoad):
             scale = 1.0
         else:
             logger.info("merging changes from %i documents into a model of %i documents",
-                        other.numdocs, targetsize)
+                other.numdocs, targetsize)
             scale = 1.0 * targetsize / other.numdocs
         self.sstats += rhot * scale * other.sstats
 
@@ -192,11 +192,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
 
     def __init__(self, corpus=None, num_topics=100, id2word=None,
-                 distributed=False, chunksize=2000, passes=1, update_every=1,
-                 alpha='symmetric', eta=None, decay=0.5, offset=1.0,
-                 eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01, random_state=None, ns_conf={},
-                 minimum_phi_value=0.01, per_word_topics=False):
+        distributed=False, chunksize=2000, passes=1, update_every=1,
+        alpha='symmetric', eta=None, decay=0.5, offset=1.0,
+        eval_every=10, iterations=50, gamma_threshold=0.001,
+        minimum_probability=0.01, random_state=None, ns_conf={},
+        minimum_phi_value=0.01, per_word_topics=False):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -295,8 +295,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.random_state = utils.get_random_state(random_state)
 
         assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
-                "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
-                (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
+            "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
+            (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
 
         # VB constants
         self.iterations = iterations
@@ -318,7 +318,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     self.dispatcher = Pyro4.Proxy(ns.list(prefix=LDA_DISPATCHER_PREFIX)[LDA_DISPATCHER_PREFIX])
                     logger.debug("looking for dispatcher at %s" % str(self.dispatcher._pyroUri))
                     self.dispatcher.initialize(id2word=self.id2word, num_topics=self.num_topics,
-                                               chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
+                        chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
                     self.numworkers = len(self.dispatcher.getworkers())
                     logger.info("using distributed version with %i workers" % self.numworkers)
             except Exception as err:
@@ -466,7 +466,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if len(chunk) > 1:
             logger.debug("%i/%i documents converged within %i iterations",
-                         converged, len(chunk), self.iterations)
+                converged, len(chunk), self.iterations)
 
         if collect_sstats:
             # This step finishes computing the sufficient statistics for the
@@ -527,12 +527,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         subsample_ratio = 1.0 * total_docs / len(chunk)
         perwordbound = self.bound(chunk, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
         logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
-                    (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
+            (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
     def update(self, corpus, chunksize=None, decay=None, offset=None,
-               passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None, chunks_as_numpy=False):
+        passes=None, update_every=None, eval_every=None, iterations=None,
+        gamma_threshold=None, chunks_as_numpy=False):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -604,16 +604,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info("running %s LDA training, %s topics, %i passes over "
-                    "the supplied corpus of %i documents, updating model once "
-                    "every %i documents, evaluating perplexity every %i documents, "
-                    "iterating %ix with a convergence threshold of %f",
-                    updatetype, self.num_topics, passes, lencorpus,
-                        updateafter, evalafter, iterations,
-                        gamma_threshold)
+            "the supplied corpus of %i documents, updating model once "
+            "every %i documents, evaluating perplexity every %i documents, "
+            "iterating %ix with a convergence threshold of %f",
+            updatetype, self.num_topics, passes, lencorpus,
+            updateafter, evalafter, iterations,
+            gamma_threshold)
 
         if updates_per_pass * passes < 10:
             logger.warning("too few updates, training might not converge; consider "
-                           "increasing the number of passes or iterations to improve accuracy")
+                "increasing the number of passes or iterations to improve accuracy")
 
         # rho is the "speed" of updating; TODO try other fncs
         # pass_ + num_updates handles increasing the starting t for each pass,
@@ -639,12 +639,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i',
-                                pass_, chunk_no * chunksize + len(chunk), lencorpus)
+                        pass_, chunk_no * chunksize + len(chunk), lencorpus)
                     # this will eventually block until some jobs finish, because the queue has a small finite length
                     self.dispatcher.putjob(chunk)
                 else:
                     logger.info('PROGRESS: pass %i, at document #%i/%i',
-                                pass_, chunk_no * chunksize + len(chunk), lencorpus)
+                        pass_, chunk_no * chunksize + len(chunk), lencorpus)
                     gammat = self.do_estep(chunk, other)
 
                     if self.optimize_alpha:
@@ -909,15 +909,14 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             kwargs = dict(
                 per_word_topics=per_word_topics,
                 minimum_probability=minimum_probability,
-                minimum_phi_value=minimum_phi_value
-            )
+                minimum_phi_value=minimum_phi_value)
             return self._apply(corpus, **kwargs)
 
         gamma, phis = self.inference([bow], collect_sstats=True)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
 
         document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                    if topicvalue >= minimum_probability]
+            if topicvalue >= minimum_probability]
 
         if not per_word_topics:
             return document_topics

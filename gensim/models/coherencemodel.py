@@ -22,8 +22,8 @@ import logging
 
 from gensim import interfaces
 from gensim.topic_coherence import (segmentation, probability_estimation,
-                                    direct_confirmation_measure, indirect_confirmation_measure,
-                                    aggregation)
+    direct_confirmation_measure, indirect_confirmation_measure,
+    aggregation)
 from gensim.matutils import argsort
 from gensim.utils import is_corpus, FakeDict
 from gensim.models.ldamodel import LdaModel
@@ -41,28 +41,26 @@ make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
 
 coherence_dict = {
     'u_mass': make_pipeline(segmentation.s_one_pre,
-                            probability_estimation.p_boolean_document,
-                            direct_confirmation_measure.log_conditional_probability,
-                            aggregation.arithmetic_mean),
+        probability_estimation.p_boolean_document,
+        direct_confirmation_measure.log_conditional_probability,
+        aggregation.arithmetic_mean),
     'c_v': make_pipeline(segmentation.s_one_set,
-                         probability_estimation.p_boolean_sliding_window,
-                         indirect_confirmation_measure.cosine_similarity,
-                         aggregation.arithmetic_mean),
+        probability_estimation.p_boolean_sliding_window,
+        indirect_confirmation_measure.cosine_similarity,
+        aggregation.arithmetic_mean),
     'c_uci': make_pipeline(segmentation.s_one_one,
-                           probability_estimation.p_boolean_sliding_window,
-                           direct_confirmation_measure.log_ratio_measure,
-                           aggregation.arithmetic_mean),
+        probability_estimation.p_boolean_sliding_window,
+        direct_confirmation_measure.log_ratio_measure,
+        aggregation.arithmetic_mean),
     'c_npmi': make_pipeline(segmentation.s_one_one,
-                            probability_estimation.p_boolean_sliding_window,
-                            direct_confirmation_measure.log_ratio_measure,
-                            aggregation.arithmetic_mean),
-}
+        probability_estimation.p_boolean_sliding_window,
+        direct_confirmation_measure.log_ratio_measure,
+        aggregation.arithmetic_mean), }
 
 sliding_windows_dict = {
     'c_v': 110,
     'c_uci': 10,
-    'c_npmi': 10
-}
+    'c_npmi': 10}
 
 
 class CoherenceModel(interfaces.TransformationABC):
@@ -134,7 +132,7 @@ class CoherenceModel(interfaces.TransformationABC):
         if dictionary is None:
             if isinstance(model.id2word, FakeDict):
                 raise ValueError("The associated dictionary should be provided with the corpus or 'id2word' for topic model"
-                                 " should be set as the associated dictionary.")
+                    " should be set as the associated dictionary.")
             else:
                 self.dictionary = model.id2word
         else:
@@ -190,7 +188,7 @@ class CoherenceModel(interfaces.TransformationABC):
                 topics.append(bestn)
         else:
             raise ValueError("This topic model is not currently supported. Supported topic models are"
-                             "LdaModel, LdaVowpalWabbit and LdaMallet.")
+                "LdaModel, LdaVowpalWabbit and LdaMallet.")
         return topics
 
     def get_coherence(self):
@@ -206,7 +204,7 @@ class CoherenceModel(interfaces.TransformationABC):
             if self.window_size is not None:
                 self.window_size = sliding_windows_dict[self.coherence]
             per_topic_postings, num_windows = measure.prob(texts=self.texts, segmented_topics=segmented_topics,
-                                                           dictionary=self.dictionary, window_size=self.window_size)
+                dictionary=self.dictionary, window_size=self.window_size)
             if self.coherence == 'c_v':
                 confirmed_measures = measure.conf(self.topics, segmented_topics, per_topic_postings, 'nlr', 1, num_windows)
             else:

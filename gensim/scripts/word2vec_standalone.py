@@ -80,7 +80,7 @@ if __name__ == "__main__":
     parser.add_argument("-window", help="Set max skip length WINDOW between words; default is 5", type=int, default=5)
     parser.add_argument("-size", help="Set size of word vectors; default is 100", type=int, default=100)
     parser.add_argument("-sample", help="Set threshold for occurrence of words. Those that appear with higher frequency in the training data will be randomly down-sampled; "
-                                        "default is 1e-3, useful range is (0, 1e-5)", type=float, default=1e-3)
+        "default is 1e-3, useful range is (0, 1e-5)", type=float, default=1e-3)
     parser.add_argument("-hs", help="Use Hierarchical Softmax; default is 0 (not used)", type=int, default=0, choices=[0, 1])
     parser.add_argument("-negative", help="Number of negative examples; default is 5, common values are 3 - 10 (0 = not used)", type=int, default=5)
     parser.add_argument("-threads", help="Use THREADS threads (default 3)", type=int, default=3)

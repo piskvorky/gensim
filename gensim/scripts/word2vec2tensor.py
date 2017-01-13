@@ -78,8 +78,8 @@ if __name__ == "__main__":
         "-o", "--output", required=True,
         help="Output tensor file name prefix")
     parser.add_argument("-b", "--binary",
-                        required=False,
-                        help="If word2vec model in binary format, set True, else False")
+        required=False,
+        help="If word2vec model in binary format, set True, else False")
     args = parser.parse_args()
 
     word2vec2tensor(args.input, args.output, args.binary)

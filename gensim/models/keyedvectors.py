@@ -79,12 +79,10 @@ class KeyedVectors(utils.SaveLoad):
         # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
         positive = [
             (word, 1.0) if isinstance(word, string_types + (ndarray,)) else word
-            for word in positive
-        ]
+            for word in positive]
         negative = [
             (word, -1.0) if isinstance(word, string_types + (ndarray,)) else word
-            for word in negative
-        ]
+            for word in negative]
 
         # compute the weighted average of all words
         all_words, mean = set(), []
@@ -156,11 +154,11 @@ class KeyedVectors(utils.SaveLoad):
         diff2 = len_pre_oov2 - len(document2)
         if diff1 > 0 or diff2 > 0:
             logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
-                        diff1, diff2)
+                diff1, diff2)
 
         if len(document1) == 0 or len(document2) == 0:
             logger.info('At least one of the documents had no words that were'
-                        'in the vocabulary. Aborting (returning inf).')
+                'in the vocabulary. Aborting (returning inf).')
             return float('inf')
 
         dictionary = Dictionary(documents=[document1, document2])
@@ -388,15 +386,15 @@ class KeyedVectors(utils.SaveLoad):
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)),
-                   matutils.unitvec(array(v2).mean(axis=0)))
+            matutils.unitvec(array(v2).mean(axis=0)))
 
     @staticmethod
     def log_accuracy(section):
         correct, incorrect = len(section['correct']), len(section['incorrect'])
         if correct + incorrect > 0:
             logger.info("%s: %.1f%% (%i/%i)" %
-                        (section['section'], 100.0 * correct / (correct + incorrect),
-                         correct, correct + incorrect))
+                (section['section'], 100.0 * correct / (correct + incorrect),
+                    correct, correct + incorrect))
 
     def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, case_insensitive=True):
         """
@@ -473,8 +471,7 @@ class KeyedVectors(utils.SaveLoad):
         total = {
             'section': 'total',
             'correct': sum((s['correct'] for s in sections), []),
-            'incorrect': sum((s['incorrect'] for s in sections), []),
-        }
+            'incorrect': sum((s['incorrect'] for s in sections), []), }
         self.log_accuracy(total)
         sections.append(total)
         return sections
@@ -551,9 +548,9 @@ class KeyedVectors(utils.SaveLoad):
         oov_ratio = float(oov) / (len(similarity_gold) + oov) * 100
 
         logger.debug('Pearson correlation coefficient against {0:s}: {1:f} with p-value {2:f}'
-                     .format(pairs, pearson[0], pearson[1]))
+            .format(pairs, pearson[0], pearson[1]))
         logger.debug('Spearman rank-order correlation coefficient against {0:s}: {1:f} with p-value {2:f}'
-                     .format(pairs, spearman[0], spearman[1]))
+            .format(pairs, spearman[0], spearman[1]))
         logger.debug('Pairs with unknown words: {0:d}'.format(oov))
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio

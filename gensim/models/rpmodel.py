@@ -90,7 +90,7 @@ class RpModel(interfaces.TransformationABC):
         vec = np.asfortranarray(vec, dtype=np.float32)
         topic_dist = np.dot(self.projection, vec)  # (k, d) * (d, 1) = (k, 1)
         return [(topicid, float(topicvalue)) for topicid, topicvalue in enumerate(topic_dist.flat)
-                if np.isfinite(topicvalue) and not np.allclose(topicvalue, 0.0)]
+            if np.isfinite(topicvalue) and not np.allclose(topicvalue, 0.0)]
 
     def __setstate__(self, state):
         self.__dict__ = state

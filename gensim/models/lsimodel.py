@@ -88,7 +88,7 @@ def clip_spectrum(s, k, discard=0.001):
     small = 1 + len(np.where(rel_spectrum > min(discard, 1.0 / k))[0])
     k = min(k, small)  # clip against k
     logger.info("keeping %i factors (discarding %.3f%% of energy spectrum)",
-                k, 100 * rel_spectrum[k - 1])
+        k, 100 * rel_spectrum[k - 1])
     return k
 
 
@@ -165,7 +165,7 @@ class Projection(utils.SaveLoad):
             return
         if self.m != other.m:
             raise ValueError("vector space mismatch: update is using %s features, expected %s" %
-                             (other.m, self.m))
+                (other.m, self.m))
         logger.info("merging projections: %s + %s", str(self.u.shape), str(other.u.shape))
         m, n1, n2 = self.u.shape[0], self.u.shape[1], other.u.shape[1]
         # TODO Maybe keep the bases as elementary reflectors, without
@@ -186,7 +186,7 @@ class Projection(utils.SaveLoad):
 
         # find the rotation that diagonalizes r
         k = np.bmat([[np.diag(decay * self.s), np.multiply(c, other.s)],
-                        [matutils.pad(np.array([]).reshape(0, 0), min(m, n2), n1), np.multiply(r, other.s)]])
+            [matutils.pad(np.array([]).reshape(0, 0), min(m, n2), n1), np.multiply(r, other.s)]])
         logger.debug("computing SVD of %s dense matrix", k.shape)
         try:
             # in np < 1.1.0, running SVD sometimes results in "LinAlgError: SVD did not converge'.
@@ -247,8 +247,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
 
     def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
-                 decay=1.0, distributed=False, onepass=True,
-                 power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS):
+        decay=1.0, distributed=False, onepass=True,
+        power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS):
         """
         `num_topics` is the number of requested factors (latent dimensions).
 
@@ -312,15 +312,15 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         else:
             if not onepass:
                 raise NotImplementedError("distributed stochastic LSA not implemented yet; "
-                                          "run either distributed one-pass, or serial randomized.")
+                    "run either distributed one-pass, or serial randomized.")
             try:
                 import Pyro4
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')
                 logger.debug("looking for dispatcher at %s", str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
-                                      chunksize=chunksize, decay=decay,
-                                      power_iters=self.power_iters, extra_samples=self.extra_samples,
-                                      distributed=False, onepass=onepass)
+                    chunksize=chunksize, decay=decay,
+                    power_iters=self.power_iters, extra_samples=self.extra_samples,
+                    distributed=False, onepass=onepass)
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
                 logger.info("using distributed version with %i workers", self.numworkers)
@@ -530,8 +530,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         print_debug(
             self.id2word, self.projection.u, self.projection.s,
             range(min(num_topics, len(self.projection.u.T))),
-            num_words=num_words
-        )
+            num_words=num_words)
 
     def save(self, fname, *args, **kwargs):
         """
@@ -608,7 +607,7 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
 
 
 def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
-                   power_iters=0, dtype=np.float64, eps=1e-6):
+    power_iters=0, dtype=np.float64, eps=1e-6):
     """
     Run truncated Singular Value Decomposition (SVD) on a sparse input.
 
@@ -649,7 +648,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         assert num_terms == m, "mismatch in number of features: %i in sparse matrix vs. %i parameter" % (m, num_terms)
         o = np.random.normal(0.0, 1.0, (n, samples)).astype(y.dtype)  # draw a random gaussian matrix
         sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices,
-                                corpus.data, o.ravel(), y.ravel())  # y = corpus * o
+            corpus.data, o.ravel(), y.ravel())  # y = corpus * o
         del o
 
         # unlike np, scipy.sparse `astype()` copies everything, even if there is no change to dtype!
@@ -681,7 +680,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
             logger.debug("multiplying chunk * gauss")
             o = np.random.normal(0.0, 1.0, (n, samples)).astype(dtype)  # draw a random gaussian matrix
             sparsetools.csc_matvecs(m, n, samples, chunk.indptr, chunk.indices,  # y = y + chunk * o
-                                    chunk.data, o.ravel(), y.ravel())
+                chunk.data, o.ravel(), y.ravel())
             del chunk, o
         y = [y]
         q, _ = matutils.qr_destroy(y)  # orthonormalize the range
