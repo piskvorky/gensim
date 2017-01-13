@@ -58,7 +58,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
     """
 
     def __init__(self, mallet_path, corpus=None, num_topics=100, alpha=50, id2word=None, workers=4, prefix=None,
-                 optimize_interval=0, iterations=1000, topic_threshold=0.0):
+        optimize_interval=0, iterations=1000, topic_threshold=0.0):
         """
         `mallet_path` is path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`.
 
@@ -292,13 +292,13 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
                 # this handles the file differently dependent on the pattern
                 if len(parts) == 2 * self.num_topics:
                     doc = [(id_, weight)
-                           for id_, weight in zip(map(int, parts[::2]),
-                                                  map(float, parts[1::2]))
-                           if abs(weight) > eps]
+                        for id_, weight in zip(map(int, parts[::2]),
+                        map(float, parts[1::2]))
+                        if abs(weight) > eps]
                 elif len(parts) == self.num_topics and mallet_version != '2.0.7':
                     doc = [(id_, weight)
-                           for id_, weight in enumerate(map(float, parts))
-                           if abs(weight) > eps]
+                        for id_, weight in enumerate(map(float, parts))
+                        if abs(weight) > eps]
                 else:
                     if mallet_version == "2.0.7":
                         """
