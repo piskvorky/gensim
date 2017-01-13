@@ -34,10 +34,10 @@ from gensim.test import basetests
 # sense.
 
 # FIXME: remember to remove this, once done using it:
-#logger = logging.getLogger('gensim')
-#logger.propagate = False
+# logger = logging.getLogger('gensim')
+# logger.propagate = False
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
@@ -67,6 +67,7 @@ author2doc_new = {'jill': [0], 'bob': [0, 1], 'sally': [1, 2]}
 dictionary_new = Dictionary(texts_new)
 corpus_new = [dictionary_new.doc2bow(text) for text in texts_new]
 
+
 def testfile(test_fname=''):
     # temporary data will be stored to this file
     fname = 'gensim_models_' + test_fname + '.tst'
@@ -84,7 +85,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         # sometimes, training gets stuck at a local minimum
         # in that case try re-training the model from scratch, hoping for a
         # better random initialization
-        for i in range(25): # restart at most 5 times
+        for i in range(25):  # restart at most 5 times
             # create the transformation model
             # NOTE: LdaModel tests do not use set random_state. Is it necessary?
             model = self.class_(id2word=dictionary, num_topics=2, passes=100, random_state=0)
@@ -97,9 +98,9 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
             # author2id (because the random initialization changes when author2id changes). If it does
             # fail, simply be aware of whether we broke something, or if it just naturally changed the
             # output of the model slightly.
-            vec = matutils.sparse2full(jill_topics, 2) # convert to dense vector, for easier equality tests
+            vec = matutils.sparse2full(jill_topics, 2)  # convert to dense vector, for easier equality tests
             expected = [0.91, 0.08]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
             if passed:
                 break
             logging.warning("Author-topic model failed to converge on attempt %i (got %s, expected %s)" %
@@ -107,18 +108,18 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertTrue(passed)
 
     # TODO: test that models are compatiple across versions. Code below is copied from LdaModel tests.
-    #def testModelCompatibilityWithPythonVersions(self):
-    #    fname_model_2_7 = datapath('ldamodel_python_2_7')
-    #    model_2_7 = self.class_.load(fname_model_2_7)
-    #    fname_model_3_5 = datapath('ldamodel_python_3_5')
-    #    model_3_5 = self.class_.load(fname_model_3_5)
-    #    self.assertEqual(model_2_7.num_topics, model_3_5.num_topics)
-    #    self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
-    #    tstvec = []
-    #    self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec])) # try projecting an empty vector
-    #    id2word_2_7 = dict((k,v) for k,v in model_2_7.id2word.iteritems())
-    #    id2word_3_5 = dict((k,v) for k,v in model_3_5.id2word.iteritems())
-    #    self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
+    # def testModelCompatibilityWithPythonVersions(self):
+    #     fname_model_2_7 = datapath('ldamodel_python_2_7')
+    #     model_2_7 = self.class_.load(fname_model_2_7)
+    #     fname_model_3_5 = datapath('ldamodel_python_3_5')
+    #     model_3_5 = self.class_.load(fname_model_3_5)
+    #     self.assertEqual(model_2_7.num_topics, model_3_5.num_topics)
+    #     self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
+    #     tstvec = []
+    #     self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec]))  # try projecting an empty vector
+    #     id2word_2_7 = dict((k,v) for k,v in model_2_7.id2word.iteritems())
+    #     id2word_3_5 = dict((k,v) for k,v in model_3_5.id2word.iteritems())
+    #     self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
 
     def testBasic(self):
         # Check that training the model produces a positive topic vector for some author
@@ -169,7 +170,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertFalse(all(np.equal(jill_topics, jill_topics2)))
 
     def testUpdateNewDataOldAuthor(self):
-        # Check that calling update with new documents and/or authors after the model already has 
+        # Check that calling update with new documents and/or authors after the model already has
         # been trained works.
         # Test an author that already existed in the old dataset.
         model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2)
@@ -185,7 +186,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertFalse(all(np.equal(jill_topics, jill_topics2)))
 
     def testUpdateNewDataNewAuthor(self):
-        # Check that calling update with new documents and/or authors after the model already has 
+        # Check that calling update with new documents and/or authors after the model already has
         # been trained works.
         # Test a new author, that didn't exist in the old dataset.
         model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2)
@@ -229,7 +230,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         # sometimes, training gets stuck at a local minimum
         # in that case try re-training the model from scratch, hoping for a
         # better random initialization
-        for i in range(25): # restart at most 5 times
+        for i in range(25):  # restart at most 5 times
             # create the transformation model
             # NOTE: LdaModel tests do not use set random_state. Is it necessary?
             model = self.class_(id2word=dictionary, num_topics=2, passes=100, random_state=0, serialized=True, serialization_path=datapath('testcorpus_serialization.mm'))
@@ -242,9 +243,9 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
             # author2id (because the random initialization changes when author2id changes). If it does
             # fail, simply be aware of whether we broke something, or if it just naturally changed the
             # output of the model slightly.
-            vec = matutils.sparse2full(jill_topics, 2) # convert to dense vector, for easier equality tests
+            vec = matutils.sparse2full(jill_topics, 2)  # convert to dense vector, for easier equality tests
             expected = [0.91, 0.08]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
 
             # Delete the MmCorpus used for serialization inside the author-topic model.
             remove(datapath('testcorpus_serialization.mm'))
@@ -318,7 +319,6 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         kwargs['alpha'] = "gensim is cool"
         self.assertRaises(ValueError, self.class_, **kwargs)
 
-
     def testEtaAuto(self):
         model1 = self.class_(corpus, author2doc=author2doc, id2word=dictionary, eta='symmetric', passes=10, num_topics=2)
         modelauto = self.class_(corpus, author2doc=author2doc, id2word=dictionary, eta='auto', passes=10, num_topics=2)
@@ -366,7 +366,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(model.eta.shape, expected_shape)
         self.assertTrue(all(model.eta == np.array([0.3] * num_terms)))
 
-	# should be ok with num_topics x num_terms
+        # should be ok with num_topics x num_terms
         testeta = np.array([[0.5] * len(dictionary)] * 2)
         kwargs['eta'] = testeta
         self.class_(**kwargs)
@@ -407,7 +407,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testGetAuthorTopics(self):
 
-        model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, passes= 100, random_state=np.random.seed(0))
+        model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
 
         author_topics = []
         for a in model.id2author.values():
@@ -525,6 +525,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, self.class_.load, fname, mmap='r')
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
