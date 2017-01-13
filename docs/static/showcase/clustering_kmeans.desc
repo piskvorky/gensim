@@ -1,0 +1,3 @@
+Clustering demonstration using the CKMeans class of Shogun. More information on the k-means clustering algorithm can be found here.
+You can enter data points by clicking on the canvas below or you can have some generated for you from the "Toy Data" panel on the right.
+You can also experiment with the arguments to see how they affect the outcome.

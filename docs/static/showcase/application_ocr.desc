@@ -1,0 +1,2 @@
+This demo application uses a previously trained CGMNPSVM svm in combination with the Gaussian Kernel to recognize hand-written digits.
+To test it, draw a digit (0..9) in the area below and press recognize!

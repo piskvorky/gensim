@@ -1,0 +1,1 @@
+This notebook illustrates Blind Source Seperation(BSS) on audio signals using Independent Component Analysis (ICA) in Shogun. We generate a mixed signal and try to seperate it out using Shogun's implementation of ICA & BSS called JADE.

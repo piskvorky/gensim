@@ -1,0 +1,41 @@
+.navbar {
+  &.hero {
+    margin: 0px;
+    border-radius: 0px;
+    border: 0px;
+    z-index: 999;
+    -webkit-font-smoothing: antialiased;
+
+    @media (min-width: 768px) {
+      background: transparent;
+      padding-top: 10px;
+    }
+  }
+
+  &.normal {
+    min-height: 70px;
+    background: $color-ink-gray;
+    border-radius: 0px;
+    border: none;
+    z-index: 999;
+    -webkit-font-smoothing: antialiased;
+
+    @media (min-width: 768px) {
+      padding-top: 10px;
+    }
+  }
+
+  .navbar-header {
+    .navbar-brand {
+      color: #fff;
+      font-weight: 500;
+      font-size: 26px;
+      font-family: $montserrat;
+    }
+  }
+
+  .navbar-nav li a {
+    color: white;
+    padding-left: 25px;
+  }
+}
