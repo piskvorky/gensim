@@ -31,13 +31,15 @@ try:
 except ImportError:
     PYEMD_EXT = False
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 logger = logging.getLogger()
 logger.level = logging.ERROR
 
+
 class LeeCorpus(object):
+
     def __iter__(self):
         with open(datapath('lee_background.cor')) as f:
             for line in f:
@@ -66,23 +68,29 @@ new_sentences = [
     ['artificial', 'intelligence', 'system']
 ]
 
+
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
+
 
 def _rule(word, count, min_count):
     if word == "human":
         return utils.RULE_DISCARD  # throw out
     else:
         return utils.RULE_DEFAULT  # apply default rule, i.e. min_count
+
+
 def load_on_instance():
     # Save and load a Word2Vec Model on instance for test
     model = word2vec.Word2Vec(sentences, min_count=1)
     model.save(testfile())
-    model = word2vec.Word2Vec() # should fail at this point
+    model = word2vec.Word2Vec()  # should fail at this point
     return model.load(testfile())
 
+
 class TestWord2VecModel(unittest.TestCase):
+
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
@@ -191,13 +199,13 @@ class TestWord2VecModel(unittest.TestCase):
     def testLoadPreKeyedVectorModel(self):
         """Test loading pre-KeyedVectors word2vec model"""
 
-        if sys.version_info[:2] == (3,4):
+        if sys.version_info[:2] == (3, 4):
             model_file_suffix = '_py3_4'
         elif sys.version_info < (3,):
             model_file_suffix = '_py2'
         else:
             model_file_suffix = '_py3'
-        
+
         # Model stored in one file
         model_file = 'word2vec_pre_kv%s' % model_file_suffix
         model = word2vec.Word2Vec.load(datapath(model_file))
@@ -320,7 +328,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertRaises(RuntimeError, word2vec.Word2Vec, [])
 
         # input not empty, but rather completely filtered out
-        self.assertRaises(RuntimeError, word2vec.Word2Vec, corpus, min_count=total_words+1)
+        self.assertRaises(RuntimeError, word2vec.Word2Vec, corpus, min_count=total_words + 1)
 
     def testTraining(self):
         """Test word2vec training."""
@@ -601,20 +609,22 @@ class TestWord2VecModel(unittest.TestCase):
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
-    
+
     def test_sentences_should_not_be_a_generator(self):
         """
         Is sentences a generator object?
         """
         gen = (s for s in sentences)
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
-        
+
     def testLoadOnClassError(self):
         """Test if exception is raised when loading word2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
-#endclass TestWord2VecModel
+# endclass TestWord2VecModel
+
 
 class TestWMD(unittest.TestCase):
+
     def testNonzero(self):
         '''Test basic functionality with a test sentence.'''
 
@@ -655,6 +665,7 @@ class TestWMD(unittest.TestCase):
 
 
 class TestWord2VecSentenceIterators(unittest.TestCase):
+
     def testLineSentenceWorksWithFilename(self):
         """Does LineSentence work with a filename argument?"""
         with utils.smart_open(datapath('lee_background.cor')) as orig:
@@ -676,7 +687,7 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
                 sentences = word2vec.LineSentence(fin)
                 for words in sentences:
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
-#endclass TestWord2VecSentenceIterators
+# endclass TestWord2VecSentenceIterators
 
 # TODO: get correct path to Python binary
 # class TestWord2VecScripts(unittest.TestCase):

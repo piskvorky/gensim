@@ -36,6 +36,7 @@ class MalletCorpus(LowCorpus):
     Note that language/label is *not* considered in Gensim.
 
     """
+
     def __init__(self, fname, id2word=None, metadata=False):
         self.metadata = metadata
         LowCorpus.__init__(self, fname, id2word)

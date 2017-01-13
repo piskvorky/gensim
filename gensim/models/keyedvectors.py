@@ -35,6 +35,7 @@ class KeyedVectors(utils.SaveLoad):
     Class to contain vectors and vocab for the Word2Vec training class and other w2v methods not directly
     involved in training such as most_similar()
     """
+
     def __init__(self):
         self.syn0 = []
         self.syn0norm = None
@@ -177,7 +178,7 @@ class KeyedVectors(utils.SaveLoad):
         distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
         for i, t1 in dictionary.items():
             for j, t2 in dictionary.items():
-                if not t1 in docset1 or not t2 in docset2:
+                if t1 not in docset1 or t2 not in docset2:
                     continue
                 # Compute Euclidean distance between word vectors.
                 distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
@@ -321,7 +322,6 @@ class KeyedVectors(utils.SaveLoad):
         return sorted(zip(dists, words))[0][1]
 
     def __getitem__(self, words):
-
         """
         Accept a single word or a list of words as input.
 
@@ -562,7 +562,6 @@ class KeyedVectors(utils.SaveLoad):
         logger.debug('Pairs with unknown words: %d' % oov)
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio
-
 
     def init_sims(self, replace=False):
         """

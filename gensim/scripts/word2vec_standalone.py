@@ -55,9 +55,9 @@ import sys
 import argparse
 from numpy import seterr
 
-logger = logging.getLogger(__name__)
-
 from gensim.models.word2vec import Word2Vec, LineSentence  # avoid referencing __main__ in pickle
+
+logger = logging.getLogger(__name__)
 
 
 if __name__ == "__main__":

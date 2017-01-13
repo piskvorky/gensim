@@ -76,10 +76,11 @@ class LdaVowpalWabbit(utils.SaveLoad):
     between Vowpal Wabbit and Python takes place by passing around data files
     on disk and calling the 'vw' binary with the subprocess module.
     """
+
     def __init__(self, vw_path, corpus=None, num_topics=100, id2word=None,
-                 chunksize=256, passes=1, alpha=0.1, eta=0.1, decay=0.5,
-                 offset=1, gamma_threshold=0.001, random_seed=None,
-                 cleanup_files=True, tmp_prefix='tmp'):
+        chunksize=256, passes=1, alpha=0.1, eta=0.1, decay=0.5,
+        offset=1, gamma_threshold=0.001, random_seed=None,
+        cleanup_files=True, tmp_prefix='tmp'):
         """`vw_path` is the path to Vowpal Wabbit's 'vw' executable.
 
         `corpus` is an iterable training corpus. If given, training will
@@ -140,10 +141,10 @@ class LdaVowpalWabbit(utils.SaveLoad):
         if self.id2word is None:
             if corpus is None:
                 raise ValueError('at least one of corpus/id2word must be '
-                                 'specified, to establish input space '
-                                 'dimensionality')
+                    'specified, to establish input space '
+                    'dimensionality')
             LOG.warning('no word id mapping provided; initializing from '
-                        'corpus, assuming identity')
+                'corpus, assuming identity')
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         elif len(self.id2word) > 0:
@@ -153,7 +154,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         if self.num_terms == 0:
             raise ValueError('cannot compute LDA over an empty collection '
-                             '(no terms)')
+                '(no terms)')
 
         # LDA parameters
         self.num_topics = num_topics
@@ -197,7 +198,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         _run_vw_command(cmd)
 
-        # ensure that future updates of this model use correct offset
+        # ensure that future updates of this model use correct offset
         self.offset += corpus_size
 
     def update(self, corpus):
@@ -216,7 +217,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         _run_vw_command(cmd)
 
-        # ensure that future updates of this model use correct offset
+        # ensure that future updates of this model use correct offset
         self.offset += corpus_size
 
     def log_perplexity(self, chunk):
@@ -228,18 +229,18 @@ class LdaVowpalWabbit(utils.SaveLoad):
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         bound = -vw_data['average_loss']
         LOG.info("%.3f per-word bound, %.1f perplexity estimate based on a "
-                 "held-out corpus of %i documents with %i words",
-                 bound,
-                 numpy.exp2(-bound),
-                 vw_data['corpus_size'],
-                 corpus_words)
+            "held-out corpus of %i documents with %i words",
+            bound,
+            numpy.exp2(-bound),
+            vw_data['corpus_size'],
+            corpus_words)
         return bound
 
     def print_topics(self, num_topics=10, num_words=10):
         return self.show_topics(num_topics, num_words, log=True)
 
     def show_topics(self, num_topics=10, num_words=10,
-                    log=False, formatted=True):
+        log=False, formatted=True):
         if num_topics < 0 or num_topics >= self.num_topics:
             num_topics = self.num_topics
         else:
@@ -263,7 +264,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
     def print_topic(self, topicid, topn=10):
         return ' + '.join(['{0:.3f}*{1}'.format(v[0], v[1])
-                           for v in self.show_topic(topicid, topn)])
+            for v in self.show_topic(topicid, topn)])
 
     def show_topic(self, topicid, topn=10):
         topics = self._get_topics()
@@ -303,7 +304,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
             LOG.debug("Writing model bytes to '%s'", lda_vw._model_filename)
             with utils.smart_open(lda_vw._model_filename, 'wb') as fhandle:
                 fhandle.write(lda_vw._model_data)
-            lda_vw._model_data = None # no need to keep in memory after this
+            lda_vw._model_data = None  # no need to keep in memory after this
 
         if lda_vw._topics_data:
             LOG.debug("Writing topic bytes to '%s'", lda_vw._topics_filename)
@@ -327,12 +328,12 @@ class LdaVowpalWabbit(utils.SaveLoad):
     def _get_vw_predict_command(self, corpus_size):
         """Get list of command line arguments for running prediction."""
         cmd = [self.vw_path,
-               '--testonly', # don't update model with this data
-               '--lda_D', str(corpus_size),
-               '-i', self._model_filename, # load existing binary model
-               '-d', self._corpus_filename,
-               '--learning_rate', '0', # possibly not needed, but harmless
-               '-p', self._predict_filename]
+            '--testonly',  # don't update model with this data
+            '--lda_D', str(corpus_size),
+            '-i', self._model_filename,  # load existing binary model
+            '-d', self._corpus_filename,
+            '--learning_rate', '0',  # possibly not needed, but harmless
+            '-p', self._predict_filename]
 
         if self.random_seed is not None:
             cmd.extend(['--random_seed', str(self.random_seed)])
@@ -346,26 +347,26 @@ class LdaVowpalWabbit(utils.SaveLoad):
         an existing model.
         """
         cmd = [self.vw_path,
-               '-d', self._corpus_filename,
-               '--power_t', str(self.decay),
-               '--initial_t', str(self.offset),
-               '--minibatch', str(self.chunksize),
-               '--lda_D', str(corpus_size),
-               '--passes', str(self.passes),
-               '--cache_file', self._cache_filename,
-               '--lda_epsilon', str(self.gamma_threshold),
-               '--readable_model', self._topics_filename,
-               '-k', # clear cache
-               '-f', self._model_filename]
+            '-d', self._corpus_filename,
+            '--power_t', str(self.decay),
+            '--initial_t', str(self.offset),
+            '--minibatch', str(self.chunksize),
+            '--lda_D', str(corpus_size),
+            '--passes', str(self.passes),
+            '--cache_file', self._cache_filename,
+            '--lda_epsilon', str(self.gamma_threshold),
+            '--readable_model', self._topics_filename,
+            '-k',  # clear cache
+            '-f', self._model_filename]
 
         if update:
             cmd.extend(['-i', self._model_filename])
         else:
             # these params are read from model file if updating
             cmd.extend(['--lda', str(self.num_topics),
-                        '-b', str(_bit_length(self.num_terms)),
-                        '--lda_alpha', str(self.alpha),
-                        '--lda_rho', str(self.eta)])
+                '-b', str(_bit_length(self.num_terms)),
+                '--lda_alpha', str(self.alpha),
+                '--lda_rho', str(self.eta)])
 
         if self.random_seed is not None:
             cmd.extend(['--random_seed', str(self.random_seed)])
@@ -384,7 +385,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         <word_id> <topic_1_gamma> <topic_2_gamma> ...
         """
         topics = numpy.zeros((self.num_topics, self.num_terms),
-                             dtype=numpy.float32)
+            dtype=numpy.float32)
 
         with utils.smart_open(self._topics_filename) as topics_file:
             found_data = False
@@ -428,7 +429,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         vw_data['corpus_size'] = corpus_size
 
         predictions = numpy.zeros((corpus_size, self.num_topics),
-                                  dtype=numpy.float32)
+            dtype=numpy.float32)
 
         with utils.smart_open(self._predict_filename) as fhandle:
             for i, line in enumerate(fhandle):
@@ -544,14 +545,14 @@ def _run_vw_command(cmd):
     """Execute given Vowpal Wabbit command, log stdout and stderr."""
     LOG.info("Running Vowpal Wabbit command: %s", ' '.join(cmd))
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
+        stderr=subprocess.STDOUT)
     output = proc.communicate()[0].decode('utf-8')
     LOG.debug("Vowpal Wabbit output: %s", output)
 
     if proc.returncode != 0:
         raise subprocess.CalledProcessError(proc.returncode,
-                                            ' '.join(cmd),
-                                            output=output)
+            ' '.join(cmd),
+            output=output)
 
     return output
 
@@ -560,6 +561,7 @@ def _run_vw_command(cmd):
 def _bit_length(num):
     """Return number of bits needed to encode given number."""
     return len(bin(num).lstrip('-0b'))
+
 
 def vwmodel2ldamodel(vw_model, iterations=50):
     """

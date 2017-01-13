@@ -87,7 +87,7 @@ class TestSummarizationTest(unittest.TestCase):
         text = "\n".join(text.split('\n')[:8])
 
         self.assertTrue(summarize(text) is not None)
-        
+
     def test_text_summarization_returns_input_on_single_input_sentence(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
@@ -107,7 +107,7 @@ class TestSummarizationTest(unittest.TestCase):
 
         # Keeps the first 8 sentences to make the text shorter.
         sentences = text.split('\n')[:8]
-        
+
         # Generate the corpus.
         tokens = [sentence.split() for sentence in sentences]
         dictionary = Dictionary(tokens)

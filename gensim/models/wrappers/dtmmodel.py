@@ -42,8 +42,8 @@ class DtmModel(utils.SaveLoad):
     """
 
     def __init__(
-            self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100, id2word=None, prefix=None,
-            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
+        self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100, id2word=None, prefix=None,
+        lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
         """
         `dtm_path` is path to the dtm executable, e.g. `C:/dtm/dtm-win64.exe`.
 
@@ -255,7 +255,7 @@ class DtmModel(utils.SaveLoad):
         else:
             num_topics = min(num_topics, self.num_topics)
             chosen_topics = range(num_topics)
-             # add a little random jitter, to randomize results around the same
+            # add a little random jitter, to randomize results around the same
             # alpha
             # sort_alpha = self.alpha + 0.0001 * \
             #     numpy.random.rand(len(self.alpha))
@@ -310,7 +310,7 @@ class DtmModel(utils.SaveLoad):
         all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
         input parameter is the year to do the visualisation.
         """
-        topic_term = np.exp(self.lambda_[:,:,time]) / np.exp(self.lambda_[:,:,time]).sum()
+        topic_term = np.exp(self.lambda_[:, :, time]) / np.exp(self.lambda_[:, :, time]).sum()
         topic_term = topic_term * self.num_topics
 
         doc_topic = self.gamma_
@@ -329,10 +329,10 @@ class DtmModel(utils.SaveLoad):
 
     def dtm_coherence(self, time, num_words=20):
         """
-        returns all topics of a particular time-slice without probabilitiy values for it to be used 
+        returns all topics of a particular time-slice without probabilitiy values for it to be used
         for either "u_mass" or "c_v" coherence.
         TODO: because of print format right now can only return for 1st time-slice.
-              should we fix the coherence printing or make changes to the print statements to mirror DTM python?  
+              should we fix the coherence printing or make changes to the print statements to mirror DTM python?
         """
         coherence_topics = []
         for topic_no in range(0, self.num_topics):

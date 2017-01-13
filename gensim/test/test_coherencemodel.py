@@ -43,6 +43,7 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
+
 def checkCoherenceMeasure(topics1, topics2, coherence):
     """Check provided topic coherence algorithm on given topics"""
     if coherence in boolean_document_based:
@@ -53,7 +54,9 @@ def checkCoherenceMeasure(topics1, topics2, coherence):
         cm2 = CoherenceModel(topics=topics2, texts=texts, dictionary=dictionary, coherence=coherence)
     return cm1.get_coherence() > cm2.get_coherence()
 
+
 class TestCoherenceModel(unittest.TestCase):
+
     def setUp(self):
         # Suppose given below are the topics which two different LdaModels come up with.
         # `topics1` is clearly better as it has a clear distinction between system-human

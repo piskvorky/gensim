@@ -24,7 +24,7 @@ import fnmatch
 
 EXTENSIONS = ['*.py']
 EXECUTABLE = 'nosetests test/'
-DEFAULTARGS = '--with-color -exe'# -w tests'
+DEFAULTARGS = '--with-color -exe'  # -w tests'
 
 
 def checkSum():

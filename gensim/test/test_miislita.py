@@ -59,6 +59,7 @@ class CorpusMiislita(corpora.TextCorpus):
 
 
 class TestMiislita(unittest.TestCase):
+
     def test_textcorpus(self):
         """Make sure TextCorpus can be serialized to disk. """
         # construct corpus from file
@@ -72,7 +73,6 @@ class TestMiislita(unittest.TestCase):
         # make sure deserializing gives the same result
         miislita2 = corpora.MmCorpus(ftmp)
         self.assertEqual(list(miislita), list(miislita2))
-
 
     def test_save_load_ability(self):
         """
@@ -91,7 +91,6 @@ class TestMiislita(unittest.TestCase):
 
         self.assertEqual(len(miislita), len(miislita2))
         self.assertEqual(miislita.dictionary.token2id, miislita2.dictionary.token2id)
-
 
     def test_miislita_high_level(self):
         # construct corpus from file

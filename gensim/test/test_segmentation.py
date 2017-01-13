@@ -19,6 +19,7 @@ from numpy import array
 
 
 class TestSegmentation(unittest.TestCase):
+
     def setUp(self):
         self.topics = [array([9, 4, 6]), array([9, 10, 7]), array([5, 2, 7])]
 

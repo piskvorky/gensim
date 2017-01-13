@@ -13,7 +13,9 @@ import unittest
 
 from gensim.topic_coherence import direct_confirmation_measure
 
+
 class TestDirectConfirmationMeasure(unittest.TestCase):
+
     def setUp(self):
         # Set up toy example for better understanding and testing
         # of this module. See the modules for the mathematical formulas

@@ -52,6 +52,7 @@ class TextCorpus(interfaces.CorpusABC):
     implementation.
 
     """
+
     def __init__(self, input=None):
         super(TextCorpus, self).__init__()
         self.input = input

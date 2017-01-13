@@ -47,6 +47,7 @@ class HashDictionary(utils.SaveLoad, dict):
     bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
 
     """
+
     def __init__(self, documents=None, id_range=32000, myhash=zlib.adler32, debug=True):
         """
         By default, keep track of debug statistics and mappings. If you find yourself

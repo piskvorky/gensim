@@ -24,12 +24,12 @@ import itertools
 
 from gensim import utils
 
-if sys.version_info[0] >= 3:
-    unicode = str
-
 from six import PY3, iteritems, iterkeys, itervalues, string_types
 from six.moves import xrange
 from six.moves import zip as izip
+
+if sys.version_info[0] >= 3:
+    unicode = str
 
 
 logger = logging.getLogger('gensim.corpora.dictionary')
@@ -42,6 +42,7 @@ class Dictionary(utils.SaveLoad, Mapping):
     The main function is `doc2bow`, which converts a collection of words to its
     bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
     """
+
     def __init__(self, documents=None, prune_at=2000000):
         """
         If `documents` are given, use them to initialize Dictionary (see `add_documents()`).
@@ -222,7 +223,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         most_frequent_words = [(self[id], self.dfs.get(id, 0)) for id in most_frequent_ids]
         logger.info("discarding %i tokens: %s...", len(most_frequent_ids), most_frequent_words[:10])
-        
+
         self.filter_tokens(bad_ids=most_frequent_ids)
         logger.info("resulting dictionary: %s" % self)
 

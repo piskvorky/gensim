@@ -16,7 +16,9 @@ from gensim.topic_coherence import indirect_confirmation_measure
 import numpy as np
 from numpy import array
 
+
 class TestIndirectConfirmation(unittest.TestCase):
+
     def setUp(self):
         # Set up toy example for better understanding and testing
         # of this module. See the modules for the mathematical formulas

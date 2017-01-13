@@ -18,11 +18,12 @@ import unittest
 from gensim.corpora.wikicorpus import WikiCorpus
 
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 FILENAME = 'enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2'
 
 logger = logging.getLogger(__name__)
+
 
 class TestWikiCorpus(unittest.TestCase):
 
