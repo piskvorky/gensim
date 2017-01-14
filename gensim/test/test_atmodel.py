@@ -6,7 +6,9 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Automated tests for checking transformation algorithms (the models package).
+Automated tests for the author-topic model (AuthorTopicModel class). These tests
+are based on the unit tests of LDA; the classes are quite similar, and the tests
+needed are thus quite similar.
 """
 
 
@@ -31,11 +33,9 @@ from gensim.test import basetests
 # Test that computing the bound on new unseen documents works as expected (this is somewhat different
 # in the author-topic model than in LDA).
 # Perhaps test that the bound increases, in general (i.e. in several of the tests below where it makes
-# sense.
-
-# FIXME: remember to remove this, once done using it:
-# logger = logging.getLogger('gensim')
-# logger.propagate = False
+# sense. This is not tested in LDA either. Tests can also be made to check that automatic prior learning
+# increases the bound.
+# Test that models are compatiple across versions, as done in LdaModel.
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -87,7 +87,6 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         # better random initialization
         for i in range(25):  # restart at most 5 times
             # create the transformation model
-            # NOTE: LdaModel tests do not use set random_state. Is it necessary?
             model = self.class_(id2word=dictionary, num_topics=2, passes=100, random_state=0)
             model.update(corpus, author2doc)
 
@@ -106,20 +105,6 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
             logging.warning("Author-topic model failed to converge on attempt %i (got %s, expected %s)" %
                             (i, sorted(vec), sorted(expected)))
         self.assertTrue(passed)
-
-    # TODO: test that models are compatiple across versions. Code below is copied from LdaModel tests.
-    # def testModelCompatibilityWithPythonVersions(self):
-    #     fname_model_2_7 = datapath('ldamodel_python_2_7')
-    #     model_2_7 = self.class_.load(fname_model_2_7)
-    #     fname_model_3_5 = datapath('ldamodel_python_3_5')
-    #     model_3_5 = self.class_.load(fname_model_3_5)
-    #     self.assertEqual(model_2_7.num_topics, model_3_5.num_topics)
-    #     self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
-    #     tstvec = []
-    #     self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec]))  # try projecting an empty vector
-    #     id2word_2_7 = dict((k,v) for k,v in model_2_7.id2word.iteritems())
-    #     id2word_3_5 = dict((k,v) for k,v in model_3_5.id2word.iteritems())
-    #     self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
 
     def testBasic(self):
         # Check that training the model produces a positive topic vector for some author
@@ -232,7 +217,6 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         # better random initialization
         for i in range(25):  # restart at most 5 times
             # create the transformation model
-            # NOTE: LdaModel tests do not use set random_state. Is it necessary?
             model = self.class_(id2word=dictionary, num_topics=2, passes=100, random_state=0, serialized=True, serialization_path=datapath('testcorpus_serialization.mm'))
             model.update(self.corpus, author2doc)
 
@@ -261,8 +245,6 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
         # did we learn something?
         self.assertFalse(all(np.equal(model1.alpha, modelauto.alpha)))
-
-        # NOTE: it could test that the bound is higher in modelauto. Same in testEtaAuto.
 
     def testAlpha(self):
         kwargs = dict(

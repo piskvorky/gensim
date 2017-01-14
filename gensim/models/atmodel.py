@@ -24,6 +24,11 @@ coming in the future.
 
 """
 
+# TODO: this class inherits LdaModel and overwrites some methods. There is some code
+# duplication still, and a refactor could be made to avoid this. Comments with "TODOs"
+# are included in the code where this is the case, for example in the log_perplexity
+# and do_estep methods.
+
 # FIXME: link to tutorial in docstring above, once the tutorial is available.
 
 import pdb
@@ -204,6 +209,8 @@ class AuthorTopicModel(LdaModel):
         # NOTE: as distributed version of this model is not implemented, "distributed" is set to false. Some of the
         # infrastructure to implement a distributed author-topic model is already in place, such as the AuthorTopicState.
         distributed = False
+        self.dispatcher = None
+        self.numworkers = 1
 
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -268,13 +275,6 @@ class AuthorTopicModel(LdaModel):
         assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
                 "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
                 (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
-
-        if not distributed:
-            self.dispatcher = None
-            self.numworkers = 1
-        else:
-            # NOTE: distributed processing is not implemented for the author-topic model.
-            pass
 
         # VB constants
         self.iterations = iterations
@@ -471,6 +471,8 @@ class AuthorTopicModel(LdaModel):
         sufficient statistics in `state` (or `self.state` if None).
 
         """
+
+        # TODO: this method is somewhat similar to the one in LdaModel. Refactor if possible.
         if state is None:
             state = self.state
         gamma, sstats = self.inference(chunk, author2doc, doc2author, rhot, collect_sstats=True, chunk_doc_idx=chunk_doc_idx)
@@ -485,15 +487,14 @@ class AuthorTopicModel(LdaModel):
         perplexity=2^(-bound), to log at INFO level.
 
         """
+
+        # TODO: This method is very similar to the one in LdaModel. Refactor.
         if total_docs is None:
             total_docs = len(chunk)
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         subsample_ratio = 1.0 * total_docs / len(chunk)
         perwordbound = self.bound(chunk, chunk_doc_idx, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
-        # print(perwordbound)
-        # FIXME: the input to this function is not necessarily held-out data (as stated in the log below). The input is not
-        # held-out data when called from self.update(). It is also stated like this in LdaModel, and it is misleading.
-        logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
+        logger.info("%.3f per-word bound, %.1f perplexity estimate based on a corpus of %i documents with %i words" %
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
@@ -761,31 +762,6 @@ class AuthorTopicModel(LdaModel):
                 dirty = False
         # endfor entire corpus update
 
-    def do_mstep(self, rho, other, extra_pass=False):
-        """
-        M step: use linear interpolation between the existing topics and
-        collected sufficient statistics in `other` to update the topics.
-
-        """
-        logger.debug("updating topics")
-        # update self with the new blend; also keep track of how much did
-        # the topics change through this update, to assess convergence
-        diff = np.log(self.expElogbeta)
-        self.state.blend(rho, other)
-        diff -= self.state.get_Elogbeta()
-        self.sync_state()
-
-        # print out some debug info at the end of each EM iteration
-        self.print_topics(5)
-        logger.info("topic diff=%f, rho=%f", np.mean(np.abs(diff)), rho)
-
-        if self.optimize_eta:
-            self.update_eta(self.state.get_lambda(), rho)
-
-        if not extra_pass:
-            # only update if this isn't an additional pass
-            self.num_updates += other.numdocs
-
     def bound(self, chunk, chunk_doc_idx=None, subsample_ratio=1.0, author2doc=None, doc2author=None):
         """
         Estimate the variational bound of documents from `corpus`:
@@ -826,7 +802,7 @@ class AuthorTopicModel(LdaModel):
             if not chunk_doc_idx:
                 # If author2doc and doc2author are not provided, chunk is assumed to be a subset of
                 # self.corpus, and chunk_doc_idx is thus required.
-                raise ValueError('Either author dictionaries or chunk_doc_idx must be prodivded. Consult documentation of bound method.')
+                raise ValueError('Either author dictionaries or chunk_doc_idx must be provided. Consult documentation of bound method.')
         elif author2doc is not None and doc2author is not None:
             # Training on held-out documents (documents not seen during training).
             # All authors in dictionaries must still be seen during training.
@@ -835,7 +811,7 @@ class AuthorTopicModel(LdaModel):
                     raise ValueError('bound cannot be called with authors not seen during training.')
 
             if chunk_doc_idx:
-                raise ValueError('Either author dictionaries or chunk_doc_idx must be prodivded, not both. Consult documentation of bound method.')
+                raise ValueError('Either author dictionaries or chunk_doc_idx must be provided, not both. Consult documentation of bound method.')
         else:
             raise ValueError('Either both author2doc and doc2author should be provided, or neither. Consult documentation of bound method.')
 
@@ -913,9 +889,7 @@ class AuthorTopicModel(LdaModel):
 
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
-
-        # NOTE: this is used in LdaModel:
-        # minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
+        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
 
         topic_dist = self.state.gamma[author_id, :] / sum(self.state.gamma[author_id, :])
 
