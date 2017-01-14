@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Shogun Machine Learning - Showroom </title>
+
+    
+      <link rel="stylesheet" type="text/css" href="/gensim/static/gen/all.css?594cfd5f">
+      <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    
+
+    
+      <script type="text/javascript" src="/gensim/static/gen/packed.js?53fff19e"></script>
+      <script async defer id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
+    
+  </head>
+
+  <body>
+    <div class="overlay-bg">
+    <div class="overlay-header">
+      <a class="overlay-new" href="#" target="_new">Open in new window</a>&nbsp;/&nbsp;<a class="overlay-cloud" href="http://cloud.shogun-toolbox.org" target="_cloud">Try shogun cloud</a>
+    </div>
+
+    <div class="overlay-content">
+      <div class="overlay-close"><a href="#"></a></div>
+      <iframe class="overlay-iframe"></iframe>
+   </div>
+</div>
+
+    <div class="page">
+      <div class="content">
+        
+
+<header class="navbar navbar-inverse normal" role="banner">
+    <a href="https://github.com/shogun-toolbox/shogun" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+<div class="container">
+  <div class="navbar-header">
+    <a href="/" class="navbar-brand">Shogun</a>
+  </div>
+  <ul class="nav navbar-nav navbar-right">
+    <li><a href="/">home</a></li>
+    <li><a href="/examples" target="_blank">examples</a></li>
+    <li><a href="/install">install</a></li>
+    <li><a href="/gensim/showroom">showroom</a></li>
+    <li><a href="https://github.com/shogun-toolbox/shogun/wiki" target="_blank">dev wiki</a></li>
+    <li><a href="/api" target="_blank">api</a></li>
+    <li><a href="#footer" class="smooth-scroll">contact</a></li>
+  </ul>
+</div>
+</header>
+
+<div class="container pt">
+    <div class="row">
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/lda_training_tips.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>lda training tips</p>
+                    </div>
+                    <img src="static/notebooks/lda_training_tips.png" alt="lda training tips" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Pre-processing and training LDA</p>
+<p>The purpose of this tutorial is to show you how to pre-process text data, and how to train the LDA model on that data. This tutorial will <strong>not</strong> explain you the LDA model, how inference is made in the LDA model, and it will not necessarily teach you how to use Gensim's implementation. There are plenty of resources for all of those things, but what is somewhat lacking is a hands-on tutorial that helps you train an LDA model with good results... so here is my contribution towards that.</p>
+<p>I have used a corpus of NIPS papers in this tutorial, but if you're following this tutorial just to learn about LDA I encourage you to consider picking a corpus on a subject that you are familiar with. Qualitatively evaluating the output of an LDA model is challenging and can require you to understand the subject matter of your corpus (depending on your goal with the model).</p>
+<p>I would also encourage you to consider each step when applying the model to your data, instead of just blindly applying my solution. The different steps will depend on your data and possibly your goal with the model.</p>
+<p>In the following sections, we will go through pre-processing the data and training the model.</p>
+<blockquote>
+<p><strong>Note:</strong></p>
+<p>This tutorial uses the nltk library, although you can replace it with something else if you want. Python 3 is used, although Python 2.7 can be used as well.</p>
+</blockquote>
+<p>In this tutorial we will:</p>
+<ul>
+<li>Load data.</li>
+<li>Pre-process data.</li>
+<li>Transform documents to a vectorized form.</li>
+<li>Train an LDA model.</li>
+</ul>
+<p>If you are not familiar with the LDA model or how to use it in Gensim, I suggest you read up on that before continuing with this tutorial. Basic understanding of the LDA model should suffice. Examples:</p>
+<ul>
+<li>Gentle introduction to the LDA model: http://blog.echen.me/2011/08/22/introduction-to-latent-dirichlet-allocation/</li>
+<li>Gensim's LDA API documentation: https://radimrehurek.com/gensim/models/ldamodel.html</li>
+<li>Topic modelling in Gensim: http://radimrehurek.com/topic_modeling_tutorial/2%20-%20Topic%20Modeling.html</li>
+</ul>
+<p>Data</p>
+<p>We will be using some papers from the NIPS (Neural Information Processing Systems) conference. NIPS is a machine learning conference so the subject matter should be well suited for most of the target audience of this tutorial.</p>
+<p>You can download the data from Sam Roweis' website (http://www.cs.nyu.edu/~roweis/data.html).</p>
+<p>Note that the corpus contains 1740 documents, and not particularly long ones. So keep in mind that this tutorial is not geared towards efficiency, and be careful before applying the code to a large dataset.</p>
+<p>Below we are simply reading the data.</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/Corpora_and_Vector_Spaces.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>Corpora and Vector Spaces</p>
+                    </div>
+                    <img src="static/notebooks/Corpora_and_Vector_Spaces.png" alt="Corpora and Vector Spaces" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Tutorial 1: Corpora and Vector Spaces
+See this <em>gensim</em> tutorial on the web <a href="https://radimrehurek.com/gensim/tut1.html">here</a>.</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/doc2vec-wikipedia.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>doc2vec-wikipedia</p>
+                    </div>
+                    <img src="static/notebooks/doc2vec-wikipedia.png" alt="doc2vec-wikipedia" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Doc2Vec to wikipedia articles</p>
+            </div>
+        </div>
+        
+    </div>
+    <div class="row">
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/doc2vec-IMDB.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>doc2vec-IMDB</p>
+                    </div>
+                    <img src="static/notebooks/doc2vec-IMDB.png" alt="doc2vec-IMDB" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>gensim doc2vec &amp; IMDB sentiment dataset</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/WMD_tutorial.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>WMD tutorial</p>
+                    </div>
+                    <img src="static/notebooks/WMD_tutorial.png" alt="WMD tutorial" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Finding similar documents with Word2Vec and WMD </p>
+<p>Word Mover's Distance is a promising new tool in machine learning that allows us to submit a query and return the most relevant documents. For example, in a blog post <a href="http://tech.opentable.com/2015/08/11/navigating-themes-in-restaurant-reviews-with-word-movers-distance/">OpenTable</a> use WMD on restaurant reviews. Using this approach, they are able to mine different aspects of the reviews. In <strong>part 2</strong> of this tutorial, we show how you can use Gensim's <code>WmdSimilarity</code> to do something similar to what OpenTable did. In <strong>part 1</strong> shows how you can compute the WMD distance between two documents using <code>wmdistance</code>. Part 1 is optional if you want use <code>WmdSimilarity</code>, but is also useful in it's own merit.</p>
+<p>First, however, we go through the basics of what WMD is.</p>
+<p>Word Mover's Distance basics</p>
+<p>WMD is a method that allows us to assess the "distance" between two documents in a meaningful way, even when they have no words in common. It uses <a href="http://rare-technologies.com/word2vec-tutorial/">word2vec</a> [4] vector embeddings of words. It been shown to outperform many of the state-of-the-art methods in <em>k</em>-nearest neighbors classification [3].</p>
+<p>WMD is illustrated below for two very similar sentences (illustration taken from <a href="http://vene.ro/blog/word-movers-distance-in-python.html">Vlad Niculae's blog</a>). The sentences have no words in common, but by matching the relevant words, WMD is able to accurately measure the (dis)similarity between the two sentences. The method also uses the bag-of-words representation of the documents (simply put, the word's frequencies in the documents), noted as $d$ in the figure below. The intution behind the method is that we find the minimum "traveling distance" between documents, in other words the most efficient way to "move" the distribution of document 1 to the distribution of document 2.</p>
+<p><img src='https://vene.ro/images/wmd-obama.png' height='600' width='600'></p>
+<p>This method was introduced in the article "From Word Embeddings To Document Distances" by Matt Kusner et al. (<a href="http://jmlr.org/proceedings/papers/v37/kusnerb15.pdf">link to PDF</a>). It is inspired by the "Earth Mover's Distance", and employs a solver of the "transportation problem".</p>
+<p>In this tutorial, we will learn how to use Gensim's WMD functionality, which consists of the <code>wmdistance</code> method for distance computation, and the <code>WmdSimilarity</code> class for corpus based similarity queries.</p>
+<blockquote>
+<p><strong>Note</strong>:</p>
+<p>If you use this software, please consider citing [1], [2] and [3].
+</p>
+</blockquote>
+<p>Running this notebook</p>
+<p>You can download this <a href="http://ipython.org/notebook.html">iPython Notebook</a>, and run it on your own computer, provided you have installed Gensim, PyEMD, NLTK, and downloaded the necessary data.</p>
+<p>The notebook was run on an Ubuntu machine with an Intel core i7-4770 CPU 3.40GHz (8 cores) and 32 GB memory. Running the entire notebook on this machine takes about 3 minutes.</p>
+<p>Part 1: Computing the Word Mover's Distance</p>
+<p>To use WMD, we need some word embeddings first of all. You could train a word2vec (see tutorial <a href="http://rare-technologies.com/word2vec-tutorial/">here</a>) model on some corpus, but we will start by downloading some pre-trained word2vec embeddings. Download the GoogleNews-vectors-negative300.bin.gz embeddings <a href="https://code.google.com/archive/p/word2vec/">here</a> (warning: 1.5 GB, file is not needed for part 2). Training your own embeddings can be beneficial, but to simplify this tutorial, we will be using pre-trained embeddings at first.</p>
+<p>Let's take some sentences to compute the distance between.</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/Word2Vec_FastText_Comparison.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>Word2Vec FastText Comparison</p>
+                    </div>
+                    <img src="static/notebooks/Word2Vec_FastText_Comparison.png" alt="Word2Vec FastText Comparison" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Comparison of FastText and Word2Vec </p>
+            </div>
+        </div>
+        
+    </div>
+    <div class="row">
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/topic_coherence-movies.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>topic coherence-movies</p>
+                    </div>
+                    <img src="static/notebooks/topic_coherence-movies.png" alt="topic coherence-movies" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Benchmark testing of coherence pipeline on Movies dataset:
+ How to find how well coherence measure matches your manual annotators</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/ldaseqmodel.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>ldaseqmodel</p>
+                    </div>
+                    <img src="static/notebooks/ldaseqmodel.png" alt="ldaseqmodel" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Dynamic Topic Models Tutorial</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/distance_metrics.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>distance metrics</p>
+                    </div>
+                    <img src="static/notebooks/distance_metrics.png" alt="distance metrics" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>New Distance Metrics for Probability Distribution and Bag of Words </p>
+            </div>
+        </div>
+        
+    </div>
+    <div class="row">
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/dtm_example.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>dtm example</p>
+                    </div>
+                    <img src="static/notebooks/dtm_example.png" alt="dtm example" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>DTM Example</p>
+<p>In this example we will present a sample usage of the DTM wrapper. Prior to using this you need to compile the <a href="https://github.com/magsilva/dtm">DTM code</a> yourself or use one of the <a href="https://github.com/magsilva/dtm/tree/master/bin">binaries</a>.</p>
+<p>This tutorial is on Windows. Running it on Linux and OSX is the same.</p>
+<p>In this example we will use a small already processed corpus. To see how to get a dataset to this stage please take a look at <a href="https://radimrehurek.com/gensim/tutorial.html">Gensim Tutorials</a></p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/deepir.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>deepir</p>
+                    </div>
+                    <img src="static/notebooks/deepir.png" alt="deepir" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Deep Inverse Regression with Yelp reviews</p>
+<p>In this note we'll use <a href="http://radimrehurek.com/gensim/">gensim</a> to turn the Word2Vec machinery into a document classifier, as in <a href="http://arxiv.org/pdf/1504.07295v3">Document Classification by Inversion of Distributed Language Representations</a> from ACL 2015.</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/Topics_and_Transformations.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>Topics and Transformations</p>
+                    </div>
+                    <img src="static/notebooks/Topics_and_Transformations.png" alt="Topics and Transformations" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Topics and Transformation</p>
+            </div>
+        </div>
+        
+    </div>
+    <div class="row">
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/Similarity_Queries.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>Similarity Queries</p>
+                    </div>
+                    <img src="static/notebooks/Similarity_Queries.png" alt="Similarity Queries" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Similarity Queries</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/gensim_news_classification.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>gensim news classification</p>
+                    </div>
+                    <img src="static/notebooks/gensim_news_classification.png" alt="gensim news classification" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>News classification with topic models in gensim
+News article classification is a task which is performed on a huge scale by news agencies all over the world. We will be looking into how topic modeling can be used to accurately classify news articles into different categories such as sports, technology, politics etc.</p>
+<p>Our aim in this tutorial is to come up with some topic model which can come up with topics that can easily be interpreted by us. Such a topic model can be used to discover hidden structure in the corpus and can also be used to determine the membership of a news article into one of the topics.</p>
+<p>For this tutorial, we will be using the Lee corpus which is a shortened version of the <a href="http://www.socsci.uci.edu/~mdlee/lee_pincombe_welsh_document.PDF">Lee Background Corpus</a>. The shortened version consists of 300 documents selected from the Australian Broadcasting Corporation's news mail service. It consists of texts of headline stories from around the year 2000-2001.</p>
+<p>Accompanying slides can be found <a href="https://speakerdeck.com/dsquareindia/pycon-delhi-lightening">here</a>.</p>
+<p>Requirements
+In this tutorial we look at how different topic models can be easily created using <a href="https://radimrehurek.com/gensim/">gensim</a>.
+Following are the dependencies for this tutorial:
+    - Gensim Version &gt;=0.13.1 would be preferred since we will be using topic coherence metrics extensively here.
+    - matplotlib
+    - Patterns library; Gensim uses this for lemmatization. ONLY FOR PYTHON 2.5+ - no support for Python 3 yet.
+    - nltk.stopwords
+    - pyLDAVis
+We will be playing around with 4 different topic models here:
+    - LSI (Latent Semantic Indexing)
+    - HDP (Hierarchical Dirichlet Process)
+    - LDA (Latent Dirichlet Allocation)
+    - LDA (tweaked with topic coherence to find optimal number of topics) and
+    - LDA as LSI with the help of topic coherence metrics
+First we'll fit those topic models on our existing data then we'll compare each against the other and see how they rank in terms of human interpretability.</p>
+<p>All can be found in gensim and can be easily used in a plug-and-play fashion. We will tinker with the LDA model using the newly added topic coherence metrics in gensim based on <a href="http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf">this</a> paper by Roeder et al and see how the resulting topic model compares with the exsisting ones.</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/word2vec.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>word2vec</p>
+                    </div>
+                    <img src="static/notebooks/word2vec.png" alt="word2vec" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Word2Vec Tutorial</p>
+<p>In case you missed the buzz, word2vec is a widely featured as a member of the “new wave” of machine learning algorithms based on neural networks, commonly referred to as "deep learning" (though word2vec itself is rather shallow). Using large amounts of unannotated plain text, word2vec learns relationships between words automatically. The output are vectors, one vector per word, with remarkable linear relationships that allow us to do things like vec(“king”) – vec(“man”) + vec(“woman”) =~ vec(“queen”), or vec(“Montreal Canadiens”) – vec(“Montreal”) + vec(“Toronto”) resembles the vector for “Toronto Maple Leafs”.</p>
+<p>Word2vec is very useful in <a href="https://github.com/RaRe-Technologies/movie-plots-by-genre">automatic text tagging</a>, recommender systems and machine translation.</p>
+<p>Check out an <a href="http://radimrehurek.com/2014/02/word2vec-tutorial/app">online word2vec demo</a> where you can try this vector algebra for yourself. That demo runs <code>word2vec</code> on the Google News dataset, of <strong>about 100 billion words</strong>.</p>
+<p>This tutorial</p>
+<p>In this tutorial you will learn how to train and evaluate word2vec models on your business data.</p>
+            </div>
+        </div>
+        
+    </div>
+    <div class="row">
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/doc2vec-lee.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>doc2vec-lee</p>
+                    </div>
+                    <img src="static/notebooks/doc2vec-lee.png" alt="doc2vec-lee" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Doc2Vec Tutorial on the Lee Dataset</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/topic_coherence_tutorial.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>topic coherence tutorial</p>
+                    </div>
+                    <img src="static/notebooks/topic_coherence_tutorial.png" alt="topic coherence tutorial" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Demonstration of the topic coherence pipeline in Gensim</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/topic_methods.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>topic methods</p>
+                    </div>
+                    <img src="static/notebooks/topic_methods.png" alt="topic methods" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>New Term Topics Methods and Document Coloring</p>
+            </div>
+        </div>
+        
+    </div>
+    <div class="row">
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/online_w2v_tutorial.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>online w2v tutorial</p>
+                    </div>
+                    <img src="static/notebooks/online_w2v_tutorial.png" alt="online w2v tutorial" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Online word2vec tutorial</p>
+<p>So far, word2vec cannot increase the size of vocabulary after initial training. To handle unknown words, not in word2vec vocaburary, you must  retrain updated documents over again.</p>
+<p>In this tutorial, we introduce gensim new feature, online vocaburary update. This additional feature overcomes the unknown word problems. Despite after initial training, we can continuously add new vocaburary to the pre-trained word2vec model using this online feature.</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/annoytutorial.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>annoytutorial</p>
+                    </div>
+                    <img src="static/notebooks/annoytutorial.png" alt="annoytutorial" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <p>Similarity Queries using Annoy Tutorial</p>
+            </div>
+        </div>
+        
+
+        <div class="col-md-3 col-md-offset-1 notebook-panel">
+            <div class="image pic">
+                <a href="static/notebooks/summarization_tutorial.html" target="_blank" class="overlay">
+                    <div class="layer">
+                        <p>summarization tutorial</p>
+                    </div>
+                    <img src="static/notebooks/summarization_tutorial.png" alt="summarization tutorial" width="100%" max-height="125px" />
+                </a>
+            </div>
+            <div class="abstract">
+                <h1>Tutorial: automatic summarization using Gensim</h1>
+
+<p>This module automatically summarizes the given text, by extracting one or more important sentences from the text. In a similar way, it can also extract keywords. This tutorial will teach you to use this summarization module via some examples. First, we will try a small example, then we will try two larger ones, and then we will review the performance of the summarizer in terms of speed.</p>
+<p>This summarizer is based on the "TextRank" algorithm, from an <a href="http://web.eecs.umich.edu/%7Emihalcea/papers/mihalcea.emnlp04.pdf">article</a> by Mihalcea et al. This algorithm was later improved upon by Barrios et al. in another <a href="https://raw.githubusercontent.com/summanlp/docs/master/articulo/articulo-en.pdf">article</a>, by introducing something called a "BM25 ranking function". </p>
+<p>This tutorial assumes that you are familiar with Python and have <a href="http://radimrehurek.com/gensim/install.html">installed Gensim</a>.</p>
+<p><b>Note</b>: Gensim's summarization only works for English for now, because the text is pre-processed so that stopwords are removed and the words are stemmed, and these processes are language-dependent.</p>
+<h2>Small example</h2>
+
+<p>First of all, we import the function "summarize".</p>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+      </div>
+    </div>
+
+    
+
+<div id="footer">
+  <div class="container-fluid">
+
+    <div class="row">
+      <div class="col-md-2">
+        <h4>Contact Us</h4>
+        <p>
+          <a href="http://herrstrathmann.de/" target="_blank">Heiko Strathmann</a><br/>
+          <a href="http://maeth.com" target="_blank">Viktor Gal</a><br/>
+          <a href="mailto:lisitsyn.s.o [AT] gmail [DOT] com">Sergey Lisitsyn</a><br/>
+          <a href="http://sonnenburgs.de/soeren" target="_blank">Soeren Sonnenburg</a><br/>
+          <a href="http://raetschlab.org" target="_blank">Gunnar Raetsch</a>
+        </p>
+      </div>
+
+      <div class="col-md-2">
+        <h4>Mailing List</h4>
+        <p>
+          <a href="mailto:shogun-list-subscribe@shogun-toolbox.org" target="_blank">Subscribe</a><br/>
+          <a href="mailto:shogun-list-unsubscribe@shogun-toolbox.org" target="_blank">Unsubscribe</a><br/>
+          <a href="mailto:shogun-list@shogun-toolbox.org" target="_blank">Post</a><br/>
+          <a href="http://news.gmane.org/gmane.comp.ai.machine-learning.shogun" target="_blank">Read the archive</a><br/>
+        </p>
+      </div>
+    
+          <div class="col-md-3">
+        <h4>HELP?!?</h4>
+        <p>
+          Ask questions on <a href="http://stackoverflow.com/questions/tagged/shogun" target="_blank">StackOverflow</a><br>
+          Report problems on <a href="https://github.com/shogun-toolbox/shogun/issues" target="_blank">GitHub</a>
+        </p>
+      </div>
+
+      <div class="col-md-3">
+        <h4>IRC</h4>
+        <p>
+          Chat with us on IRC - <strong>#shogun</strong> on freenode. You can also connect with <a href="http://webchat.freenode.net/?channels=shogun&amp;uio=d4" target="_blank">webchat#shogun</a> directly in your browser. All chats are logged <a href="/irclogs">here</a> for your convience.
+        </p>
+      </div>
+
+      <div class="col-md-2">
+        <h4>Citing Shogun</h4>
+        <p>
+          If you use SHOGUN in your research you are kindly asked to <a href="https://zenodo.org/badge/latestdoi/1555094" target="_blank">cite its DOI</a>.
+        </p>
+      </div>
+
+    <hr>
+
+    <div class="row">
+      <div class="col-md-8 col-md-offset-2">
+        <a href="http://www.gnu.org/copyleft/gpl.html" target="_blank">
+          <img src="/gensim/static/images/gplv3.png" border="0" alt="GPLv3 Logo" align="left" style="padding: 6px 8px 8px 8px;"/>
+        </a>
+        <p align="justify">
+          SHOGUN is licensed under the the GPLv3. A non-GPLv3 compatible version that builds on optional external components is available (cf. LICENSE). We are working on a change towards a BSD3 license.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+    <!-- smooth scroll to anchor script -->
+    <script type='text/javascript'>
+    $(function() {
+      $('a.smooth-scroll').click(function() {
+        if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
+          var target = $(this.hash);
+          target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+          if (target.length) {
+            $('html,body').animate({
+              scrollTop: target.offset().top
+            }, 1000);
+            return false;
+          }
+        }
+      });
+    });
+    </script>
+  </body>
+</html>
