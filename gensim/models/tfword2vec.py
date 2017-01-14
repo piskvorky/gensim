@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.models.embedding.word2vec_optimized import Word2Vec
+from tensorflow.models.embedding.word2vec_optimized import tfw2v
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.models.word2vec import Vocab
 from gensim import utils
@@ -9,13 +9,14 @@ import tempfile
 import logging
 logger = logging.getLogger(__name__)
 
+
 class Options(object):
     """Options class that doesn't use FLAGS"""
 
     def __init__(self, train_data=None, save_path=None, eval_data=None,
-                 embedding_size=200, epochs_to_train=15, learning_rate=0.025,
-                 num_neg_samples=25, batch_size=500, concurrent_steps=12,
-                 window_size=5, min_count=5, subsample=1e-3):
+        embedding_size=200, epochs_to_train=15, learning_rate=0.025,
+        num_neg_samples=25, batch_size=500, concurrent_steps=12,
+        window_size=5, min_count=5, subsample=1e-3):
         """
         train_data: Training data. E.g., unzipped file http://mattmahoney.net/dc/text8.zip.
 
@@ -104,18 +105,17 @@ def modified_tfw2v_init(self, options, session):
 # TODO take care of monkey patching.
 
 
-Word2Vec.__init__ = modified_tfw2v_init
+tfw2v.__init__ = modified_tfw2v_init
 
 
 class TfWord2Vec(KeyedVectors):
 
     def __init__(self, train_data=None, save_path=None, eval_data=None,
-                 embedding_size=200, epochs_to_train=15, learning_rate=0.025,
-                 num_neg_samples=25, batch_size=500, concurrent_steps=12,
-                 window_size=5, min_count=5, subsample=1e-3):
+        embedding_size=200, epochs_to_train=15, learning_rate=0.025,
+        num_neg_samples=25, batch_size=500, concurrent_steps=12,
+        window_size=5, min_count=5, subsample=1e-3):
 
-        self.options = Options(
-            train_data, save_path=save_path, eval_data=eval_data,
+        self.options = Options(train_data, save_path=save_path, eval_data=eval_data,
             embedding_size=embedding_size, epochs_to_train=epochs_to_train,
             learning_rate=learning_rate, num_neg_samples=num_neg_samples,
             batch_size=batch_size, concurrent_steps=concurrent_steps,
@@ -128,7 +128,7 @@ class TfWord2Vec(KeyedVectors):
 
     def train(self):
         with tf.Graph().as_default(), tf.Session() as session:
-            self.model = Word2Vec(self.options, session)
+            self.model = tfw2v(self.options, session)
             for _ in range(self.options.epochs_to_train):
                 self.model.train()  # Process one epoch
                 if self.options.eval_data is not None:
