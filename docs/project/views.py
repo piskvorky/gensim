@@ -62,12 +62,9 @@ def get_notebooks():
     for _file in os.listdir(NOTEBOOK_DIR):
         if _file.endswith(".html"):
             notebook_url = rel_path + _file
-            print(notebook_url)
             notebook_image = notebook_url[:-5] + '.png'
             if not os.path.isfile(notebook_image):
                 notebook_image = rel_path + "default.png"
-                print notebook_image
-            print notebook_image
             notebook_title = _file[0:-5].replace('_', ' ')
             notebook_abstract = get_abstract(os.path.join(NOTEBOOK_DIR, _file.replace('.html', '.ipynb')))
 
