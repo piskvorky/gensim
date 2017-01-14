@@ -58,7 +58,7 @@ def get_abstract(fname):
 
 def get_notebooks():
     notebooks = []
-    rel_path = "static/notebooks/"
+    rel_path = "/gensim/static/notebooks/"
     for _file in os.listdir(NOTEBOOK_DIR):
         if _file.endswith(".html"):
             notebook_url = rel_path + _file
@@ -67,7 +67,6 @@ def get_notebooks():
                 notebook_image = rel_path + "default.png"
             notebook_title = _file[0:-5].replace('_', ' ')
             notebook_abstract = get_abstract(os.path.join(NOTEBOOK_DIR, _file.replace('.html', '.ipynb')))
-
             notebooks.append({
                 'url': notebook_url,
                 'image': notebook_image,
