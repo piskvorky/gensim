@@ -63,10 +63,15 @@ def get_notebooks():
         if _file.endswith(".html"):
             notebook_url = rel_path + _file
             notebook_image = notebook_url[:-5] + '.png'
-            if not os.path.isfile(notebook_image):
+            #print("")
+            #print(notebook_image[8:])
+            if not os.path.isfile(notebook_image[8:]):
+                #print("do not exist")
                 notebook_image = rel_path + "default.png"
             notebook_title = _file[0:-5].replace('_', ' ')
             notebook_abstract = get_abstract(os.path.join(NOTEBOOK_DIR, _file.replace('.html', '.ipynb')))
+            #print(notebook_url)
+            #print(notebook_image)
             notebooks.append({
                 'url': notebook_url,
                 'image': notebook_image,
