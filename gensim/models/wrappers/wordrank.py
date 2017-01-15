@@ -141,6 +141,7 @@ class Wordrank(Word2Vec):
         logger.info("Running wordrank binary '%s'", cmd)
         output = utils.check_output(args=cmd)
 
+        # use embeddings from max. iteration's dump
         max_iter_dump = iter / dump_period * dump_period - 1
         copyfile('model_word_%d.txt' % max_iter_dump, 'wordrank.words')
         copyfile('model_context_%d.txt' % max_iter_dump, 'wordrank.contexts')
@@ -186,6 +187,7 @@ class Wordrank(Word2Vec):
         glove2word2vec(context_embedding, context_embedding+'.w2vformat')
         w_emb = Word2Vec.load_word2vec_format('%s.w2vformat' % word_embedding)
         c_emb = Word2Vec.load_word2vec_format('%s.w2vformat' % context_embedding)
+        # compare vocab words using keys of dict wv.vocab
         assert set(w_emb.wv.vocab) == set(c_emb.wv.vocab), 'Vocabs are not same for both embeddings'
 
         prev_c_emb = copy.deepcopy(c_emb.wv.syn0)
