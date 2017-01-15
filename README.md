@@ -72,7 +72,7 @@ For alternative modes of installation (without root privileges,
 development installation, optional install features), see the
 [documentation].
 
-This version has been tested under Python 2.6, 2.7, 3.3, 3.4 and 3.5
+This version has been tested under Python 2.6, 2.7, 3.3, 3.4, 3.5 and 3.6
 (support for Python 2.5 was dropped in gensim 0.10.0; install gensim
 0.9.1 if you *must* use Python 2.5). Gensim’s github repo is hooked
 against [Travis CI for automated testing] on every commit push and pull
