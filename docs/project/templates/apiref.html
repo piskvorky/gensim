@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %} - Tutorials {% endblock %}
+
+{% block content %}
+
+<header class="navbar navbar-inverse normal" role="banner">
+    {% include "partials/navbar.html" %}
+</header>
+
+<div class="container pt">
+<h3 id="tutorials">API Reference</h3>
+<h5 id="tf-idf-model">Modules:</h5>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html"><code class="docutils literal"><span class="pre">interfaces</span></code> &#8211; Core gensim interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">utils</span></code> &#8211; Various utility functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matutils.html"><code class="docutils literal"><span class="pre">matutils</span></code> &#8211; Math utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/bleicorpus.html"><code class="docutils literal"><span class="pre">corpora.bleicorpus</span></code> &#8211; Corpus in Blei&#8217;s LDA-C format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/csvcorpus.html"><code class="docutils literal"><span class="pre">corpora.csvcorpus</span></code> &#8211; Corpus in CSV format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/dictionary.html"><code class="docutils literal"><span class="pre">corpora.dictionary</span></code> &#8211; Construct word&lt;-&gt;id mappings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/hashdictionary.html"><code class="docutils literal"><span class="pre">corpora.hashdictionary</span></code> &#8211; Construct word&lt;-&gt;id mappings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/indexedcorpus.html"><code class="docutils literal"><span class="pre">corpora.indexedcorpus</span></code> &#8211; Random access to corpus documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/lowcorpus.html"><code class="docutils literal"><span class="pre">corpora.lowcorpus</span></code> &#8211; Corpus in List-of-Words format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/malletcorpus.html"><code class="docutils literal"><span class="pre">corpora.malletcorpus</span></code> &#8211; Corpus in Mallet format of List-Of-Words.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/mmcorpus.html"><code class="docutils literal"><span class="pre">corpora.mmcorpus</span></code> &#8211; Corpus in Matrix Market format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/sharded_corpus.html"><code class="docutils literal"><span class="pre">corpora.sharded_corpus</span></code> &#8211; Corpus stored in separate files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/svmlightcorpus.html"><code class="docutils literal"><span class="pre">corpora.svmlightcorpus</span></code> &#8211; Corpus in SVMlight format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/textcorpus.html"><code class="docutils literal"><span class="pre">corpora.textcorpus</span></code> &#8211; Building corpora with dictionaries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/ucicorpus.html"><code class="docutils literal"><span class="pre">corpora.ucicorpus</span></code> &#8211; Corpus in UCI bag-of-words format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/wikicorpus.html"><code class="docutils literal"><span class="pre">corpora.wikicorpus</span></code> &#8211; Corpus from a Wikipedia dump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/ldamodel.html"><code class="docutils literal"><span class="pre">models.ldamodel</span></code> &#8211; Latent Dirichlet Allocation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/ldamulticore.html"><code class="docutils literal"><span class="pre">models.ldamulticore</span></code> &#8211; parallelized Latent Dirichlet Allocation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/lsimodel.html"><code class="docutils literal"><span class="pre">models.lsimodel</span></code> &#8211; Latent Semantic Indexing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/ldaseqmodel.html"><code class="docutils literal"><span class="pre">models.ldaseqmodel</span></code> &#8211; Dynamic Topic Modeling in Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/tfidfmodel.html"><code class="docutils literal"><span class="pre">models.tfidfmodel</span></code> &#8211; TF-IDF model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/rpmodel.html"><code class="docutils literal"><span class="pre">models.rpmodel</span></code> &#8211; Random Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/hdpmodel.html"><code class="docutils literal"><span class="pre">models.hdpmodel</span></code> &#8211; Hierarchical Dirichlet Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/logentropy_model.html"><code class="docutils literal"><span class="pre">models.logentropy_model</span></code> &#8211; LogEntropy model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/normmodel.html"><code class="docutils literal"><span class="pre">models.normmodel</span></code> &#8211; Normalization model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/lsi_dispatcher.html"><code class="docutils literal"><span class="pre">models.lsi_dispatcher</span></code> &#8211; Dispatcher for distributed LSI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/lsi_worker.html"><code class="docutils literal"><span class="pre">models.lsi_worker</span></code> &#8211; Worker for distributed LSI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/lda_dispatcher.html"><code class="docutils literal"><span class="pre">models.lda_dispatcher</span></code> &#8211; Dispatcher for distributed LDA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/lda_worker.html"><code class="docutils literal"><span class="pre">models.lda_worker</span></code> &#8211; Worker for distributed LDA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/word2vec.html"><code class="docutils literal"><span class="pre">models.word2vec</span></code> &#8211; Deep learning with word2vec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/doc2vec.html"><code class="docutils literal"><span class="pre">models.doc2vec</span></code> &#8211; Deep learning with paragraph2vec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/phrases.html"><code class="docutils literal"><span class="pre">models.phrases</span></code> &#8211; Phrase (collocation) detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/wrappers/ldamallet.html"><code class="docutils literal"><span class="pre">models.wrappers.ldamallet</span></code> &#8211; Latent Dirichlet Allocation via Mallet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/wrappers/dtmmodel.html"><code class="docutils literal"><span class="pre">models.wrappers.dtmmodel</span></code> &#8211; Dynamic Topic Models (DTM) and Dynamic Influence Models (DIM)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/wrappers/ldavowpalwabbit.html"><code class="docutils literal"><span class="pre">models.wrappers.ldavowpalwabbit</span></code> &#8211; Latent Dirichlet Allocation via Vowpal Wabbit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="similarities/docsim.html"><code class="docutils literal"><span class="pre">similarities.docsim</span></code> &#8211; Document similarity queries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="similarities/docsim.html#how-it-works">How It Works</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="similarities/index.html"><code class="docutils literal"><span class="pre">similarities.index</span></code> &#8211; Fast Approximate Nearest Neighbor Similarity with Annoy package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topic_coherence/aggregation.html"><code class="docutils literal"><span class="pre">topic_coherence.aggregation</span></code> &#8211; Aggregation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topic_coherence/direct_confirmation_measure.html"><code class="docutils literal"><span class="pre">topic_coherence.direct_confirmation_measure</span></code> &#8211; Direct confirmation measure module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topic_coherence/indirect_confirmation_measure.html"><code class="docutils literal"><span class="pre">topic_coherence.indirect_confirmation_measure</span></code> &#8211; Indirect confirmation measure module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topic_coherence/probability_estimation.html"><code class="docutils literal"><span class="pre">topic_coherence.probability_estimation</span></code> &#8211; Probability estimation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topic_coherence/segmentation.html"><code class="docutils literal"><span class="pre">topic_coherence.segmentation</span></code> &#8211; Segmentation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/glove2word2vec.html"><code class="docutils literal"><span class="pre">scripts.glove2word2vec</span></code> &#8211; Convert glove format to word2vec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/make_wikicorpus.html"><code class="docutils literal"><span class="pre">scripts.make_wikicorpus</span></code> &#8211; Convert articles from a Wikipedia dump to vectors.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/word2vec_standalone.html"><code class="docutils literal"><span class="pre">scripts.word2vec_standalone</span></code> &#8211; Train word2vec on text file CORPUS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parsing/porter.html"><code class="docutils literal"><span class="pre">parsing.porter</span></code> &#8211; Porter Stemming Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parsing/preprocessing.html"><code class="docutils literal"><span class="pre">parsing.preprocessing</span></code> &#8211; Functions to preprocess raw text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summarization/bm25.html"><code class="docutils literal"><span class="pre">summarization.bm25</span></code> &#8211; BM25 ranking function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summarization/commons.html"><code class="docutils literal"><span class="pre">summarization.commons</span></code> &#8211; Common graph functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summarization/graph.html"><code class="docutils literal"><span class="pre">summarization.graph</span></code> &#8211; TextRank graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summarization/keywords.html"><code class="docutils literal"><span class="pre">summarization.keywords</span></code> &#8211; Keywords for TextRank summarization algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summarization/pagerank_weighted.html"><code class="docutils literal"><span class="pre">summarization.pagerank_weighted</span></code> &#8211; Weighted PageRank algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summarization/summariser.html"><code class="docutils literal"><span class="pre">summarization.summarizer</span></code> &#8211; TextRank Summariser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summarization/syntactic_unit.html"><code class="docutils literal"><span class="pre">summarization.syntactic_unit</span></code> &#8211; Syntactic Unit class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summarization/textcleaner.html"><code class="docutils literal"><span class="pre">summarization.textcleaner</span></code> &#8211; Summarization pre-processing</a></li>
+
+
+</ul>
+</div>
+{% endblock %}

@@ -10,6 +10,10 @@ NOTEBOOK_DIR = os.path.dirname(os.path.realpath(__file__)) + "/static/notebooks"
 def index():
     return render_template('home.html')
 
+@app.route('/apiref/')
+def apiref():
+    return render_template('apiref.html')
+
 @app.route('/tutorials/')
 def tutorials():
     return render_template('tutorials.html')
