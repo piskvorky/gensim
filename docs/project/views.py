@@ -51,9 +51,11 @@ def get_abstract(fname):
 
         for cell in cells:
             if cell['cell_type'] == 'heading' or cell['cell_type'] == 'markdown':
-                return markdown.markdown(''.join(cell['source']).replace('#',''))
-    except:
+                return markdown.markdown(''.join(cell['source'][0]).replace('#',''))
+    except Exception as e:
+        print(e, "\n")
         pass
+
     return os.path.basename(fname)
 
 def get_notebooks():
@@ -63,15 +65,10 @@ def get_notebooks():
         if _file.endswith(".html"):
             notebook_url = rel_path + _file
             notebook_image = notebook_url[:-5] + '.png'
-            #print("")
-            #print(notebook_image[8:])
             if not os.path.isfile(notebook_image[8:]):
-                #print("do not exist")
                 notebook_image = rel_path + "default.png"
             notebook_title = _file[0:-5].replace('_', ' ')
-            notebook_abstract = get_abstract(os.path.join(NOTEBOOK_DIR, _file.replace('.html', '.ipynb')))
-            #print(notebook_url)
-            #print(notebook_image)
+            notebook_abstract = get_abstract(os.path.abspath(os.path.join(os.path.realpath(__file__), '../../notebooks', _file.replace('.html', '.ipynb'))))
             notebooks.append({
                 'url': notebook_url,
                 'image': notebook_image,
