@@ -792,7 +792,7 @@ class AuthorTopicModel(LdaModel):
 
         _lambda = self.state.get_lambda()
         Elogbeta = dirichlet_expectation(_lambda)
-        expElogbeta = np.exp(dirichlet_expectation(_lambda))
+        expElogbeta = np.exp(Elogbeta)
 
         gamma = self.state.gamma
 
