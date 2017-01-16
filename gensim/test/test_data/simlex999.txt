@@ -1,3 +1,5 @@
+# The SimLex-999 Test data (https://www.cl.cam.ac.uk/~fh295/simlex.html)
+# Word 1	Word 2	Human (mean)
 old	new	1.58
 smart	intelligent	9.2
 hard	difficult	8.77

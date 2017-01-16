@@ -1146,7 +1146,7 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
         else:
             return default_res
 
-def check_output(*popenargs, **kwargs):
+def check_output(*popenargs, stdout=subprocess.PIPE, **kwargs):
     r"""Run command with arguments and return its output as a byte string.
     Backported from Python 2.7 as it's implemented as pure python on stdlib.
     >>> check_output(['/usr/bin/python', '--version'])
@@ -1154,7 +1154,8 @@ def check_output(*popenargs, **kwargs):
     Added extra KeyboardInterrupt handling
     """
     try:
-        process = subprocess.Popen(*popenargs, **kwargs)
+        # process = subprocess.Popen(*popenargs, stdout=subprocess.PIPE, **kwargs)
+        process = subprocess.Popen(*popenargs, stdout=stdout, **kwargs)
         output, unused_err = process.communicate()
         retcode = process.poll()
         if retcode:
