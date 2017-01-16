@@ -22,6 +22,10 @@ inherits the LdaModel class, and its usage is thus similar.
 Distributed compuation and multiprocessing is not implemented at the moment, but may be
 coming in the future.
 
+The model was introduced by Rosen-Zvi and co-authors in 2004 (https://mimno.infosci.cornell.edu/info6150/readings/398.pdf).
+
+A tutorial can be found at http://rare-technologies.com/atmodel_tutorial.html.
+
 """
 
 # TODO: this class inherits LdaModel and overwrites some methods. There is some code
