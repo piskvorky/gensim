@@ -1154,7 +1154,6 @@ def check_output(*popenargs, stdout=subprocess.PIPE, **kwargs):
     Added extra KeyboardInterrupt handling
     """
     try:
-        # process = subprocess.Popen(*popenargs, stdout=subprocess.PIPE, **kwargs)
         process = subprocess.Popen(*popenargs, stdout=stdout, **kwargs)
         output, unused_err = process.communicate()
         retcode = process.poll()
