@@ -24,7 +24,7 @@ coming in the future.
 
 The model was introduced by Rosen-Zvi and co-authors in 2004 (https://mimno.infosci.cornell.edu/info6150/readings/398.pdf).
 
-A tutorial can be found at http://rare-technologies.com/atmodel_tutorial.html.
+A tutorial can be found at https://github.com/RaRe-Technologies/gensim/tree/develop/docs/notebooks/atmodel_tutorial.ipynb.
 
 """
 
