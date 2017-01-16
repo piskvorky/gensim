@@ -33,8 +33,6 @@ A tutorial can be found at https://github.com/RaRe-Technologies/gensim/tree/deve
 # are included in the code where this is the case, for example in the log_perplexity
 # and do_estep methods.
 
-# FIXME: link to tutorial in docstring above, once the tutorial is available.
-
 import pdb
 from pdb import set_trace as st
 from pprint import pprint
