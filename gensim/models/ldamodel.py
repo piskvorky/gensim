@@ -737,7 +737,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             score += np.sum(gammaln(gammad) - gammaln(self.alpha))
             score += gammaln(np.sum(self.alpha)) - gammaln(np.sum(gammad))
 
-        # compensate likelihood for when `corpus` above is only a sample of the whole corpus
+        # Compensate likelihood for when `corpus` above is only a sample of the whole corpus. This ensures
+        # that the likelihood is always rougly on the same scale.
         score *= subsample_ratio
 
         # E[log p(beta | eta) - log q (beta | lambda)]; assumes eta is a scalar
