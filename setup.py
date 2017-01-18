@@ -122,17 +122,6 @@ LONG_DESCRIPTION = """
 gensim -- Topic Modelling in Python
 ==============================================
 
-|Travis|_
-|Wheel|_
-
-.. |Travis| image:: https://img.shields.io/travis/RaRe-Technologies/gensim/develop.svg
-.. |Wheel| image:: https://img.shields.io/pypi/wheel/gensim.svg
-
-.. _Travis: https://travis-ci.org/RaRe-Technologies/gensim
-.. _Downloads: https://pypi.python.org/pypi/gensim
-.. _License: http://radimrehurek.com/gensim/about.html
-.. _Wheel: https://pypi.python.org/pypi/gensim
-
 Gensim is a Python library for *topic modelling*, *document indexing* and *similarity retrieval* with large corpora.
 Target audience is the *natural language processing* (NLP) and *information retrieval* (IR) community.
 
@@ -193,39 +182,12 @@ Documentation
 * `Tutorial Videos`_
 * `Official Documentation and Walkthrough`_
 
-Citing gensim
--------------
-
-When `citing gensim in academic papers and theses <https://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC>`_, please use this BibTeX entry::
-
-  @inproceedings{rehurek_lrec,
-        title = {{Software Framework for Topic Modelling with Large Corpora}},
-        author = {Radim {\v R}eh{\r u}{\v r}ek and Petr Sojka},
-        booktitle = {{Proceedings of the LREC 2010 Workshop on New
-             Challenges for NLP Frameworks}},
-        pages = {45--50},
-        year = 2010,
-        month = May,
-        day = 22,
-        publisher = {ELRA},
-        address = {Valletta, Malta},
-        note={\url{http://is.muni.cz/publication/884893/en}},
-        language={English}
-  }
 
 ----------------
 
 Gensim is open source software released under the `GNU LGPLv2.1 license <http://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_.
 Copyright (c) 2009-now Radim Rehurek
 
-|Analytics|_
-
-.. |Analytics| image:: https://ga-beacon.appspot.com/UA-24066335-5/your-repo/page-name
-.. _Analytics: https://github.com/igrigorik/ga-beacon
-.. _Official Documentation and Walkthrough: http://radimrehurek.com/gensim/
-.. _Tutorials: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
-.. _Tutorial Videos: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
-.. _QuickStart: https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim%20Quick%20Start.ipynb
 
 """
 
