@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.models.embedding.word2vec_optimized import tfw2v
+from tensorflow.models.embedding.word2vec_optimized import Word2Vec as tfw2v
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.models.word2vec import Vocab
 from gensim import utils
