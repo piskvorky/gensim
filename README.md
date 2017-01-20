@@ -159,7 +159,7 @@ BibTeX entry:
           language={English}
     }
 
-  [citing gensim in academic papers and theses]: https://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC
+  [citing gensim in academic papers and theses]: https://scholar.google.com/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:NaGl4SEjCO4C
 
   [Travis CI for automated testing]: https://travis-ci.org/RaRe-Technologies/gensim
   [design goals]: http://radimrehurek.com/gensim/about.html
