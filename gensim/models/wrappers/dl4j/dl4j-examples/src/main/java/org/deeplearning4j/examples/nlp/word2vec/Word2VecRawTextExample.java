@@ -24,10 +24,27 @@ public class Word2VecRawTextExample {
 
     private static Logger log = LoggerFactory.getLogger(Word2VecRawTextExample.class);
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] values) throws Exception {
+        System.out.println("Program Arguments:");
+        
+        int[] arg = new int[6];
+        String _fileName = "";
+        int i=0;
+        for(String s:values){
+            if(i == 0)
+                _fileName = s;
+            else
+                arg[i] = Integer.parseInt(s);  
+        i++;
+        }
 
+        int minWordFrequency = arg[1]; 
+        int iterations = arg[2]; 
+        int layerSize = arg[3]; 
+        int seed = arg[4]; 
+        int windowSize = arg[5]; 
         // Gets Path to Text file
-        String filePath = new ClassPathResource("raw_sentences.txt").getFile().getAbsolutePath();
+        String filePath = new ClassPathResource(_fileName).getFile().getAbsolutePath();
 
         log.info("Load & Vectorize Sentences....");
         // Strip white space before and after for each line
@@ -44,11 +61,11 @@ public class Word2VecRawTextExample {
 
         log.info("Building model....");
         Word2Vec vec = new Word2Vec.Builder()
-                .minWordFrequency(5)
-                .iterations(1)
-                .layerSize(100)
-                .seed(42)
-                .windowSize(5)
+                .minWordFrequency(minWordFrequency)
+                .iterations(iterations)
+                .layerSize(layerSize)
+                .seed(seed)
+                .windowSize(windowSize)
                 .iterate(iter)
                 .tokenizerFactory(t)
                 .build();

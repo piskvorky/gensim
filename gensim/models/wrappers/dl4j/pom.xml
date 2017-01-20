@@ -51,6 +51,9 @@
                                     <message>********** Minimum Maven Version is ${maven.minimum.version}. Please upgrade Maven before continuing (run "mvn --version" to check). **********</message>
                                 </requireMavenVersion>
                             </rules>
+                            <compilerArgs>
+                                <arg>5</arg>
+                            </compilerArgs>
                         </configuration>
                     </execution>
                 </executions>
