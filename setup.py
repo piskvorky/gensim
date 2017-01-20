@@ -208,8 +208,7 @@ When `citing gensim in academic papers and theses <https://scholar.google.cz/cit
         month = May,
         day = 22,
         publisher = {ELRA},
-        address = {Valletta, Malta},
-        note={\url{http://is.muni.cz/publication/884893/en}},
+        address = {Valletta, Malta}, 
         language={English}
   }
 
