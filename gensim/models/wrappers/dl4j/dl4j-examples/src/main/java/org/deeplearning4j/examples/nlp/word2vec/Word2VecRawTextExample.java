@@ -14,18 +14,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
-/**
- * Created by agibsonccc on 10/9/14.
- *
- * Neural net that processes text into wordvectors. See below url for an in-depth explanation.
- * https://deeplearning4j.org/word2vec.html
- */
 public class Word2VecRawTextExample {
 
     private static Logger log = LoggerFactory.getLogger(Word2VecRawTextExample.class);
 
     public static void main(String[] values) throws Exception {
-        System.out.println("Program Arguments:");
         
         int[] arg = new int[6];
         String _fileName = "";
