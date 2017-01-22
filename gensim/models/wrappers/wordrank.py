@@ -103,9 +103,9 @@ class Wordrank(Word2Vec):
         for command, input_fname, output_fname in zip(commands, input_fnames, output_fnames):
             with smart_open(input_fname, 'rb') as r:
                 with smart_open(output_fname, 'wb') as w:
-                    utils.check_output(command, stdout=w, stdin=r)
+                    utils.check_output(w, command, stdin=r)
         with smart_open(vocab_file, 'wb') as w:
-            utils.check_output(cmd_del_vocab_freq, stdout=w)
+            utils.check_output(w, cmd_del_vocab_freq)
 
         with smart_open(vocab_file, 'rb') as f:
             numwords = sum(1 for line in f)
