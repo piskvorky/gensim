@@ -3,7 +3,7 @@ Changes
 
 Unreleased:
 
-None
+* FastText wrapper added, can be used for training FastText word representations and performing word2vec operations over it
 
 0.13.4.1, 2017-01-04
 
