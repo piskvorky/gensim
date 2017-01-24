@@ -46,6 +46,25 @@ class KeyedVectors(utils.SaveLoad):
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
         super(KeyedVectors, self).save(*args, **kwargs)
 
+    def word_vec(self, word, use_norm=False):
+        """
+        Accept a single word as input.
+        Returns the word's representations in vector space, as a 1D numpy array.
+
+        Example::
+
+          >>> trained_model.word_vec('office', use_norm=True)
+          array([ -1.40128313e-02, ...])
+
+        """
+        if word in self.vocab:
+            if use_norm:
+                return self.syn0norm[self.vocab[word].index]
+            else:
+                return self.syn0[self.vocab[word].index]
+        else:
+            raise KeyError("word '%s' not in vocabulary" % word)
+
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
@@ -90,11 +109,10 @@ class KeyedVectors(utils.SaveLoad):
         for word, weight in positive + negative:
             if isinstance(word, ndarray):
                 mean.append(weight * word)
-            elif word in self.vocab:
-                mean.append(weight * self.syn0norm[self.vocab[word].index])
-                all_words.add(self.vocab[word].index)
             else:
-                raise KeyError("word '%s' not in vocabulary" % word)
+                mean.append(weight * self.word_vec(word, use_norm=True))
+                if word in self.vocab:
+                    all_words.add(self.vocab[word].index)
         if not mean:
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
@@ -230,21 +248,13 @@ class KeyedVectors(utils.SaveLoad):
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
-        all_words = set()
 
-        def word_vec(word):
-            if isinstance(word, ndarray):
-                return word
-            elif word in self.vocab:
-                all_words.add(self.vocab[word].index)
-                return self.syn0norm[self.vocab[word].index]
-            else:
-                raise KeyError("word '%s' not in vocabulary" % word)
-
-        positive = [word_vec(word) for word in positive]
-        negative = [word_vec(word) for word in negative]
+        positive = [self.word_vec(word, use_norm=True) for word in positive]
+        negative = [self.word_vec(word, use_norm=True) for word in negative]
         if not positive:
             raise ValueError("cannot compute similarity with no input")
+
+        all_words = set([self.vocab[word].index for word in positive+negative if word in self.vocab])
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)
@@ -311,14 +321,16 @@ class KeyedVectors(utils.SaveLoad):
         """
         self.init_sims()
 
-        words = [word for word in words if word in self.vocab]  # filter out OOV words
-        logger.debug("using words %s" % words)
-        if not words:
+        used_words = [word for word in words if word in self]
+        if len(used_words) != len(words):
+            ignored_words = set(words) - set(used_words)
+            logger.warning("vectors for words %s are not present in the model, ignoring these words", ignored_words)
+        if not used_words:
             raise ValueError("cannot select a word from an empty list")
-        vectors = vstack(self.syn0norm[self.vocab[word].index] for word in words).astype(REAL)
+        vectors = vstack(self.word_vec(word, use_norm=True) for word in used_words).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
-        return sorted(zip(dists, words))[0][1]
+        return sorted(zip(dists, used_words))[0][1]
 
     def __getitem__(self, words):
 
@@ -345,9 +357,9 @@ class KeyedVectors(utils.SaveLoad):
         """
         if isinstance(words, string_types):
             # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
-            return self.syn0[self.vocab[words].index]
+            return self.word_vec(words)
 
-        return vstack([self.syn0[self.vocab[word].index] for word in words])
+        return vstack([self.word_vec(word) for word in words])
 
     def __contains__(self, word):
         return word in self.vocab
