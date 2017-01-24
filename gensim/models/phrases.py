@@ -63,7 +63,6 @@ import logging
 import warnings
 from collections import defaultdict
 import itertools as it
-import types
 
 from six import iteritems, string_types
 
@@ -72,28 +71,28 @@ from gensim import utils, interfaces
 logger = logging.getLogger(__name__)
 
 
-def _is_single(sentence):
-    """Returns a tuple consisting of the given `sentence` and a boolean.
-    The bool is `True` if the given iterator is a single document and `False` otherwise.
-    This should allow corpus inputs to be generators or generators of generators of strings."""
+def _is_single(obj):
+    """
+    Check whether `obj` is a single document or an entire corpus.
+    Returns (is_single, new) 2-tuple, where `new` yields the same
+    sequence as `obj`.
+
+    `obj` is a single document if it is an iterable of strings.  It
+    is a corpus if it is an iterable of documents.
+    """
+    obj_iter = iter(obj)
     try:
-        # This should work with generators and generators of generators
-        if not sentence:
-            return sentence, True
-        elif isinstance(sentence, types.GeneratorType):
-            nxt = sentence.next()
-            sentence = it.chain([nxt], sentence)
-            if isinstance(nxt, string_types):
-                return sentence, True
-            # If it's not a string, assume it's an iterable of such
-            else:
-                return sentence, False
-        elif isinstance(sentence[0], string_types):
-            return sentence, True
-        else:
-            return sentence, False
-    except:
-        return sentence, False
+        peek = obj_iter.next()
+        obj_iter = it.chain([peek], obj_iter)
+    except StopIteration:
+        # An empty object is a single document
+        return True, obj
+    if isinstance(peek, string_types):
+        # It's a document, return the iterator
+        return True, obj_iter
+    else:
+        # If the first item isn't a string, assume it's a document
+        return False, obj_iter
 
 
 class Phrases(interfaces.TransformationABC):
@@ -274,7 +273,7 @@ class Phrases(interfaces.TransformationABC):
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
 
-        sentence, is_single = _is_single(sentence)
+        is_single, sentence = _is_single(sentence)
         if not is_single:
             # if the input is an entire corpus (rather than a single sentence),
             # return an iterable stream.
@@ -364,7 +363,7 @@ class Phraser(interfaces.TransformationABC):
         into phrases on the fly, one after another.
 
         """
-        sentence, is_single = _is_single(sentence)
+        is_single, sentence = _is_single(sentence)
         if not is_single:
             # if the input is an entire corpus (rather than a single sentence),
             # return an iterable stream.
