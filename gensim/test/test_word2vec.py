@@ -231,6 +231,14 @@ class TestWord2VecModel(unittest.TestCase):
         half_precision_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, datatype=np.float16)
         self.assertEquals(binary_model.wv.syn0.nbytes, half_precision_model.wv.syn0.nbytes * 2)
 
+    def testNoTrainingCFormat(self):
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        model.save_word2vec_format(testfile(), binary=True)
+        binary_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
+        self.assertRaises(ValueError, binary_model.train, sentences)
+
+
     def testTooShortBinaryWord2VecFormat(self):
         tfile = testfile()
         model = word2vec.Word2Vec(sentences, min_count=1)
