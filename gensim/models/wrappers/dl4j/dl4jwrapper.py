@@ -27,6 +27,8 @@ from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.models.word2vec import Word2Vec
+from gensim.scripts.glove2word2vec import glove2word2vec
+
 import os
 logger = logging.getLogger(__name__)
 
@@ -54,10 +56,11 @@ class dl4jWrapper(Word2Vec):
             cmd.append(str(value))
 
         output = utils.check_output(args=cmd)
-        # model = cls.load_dl4j_w2v_model(output_file)
-        # return model
+        model = cls.load_dl4j_w2v_model(output_file)
+        return model
 
     @classmethod
     def load_dl4j_w2v_model(cls, model_file):
-        model = cls.load_word2vec_format('%s.vec' % model_file)
+        glove2word2vec(model_file, model_file+'.w2vformat')
+        model = cls.load_word2vec_format(model_file+'.w2vformat')
         return model
