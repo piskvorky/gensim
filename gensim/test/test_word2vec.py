@@ -285,7 +285,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
         testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
-        model.kv.save_word2vec_format(testfile(), testvocab, binary=True)
+        model.wv.save_word2vec_format(testfile(), testvocab, binary=True)
         kv_binary_model_with_vocab = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), testvocab, binary=True)
         self.assertEqual(model.wv.vocab['human'].count, kv_binary_model_with_vocab.vocab['human'].count)
 

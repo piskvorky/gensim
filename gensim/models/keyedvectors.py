@@ -75,13 +75,14 @@ class KeyedVectors(utils.SaveLoad):
          in binary word2vec format (default: False)
 
         """
+        vector_size = self.syn0.shape[1]
         if fvocab is not None:
             logger.info("storing vocabulary in %s" % (fvocab))
             with utils.smart_open(fvocab, 'wb') as vout:
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
-        logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), self.vector_size, fname))
-        assert (len(self.vocab), self.vector_size) == self.syn0.shape
+        logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), vector_size, fname))
+        assert (len(self.vocab), vector_size) == self.syn0.shape
         with utils.smart_open(fname, 'wb') as fout:
             fout.write(utils.to_utf8("%s %s\n" % self.syn0.shape))
             # store in sorted order: most frequent words at the top
