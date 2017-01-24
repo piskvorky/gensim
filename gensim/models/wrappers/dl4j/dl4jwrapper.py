@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2014 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2017 Mohit Rathore <mrmohitrathoremr@gmail.com>
+# Copyright (C) 2017 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
@@ -25,33 +26,38 @@ from six import iteritems
 from smart_open import smart_open
 
 from gensim import utils, matutils
-from gensim.utils import check_output
-from gensim.models import basemodel
+from gensim.models.word2vec import Word2Vec
 import os
 logger = logging.getLogger(__name__)
 
 
-class dl4jWrapper(utils.SaveLoad, basemodel.BaseTopicModel):
+class dl4jWrapper(Word2Vec):
     """
 
     """
-    def __init__(self, file_path, minWordFrequency, iterations, layerSize, seed, windowSize):
-        """
-        params
 
-        """
-        self.file_path = file_path
-        self.minWordFrequency = minWordFrequency
-        self.iterations = iterations
-        self.layerSize = layerSize
-        self.seed = seed
-        self.windowSize = windowSize
+    @classmethod
+    def train(cls, jar_file, corpus_file, minWordFrequency, iterations, layerSize, seed, windowSize, output_file=None):
+        output_file = output_file or os.path.join(tempfile.gettempdir(), 'dl4j_model')
+        wr_args = {
+            'corpus_file': corpus_file,
+            'minWordFrequency': minWordFrequency,
+            'iterations': iterations,
+            'layerSize': layerSize,
+            'seed': seed,
+            'windowSize': windowSize
+        }
 
-    def train(self):
-        cmd = "java -cp ./dl4j-examples/target/dl4j-examples-*-bin.jar org.deeplearning4j.examples.nlp.word2vec.Word2VecRawTextExample %s %s %s %s %s %s"
-        cmd = cmd % (self.file_path, self.minWordFrequency, self.iterations, self.layerSize, self.seed, self.windowSize)
-        os.system(cmd)
-        # check_output(cmd, shell=True)
+        cmd = ['java', '-cp', 'lib/*:' + jar_file, 'org.deeplearning4j.examples.nlp.word2vec.Word2VecRawTextExample']
+        for option, value in wr_args.items():
+            #TODO pass options along with value
+            cmd.append(str(value))
 
-    def __getitem__(self, bow, iterations=100):
-        pass
+        output = utils.check_output(args=cmd)
+        # model = cls.load_dl4j_w2v_model(output_file)
+        # return model
+
+    @classmethod
+    def load_dl4j_w2v_model(cls, model_file):
+        model = cls.load_word2vec_format('%s.vec' % model_file)
+        return model
