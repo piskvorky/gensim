@@ -211,7 +211,7 @@ class TestWord2VecModel(unittest.TestCase):
     def testLoadPreKeyedVectorModelCFormat(self):
         """Test loading pre-KeyedVectors word2vec model saved in word2vec format"""
         model = word2vec.Word2Vec.load_word2vec_format(datapath('word2vec_pre_kv_c'))
-        self.assertTrue(model.wv.syn0.shape[0] == len(model.wv.vocab))
+        self.assertTrue(model.syn0.shape[0] == len(model.vocab))
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
@@ -224,11 +224,11 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
         norm_only_model.init_sims(replace=True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
-        self.assertTrue(np.allclose(model.wv.syn0norm[model.wv.vocab['human'].index], norm_only_model['human']))
+        self.assertTrue(np.allclose(model.wv.word_vec('human', use_norm=True), norm_only_model['human']))
         limited_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, limit=3)
-        self.assertEquals(len(limited_model.wv.syn0), 3)
+        self.assertEquals(len(limited_model.syn0), 3)
         half_precision_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, datatype=np.float16)
-        self.assertEquals(binary_model.wv.syn0.nbytes, half_precision_model.wv.syn0.nbytes * 2)
+        self.assertEquals(binary_model.syn0.nbytes, half_precision_model.syn0.nbytes * 2)
 
     def testNoTrainingCFormat(self):
         model = word2vec.Word2Vec(sentences, min_count=1)
@@ -269,7 +269,7 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False)
         norm_only_model.init_sims(True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human'], atol=1e-6))
-        self.assertTrue(np.allclose(model.wv.syn0norm[model.wv.vocab['human'].index], norm_only_model['human'], atol=1e-4))
+        self.assertTrue(np.allclose(model.wv.word_vec('human', use_norm=True), norm_only_model['human'], atol=1e-4))
 
     def testPersistenceWord2VecFormatWithVocab(self):
         """Test storing/loading the entire model and vocabulary in word2vec format."""
@@ -279,6 +279,16 @@ class TestWord2VecModel(unittest.TestCase):
         model.save_word2vec_format(testfile(), testvocab, binary=True)
         binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
         self.assertEqual(model.wv.vocab['human'].count, binary_model_with_vocab.wv.vocab['human'].count)
+
+    def testPersistenceKeyedVectorsFormatWithVocab(self):
+        """Test storing/loading the entire model and vocabulary in word2vec format."""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
+        model.kv.save_word2vec_format(testfile(), testvocab, binary=True)
+        kv_binary_model_with_vocab = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), testvocab, binary=True)
+        self.assertEqual(model.wv.vocab['human'].count, kv_binary_model_with_vocab.vocab['human'].count)
+
 
     def testPersistenceWord2VecFormatCombinationWithStandardPersistence(self):
         """Test storing/loading the entire model and vocabulary in word2vec format chained with
@@ -291,6 +301,7 @@ class TestWord2VecModel(unittest.TestCase):
         binary_model_with_vocab.save(testfile())
         binary_model_with_vocab = word2vec.Word2Vec.load(testfile())
         self.assertEqual(model.wv.vocab['human'].count, binary_model_with_vocab.wv.vocab['human'].count)
+
 
     def testLargeMmap(self):
         """Test storing/loading the entire model."""
@@ -579,8 +590,8 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testNormalizeAfterTrainingData(self):
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.save_word2vec_format(testfile(), binary=True)
-        norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
+        model.save(testfile())
+        norm_only_model = word2vec.Word2Vec.load(testfile())
         norm_only_model.delete_temporary_training_data(replace_word_vectors_with_normalized=True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
 
