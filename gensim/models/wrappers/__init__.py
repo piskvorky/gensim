@@ -6,3 +6,4 @@ from .ldamallet import LdaMallet
 from .dtmmodel import DtmModel
 from .ldavowpalwabbit import LdaVowpalWabbit
 from .fasttext import FastText
+from .wordrank import Wordrank

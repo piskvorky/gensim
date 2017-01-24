@@ -8,7 +8,7 @@ Unreleased:
 0.13.4.1, 2017-01-04
 
 * Disable direct access warnings on save and load of Word2vec/Doc2vec (@tmylk, [#1072](https://github.com/RaRe-Technologies/gensim/pull/1072))
-* Making Default hs error explicit (@accraz, [#1054](https://github.com/RaRe-Technologies/gensim/pull/1054)) 
+* Making Default hs error explicit (@accraze, [#1054](https://github.com/RaRe-Technologies/gensim/pull/1054)) 
 * Removed unnecessary numpy imports (@bhargavvader,  [#1065](https://github.com/RaRe-Technologies/gensim/pull/1065))
 * Utils and Matutils changes (@bhargavvader,  [#1062](https://github.com/RaRe-Technologies/gensim/pull/1062)) 
 * Tests for the evaluate_word_pairs function (@akutuzov, [#1061](https://github.com/RaRe-Technologies/gensim/pull/1061))

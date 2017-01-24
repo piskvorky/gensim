@@ -780,6 +780,12 @@ class Word2Vec(utils.SaveLoad):
         if not len(self.wv.syn0):
             raise RuntimeError("you must first finalize vocabulary before training the model")
 
+        if not hasattr(self, 'corpus_count'):
+            raise ValueError(
+                "The number of sentences in the training corpus is missing. Did you load the model via load_word2vec_format?"
+                "Models loaded via load_word2vec_format don't support further training. "
+                "Instead start with a blank model, scan_vocab on the new corpus, intersect_word2vec_format with the old model, then train.")
+
         if total_words is None and total_examples is None:
             if self.corpus_count:
                 total_examples = self.corpus_count

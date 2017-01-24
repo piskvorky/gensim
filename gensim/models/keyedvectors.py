@@ -493,19 +493,20 @@ class KeyedVectors(utils.SaveLoad):
 
     @staticmethod
     def log_evaluate_word_pairs(pearson, spearman, oov, pairs):
-        logger.info('Pearson correlation coefficient against {0:s}: {1:.4f}'.format(pairs, pearson[0]))
-        logger.info('Spearman rank-order correlation coefficient against {0:s}: {1:.4f}'.format(pairs, spearman[0]))
-        logger.info('Pairs with unknown words ratio: {0:.1f}%'.format(oov))
+        logger.info('Pearson correlation coefficient against %s: %.4f', pairs, pearson[0])
+        logger.info('Spearman rank-order correlation coefficient against %s: %.4f', pairs, spearman[0])
+        logger.info('Pairs with unknown words ratio: %.1f%%', oov)
 
-    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True,
+                            dummy4unknown=False):
         """
         Compute correlation of the model with human similarity judgments. `pairs` is a filename of a dataset where
         lines are 3-tuples, each consisting of a word pair and a similarity value, separated by `delimiter'.
-        Example datasets can be found at http://technion.ac.il/~ira.leviant/wordsim353.zip or at
-        https://www.cl.cam.ac.uk/~fh295/SimLex-999.zip.
+        An example dataset is included in Gensim (test/test_data/wordsim353.tsv). More datasets can be found at
+        http://technion.ac.il/~ira.leviant/MultilingualVSMdata.html or https://www.cl.cam.ac.uk/~fh295/simlex.html.
 
         The model is evaluated using Pearson correlation coefficient and Spearman rank-order correlation coefficient
-        between the similarities from the dataset and the similarities produced by the model itself.        .
+        between the similarities from the dataset and the similarities produced by the model itself.
         The results are printed to log and returned as a triple (pearson, spearman, ratio of pairs with unknown words).
 
         Use `restrict_vocab` to ignore all word pairs containing a word not in the first `restrict_vocab`
@@ -544,7 +545,7 @@ class KeyedVectors(utils.SaveLoad):
                         a, b, sim = [word for word in line.split(delimiter)]
                     sim = float(sim)
                 except:
-                    logger.info('skipping invalid line #{0:d} in {1:s}'.format(line_no, pairs.encode('utf-8')))
+                    logger.info('skipping invalid line #%d in %s', line_no, pairs)
                     continue
                 if a not in ok_vocab or b not in ok_vocab:
                     oov += 1
@@ -553,7 +554,7 @@ class KeyedVectors(utils.SaveLoad):
                         similarity_gold.append(sim)
                         continue
                     else:
-                        logger.debug('skipping line #{0:d} with OOV words: {1:s}'.format(line_no, line.strip()))
+                        logger.debug('skipping line #%d with OOV words: %s', line_no, line.strip())
                         continue
                 similarity_gold.append(sim)  # Similarity from the dataset
                 similarity_model.append(self.similarity(a, b))  # Similarity from the model
@@ -562,11 +563,15 @@ class KeyedVectors(utils.SaveLoad):
         pearson = stats.pearsonr(similarity_gold, similarity_model)
         oov_ratio = float(oov) / (len(similarity_gold) + oov) * 100
 
-        logger.debug('Pearson correlation coefficient against {0:s}: {1:f} with p-value {2:f}'
-                     .format(pairs, pearson[0], pearson[1]))
-        logger.debug('Spearman rank-order correlation coefficient against {0:s}: {1:f} with p-value {2:f}'
-                     .format(pairs, spearman[0], spearman[1]))
-        logger.debug('Pairs with unknown words: {0:d}'.format(oov))
+        logger.debug(
+            'Pearson correlation coefficient against %s: %f with p-value %f',
+            pairs, pearson[0], pearson[1]
+        )
+        logger.debug(
+            'Spearman rank-order correlation coefficient against %s: %f with p-value %f',
+            pairs, spearman[0], spearman[1]
+        )
+        logger.debug('Pairs with unknown words: %d' % oov)
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio
 
