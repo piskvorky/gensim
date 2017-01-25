@@ -353,6 +353,11 @@ class DocvecsArray(utils.SaveLoad):
         else:
             return index in self.doctags
 
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
+        super(DocvecsArray, self).save(*args, **kwargs)
+
     def borrow_from(self, other_docvecs):
         self.count = other_docvecs.count
         self.doctags = other_docvecs.doctags
