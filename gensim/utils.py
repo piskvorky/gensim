@@ -800,7 +800,6 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
 
     """
-    import numpy as np
     it = iter(iterable)
     while True:
         if as_numpy:
@@ -827,8 +826,6 @@ class InputQueue(multiprocessing.Process):
         self.as_numpy = as_numpy
 
     def run(self):
-        if self.as_numpy:
-            import np # don't clutter the global namespace with a dependency on numpy
         it = iter(self.corpus)
         while True:
             chunk = itertools.islice(it, self.chunksize)
@@ -1149,15 +1146,15 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
         else:
             return default_res
 
-def check_output(*popenargs, **kwargs):
+def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     r"""Run command with arguments and return its output as a byte string.
     Backported from Python 2.7 as it's implemented as pure python on stdlib.
-    >>> check_output(['/usr/bin/python', '--version'])
+    >>> check_output(args=['/usr/bin/python', '--version'])
     Python 2.6.2
     Added extra KeyboardInterrupt handling
     """
     try:
-        process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+        process = subprocess.Popen(stdout=stdout, *popenargs, **kwargs)
         output, unused_err = process.communicate()
         retcode = process.poll()
         if retcode:

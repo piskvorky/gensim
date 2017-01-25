@@ -46,6 +46,25 @@ class KeyedVectors(utils.SaveLoad):
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
         super(KeyedVectors, self).save(*args, **kwargs)
 
+    def word_vec(self, word, use_norm=False):
+        """
+        Accept a single word as input.
+        Returns the word's representations in vector space, as a 1D numpy array.
+
+        Example::
+
+          >>> trained_model.word_vec('office', use_norm=True)
+          array([ -1.40128313e-02, ...])
+
+        """
+        if word in self.vocab:
+            if use_norm:
+                return self.syn0norm[self.vocab[word].index]
+            else:
+                return self.syn0[self.vocab[word].index]
+        else:
+            raise KeyError("word '%s' not in vocabulary" % word)
+
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
@@ -90,11 +109,10 @@ class KeyedVectors(utils.SaveLoad):
         for word, weight in positive + negative:
             if isinstance(word, ndarray):
                 mean.append(weight * word)
-            elif word in self.vocab:
-                mean.append(weight * self.syn0norm[self.vocab[word].index])
-                all_words.add(self.vocab[word].index)
             else:
-                raise KeyError("word '%s' not in vocabulary" % word)
+                mean.append(weight * self.word_vec(word, use_norm=True))
+                if word in self.vocab:
+                    all_words.add(self.vocab[word].index)
         if not mean:
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
@@ -230,21 +248,13 @@ class KeyedVectors(utils.SaveLoad):
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
-        all_words = set()
 
-        def word_vec(word):
-            if isinstance(word, ndarray):
-                return word
-            elif word in self.vocab:
-                all_words.add(self.vocab[word].index)
-                return self.syn0norm[self.vocab[word].index]
-            else:
-                raise KeyError("word '%s' not in vocabulary" % word)
-
-        positive = [word_vec(word) for word in positive]
-        negative = [word_vec(word) for word in negative]
+        positive = [self.word_vec(word, use_norm=True) for word in positive]
+        negative = [self.word_vec(word, use_norm=True) for word in negative]
         if not positive:
             raise ValueError("cannot compute similarity with no input")
+
+        all_words = set([self.vocab[word].index for word in positive+negative if word in self.vocab])
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)
@@ -311,14 +321,16 @@ class KeyedVectors(utils.SaveLoad):
         """
         self.init_sims()
 
-        words = [word for word in words if word in self.vocab]  # filter out OOV words
-        logger.debug("using words %s" % words)
-        if not words:
+        used_words = [word for word in words if word in self]
+        if len(used_words) != len(words):
+            ignored_words = set(words) - set(used_words)
+            logger.warning("vectors for words %s are not present in the model, ignoring these words", ignored_words)
+        if not used_words:
             raise ValueError("cannot select a word from an empty list")
-        vectors = vstack(self.syn0norm[self.vocab[word].index] for word in words).astype(REAL)
+        vectors = vstack(self.word_vec(word, use_norm=True) for word in used_words).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
-        return sorted(zip(dists, words))[0][1]
+        return sorted(zip(dists, used_words))[0][1]
 
     def __getitem__(self, words):
 
@@ -345,9 +357,9 @@ class KeyedVectors(utils.SaveLoad):
         """
         if isinstance(words, string_types):
             # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
-            return self.syn0[self.vocab[words].index]
+            return self.word_vec(words)
 
-        return vstack([self.syn0[self.vocab[word].index] for word in words])
+        return vstack([self.word_vec(word) for word in words])
 
     def __contains__(self, word):
         return word in self.vocab
@@ -481,19 +493,20 @@ class KeyedVectors(utils.SaveLoad):
 
     @staticmethod
     def log_evaluate_word_pairs(pearson, spearman, oov, pairs):
-        logger.info('Pearson correlation coefficient against {0:s}: {1:.4f}'.format(pairs, pearson[0]))
-        logger.info('Spearman rank-order correlation coefficient against {0:s}: {1:.4f}'.format(pairs, spearman[0]))
-        logger.info('Pairs with unknown words ratio: {0:.1f}%'.format(oov))
+        logger.info('Pearson correlation coefficient against %s: %.4f', pairs, pearson[0])
+        logger.info('Spearman rank-order correlation coefficient against %s: %.4f', pairs, spearman[0])
+        logger.info('Pairs with unknown words ratio: %.1f%%', oov)
 
-    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True,
+                            dummy4unknown=False):
         """
         Compute correlation of the model with human similarity judgments. `pairs` is a filename of a dataset where
         lines are 3-tuples, each consisting of a word pair and a similarity value, separated by `delimiter'.
-        Example datasets can be found at http://technion.ac.il/~ira.leviant/wordsim353.zip or at
-        https://www.cl.cam.ac.uk/~fh295/SimLex-999.zip.
+        An example dataset is included in Gensim (test/test_data/wordsim353.tsv). More datasets can be found at
+        http://technion.ac.il/~ira.leviant/MultilingualVSMdata.html or https://www.cl.cam.ac.uk/~fh295/simlex.html.
 
         The model is evaluated using Pearson correlation coefficient and Spearman rank-order correlation coefficient
-        between the similarities from the dataset and the similarities produced by the model itself.        .
+        between the similarities from the dataset and the similarities produced by the model itself.
         The results are printed to log and returned as a triple (pearson, spearman, ratio of pairs with unknown words).
 
         Use `restrict_vocab` to ignore all word pairs containing a word not in the first `restrict_vocab`
@@ -532,7 +545,7 @@ class KeyedVectors(utils.SaveLoad):
                         a, b, sim = [word for word in line.split(delimiter)]
                     sim = float(sim)
                 except:
-                    logger.info('skipping invalid line #{0:d} in {1:s}'.format(line_no, pairs.encode('utf-8')))
+                    logger.info('skipping invalid line #%d in %s', line_no, pairs)
                     continue
                 if a not in ok_vocab or b not in ok_vocab:
                     oov += 1
@@ -541,7 +554,7 @@ class KeyedVectors(utils.SaveLoad):
                         similarity_gold.append(sim)
                         continue
                     else:
-                        logger.debug('skipping line #{0:d} with OOV words: {1:s}'.format(line_no, line.strip()))
+                        logger.debug('skipping line #%d with OOV words: %s', line_no, line.strip())
                         continue
                 similarity_gold.append(sim)  # Similarity from the dataset
                 similarity_model.append(self.similarity(a, b))  # Similarity from the model
@@ -550,11 +563,15 @@ class KeyedVectors(utils.SaveLoad):
         pearson = stats.pearsonr(similarity_gold, similarity_model)
         oov_ratio = float(oov) / (len(similarity_gold) + oov) * 100
 
-        logger.debug('Pearson correlation coefficient against {0:s}: {1:f} with p-value {2:f}'
-                     .format(pairs, pearson[0], pearson[1]))
-        logger.debug('Spearman rank-order correlation coefficient against {0:s}: {1:f} with p-value {2:f}'
-                     .format(pairs, spearman[0], spearman[1]))
-        logger.debug('Pairs with unknown words: {0:d}'.format(oov))
+        logger.debug(
+            'Pearson correlation coefficient against %s: %f with p-value %f',
+            pairs, pearson[0], pearson[1]
+        )
+        logger.debug(
+            'Spearman rank-order correlation coefficient against %s: %f with p-value %f',
+            pairs, spearman[0], spearman[1]
+        )
+        logger.debug('Pairs with unknown words: %d' % oov)
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio
 
