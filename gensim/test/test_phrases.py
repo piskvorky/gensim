@@ -50,6 +50,19 @@ class TestPhrasesCommon(unittest.TestCase):
         self.bigram_utf8 = Phrases(sentences, min_count=1, threshold=1)
         self.bigram_unicode = Phrases(unicode_sentences, min_count=1, threshold=1)
 
+    def testEmptyInputsOnBigramConstruction(self):
+        """Test that empty inputs don't throw errors and return the expected result."""
+        # Empty list -> empty list
+        self.assertEqual(list(self.bigram_default[[]]), [])
+        # Empty iterator -> empty list
+        self.assertEqual(list(self.bigram_default[iter(())]), [])
+        # List of empty list -> list of empty list
+        self.assertEqual(list(self.bigram_default[[[], []]]), [[], []])
+        # Iterator of empty list -> list of empty list
+        self.assertEqual(list(self.bigram_default[iter([[], []])]), [[], []])
+        # Iterator of empty iterator -> list of empty list
+        self.assertEqual(list(self.bigram_default[(iter(()) for i in range(2))]), [[], []])
+
     def testSentenceGeneration(self):
         """Test basic bigram using a dummy corpus."""
         # test that we generate the same amount of sentences as the input

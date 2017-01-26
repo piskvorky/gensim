@@ -64,7 +64,7 @@ import warnings
 from collections import defaultdict
 import itertools as it
 
-from six import iteritems, string_types
+from six import iteritems, string_types, next
 
 from gensim import utils, interfaces
 
@@ -82,7 +82,7 @@ def _is_single(obj):
     """
     obj_iter = iter(obj)
     try:
-        peek = obj_iter.next()
+        peek = next(obj_iter)
         obj_iter = it.chain([peek], obj_iter)
     except StopIteration:
         # An empty object is a single document
@@ -91,7 +91,7 @@ def _is_single(obj):
         # It's a document, return the iterator
         return True, obj_iter
     else:
-        # If the first item isn't a string, assume it's a document
+        # If the first item isn't a string, assume obj is a corpus
         return False, obj_iter
 
 
@@ -251,7 +251,6 @@ class Phrases(interfaces.TransformationABC):
                             continue
                         last_bigram = False
 
-    # TODO: Modify type in docstring to indicate that generators work too
     def __getitem__(self, sentence):
         """
         Convert the input tokens `sentence` (=list of unicode strings) into phrase
@@ -351,7 +350,6 @@ class Phraser(interfaces.TransformationABC):
                 logger.info('Phraser added %i phrasegrams', count)
         logger.info('Phraser built with %i %i phrasegrams', count, len(self.phrasegrams))
 
-    # TODO: Modify type in docstring to indicate that generators work too
     def __getitem__(self, sentence):
         """
         Convert the input tokens `sentence` (=list of unicode strings) into phrase
