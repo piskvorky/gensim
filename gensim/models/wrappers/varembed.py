@@ -14,86 +14,85 @@ The wrapped model can NOT be updated with new documents for online training -- u
 .. [2] http://arxiv.org/pdf/1608.01056.pdf
 """
 
-
 import logging
-import tempfile
-import os
-import struct
 import morfessor
 
 import numpy as np
 
-from gensim import utils
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.models.word2vec import Word2Vec
 
-from six import string_types
-
-logger = logging.getLogger(__name__)
-
-
 # utility fnc for pickling, common scipy operations etc
-from gensim import utils, matutils
-from gensim.corpora.dictionary import Dictionary
-from six import iteritems, itervalues, string_types
-from six.moves import xrange
-from types import GeneratorType
-from scipy import stats
+from gensim import utils
+from gensim.models.word2vec import Vocab
 
 logger = logging.getLogger(__name__)
 
 
 class VarEmbed(Word2Vec):
     """
-    Class for word vectors using Varembed models. Contains methods to load a varembed model and
+    Class for word vectors using Varembed models. Contains methods to load a varembed model and implements
+    functionality like `most_similar`, `similarity` by extracting vectors into numpy matrix.
+    Refer to [Varembed]https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings for
+    implementation of Varembed models.
     """
-    def __init__():
+
+    def __init__(self):
         self.wv = KeyedVectors()
+        self.vector_size = 0
+        self.vocab_size = 0
 
     @classmethod
-    def load_varembed_format(cls, vectors=None, morfessor_model=None):
+    def load_varembed_format(cls, vectors, morfessor_model=None, use_morphemes=False):
+        """
+        Load the input-hidden weight matrix from the fast text output files.
+
+        Note that due to limitations in the FastText API, you cannot continue training
+        with a model loaded this way, though you can query for word similarity etc.
+
+        'vectors' is the pickle file containing the word vectors.
+        'morfessor_model' is the path to the trained morfessor model.
+        'use_morphemes' False(default) use of morpheme embeddings in output.
+        """
         result = cls()
-        if vectors is None or morfessor_model is None:
+        if vectors is None:
             raise Exception(
-                "Please provide vectors and morfessor_model binary to load varembed model")
+                "Please provide vectors binary to load varembed model")
         D = utils.unpickle(vectors)
-        word_to_ix = D["word_to_ix"]
-        morpho_to_ix = D["morpho_to_ix"]
-        word_embeddings = D["word_embeddings"]
-        morpho_embeddings = D["morpheme_embeddings"]
-        morfessor_model = morfessor.MorfessorIO().read_binary_model_file(morfessor_model)
+        word_to_ix = D['word_to_ix']
+        morpho_to_ix = D['morpho_to_ix']
+        word_embeddings = D['word_embeddings']
+        morpho_embeddings = D['morpheme_embeddings']
         result.build_vocab(word_to_ix)
-        result.load_embeddings(
-            word_embeddings, morpho_embeddings, morfessor_model, word_to_ix)
-        result.sort_embeddings
+        result.load_word_embeddings(word_embeddings, word_to_ix)
+        if use_morphemes:
+            morfessor_model = morfessor.MorfessorIO().read_binary_model_file(morfessor_model)
+            result.ensemble_morpheme_embeddings(morfessor_model, morpho_embeddings, morpho_to_ix)
         return result
 
-    def load_dict(self, word_to_ix):
+    def load_word_embeddings(self, word_embeddings, word_to_ix):
+        """ Loads the word embeddings """
         logger.info("Loading the vocabulary")
         self.wv.vocab = {}
+        counts = {}
         for word in word_to_ix:
-            self.wv.vocab[word] += 1
+            counts[word] += 1
+        self.vocab_size = len(counts)
+        self.vector_size = word_embeddings.shape[1]
+        self.wv.syn0 = np.zeros((self.vocab_size, self.vector_size))
+        self.wv.index2word = [None]*self.vocab_size
         logger.info("Corpus has %i words", len(self.wv.vocab))
+        for word_id, word in enumerate(counts):
+            self.wv.vocab[word] = Vocab(index=word_id, count=counts[word])
+            self.wv.syn0[word_id] = word_embeddings[word_to_ix[word]]
+            self.wv.index2word[word_id] = word
+        assert((len(self.wv.vocab), self.vector_size) == self.wv.syn0.shape)
+        logger.info("Loaded % matrix ")
 
-    def load_embeddings(self, word_embeddings, morpho_embeddings, morfessor_model, word_to_ix):
-        for word in word_to_ix:
-            embed = word_embeddings[word_to_ix[word]]
-            # morpho_embed = np.array([morpho_embeddings[morpho_to_ix.get(
-            #     m, -1)] for m in morfessor_model.viterbi_segment(word)[0]]).sum(axis=0)
-            # embed = embed + morpho_embed
-            self.wv.syn0[word] = embed
 
-    def sort_embeddings(self):
-        prev_syn0 = copy.deepcopy(self.wv.syn0)
-        prev_vocab = copy.deepcopy(self.wv.vocab)
-        self.wv.index2word = []
-
-        sorted_vocab = sorted(iteritems(self.wv.vocab, key=lambda x: x[1])
-        for word, count in iteritems(sorted_vocab):
-            counts[word]=count
-            self.wv.index2word.append(word)
-
-        for word_id, word in enumerate(self.wv.index2word):
-            self.wv.syn0[word_id]=prev_syn0[prev_vocab[word].index]
-            self.wv.vocab[word].index=word_id
-            self.wv.vocab[word].count=counts[word]
+    def ensemble_morpheme_embeddings(self, morfessor_model, morpho_embeddings, morpho_to_ix):
+        for word in self.wv.vocab:
+            morpheme_embedding = np.array(
+                    [morpho_embeddings[morpho_to_ix.get(m, -1)] for m in
+                     morfessor_model.viterbi_segment(word)[0]]).sum(axis=0)
+            self.wv.syn0[self.wv.vocab[word].index] += morpheme_embedding
