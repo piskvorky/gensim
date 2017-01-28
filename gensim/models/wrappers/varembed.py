@@ -17,12 +17,6 @@ The wrapped model can NOT be updated with new documents for online training -- u
 """
 
 import logging
-try:
-    import morfessor
-    USE_MORPHEMES = -1
-except ImportError:
-    # Morfessor Package not found. Will only allow reading varembed vectors without morpheme embeddings.
-    USE_MORPHEMES = 0
 
 import numpy as np
 
@@ -72,11 +66,14 @@ class VarEmbed(Word2Vec):
         morpho_embeddings = D['morpheme_embeddings']
         result.load_word_embeddings(word_embeddings, word_to_ix)
         if use_morphemes:
-            if USE_MORPHEMES == -1:
-                logger.warning('Could not import morfessor. Not using morpheme embeddings')
-            else:
+            try:
+                import morfessor
                 morfessor_model = morfessor.MorfessorIO().read_binary_model_file(morfessor_model)
                 result.ensemble_morpheme_embeddings(morfessor_model, morpho_embeddings, morpho_to_ix)
+            except ImportError:
+                # Morfessor Package not found. Will only allow reading varembed vectors without morpheme embeddings.
+                logger.warning('Could not import morfessor. Not using morpheme embeddings')
+
         logger.info('Loaded varembed model vectors from %s', vectors)
         return result
 
@@ -89,7 +86,6 @@ class VarEmbed(Word2Vec):
             counts[word] = counts.get(word, 0) + 1
         self.vocab_size = len(counts)
         self.vector_size = word_embeddings.shape[1]
-
         self.wv.syn0 = np.zeros((self.vocab_size, self.vector_size))
         self.wv.index2word = [None]*self.vocab_size
         logger.info("Corpus has %i words", len(self.wv.vocab))
@@ -102,6 +98,7 @@ class VarEmbed(Word2Vec):
 
 
     def ensemble_morpheme_embeddings(self, morfessor_model, morpho_embeddings, morpho_to_ix):
+        """ Method to include morpheme embeddings into varembed vectors """
         for word in self.wv.vocab:
             morpheme_embedding = np.array(
                     [morpho_embeddings[morpho_to_ix.get(m, -1)] for m in
