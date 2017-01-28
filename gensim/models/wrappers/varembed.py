@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Copyright (C) 2017 Anmol Gulati <anmol01gulati@gmail.com>
+# Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 
 """
 Python wrapper around word representation learning from Varembed models, a library for efficient learning of word representations and sentence classification [1].
@@ -15,7 +17,12 @@ The wrapped model can NOT be updated with new documents for online training -- u
 """
 
 import logging
-import morfessor
+try:
+    import morfessor
+    USE_MORPHEMES = 1
+except ImportError:
+    # Morfessor Package not found. Will only allow reading varembed vectors without morpheme embeddings.
+    USE_MORPHEMES = 0
 
 import numpy as np
 
@@ -63,11 +70,14 @@ class VarEmbed(Word2Vec):
         morpho_to_ix = D['morpho_to_ix']
         word_embeddings = D['word_embeddings']
         morpho_embeddings = D['morpheme_embeddings']
-        result.build_vocab(word_to_ix)
         result.load_word_embeddings(word_embeddings, word_to_ix)
         if use_morphemes:
-            morfessor_model = morfessor.MorfessorIO().read_binary_model_file(morfessor_model)
-            result.ensemble_morpheme_embeddings(morfessor_model, morpho_embeddings, morpho_to_ix)
+            if USE_MORPHEMES == -1:
+                logger.warning('Could not import morfessor. Not using morpheme embeddings')
+            else:
+                morfessor_model = morfessor.MorfessorIO().read_binary_model_file(morfessor_model)
+                result.ensemble_morpheme_embeddings(morfessor_model, morpho_embeddings, morpho_to_ix)
+        logger.info('Loaded varembed model vectors from %s', vectors)
         return result
 
     def load_word_embeddings(self, word_embeddings, word_to_ix):
@@ -76,9 +86,10 @@ class VarEmbed(Word2Vec):
         self.wv.vocab = {}
         counts = {}
         for word in word_to_ix:
-            counts[word] += 1
+            counts[word] = counts.get(word, 0) + 1
         self.vocab_size = len(counts)
         self.vector_size = word_embeddings.shape[1]
+
         self.wv.syn0 = np.zeros((self.vocab_size, self.vector_size))
         self.wv.index2word = [None]*self.vocab_size
         logger.info("Corpus has %i words", len(self.wv.vocab))
@@ -87,7 +98,7 @@ class VarEmbed(Word2Vec):
             self.wv.syn0[word_id] = word_embeddings[word_to_ix[word]]
             self.wv.index2word[word_id] = word
         assert((len(self.wv.vocab), self.vector_size) == self.wv.syn0.shape)
-        logger.info("Loaded % matrix ")
+        logger.info("Loaded matrix of %d size and %d dimensions", self.vocab_size, self.vector_size)
 
 
     def ensemble_morpheme_embeddings(self, morfessor_model, morpho_embeddings, morpho_to_ix):
