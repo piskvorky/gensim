@@ -280,6 +280,16 @@ class TestWord2VecModel(unittest.TestCase):
         binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
         self.assertEqual(model.wv.vocab['human'].count, binary_model_with_vocab.wv.vocab['human'].count)
 
+    def testPersistenceKeyedVectorsFormatWithVocab(self):
+        """Test storing/loading the entire model and vocabulary in word2vec format."""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
+        model.wv.save_word2vec_format(testfile(), testvocab, binary=True)
+        kv_binary_model_with_vocab = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), testvocab, binary=True)
+        self.assertEqual(model.wv.vocab['human'].count, kv_binary_model_with_vocab.vocab['human'].count)
+
+
     def testPersistenceWord2VecFormatCombinationWithStandardPersistence(self):
         """Test storing/loading the entire model and vocabulary in word2vec format chained with
          saving and loading via `save` and `load` methods`."""
@@ -291,6 +301,7 @@ class TestWord2VecModel(unittest.TestCase):
         binary_model_with_vocab.save(testfile())
         binary_model_with_vocab = word2vec.Word2Vec.load(testfile())
         self.assertEqual(model.wv.vocab['human'].count, binary_model_with_vocab.wv.vocab['human'].count)
+
 
     def testLargeMmap(self):
         """Test storing/loading the entire model."""
@@ -579,8 +590,8 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testNormalizeAfterTrainingData(self):
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.save_word2vec_format(testfile(), binary=True)
-        norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
+        model.save(testfile())
+        norm_only_model = word2vec.Word2Vec.load(testfile())
         norm_only_model.delete_temporary_training_data(replace_word_vectors_with_normalized=True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
 
