@@ -19,7 +19,7 @@ The wrapped model can NOT be updated with new documents for online training -- u
 import logging
 try:
     import morfessor
-    USE_MORPHEMES = 1
+    USE_MORPHEMES = -1
 except ImportError:
     # Morfessor Package not found. Will only allow reading varembed vectors without morpheme embeddings.
     USE_MORPHEMES = 0
