@@ -7,8 +7,7 @@ RUN apt-get update \
     && apt-get install -y \
     python3 \
     python3-pip \
-    python3-setuptools \
-    git
+    python3-setuptools
 
 # Setup python language
 RUN locale-gen en_US.UTF-8
