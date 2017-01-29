@@ -5,6 +5,10 @@ Unreleased:
 
 * FastText wrapper added, can be used for training FastText word representations and performing word2vec operations over it
 
+0.13.5, 2016-12-31
+
+* Added sklearn wrapper for LdaModel along with relevant test cases, ipynb draft and rst docs. (@AadityaJ,[#932](https://github.com/RaRe-Technologies/gensim/pull/932))
+
 0.13.4.1, 2017-01-04
 
 * Disable direct access warnings on save and load of Word2vec/Doc2vec (@tmylk, [#1072](https://github.com/RaRe-Technologies/gensim/pull/1072))
