@@ -28,11 +28,12 @@ RUN pip install --upgrade pip
 
 # Install dependencies
 RUN pip3 install \
+    annoy \
     cython \
-    sklearn \
-    pandas \
+    gensim \
+    jupyter \
     matplotlib \
     nltk \
+    pandas \
     pyemd \
-    jupyter \
-    gensim
+    sklearn
