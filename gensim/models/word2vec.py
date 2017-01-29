@@ -470,7 +470,9 @@ class Word2Vec(utils.SaveLoad):
         vocab_size = len(self.wv.index2word)
         self.cum_table = zeros(vocab_size, dtype=uint32)
         # compute sum of all power (Z in paper)
-        train_words_pow = float(sum([self.wv.vocab[word].count**power for word in self.wv.vocab]))
+        train_words_pow = 0.0
+        for word_index in xrange(vocab_size):
+            train_words_pow += self.wv.vocab[self.wv.index2word[word_index]].count**power
         cumulative = 0.0
         for word_index in range(vocab_size):
             cumulative += self.wv.vocab[self.wv.index2word[word_index]].count**power
