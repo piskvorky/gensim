@@ -1,0 +1,10 @@
+version: '2'
+
+services:
+  gensim:
+    command: "sh -c 'jupyter notebook --no-browser --ip=* --port=9000 --notebook-dir=/gensim/docs/notebooks'"
+    build: .
+    volumes:
+      - ../:/gensim
+    ports:
+      - 9000:9000
