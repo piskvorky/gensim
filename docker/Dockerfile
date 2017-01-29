@@ -7,7 +7,9 @@ RUN apt-get update \
     && apt-get install -y \
     python3 \
     python3-pip \
-    python3-setuptools
+    python3-setuptools \
+    unzip \
+    wget
 
 # Setup python language
 RUN locale-gen en_US.UTF-8
@@ -37,3 +39,27 @@ RUN pip3 install \
     pandas \
     pyemd \
     sklearn
+
+# Create gensim directory
+RUN mkdir /gensim
+
+# Download gensim from Github
+RUN mkdir /gensim/download \
+    && cd /gensim/download \
+    && wget --quiet https://github.com/RaRe-Technologies/gensim/archive/master.zip \
+    && unzip master.zip \
+    && mv ./gensim-master/* /gensim \
+    && rm -rf /gensim/download
+
+# Create directory to host docker file
+RUN mkdir /gensim/docker
+
+# Copy startup script
+COPY ./start_jupyter_notebook.sh /gensim/docker
+
+# Add running permission to startup script
+RUN chmod +x /gensim/docker/start_jupyter_notebook.sh
+
+# Define the starting command for this container and expose its running port
+CMD sh -c '/gensim/docker/start_jupyter_notebook.sh 9000'
+EXPOSE 9000

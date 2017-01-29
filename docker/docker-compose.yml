@@ -2,9 +2,6 @@ version: '2'
 
 services:
   gensim:
-    command: "sh -c 'jupyter notebook --no-browser --ip=* --port=9000 --notebook-dir=/gensim/docs/notebooks --NotebookApp.token=\"\" --NotebookApp.default_url=/notebooks/gensim%20Quick%20Start.ipynb'"
     build: .
-    volumes:
-      - ../:/gensim
     ports:
       - 9000:9000
