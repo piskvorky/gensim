@@ -474,7 +474,7 @@ class Word2Vec(utils.SaveLoad):
         for word_index in xrange(vocab_size):
             train_words_pow += self.wv.vocab[self.wv.index2word[word_index]].count**power
         cumulative = 0.0
-        for word_index in range(vocab_size):
+        for word_index in xrange(vocab_size):
             cumulative += self.wv.vocab[self.wv.index2word[word_index]].count**power
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
