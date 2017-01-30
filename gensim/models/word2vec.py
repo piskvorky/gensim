@@ -93,8 +93,6 @@ from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
 
 from scipy.special import expit
 
-from scipy.special import expit
-
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
