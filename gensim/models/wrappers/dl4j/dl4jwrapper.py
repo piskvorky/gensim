@@ -50,7 +50,7 @@ class dl4jWrapper(Word2Vec):
             'windowSize': windowSize
         }
 
-        cmd = ['java', '-cp', 'lib/*:' + jar_file, 'org.deeplearning4j.examples.nlp.word2vec.Word2VecRawTextExample']
+        cmd = ['java', '-cp', 'lib/*:' + jar_file + ':.', 'org.deeplearning4j.examples.nlp.word2vec.Word2VecRawTextExample']
         for option, value in wr_args.items():
             #TODO pass options along with value
             cmd.append(str(value))
