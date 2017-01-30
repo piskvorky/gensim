@@ -102,8 +102,6 @@ def modified_tfw2v_init(self, options, session):
     if options.eval_data is not None:
         self.read_analogies()
 
-# TODO take care of monkey patching.
-
 
 tfw2v.__init__ = modified_tfw2v_init
 
