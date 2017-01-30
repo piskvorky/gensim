@@ -29,7 +29,7 @@ from gensim import utils
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
 
-# from six import string_types
+from six import string_types
 from smart_open import smart_open
 from shutil import copyfile, rmtree
 
