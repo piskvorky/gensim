@@ -40,7 +40,7 @@ def log_conditional_probability(segmented_topics, per_topic_postings, num_docs):
             if  w_star_docs:
                 m_lc_i = np.log(((len(co_docs) / float(num_docs)) + EPSILON) / (len(w_star_docs) / float(num_docs)))
             else:
-                m_lc_i = 0
+                m_lc_i = 0.0
             m_lc.append(m_lc_i)
 
     return m_lc

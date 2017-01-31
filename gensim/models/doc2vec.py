@@ -21,7 +21,8 @@ Persist a model to disk with::
 >>> model.save(fname)
 >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
-The model can also be instantiated from an existing file on disk in the word2vec C format::
+The word vectors in the model can also be instantiated from an existing file on disk in the word2vec C format:
+NOTE: document vectors are not loaded/saved with .load/save_word2vec_format(). Use .save()/.load() instead.
 
   >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
   >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
@@ -53,7 +54,7 @@ from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
 
 from gensim.utils import call_on_class_only
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_batch_sg
+from gensim.models.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg
 from six.moves import xrange, zip
 from six import string_types, integer_types, itervalues
 
@@ -352,6 +353,11 @@ class DocvecsArray(utils.SaveLoad):
             return index < self.count
         else:
             return index in self.doctags
+
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
+        super(DocvecsArray, self).save(*args, **kwargs)
 
     def borrow_from(self, other_docvecs):
         self.count = other_docvecs.count

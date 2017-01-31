@@ -38,6 +38,10 @@ sentences = [
 unicode_sentences = [[utils.to_unicode(w) for w in sentence] for sentence in sentences]
 
 
+def gen_sentences():
+    return ((w for w in sentence) for sentence in sentences)
+
+
 class TestPhrasesCommon(unittest.TestCase):
     """ Tests that need to be run for both Prases and Phraser classes."""
     def setUp(self):
@@ -46,10 +50,28 @@ class TestPhrasesCommon(unittest.TestCase):
         self.bigram_utf8 = Phrases(sentences, min_count=1, threshold=1)
         self.bigram_unicode = Phrases(unicode_sentences, min_count=1, threshold=1)
 
+    def testEmptyInputsOnBigramConstruction(self):
+        """Test that empty inputs don't throw errors and return the expected result."""
+        # Empty list -> empty list
+        self.assertEqual(list(self.bigram_default[[]]), [])
+        # Empty iterator -> empty list
+        self.assertEqual(list(self.bigram_default[iter(())]), [])
+        # List of empty list -> list of empty list
+        self.assertEqual(list(self.bigram_default[[[], []]]), [[], []])
+        # Iterator of empty list -> list of empty list
+        self.assertEqual(list(self.bigram_default[iter([[], []])]), [[], []])
+        # Iterator of empty iterator -> list of empty list
+        self.assertEqual(list(self.bigram_default[(iter(()) for i in range(2))]), [[], []])
+
     def testSentenceGeneration(self):
         """Test basic bigram using a dummy corpus."""
         # test that we generate the same amount of sentences as the input
         self.assertEqual(len(sentences), len(list(self.bigram_default[sentences])))
+
+    def testSentenceGenerationWithGenerator(self):
+        """Test basic bigram production when corpus is a generator."""
+        self.assertEqual(len(list(gen_sentences())),
+                         len(list(self.bigram_default[gen_sentences()])))
 
     def testBigramConstruction(self):
         """Test Phrases bigram construction building."""
@@ -74,6 +96,20 @@ class TestPhrasesCommon(unittest.TestCase):
         self.assertTrue(u'graph_minors' in self.bigram[sentences[-2]])
         self.assertTrue(u'graph_minors' in self.bigram[sentences[-1]])
         self.assertTrue(u'human_interface' in self.bigram[sentences[-1]])
+
+    def testBigramConstructionFromGenerator(self):
+        """Test Phrases bigram construction building when corpus is a generator"""
+        bigram1_seen = False
+        bigram2_seen = False
+
+        for s in self.bigram[gen_sentences()]:
+            if not bigram1_seen and 'response_time' in s:
+                bigram1_seen = True
+            if not bigram2_seen and 'graph_minors' in s:
+                bigram2_seen = True
+            if bigram1_seen and bigram2_seen:
+                break
+        self.assertTrue(bigram1_seen and bigram2_seen)
 
     def testEncoding(self):
         """Test that both utf8 and unicode input work; output must be unicode."""
