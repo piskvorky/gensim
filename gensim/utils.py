@@ -607,7 +607,7 @@ def is_corpus(obj):
             doc1 = next(iter(obj))  # empty corpus is resolved to False here
         if len(doc1) == 0:  # sparse documents must have a __len__ function (list, tuple...)
             return True, obj  # the first document is empty=>assume this is a corpus
-        id1, val1 = next(iter(doc1))  # if obj is a numpy array, it resolves to False here
+        id1, val1 = next(iter(doc1))  # if obj is a 1D numpy array(scalars) instead of 2-tuples, it resolves to False here
         id1, val1 = int(id1), float(val1)  # must be a 2-tuple (integer, float)
     except Exception:
         return False, obj
