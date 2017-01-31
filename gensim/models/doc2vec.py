@@ -21,7 +21,8 @@ Persist a model to disk with::
 >>> model.save(fname)
 >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
-The model can also be instantiated from an existing file on disk in the word2vec C format::
+The word vectors in the model can also be instantiated from an existing file on disk in the word2vec C format:
+NOTE: document vectors are not loaded/saved with .load/save_word2vec_format(). Use .save()/.load() instead.
 
   >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
   >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
