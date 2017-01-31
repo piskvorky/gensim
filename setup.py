@@ -231,7 +231,7 @@ Copyright (c) 2009-now Radim Rehurek
 
 setup(
     name='gensim',
-    version='1.0.0rc1'
+    version='1.0.0rc1',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
