@@ -10,12 +10,15 @@
 Automated tests for VarEmbed wrapper.
 """
 
-
 import logging
-import unittest
 import os
-
+import sys
 import numpy as np
+
+if sys.version_info < (2, 7):
+    import unittest2 as unittest
+else:
+    import unittest
 
 from gensim.models.wrappers import varembed
 
@@ -25,9 +28,8 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 varembed_model_vector_file = datapath('varembed_leecorpus_vectors.pkl')
 varembed_model_morfessor_file = datapath('varembed_leecorpus_morfessor.bin')
 
+
 class TestVarembed(unittest.TestCase):
-
-
     def testLoadVarembedFormat(self):
         """Test storing/loading the entire model."""
         model = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file)
@@ -43,6 +45,7 @@ class TestVarembed(unittest.TestCase):
         self.assertEqual(model.syn0.shape, (model.vocab_size, model.vector_size))
         self.assertTrue(model.syn0.shape[0] == len(model.vocab))
 
+    @unittest.skipIf(sys.version_info < (2, 7), 'Supported only on Python 2.7 and above')
     def testEnsembleMorphemeEmbeddings(self):
         """Test ensembling of Morhpeme Embeddings"""
         model = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file)
@@ -52,6 +55,13 @@ class TestVarembed(unittest.TestCase):
         self.model_sanity(model_with_morphemes)
         # Check syn0 is different for both models.
         self.assertFalse(np.allclose(model.syn0, model_with_morphemes.syn0))
+
+    @unittest.skipUnless(sys.version_info < (2, 7), 'Test to check throwing exception in Python 2.6 and earlier')
+    def testEnsembleEmbeddingsThrowsExceptionInPython26(self):
+        self.assertRaises(Exception,
+                          varembed.VarEmbed.load_varembed_format,vectors=varembed_model_vector_file,
+                                                                 morfessor_model=varembed_model_morfessor_file,
+                                                                 use_morphemes=True)
 
     def testLookup(self):
         """Test lookup of vector for a particular word and list"""
