@@ -17,6 +17,7 @@ The wrapped model can NOT be updated with new documents for online training -- u
 """
 
 import logging
+import sys
 
 import numpy as np
 
@@ -45,6 +46,7 @@ class VarEmbed(KeyedVectors):
     def load_varembed_format(cls, vectors, morfessor_model=None, use_morphemes=False):
         """
         Load the word vectors into matrix from the varembed output vector files.
+        Using morphemes requires Python 2.7 version or above.
 
         'vectors' is the pickle file containing the word vectors.
         'morfessor_model' is the path to the trained morfessor model.
@@ -61,13 +63,19 @@ class VarEmbed(KeyedVectors):
         morpho_embeddings = D['morpheme_embeddings']
         result.load_word_embeddings(word_embeddings, word_to_ix)
         if use_morphemes:
-            try:
-                import morfessor
-                morfessor_model = morfessor.MorfessorIO().read_binary_model_file(morfessor_model)
-                result.ensemble_morpheme_embeddings(morfessor_model, morpho_embeddings, morpho_to_ix)
-            except ImportError:
-                # Morfessor Package not found. Will only allow reading varembed vectors without morpheme embeddings.
-                logger.warning('Could not import morfessor. Not using morpheme embeddings')
+            if sys.version_info >= (2, 7):  #Morfessor is only supported for Python 2.7 and above.
+                try:
+                    import morfessor
+                    morfessor_model = morfessor.MorfessorIO().read_binary_model_file(morfessor_model)
+                    result.ensemble_morpheme_embeddings(morfessor_model, morpho_embeddings, morpho_to_ix)
+                except ImportError:
+                    # Morfessor Package not found.
+                    logger.error('Could not import morfessor. Not using morpheme embeddings')
+                    raise ImportError('Could not import morfessor.')
+            else:
+                # Raise exception in Python 2.6 or earlier.
+                raise Exception('Using Morphemes requires Python 2.7 and above. '
+                                'Morfessor is not supported in python 2.6')
 
         logger.info('Loaded varembed model vectors from %s', vectors)
         return result
@@ -94,7 +102,9 @@ class VarEmbed(KeyedVectors):
 
 
     def ensemble_morpheme_embeddings(self, morfessor_model, morpho_embeddings, morpho_to_ix):
-        """ Method to include morpheme embeddings into varembed vectors """
+        """ Method to include morpheme embeddings into varembed vectors
+            Allowed only in Python versions 2.7 and above.
+        """
         for word in self.vocab:
             morpheme_embedding = np.array(
                     [morpho_embeddings[morpho_to_ix.get(m, -1)] for m in
