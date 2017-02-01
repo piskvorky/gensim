@@ -21,7 +21,6 @@ import logging
 import numpy as np
 
 from gensim.models.keyedvectors import KeyedVectors
-from gensim.models.word2vec import Word2Vec
 
 # utility fnc for pickling, common scipy operations etc
 from gensim import utils
@@ -30,7 +29,7 @@ from gensim.models.word2vec import Vocab
 logger = logging.getLogger(__name__)
 
 
-class VarEmbed(Word2Vec):
+class VarEmbed(KeyedVectors):
     """
     Class for word vectors using Varembed models. Contains methods to load a varembed model and implements
     functionality like `most_similar`, `similarity` by extracting vectors into numpy matrix.
@@ -39,17 +38,13 @@ class VarEmbed(Word2Vec):
     """
 
     def __init__(self):
-        self.wv = KeyedVectors()
         self.vector_size = 0
         self.vocab_size = 0
 
     @classmethod
     def load_varembed_format(cls, vectors, morfessor_model=None, use_morphemes=False):
         """
-        Load the input-hidden weight matrix from the fast text output files.
-
-        Note that due to limitations in the FastText API, you cannot continue training
-        with a model loaded this way, though you can query for word similarity etc.
+        Load the word vectors into matrix from the varembed output vector files.
 
         'vectors' is the pickle file containing the word vectors.
         'morfessor_model' is the path to the trained morfessor model.
@@ -80,27 +75,28 @@ class VarEmbed(Word2Vec):
     def load_word_embeddings(self, word_embeddings, word_to_ix):
         """ Loads the word embeddings """
         logger.info("Loading the vocabulary")
-        self.wv.vocab = {}
+        self.vocab = {}
+        self.index2word = []
         counts = {}
         for word in word_to_ix:
             counts[word] = counts.get(word, 0) + 1
         self.vocab_size = len(counts)
         self.vector_size = word_embeddings.shape[1]
-        self.wv.syn0 = np.zeros((self.vocab_size, self.vector_size))
-        self.wv.index2word = [None]*self.vocab_size
-        logger.info("Corpus has %i words", len(self.wv.vocab))
+        self.syn0 = np.zeros((self.vocab_size, self.vector_size))
+        self.index2word = [None]*self.vocab_size
+        logger.info("Corpus has %i words", len(self.vocab))
         for word_id, word in enumerate(counts):
-            self.wv.vocab[word] = Vocab(index=word_id, count=counts[word])
-            self.wv.syn0[word_id] = word_embeddings[word_to_ix[word]]
-            self.wv.index2word[word_id] = word
-        assert((len(self.wv.vocab), self.vector_size) == self.wv.syn0.shape)
+            self.vocab[word] = Vocab(index=word_id, count=counts[word])
+            self.syn0[word_id] = word_embeddings[word_to_ix[word]]
+            self.index2word[word_id] = word
+        assert((len(self.vocab), self.vector_size) == self.syn0.shape)
         logger.info("Loaded matrix of %d size and %d dimensions", self.vocab_size, self.vector_size)
 
 
     def ensemble_morpheme_embeddings(self, morfessor_model, morpho_embeddings, morpho_to_ix):
         """ Method to include morpheme embeddings into varembed vectors """
-        for word in self.wv.vocab:
+        for word in self.vocab:
             morpheme_embedding = np.array(
                     [morpho_embeddings[morpho_to_ix.get(m, -1)] for m in
                      morfessor_model.viterbi_segment(word)[0]]).sum(axis=0)
-            self.wv.syn0[self.wv.vocab[word].index] += morpheme_embedding
+            self.syn0[self.vocab[word].index] += morpheme_embedding
