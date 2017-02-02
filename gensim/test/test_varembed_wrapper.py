@@ -50,18 +50,15 @@ class TestVarembed(unittest.TestCase):
         """Test ensembling of Morhpeme Embeddings"""
         model = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file)
         model_with_morphemes = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file,
-                                                                      morfessor_model=varembed_model_morfessor_file,
-                                                                      use_morphemes=True)
+                                                                      morfessor_model=varembed_model_morfessor_file)
         self.model_sanity(model_with_morphemes)
         # Check syn0 is different for both models.
         self.assertFalse(np.allclose(model.syn0, model_with_morphemes.syn0))
 
     @unittest.skipUnless(sys.version_info < (2, 7), 'Test to check throwing exception in Python 2.6 and earlier')
     def testEnsembleEmbeddingsThrowsExceptionInPython26(self):
-        self.assertRaises(Exception,
-                          varembed.VarEmbed.load_varembed_format,vectors=varembed_model_vector_file,
-                                                                 morfessor_model=varembed_model_morfessor_file,
-                                                                 use_morphemes=True)
+        self.assertRaises(Exception, varembed.VarEmbed.load_varembed_format, vectors=varembed_model_vector_file,
+                          morfessor_model=varembed_model_morfessor_file)
 
     def testLookup(self):
         """Test lookup of vector for a particular word and list"""
@@ -70,6 +67,5 @@ class TestVarembed(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
