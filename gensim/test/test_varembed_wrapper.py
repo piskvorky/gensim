@@ -46,8 +46,10 @@ class TestVarembed(unittest.TestCase):
         self.assertTrue(model.syn0.shape[0] == len(model.vocab))
 
     @unittest.skipIf(sys.version_info < (2, 7), 'Supported only on Python 2.7 and above')
-    def testEnsembleMorphemeEmbeddings(self):
-        """Test ensembling of Morhpeme Embeddings"""
+    def testAddMorphemesToEmbeddings(self):
+        """Test add morphemes to Embeddings
+           Test only in Python 2.7 and above. Add Morphemes is not supported in earlier versions.
+        """
         model = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file)
         model_with_morphemes = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file,
                                                                       morfessor_model=varembed_model_morfessor_file)
@@ -56,7 +58,7 @@ class TestVarembed(unittest.TestCase):
         self.assertFalse(np.allclose(model.syn0, model_with_morphemes.syn0))
 
     @unittest.skipUnless(sys.version_info < (2, 7), 'Test to check throwing exception in Python 2.6 and earlier')
-    def testEnsembleEmbeddingsThrowsExceptionInPython26(self):
+    def testAddMorphemesThrowsExceptionInPython26(self):
         self.assertRaises(Exception, varembed.VarEmbed.load_varembed_format, vectors=varembed_model_vector_file,
                           morfessor_model=varembed_model_morfessor_file)
 
