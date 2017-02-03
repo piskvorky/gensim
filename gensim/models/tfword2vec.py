@@ -1,3 +1,7 @@
+# Copyright (C) 2017 Parul Sethi <parul1sethi@gmail.com>
+# Copyright (C) 2017 Radim Rehurek <me@radimrehurek.com>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
 import tensorflow as tf
 from tensorflow.models.embedding.word2vec_optimized import Word2Vec as tfw2v
 from gensim.models.keyedvectors import KeyedVectors
@@ -135,6 +139,11 @@ class TfWord2Vec(KeyedVectors):
             self.syn0 = self.model._w_in
             self.syn0norm = session.run(tf.nn.l2_normalize(self.model._w_in, 1))
             self.index2word = self.model._id2word
+
+    def load_tf_model(self, model_file):
+        glove2word2vec(model_file, model_file+'.w2vformat')
+        model = self.load_word2vec_format('%s.w2vformat' % model_file)
+        return model
 
     def create_vocab(self):
         for word in self.options.vocab_words:
