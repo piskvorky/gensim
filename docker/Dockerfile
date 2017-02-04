@@ -2,6 +2,9 @@ FROM ubuntu:16.04
 
 MAINTAINER Daniel Baptista Dias <danielbpdias@gmail.com>
 
+ENV GENSIM_REPOSITORY https://github.com/danielbdias/gensim/archive
+ENV GENSIM_VERSION develop
+
 # Installs python, pip and setup tools
 RUN apt-get update \
     && apt-get install -y \
@@ -46,22 +49,13 @@ RUN mkdir /gensim
 # Download gensim from Github
 RUN mkdir /gensim/download \
     && cd /gensim/download \
-    && wget --quiet https://github.com/RaRe-Technologies/gensim/archive/master.zip \
-    && unzip master.zip \
-    && mv ./gensim-master/* /gensim \
+    && wget --quiet $GENSIM_REPOSITORY/$GENSIM_VERSION.zip \
+    && unzip $GENSIM_VERSION.zip \
+    && mv ./gensim-$GENSIM_VERSION/* /gensim \
     && rm -rf /gensim/download
-
-# Create directory to host helpers
-RUN mkdir /gensim/docker
-
-# Copying check script
-COPY ./check_fast_version.py /gensim/docker
 
 # Run check script
 RUN python /gensim/docker/check_fast_version.py
-
-# Copy startup script
-COPY ./start_jupyter_notebook.sh /gensim/docker
 
 # Add running permission to startup script
 RUN chmod +x /gensim/docker/start_jupyter_notebook.sh
