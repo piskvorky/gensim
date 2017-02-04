@@ -51,8 +51,14 @@ RUN mkdir /gensim/download \
     && mv ./gensim-master/* /gensim \
     && rm -rf /gensim/download
 
-# Create directory to host docker file
+# Create directory to host helpers
 RUN mkdir /gensim/docker
+
+# Copying check script
+COPY ./check_fast_version.py /gensim/docker
+
+# Run check script
+RUN python /gensim/docker/check_fast_version.py
 
 # Copy startup script
 COPY ./start_jupyter_notebook.sh /gensim/docker
