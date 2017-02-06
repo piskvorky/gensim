@@ -10,7 +10,7 @@ and sentence classification [1].
 
 This module allows ability to obtain word vectors for out-of-vocabulary words, for the Varembed model[2].
 
-The wrapped model can NOT be updated with new documents for online training -- use gensim's `Word2Vec` for that.
+The wrapped model can not be updated with new documents for online training.
 
 .. [1] https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings
 
