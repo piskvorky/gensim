@@ -298,7 +298,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         else:
-            self.num_terms = 1 + max([-1] + self.id2word.keys())
+            self.num_terms = 1 + (max(self.id2word.keys()) if self.id2word else -1)
 
         self.docs_processed = 0
         self.projection = Projection(self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples)

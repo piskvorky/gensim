@@ -607,7 +607,7 @@ def is_corpus(obj):
             doc1 = next(iter(obj))  # empty corpus is resolved to False here
         if len(doc1) == 0:  # sparse documents must have a __len__ function (list, tuple...)
             return True, obj  # the first document is empty=>assume this is a corpus
-        id1, val1 = next(iter(doc1))  # if obj is a numpy array, it resolves to False here
+        id1, val1 = next(iter(doc1))  # if obj is a 1D numpy array(scalars) instead of 2-tuples, it resolves to False here
         id1, val1 = int(id1), float(val1)  # must be a 2-tuple (integer, float)
     except Exception:
         return False, obj
@@ -1146,15 +1146,15 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
         else:
             return default_res
 
-def check_output(*popenargs, **kwargs):
+def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     r"""Run command with arguments and return its output as a byte string.
     Backported from Python 2.7 as it's implemented as pure python on stdlib.
-    >>> check_output(['/usr/bin/python', '--version'])
+    >>> check_output(args=['/usr/bin/python', '--version'])
     Python 2.6.2
     Added extra KeyboardInterrupt handling
     """
     try:
-        process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+        process = subprocess.Popen(stdout=stdout, *popenargs, **kwargs)
         output, unused_err = process.communicate()
         retcode = process.poll()
         if retcode:

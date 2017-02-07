@@ -737,7 +737,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             score += np.sum(gammaln(gammad) - gammaln(self.alpha))
             score += gammaln(np.sum(self.alpha)) - gammaln(np.sum(gammad))
 
-        # compensate likelihood for when `corpus` above is only a sample of the whole corpus
+        # Compensate likelihood for when `corpus` above is only a sample of the whole corpus. This ensures
+        # that the likelihood is always rougly on the same scale.
         score *= subsample_ratio
 
         # E[log p(beta | eta) - log q (beta | lambda)]; assumes eta is a scalar
@@ -863,9 +864,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 m_docs = doc_word_list[m]
                 m_index = np.where(top_words == m)[0]
 
-                # Sum of top words l=1..m-1
+                # Sum of top words l=1..m
                 # i.e., all words ranked higher than the current word m
-                for l in top_words[:m_index - 1]:
+                for l in top_words[:m_index]:
                     # l_docs is v_l^(t)
                     l_docs = doc_word_list[l]
 
