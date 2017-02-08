@@ -7,65 +7,22 @@
 
 
 """
-Deep learning via word2vec's "skip-gram and CBOW models", using either
-hierarchical softmax or negative sampling [1]_ [2]_.
+Deep learning via word2vec's "CBOW models", differently from the original word2vec, input and output layers have
+different words and vocabularies.
 
-The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
-and extended with additional functionality.
+One can then learn the semantic relatedness between sets of words and labels, obtaining a text classification model.
+This model is indeed inspired by fastText text classification [1]_
 
-For a blog tutorial on gensim word2vec, with an interactive web app trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
-
-**Make sure you have a C compiler before installing gensim, to use optimized (compiled) word2vec training**
-(70x speedup compared to plain NumPy implementation [3]_).
+Differently from word2vec, only the CBOW model makes sense for predicting these labels given a bag of words.
+Given that the output layer is usually of a pre-defined size (e.g. labels in a text classification scenario),
+it is feasible to directly compute the softmax instead of its "approximations" (negative sampling and huffman tree).
+Then there 3 loss methods can be chosen.
 
 Initialize a model with e.g.::
 
->>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
+>>> model = LabeledWord2Vec(sentences, size=100, loss='softmax', min_count=5, workers=4)
 
-Persist a model to disk with::
-
->>> model.save(fname)
->>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
-
-The model can also be instantiated from an existing file on disk in the word2vec C format::
-
-  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
-
-You can perform various syntactic/semantic NLP word tasks with the model. Some of them
-are already built-in::
-
-  >>> model.most_similar(positive=['woman', 'king'], negative=['man'])
-  [('queen', 0.50882536), ...]
-
-  >>> model.doesnt_match("breakfast cereal dinner lunch".split())
-  'cereal'
-
-  >>> model.similarity('woman', 'man')
-  0.73723527
-
-  >>> model['computer']  # raw numpy vector of a word
-  array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
-
-and so on.
-
-If you're finished training a model (=no more updates, only querying), you can do
-
-  >>> model.init_sims(replace=True)
-
-to trim unneeded model memory = use (much) less RAM.
-
-Note that there is a :mod:`gensim.models.phrases` module which lets you automatically
-detect phrases longer than one word. Using phrases, you can learn a word2vec model
-where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
-
->>> bigram_transformer = gensim.models.Phrases(sentences)
->>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
-
-.. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
-.. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
-       In Proceedings of NIPS, 2013.
-.. [3] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
+.. [1] A. Joulin, E. Grave, P. Bojanowski, T. Mikolov, Bag of Tricks for Efficient Text Classification
 """
 
 from __future__ import division  # py3 "true division"
@@ -76,6 +33,8 @@ import sys
 from gensim.models import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.models.word2vec import train_cbow_pair, Vocab
+from types import GeneratorType
+
 
 try:
     from queue import Queue, Empty
@@ -174,7 +133,7 @@ except ImportError:
     def score_cbow_labeled_pair(model, targets, l1):
         if model.hs:
             prob = []
-            # FIXME this cycle should be executed internally in numpy
+            # TODO this cycle should be executed internally in numpy
             for target in targets:
                 l2a = model.syn1[target.point]
                 sgn = (-1.0) ** target.code  # ch function, 0-> 1, 1 -> -1
@@ -193,9 +152,12 @@ except ImportError:
 class LabeledWord2Vec(Word2Vec):
     def __init__(self, loss='softmax', **kwargs):
         """
-        Exactly as the parent class `Word2Vec <https://radimrehurek.com/gensim/models/word2vec.html#gensim.models.word2vec.Word2Vec>`_.
-        Some parameter values are overwritten (e.g. sg=0 because we never use skip-gram here), look at the code for details.
-        Argument names must be explicit!
+        Exactly as the parent class
+        `Word2Vec <https://radimrehurek.com/gensim/models/word2vec.html#gensim.models.word2vec.Word2Vec>`_.
+        Some parameter values are overwritten (e.g. sg=0 because we never use skip-gram here,
+        window size is always the sentence size), look at the code for details.
+
+        `sentences` = An iterator over TaggedDocuments, each sentence is a pair bag of words and labels
 
         `loss` = one value in {ns, hs, softmax}. If "ns" is selected negative sampling will be used
         as loss function, together with the parameter `negative`. With "hs" hierarchical softmax will be used,
@@ -210,9 +172,16 @@ class LabeledWord2Vec(Word2Vec):
         self.index2label = []
         kwargs['sg'] = 0
         kwargs['window'] = sys.maxsize
+        sentences = kwargs['sentences']
         kwargs['sentences'] = None
         self.softmax = self.init_loss(kwargs, loss)
         super(LabeledWord2Vec, self).__init__(**kwargs)
+        if sentences is not None:
+            if isinstance(sentences, GeneratorType):
+                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+            self.build_vocab(sentences, trim_rule=kwargs['trim_rule'])
+            #FIXME wrong!
+            self.train(sentences)
 
     def init_loss(self, kwargs, loss):
         if loss == 'hs':
@@ -242,24 +211,31 @@ class LabeledWord2Vec(Word2Vec):
         work, neu1 = inits
         tally = 0
         if self.sg:
-            raise NotImplementedError('Supervised learning in fastText is based only on the CBOW model')
+            raise NotImplementedError('Here we are trying only to, given a bag of words, predict a label')
         else:
             tally += train_batch_labeled_cbow(self, sentences, alpha, work, neu1)
         return tally, self._raw_word_count(sentences)
 
     # TODO use TaggedDocument from Gensim?
-    # FIXME pass just an iterator over (doc, label) like for train
-    def build_vocab(self, sentences, labels, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
+    # FIXME sentences and labels in one iterator
+    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
         """
-        Build vocabularies from a sequence of sentences/documents (can be a once-only generator stream) and the set of labels.
-        Each sentence must be a list of unicode strings. `labels` is an iterable over the label names.
+        Build vocabularies from a sequence of TaggedDocument (can be a once-only generator stream).
+        Each sentence must be a list of unicode strings.
+        """
+        def sentences_it():
+            for s, _ in sentences:
+                yield s
 
-        """
+        def labels_it():
+            for _, l in sentences:
+                yield l
+
         # Build words and labels vocabularies in two different objects
-        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)
+        self.scan_vocab(sentences_it(), progress_per=progress_per, trim_rule=trim_rule)
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)
         self.finalize_vocab(update=update)  # build tables & arrays
-        self.build_lvocab(labels, progress_per=progress_per, update=update)
+        self.build_lvocab(labels_it(), progress_per=progress_per, update=update)
 
     def build_lvocab(self, labels, progress_per=10000, update=False):
         """Only build data structures for labels. `labels` is an iterable over the label names."""
@@ -274,7 +250,7 @@ class LabeledWord2Vec(Word2Vec):
                 self.sample = sample
                 self.estimate_memory = estimate_memory
 
-        # FIXME set the right estimate memory for labels
+        logger.info('Building the vocabulary of labels (words of the output layer)')
         labels_vocab = FakeSelf(sys.maxsize, 0, 0, self.estimate_memory)
         self.__class__.scan_vocab(labels_vocab, [labels], progress_per=progress_per, trim_rule=None)
         self.__class__.scale_vocab(labels_vocab, min_count=None, sample=None, keep_raw_vocab=False, trim_rule=None,
@@ -434,7 +410,7 @@ class LabeledWord2Vec(Word2Vec):
     @classmethod
     def load_from(cls, other_model):
         """
-        Import data and parameter values from other model
+        Import data and parameter values from another model
         :param other_model: A ``LabeledWord2Vec`` object, or a ``Word2Vec`` or ``KeyedVectors`` object of Gensim
         """
         softmax = getattr(other_model, 'softmax', False)
