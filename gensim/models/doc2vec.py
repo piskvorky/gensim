@@ -628,7 +628,7 @@ class Doc2Vec(Word2Vec):
         self.comment = comment
         if documents is not None:
             self.build_vocab(documents, trim_rule=trim_rule)
-            self.train(documents)
+            self.train(documents, total_examples=self.corpus_count, epochs=self.iter)
 
     @property
     def dm(self):

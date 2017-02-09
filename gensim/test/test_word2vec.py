@@ -104,12 +104,12 @@ class TestWord2VecModel(unittest.TestCase):
                 others.append(l)
         self.assertTrue(all(['terrorism' not in l for l in others]))
         model.build_vocab(others)
-        model.train(others)
+        model.train(others, total_examples=model.corpus_count, epochs=model.iter)
         self.assertFalse('terrorism' in model.wv.vocab)
         model.build_vocab(terro, update=True)
         self.assertTrue('terrorism' in model.wv.vocab)
         orig0 = np.copy(model.wv.syn0)
-        model.train(terro)
+        model.train(terro, total_examples=len(terro), epochs=model.iter)
         self.assertFalse(np.allclose(model.wv.syn0, orig0))
         sim = model.n_similarity(['war'], ['terrorism'])
         self.assertLess(0., sim)
@@ -349,7 +349,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
         self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 2))
 
-        model.train(sentences)
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
@@ -385,7 +385,7 @@ class TestWord2VecModel(unittest.TestCase):
             # lock the vector in slot 0 against change
             model.syn0_lockf[0] = 0.0
 
-            model.train(corpus)
+            model.train(corpus, total_examples=model.corpus_count, epochs=model.iter)
             self.assertFalse((unlocked1 == model.wv.syn0[1]).all())  # unlocked vector should vary
             self.assertTrue((locked0 == model.wv.syn0[0]).all())  # locked vector should not vary
 
@@ -414,7 +414,7 @@ class TestWord2VecModel(unittest.TestCase):
         if train:
             model.build_vocab(list_corpus)
             orig0 = np.copy(model.wv.syn0[0])
-            model.train(list_corpus)
+            model.train(list_corpus, total_examples=model.corpus_count, epochs=model.iter)
             self.assertFalse((orig0 == model.wv.syn0[1]).all())  # vector should vary after training
         sims = model.most_similar('war', topn=len(model.index2word))
         t_rank = [word for word, score in sims].index('terrorism')
@@ -456,7 +456,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
         self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 2))
 
-        model.train(sentences)
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
@@ -479,7 +479,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), 2))
 
-        model.train(sentences)
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
@@ -502,7 +502,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), 2))
 
-        model.train(sentences)
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
@@ -521,7 +521,7 @@ class TestWord2VecModel(unittest.TestCase):
         # The model is trained using CBOW
         model = word2vec.Word2Vec(size=2, min_count=1, sg=0, hs=0, negative=2)
         model.build_vocab(sentences)
-        model.train(sentences)
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
 
         self.assertTrue(model.n_similarity(['graph', 'trees'], ['trees', 'graph']))
         self.assertTrue(model.n_similarity(['graph'], ['trees']) == model.similarity('graph', 'trees'))
@@ -612,7 +612,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(min_count=1)
         model.build_vocab(sentences)
         for epoch in range(10):
-            model.train(sentences)
+            model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
             model.alpha -= 0.002
             model.min_alpha = model.alpha
             if epoch == 5:
