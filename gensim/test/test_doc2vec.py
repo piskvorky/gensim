@@ -191,7 +191,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20, workers=1)
         model.build_vocab(corpus)
         self.assertEqual(model.docvecs.doctag_syn0.shape, (300, 100))
-        model.train(corpus)
+        model.train(corpus, total_examples=model.corpus_count, epochs=model.iter)
 
         self.model_sanity(model)
 
@@ -358,7 +358,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(alpha=0.025, min_alpha=0.025, min_count=1, workers=8, size=5)
         model.build_vocab(sentences)
         for epoch in range(10):
-            model.train(sentences)
+            model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
             model.alpha -= 0.002
             model.min_alpha = model.alpha
             if epoch == 5:
