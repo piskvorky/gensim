@@ -448,7 +448,8 @@ class Word2Vec(utils.SaveLoad):
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
-            self.train(sentences)
+            self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
+                       start_alpha=self.alpha, end_alpha=self.min_alpha)
 
     def initialize_word_vectors(self):
         self.wv = KeyedVectors()
@@ -729,16 +730,23 @@ class Word2Vec(utils.SaveLoad):
         """Return the number of words in a given job."""
         return sum(len(sentence) for sentence in job)
 
-    def train(self, sentences, total_words=None, word_count=0,
-              total_examples=None, queue_factor=2, report_delay=1.0):
+    def train(self, sentences, total_examples=None, total_words=None,
+              epochs=None, start_alpha=None, end_alpha=None,
+              word_count=0,
+              queue_factor=2, report_delay=1.0):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
 
-        To support linear learning-rate decay from (initial) alpha to min_alpha, either total_examples
-        (count of sentences) or total_words (count of raw words in sentences) should be provided, unless the
-        sentences are the same as those that were used to initially build the vocabulary.
+        To support linear learning-rate decay from (initial) alpha to min_alpha, and accurate
+        progres-percentage logging, either total_examples (count of sentences) or total_words (count of
+        raw words in sentences) MUST be provided. (If the corpus is the same as was provided to
+        `build_vocab()`, the count of examples in that corpus will be available in the model's
+        `corpus_count` property.)
 
+        To avoid common mistakes around the model's ability to do multiple training passes itself, an
+        explicit `epochs` argument MUST be provided. In the common and recommended case, where `train()`
+        is only called once, the model's cached `iter` value should be supplied as `epochs` value.
         """
         if (self.model_trimmed_post_training):
             raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
@@ -770,18 +778,18 @@ class Word2Vec(utils.SaveLoad):
                 "Instead start with a blank model, scan_vocab on the new corpus, intersect_word2vec_format with the old model, then train.")
 
         if total_words is None and total_examples is None:
-            if self.corpus_count:
-                total_examples = self.corpus_count
-                logger.info("expecting %i sentences, matching count from corpus used for vocabulary survey", total_examples)
-            else:
-                raise ValueError("you must provide either total_words or total_examples, to enable alpha and progress calculations")
+            raise ValueError("you must specify either total_examples or total_words, for proper alpha and progress calculations")
+        if epochs is None:
+            raise ValueError("you must specify an explict epochs count")
+        start_alpha = start_alpha or self.alpha
+        end_alpha = end_alpha or self.min_alpha
 
         job_tally = 0
 
-        if self.iter > 1:
-            sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
-            total_words = total_words and total_words * self.iter
-            total_examples = total_examples and total_examples * self.iter
+        if epochs > 1:
+            sentences = utils.RepeatCorpusNTimes(sentences, epochs)
+            total_words = total_words and total_words * epochs
+            total_examples = total_examples and total_examples * epochs
 
         def worker_loop():
             """Train the model, lifting lists of sentences from the job_queue."""
@@ -803,7 +811,7 @@ class Word2Vec(utils.SaveLoad):
             """Fill jobs queue using the input `sentences` iterator."""
             job_batch, batch_size = [], 0
             pushed_words, pushed_examples = 0, 0
-            next_alpha = self.alpha
+            next_alpha = start_alpha
             if next_alpha > self.min_alpha_yet_reached:
                 logger.warn("Effective 'alpha' higher than previous training cycles")
             self.min_alpha_yet_reached = next_alpha
@@ -826,7 +834,7 @@ class Word2Vec(utils.SaveLoad):
                     job_queue.put((job_batch, next_alpha))
 
                     # update the learning rate for the next job
-                    if self.min_alpha < next_alpha:
+                    if end_alpha < next_alpha:
                         if total_examples:
                             # examples-based decay
                             pushed_examples += len(job_batch)
@@ -835,8 +843,8 @@ class Word2Vec(utils.SaveLoad):
                             # words-based decay
                             pushed_words += self._raw_word_count(job_batch)
                             progress = 1.0 * pushed_words / total_words
-                        next_alpha = self.alpha - (self.alpha - self.min_alpha) * progress
-                        next_alpha = max(self.min_alpha, next_alpha)
+                        next_alpha = start_alpha - (start_alpha - end_alpha) * progress
+                        next_alpha = max(end_alpha, next_alpha)
 
                     # add the sentence that didn't fit as the first item of a new job
                     job_batch, batch_size = [sentence], sentence_length
