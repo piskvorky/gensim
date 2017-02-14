@@ -51,7 +51,7 @@ def word2vec2tensor(word2vec_model_path,tensor_filename, binary=False):
     with open(outfiletsv, 'w+') as file_vector:
         with open(outfiletsvmeta, 'w+') as file_metadata:
             for word in model.index2word:
-                file_metadata.write(gensim.utils.to_unicode(word) + '\n')
+                file_metadata.write(gensim.utils.to_utf8(word) + gensim.utils.to_utf8('\n'))
                 vector_row = '\t'.join(map(str, model[word]))
                 file_vector.write(vector_row + '\n')
     
