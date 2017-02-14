@@ -15,8 +15,8 @@ import sys
 import warnings
 import io
 
-if sys.version_info[:2] < (2, 6):
-    raise Exception('This version of gensim needs Python 2.6 or later.')
+if sys.version_info[:2] < (2, 7) or (sys.version_info[:1] == 3 and sys.version_info[:2] < (3, 5)):
+    raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
 
 import ez_setup
 ez_setup.use_setuptools()
@@ -113,9 +113,6 @@ if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
     cmdclass.update(vars(wheelhouse_uploader.cmd))
 
 
-python_2_6_backports = ''
-if sys.version_info[:2] < (2, 7):
-    python_2_6_backports = ['argparse']
 
 LONG_DESCRIPTION = u"""
 ==============================================
@@ -267,11 +264,9 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Text Processing :: Linguistic',
@@ -286,7 +281,6 @@ setup(
         'scipy >= 0.7.0',
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
-        python_2_6_backports,
     ],
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
