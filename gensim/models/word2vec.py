@@ -330,9 +330,6 @@ class Word2Vec(utils.SaveLoad):
 
     """
 
-    # TODO: delete this flag after direct access to syn0norm, syn0, vocab is removed
-    keyed_vector_warnings = True
-
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
@@ -1092,22 +1089,7 @@ class Word2Vec(utils.SaveLoad):
         once = random.RandomState(self.hashfxn(seed_string) & 0xffffffff)
         return (once.rand(self.vector_size) - 0.5) / self.vector_size
 
-    def save_word2vec_format(self, *args, **kwargs):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('word2vec.save_word2vec_format will be deprected in future gensim releases. Please use model.wv.save_word2vec_format')
-        return self.wv.save_word2vec_format(*args, **kwargs)
-
-    @classmethod
-    def load_word2vec_format(cls, *args, **kwargs):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('Word2vec.load_word2vec_format will be deprected in future gensim releases. Please use KeyedVectors.load_word2vec_format')
-
-        wv = KeyedVectors.load_word2vec_format(*args, **kwargs)
-        result = cls(size=wv.syn0.shape[1])
-        result.wv = wv
-        return result
-
-    def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
+     def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
         """
         Merge the input-hidden weight matrix from the original C word2vec-tool format
         given, where it intersects with the current vocabulary. (No words are added to the
@@ -1176,86 +1158,6 @@ class Word2Vec(utils.SaveLoad):
 
     def __getitem__(self, words):
         return self.wv.__getitem__(words)
-
-    @staticmethod
-    def disable_keyed_vectors_warnings():
-        Word2Vec.keyed_vector_warnings = False
-
-    @staticmethod
-    def enable_keyed_vectors_warnings():
-        Word2Vec.keyed_vector_warnings = True
-
-    @property
-    def syn0norm(self):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.wv.syn0norm')
-        return self.wv.syn0norm
-
-    @syn0norm.setter
-    def syn0norm(self, value):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.wv.syn0norm')
-        self.wv.syn0norm = value
-
-    @syn0norm.deleter
-    def syn0norm(self):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.wv.syn0norm')
-        del self.wv.syn0norm
-
-    @property
-    def syn0(self):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to syn0 will not be supported in future gensim releases, please use model.wv.syn0')
-        return self.wv.syn0
-
-    @syn0.setter
-    def syn0(self, value):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to syn0 will not be supported in future gensim releases, please use model.wv.syn0')
-        self.wv.syn0 = value
-
-    @syn0.deleter
-    def syn0(self):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to syn0 will not be supported in future gensim releases, please use model.wv.syn0')
-        del self.wv.syn0
-
-    @property
-    def vocab(self):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to vocab will not be supported in future gensim releases, please use model.wv.vocab')
-        return self.wv.vocab
-
-    @vocab.setter
-    def vocab(self, value):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to vocab will not be supported in future gensim releases, please use model.wv.vocab')
-        self.wv.vocab = value
-
-    @vocab.deleter
-    def vocab(self):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to vocab will not be supported in future gensim releases, please use model.wv.vocab')
-        del self.wv.vocab
-
-    @property
-    def index2word(self):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to index2word will not be supported in future gensim releases, please use model.wv.index2word')
-        return self.wv.index2word
-
-    @index2word.setter
-    def index2word(self, value):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to index2word will not be supported in future gensim releases, please use model.wv.index2word')
-        self.wv.index2word = value
-
-    @index2word.deleter
-    def index2word(self):
-        if Word2Vec.keyed_vector_warnings:
-            logger.warning('direct access to index2word will not be supported in future gensim releases, please use model.wv.index2word')
-        del self.wv.index2word
 
     def __contains__(self, word):
         return self.wv.__contains__(word)
@@ -1329,19 +1231,14 @@ class Word2Vec(utils.SaveLoad):
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table
-        # TODO: after introducing KeyedVectors now syn0, vocab, id2word are saved TWO times. Once in word2vec and once in keyedvectors
-        #       After keyedvectors are deprecated it will be only once
-        Word2Vec.disable_keyed_vectors_warnings()
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'table', 'cum_table'])
 
         super(Word2Vec, self).save(*args, **kwargs)
-        Word2Vec.enable_keyed_vectors_warnings()
 
     save.__doc__ = utils.SaveLoad.save.__doc__
 
     @classmethod
     def load(cls, *args, **kwargs):
-        Word2Vec.disable_keyed_vectors_warnings()
         model = super(Word2Vec, cls).load(*args, **kwargs)
         # update older models
         if hasattr(model, 'table'):
@@ -1363,7 +1260,6 @@ class Word2Vec(utils.SaveLoad):
         if not hasattr(model, 'train_count'):
             model.train_count = 0
             model.total_train_time = 0
-        Word2Vec.enable_keyed_vectors_warnings()
         return model
 
     def _load_specials(self, *args, **kwargs):
