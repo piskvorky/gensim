@@ -206,6 +206,9 @@ def sparse2full(doc, length):
 
     """
     result = np.zeros(length, dtype=np.float32)  # fill with zeroes (default value)
+    # convert indices to int as numpy 1.12 no longer indexes by floats
+    doc = ((int(id_), float(val_)) for (id_, val_) in doc)
+
     doc = dict(doc)
     # overwrite some of the zeroes with explicit values
     result[list(doc)] = list(itervalues(doc))
