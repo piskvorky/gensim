@@ -283,7 +283,7 @@ class TestDoc2VecModel(unittest.TestCase):
 
     def models_equal(self, model, model2):
         # check words/hidden-weights
-        self.assertEqual(len(model.vocab), len(model2.vocab))
+        self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
         self.assertTrue(np.allclose(model.wv.syn0, model2.wv.syn0))
         if model.hs:
             self.assertTrue(np.allclose(model.syn1, model2.syn1))
@@ -306,7 +306,7 @@ class TestDoc2VecModel(unittest.TestCase):
                 self.assertTrue(hasattr(model, 'syn0_lockf'))
                 model.delete_temporary_training_data(keep_doctags_vectors=False, keep_inference=False)
                 self.assertTrue(len(model['human']), 10)
-                self.assertTrue(model.vocab['graph'].count, 5)
+                self.assertTrue(model.wv.vocab['graph'].count, 5)
                 self.assertTrue(not hasattr(model, 'syn1'))
                 self.assertTrue(not hasattr(model, 'syn1neg'))
                 self.assertTrue(not hasattr(model, 'syn0_lockf'))
