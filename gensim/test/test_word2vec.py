@@ -210,31 +210,33 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testLoadPreKeyedVectorModelCFormat(self):
         """Test loading pre-KeyedVectors word2vec model saved in word2vec format"""
-        model = word2vec.Word2Vec.load_word2vec_format(datapath('word2vec_pre_kv_c'))
-        self.assertTrue(model.wv.syn0.shape[0] == len(model.wv.vocab))
+        model = keyedvectors.KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'))
+        self.assertTrue(model.syn0.shape[0] == len(model.vocab))
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        model.save_word2vec_format(testfile(), binary=True)
-        binary_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
-        binary_model.init_sims(replace=False)
-        self.assertTrue(np.allclose(model['human'], binary_model['human']))
-        norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
+        model.wv.save_word2vec_format(testfile(), binary=True)
+        binary_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        binary_model_kv.init_sims(replace=False)
+        self.assertTrue(np.allclose(model['human'], binary_model_kv['human']))
+        norm_only_model = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
         norm_only_model.init_sims(replace=True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
         self.assertTrue(np.allclose(model.wv.syn0norm[model.wv.vocab['human'].index], norm_only_model['human']))
-        limited_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, limit=3)
-        self.assertEquals(len(limited_model.wv.syn0), 3)
-        half_precision_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, datatype=np.float16)
-        self.assertEquals(binary_model.wv.syn0.nbytes, half_precision_model.wv.syn0.nbytes * 2)
+        limited_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True, limit=3)
+        self.assertEquals(len(limited_model_kv.syn0), 3)
+        half_precision_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True, datatype=np.float16)
+        self.assertEquals(binary_model_kv.syn0.nbytes, half_precision_model_kv.syn0.nbytes * 2)
 
     def testNoTrainingCFormat(self):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        model.save_word2vec_format(testfile(), binary=True)
-        binary_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
+        model.wv.save_word2vec_format(testfile(), binary=True)
+        kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        binary_model = word2vec.Word2Vec()
+        binary_model.wv = kv
         self.assertRaises(ValueError, binary_model.train, sentences)
 
 
@@ -242,31 +244,31 @@ class TestWord2VecModel(unittest.TestCase):
         tfile = testfile()
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        model.save_word2vec_format(tfile, binary=True)
+        model.wv.save_word2vec_format(tfile, binary=True)
         f = open(tfile, 'r+b')
         f.write(b'13')  # write wrong (too-long) vector count
         f.close()
-        self.assertRaises(EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=True)
+        self.assertRaises(EOFError, keyedvectors.KeyedVectors.load_word2vec_format, tfile, binary=True)
 
     def testTooShortTextWord2VecFormat(self):
         tfile = testfile()
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        model.save_word2vec_format(tfile, binary=False)
+        model.wv.save_word2vec_format(tfile, binary=False)
         f = open(tfile, 'r+b')
         f.write(b'13')  # write wrong (too-long) vector count
         f.close()
-        self.assertRaises(EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=False)
+        self.assertRaises(EOFError, keyedvectors.KeyedVectors.load_word2vec_format, tfile, binary=False)
 
     def testPersistenceWord2VecFormatNonBinary(self):
         """Test storing/loading the entire model in word2vec non-binary format."""
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        model.save_word2vec_format(testfile(), binary=False)
-        text_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False)
+        model.wv.save_word2vec_format(testfile(), binary=False)
+        text_model = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=False)
         text_model.init_sims(False)
         self.assertTrue(np.allclose(model['human'], text_model['human'], atol=1e-6))
-        norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False)
+        norm_only_model = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=False)
         norm_only_model.init_sims(True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human'], atol=1e-6))
         self.assertTrue(np.allclose(model.wv.syn0norm[model.wv.vocab['human'].index], norm_only_model['human'], atol=1e-4))
@@ -276,9 +278,9 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
         testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
-        model.save_word2vec_format(testfile(), testvocab, binary=True)
-        binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
-        self.assertEqual(model.wv.vocab['human'].count, binary_model_with_vocab.wv.vocab['human'].count)
+        model.wv.save_word2vec_format(testfile(), testvocab, binary=True)
+        binary_model_with_vocab_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), testvocab, binary=True)
+        self.assertEqual(model.wv.vocab['human'].count, binary_model_with_vocab_kv.vocab['human'].count)
 
     def testPersistenceKeyedVectorsFormatWithVocab(self):
         """Test storing/loading the entire model and vocabulary in word2vec format."""
@@ -292,15 +294,15 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testPersistenceWord2VecFormatCombinationWithStandardPersistence(self):
         """Test storing/loading the entire model and vocabulary in word2vec format chained with
-         saving and loading via `save` and `load` methods`."""
+         saving and loading via `save` and `load` methods`.
+         It was possible prior to 1.0.0 release, now raises Exception"""
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
         testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
-        model.save_word2vec_format(testfile(), testvocab, binary=True)
-        binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
-        binary_model_with_vocab.save(testfile())
-        binary_model_with_vocab = word2vec.Word2Vec.load(testfile())
-        self.assertEqual(model.wv.vocab['human'].count, binary_model_with_vocab.wv.vocab['human'].count)
+        model.wv.save_word2vec_format(testfile(), testvocab, binary=True)
+        binary_model_with_vocab_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), testvocab, binary=True)
+        binary_model_with_vocab_kv.save(testfile())
+        self.assertRaises(AttributeError, word2vec.Word2Vec.load, testfile())
 
 
     def testLargeMmap(self):
@@ -416,7 +418,7 @@ class TestWord2VecModel(unittest.TestCase):
             orig0 = np.copy(model.wv.syn0[0])
             model.train(list_corpus)
             self.assertFalse((orig0 == model.wv.syn0[1]).all())  # vector should vary after training
-        sims = model.most_similar('war', topn=len(model.index2word))
+        sims = model.most_similar('war', topn=len(model.wv.index2word))
         t_rank = [word for word, score in sims].index('terrorism')
         # in >200 calibration runs w/ calling parameters, 'terrorism' in 50-most_sim for 'war'
         self.assertLess(t_rank, 50)
