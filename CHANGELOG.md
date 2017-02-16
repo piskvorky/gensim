@@ -3,6 +3,13 @@ Changes
 
 Unreleased:
 
+1.0.0RC2, 2017-02-16
+
+* Add note about Annoy speed depending on numpy BLAS setup in annoytutorial.ipynb (@greninja,[#1137](https://github.com/RaRe-Technologies/gensim/pull/1137)) 
+* Remove direct access to properties moved to KeyedVectors (@tmylk,[#1147](https://github.com/RaRe-Technologies/gensim/pull/1147))
+* Remove support for Python 2.6, 3.3 and 3.4 (@tmylk,[#1145](https://github.com/RaRe-Technologies/gensim/pull/1145))
+* Write UTF-8 byte strings in tensorboard conversion (@tmylk,[#1144](https://github.com/RaRe-Technologies/gensim/pull/1144))
+* Make top_topics and sparse2full compatible with numpy 1.12 strictly int idexing (@tmylk,[#1146](https://github.com/RaRe-Technologies/gensim/pull/1146))
 
 1.0.0RC1, 2017-01-31
 
