@@ -18,9 +18,17 @@ Given that the output layer is usually of a pre-defined size (e.g. labels in a t
 it is feasible to directly compute the softmax instead of its "approximations" (negative sampling and huffman tree).
 Then there 3 loss methods can be chosen.
 
-Initialize a model with e.g.::
+Initialize a model with e.g.:
 
->>> model = LabeledWord2Vec(sentences, size=100, loss='softmax', min_count=5, workers=4)
+>>> model = LabeledWord2Vec(tagged_docs, size=100, loss='softmax', min_count=5, workers=4)
+
+In which each tagged_doc is a pair (e.g. a `gensim.models.TaggedDocument`) with the actual document and a list of labels
+(tags).
+
+In order to predict the probability of a label, given a tagged_doc, use this method which returns the probability for all
+the labels
+
+>>> model.predict(('this', 'is', 'a', 'document'))
 
 .. [1] A. Joulin, E. Grave, P. Bojanowski, T. Mikolov, Bag of Tricks for Efficient Text Classification
 """
@@ -93,10 +101,10 @@ except ImportError:
         return neu1e
 
 
-    def train_batch_labeled_cbow(model, sentences, alpha, work=None, neu1=None):
+    def train_batch_labeled_cbow(model, tagged_docs, alpha, work=None, neu1=None):
         result = 0
-        for sentence in sentences:
-            document, target = sentence
+        for tagged_doc in tagged_docs:
+            document, target = tagged_doc
             word_vocabs = [model.wv.vocab[w] for w in document if w in model.wv.vocab and
                            model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
             target_vocabs = [model.lvocab[t] for t in target if t in model.lvocab]
@@ -150,14 +158,14 @@ except ImportError:
 
 
 class LabeledWord2Vec(Word2Vec):
-    def __init__(self, loss='softmax', **kwargs):
+    def __init__(self, tagged_docs=None, loss='softmax', **kwargs):
         """
         Exactly as the parent class
         `Word2Vec <https://radimrehurek.com/gensim/models/word2vec.html#gensim.models.word2vec.Word2Vec>`_.
         Some parameter values are overwritten (e.g. sg=0 because we never use skip-gram here,
-        window size is always the sentence size), look at the code for details.
+        window size is always the document size), look at the code for details.
 
-        `sentences` = An iterator over TaggedDocuments, each sentence is a pair bag of words and labels
+        `tagged_docs` = An iterator over TaggedDocuments, each tagged_doc is a pair of bag of words and labels
 
         `loss` = one value in {ns, hs, softmax}. If "ns" is selected negative sampling will be used
         as loss function, together with the parameter `negative`. With "hs" hierarchical softmax will be used,
@@ -172,16 +180,15 @@ class LabeledWord2Vec(Word2Vec):
         self.index2label = []
         kwargs['sg'] = 0
         kwargs['window'] = sys.maxsize
-        sentences = kwargs['sentences']
         kwargs['sentences'] = None
         self.softmax = self.init_loss(kwargs, loss)
         super(LabeledWord2Vec, self).__init__(**kwargs)
-        if sentences is not None:
-            if isinstance(sentences, GeneratorType):
-                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
-            self.build_vocab(sentences, trim_rule=kwargs['trim_rule'])
+        if tagged_docs is not None:
+            if isinstance(tagged_docs, GeneratorType):
+                raise TypeError("You can't pass a generator as the tagged_docs argument. Try an iterator.")
+            self.build_vocab(tagged_docs, trim_rule=kwargs.get('trim_rule'))
             #FIXME wrong!
-            self.train(sentences)
+            self.train(tagged_docs)
 
     def init_loss(self, kwargs, loss):
         if loss == 'hs':
@@ -200,12 +207,12 @@ class LabeledWord2Vec(Word2Vec):
 
     def _raw_word_count(self, job):
         """Return the number of words in a given job."""
-        return sum(len(sentence[0]) for sentence in job)
+        return sum(len(tagged_doc[0]) for tagged_doc in job)
 
-    def _do_train_job(self, sentences, alpha, inits):
+    def _do_train_job(self, tagged_docs, alpha, inits):
         """
-        Train a single batch of sentences (documents and labels in LabeledWord2Vec).
-        Return 2-tuple `(effective word count after ignoring unknown words and sentence length trimming,
+        Train a single batch of tagged_docs (documents and labels in LabeledWord2Vec).
+        Return 2-tuple `(effective word count after ignoring unknown words and document length trimming,
         total word count)`.
         """
         work, neu1 = inits
@@ -213,29 +220,24 @@ class LabeledWord2Vec(Word2Vec):
         if self.sg:
             raise NotImplementedError('Here we are trying only to, given a bag of words, predict a label')
         else:
-            tally += train_batch_labeled_cbow(self, sentences, alpha, work, neu1)
-        return tally, self._raw_word_count(sentences)
+            tally += train_batch_labeled_cbow(self, tagged_docs, alpha, work, neu1)
+        return tally, self._raw_word_count(tagged_docs)
 
-    # TODO use TaggedDocument from Gensim?
-    # FIXME sentences and labels in one iterator
-    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
+    def build_vocab(self, tagged_docs, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
         """
         Build vocabularies from a sequence of TaggedDocument (can be a once-only generator stream).
-        Each sentence must be a list of unicode strings.
+        Each document and lables must be list of unicode strings.
         """
-        def sentences_it():
-            for s, _ in sentences:
+        def documents_it():
+            for s, _ in tagged_docs:
                 yield s
 
-        def labels_it():
-            for _, l in sentences:
-                yield l
-
+        labels = frozenset(l for _, labels in tagged_docs for l in labels)
         # Build words and labels vocabularies in two different objects
-        self.scan_vocab(sentences_it(), progress_per=progress_per, trim_rule=trim_rule)
+        self.scan_vocab(documents_it(), progress_per=progress_per, trim_rule=trim_rule)
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)
         self.finalize_vocab(update=update)  # build tables & arrays
-        self.build_lvocab(labels_it(), progress_per=progress_per, update=update)
+        self.build_lvocab(labels, progress_per=progress_per, update=update)
 
     def build_lvocab(self, labels, progress_per=10000, update=False):
         """Only build data structures for labels. `labels` is an iterable over the label names."""
@@ -382,15 +384,15 @@ class LabeledWord2Vec(Word2Vec):
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
 
-    def train(self, sentences, total_words=None, word_count=0,
+    def train(self, tagged_docs, total_words=None, word_count=0,
               total_examples=None, queue_factor=2, report_delay=1.0):
         """
-        Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
-        For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
+        Update the model's neural weights from a sequence of tagged_docs (can be a once-only generator stream).
+        For LabledWord2Vec, each document and lables must be list of unicode strings. (Subclasses may accept other examples.)
 
         To support linear learning-rate decay from (initial) alpha to min_alpha, either total_examples
-        (count of sentences) or total_words (count of raw words in sentences) should be provided, unless the
-        sentences are the same as those that were used to initially build the vocabulary.
+        (count of tagged_docs) or total_words (count of raw words in documents) should be provided, unless the
+        documents are the same as those that were used to initially build the vocabulary.
 
         """
         if (self.model_trimmed_post_training):
@@ -404,14 +406,14 @@ class LabeledWord2Vec(Word2Vec):
                 # precompute negative labels optimization for pure-python training
                 self.neg_labels = zeros(self.negative + 1)
                 self.neg_labels[0] = 1.
-        return super(LabeledWord2Vec, self).train(sentences, total_words, word_count,
+        return super(LabeledWord2Vec, self).train(tagged_docs, total_words, word_count,
                                                   total_examples, queue_factor, report_delay)
 
     @classmethod
     def load_from(cls, other_model):
         """
         Import data and parameter values from another model
-        :param other_model: A ``LabeledWord2Vec`` object, or a ``Word2Vec`` or ``KeyedVectors`` object of Gensim
+        `other_model` =  A ``LabeledWord2Vec`` object, or a ``Word2Vec`` or ``KeyedVectors`` object of Gensim
         """
         softmax = getattr(other_model, 'softmax', False)
         if softmax:
@@ -442,6 +444,10 @@ class LabeledWord2Vec(Word2Vec):
     def __str__(self):
         return "%s(vocab=%s, labels=%s, size=%s, alpha=%s)" % (
             self.__class__.__name__, len(self.wv.index2word), len(self.index2label), self.vector_size, self.alpha)
+
+    def predict(self, document):
+        """Return the probabilistic scores of the relatedness of each label with this document"""
+        return score_document_labeled_cbow(self, document=document)
 
     def score(self, **kwargs):
         raise NotImplementedError('This method has no reason to exist in this class (for now)')

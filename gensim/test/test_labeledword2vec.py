@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Automated tests for checking transformation algorithms (the models package).
+Automated tests for checking the labeledword2vec model.
 """
 
 import io
@@ -14,6 +14,7 @@ import unittest
 from collections import Iterable
 
 import numpy
+from gensim.models.doc2vec import TaggedDocument
 from six import string_types
 
 from gensim.models import labeledword2vec
@@ -40,16 +41,15 @@ dataset_samples = (
 
 dataset_targets = (('aa', 'b'), 'b', 'cc', 'cc', 'b', 'aa')
 
-
 def _target_list(targets):
     return targets if isinstance(targets, Iterable) and not isinstance(targets, string_types) else [targets]
 
+data = [TaggedDocument(*d) for d in zip(dataset_samples, [_target_list(t) for t in dataset_targets])]
 
 def small_model():
     model = LabeledWord2Vec(iter=1, size=30, min_count=0, loss='hs', negative=0)
-    model.build_vocab(dataset_samples, frozenset(
-        target for targets in dataset_targets for target in _target_list(targets)))
-    model.train(zip(dataset_samples, dataset_targets))
+    model.build_vocab(data)
+    model.train(data)
     return model
 
 
@@ -57,19 +57,13 @@ def bunch_of_models():
     models = []
     for kwarg in ({'loss': 'hs', 'negative': 0}, {'loss': 'ns', 'negative': 5}, {'loss': 'softmax', 'negative': 0}):
         models.extend([
-            LabeledWord2Vec(iter=5, size=30, min_count=0, sample=0, min_alpha=0.0, **kwarg),
-            LabeledWord2Vec(iter=1, alpha=1.0, size=100, min_count=0, **kwarg),
-            LabeledWord2Vec(iter=3, size=50, min_count=1, **kwarg),
-            LabeledWord2Vec(iter=2, size=50, min_count=1, sample=0, **kwarg),
-            LabeledWord2Vec(iter=10, size=10, min_count=0, **kwarg),
-            LabeledWord2Vec(iter=5, workers=1, size=50, min_count=0, **kwarg)
+            LabeledWord2Vec(data, iter=5, size=30, min_count=0, sample=0, min_alpha=0.0, **kwarg),
+            LabeledWord2Vec(data, iter=1, alpha=1.0, size=100, min_count=0, **kwarg),
+            LabeledWord2Vec(data, iter=3, size=50, min_count=1, **kwarg),
+            LabeledWord2Vec(data, iter=2, size=50, min_count=1, sample=0, **kwarg),
+            LabeledWord2Vec(data, iter=10, size=10, min_count=0, **kwarg),
+            LabeledWord2Vec(data, iter=5, workers=1, size=50, min_count=0, **kwarg)
         ])
-    targets = frozenset(
-        target for targets in dataset_targets for target in _target_list(targets)
-    )
-    for model in models:
-        model.build_vocab(dataset_samples, targets)
-        model.train(zip(dataset_samples, dataset_targets))
     return models
 
 
@@ -81,7 +75,7 @@ class TestLabeledWord2VecModel(unittest.TestCase):
 
     def test_init(self):
         model1 = LabeledWord2Vec()
-        model2 = LabeledWord2Vec(iter=1, size=50)
+        model2 = LabeledWord2Vec(data, iter=1, size=50)
         model3 = LabeledWord2Vec(seed=66)
         self.assertNotEqual(model1, model2)
         self.assertNotEqual(model1, model3)
