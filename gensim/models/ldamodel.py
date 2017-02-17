@@ -862,7 +862,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             for m in top_words[1:]:
                 # m_docs is v_m^(t)
                 m_docs = doc_word_list[m]
-                m_index = np.where(top_words == m)[0]
+                m_index = np.where(top_words == m)[0][0]
 
                 # Sum of top words l=1..m
                 # i.e., all words ranked higher than the current word m
