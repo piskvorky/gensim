@@ -62,12 +62,37 @@ import os
 import logging
 import warnings
 from collections import defaultdict
+import itertools as it
 
-from six import iteritems, string_types
+from six import iteritems, string_types, next
 
 from gensim import utils, interfaces
 
 logger = logging.getLogger(__name__)
+
+
+def _is_single(obj):
+    """
+    Check whether `obj` is a single document or an entire corpus.
+    Returns (is_single, new) 2-tuple, where `new` yields the same
+    sequence as `obj`.
+
+    `obj` is a single document if it is an iterable of strings.  It
+    is a corpus if it is an iterable of documents.
+    """
+    obj_iter = iter(obj)
+    try:
+        peek = next(obj_iter)
+        obj_iter = it.chain([peek], obj_iter)
+    except StopIteration:
+        # An empty object is a single document
+        return True, obj
+    if isinstance(peek, string_types):
+        # It's a document, return the iterator
+        return True, obj_iter
+    else:
+        # If the first item isn't a string, assume obj is a corpus
+        return False, obj_iter
 
 
 class Phrases(interfaces.TransformationABC):
@@ -246,10 +271,8 @@ class Phrases(interfaces.TransformationABC):
 
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
-        try:
-            is_single = not sentence or isinstance(sentence[0], string_types)
-        except:
-            is_single = False
+
+        is_single, sentence = _is_single(sentence)
         if not is_single:
             # if the input is an entire corpus (rather than a single sentence),
             # return an iterable stream.
@@ -327,7 +350,6 @@ class Phraser(interfaces.TransformationABC):
                 logger.info('Phraser added %i phrasegrams', count)
         logger.info('Phraser built with %i %i phrasegrams', count, len(self.phrasegrams))
 
-
     def __getitem__(self, sentence):
         """
         Convert the input tokens `sentence` (=list of unicode strings) into phrase
@@ -339,10 +361,7 @@ class Phraser(interfaces.TransformationABC):
         into phrases on the fly, one after another.
 
         """
-        try:
-            is_single = not sentence or isinstance(sentence[0], string_types)
-        except:
-            is_single = False
+        is_single, sentence = _is_single(sentence)
         if not is_single:
             # if the input is an entire corpus (rather than a single sentence),
             # return an iterable stream.

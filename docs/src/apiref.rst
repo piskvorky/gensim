@@ -37,12 +37,15 @@ Modules:
     models/lsi_worker
     models/lda_dispatcher
     models/lda_worker
+    models/atmodel
     models/word2vec
     models/doc2vec
     models/phrases
     models/wrappers/ldamallet
     models/wrappers/dtmmodel
     models/wrappers/ldavowpalwabbit.rst
+    models/wrappers/wordrank
+    models/wrappers/varembed
     similarities/docsim
     similarities/index
     topic_coherence/aggregation
@@ -63,6 +66,4 @@ Modules:
     summarization/summariser
     summarization/syntactic_unit
     summarization/textcleaner
-
-
-
+    sklearn_integration/sklearn_wrapper_gensim_ldamodel

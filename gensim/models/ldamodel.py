@@ -37,6 +37,7 @@ import numbers
 import os
 
 from gensim import interfaces, utils, matutils
+from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
 
 from itertools import chain
@@ -55,18 +56,6 @@ except ImportError:
 
 
 logger = logging.getLogger('gensim.models.ldamodel')
-
-
-def dirichlet_expectation(alpha):
-    """
-    For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
-
-    """
-    if (len(alpha.shape) == 1):
-        result = psi(alpha) - psi(np.sum(alpha))
-    else:
-        result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
-    return result.astype(alpha.dtype)  # keep the same precision as input
 
 
 def update_dir_prior(prior, N, logphat, rho):
@@ -92,19 +81,6 @@ def update_dir_prior(prior, N, logphat, rho):
 
     return prior
 
-def get_random_state(seed):
-     """ Turn seed into a np.random.RandomState instance.
-
-         Method originally from maciejkula/glove-python, and written by @joshloyal
-     """
-     if seed is None or seed is np.random:
-         return np.random.mtrand._rand
-     if isinstance(seed, (numbers.Integral, np.integer)):
-         return np.random.RandomState(seed)
-     if isinstance(seed, np.random.RandomState):
-        return seed
-     raise ValueError('%r cannot be used to seed a np.random.RandomState'
-                      ' instance' % seed)
 
 class LdaState(utils.SaveLoad):
     """
@@ -314,7 +290,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
-        self.random_state = get_random_state(random_state)
+        self.random_state = utils.get_random_state(random_state)
 
         assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
                 "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
@@ -761,7 +737,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             score += np.sum(gammaln(gammad) - gammaln(self.alpha))
             score += gammaln(np.sum(self.alpha)) - gammaln(np.sum(gammad))
 
-        # compensate likelihood for when `corpus` above is only a sample of the whole corpus
+        # Compensate likelihood for when `corpus` above is only a sample of the whole corpus. This ensures
+        # that the likelihood is always rougly on the same scale.
         score *= subsample_ratio
 
         # E[log p(beta | eta) - log q (beta | lambda)]; assumes eta is a scalar
@@ -885,11 +862,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             for m in top_words[1:]:
                 # m_docs is v_m^(t)
                 m_docs = doc_word_list[m]
-                m_index = np.where(top_words == m)[0]
+                m_index = np.where(top_words == m)[0][0]
 
-                # Sum of top words l=1..m-1
+                # Sum of top words l=1..m
                 # i.e., all words ranked higher than the current word m
-                for l in top_words[:m_index - 1]:
+                for l in top_words[:m_index]:
                     # l_docs is v_l^(t)
                     l_docs = doc_word_list[l]
 

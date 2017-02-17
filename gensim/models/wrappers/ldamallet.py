@@ -152,7 +152,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         else:
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet())
         logger.info("converting temporary corpus to MALLET format with %s", cmd)
-        check_output(cmd, shell=True)
+        check_output(args=cmd, shell=True)
 
     def train(self, corpus):
         self.convert_input(corpus, infer=False)
@@ -164,7 +164,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer(), self.topic_threshold)
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s", cmd)
-        check_output(cmd, shell=True)
+        check_output(args=cmd, shell=True)
         self.word_topics = self.load_word_topics()
         # NOTE - we are still keeping the wordtopics variable to not break backward compatibility.
         # word_topics has replaced wordtopics throughout the code; wordtopics just stores the values of word_topics when train is called.
@@ -180,7 +180,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s --doc-topics-threshold %s"
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations, self.topic_threshold)
         logger.info("inferring topics with MALLET LDA '%s'", cmd)
-        check_output(cmd, shell=True)
+        check_output(args=cmd, shell=True)
         result = list(self.read_doctopics(self.fdoctopics() + '.infer'))
         return result if is_corpus else result[0]
 
@@ -234,7 +234,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             if formatted:
                 topic = self.print_topic(i, topn=num_words)
             else:
-                topic = self.show_topic(i, topn=num_words)
+                topic = self.show_topic(i, num_words=num_words)
             shown.append((i, topic))
             if log:
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)

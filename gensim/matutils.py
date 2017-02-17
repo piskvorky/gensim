@@ -16,11 +16,12 @@ import math
 
 from gensim import utils
 
-import numpy
+import numpy as np
 import scipy.sparse
 from scipy.stats import entropy
 import scipy.linalg
 from scipy.linalg.lapack import get_lapack_funcs
+from scipy.special import psi  # gamma function utils
 
 from six import iteritems, itervalues, string_types
 from six.moves import xrange, zip as izip
@@ -33,13 +34,13 @@ except ImportError:
     from scipy.linalg.special_matrices import triu
 
 try:
-    from numpy import triu_indices
+    from np import triu_indices
 except ImportError:
-    # numpy < 1.4
+    # np < 1.4
     def triu_indices(n, k=0):
-        m = numpy.ones((n, n), int)
+        m = np.ones((n, n), int)
         a = triu(m, k)
-        return numpy.where(a != 0)
+        return np.where(a != 0)
 
 blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
@@ -53,21 +54,21 @@ def argsort(x, topn=None, reverse=False):
     If reverse is True, return the greatest elements instead, in descending order.
 
     """
-    x = numpy.asarray(x)  # unify code path for when `x` is not a numpy array (list, tuple...)
+    x = np.asarray(x)  # unify code path for when `x` is not a np array (list, tuple...)
     if topn is None:
         topn = x.size
     if topn <= 0:
         return []
     if reverse:
         x = -x
-    if topn >= x.size or not hasattr(numpy, 'argpartition'):
-        return numpy.argsort(x)[:topn]
-    # numpy >= 1.8 has a fast partial argsort, use that!
-    most_extreme = numpy.argpartition(x, topn)[:topn]
-    return most_extreme.take(numpy.argsort(x.take(most_extreme)))  # resort topn into order
+    if topn >= x.size or not hasattr(np, 'argpartition'):
+        return np.argsort(x)[:topn]
+    # np >= 1.8 has a fast partial argsort, use that!
+    most_extreme = np.argpartition(x, topn)[:topn]
+    return most_extreme.take(np.argsort(x.take(most_extreme)))  # resort topn into order
 
 
-def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_nnz=None, printprogress=0):
+def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=None, printprogress=0):
     """
     Convert a streamed corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
     with documents as columns.
@@ -96,8 +97,8 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
     if num_terms is not None and num_docs is not None and num_nnz is not None:
         # faster and much more memory-friendly version of creating the sparse csc
         posnow, indptr = 0, [0]
-        indices = numpy.empty((num_nnz,), dtype=numpy.int32) # HACK assume feature ids fit in 32bit integer
-        data = numpy.empty((num_nnz,), dtype=dtype)
+        indices = np.empty((num_nnz,), dtype=np.int32) # HACK assume feature ids fit in 32bit integer
+        data = np.empty((num_nnz,), dtype=dtype)
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i/%i" % (docno, num_docs))
@@ -122,15 +123,15 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
             num_terms = max(indices) + 1 if indices else 0
         num_docs = len(indptr) - 1
         # now num_docs, num_terms and num_nnz contain the correct values
-        data = numpy.asarray(data, dtype=dtype)
-        indices = numpy.asarray(indices)
+        data = np.asarray(data, dtype=dtype)
+        indices = np.asarray(indices)
         result = scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype)
     return result
 
 
 def pad(mat, padrow, padcol):
     """
-    Add additional rows/columns to a numpy.matrix `mat`. The new rows/columns
+    Add additional rows/columns to a np.matrix `mat`. The new rows/columns
     will be initialized with zeros.
     """
     if padrow < 0:
@@ -138,36 +139,36 @@ def pad(mat, padrow, padcol):
     if padcol < 0:
         padcol = 0
     rows, cols = mat.shape
-    return numpy.bmat([[mat, numpy.matrix(numpy.zeros((rows, padcol)))],
-                      [numpy.matrix(numpy.zeros((padrow, cols + padcol)))]])
+    return np.bmat([[mat, np.matrix(np.zeros((rows, padcol)))],
+                      [np.matrix(np.zeros((padrow, cols + padcol)))]])
 
 
 def zeros_aligned(shape, dtype, order='C', align=128):
-    """Like `numpy.zeros()`, but the array will be aligned at `align` byte boundary."""
-    nbytes = numpy.prod(shape, dtype=numpy.int64) * numpy.dtype(dtype).itemsize
-    buffer = numpy.zeros(nbytes + align, dtype=numpy.uint8)  # problematic on win64 ("maximum allowed dimension exceeded")
+    """Like `np.zeros()`, but the array will be aligned at `align` byte boundary."""
+    nbytes = np.prod(shape, dtype=np.int64) * np.dtype(dtype).itemsize
+    buffer = np.zeros(nbytes + align, dtype=np.uint8)  # problematic on win64 ("maximum allowed dimension exceeded")
     start_index = -buffer.ctypes.data % align
     return buffer[start_index : start_index + nbytes].view(dtype).reshape(shape, order=order)
 
 
 def ismatrix(m):
-    return isinstance(m, numpy.ndarray) and m.ndim == 2 or scipy.sparse.issparse(m)
+    return isinstance(m, np.ndarray) and m.ndim == 2 or scipy.sparse.issparse(m)
 
 
 def any2sparse(vec, eps=1e-9):
-    """Convert a numpy/scipy vector into gensim document format (=list of 2-tuples)."""
-    if isinstance(vec, numpy.ndarray):
+    """Convert a np/scipy vector into gensim document format (=list of 2-tuples)."""
+    if isinstance(vec, np.ndarray):
         return dense2vec(vec, eps)
     if scipy.sparse.issparse(vec):
         return scipy2sparse(vec, eps)
-    return [(int(fid), float(fw)) for fid, fw in vec if numpy.abs(fw) > eps]
+    return [(int(fid), float(fw)) for fid, fw in vec if np.abs(fw) > eps]
 
 
 def scipy2sparse(vec, eps=1e-9):
     """Convert a scipy.sparse vector into gensim document format (=list of 2-tuples)."""
     vec = vec.tocsr()
     assert vec.shape[0] == 1
-    return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if numpy.abs(val) > eps]
+    return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if np.abs(val) > eps]
 
 
 class Scipy2Corpus(object):
@@ -179,15 +180,15 @@ class Scipy2Corpus(object):
     """
     def __init__(self, vecs):
         """
-        `vecs` is a sequence of dense and/or sparse vectors, such as a 2d numpy array,
-        or a scipy.sparse.csc_matrix, or any sequence containing a mix of 1d numpy/scipy vectors.
+        `vecs` is a sequence of dense and/or sparse vectors, such as a 2d np array,
+        or a scipy.sparse.csc_matrix, or any sequence containing a mix of 1d np/scipy vectors.
 
         """
         self.vecs = vecs
 
     def __iter__(self):
         for vec in self.vecs:
-            if isinstance(vec, numpy.ndarray):
+            if isinstance(vec, np.ndarray):
                 yield full2sparse(vec)
             else:
                 yield scipy2sparse(vec)
@@ -199,12 +200,15 @@ class Scipy2Corpus(object):
 def sparse2full(doc, length):
     """
     Convert a document in sparse document format (=sequence of 2-tuples) into a dense
-    numpy array (of size `length`).
+    np array (of size `length`).
 
     This is the mirror function to `full2sparse`.
 
     """
-    result = numpy.zeros(length, dtype=numpy.float32)  # fill with zeroes (default value)
+    result = np.zeros(length, dtype=np.float32)  # fill with zeroes (default value)
+    # convert indices to int as numpy 1.12 no longer indexes by floats
+    doc = ((int(id_), float(val_)) for (id_, val_) in doc)
+
     doc = dict(doc)
     # overwrite some of the zeroes with explicit values
     result[list(doc)] = list(itervalues(doc))
@@ -213,15 +217,15 @@ def sparse2full(doc, length):
 
 def full2sparse(vec, eps=1e-9):
     """
-    Convert a dense numpy array into the sparse document format (sequence of 2-tuples).
+    Convert a dense np array into the sparse document format (sequence of 2-tuples).
 
     Values of magnitude < `eps` are treated as zero (ignored).
 
     This is the mirror function to `sparse2full`.
 
     """
-    vec = numpy.asarray(vec, dtype=float)
-    nnz = numpy.nonzero(abs(vec) > eps)[0]
+    vec = np.asarray(vec, dtype=float)
+    nnz = np.nonzero(abs(vec) > eps)[0]
     return list(zip(nnz, vec.take(nnz)))
 
 dense2vec = full2sparse
@@ -232,19 +236,19 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
     Like `full2sparse`, but only return the `topn` elements of the greatest magnitude (abs).
 
     """
-    # use numpy.argpartition/argsort and only form tuples that are actually returned.
+    # use np.argpartition/argsort and only form tuples that are actually returned.
     # this is about 40x faster than explicitly forming all 2-tuples to run sort() or heapq.nlargest() on.
     if topn <= 0:
         return []
-    vec = numpy.asarray(vec, dtype=float)
-    nnz = numpy.nonzero(abs(vec) > eps)[0]
+    vec = np.asarray(vec, dtype=float)
+    nnz = np.nonzero(abs(vec) > eps)[0]
     biggest = nnz.take(argsort(abs(vec).take(nnz), topn, reverse=True))
     return list(zip(biggest, vec.take(biggest)))
 
 
-def corpus2dense(corpus, num_terms, num_docs=None, dtype=numpy.float32):
+def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
     """
-    Convert corpus into a dense numpy array (documents will be columns). You
+    Convert corpus into a dense np array (documents will be columns). You
     must supply the number of features `num_terms`, because dimensionality
     cannot be deduced from the sparse vectors alone.
 
@@ -256,19 +260,19 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=numpy.float32):
     """
     if num_docs is not None:
         # we know the number of documents => don't bother column_stacking
-        docno, result = -1, numpy.empty((num_terms, num_docs), dtype=dtype)
+        docno, result = -1, np.empty((num_terms, num_docs), dtype=dtype)
         for docno, doc in enumerate(corpus):
             result[:, docno] = sparse2full(doc, num_terms)
         assert docno + 1 == num_docs
     else:
-        result = numpy.column_stack(sparse2full(doc, num_terms) for doc in corpus)
+        result = np.column_stack(sparse2full(doc, num_terms) for doc in corpus)
     return result.astype(dtype)
 
 
 
 class Dense2Corpus(object):
     """
-    Treat dense numpy array as a sparse, streamed gensim corpus.
+    Treat dense np array as a sparse, streamed gensim corpus.
 
     No data copy is made (changes to the underlying matrix imply changes in the
     corpus).
@@ -329,18 +333,18 @@ def ret_normalized_vec(vec, length):
 def ret_log_normalize_vec(vec, axis=1):
     log_max = 100.0
     if len(vec.shape) == 1:
-        max_val = numpy.max(vec)
-        log_shift = log_max - numpy.log(len(vec) + 1.0) - max_val
-        tot = numpy.sum(numpy.exp(vec + log_shift))
-        log_norm = numpy.log(tot) - log_shift
+        max_val = np.max(vec)
+        log_shift = log_max - np.log(len(vec) + 1.0) - max_val
+        tot = np.sum(np.exp(vec + log_shift))
+        log_norm = np.log(tot) - log_shift
         vec = vec - log_norm
     else:
         if axis == 1:  # independently normalize each sample
-            max_val = numpy.max(vec, 1)
-            log_shift = log_max - numpy.log(vec.shape[1] + 1.0) - max_val
-            tot = numpy.sum(numpy.exp(vec + log_shift[:, numpy.newaxis]), 1)
-            log_norm = numpy.log(tot) - log_shift
-            vec = vec - log_norm[:, numpy.newaxis]
+            max_val = np.max(vec, 1)
+            log_shift = log_max - np.log(vec.shape[1] + 1.0) - max_val
+            tot = np.sum(np.exp(vec + log_shift[:, np.newaxis]), 1)
+            log_norm = np.log(tot) - log_shift
+            vec = vec - log_norm[:, np.newaxis]
         elif axis == 0:  # normalize each feature
             k = ret_log_normalize_vec(vec.T)
             return (k[0].T, k[1])
@@ -349,8 +353,8 @@ def ret_log_normalize_vec(vec, axis=1):
     return (vec, log_norm)
 
 
-blas_nrm2 = blas('nrm2', numpy.array([], dtype=float))
-blas_scal = blas('scal', numpy.array([], dtype=float))
+blas_nrm2 = blas('nrm2', np.array([], dtype=float))
+blas_scal = blas('scal', np.array([], dtype=float))
 
 
 def unitvec(vec, norm='l2'):
@@ -359,25 +363,25 @@ def unitvec(vec, norm='l2'):
     is returned back unchanged.
 
     Output will be in the same format as input (i.e., gensim vector=>gensim vector,
-    or numpy array=>numpy array, scipy.sparse=>scipy.sparse).
+    or np array=>np array, scipy.sparse=>scipy.sparse).
     """
     if norm not in ('l1', 'l2'):
         raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
     if scipy.sparse.issparse(vec):
         vec = vec.tocsr()
         if norm == 'l1':
-            veclen = numpy.sum(numpy.abs(vec.data))
+            veclen = np.sum(np.abs(vec.data))
         if norm == 'l2':
-            veclen = numpy.sqrt(numpy.sum(vec.data ** 2))
+            veclen = np.sqrt(np.sum(vec.data ** 2))
         if veclen > 0.0:
             return vec / veclen
         else:
             return vec
 
-    if isinstance(vec, numpy.ndarray):
-        vec = numpy.asarray(vec, dtype=float)
+    if isinstance(vec, np.ndarray):
+        vec = np.asarray(vec, dtype=float)
         if norm == 'l1':
-            veclen = numpy.sum(numpy.abs(vec))
+            veclen = np.sum(np.abs(vec))
         if norm == 'l2':
             veclen = blas_nrm2(vec)
         if veclen > 0.0:
@@ -481,10 +485,10 @@ def hellinger(vec1, vec2):
         vec1, vec2 = dict(vec1), dict(vec2)
         if len(vec2) < len(vec1): 
             vec1, vec2 = vec2, vec1 # swap references so that we iterate over the shorter vector
-        sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
+        sim = np.sqrt(0.5*sum((np.sqrt(value) - np.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
         return sim
     else:
-        sim = numpy.sqrt(0.5 * ((numpy.sqrt(vec1) - numpy.sqrt(vec2))**2).sum())
+        sim = np.sqrt(0.5 * ((np.sqrt(vec1) - np.sqrt(vec2))**2).sum())
         return sim
 
 
@@ -514,15 +518,27 @@ def jaccard(vec1, vec2):
         return 1 - float(intersection) / float(union)
     else:
         # if it isn't in bag of words format, we can use sets to calculate intersection and union
-        if isinstance(vec1, numpy.ndarray):
+        if isinstance(vec1, np.ndarray):
             vec1 = vec1.tolist()
-        if isinstance(vec2, numpy.ndarray):
+        if isinstance(vec2, np.ndarray):
             vec2 = vec2.tolist()
         vec1 = set(vec1)
         vec2 = set(vec2)
         intersection = vec1 & vec2
         union = vec1 | vec2
         return 1 - float(len(intersection)) / float(len(union))
+
+
+def dirichlet_expectation(alpha):
+    """
+    For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
+
+    """
+    if (len(alpha.shape) == 1):
+        result = psi(alpha) - psi(np.sum(alpha))
+    else:
+        result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
+    return result.astype(alpha.dtype)  # keep the same precision as input
 
 
 def qr_destroy(la):
@@ -532,7 +548,7 @@ def qr_destroy(la):
     Using this function should be less memory intense than calling `scipy.linalg.qr(la[0])`,
     because the memory used in `la[0]` is reclaimed earlier.
     """
-    a = numpy.asfortranarray(la[0])
+    a = np.asfortranarray(la[0])
     del la[0], la # now `a` is the only reference to the input matrix
     m, n = a.shape
     # perform q, r = QR(a); code hacked out of scipy.linalg.qr

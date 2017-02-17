@@ -59,7 +59,7 @@ class AnnoyIndexer(object):
         """Build an Annoy index using word vectors from a Word2Vec model"""
 
         self.model.init_sims()
-        return self._build_from_model(self.model.wv.syn0norm, self.model.index2word
+        return self._build_from_model(self.model.wv.syn0norm, self.model.wv.index2word
                                       , self.model.vector_size)
 
     def build_from_doc2vec(self):

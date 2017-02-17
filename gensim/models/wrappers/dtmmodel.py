@@ -198,7 +198,7 @@ class DtmModel(utils.SaveLoad):
 
         cmd = [self.dtm_path] + arguments.split()
         logger.info("Running command %s" % cmd)
-        check_output(cmd, stderr=PIPE)
+        check_output(args=cmd, stderr=PIPE)
 
         self.em_steps = np.loadtxt(self.fem_steps())
         self.init_ss = np.loadtxt(self.flda_ss())

@@ -86,11 +86,11 @@ def clean_text_by_sentences(text):
     return merge_syntactic_units(original_sentences, filtered_sentences)
 
 
-def clean_text_by_word(text):
+def clean_text_by_word(text, deacc=True):
     """ Tokenizes a given text into words, applying filters and lemmatizing them.
     Returns a dict of word -> syntacticUnit. """
     text_without_acronyms = replace_with_separator(text, "", [AB_ACRONYM_LETTERS])
-    original_words = list(tokenize(text_without_acronyms, to_lower=True, deacc=True))
+    original_words = list(tokenize(text_without_acronyms, to_lower=True, deacc=deacc))
     filtered_words = [join_words(word_list, "") for word_list in preprocess_documents(original_words)]
     if HAS_PATTERN:
         tags = tag(join_words(original_words))  # tag needs the context of the words in the text

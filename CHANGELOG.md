@@ -3,14 +3,61 @@ Changes
 
 Unreleased:
 
-None
+1.0.0RC2, 2017-02-16
+
+* Add note about Annoy speed depending on numpy BLAS setup in annoytutorial.ipynb (@greninja,[#1137](https://github.com/RaRe-Technologies/gensim/pull/1137)) 
+* Remove direct access to properties moved to KeyedVectors (@tmylk,[#1147](https://github.com/RaRe-Technologies/gensim/pull/1147))
+* Remove support for Python 2.6, 3.3 and 3.4 (@tmylk,[#1145](https://github.com/RaRe-Technologies/gensim/pull/1145))
+* Write UTF-8 byte strings in tensorboard conversion (@tmylk,[#1144](https://github.com/RaRe-Technologies/gensim/pull/1144))
+* Make top_topics and sparse2full compatible with numpy 1.12 strictly int idexing (@tmylk,[#1146](https://github.com/RaRe-Technologies/gensim/pull/1146))
+
+1.0.0RC1, 2017-01-31
+
+New features:
+* Add Author-topic modeling (@olavurmortensen,[#893](https://github.com/RaRe-Technologies/gensim/pull/893))
+* Add FastText word embedding wrapper (@Jayantj,[#847](https://github.com/RaRe-Technologies/gensim/pull/847))
+* Add WordRank word embedding  wrapper (@parulsethi,[#1066](https://github.com/RaRe-Technologies/gensim/pull/1066), [#1125](https://github.com/RaRe-Technologies/gensim/pull/1125))
+* Add sklearn wrapper for LDAModel (@AadityaJ,[#932](https://github.com/RaRe-Technologies/gensim/pull/932))
+
+Improvements:
+* Python 3.6 support (@tmylk [#1077](https://github.com/RaRe-Technologies/gensim/pull/1077))  
+* Phrases and Phraser allow a generator corpus (ELind77 [#1099](https://github.com/RaRe-Technologies/gensim/pull/1099))
+* Ignore DocvecsArray.doctag_syn0norm in save. Fix #789 (@accraze,[#1053](https://github.com/RaRe-Technologies/gensim/pull/1053))
+* Move load and save word2vec_format out of word2vec class to KeyedVectors  (@tmylk,[#1107](https://github.com/RaRe-Technologies/gensim/pull/1107))
+* Fix bug in LsiModel that occurs when id2word is a Python 3 dictionary. (@cvangysel,[#1103](https://github.com/RaRe-Technologies/gensim/pull/1103)
+* Fix broken link to paper in readme (@bhargavvader,[#1101](https://github.com/RaRe-Technologies/gensim/pull/1101)) 
+* Lazy formatting in evaluate_word_pairs (@akutuzov,[#1084](https://github.com/RaRe-Technologies/gensim/pull/1084)) 
+* Deacc option to keywords pre-processing (@bhargavvader,[#1076](https://github.com/RaRe-Technologies/gensim/pull/1076))
+
+Tutorial and doc improvements:
+
+* Clarifying comment in is_corpus func in utils.py (@greninja,[#1109](https://github.com/RaRe-Technologies/gensim/pull/1109)) 
+* Tutorial Topics_and_Transformations fix markdown and add references (@lgmoneda,[#1120](https://github.com/RaRe-Technologies/gensim/pull/1120))
+* Fix doc2vec-lee.ipynb results to match previous behavior (@bahbbc,[#1119](https://github.com/RaRe-Technologies/gensim/pull/1119)) 
+* Remove Pattern lib dependency in News Classification tutorial (@luizcavalcanti,[#1118](https://github.com/RaRe-Technologies/gensim/pull/1118))
+* Corpora_and_Vector_Spaces tutorial text clarification (@lgmoneda,[#1116](https://github.com/RaRe-Technologies/gensim/pull/1116))
+* Update Transformation and Topics link from quick start notebook (@mariana393,[#1115](https://github.com/RaRe-Technologies/gensim/pull/1115))
+* Quick Start Text clarification and typo correction (@luizcavalcanti,[#1114](https://github.com/RaRe-Technologies/gensim/pull/1114))
+* Fix typos in Author-topic tutorial (@Fil,[#1102](https://github.com/RaRe-Technologies/gensim/pull/1102))
+* Address benchmark inconsistencies in Annoy tutorial (@droudy,[#1113](https://github.com/RaRe-Technologies/gensim/pull/1113))
+
+
+0.13.4.1, 2017-01-04
+
+* Disable direct access warnings on save and load of Word2vec/Doc2vec (@tmylk, [#1072](https://github.com/RaRe-Technologies/gensim/pull/1072))
+* Making Default hs error explicit (@accraze, [#1054](https://github.com/RaRe-Technologies/gensim/pull/1054)) 
+* Removed unnecessary numpy imports (@bhargavvader,  [#1065](https://github.com/RaRe-Technologies/gensim/pull/1065))
+* Utils and Matutils changes (@bhargavvader,  [#1062](https://github.com/RaRe-Technologies/gensim/pull/1062)) 
+* Tests for the evaluate_word_pairs function (@akutuzov, [#1061](https://github.com/RaRe-Technologies/gensim/pull/1061))
 
 0.13.4, 2016-12-22
 
-* Evaluation of word2vec models against semantic similarity datasets like SimLex-999 (#1047) (@akutuzov, [#1047](https://github.com/RaRe-Technologies/gensim/pull/1047))
+* Added suggested lda model method and print methods to HDP class (@bhargavvader, [#1055](https://github.com/RaRe-Technologies/gensim/pull/1055))
+* New class KeyedVectors to store embedding separate from training code (@anmol01gulati and @droudy, [#980](https://github.com/RaRe-Technologies/gensim/pull/980))
+* Evaluation of word2vec models against semantic similarity datasets like SimLex-999 (@akutuzov, [#1047](https://github.com/RaRe-Technologies/gensim/pull/1047))
 * TensorBoard word embedding visualisation of Gensim Word2vec format (@loretoparisi, [#1051](https://github.com/RaRe-Technologies/gensim/pull/1051))
-* Throw exception if load() is called on instance rather than the class in word2vec and doc2vec (@dus0x,[(#889](https://github.com/RaRe-Technologies/gensim/pull/889))
-* Loading and Saving LDA Models across Python 2 and 3. Fix #853 (@anmolgulati, #913, [#1093](https://github.com/RaRe-Technologies/gensim/pull/1093))
+* Throw exception if load() is called on instance rather than the class in word2vec and doc2vec (@dust0x,[(#889](https://github.com/RaRe-Technologies/gensim/pull/889))
+* Loading and Saving LDA Models across Python 2 and 3. Fix #853 (@anmolgulati, [#913](https://github.com/RaRe-Technologies/gensim/pull/913), [#1093](https://github.com/RaRe-Technologies/gensim/pull/1093))
 * Fix automatic learning of eta (prior over words) in LDA (@olavurmortensen, [#1024](https://github.com/RaRe-Technologies/gensim/pull/1024)).
     * eta should have dimensionality V (size of vocab) not K (number of topics). eta with shape K x V is still allowed, as the user may want to impose specific prior information to each topic.
     * eta is no longer allowed the "asymmetric" option. Asymmetric priors over words in general are fine (learned or user defined).
@@ -18,10 +65,9 @@ None
     * Unit tests were updated accordingly. The unit tests expect a different shape than before; some unit tests were redundant after the change; `eta='asymmetric'` now should raise an error.
 * Optimise show_topics to only call get_lambda once. Fix #1006. (@bhargavvader,  [#1028](https://github.com/RaRe-Technologies/gensim/pull/1028))
 * HdpModel doc improvement. Inference and print_topics (@dsquareindia, [#1029](https://github.com/RaRe-Technologies/gensim/pull/1029))
-* Removing Doc2Vec defaults so that it won't override Word2Vec defaults. Fix #795 (@markroxor, [#929](https://github.com/RaRe-Technologies/gensim/pull/929))
-Remove warning on gensim import "pattern not installed". Fix #1009 (@shashankg7, #1018)
+* Removing Doc2Vec defaults so that it won't override Word2Vec defaults. Fix #795. (@markroxor, [#929](https://github.com/RaRe-Technologies/gensim/pull/929))
+* Remove warning on gensim import "pattern not installed". Fix #1009 (@shashankg7, [#1018](https://github.com/RaRe-Technologies/gensim/pull/1018))
 * Add delete_temporary_training_data() function to word2vec and doc2vec models. (@deepmipt-VladZhukov, [#987](https://github.com/RaRe-Technologies/gensim/pull/987))
-* New class KeyedVectors to store embedding separate from training code (@anmol01gulati and @droudy, [#980](https://github.com/RaRe-Technologies/gensim/pull/980))
 * Documentation improvements (@IrinaGoloshchapova, [#1010](https://github.com/RaRe-Technologies/gensim/pull/1010), [#1011](https://github.com/RaRe-Technologies/gensim/pull/1011))
 * LDA tutorial by Olavur, tips and tricks (@olavurmortensen, [#779](https://github.com/RaRe-Technologies/gensim/pull/779)) 
 * Add double quote in commmand line to run on Windows (@akarazeev, [#1005](https://github.com/RaRe-Technologies/gensim/pull/1005)) 

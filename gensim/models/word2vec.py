@@ -80,7 +80,7 @@ import itertools
 
 from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.utils import keep_vocab_item
-from gensim.models.keyedvectors import KeyedVectors
+from gensim.models.keyedvectors import KeyedVectors, Vocab
 
 try:
     from queue import Queue, Empty
@@ -90,8 +90,6 @@ except ImportError:
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
     ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, vstack, logaddexp
-
-from scipy.special import expit
 
 from scipy.special import expit
 
@@ -322,23 +320,6 @@ def score_cbow_pair(model, word, word2_indices, l1):
     return sum(lprob)
 
 
-class Vocab(object):
-    """
-    A single vocabulary item, used internally for collecting per-word frequency/sampling info,
-    and for constructing binary trees (incl. both word leaves and inner nodes).
-
-    """
-    def __init__(self, **kwargs):
-        self.count = 0
-        self.__dict__.update(kwargs)
-
-    def __lt__(self, other):  # used for sorting in a priority queue
-        return self.count < other.count
-
-    def __str__(self):
-        vals = ['%s:%r' % (key, self.__dict__[key]) for key in sorted(self.__dict__) if not key.startswith('_')]
-        return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
-
 
 class Word2Vec(utils.SaveLoad):
     """
@@ -348,6 +329,7 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
 
     """
+
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
@@ -431,7 +413,7 @@ class Word2Vec(utils.SaveLoad):
         else:
             logger.debug('Fast version of {0} is being used'.format(__name__))
 
-        self.wv = KeyedVectors()  # wv --> KeyedVectors
+        self.initialize_word_vectors()
         self.sg = int(sg)
         self.cum_table = None  # for negative sampling
         self.vector_size = int(size)
@@ -465,6 +447,9 @@ class Word2Vec(utils.SaveLoad):
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences)
 
+    def initialize_word_vectors(self):
+        self.wv = KeyedVectors()
+
     def make_cum_table(self, power=0.75, domain=2**31 - 1):
         """
         Create a cumulative-distribution table using stored vocabulary word counts for
@@ -480,9 +465,11 @@ class Word2Vec(utils.SaveLoad):
         vocab_size = len(self.wv.index2word)
         self.cum_table = zeros(vocab_size, dtype=uint32)
         # compute sum of all power (Z in paper)
-        train_words_pow = float(sum([self.wv.vocab[word].count**power for word in self.wv.vocab]))
+        train_words_pow = 0.0
+        for word_index in xrange(vocab_size):
+            train_words_pow += self.wv.vocab[self.wv.index2word[word_index]].count**power
         cumulative = 0.0
-        for word_index in range(vocab_size):
+        for word_index in xrange(vocab_size):
             cumulative += self.wv.vocab[self.wv.index2word[word_index]].count**power
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
@@ -773,6 +760,12 @@ class Word2Vec(utils.SaveLoad):
         if not len(self.wv.syn0):
             raise RuntimeError("you must first finalize vocabulary before training the model")
 
+        if not hasattr(self, 'corpus_count'):
+            raise ValueError(
+                "The number of sentences in the training corpus is missing. Did you load the model via load_word2vec_format?"
+                "Models loaded via load_word2vec_format don't support further training. "
+                "Instead start with a blank model, scan_vocab on the new corpus, intersect_word2vec_format with the old model, then train.")
+
         if total_words is None and total_examples is None:
             if self.corpus_count:
                 total_examples = self.corpus_count
@@ -963,7 +956,9 @@ class Word2Vec(utils.SaveLoad):
             raise RuntimeError("you must first build vocabulary before scoring new data")
 
         if not self.hs:
-            raise RuntimeError("we have only implemented score for hs")
+            raise RuntimeError("We have currently only implemented score \
+                    for the hierarchical softmax scheme, so you need to have \
+                    run word2vec with hs=1 and negative=0 for this to work.")
 
         def worker_loop():
             """Train the model, lifting lists of sentences from the jobs queue."""
@@ -1094,138 +1089,6 @@ class Word2Vec(utils.SaveLoad):
         once = random.RandomState(self.hashfxn(seed_string) & 0xffffffff)
         return (once.rand(self.vector_size) - 0.5) / self.vector_size
 
-    def save_word2vec_format(self, fname, fvocab=None, binary=False):
-        """
-        Store the input-hidden weight matrix in the same format used by the original
-        C word2vec-tool, for compatibility.
-
-         `fname` is the file used to save the vectors in
-         `fvocab` is an optional file used to save the vocabulary
-         `binary` is an optional boolean indicating whether the data is to be saved
-         in binary word2vec format (default: False)
-
-        """
-        if fvocab is not None:
-            logger.info("storing vocabulary in %s" % (fvocab))
-            with utils.smart_open(fvocab, 'wb') as vout:
-                for word, vocab in sorted(iteritems(self.wv.vocab), key=lambda item: -item[1].count):
-                    vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
-        logger.info("storing %sx%s projection weights into %s" % (len(self.wv.vocab), self.vector_size, fname))
-        assert (len(self.wv.vocab), self.vector_size) == self.wv.syn0.shape
-        with utils.smart_open(fname, 'wb') as fout:
-            fout.write(utils.to_utf8("%s %s\n" % self.wv.syn0.shape))
-            # store in sorted order: most frequent words at the top
-            for word, vocab in sorted(iteritems(self.wv.vocab), key=lambda item: -item[1].count):
-                row = self.wv.syn0[vocab.index]
-                if binary:
-                    fout.write(utils.to_utf8(word) + b" " + row.tostring())
-                else:
-                    fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
-
-    @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                             limit=None, datatype=REAL):
-        """
-        Load the input-hidden weight matrix from the original C word2vec-tool format.
-
-        Note that the information stored in the file is incomplete (the binary tree is missing),
-        so while you can query for word similarity etc., you cannot continue training
-        with a model loaded this way.
-
-        `binary` is a boolean indicating whether the data is in binary word2vec format.
-        `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory.
-        Word counts are read from `fvocab` filename, if set (this is the file generated
-        by `-save-vocab` flag of the original C tool).
-
-        If you trained the C model using non-utf8 encoding for words, specify that
-        encoding in `encoding`.
-
-        `unicode_errors`, default 'strict', is a string suitable to be passed as the `errors`
-        argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
-        file may include word tokens truncated in the middle of a multibyte unicode character
-        (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
-
-        `limit` sets a maximum number of word-vectors to read from the file. The default,
-        None, means read all.
-
-        `datatype` (experimental) can coerce dimensions to a non-default float type (such
-        as np.float16) to save memory. (Such types may result in much slower bulk operations
-        or incompatibility with optimized routines.)
-
-        """
-        counts = None
-        if fvocab is not None:
-            logger.info("loading word counts from %s", fvocab)
-            counts = {}
-            with utils.smart_open(fvocab) as fin:
-                for line in fin:
-                    word, count = utils.to_unicode(line).strip().split()
-                    counts[word] = int(count)
-
-        logger.info("loading projection weights from %s", fname)
-        with utils.smart_open(fname) as fin:
-            header = utils.to_unicode(fin.readline(), encoding=encoding)
-            vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
-            if limit:
-                vocab_size = min(vocab_size, limit)
-            result = cls(size=vector_size)
-            result.wv.syn0 = zeros((vocab_size, vector_size), dtype=datatype)
-
-            def add_word(word, weights):
-                word_id = len(result.wv.vocab)
-                if word in result.wv.vocab:
-                    logger.warning("duplicate word '%s' in %s, ignoring all but first", word, fname)
-                    return
-                if counts is None:
-                    # most common scenario: no vocab file given. just make up some bogus counts, in descending order
-                    result.wv.vocab[word] = Vocab(index=word_id, count=vocab_size - word_id)
-                elif word in counts:
-                    # use count from the vocab file
-                    result.wv.vocab[word] = Vocab(index=word_id, count=counts[word])
-                else:
-                    # vocab file given, but word is missing -- set count to None (TODO: or raise?)
-                    logger.warning("vocabulary file is incomplete: '%s' is missing", word)
-                    result.wv.vocab[word] = Vocab(index=word_id, count=None)
-                result.wv.syn0[word_id] = weights
-                result.wv.index2word.append(word)
-
-            if binary:
-                binary_len = dtype(REAL).itemsize * vector_size
-                for line_no in xrange(vocab_size):
-                    # mixed text and binary: read text first, then binary
-                    word = []
-                    while True:
-                        ch = fin.read(1)
-                        if ch == b' ':
-                            break
-                        if ch == b'':
-                            raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
-                        if ch != b'\n':  # ignore newlines in front of words (some binary files have)
-                            word.append(ch)
-                    word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
-                    weights = fromstring(fin.read(binary_len), dtype=REAL)
-                    add_word(word, weights)
-            else:
-                for line_no in xrange(vocab_size):
-                    line = fin.readline()
-                    if line == b'':
-                        raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
-                    parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
-                    if len(parts) != vector_size + 1:
-                        raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
-                    word, weights = parts[0], list(map(REAL, parts[1:]))
-                    add_word(word, weights)
-        if result.wv.syn0.shape[0] != len(result.wv.vocab):
-            logger.info(
-                "duplicate words detected, shrinking matrix size from %i to %i",
-                result.wv.syn0.shape[0], len(result.wv.vocab)
-            )
-            result.wv.syn0 = ascontiguousarray(result.wv.syn0[: len(result.wv.vocab)])
-        assert (len(result.wv.vocab), result.vector_size) == result.wv.syn0.shape
-
-        logger.info("loaded %s matrix from %s" % (result.wv.syn0.shape, fname))
-        return result
-
     def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
         """
         Merge the input-hidden weight matrix from the original C word2vec-tool format
@@ -1296,66 +1159,6 @@ class Word2Vec(utils.SaveLoad):
     def __getitem__(self, words):
         return self.wv.__getitem__(words)
 
-    @property
-    def syn0norm(self):
-        logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.wv.syn0norm')
-        return self.wv.syn0norm
-
-    @syn0norm.setter
-    def syn0norm(self, value):
-        logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.wv.syn0norm')
-        self.wv.syn0norm = value
-
-    @syn0norm.deleter
-    def syn0norm(self):
-        logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.wv.syn0norm')
-        del self.wv.syn0norm
-
-    @property
-    def syn0(self):
-        logger.warning('direct access to syn0 will not be supported in future gensim releases, please use model.wv.syn0')
-        return self.wv.syn0
-
-    @syn0.setter
-    def syn0(self, value):
-        logger.warning('direct access to syn0 will not be supported in future gensim releases, please use model.wv.syn0')
-        self.wv.syn0 = value
-
-    @syn0.deleter
-    def syn0(self):
-        logger.warning('direct access to syn0 will not be supported in future gensim releases, please use model.wv.syn0')
-        del self.wv.syn0
-
-    @property
-    def vocab(self):
-        logger.warning('direct access to vocab will not be supported in future gensim releases, please use model.wv.vocab')
-        return self.wv.vocab
-
-    @vocab.setter
-    def vocab(self, value):
-        logger.warning('direct access to vocab will not be supported in future gensim releases, please use model.wv.vocab')
-        self.wv.vocab = value
-
-    @vocab.deleter
-    def vocab(self):
-        logger.warning('direct access to vocab will not be supported in future gensim releases, please use model.wv.vocab')
-        del self.wv.vocab
-
-    @property
-    def index2word(self):
-        logger.warning('direct access to index2word will not be supported in future gensim releases, please use model.wv.index2word')
-        return self.wv.index2word
-
-    @index2word.setter
-    def index2word(self, value):
-        logger.warning('direct access to index2word will not be supported in future gensim releases, please use model.wv.index2word')
-        self.wv.index2word = value
-
-    @index2word.deleter
-    def index2word(self):
-        logger.warning('direct access to index2word will not be supported in future gensim releases, please use model.wv.index2word')
-        del self.wv.index2word
-
     def __contains__(self, word):
         return self.wv.__contains__(word)
 
@@ -1402,7 +1205,7 @@ class Word2Vec(utils.SaveLoad):
         return KeyedVectors.log_evaluate_word_pairs(pearson, spearman, oov, pairs)
 
     def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
-        return self.wv.evaluate_word_pairs(self, pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
+        return self.wv.evaluate_word_pairs(pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
 
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha)
@@ -1629,4 +1432,3 @@ if __name__ == "__main__":
         model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)
-    

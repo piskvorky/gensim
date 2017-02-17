@@ -295,7 +295,7 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
        work = zeros(model.layer1_size, dtype=REAL)
     _work = <REAL_t *>np.PyArray_DATA(work)
 
-    vlookup = model.vocab
+    vlookup = model.wv.vocab
     i = 0
     for token in doc_words:
         predict_word = vlookup[token] if token in vlookup else None
@@ -435,7 +435,7 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
        neu1 = zeros(model.layer1_size, dtype=REAL)
     _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
 
-    vlookup = model.vocab
+    vlookup = model.wv.vocab
     i = 0
     for token in doc_words:
         predict_word = vlookup[token] if token in vlookup else None
@@ -548,7 +548,7 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
 
     cdef int i, j, k, m, n
     cdef long result = 0
-    cdef int null_word_index = model.vocab['\0'].index
+    cdef int null_word_index = model.wv.vocab['\0'].index
 
     # For hierarchical softmax
     cdef REAL_t *syn1
@@ -597,7 +597,7 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
        neu1 = zeros(model.layer1_size, dtype=REAL)
     _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
 
-    vlookup = model.vocab
+    vlookup = model.wv.vocab
     i = 0
     for token in doc_words:
         predict_word = vlookup[token] if token in vlookup else None

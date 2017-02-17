@@ -36,7 +36,8 @@ import sys
 from contextlib import contextmanager
 import subprocess
 
-import numpy
+import numpy as np
+import numbers
 import scipy.sparse
 
 if sys.version_info[0] >= 3:
@@ -78,6 +79,20 @@ except ImportError:
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
+
+
+def get_random_state(seed):
+     """ Turn seed into a np.random.RandomState instance.
+
+         Method originally from maciejkula/glove-python, and written by @joshloyal
+     """
+     if seed is None or seed is np.random:
+         return np.random.mtrand._rand
+     if isinstance(seed, (numbers.Integral, np.integer)):
+         return np.random.RandomState(seed)
+     if isinstance(seed, np.random.RandomState):
+        return seed
+     raise ValueError('%r cannot be used to seed a np.random.RandomState instance' % seed)
 
 
 def synchronous(tlockname):
@@ -278,9 +293,9 @@ class SaveLoad(object):
                 if mmap:
                     raise mmap_error(attrib, subname(fname, attrib))
 
-                val = numpy.load(subname(fname, attrib))['val']
+                val = np.load(subname(fname, attrib))['val']
             else:
-                val = numpy.load(subname(fname, attrib), mmap_mode=mmap)
+                val = np.load(subname(fname, attrib), mmap_mode=mmap)
 
             setattr(self, attrib, val)
 
@@ -292,14 +307,14 @@ class SaveLoad(object):
                 if mmap:
                     raise mmap_error(attrib, subname(fname, attrib))
 
-                with numpy.load(subname(fname, attrib, 'sparse')) as f:
+                with np.load(subname(fname, attrib, 'sparse')) as f:
                     sparse.data = f['data']
                     sparse.indptr = f['indptr']
                     sparse.indices = f['indices']
             else:
-                sparse.data = numpy.load(subname(fname, attrib, 'data'), mmap_mode=mmap)
-                sparse.indptr = numpy.load(subname(fname, attrib, 'indptr'), mmap_mode=mmap)
-                sparse.indices = numpy.load(subname(fname, attrib, 'indices'), mmap_mode=mmap)
+                sparse.data = np.load(subname(fname, attrib, 'data'), mmap_mode=mmap)
+                sparse.indptr = np.load(subname(fname, attrib, 'indptr'), mmap_mode=mmap)
+                sparse.indices = np.load(subname(fname, attrib, 'indices'), mmap_mode=mmap)
 
             setattr(self, attrib, sparse)
 
@@ -375,7 +390,7 @@ class SaveLoad(object):
         if separately is None:
             separately = []
             for attrib, val in iteritems(self.__dict__):
-                if isinstance(val, numpy.ndarray) and val.size >= sep_limit:
+                if isinstance(val, np.ndarray) and val.size >= sep_limit:
                     separately.append(attrib)
                 elif isinstance(val, sparse_matrices) and val.nnz >= sep_limit:
                     separately.append(attrib)
@@ -398,15 +413,15 @@ class SaveLoad(object):
         try:
             numpys, scipys, ignoreds = [], [], []
             for attrib, val in iteritems(asides):
-                if isinstance(val, numpy.ndarray) and attrib not in ignore:
+                if isinstance(val, np.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
-                    logger.info("storing numpy array '%s' to %s" % (
+                    logger.info("storing np array '%s' to %s" % (
                         attrib, subname(fname, attrib)))
 
                     if compress:
-                        numpy.savez_compressed(subname(fname, attrib), val=numpy.ascontiguousarray(val))
+                        np.savez_compressed(subname(fname, attrib), val=np.ascontiguousarray(val))
                     else:
-                        numpy.save(subname(fname, attrib), numpy.ascontiguousarray(val))
+                        np.save(subname(fname, attrib), np.ascontiguousarray(val))
 
                 elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
                     scipys.append(attrib)
@@ -414,14 +429,14 @@ class SaveLoad(object):
                         attrib, subname(fname, attrib)))
 
                     if compress:
-                        numpy.savez_compressed(subname(fname, attrib, 'sparse'),
+                        np.savez_compressed(subname(fname, attrib, 'sparse'),
                                                data=val.data,
                                                indptr=val.indptr,
                                                indices=val.indices)
                     else:
-                        numpy.save(subname(fname, attrib, 'data'), val.data)
-                        numpy.save(subname(fname, attrib, 'indptr'), val.indptr)
-                        numpy.save(subname(fname, attrib, 'indices'), val.indices)
+                        np.save(subname(fname, attrib, 'data'), val.data)
+                        np.save(subname(fname, attrib, 'indptr'), val.indptr)
+                        np.save(subname(fname, attrib, 'indices'), val.indices)
 
                     data, indptr, indices = val.data, val.indptr, val.indices
                     val.data, val.indptr, val.indices = None, None, None
@@ -592,7 +607,7 @@ def is_corpus(obj):
             doc1 = next(iter(obj))  # empty corpus is resolved to False here
         if len(doc1) == 0:  # sparse documents must have a __len__ function (list, tuple...)
             return True, obj  # the first document is empty=>assume this is a corpus
-        id1, val1 = next(iter(doc1))  # if obj is a numpy array, it resolves to False here
+        id1, val1 = next(iter(doc1))  # if obj is a 1D numpy array(scalars) instead of 2-tuples, it resolves to False here
         id1, val1 = int(id1), float(val1)  # must be a 2-tuple (integer, float)
     except Exception:
         return False, obj
@@ -698,11 +713,11 @@ class SlicedCorpus(SaveLoad):
         Negative slicing can only be used if the corpus is indexable.
         Otherwise, the corpus will be iterated over.
 
-        Slice can also be a numpy.ndarray to support fancy indexing.
+        Slice can also be a np.ndarray to support fancy indexing.
 
         NOTE: calculating the size of a SlicedCorpus is expensive
         when using a slice as the corpus has to be iterated over once.
-        Using a list or numpy.ndarray does not have this drawback, but
+        Using a list or np.ndarray does not have this drawback, but
         consumes more memory.
         """
         self.corpus = corpus
@@ -720,7 +735,7 @@ class SlicedCorpus(SaveLoad):
     def __len__(self):
         # check cached length, calculate if needed
         if self.length is None:
-            if isinstance(self.slice_, (list, numpy.ndarray)):
+            if isinstance(self.slice_, (list, np.ndarray)):
                 self.length = len(self.slice_)
             else:
                 self.length = sum(1 for x in self)
@@ -785,13 +800,12 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
 
     """
-    import numpy
     it = iter(iterable)
     while True:
         if as_numpy:
             # convert each document to a 2d numpy array (~6x faster when transmitting
             # chunk data over the wire, in Pyro)
-            wrapped_chunk = [[numpy.array(doc) for doc in itertools.islice(it, int(chunksize))]]
+            wrapped_chunk = [[np.array(doc) for doc in itertools.islice(it, int(chunksize))]]
         else:
             wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
         if not wrapped_chunk[0]:
@@ -812,8 +826,6 @@ class InputQueue(multiprocessing.Process):
         self.as_numpy = as_numpy
 
     def run(self):
-        if self.as_numpy:
-            import numpy # don't clutter the global namespace with a dependency on numpy
         it = iter(self.corpus)
         while True:
             chunk = itertools.islice(it, self.chunksize)
@@ -821,7 +833,7 @@ class InputQueue(multiprocessing.Process):
                 # HACK XXX convert documents to numpy arrays, to save memory.
                 # This also gives a scipy warning at runtime:
                 # "UserWarning: indices array has non-integer dtype (float64)"
-                wrapped_chunk = [[numpy.asarray(doc) for doc in chunk]]
+                wrapped_chunk = [[np.asarray(doc) for doc in chunk]]
             else:
                 wrapped_chunk = [list(chunk)]
 
@@ -1072,8 +1084,8 @@ def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
     a Poisson distribution with parameter lambda equal to `lam`.
 
     """
-    nnz = numpy.random.uniform(size=(dim,))
-    data = [(i, float(numpy.random.poisson(lam=lam) + 1.0))
+    nnz = np.random.uniform(size=(dim,))
+    data = [(i, float(np.random.poisson(lam=lam) + 1.0))
             for i in xrange(dim) if nnz[i] < prob_nnz]
     return data
 
@@ -1134,15 +1146,15 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
         else:
             return default_res
 
-def check_output(*popenargs, **kwargs):
+def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     r"""Run command with arguments and return its output as a byte string.
     Backported from Python 2.7 as it's implemented as pure python on stdlib.
-    >>> check_output(['/usr/bin/python', '--version'])
+    >>> check_output(args=['/usr/bin/python', '--version'])
     Python 2.6.2
     Added extra KeyboardInterrupt handling
     """
     try:
-        process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+        process = subprocess.Popen(stdout=stdout, *popenargs, **kwargs)
         output, unused_err = process.communicate()
         retcode = process.poll()
         if retcode:
