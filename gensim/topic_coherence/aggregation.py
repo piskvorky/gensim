@@ -14,7 +14,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-def arithmetic_mean(confirmed_measures):
+def arithmetic_mean(confirmed_measures, aggregated):
     """
     This functoin performs the arithmetic mean aggregation on the output obtained from
     the confirmation measure module.
@@ -27,4 +27,6 @@ def arithmetic_mean(confirmed_measures):
     -------
     mean : Arithmetic mean of all the values contained in confirmation measures.
     """
-    return np.mean(confirmed_measures)
+    if aggregated:
+        return np.mean(confirmed_measures)
+    return np.mean(confirmed_measures, axis=1)

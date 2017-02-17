@@ -26,8 +26,6 @@ from gensim.topic_coherence import (segmentation, probability_estimation,
                                     aggregation)
 from gensim.matutils import argsort
 from gensim.utils import is_corpus, FakeDict
-from gensim.models.ldamodel import LdaModel
-from gensim.models.wrappers import LdaVowpalWabbit, LdaMallet
 
 import numpy as np
 
@@ -87,7 +85,7 @@ class CoherenceModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None, window_size=None, coherence='c_v', topn=10):
+    def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None, window_size=None, coherence='c_v', topn=10, aggregated=True):
         """
         Args:
         ----
@@ -121,6 +119,7 @@ class CoherenceModel(interfaces.TransformationABC):
                     For 'u_mass' corpus should be provided. If texts is provided, it will be converted to corpus using the dictionary.
                     For 'c_v', 'c_uci' and 'c_npmi' texts should be provided. Corpus is not needed.
         topn : Integer corresponding to the number of top words to be extracted from each topic.
+        aggregated : Boolean value deciding whether aggregated coherence score is generated or non-aggregated scores.
         """
         if model is None and topics is None:
             raise ValueError("One of model or topics has to be provided.")
@@ -167,6 +166,7 @@ class CoherenceModel(interfaces.TransformationABC):
                     t_i.append(dictionary.token2id[topic[n]])
                 self.topics.append(np.array(t_i))
         self.coherence = coherence
+        self.aggregated = aggregated
 
     def __str__(self):
         return coherence_dict[self.coherence].__str__()
@@ -174,15 +174,15 @@ class CoherenceModel(interfaces.TransformationABC):
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""
         topics = []
-        if isinstance(self.model, LdaModel):
+        if hasattr(self.model, 'state'):
             for topic in self.model.state.get_lambda():
                 bestn = argsort(topic, topn=self.topn, reverse=True)
                 topics.append(bestn)
-        elif isinstance(self.model, LdaVowpalWabbit):
+        elif hasattr(self.model, '_get_topics'):
             for topic in self.model._get_topics():
                 bestn = argsort(topic, topn=self.topn, reverse=True)
                 topics.append(bestn)
-        elif isinstance(self.model, LdaMallet):
+        elif hasattr(self.model, 'word_topics'):
             for topic in self.model.word_topics:
                 bestn = argsort(topic, topn=self.topn, reverse=True)
                 topics.append(bestn)
@@ -214,4 +214,4 @@ class CoherenceModel(interfaces.TransformationABC):
                     # For c_uci
                     normalize = False
                 confirmed_measures = measure.conf(segmented_topics, per_topic_postings, num_windows, normalize=normalize)
-        return measure.aggr(confirmed_measures)
+        return measure.aggr(confirmed_measures, self.aggregated)

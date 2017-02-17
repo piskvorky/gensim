@@ -33,15 +33,18 @@ def log_conditional_probability(segmented_topics, per_topic_postings, num_docs):
     """
     m_lc = []
     for s_i in segmented_topics:
+        m_lc_i = []
         for w_prime, w_star in s_i:
             w_prime_docs = per_topic_postings[w_prime]
             w_star_docs = per_topic_postings[w_star]
             co_docs = w_prime_docs.intersection(w_star_docs)
             if  w_star_docs:
-                m_lc_i = np.log(((len(co_docs) / float(num_docs)) + EPSILON) / (len(w_star_docs) / float(num_docs)))
+                score = np.log(((len(co_docs) / float(num_docs)) + EPSILON) / (len(w_star_docs) / float(num_docs)))
             else:
-                m_lc_i = 0.0
-            m_lc.append(m_lc_i)
+                score = 0.0
+            m_lc_i.append(score)
+        
+        m_lc.append(m_lc_i)
 
     return m_lc
 
