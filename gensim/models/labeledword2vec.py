@@ -37,12 +37,11 @@ from __future__ import division  # py3 "true division"
 
 import logging
 import sys
+from types import GeneratorType
 
 from gensim.models import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.models.word2vec import train_cbow_pair, Vocab
-from types import GeneratorType
-
 
 try:
     from queue import Queue, Empty
@@ -63,6 +62,7 @@ logger = logging.getLogger(__name__)
 try:
     from .word2vec_inner import train_batch_labeled_cbow, score_document_labeled_cbow as sdlc
     from .word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
+
 
     def score_document_labeled_cbow(model, document, labels=None, work=None, neu1=None):
         if work is None:
@@ -187,7 +187,6 @@ class LabeledWord2Vec(Word2Vec):
             if isinstance(tagged_docs, GeneratorType):
                 raise TypeError("You can't pass a generator as the tagged_docs argument. Try an iterator.")
             self.build_vocab(tagged_docs, trim_rule=kwargs.get('trim_rule'))
-            #FIXME wrong!
             self.train(tagged_docs)
 
     def init_loss(self, kwargs, loss):
@@ -228,6 +227,7 @@ class LabeledWord2Vec(Word2Vec):
         Build vocabularies from a sequence of TaggedDocument (can be a once-only generator stream).
         Each document and lables must be list of unicode strings.
         """
+
         def documents_it():
             for s, _ in tagged_docs:
                 yield s
@@ -317,7 +317,7 @@ class LabeledWord2Vec(Word2Vec):
                 # construct deterministic seed from word AND seed argument
                 newsyn0[i - len(self.wv.syn0)] = self.seeded_vector(
                     (self.wv.index2word[i] if isinstance(self.wv.index2word[i], string_types) else
-                        str(self.wv.index2word[i])) + str(self.seed))
+                     str(self.wv.index2word[i])) + str(self.seed))
             self.wv.syn0 = vstack([self.wv.syn0, newsyn0])
             self.wv.syn0norm = None
 
@@ -341,7 +341,7 @@ class LabeledWord2Vec(Word2Vec):
                 # construct deterministic seed from word AND seed argument
                 self.wv.syn0[i] = self.seeded_vector(
                     (self.wv.index2word[i] if isinstance(self.wv.index2word[i], string_types) else
-                        str(self.wv.index2word[i])) + str(self.seed))
+                     str(self.wv.index2word[i])) + str(self.seed))
             self.wv.syn0norm = None
             self.syn0_lockf = ones(len(self.wv.vocab), dtype=REAL)  # zeros suppress learning
         if outputs:

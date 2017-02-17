@@ -10,16 +10,16 @@ Automated tests for checking the labeledword2vec model.
 
 import io
 import logging
+import pickle
 import unittest
 from collections import Iterable
 
 import numpy
-from gensim.models.doc2vec import TaggedDocument
 from six import string_types
 
 from gensim.models import labeledword2vec
+from gensim.models.doc2vec import TaggedDocument
 from gensim.models.labeledword2vec import LabeledWord2Vec, score_document_labeled_cbow
-import pickle
 
 logger = logging.getLogger()
 logger.level = logging.ERROR
@@ -41,10 +41,13 @@ dataset_samples = (
 
 dataset_targets = (('aa', 'b'), 'b', 'cc', 'cc', 'b', 'aa')
 
+
 def _target_list(targets):
     return targets if isinstance(targets, Iterable) and not isinstance(targets, string_types) else [targets]
 
+
 data = [TaggedDocument(*d) for d in zip(dataset_samples, [_target_list(t) for t in dataset_targets])]
+
 
 def small_model():
     model = LabeledWord2Vec(iter=1, size=30, min_count=0, loss='hs', negative=0)
@@ -68,7 +71,6 @@ def bunch_of_models():
 
 
 class TestLabeledWord2VecModel(unittest.TestCase):
-
     def setUp(self):
         self.small_model = small_model()
         self.bunch_of_models = bunch_of_models()
@@ -106,7 +108,8 @@ class TestLabeledWord2VecModel(unittest.TestCase):
             b = list(score_document_labeled_cbow(model, ('study', 'to', 'learn'), ['b']))[0][1]
             c = list(score_document_labeled_cbow(model, ('study', 'to', 'learn'), ['cc']))[0][1]
             assert round(a + b + c, 1) == 1.
-            assert round(sum([pred[1] for pred in score_document_labeled_cbow(model, ('study', 'to', 'learn'))]), 1) == 1.
+            assert round(sum([pred[1] for pred in score_document_labeled_cbow(model, ('study', 'to', 'learn'))]),
+                         1) == 1.
 
 
 if __name__ == '__main__':
