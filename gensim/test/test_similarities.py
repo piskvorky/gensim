@@ -485,8 +485,8 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertRaises(IOError, test_index.load, fname='test-index')
 
     def assertVectorIsSimilarToItself(self, model, index):
-        vector = model.syn0norm[0]
-        label = model.index2word[0]
+        vector = model.wv.syn0norm[0]
+        label = model.wv.index2word[0]
         approx_neighbors = index.most_similar(vector, 1)
         word, similarity = approx_neighbors[0]
 
@@ -494,7 +494,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(similarity, 1.0)
 
     def assertApproxNeighborsMatchExact(self, model, index):
-        vector = model.syn0norm[0]
+        vector = model.wv.syn0norm[0]
         approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
         exact_neighbors = model.most_similar(positive=[vector], topn=5)
 

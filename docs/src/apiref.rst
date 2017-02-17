@@ -45,6 +45,7 @@ Modules:
     models/wrappers/dtmmodel
     models/wrappers/ldavowpalwabbit.rst
     models/wrappers/wordrank
+    models/wrappers/varembed
     similarities/docsim
     similarities/index
     topic_coherence/aggregation
