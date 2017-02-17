@@ -25,8 +25,8 @@ Initialize a model with e.g.:
 In which each tagged_doc is a pair (e.g. a `gensim.models.TaggedDocument`) with the actual document and a list of labels
 (tags).
 
-In order to predict the probability of a label, given a tagged_doc, use this method which returns the probability for all
-the labels
+In order to predict the probability of a label, given a document, use this method which returns, for all
+the labels, the pairs <label, probability>:
 
 >>> model.predict(('this', 'is', 'a', 'document'))
 
@@ -302,10 +302,7 @@ class LabeledWord2Vec(Word2Vec):
             self.update_weights(inputs=False)
 
     def update_weights(self, inputs=True, outputs=True):
-        """
-        Copy all the existing weights, and reset the weights for the newly
-        added vocabulary.
-        """
+        """Copy all the existing weights, and reset the weights for the newly added vocabulary."""
         logger.info("updating layer weights")
 
         if inputs:
@@ -354,8 +351,8 @@ class LabeledWord2Vec(Word2Vec):
 
     def reset_from(self, other_model):
         """
-        Borrow shareable pre-built structures (like vocab) from the other_model. Useful
-        if testing multiple models in parallel on the same corpus.
+        Borrow shareable pre-built structures (like vocab) from the other_model.
+        Useful if testing multiple models in parallel on the same corpus.
         """
         self.lvocab = getattr(other_model, 'lvocab', {})
         self.index2label = getattr(other_model, 'index2label', [])
@@ -371,7 +368,7 @@ class LabeledWord2Vec(Word2Vec):
         (as if by bisect_left or ndarray.searchsorted()). That insertion point is the
         drawn index, coming up in proportion equal to the increment at that slot.
 
-        Called internally from 'build_vocab()'.
+        Called internally by ``build_vocab()``.
         """
         vocab_size = len(self.index2label)
         self.cum_table = zeros(vocab_size, dtype=uint32)
@@ -388,7 +385,8 @@ class LabeledWord2Vec(Word2Vec):
               total_examples=None, queue_factor=2, report_delay=1.0):
         """
         Update the model's neural weights from a sequence of tagged_docs (can be a once-only generator stream).
-        For LabledWord2Vec, each document and lables must be list of unicode strings. (Subclasses may accept other examples.)
+        For LabledWord2Vec, each document and labels must be list of unicode strings.
+        (Subclasses may accept other examples.)
 
         To support linear learning-rate decay from (initial) alpha to min_alpha, either total_examples
         (count of tagged_docs) or total_words (count of raw words in documents) should be provided, unless the
