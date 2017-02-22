@@ -19,7 +19,7 @@ class TestAggregation(unittest.TestCase):
 
     def testArithmeticMean(self):
         """Test arithmetic_mean()"""
-        obtained = aggregation.arithmetic_mean(self.confirmed_measures)
+        obtained = aggregation.arithmetic_mean(self.confirmed_measures, True)
         expected = 2.75
         self.assertEqual(obtained, expected)
 
