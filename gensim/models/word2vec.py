@@ -353,7 +353,7 @@ class Word2Vec(utils.SaveLoad):
     Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
 
     The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in a format
-    compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
+    compatible with the original word2vec implementation via `wv.save_word2vec_format()` and `KeyedVectors.load_word2vec_format()`.
 
     """
 
@@ -789,7 +789,7 @@ class Word2Vec(utils.SaveLoad):
 
         if not hasattr(self, 'corpus_count'):
             raise ValueError(
-                "The number of sentences in the training corpus is missing. Did you load the model via load_word2vec_format?"
+                "The number of sentences in the training corpus is missing. Did you load the model via KeyedVectors.load_word2vec_format?"
                 "Models loaded via load_word2vec_format don't support further training. "
                 "Instead start with a blank model, scan_vocab on the new corpus, intersect_word2vec_format with the old model, then train.")
 
@@ -1457,14 +1457,14 @@ if __name__ == "__main__":
 
     if args.output:
         outfile = args.output
-        model.save_word2vec_format(outfile, binary=args.binary)
+        model.wv.save_word2vec_format(outfile, binary=args.binary)
     else:
         outfile = args.train
         model.save(outfile + '.model')
     if args.binary == 1:
-        model.save_word2vec_format(outfile + '.model.bin', binary=True)
+        model.wv.save_word2vec_format(outfile + '.model.bin', binary=True)
     else:
-        model.save_word2vec_format(outfile + '.model.txt', binary=False)
+        model.wv.save_word2vec_format(outfile + '.model.txt', binary=False)
 
     if args.accuracy:
         model.accuracy(args.accuracy)

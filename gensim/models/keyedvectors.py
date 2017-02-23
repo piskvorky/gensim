@@ -19,7 +19,7 @@ Persist the word vectors to disk with::
 >>> word_vectors.save(fname)
 >>> word_vectors = KeyedVectors.load(fname)
 
-The vectors can also be instantiated from an existing file on disk in the word2vec C format as a KeyedVectors instance::
+The vectors can also be instantiated from an existing file on disk in the original Google's word2vec C format as a KeyedVectors instance::
 
   >>> from gensim.keyedvectors import KeyedVectors
   >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format

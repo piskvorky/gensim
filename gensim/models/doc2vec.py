@@ -21,17 +21,21 @@ Persist a model to disk with::
 >>> model.save(fname)
 >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
-The word vectors in the model can also be instantiated from an existing file on disk in the word2vec C format:
-NOTE: document vectors are not loaded/saved with .load/save_word2vec_format(). Use .save()/.load() instead.
+If you're finished training a model (=no more updates, only querying), you can do
 
-  >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-  >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+  >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
+
+to trim unneeded model memory = use (much) less RAM.
+
+
 
 .. [1] Quoc Le and Tomas Mikolov. Distributed Representations of Sentences and Documents. http://arxiv.org/pdf/1405.4053v2.pdf
 .. [2] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 .. [3] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
        In Proceedings of NIPS, 2013.
 .. [blog] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
+.. [tutorial] Doc2vec in gensim tutorial, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
+
 
 """
 
