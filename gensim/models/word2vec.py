@@ -37,7 +37,7 @@ The word vectors can also be instantiated from an existing file on disk in the w
 
 NOTE: It is impossible to continue training the vectors loaded from the C format because the binary tree is missing.
 
-  >>> from gensim.keyedvectors import KeyedVectors
+  >>> from gensim.models.keyedvectors import KeyedVectors
   >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
   >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
 
@@ -67,6 +67,10 @@ Correlation with human opinion on word similarity::
 
   >>> model.wv.evaluate_word_pairs(os.path.join(module_path, 'test_data','wordsim353.tsv'))
   0.51, 0.62, 0.13
+
+And on analogies::
+
+  >>> model.wv.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
 
 and so on.
 
@@ -1294,6 +1298,17 @@ class Word2Vec(utils.SaveLoad):
             wv.index2word = self.__dict__.get('index2word', [])
             self.wv = wv
         super(Word2Vec, self)._load_specials(*args, **kwargs)
+
+    @classmethod
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+                         limit=None, datatype=REAL):
+        """Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead."""
+        raise DeprecationWarning("Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
+
+    def save_word2vec_format(self, fname, fvocab=None, binary=False):
+        """Deprecated. Use model.wv.save_word2vec_format instead."""
+        raise DeprecationWarning("Deprecated. Use model.wv.save_word2vec_format instead.")
+
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""

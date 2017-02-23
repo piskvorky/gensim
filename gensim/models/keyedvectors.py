@@ -45,6 +45,10 @@ Correlation with human opinion on word similarity::
   >>> word_vectors.evaluate_word_pairs(os.path.join(module_path, 'test_data','wordsim353.tsv'))
   0.51, 0.62, 0.13
 
+And on analogies::
+
+  >>> word_vectors.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
+
 and so on.
 
 """
