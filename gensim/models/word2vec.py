@@ -87,7 +87,7 @@ Note that there is a :mod:`gensim.models.phrases` module which lets you automati
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
 
->>> bigram_transformer = gensim.models.Phraser(gensim.models.Phrases(sentences))
+>>> bigram_transformer = gensim.models.Phrases(sentences)
 >>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
