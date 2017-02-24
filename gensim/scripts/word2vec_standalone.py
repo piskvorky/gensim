@@ -111,14 +111,14 @@ if __name__ == "__main__":
 
     if args.output:
         outfile = args.output
-        model.save_word2vec_format(outfile, binary=args.binary)
+        model.wv.save_word2vec_format(outfile, binary=args.binary)
     else:
         outfile = args.train.split('.')[0]
         model.save(outfile + '.model')
         if args.binary == 1:
-            model.save_word2vec_format(outfile + '.model.bin', binary=True)
+            model.wv.save_word2vec_format(outfile + '.model.bin', binary=True)
         else:
-            model.save_word2vec_format(outfile + '.model.txt', binary=False)
+            model.wv.save_word2vec_format(outfile + '.model.txt', binary=False)
 
     if args.accuracy:
         questions_file = args.accuracy

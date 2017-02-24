@@ -44,7 +44,7 @@ def word2vec2tensor(word2vec_model_path,tensor_filename, binary=False):
         param2 (str): filename prefix
         param2 (bool): set True to use a binary Word2Vec model, defaults to False
     '''    
-    model = gensim.models.Word2Vec.load_word2vec_format(word2vec_model_path, binary=binary)
+    model = gensim.models.KeyedVectors.load_word2vec_format(word2vec_model_path, binary=binary)
     outfiletsv = tensor_filename + '_tensor.tsv'
     outfiletsvmeta = tensor_filename + '_metadata.tsv'
     

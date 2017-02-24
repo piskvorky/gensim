@@ -3,6 +3,55 @@ Changes
 
 Unreleased:
 
+
+========
+
+1.0.0, 2017-02-24
+
+New features:
+* Add Author-topic modeling (@olavurmortensen,[#893](https://github.com/RaRe-Technologies/gensim/pull/893))
+* Add FastText word embedding wrapper (@Jayantj,[#847](https://github.com/RaRe-Technologies/gensim/pull/847))
+* Add WordRank word embedding  wrapper (@parulsethi,[#1066](https://github.com/RaRe-Technologies/gensim/pull/1066), [#1125](https://github.com/RaRe-Technologies/gensim/pull/1125))
+* Add sklearn wrapper for LDAModel (@AadityaJ,[#932](https://github.com/RaRe-Technologies/gensim/pull/932))
+
+Deprecated features:
+
+* Move `load_word2vec_format` and `save_word2vec_format` out of Word2Vec class to KeyedVectors  (@tmylk,[#1107](https://github.com/RaRe-Technologies/gensim/pull/1107))
+* Move properties `syn0norm`, `syn0`, `vocab`, `index2word` from Word2Vec class to KeyedVectors (@tmylk,[#1147](https://github.com/RaRe-Technologies/gensim/pull/1147))
+* Remove support for Python 2.6, 3.3 and 3.4 (@tmylk,[#1145](https://github.com/RaRe-Technologies/gensim/pull/1145))
+
+
+Improvements:
+
+* Python 3.6 support (@tmylk [#1077](https://github.com/RaRe-Technologies/gensim/pull/1077))  
+* Phrases and Phraser allow a generator corpus (ELind77 [#1099](https://github.com/RaRe-Technologies/gensim/pull/1099))
+* Ignore DocvecsArray.doctag_syn0norm in save. Fix #789 (@accraze,[#1053](https://github.com/RaRe-Technologies/gensim/pull/1053))
+* Fix bug in LsiModel that occurs when id2word is a Python 3 dictionary. (@cvangysel,[#1103](https://github.com/RaRe-Technologies/gensim/pull/1103)
+* Fix broken link to paper in readme (@bhargavvader,[#1101](https://github.com/RaRe-Technologies/gensim/pull/1101)) 
+* Lazy formatting in evaluate_word_pairs (@akutuzov,[#1084](https://github.com/RaRe-Technologies/gensim/pull/1084)) 
+* Deacc option to keywords pre-processing (@bhargavvader,[#1076](https://github.com/RaRe-Technologies/gensim/pull/1076))
+* Generate Deprecated exception when using Word2Vec.load_word2vec_format (@tmylk, [#1165](https://github.com/RaRe-Technologies/gensim/pull/1165)) 
+* Fix hdpmodel constructor docstring for print_topics (#1152) (@toliwa, [#1152](https://github.com/RaRe-Technologies/gensim/pull/1152)) 
+* Default to per_word_topics=False in LDA get_item for performance (@menshikh-iv,   [#1154](https://github.com/RaRe-Technologies/gensim/pull/1154)) 
+* Fix bound computation in Author Topic models. (@olavurmortensen,   [#1156](https://github.com/RaRe-Technologies/gensim/pull/1156))
+* Write UTF-8 byte strings in tensorboard conversion (@tmylk,[#1144](https://github.com/RaRe-Technologies/gensim/pull/1144))
+* Make top_topics and sparse2full compatible with numpy 1.12 strictly int idexing (@tmylk,[#1146](https://github.com/RaRe-Technologies/gensim/pull/1146))
+
+Tutorial and doc improvements:
+
+* Clarifying comment in is_corpus func in utils.py (@greninja,[#1109](https://github.com/RaRe-Technologies/gensim/pull/1109)) 
+* Tutorial Topics_and_Transformations fix markdown and add references (@lgmoneda,[#1120](https://github.com/RaRe-Technologies/gensim/pull/1120))
+* Fix doc2vec-lee.ipynb results to match previous behavior (@bahbbc,[#1119](https://github.com/RaRe-Technologies/gensim/pull/1119)) 
+* Remove Pattern lib dependency in News Classification tutorial (@luizcavalcanti,[#1118](https://github.com/RaRe-Technologies/gensim/pull/1118))
+* Corpora_and_Vector_Spaces tutorial text clarification (@lgmoneda,[#1116](https://github.com/RaRe-Technologies/gensim/pull/1116))
+* Update Transformation and Topics link from quick start notebook (@mariana393,[#1115](https://github.com/RaRe-Technologies/gensim/pull/1115))
+* Quick Start Text clarification and typo correction (@luizcavalcanti,[#1114](https://github.com/RaRe-Technologies/gensim/pull/1114))
+* Fix typos in Author-topic tutorial (@Fil,[#1102](https://github.com/RaRe-Technologies/gensim/pull/1102))
+* Address benchmark inconsistencies in Annoy tutorial (@droudy,[#1113](https://github.com/RaRe-Technologies/gensim/pull/1113))
+* Add note about Annoy speed depending on numpy BLAS setup in annoytutorial.ipynb (@greninja,[#1137](https://github.com/RaRe-Technologies/gensim/pull/1137)) 
+* Add documentation for WikiCorpus metadata. (@kirit93, [#1163](https://github.com/RaRe-Technologies/gensim/pull/1163)) 
+
+ 
 1.0.0RC2, 2017-02-16
 
 * Add note about Annoy speed depending on numpy BLAS setup in annoytutorial.ipynb (@greninja,[#1137](https://github.com/RaRe-Technologies/gensim/pull/1137)) 
