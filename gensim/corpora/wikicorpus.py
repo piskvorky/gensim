@@ -266,6 +266,7 @@ class WikiCorpus(TextCorpus):
         If `pattern` package is installed, use fancier shallow parsing to get
         token lemmas. Otherwise, use simple regexp tokenization. You can override
         this automatic logic by forcing the `lemmatize` parameter explicitly.
+        self.metadata if set to true will ensure that serialize will write out article titles to a pickle file.
 
         """
         self.fname = fname
