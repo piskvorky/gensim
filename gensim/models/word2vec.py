@@ -35,7 +35,9 @@ The word vectors are stored in a KeyedVectors instance in model.wv. This separat
 
 The word vectors can also be instantiated from an existing file on disk in the word2vec C format as a KeyedVectors instance::
 
-NOTE: It is impossible to continue training the vectors loaded from the C format because the binary tree is missing.
+
+NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights, vocabulary frequency and the binary tree is missing.
+
 
   >>> from gensim.models.keyedvectors import KeyedVectors
   >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
@@ -74,10 +76,10 @@ And on analogies::
 
 and so on.
 
+If you're finished training a model (=no more updates, only querying), then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
 
-If you're finished training a model (=no more updates, only querying), you can do
-
-  >>> model.delete_temporary_training_data(replace_word_vectors_with_normalized=True)
+  >>> word_vectors = model.wv
+  >>> del model
 
 to trim unneeded model memory = use (much) less RAM.
 
@@ -85,7 +87,7 @@ Note that there is a :mod:`gensim.models.phrases` module which lets you automati
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
 
->>> bigram_transformer = gensim.models.Phraser(gensim.models.Phrases(sentences))
+>>> bigram_transformer = gensim.models.Phrases(sentences)
 >>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
@@ -433,7 +435,6 @@ class Word2Vec(utils.SaveLoad):
         """
 
         self.load = call_on_class_only
-        self.load_word2vec_format = call_on_class_only        
 
         if FAST_VERSION == -1:
             logger.warning('Slow version of {0} is being used'.format(__name__))
