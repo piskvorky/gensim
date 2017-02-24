@@ -78,11 +78,9 @@ For alternative modes of installation (without root privileges,
 development installation, optional install features), see the
 [documentation].
 
-This version has been tested under Python 2.6, 2.7, 3.3, 3.4, 3.5 and 3.6
-(support for Python 2.5 was dropped in gensim 0.10.0; install gensim
-0.9.1 if you *must* use Python 2.5). Gensim’s github repo is hooked
+This version has been tested under Python 2.7, 3.5 and 3.6. Gensim’s github repo is hooked
 against [Travis CI for automated testing] on every commit push and pull
-request.
+request. Support for Python 2.6, 3.3 and 3.4 was dropped in gensim 1.0.0. Install gensim 0.13.4 if you *must* use Python 2.6, 3.3 or 3.4. Support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). 
 
 How come gensim is so fast and memory efficient? Isn’t it pure Python, and isn’t Python slow and greedy?
 --------------------------------------------------------------------------------------------------------
