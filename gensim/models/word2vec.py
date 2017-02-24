@@ -35,7 +35,9 @@ The word vectors are stored in a KeyedVectors instance in model.wv. This separat
 
 The word vectors can also be instantiated from an existing file on disk in the word2vec C format as a KeyedVectors instance::
 
+
 NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights, vocabulary frequency and the binary tree is missing.
+
 
   >>> from gensim.models.keyedvectors import KeyedVectors
   >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
@@ -74,7 +76,6 @@ And on analogies::
 
 and so on.
 
-
 If you're finished training a model (=no more updates, only querying), then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
 
   >>> word_vectors = model.wv
@@ -86,7 +87,7 @@ Note that there is a :mod:`gensim.models.phrases` module which lets you automati
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
 
->>> bigram_transformer = gensim.models.Phrases(sentences)
+>>> bigram_transformer = gensim.models.Phraser(gensim.models.Phrases(sentences))
 >>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.

@@ -838,7 +838,7 @@ class AuthorTopicModel(LdaModel):
             # Computing the bound requires summing over expElogtheta[a, k] * expElogbeta[k, v], which
             # is the same computation as in normalizing phi.
             phinorm = self.compute_phinorm(ids, authors_d, expElogtheta[authors_d, :], expElogbeta[:, ids])
-            word_score += np.log(1.0 / len(authors_d)) + cts.dot(np.log(phinorm))
+            word_score += np.log(1.0 / len(authors_d)) * sum(cts) + cts.dot(np.log(phinorm))
 
         # Compensate likelihood for when `chunk` above is only a sample of the whole corpus. This ensures
         # that the likelihood is always rougly on the same scale.
