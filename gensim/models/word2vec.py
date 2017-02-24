@@ -6,8 +6,10 @@
 
 
 """
-Deep learning via word2vec's "skip-gram and CBOW models", using either
+Produce word vectors with deep learning via word2vec's "skip-gram and CBOW models", using either
 hierarchical softmax or negative sampling [1]_ [2]_.
+
+NOTE: There are more ways to get word vectors in Gensim than just Word2Vec. See wrappers for FastText, VarEmbed and WordRank.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
@@ -26,31 +28,56 @@ Persist a model to disk with::
 >>> model.save(fname)
 >>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
 
-The model can also be instantiated from an existing file on disk in the word2vec C format::
+The word vectors are stored in a KeyedVectors instance in model.wv. This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec.
 
-  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+  >>> model.wv['computer']  # numpy vector of a word
+  array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
 
-You can perform various syntactic/semantic NLP word tasks with the model. Some of them
+The word vectors can also be instantiated from an existing file on disk in the word2vec C format as a KeyedVectors instance::
+
+NOTE: It is impossible to continue training the vectors loaded from the C format because the binary tree is missing.
+
+  >>> from gensim.models.keyedvectors import KeyedVectors
+  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
+  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+
+
+You can perform various NLP word tasks with the model. Some of them
 are already built-in::
 
-  >>> model.most_similar(positive=['woman', 'king'], negative=['man'])
+  >>> model.wv.most_similar(positive=['woman', 'king'], negative=['man'])
   [('queen', 0.50882536), ...]
 
-  >>> model.doesnt_match("breakfast cereal dinner lunch".split())
+  >>> model.wv.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
+  [('queen', 0.71382287), ...]
+
+
+  >>> model.wv.doesnt_match("breakfast cereal dinner lunch".split())
   'cereal'
 
-  >>> model.similarity('woman', 'man')
+  >>> model.wv.similarity('woman', 'man')
   0.73723527
 
-  >>> model['computer']  # raw numpy vector of a word
-  array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
+Probability of a text under the model::
+
+  >>> model.score(["The fox jumped over a lazy dog".split()])
+  0.2158356
+
+Correlation with human opinion on word similarity::
+
+  >>> model.wv.evaluate_word_pairs(os.path.join(module_path, 'test_data','wordsim353.tsv'))
+  0.51, 0.62, 0.13
+
+And on analogies::
+
+  >>> model.wv.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
 
 and so on.
 
+
 If you're finished training a model (=no more updates, only querying), you can do
 
-  >>> model.init_sims(replace=True)
+  >>> model.delete_temporary_training_data(replace_word_vectors_with_normalized=True)
 
 to trim unneeded model memory = use (much) less RAM.
 
@@ -58,7 +85,7 @@ Note that there is a :mod:`gensim.models.phrases` module which lets you automati
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
 
->>> bigram_transformer = gensim.models.Phrases(sentences)
+>>> bigram_transformer = gensim.models.Phraser(gensim.models.Phrases(sentences))
 >>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
@@ -326,7 +353,7 @@ class Word2Vec(utils.SaveLoad):
     Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
 
     The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in a format
-    compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
+    compatible with the original word2vec implementation via `wv.save_word2vec_format()` and `KeyedVectors.load_word2vec_format()`.
 
     """
 
@@ -762,7 +789,7 @@ class Word2Vec(utils.SaveLoad):
 
         if not hasattr(self, 'corpus_count'):
             raise ValueError(
-                "The number of sentences in the training corpus is missing. Did you load the model via load_word2vec_format?"
+                "The number of sentences in the training corpus is missing. Did you load the model via KeyedVectors.load_word2vec_format?"
                 "Models loaded via load_word2vec_format don't support further training. "
                 "Instead start with a blank model, scan_vocab on the new corpus, intersect_word2vec_format with the old model, then train.")
 
@@ -1272,6 +1299,17 @@ class Word2Vec(utils.SaveLoad):
             self.wv = wv
         super(Word2Vec, self)._load_specials(*args, **kwargs)
 
+    @classmethod
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+                         limit=None, datatype=REAL):
+        """Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead."""
+        raise DeprecationWarning("Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
+
+    def save_word2vec_format(self, fname, fvocab=None, binary=False):
+        """Deprecated. Use model.wv.save_word2vec_format instead."""
+        raise DeprecationWarning("Deprecated. Use model.wv.save_word2vec_format instead.")
+
+
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
     def __init__(self, dirname):
@@ -1419,14 +1457,14 @@ if __name__ == "__main__":
 
     if args.output:
         outfile = args.output
-        model.save_word2vec_format(outfile, binary=args.binary)
+        model.wv.save_word2vec_format(outfile, binary=args.binary)
     else:
         outfile = args.train
         model.save(outfile + '.model')
     if args.binary == 1:
-        model.save_word2vec_format(outfile + '.model.bin', binary=True)
+        model.wv.save_word2vec_format(outfile + '.model.bin', binary=True)
     else:
-        model.save_word2vec_format(outfile + '.model.txt', binary=False)
+        model.wv.save_word2vec_format(outfile + '.model.txt', binary=False)
 
     if args.accuracy:
         model.accuracy(args.accuracy)
