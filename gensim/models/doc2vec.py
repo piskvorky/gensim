@@ -7,7 +7,7 @@
 
 """
 Deep learning via the distributed memory and distributed bag of words models from
-[1]_, using either hierarchical softmax or negative sampling [2]_ [3]_.
+[1]_, using either hierarchical softmax or negative sampling [2]_ [3]_. See [tutorial]_
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled)
 doc2vec training** (70x speedup [blog]_).
@@ -34,7 +34,7 @@ to trim unneeded model memory = use (much) less RAM.
 .. [3] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
        In Proceedings of NIPS, 2013.
 .. [blog] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
-.. [tutorial] Doc2vec in gensim tutorial, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
+.. [tutorial] Doc2vec in gensim tutorial, https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
 
 
 """
@@ -617,7 +617,6 @@ class Doc2Vec(Word2Vec):
             null_word=dm_concat, **kwargs)
         
         self.load = call_on_class_only
-        self.load_word2vec_format = call_on_class_only
 
         if dm_mean is not None:
             self.cbow_mean = dm_mean
