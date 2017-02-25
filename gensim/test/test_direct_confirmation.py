@@ -23,7 +23,7 @@ class TestDirectConfirmationMeasure(unittest.TestCase):
 
     def testLogConditionalProbability(self):
         """Test log_conditional_probability()"""
-        obtained = direct_confirmation_measure.log_conditional_probability(self.segmentation, self.posting_list, self.num_docs)[0][0]
+        obtained = direct_confirmation_measure.log_conditional_probability(self.segmentation, self.posting_list, self.num_docs)[0]
         # Answer should be ~ ln(1 / 2) = -0.693147181
         expected = -0.693147181
         self.assertAlmostEqual(obtained, expected)

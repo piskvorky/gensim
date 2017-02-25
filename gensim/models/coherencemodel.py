@@ -199,7 +199,7 @@ class CoherenceModel(interfaces.TransformationABC):
         segmented_topics = measure.seg(self.topics)
         if self.coherence in boolean_document_based:
             per_topic_postings, num_docs = measure.prob(self.corpus, segmented_topics)
-            confirmed_measures = measure.conf(segmented_topics, per_topic_postings, num_docs)
+            confirmed_measures = measure.conf(segmented_topics, per_topic_postings, num_docs, self.aggregated)
         elif self.coherence in sliding_window_based:
             if self.window_size is not None:
                 self.window_size = sliding_windows_dict[self.coherence]
@@ -214,4 +214,4 @@ class CoherenceModel(interfaces.TransformationABC):
                     # For c_uci
                     normalize = False
                 confirmed_measures = measure.conf(segmented_topics, per_topic_postings, num_windows, normalize=normalize)
-        return measure.aggr(confirmed_measures, self.aggregated)
+        return measure.aggr(confirmed_measures)

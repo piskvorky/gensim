@@ -14,7 +14,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-def arithmetic_mean(confirmed_measures, aggregated):
+def arithmetic_mean(confirmed_measures):
     """
     This functoin performs the arithmetic mean aggregation on the output obtained from
     the confirmation measure module.
@@ -27,6 +27,6 @@ def arithmetic_mean(confirmed_measures, aggregated):
     -------
     mean : Arithmetic mean of all the values contained in confirmation measures.
     """
-    if aggregated:
-        return np.mean(confirmed_measures)
-    return np.mean(confirmed_measures, axis=1)
+    if isinstance(confirmed_measures[0], list): 
+        return np.mean(confirmed_measures, axis=1) # This will generate non-aggregated coherence scores
+    return np.mean(confirmed_measures)
