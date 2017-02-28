@@ -4,7 +4,7 @@ from gensim.models.word2vec import Word2Vec, Text8Corpus
 
 #TF benchmark
 start = time.time()
-model = TfWord2Vec("text8", epochs_to_train=1, batch_size=100)
+model = TfWord2Vec("text8", epochs_to_train=1, batch_size=1000000)
 print "Tensorflow:\n" + str(time.time()-start)
 
 #Gensim benchmark

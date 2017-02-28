@@ -116,7 +116,7 @@ class TfWord2Vec(KeyedVectors):
     def __init__(self, train_data=None, save_path=None, eval_data=None,
         embedding_size=200, epochs_to_train=15, learning_rate=0.025,
         num_neg_samples=25, batch_size=500, concurrent_steps=12,
-        window_size=5, min_count=5, subsample=1e-3):
+        window_size=5, min_count=5, subsample=1e-3, gpus=4):
 
         self.options = Options(train_data, save_path=save_path, eval_data=eval_data,
             embedding_size=embedding_size, epochs_to_train=epochs_to_train,
@@ -125,13 +125,17 @@ class TfWord2Vec(KeyedVectors):
             window_size=window_size, min_count=min_count, subsample=subsample)
 
         self.convert_input(train_data)
+        self.gpus = gpus
         self.train()
         self.vocab = {}
         self.create_vocab()
 
     def train(self):
-        with tf.Graph().as_default(), tf.Session() as session:
-            self.model = tfw2v(self.options, session)
+        with tf.Graph().as_default(), tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)) as session:
+            gpu_devices = ['/gpu:0', '/gpu:1', '/gpu:2', '/gpu:3']
+            for i in range(self.gpus):
+                with tf.device(gpu_devices[i]):
+                    self.model = tfw2v(self.options, session)
             for _ in range(self.options.epochs_to_train):
                 self.model.train()  # Process one epoch
                 if self.options.eval_data is not None:
