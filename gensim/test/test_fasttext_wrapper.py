@@ -120,6 +120,14 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(self.test_model.wv.syn0_all.shape, (self.test_model.num_ngram_vectors, model_size))
         self.model_sanity(model)
 
+    def testLoadModelWithNonAsciiVocab(self):
+        model = fasttext.FastText.load_fasttext_format(datapath('non_ascii_fasttext'))
+        self.assertTrue(u'který' in model)
+        try:
+            vector = model[u'který']
+        except UnicodeDecodeError:
+            self.fail('Unable to access vector for non-ascii word')
+
     def testNSimilarity(self):
         """Test n_similarity for in-vocab and out-of-vocab words"""
         # In vocab, sanity check
