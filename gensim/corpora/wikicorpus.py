@@ -30,7 +30,7 @@ from gensim import utils
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
 
-logger = logging.getLogger('gensim.corpora.wikicorpus')
+logger = logging.getLogger(__name__)
 
 # ignore articles shorter than ARTICLE_MIN_WORDS characters (after full preprocessing)
 ARTICLE_MIN_WORDS = 50
@@ -172,8 +172,10 @@ def tokenize(content):
     that 15 characters (not bytes!).
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
-    return [token.encode('utf8') for token in utils.tokenize(content, lower=True, errors='ignore')
-            if 2 <= len(token) <= 15 and not token.startswith('_')]
+    return [
+        token.encode('utf8') for token in utils.tokenize(content, lower=True, errors='ignore')
+        if 2 <= len(token) <= 15 and not token.startswith('_')
+    ]
 
 
 def get_namespace(tag):

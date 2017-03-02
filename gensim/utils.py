@@ -10,7 +10,8 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
-import logging, warnings
+import logging
+import warnings
 
 logger = logging.getLogger(__name__)
 
