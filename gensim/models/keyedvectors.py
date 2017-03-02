@@ -455,13 +455,12 @@ class KeyedVectors(utils.SaveLoad):
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
+        all_words = set([self.vocab[word].index for word in positive+negative if word in self.vocab])
 
         positive = [self.word_vec(word, use_norm=True) for word in positive]
         negative = [self.word_vec(word, use_norm=True) for word in negative]
         if not positive:
             raise ValueError("cannot compute similarity with no input")
-
-        all_words = set([self.vocab[word].index for word in positive+negative if word in self.vocab])
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)
