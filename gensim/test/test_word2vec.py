@@ -95,6 +95,18 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(len(model_hs.wv.vocab), 14)
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
+    def testOnlineLearningAfterSave(self):
+        """Test that the algorithm is able to add new words to the
+        vocabulary and to a trained model when using a sorted vocabulary"""
+        model_neg = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
+        model_neg.save(testfile())
+        model_neg = word2vec.Word2Vec.load(testfile())
+        self.assertTrue(len(model_neg.wv.vocab), 12)
+        model_neg.build_vocab(new_sentences, update=True)
+        model_neg.train(new_sentences)
+        self.assertEqual(len(model_neg.wv.vocab), 14)
+
+
     def onlineSanity(self, model):
         terro, others = [], []
         for l in list_corpus:
