@@ -142,7 +142,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model.build_vocab(corpus)
         self.assertTrue(model.docvecs.similarity_unseen_docs(model, rome_str, rome_str) > model.docvecs.similarity_unseen_docs(model, rome_str, car_str))
 
-    def model_sanity(self, model):
+    def model_sanity(self, model, keep_training=True):
         """Any non-trivial model on DocsLeeCorpus can pass these sanity checks"""
         fire1 = 0  # doc 0 sydney fires
         fire2 = 8  # doc 8 sydney fires
@@ -178,6 +178,12 @@ class TestDoc2VecModel(unittest.TestCase):
 
         # fire docs should be closer than fire-tennis
         self.assertTrue(model.docvecs.similarity(fire1, fire2) > model.docvecs.similarity(fire1, tennis1))
+
+        # keep training after save
+        if keep_training:
+            model.save(testfile())
+            loaded = doc2vec.Doc2Vec.load(testfile())
+            loaded.train(DocsLeeCorpus())
 
     def test_training(self):
         """Test doc2vec training."""
@@ -316,10 +322,10 @@ class TestDoc2VecModel(unittest.TestCase):
         model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
         self.assertTrue(model.docvecs and hasattr(model.docvecs, 'doctag_syn0'))
         self.assertTrue(hasattr(model, 'syn1'))
-        self.model_sanity(model)
+        self.model_sanity(model, keep_training=False)
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0, negative=1, alpha=0.05, min_count=2, iter=20)
         model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
-        self.model_sanity(model)
+        self.model_sanity(model, keep_training=False)
         self.assertTrue(hasattr(model, 'syn1neg'))
 
     @log_capture()
