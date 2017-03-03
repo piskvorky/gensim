@@ -158,11 +158,11 @@ class TestFastText(unittest.TestCase):
     def testMostSimilarCosmul(self):
         """Test most_similar_cosmul for in-vocab and out-of-vocab words"""
         # In vocab, sanity check
-        self.assertEqual(len(self.test_model.most_similar(positive=['the', 'and'], topn=5)), 5)
-        self.assertEqual(self.test_model.most_similar('the'), self.test_model.most_similar(positive=['the']))
+        self.assertEqual(len(self.test_model.most_similar_cosmul(positive=['the', 'and'], topn=5)), 5)
+        self.assertEqual(self.test_model.most_similar_cosmul('the'), self.test_model.most_similar_cosmul(positive=['the']))
         # Out of vocab check
-        self.assertEqual(len(self.test_model.most_similar(['night', 'nights'], topn=5)), 5)
-        self.assertEqual(self.test_model.most_similar('nights'), self.test_model.most_similar(positive=['nights']))
+        self.assertEqual(len(self.test_model.most_similar_cosmul(['night', 'nights'], topn=5)), 5)
+        self.assertEqual(self.test_model.most_similar_cosmul('nights'), self.test_model.most_similar_cosmul(positive=['nights']))
 
     def testLookup(self):
         """Tests word vector lookup for in-vocab and out-of-vocab words"""

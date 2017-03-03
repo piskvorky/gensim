@@ -449,6 +449,17 @@ class TestWord2VecModel(unittest.TestCase):
                                   min_count=5, iter=10, workers=2, sample=0)
         self.model_sanity(model)
 
+    def test_cosmul(self):
+        model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
+        sims = model.most_similar_cosmul('graph', topn=10)
+        # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
+
+        # test querying for "most similar" by vector
+        graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
+        sims2 = model.most_similar_cosmul(positive=[graph_vector], topn=11)
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
+
     def testTrainingCbow(self):
         """Test CBOW word2vec training."""
         # to test training, make the corpus larger by repeating its sentences over and over
