@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
+# Author: Jayant Jain <jayantjain1992@gmail.com>
+# Copyright (C) 2017 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
