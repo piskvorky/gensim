@@ -1271,7 +1271,7 @@ class Word2Vec(utils.SaveLoad):
         # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table
-        if model.negative and hasattr(model, 'index2word'):
+        if model.negative and hasattr(model.wv, 'index2word'):
             model.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
