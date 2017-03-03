@@ -183,7 +183,7 @@ class TestDoc2VecModel(unittest.TestCase):
         if keep_training:
             model.save(testfile())
             loaded = doc2vec.Doc2Vec.load(testfile())
-            loaded.train(DocsLeeCorpus())
+            loaded.train(sentences)
 
     def test_training(self):
         """Test doc2vec training."""
