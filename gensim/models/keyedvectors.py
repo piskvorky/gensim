@@ -455,10 +455,18 @@ class KeyedVectors(utils.SaveLoad):
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
-        all_words = set([self.vocab[word].index for word in positive+negative if word in self.vocab])
+        all_words = set([self.vocab[word].index for word in positive+negative
+            if not isinstance(word, ndarray) and word in self.vocab])
 
-        positive = [self.word_vec(word, use_norm=True) for word in positive]
-        negative = [self.word_vec(word, use_norm=True) for word in negative]
+        positive = [
+            self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
+            for word in positive
+        ]
+        negative = [
+            self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
+            for word in negative
+        ]
+
         if not positive:
             raise ValueError("cannot compute similarity with no input")
 
