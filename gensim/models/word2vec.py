@@ -1291,14 +1291,15 @@ class Word2Vec(utils.SaveLoad):
         return model
 
     def _load_specials(self, *args, **kwargs):
+        super(Word2Vec, self)._load_specials(*args, **kwargs)
         # loading from a pre-KeyedVectors word2vec model
         if not hasattr(self, 'wv'):
             wv = KeyedVectors()
             wv.syn0 = self.__dict__.get('syn0', [])
+            wv.syn0norm = self.__dict__.get('syn0norm', None)
             wv.vocab = self.__dict__.get('vocab', {})
             wv.index2word = self.__dict__.get('index2word', [])
             self.wv = wv
-        super(Word2Vec, self)._load_specials(*args, **kwargs)
 
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
