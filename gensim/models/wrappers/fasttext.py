@@ -277,14 +277,13 @@ class FastText(Word2Vec):
         assert len(self.wv.vocab) == vocab_size, 'mismatch between vocab sizes'
         ntokens, = self.struct_unpack(file_handle, '@q')
         for i in range(nwords):
-            word = ''
-            char, = self.struct_unpack(file_handle, '@c')
-            char = char.decode()
+            word_bytes = b''
+            char_byte = file_handle.read(1)
             # Read vocab word
-            while char != '\x00':
-                word += char 
-                char, = self.struct_unpack(file_handle, '@c')
-                char = char.decode()
+            while char_byte != b'\x00':
+                word_bytes += char_byte
+                char_byte = file_handle.read(1)
+            word = word_bytes.decode('utf8')
             count, _ = self.struct_unpack(file_handle, '@ib')
             _ = self.struct_unpack(file_handle, '@i')
             assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'

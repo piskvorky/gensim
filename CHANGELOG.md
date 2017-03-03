@@ -12,6 +12,7 @@ New features:
 * Add Author-topic modeling (@olavurmortensen,[#893](https://github.com/RaRe-Technologies/gensim/pull/893))
 * Add FastText word embedding wrapper (@Jayantj,[#847](https://github.com/RaRe-Technologies/gensim/pull/847))
 * Add WordRank word embedding  wrapper (@parulsethi,[#1066](https://github.com/RaRe-Technologies/gensim/pull/1066), [#1125](https://github.com/RaRe-Technologies/gensim/pull/1125))
+* Add VarEmbed word embedding wrapper (@anmol01gulati,  [#1067](https://github.com/RaRe-Technologies/gensim/pull/1067)))
 * Add sklearn wrapper for LDAModel (@AadityaJ,[#932](https://github.com/RaRe-Technologies/gensim/pull/932))
 
 Deprecated features:
@@ -49,6 +50,7 @@ Tutorial and doc improvements:
 * Fix typos in Author-topic tutorial (@Fil,[#1102](https://github.com/RaRe-Technologies/gensim/pull/1102))
 * Address benchmark inconsistencies in Annoy tutorial (@droudy,[#1113](https://github.com/RaRe-Technologies/gensim/pull/1113))
 * Add note about Annoy speed depending on numpy BLAS setup in annoytutorial.ipynb (@greninja,[#1137](https://github.com/RaRe-Technologies/gensim/pull/1137)) 
+* Fix dependencies description on doc2vec-IMDB notebook (@luizcavalcanti, [#1132](https://github.com/RaRe-Technologies/gensim/pull/1132)) 
 * Add documentation for WikiCorpus metadata. (@kirit93, [#1163](https://github.com/RaRe-Technologies/gensim/pull/1163)) 
 
  
