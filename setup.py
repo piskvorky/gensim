@@ -15,8 +15,8 @@ import sys
 import warnings
 import io
 
-if sys.version_info[:2] < (2, 6):
-    raise Exception('This version of gensim needs Python 2.6 or later.')
+if sys.version_info[:2] < (2, 7) or (sys.version_info[:1] == 3 and sys.version_info[:2] < (3, 5)):
+    raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
 
 import ez_setup
 ez_setup.use_setuptools()
@@ -113,9 +113,6 @@ if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
     cmdclass.update(vars(wheelhouse_uploader.cmd))
 
 
-python_2_6_backports = ''
-if sys.version_info[:2] < (2, 7):
-    python_2_6_backports = ['argparse']
 
 LONG_DESCRIPTION = u"""
 ==============================================
@@ -177,7 +174,7 @@ you'd run::
 For alternative modes of installation (without root privileges, development
 installation, optional install features), see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
 
-This version has been tested under Python 2.6, 2.7, 3.3, 3.4, 3.5 and 3.6 (support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). Gensim's github repo is hooked against `Travis CI for automated testing <https://travis-ci.org/RaRe-Technologies/gensim>`_ on every commit push and pull request.
+This version has been tested under Python 2.7, 3.5 and 3.6. Support for Python 2.6, 3.3 and 3.4 was dropped in gensim 1.0.0. Install gensim 0.13.4 if you *must* use Python 2.6, 3.3 or 3.4. Support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). Gensim's github repo is hooked against `Travis CI for automated testing <https://travis-ci.org/RaRe-Technologies/gensim>`_ on every commit push and pull request.
 
 How come gensim is so fast and memory efficient? Isn't it pure Python, and isn't Python slow and greedy?
 --------------------------------------------------------------------------------------------------------
@@ -231,7 +228,7 @@ Copyright (c) 2009-now Radim Rehurek
 
 setup(
     name='gensim',
-    version='0.13.4.1',
+    version='1.0.1',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -267,11 +264,9 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Text Processing :: Linguistic',
@@ -286,7 +281,6 @@ setup(
         'scipy >= 0.7.0',
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
-        python_2_6_backports,
     ],
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],

@@ -27,7 +27,6 @@ import numpy as np
 
 from gensim import utils
 from gensim.models.keyedvectors import KeyedVectors
-from gensim.models.word2vec import Word2Vec
 from gensim.scripts.glove2word2vec import glove2word2vec
 
 from six import string_types
@@ -38,7 +37,7 @@ from shutil import copyfile, rmtree
 logger = logging.getLogger(__name__)
 
 
-class Wordrank(Word2Vec):
+class Wordrank(KeyedVectors):
     """
     Class for word vector training using Wordrank. Communication between Wordrank and Python
     takes place by working with data files on disk and calling the Wordrank binary and glove's
@@ -70,7 +69,7 @@ class Wordrank(Word2Vec):
         `beta` is the beta parameter of gamma distribution.
         `loss` = name of the loss (logistic, hinge).
         `memory` = soft limit for memory consumption, in GB.
-        `cleanup_files` if to delete directory and files used by this wrapper, setting to False can be useful for debugging
+        `cleanup_files` if True, delete directory and files used by this wrapper, setting to False can be useful for debugging
         `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before assigning word indexes.
         `ensemble` = 0 (default), use ensemble of word and context vectors
         """
@@ -81,7 +80,7 @@ class Wordrank(Word2Vec):
         cooccurrence_file = 'cooccurrence'
         cooccurrence_shuf_file = 'wiki.toy'
         meta_file = 'meta'
-        
+
         # prepare training data (cooccurrence matrix and vocab)
         model_dir = os.path.join(wr_path, out_path)
         meta_dir = os.path.join(model_dir, 'meta')
@@ -99,7 +98,7 @@ class Wordrank(Word2Vec):
         logger.info("Prepare training data using glove code '%s'", commands)
         input_fnames = [corpus_file.split('/')[-1], corpus_file.split('/')[-1], cooccurrence_file]
         output_fnames = [temp_vocab_file, cooccurrence_file, cooccurrence_shuf_file]
-        
+
         for command, input_fname, output_fname in zip(commands, input_fnames, output_fnames):
             with smart_open(input_fname, 'rb') as r:
                 with smart_open(output_fname, 'wb') as w:
@@ -165,35 +164,40 @@ class Wordrank(Word2Vec):
     def sort_embeddings(self, vocab_file):
         """Sort embeddings according to word frequency."""
         counts = {}
-        vocab_size = len(self.wv.vocab)
-        prev_syn0 = copy.deepcopy(self.wv.syn0)
-        prev_vocab = copy.deepcopy(self.wv.vocab)
-        self.wv.index2word = []
+        vocab_size = len(self.vocab)
+        prev_syn0 = copy.deepcopy(self.syn0)
+        prev_vocab = copy.deepcopy(self.vocab)
+        self.index2word = []
 
+        # sort embeddings using frequency sorted vocab file in wordrank
         with utils.smart_open(vocab_file) as fin:
             for index, line in enumerate(fin):
                 word, count = utils.to_unicode(line).strip(), vocab_size - index
+                # store word with it's count in a dict
                 counts[word] = int(count)
-                self.wv.index2word.append(word)
-        assert len(self.wv.index2word) == vocab_size, 'mismatch between vocab sizes'
+                # build new index2word with frequency sorted words
+                self.index2word.append(word)
+        assert len(self.index2word) == vocab_size, 'mismatch between vocab sizes'
 
-        for word_id, word in enumerate(self.wv.index2word):
-            self.wv.syn0[word_id] = prev_syn0[prev_vocab[word].index]
-            self.wv.vocab[word].index = word_id
-            self.wv.vocab[word].count = counts[word]
+        for word_id, word in enumerate(self.index2word):
+            self.syn0[word_id] = prev_syn0[prev_vocab[word].index]
+            self.vocab[word].index = word_id
+            self.vocab[word].count = counts[word]
 
     def ensemble_embedding(self, word_embedding, context_embedding):
         """Replace syn0 with the sum of context and word embeddings."""
         glove2word2vec(context_embedding, context_embedding+'.w2vformat')
-        w_emb = Word2Vec.load_word2vec_format('%s.w2vformat' % word_embedding)
-        c_emb = Word2Vec.load_word2vec_format('%s.w2vformat' % context_embedding)
-        # compare vocab words using keys of dict wv.vocab
-        assert set(w_emb.wv.vocab) == set(c_emb.wv.vocab), 'Vocabs are not same for both embeddings'
+        w_emb = KeyedVectors.load_word2vec_format('%s.w2vformat' % word_embedding)
+        c_emb = KeyedVectors.load_word2vec_format('%s.w2vformat' % context_embedding)
+        # compare vocab words using keys of dict vocab
+        assert set(w_emb.vocab) == set(c_emb.vocab), 'Vocabs are not same for both embeddings'
 
-        prev_c_emb = copy.deepcopy(c_emb.wv.syn0)
-        for word_id, word in enumerate(w_emb.wv.index2word):
-            c_emb.wv.syn0[word_id] = prev_c_emb[c_emb.wv.vocab[word].index]
-        new_emb = w_emb.wv.syn0 + c_emb.wv.syn0
-        self.wv.syn0 = new_emb
+        # sort context embedding to have words in same order as word embedding
+        prev_c_emb = copy.deepcopy(c_emb.syn0)
+        for word_id, word in enumerate(w_emb.index2word):
+            c_emb.syn0[word_id] = prev_c_emb[c_emb.vocab[word].index]
+        # add vectors of the two embeddings
+        new_emb = w_emb.syn0 + c_emb.syn0
+        self.syn0 = new_emb
         return new_emb
 

@@ -114,7 +114,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     To print 20 topics with top 10 most probable words
 
-    >>> hdp.print_topics(show_topics=20, num_words=10)
+    >>> hdp.print_topics(num_topics=20, num_words=10)
 
     Model persistency is achieved through its `load`/`save` methods.
 

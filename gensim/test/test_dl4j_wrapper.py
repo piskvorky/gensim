@@ -29,20 +29,7 @@ class TestDl4j(unittest.TestCase):
         self.corpus_file = datapath('raw_sentences.txt')
         self.out_path = 'testmodel'
         self.test_model_file = datapath('raw_dl4j.txt')
-        self.test_model = dl4jwrapper.dl4jWrapper.load_dl4j_w2v_format(self.test_model_file)
-
-    def model_sanity(self, model):
-        """Even tiny models trained on any corpus should pass these sanity checks"""
-        self.assertEqual(model.syn0.shape, (len(model.vocab), model.size))
-        self.assertEqual(model.syn0_all.shape, (model.num_ngram_vectors, model.size))
-
-    def testTraining(self):
-        """Test self.test_model successfully trained, parameters and weights correctly loaded"""
-        vocab_size, model_size = 1762, 10
-        trained_model = dl4jwrapper.dl4jWrapper.train("dl4j-examples-0.7-SNAPSHOT-bin.jar", "raw_sentences.txt", 5, 1, 100, 42, 5, output_file="raw_dl4j.txt")
-        self.assertEqual(trained_model.syn0.shape, (vocab_size, model_size))
-        self.assertEqual(len(trained_model.vocab), vocab_size)
-        self.model_sanity(trained_model)
+        self.test_model = dl4jwrapper.dl4jWrapper.train("dl4j-examples-0.7-SNAPSHOT-bin.jar", corpus_file="raw_sentences.txt", minWordFrequency=5, iterations=1, layerSize=100, seed=42, windowSize=5, output_file="raw_dl4j.txt")
 
     def testLoadDl4jFormat(self):
         """Test model successfully loaded from Wordrank format file"""

@@ -78,11 +78,9 @@ For alternative modes of installation (without root privileges,
 development installation, optional install features), see the
 [documentation].
 
-This version has been tested under Python 2.6, 2.7, 3.3, 3.4, 3.5 and 3.6
-(support for Python 2.5 was dropped in gensim 0.10.0; install gensim
-0.9.1 if you *must* use Python 2.5). Gensim’s github repo is hooked
+This version has been tested under Python 2.7, 3.5 and 3.6. Gensim’s github repo is hooked
 against [Travis CI for automated testing] on every commit push and pull
-request.
+request. Support for Python 2.6, 3.3 and 3.4 was dropped in gensim 1.0.0. Install gensim 0.13.4 if you *must* use Python 2.6, 3.3 or 3.4. Support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). 
 
 How come gensim is so fast and memory efficient? Isn’t it pure Python, and isn’t Python slow and greedy?
 --------------------------------------------------------------------------------------------------------
@@ -111,6 +109,7 @@ Documentation
   [Tutorials]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
   [Tutorial Videos]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
   [Official Documentation and Walkthrough]: http://radimrehurek.com/gensim/
+  [Official API Documentation]: http://radimrehurek.com/gensim/apiref.html
   
 ---------
 
@@ -128,7 +127,7 @@ Adopters
 | Sports Authority        | <img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Sports_Authority_logo2011.jpg" width="100"> | [sportsauthority.com](https://en.wikipedia.org/wiki/Sports_Authority)| Text mining of customer surveys and social media sources |
 | Search Metrics        | <img src="http://www.searchmetrics.com/wp-content/uploads/Logo_searchmetrics_Webversion.png" width="100"> | [searchmetrics.com](http://www.searchmetrics.com/)| Gensim word2vec used for entity disambiguation in Search Engine Optimisation
 | Cisco Security        | <img src="https://supportforums.cisco.com/sites/default/files/legacy/1/6/1/2161-CiscoSystems.gif" width="100"> | [cisco.com](http://www.cisco.com/c/en/us/products/security/index.html)|  Large-scale fraud detection
-|  12K Research         | <img src="https://techberlin.com/media/CACHE/images/threesixty/FtA5ANuJ/1aa5b8517ec65ef1c7d69c9bda5f9a3c.jpg" width="100"> | [12k.co](https://12k.co/)|   Document similarity analysis on media articles
+|  12K Research         | <img src="https://static1.squarespace.com/static/548d6f40e4b0fb61d7b8f40b/t/57310800b09f95e472ba5dd1/1462831123953/12k-logo.png" width="100"> | [12k.co](https://12k.co/)|   Document similarity analysis on media articles
 |  National Institutes of Health         | <img src="https://www.nih.gov/sites/default/files/styles/featured_media_breakpoint-large/public/about-nih/2012-logo.png" width="100"> | [github/NIHOPA](https://github.com/NIHOPA/pipeline_word2vec)|   Processing grants and publications with word2vec
 |  Codeq LLC         | <img src="https://codeq.com/wp-content/themes/codeq/assets/img/logo.svg" width="100"> | [codeq.com](https://codeq.com)|   Document classification with word2vec
 | Mass Cognition     | <img src="http://static1.squarespace.com/static/5637b16ee4b050255657c537/t/56a683bf9cadb6bf86a0ea13/1461016648294/?format=1500w" width="100"> | [masscognition.com](http://www.masscognition.com/)                                  | Topic analysis service for consumer text data and general text data |

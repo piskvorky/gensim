@@ -7,7 +7,7 @@
 
 """
 Deep learning via the distributed memory and distributed bag of words models from
-[1]_, using either hierarchical softmax or negative sampling [2]_ [3]_.
+[1]_, using either hierarchical softmax or negative sampling [2]_ [3]_. See [tutorial]_
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled)
 doc2vec training** (70x speedup [blog]_).
@@ -21,16 +21,23 @@ Persist a model to disk with::
 >>> model.save(fname)
 >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
-The model can also be instantiated from an existing file on disk in the word2vec C format::
+If you're finished training a model (=no more updates, only querying), you can do
 
-  >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-  >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+  >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
+
+to trim unneeded model memory = use (much) less RAM.
+
+
 
 .. [1] Quoc Le and Tomas Mikolov. Distributed Representations of Sentences and Documents. http://arxiv.org/pdf/1405.4053v2.pdf
 .. [2] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 .. [3] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
        In Proceedings of NIPS, 2013.
 .. [blog] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
+
+.. [tutorial] Doc2vec in gensim tutorial, https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
+
+
 
 """
 
@@ -53,7 +60,7 @@ from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
 
 from gensim.utils import call_on_class_only
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_batch_sg
+from gensim.models.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg
 from six.moves import xrange, zip
 from six import string_types, integer_types, itervalues
 
@@ -353,6 +360,11 @@ class DocvecsArray(utils.SaveLoad):
         else:
             return index in self.doctags
 
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
+        super(DocvecsArray, self).save(*args, **kwargs)
+
     def borrow_from(self, other_docvecs):
         self.count = other_docvecs.count
         self.doctags = other_docvecs.doctags
@@ -607,7 +619,6 @@ class Doc2Vec(Word2Vec):
             null_word=dm_concat, **kwargs)
         
         self.load = call_on_class_only
-        self.load_word2vec_format = call_on_class_only
 
         if dm_mean is not None:
             self.cbow_mean = dm_mean

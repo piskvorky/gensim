@@ -40,8 +40,8 @@ class TestWordrank(unittest.TestCase):
         """Test model successfully loaded from Wordrank format file"""
         model = wordrank.Wordrank.load_wordrank_model(self.wr_file)
         vocab_size, dim = 76, 50
-        self.assertEqual(model.wv.syn0.shape, (vocab_size, dim))
-        self.assertEqual(len(model.wv.vocab), vocab_size)
+        self.assertEqual(model.syn0.shape, (vocab_size, dim))
+        self.assertEqual(len(model.vocab), vocab_size)
         os.remove(self.wr_file+'.w2vformat')
 
     def testEnsemble(self):
@@ -75,7 +75,7 @@ class TestWordrank(unittest.TestCase):
     def models_equal(self, model, model2):
         self.assertEqual(len(model.vocab), len(model2.vocab))
         self.assertEqual(set(model.vocab.keys()), set(model2.vocab.keys()))
-        self.assertTrue(numpy.allclose(model.wv.syn0, model2.wv.syn0))
+        self.assertTrue(numpy.allclose(model.syn0, model2.syn0))
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

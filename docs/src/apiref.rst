@@ -45,6 +45,7 @@ Modules:
     models/wrappers/dtmmodel
     models/wrappers/ldavowpalwabbit.rst
     models/wrappers/wordrank
+    models/wrappers/varembed
     similarities/docsim
     similarities/index
     topic_coherence/aggregation
@@ -65,6 +66,4 @@ Modules:
     summarization/summariser
     summarization/syntactic_unit
     summarization/textcleaner
-
-
-
+    sklearn_integration/sklearn_wrapper_gensim_ldamodel

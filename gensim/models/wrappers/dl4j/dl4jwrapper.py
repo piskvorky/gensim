@@ -27,13 +27,14 @@ from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.models.word2vec import Word2Vec
+from gensim.models.keyedvectors import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
 
 import os
 logger = logging.getLogger(__name__)
 
 
-class dl4jWrapper(Word2Vec):
+class dl4jWrapper(KeyedVectors):
     """
 
     """
