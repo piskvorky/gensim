@@ -16,7 +16,7 @@ import tempfile
 
 import numpy
 
-from gensim.models.tfword2vec import TfWord2Vec
+from gensim.models.wrappers.tfword2vec import TfWord2Vec
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -27,6 +27,10 @@ def testfile():
 
 class TestTensorFlow(unittest.TestCase):
     def setUp(self):
+        try:
+            import tensorflow as tf
+        except ImportError:
+            raise unittest.SkipTest("TensorFlow not installed. Skipping tensorflow tests")
         self.corpus_file = datapath('lee.cor')
         self.out_path = 'testmodel'
         self.tf_file = datapath('test_glove.txt')
@@ -45,8 +49,6 @@ class TestTensorFlow(unittest.TestCase):
     #TODO fix this after saving works
     def Persistence(self):
         """Test storing/loading the entire model"""
-        if not self.wr_path:
-            return
         self.test_model.save(testfile())
         loaded = TfWord2Vec.load_tf_model(testfile())
         self.models_equal(self.test_model, loaded)
@@ -67,5 +69,3 @@ class TestTensorFlow(unittest.TestCase):
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
-
-

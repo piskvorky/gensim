@@ -8,3 +8,4 @@ from .ldavowpalwabbit import LdaVowpalWabbit
 from .fasttext import FastText
 from .wordrank import Wordrank
 from .varembed import VarEmbed
+from .tfword2vec import TfWord2Vec
