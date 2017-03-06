@@ -259,14 +259,23 @@ class SaveLoad(object):
         is encountered.
 
         """
-        logger.info("loading %s object from %s" % (cls.__name__, fname))
+        try:
+            from cPickle import UnpicklingError
+        except ImportError:
+            from pickle import UnpicklingError
+        try:
+            logger.info("loading %s object from %s" % (cls.__name__, fname))
 
-        compress, subname = SaveLoad._adapt_by_suffix(fname)
+            compress, subname = SaveLoad._adapt_by_suffix(fname)
 
-        obj = unpickle(fname)
-        obj._load_specials(fname, mmap, compress, subname)
-        logger.info("loaded %s", fname)
-        return obj
+            obj = unpickle(fname)
+            obj._load_specials(fname, mmap, compress, subname)
+            logger.info("loaded %s", fname)
+            return obj
+        except UnpicklingError:
+            raise UnpicklingError('File is not a pickle \n'
+            'If you are trying to load a corpus, use the default constructor of the corpus class')
+
 
 
     def _load_specials(self, fname, mmap, compress, subname):
