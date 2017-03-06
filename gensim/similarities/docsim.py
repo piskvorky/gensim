@@ -50,8 +50,6 @@ uses the faster, batch queries internally and **is ideal for all-vs-all pairwise
 """
 
 
-import concurrent.futures
-import functools
 import logging
 import itertools
 import os
@@ -394,17 +392,12 @@ class Similarity(interfaces.SimilarityABC):
         # turn off query normalization (vectors in the index are already normalized, save some CPU)
         norm, self.norm = self.norm, False
 
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            futures = []
-            process_chunk = functools.partial(_query_chunk, index=self)
-
-            chunks = list(self.iter_chunks())
-            for chunk in chunks:
-                futures.append(executor.submit(process_chunk, chunk))
-            del chunks
-
-            for future in concurrent.futures.as_completed(futures):
-                for sim in future.result():
+        import multiprocessing
+        import functools
+        with multiprocessing.Pool() as pool:
+            worker = functools.partial(_query_chunk_worker, index=self)
+            for result in pool.map(worker, self.iter_chunks()):
+                for sim in result:
                     yield sim
 
         self.norm = norm  # restore normalization
@@ -466,17 +459,16 @@ class Similarity(interfaces.SimilarityABC):
             os.remove(fname)
 
 
-def _query_chunk(chunk, index):
-    """ Allow pickling """
-    return list(_query_chunk_gen(chunk, index))
+def _query_chunk_worker(chunk, index):
+    """ To allow pickling of method for multiprocessing """
+    def _query_chunk_work():
+        if chunk.shape[0] > 1:
+            for sim in index[chunk]:
+                yield sim
+        else:
+            yield index[chunk]
 
-
-def _query_chunk_gen(chunk, index):
-    if chunk.shape[0] > 1:
-        for sim in index[chunk]:
-            yield sim
-    else:
-        yield index[chunk]
+    return list(_query_chunk_work())
 #endclass Similarity
 
 
