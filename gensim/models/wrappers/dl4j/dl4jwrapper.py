@@ -38,12 +38,13 @@ class dl4jWrapper(KeyedVectors):
     """
 
     """
+    def __init__(self):
+        super(dl4jWrapper, self).__init__()
 
     @classmethod
-    def train(cls, jar_file, corpus_file, minWordFrequency, iterations, layerSize, seed, windowSize, output_file=None):
+    def train(cls, jar_file, minWordFrequency, iterations, layerSize, seed, windowSize, output_file=None):
         output_file = output_file or os.path.join(tempfile.gettempdir(), 'dl4j_model')
         wr_args = {
-            'corpus_file': corpus_file,
             'minWordFrequency': minWordFrequency,
             'iterations': iterations,
             'layerSize': layerSize,
@@ -53,7 +54,6 @@ class dl4jWrapper(KeyedVectors):
 
         cmd = ['java', '-cp', 'lib/*:' + jar_file + ':.', 'org.deeplearning4j.examples.nlp.word2vec.Word2VecRawTextExample']
         for option, value in wr_args.items():
-            #TODO pass options along with value
             cmd.append(str(value))
 
         output = utils.check_output(args=cmd)

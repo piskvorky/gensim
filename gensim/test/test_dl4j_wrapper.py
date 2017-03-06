@@ -22,21 +22,29 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 def testfile():
     # temporary model will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_dl4j.test')
+    return os.path.join(tempfile.gettempdir(), 'gensim_dl4j.tst')
 
 class TestDl4j(unittest.TestCase):
     def setUp(self):
-        self.corpus_file = datapath('raw_sentences.txt')
+        if not os.path.isfile("dl4j_jar.jar"):
+            raise unittest.SkipTest("dlfj libraries not found. Skipping dl4j wrapper tests")
         self.out_path = 'testmodel'
         self.test_model_file = datapath('raw_dl4j.txt')
-        self.test_model = dl4jwrapper.dl4jWrapper.train("dl4j-examples-0.7-SNAPSHOT-bin.jar", corpus_file="raw_sentences.txt", minWordFrequency=5, iterations=1, layerSize=100, seed=42, windowSize=5, output_file="raw_dl4j.txt")
+        self.test_model = dl4jwrapper.dl4jWrapper.load_dl4j_w2v_format(self.test_model_file)
+
+    def testTraining(self):
+        """Test self.test_model successfully trained, parameters and weights correctly loaded"""
+        vocab_size, model_size = 1750, 1
+        trained_model = dl4jwrapper.dl4jWrapper.train("dl4j_jar.jar", minWordFrequency=5, iterations=1, layerSize=100, seed=42, windowSize=5, output_file="raw_dl4j.txt")
+
+        self.assertEqual(trained_model.syn0.shape, (vocab_size, model_size))
+        self.assertEqual(len(trained_model.vocab), vocab_size)
 
     def testLoadDl4jFormat(self):
         """Test model successfully loaded from Wordrank format file"""
-        model = dl4jwrapper.dl4jWrapper.load_dl4j_w2v_format(self.test_model_file)
-        vocab_size, dim = 242, 100
-        self.assertEqual(model.syn0.shape, (vocab_size, dim))
-        self.assertEqual(len(model.vocab), vocab_size)
+        vocab_size, dim = 1750, 100
+        self.assertEqual(self.test_model.syn0.shape, (vocab_size, dim))
+        self.assertEqual(len(self.test_model.vocab), vocab_size)
         os.remove(self.test_model_file+'.w2vformat')
 
     def testPersistence(self):
@@ -61,5 +69,3 @@ class TestDl4j(unittest.TestCase):
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
-
-
