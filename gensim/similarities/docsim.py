@@ -394,11 +394,12 @@ class Similarity(interfaces.SimilarityABC):
 
         import multiprocessing
         import functools
-        with multiprocessing.Pool() as pool:
-            worker = functools.partial(_query_chunk_worker, index=self)
-            for result in pool.map(worker, self.iter_chunks()):
-                for sim in result:
-                    yield sim
+        pool = multiprocessing.Pool()
+        worker = functools.partial(_query_chunk_worker, index=self)
+        for result in pool.map(worker, self.iter_chunks()):
+            for sim in result:
+                yield sim
+        pool.terminate()
 
         self.norm = norm  # restore normalization
 
