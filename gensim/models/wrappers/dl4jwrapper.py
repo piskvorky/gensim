@@ -7,11 +7,17 @@
 
 
 """
-Python wrapper
-TODO: write desciption
+    A deeplearning4j java based wrapper for word2vec.
+    This requires a packaged jar file which includes all the required dependencies
+    downloaded from maven along with the corpus file and the java file.
 
+    Steps for generating the jar file:
+    1. Goto gensim/test/test_data/dl4j folder
+    2. Change the java file in resources/src/main/java/org/deeplearning4j/examples/nlp/word2vec/Word2VecRawTextExample.java
+    3. Copy the associated files (like corpus file) in resources/src/main/resources/
+    4. Execute `mvn clean install`
 """
-
+# TODO remove this java file by sending a PR to dl4j
 
 import logging
 import random
@@ -62,6 +68,6 @@ class dl4jWrapper(KeyedVectors):
 
     @classmethod
     def load_dl4j_w2v_format(cls, model_file):
-        glove2word2vec(model_file, model_file+'.w2vformat')
-        model = cls.load_word2vec_format(model_file+'.w2vformat')
+        glove2word2vec(model_file, model_file + '.w2vformat')
+        model = cls.load_word2vec_format(model_file + '.w2vformat')
         return model

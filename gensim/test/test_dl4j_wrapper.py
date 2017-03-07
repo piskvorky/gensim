@@ -13,29 +13,36 @@ Automated tests for checking transformation algorithms (the models package).
 import logging
 import unittest
 import os
+import glob
 import tempfile
 import numpy
-from gensim.models.wrappers.dl4j import dl4jwrapper
+from gensim.models.wrappers import dl4jwrapper
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+
 
 def testfile():
     # temporary model will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_dl4j.tst')
 
+
 class TestDl4j(unittest.TestCase):
     def setUp(self):
-        if not os.path.isfile("dl4j_jar.jar"):
-            raise unittest.SkipTest("dlfj libraries not found. Skipping dl4j wrapper tests")
+        # glob for using regex while finding file
+        print("lol")
+        if not glob.glob(datapath("dl4j/resources/target/dl4j_jar*-bin.jar")):
+            raise unittest.SkipTest("dl4j libraries not found. Skipping dl4j wrapper tests")
+        print("oo")
+        self.jar_file = str(glob.glob(datapath("dl4j/resources/target/dl4j_jar*-bin.jar"))[0])
         self.out_path = 'testmodel'
-        self.test_model_file = datapath('raw_dl4j.txt')
+        self.test_model_file = datapath('dl4j_lee.txt')
         self.test_model = dl4jwrapper.dl4jWrapper.load_dl4j_w2v_format(self.test_model_file)
 
     def testTraining(self):
         """Test self.test_model successfully trained, parameters and weights correctly loaded"""
         vocab_size, model_size = 1750, 1
-        trained_model = dl4jwrapper.dl4jWrapper.train("dl4j_jar.jar", minWordFrequency=5, iterations=1, layerSize=100, seed=42, windowSize=5, output_file="raw_dl4j.txt")
+        trained_model = dl4jwrapper.dl4jWrapper.train(self.jar_file, minWordFrequency=5, iterations=1, layerSize=100, seed=42, windowSize=5, output_file="dl4j_lee.txt")
 
         self.assertEqual(trained_model.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(trained_model.vocab), vocab_size)
@@ -45,7 +52,7 @@ class TestDl4j(unittest.TestCase):
         vocab_size, dim = 1750, 100
         self.assertEqual(self.test_model.syn0.shape, (vocab_size, dim))
         self.assertEqual(len(self.test_model.vocab), vocab_size)
-        os.remove(self.test_model_file+'.w2vformat')
+        os.remove(self.test_model_file + '.w2vformat')
 
     def testPersistence(self):
         """Test storing/loading the entire model"""

@@ -30,7 +30,7 @@
     </properties>
 
     <modules>
-        <module>dl4j-examples</module>
+        <module>resources</module>
     </modules>
 
     <!-- Maven Enforcer: Ensures user has an up to date version of Maven before building -->
