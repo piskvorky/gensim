@@ -721,7 +721,7 @@ class Word2Vec(utils.SaveLoad):
     def sort_vocab(self):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
         if len(self.wv.syn0):
-            raise RuntimeError("must sort before initializing vectors/weights")
+            raise RuntimeError("cannot sort vocabulary after model weights already initialized.")
         self.wv.index2word.sort(key=lambda word: self.wv.vocab[word].count, reverse=True)
         for i, word in enumerate(self.wv.index2word):
             self.wv.vocab[word].index = i
