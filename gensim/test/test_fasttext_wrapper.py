@@ -121,12 +121,22 @@ class TestFastText(unittest.TestCase):
         self.model_sanity(model)
 
     def testLoadModelWithNonAsciiVocab(self):
+        """Test loading model with non-ascii words in vocab"""
         model = fasttext.FastText.load_fasttext_format(datapath('non_ascii_fasttext'))
         self.assertTrue(u'který' in model)
         try:
             vector = model[u'který']
         except UnicodeDecodeError:
-            self.fail('Unable to access vector for non-ascii word')
+            self.fail('Unable to access vector for utf8 encoded non-ascii word')
+
+    def testLoadModelNonUtf8Encoding(self):
+        """Test loading model with words in user-specified encoding"""
+        model = fasttext.FastText.load_fasttext_format(datapath('cp852_fasttext'), encoding='cp852')
+        self.assertTrue(u'který' in model)
+        try:
+            vector = model[u'který']
+        except KeyError:
+            self.fail('Unable to access vector for cp-852 word')
 
     def testNSimilarity(self):
         """Test n_similarity for in-vocab and out-of-vocab words"""
