@@ -39,6 +39,7 @@ Modules:
     models/lda_worker
     models/atmodel
     models/word2vec
+    models/keyedvectors
     models/doc2vec
     models/phrases
     models/coherencemodel
