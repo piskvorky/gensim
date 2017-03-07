@@ -474,6 +474,12 @@ class Word2Vec(utils.SaveLoad):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences)
+            
+        else :
+            if trim_rule is not None :
+                logger.warning("The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part of the model. ")
+                logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored." )
+
 
     def initialize_word_vectors(self):
         self.wv = KeyedVectors()
