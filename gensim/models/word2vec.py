@@ -476,8 +476,9 @@ class Word2Vec(utils.SaveLoad):
             self.train(sentences)
             
         else :
-            logger.warning("The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part of the model. ")
-            logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored." )
+            if trim_rule is not None :
+                logger.warning("The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part of the model. ")
+                logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored." )
 
 
     def initialize_word_vectors(self):
