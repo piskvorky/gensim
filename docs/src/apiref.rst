@@ -39,13 +39,16 @@ Modules:
     models/lda_worker
     models/atmodel
     models/word2vec
+    models/keyedvectors
     models/doc2vec
     models/phrases
+    models/coherencemodel
     models/wrappers/ldamallet
     models/wrappers/dtmmodel
     models/wrappers/ldavowpalwabbit.rst
     models/wrappers/wordrank
     models/wrappers/varembed
+    models/wrappers/fasttext
     similarities/docsim
     similarities/index
     topic_coherence/aggregation

@@ -95,6 +95,18 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(len(model_hs.wv.vocab), 14)
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
+    def testOnlineLearningAfterSave(self):
+        """Test that the algorithm is able to add new words to the
+        vocabulary and to a trained model when using a sorted vocabulary"""
+        model_neg = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
+        model_neg.save(testfile())
+        model_neg = word2vec.Word2Vec.load(testfile())
+        self.assertTrue(len(model_neg.wv.vocab), 12)
+        model_neg.build_vocab(new_sentences, update=True)
+        model_neg.train(new_sentences)
+        self.assertEqual(len(model_neg.wv.vocab), 14)
+
+
     def onlineSanity(self, model):
         terro, others = [], []
         for l in list_corpus:
@@ -448,6 +460,17 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
                                   min_count=5, iter=10, workers=2, sample=0)
         self.model_sanity(model)
+
+    def test_cosmul(self):
+        model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
+        sims = model.most_similar_cosmul('graph', topn=10)
+        # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
+
+        # test querying for "most similar" by vector
+        graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
+        sims2 = model.most_similar_cosmul(positive=[graph_vector], topn=11)
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
 
     def testTrainingCbow(self):
         """Test CBOW word2vec training."""

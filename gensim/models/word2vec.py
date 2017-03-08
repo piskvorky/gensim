@@ -474,6 +474,12 @@ class Word2Vec(utils.SaveLoad):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences)
+            
+        else :
+            if trim_rule is not None :
+                logger.warning("The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part of the model. ")
+                logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored." )
+
 
     def initialize_word_vectors(self):
         self.wv = KeyedVectors()
@@ -721,7 +727,7 @@ class Word2Vec(utils.SaveLoad):
     def sort_vocab(self):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
         if len(self.wv.syn0):
-            raise RuntimeError("must sort before initializing vectors/weights")
+            raise RuntimeError("cannot sort vocabulary after model weights already initialized.")
         self.wv.index2word.sort(key=lambda word: self.wv.vocab[word].count, reverse=True)
         for i, word in enumerate(self.wv.index2word):
             self.wv.vocab[word].index = i
@@ -1271,7 +1277,7 @@ class Word2Vec(utils.SaveLoad):
         # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table
-        if model.negative and hasattr(model, 'index2word'):
+        if model.negative and hasattr(model.wv, 'index2word'):
             model.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
@@ -1291,14 +1297,15 @@ class Word2Vec(utils.SaveLoad):
         return model
 
     def _load_specials(self, *args, **kwargs):
+        super(Word2Vec, self)._load_specials(*args, **kwargs)
         # loading from a pre-KeyedVectors word2vec model
         if not hasattr(self, 'wv'):
             wv = KeyedVectors()
             wv.syn0 = self.__dict__.get('syn0', [])
+            wv.syn0norm = self.__dict__.get('syn0norm', None)
             wv.vocab = self.__dict__.get('vocab', {})
             wv.index2word = self.__dict__.get('index2word', [])
             self.wv = wv
-        super(Word2Vec, self)._load_specials(*args, **kwargs)
 
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',

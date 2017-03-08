@@ -120,6 +120,24 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(self.test_model.wv.syn0_all.shape, (self.test_model.num_ngram_vectors, model_size))
         self.model_sanity(model)
 
+    def testLoadModelWithNonAsciiVocab(self):
+        """Test loading model with non-ascii words in vocab"""
+        model = fasttext.FastText.load_fasttext_format(datapath('non_ascii_fasttext'))
+        self.assertTrue(u'který' in model)
+        try:
+            vector = model[u'který']
+        except UnicodeDecodeError:
+            self.fail('Unable to access vector for utf8 encoded non-ascii word')
+
+    def testLoadModelNonUtf8Encoding(self):
+        """Test loading model with words in user-specified encoding"""
+        model = fasttext.FastText.load_fasttext_format(datapath('cp852_fasttext'), encoding='cp852')
+        self.assertTrue(u'který' in model)
+        try:
+            vector = model[u'který']
+        except KeyError:
+            self.fail('Unable to access vector for cp-852 word')
+
     def testNSimilarity(self):
         """Test n_similarity for in-vocab and out-of-vocab words"""
         # In vocab, sanity check
@@ -150,11 +168,11 @@ class TestFastText(unittest.TestCase):
     def testMostSimilarCosmul(self):
         """Test most_similar_cosmul for in-vocab and out-of-vocab words"""
         # In vocab, sanity check
-        self.assertEqual(len(self.test_model.most_similar(positive=['the', 'and'], topn=5)), 5)
-        self.assertEqual(self.test_model.most_similar('the'), self.test_model.most_similar(positive=['the']))
+        self.assertEqual(len(self.test_model.most_similar_cosmul(positive=['the', 'and'], topn=5)), 5)
+        self.assertEqual(self.test_model.most_similar_cosmul('the'), self.test_model.most_similar_cosmul(positive=['the']))
         # Out of vocab check
-        self.assertEqual(len(self.test_model.most_similar(['night', 'nights'], topn=5)), 5)
-        self.assertEqual(self.test_model.most_similar('nights'), self.test_model.most_similar(positive=['nights']))
+        self.assertEqual(len(self.test_model.most_similar_cosmul(['night', 'nights'], topn=5)), 5)
+        self.assertEqual(self.test_model.most_similar_cosmul('nights'), self.test_model.most_similar_cosmul(positive=['nights']))
 
     def testLookup(self):
         """Tests word vector lookup for in-vocab and out-of-vocab words"""
