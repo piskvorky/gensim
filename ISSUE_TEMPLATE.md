@@ -1,15 +1,16 @@
 <!--
 If your issue is a usage or a general question, please submit it here instead:
-- Mailing List: https://mail.python.org/mailman/listinfo/scikit-learn
-For more information, see User Questions: http://scikit-learn.org/stable/support.html#user-questions
+- Mailing List: https://groups.google.com/forum/#!forum/gensim
+For more information, see Recipes&FAQ: https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ
 -->
 
-<!-- Instructions For Filing a Bug: https://github.com/scikit-learn/scikit-learn/blob/master/CONTRIBUTING.md#filing-bugs -->
+<!-- Instructions For Filing a Bug: https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md -->
 
 #### Description
+TODO: change commented example
 <!-- Example: Joblib Error thrown when calling fit on LatentDirichletAllocation with evaluate_every > 0-->
 
-#### Steps/Code to Reproduce
+#### Steps/Code/Corpus to Reproduce
 <!--
 Example:
 ```
