@@ -240,12 +240,18 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
         return shown
 
-    def show_topic(self, topicid, num_words=10):
+    def show_topic(self, topicid,topn=None, num_words=10):
+        if topn is None: #deprecated num_words is used
+            logger.warn("The parameter num_words for show_topic() method would be deprecated in the updated version.\
+            Please use topn instead. Ignore if you didn't use parameter num_words or topn for show_topic() ")
+            #Add ignore comment for corner case when user passes num_words same as default i.e, num_words=20
+            topn = num_words
+            
         if self.word_topics is None:
             logger.warn("Run train or load_word_topics before showing topics.")
         topic = self.word_topics[topicid]
         topic = topic / topic.sum()  # normalize to probability dist
-        bestn = matutils.argsort(topic, num_words, reverse=True)
+        bestn = matutils.argsort(topic, topn, reverse=True)
         beststr = [(self.id2word[id], topic[id]) for id in bestn]
         return beststr
 

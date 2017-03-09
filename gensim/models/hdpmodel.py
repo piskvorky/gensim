@@ -47,7 +47,6 @@ logger = logging.getLogger(__name__)
 meanchangethresh = 0.00001
 rhot_bound = 0.0
 
-
 def expect_log_sticks(sticks):
     """
     For stick-breaking hdp, return the E[log(sticks)]
@@ -436,7 +435,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
 
-    def show_topic(self, topic_id, num_words=20, log=False, formatted=False):
+    def show_topic(self, topic_id, topn=None, log=False, formatted=False, num_words=20):
         """
         Print the `num_words` most probable words for `topics` number of topics.
         Set `topics=-1` to print all topics.
@@ -445,11 +444,17 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         `False` as lists of (weight, word) pairs.
 
         """
+        if topn is None: #deprecated num_words is used
+            logger.warn("The parameter num_words for show_topic() method would be deprecated in the updated version.\
+            Please use topn instead. Ignore if you didn't use parameter num_words or topn for show_topic() ")
+            #Add ignore comment for corner case when user passes num_words same as default i.e, num_words=20
+            topn = num_words
+          
         if not self.m_status_up_to_date:
             self.update_expectations()
         betas = self.m_lambda + self.m_eta
         hdp_formatter = HdpTopicFormatter(self.id2word, betas)
-        return hdp_formatter.show_topic(topic_id, num_words, log, formatted)
+        return hdp_formatter.show_topic(topic_id, topn, log, formatted)
         
     def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
         """
@@ -609,10 +614,21 @@ class HdpTopicFormatter(object):
 
         return shown
 
-    def print_topic(self, topic_id, num_words):
-        return self.show_topic(topic_id, num_words, formatted=True)
+    def print_topic(self, topic_id,topn= None, num_words=20):
+        if topn is None: #deprecated num_words is used
+            logger.warn("The parameter num_words for print_topic() method would be deprecated in the updated version.\
+            Please use topn instead. Ignore if you didn't use parameter num_words or topn for print_topic() ")
+            #Add ignore comment for corner case when user passes num_words same as default i.e, num_words=20
+            topn = num_words
+            
+        return self.show_topic(topic_id, topn, formatted=True)
 
-    def show_topic(self, topic_id, num_words, log=False, formatted=False):
+    def show_topic(self, topic_id,topn=None, log=False, formatted=False, num_words= 20,):
+        if topn is None: #deprecated num_words is used
+            logger.warn("The parameter num_words for show_topic() method would be deprecated in the updated version.\
+            Please use topn instead. Ignore if you didn't use parameter num_words or topn for show_topic() ")
+            #Add ignore comment for corner case when user passes num_words same as default i.e, num_words=20
+            topn = num_words
 
         lambdak = list(self.data[topic_id, :])
         lambdak = lambdak / sum(lambdak)
@@ -620,7 +636,7 @@ class HdpTopicFormatter(object):
         temp = zip(lambdak, xrange(len(lambdak)))
         temp = sorted(temp, key=lambda x: x[0], reverse=True)
 
-        topic_terms = self.show_topic_terms(temp, num_words)
+        topic_terms = self.show_topic_terms(temp, topn)
 
         if formatted:
             topic = self.format_topic(topic_id, topic_terms)
