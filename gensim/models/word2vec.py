@@ -1091,7 +1091,7 @@ class Word2Vec(utils.SaveLoad):
             # construct deterministic seed from word AND seed argument
             newsyn0[i-len(self.wv.syn0)] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
 
-        # Raise an error in an online update is run before initial training on a corpus
+        # Raise an error if an online update is run before initial training on a corpus
         if not len(self.wv.syn0):
             raise RuntimeError("You can do an online update of vocabulary on a pre-trained model. " \
                 "Or first build the vocabulary of your model with a corpus and train it " \
