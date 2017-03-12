@@ -1253,7 +1253,8 @@ class Word2Vec(utils.SaveLoad):
             del self.syn0_lockf
         if not save_syn1 or not save_syn1neg or not save_syn0_lockf:
             self.model_trimmed_post_training = True
-        logger.warning("This method would be deprecated in the future. Use KeyedVectors to retain the previously trained word vectors instead.")
+        import warnings
+        warnings.warn("This method would be deprecated in the future. Use KeyedVectors to retain the previously trained word vectors instead.")
 
     def delete_temporary_training_data(self, replace_word_vectors_with_normalized=False):
         """
