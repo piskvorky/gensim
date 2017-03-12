@@ -474,7 +474,7 @@ class Word2Vec(utils.SaveLoad):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences)
-            
+
         else :
             if trim_rule is not None :
                 logger.warning("The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part of the model. ")
@@ -995,7 +995,7 @@ class Word2Vec(utils.SaveLoad):
                     run word2vec with hs=1 and negative=0 for this to work.")
 
         def worker_loop():
-            """Train the model, lifting lists of sentences from the jobs queue."""
+            """Compute log probability for each sentence, lifting lists of sentences from the jobs queue."""
             work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
             while True:
