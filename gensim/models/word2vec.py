@@ -1251,7 +1251,8 @@ class Word2Vec(utils.SaveLoad):
             del self.syn1neg
         if hasattr(self, 'syn0_lockf') and not save_syn0_lockf:
             del self.syn0_lockf
-        self.model_trimmed_post_training = True
+        if not save_syn1 or not save_syn1neg or not save_syn0_lockf:
+            self.model_trimmed_post_training = True
 
     def delete_temporary_training_data(self, replace_word_vectors_with_normalized=False):
         """
