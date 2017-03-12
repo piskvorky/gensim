@@ -106,6 +106,7 @@ from copy import deepcopy
 from collections import defaultdict
 import threading
 import itertools
+import warnings
 
 from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.utils import keep_vocab_item
@@ -1245,6 +1246,9 @@ class Word2Vec(utils.SaveLoad):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha)
 
     def _minimize_model(self, save_syn1 = False, save_syn1neg = False, save_syn0_lockf = False):
+        warnings.warn("This method would be deprecated in the future. Keep just_word_vectors = model.wv to retain just the KeyedVectors instance for read-only querying of word vectors.")
+        if save_syn1 and save_syn1neg and save_syn0_lockf:
+            return
         if hasattr(self, 'syn1') and not save_syn1:
             del self.syn1
         if hasattr(self, 'syn1neg') and not save_syn1neg:
