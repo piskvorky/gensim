@@ -172,14 +172,16 @@ class Dictionary(utils.SaveLoad, Mapping):
         else:
             return result
 
-    def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000):
+    def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
         """
         Filter out tokens that appear in
 
         1. less than `no_below` documents (absolute number) or
         2. more than `no_above` documents (fraction of total corpus size, *not*
            absolute number).
-        3. after (1) and (2), keep only the first `keep_n` most frequent tokens (or
+        3. if tokens are given in keep_tokens (list of strings), they will be kept regardless of
+           the `no_below` and `no_above` settings           
+        4. after (1), (2) and (3), keep only the first `keep_n` most frequent tokens (or
            keep all if `None`).
 
         After the pruning, shrink resulting gaps in word ids.
@@ -193,6 +195,12 @@ class Dictionary(utils.SaveLoad, Mapping):
         good_ids = (
             v for v in itervalues(self.token2id)
             if no_below <= self.dfs.get(v, 0) <= no_above_abs)
+        # add ids of keep_tokens elements to good_ids
+        if keep_tokens:
+            keep_ids = [self.token2id[v] for v in keep_tokens if v in self.token2id]
+            good_ids_copy =  (v for v in itervalues(self.token2id) if no_below <= self.dfs.get(v, 0) <= no_above_abs)
+            keep_ids = list(set(keep_ids).union(set(good_ids_copy)))
+            good_ids = keep_ids
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
