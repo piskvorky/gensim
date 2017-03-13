@@ -192,15 +192,15 @@ class Dictionary(utils.SaveLoad, Mapping):
         no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
 
         # determine which tokens to keep
-        good_ids = (
-            v for v in itervalues(self.token2id)
-            if no_below <= self.dfs.get(v, 0) <= no_above_abs)
-        # add ids of keep_tokens elements to good_ids
         if keep_tokens:
             keep_ids = [self.token2id[v] for v in keep_tokens if v in self.token2id]
-            good_ids_copy =  (v for v in itervalues(self.token2id) if no_below <= self.dfs.get(v, 0) <= no_above_abs)
-            keep_ids = list(set(keep_ids).union(set(good_ids_copy)))
-            good_ids = keep_ids
+            good_ids =  (v for v in itervalues(self.token2id) 
+                         if no_below <= self.dfs.get(v, 0) <= no_above_abs 
+                         or v in keep_ids)
+        else:
+            good_ids = (
+                v for v in itervalues(self.token2id)
+                if no_below <= self.dfs.get(v, 0) <= no_above_abs)
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
