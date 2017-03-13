@@ -1093,8 +1093,8 @@ class Word2Vec(utils.SaveLoad):
 
         # Raise an error if an online update is run before initial training on a corpus
         if not len(self.wv.syn0):
-            raise RuntimeError("You can do an online update of vocabulary on a pre-trained model. " \
-                "Or first build the vocabulary of your model with a corpus and train it " \
+            raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. " \
+                "First build the vocabulary of your model with a corpus " \
                 "before doing an online update.")
 
         self.wv.syn0 = vstack([self.wv.syn0, newsyn0])
