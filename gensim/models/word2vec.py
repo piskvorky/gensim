@@ -1091,6 +1091,13 @@ class Word2Vec(utils.SaveLoad):
         for i in xrange(len(self.wv.syn0), len(self.wv.vocab)):
             # construct deterministic seed from word AND seed argument
             newsyn0[i-len(self.wv.syn0)] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
+
+        # Raise an error if an online update is run before initial training on a corpus
+        if not len(self.wv.syn0):
+            raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. " \
+                "First build the vocabulary of your model with a corpus " \
+                "before doing an online update.")
+
         self.wv.syn0 = vstack([self.wv.syn0, newsyn0])
 
         if self.hs:
