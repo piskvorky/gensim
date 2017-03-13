@@ -8,37 +8,29 @@ For more information, see Recipes&FAQ: https://github.com/RaRe-Technologies/gens
 
 #### Description
 TODO: change commented example
-<!-- Example: Joblib Error thrown when calling fit on LatentDirichletAllocation with evaluate_every > 0-->
+<!-- Example: Vocabulary size is not what I expected when training Word2Vec. -->
 
 #### Steps/Code/Corpus to Reproduce
 <!--
 Example:
 ```
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.decomposition import LatentDirichletAllocation
+from gensim.models import word2vec
 
-docs = ["Help I have a bug" for i in range(1000)]
-
-vectorizer = CountVectorizer(input=docs, analyzer='word')
-lda_features = vectorizer.fit_transform(docs)
-
-lda_model = LatentDirichletAllocation(
-    n_topics=10,
-    learning_method='online',
-    evaluate_every=10,
-    n_jobs=4,
-)
-model = lda_model.fit(lda_features)
+sentences = ['human', 'machine']
+model = word2vec.Word2Vec(sentences)
+print(model.syn0.shape) 
 ```
 If the code is too long, feel free to put it in a public gist and link
 it in the issue: https://gist.github.com
 -->
 
 #### Expected Results
-<!-- Example: No error is thrown. Please paste or describe the expected results.-->
+<!-- Example: Expected shape of (100,2).-->
 
 #### Actual Results
-<!-- Please paste or specifically describe the actual output or traceback. -->
+<!-- Example: Actual shape of (100,5). 
+
+Please paste or specifically describe the actual output or traceback. -->
 
 #### Versions
 <!--
