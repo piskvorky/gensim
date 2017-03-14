@@ -40,8 +40,8 @@ class TestFastText(unittest.TestCase):
 
     def model_sanity(self, model):
         """Even tiny models trained on any corpus should pass these sanity checks"""
-        self.assertEqual(model.wv.syn0.shape, (len(model.wv.vocab), model.size))
-        self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model.size))
+        self.assertEqual(model.wv.syn0.shape, (len(model.wv.vocab), model.vector_size))
+        self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model.vector_size))
 
     def models_equal(self, model1, model2):
         self.assertEqual(len(model1.wv.vocab), len(model2.wv.vocab))
@@ -84,7 +84,7 @@ class TestFastText(unittest.TestCase):
             return  # Use self.skipTest once python < 2.7 is no longer supported
         test_model_size_20 = fasttext.FastText.train(
                 self.ft_path, self.corpus_file, output_file=testfile(), size=20)
-        self.assertEqual(test_model_size_20.size, 20)
+        self.assertEqual(test_model_size_20.vector_size, 20)
         self.assertEqual(test_model_size_20.wv.syn0.shape[1], 20)
         self.assertEqual(test_model_size_20.wv.syn0_all.shape[1], 20)
 

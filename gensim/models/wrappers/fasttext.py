@@ -303,7 +303,7 @@ class FastText(Word2Vec):
         self.num_original_vectors = num_vectors
         self.wv.syn0_all = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
         self.wv.syn0_all = self.wv.syn0_all.reshape((num_vectors, dim))
-        assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.size), \
+        assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
             'mismatch between weight matrix shape and vocab/model size'
         self.init_ngrams()
 
