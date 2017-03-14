@@ -293,7 +293,7 @@ class FastText(Word2Vec):
     def load_vectors(self, file_handle):
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
-        assert self.size == dim, 'mismatch between model sizes'
+        assert self.vector_size == dim, 'mismatch between model sizes'
         float_size = struct.calcsize('@f')
         if float_size == 4:
             dtype = np.dtype(np.float32)
