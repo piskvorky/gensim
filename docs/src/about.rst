@@ -64,7 +64,7 @@ Some honorable mentions are included in the `CHANGELOG.txt <https://github.com/p
 Academic citing
 ----------------
 
-Gensim has been used in `many students' final theses as well as research papers <http://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC>`_. When citing gensim,
+Gensim has been used in `many students' final theses as well as research papers <https://scholar.google.com/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:NaGl4SEjCO4C>`_. When citing gensim,
 please use `this BibTeX entry <bibtex_gensim.bib>`_::
 
   @inproceedings{rehurek_lrec,
