@@ -3,6 +3,7 @@ import unittest
 import numpy
 
 from scipy import sparse
+from sklearn.pipeline import Pipeline
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklearnWrapperLdaModel
 from gensim.corpora import Dictionary
 from gensim import matutils
@@ -66,6 +67,16 @@ class TestSklearnLDAWrapper(unittest.TestCase):
         for k, v in topic:
             self.assertTrue(isinstance(v, six.string_types))
             self.assertTrue(isinstance(k, int))
+
+    def testPipline(self):
+        model = SklearnWrapperLdaModel(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        text_lda = Pipeline([('model', model)])
+        text_lda.fit(corpus)
+        topic = text_lda.named_steps['model'].print_topics(2)
+        for k, v in topic:
+            self.assertTrue(isinstance(v, six.string_types))
+            self.assertTrue(isinstance(k, int))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -56,14 +56,13 @@ class SklearnWrapperLdaModel(models.LdaModel):
         """
         Returns all parameters as dictionary.
         """
-        if deep:
-            return {
-                "corpus": self.corpus, "num_topics": self.num_topics, "id2word": self.id2word,
+        return {"corpus": self.corpus, "num_topics": self.num_topics, "id2word": self.id2word,
                 "chunksize": self.chunksize, "passes": self.passes,
-                "update_every": self.update_every, "alpha": self.alpha, " eta": self.eta, " decay": self.decay,
-                "offset": self.offset, "eval_every": self.eval_every, " iterations": self.iterations,
+                "update_every": self.update_every, "alpha": self.alpha, "eta": self.eta, "decay": self.decay,
+                "offset": self.offset, "eval_every": self.eval_every, "iterations": self.iterations,
                 "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
                 "random_state": self.random_state}
+
 
     def set_params(self, **parameters):
         """
@@ -73,7 +72,7 @@ class SklearnWrapperLdaModel(models.LdaModel):
             self.parameter = value
         return self
 
-    def fit(self, X):
+    def fit(self, X,  y=None):
         """
         For fitting corpus into the class object.
         Calls gensim.model.LdaModel:
