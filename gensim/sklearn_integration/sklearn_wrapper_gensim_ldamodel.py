@@ -8,12 +8,17 @@
 Scikit learn interface for gensim for easy use of gensim with scikit-learn
 follows on scikit learn API conventions
 """
+import numpy as np
+
 from gensim import models
 from gensim import matutils
 from scipy import sparse
+from sklearn.base import TransformerMixin, BaseEstimator
 
 
-class SklearnWrapperLdaModel(models.LdaModel):
+
+
+class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """
@@ -92,14 +97,22 @@ class SklearnWrapperLdaModel(models.LdaModel):
             random_state=self.random_state)
         return self
 
-    def transform(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
+    def transform(self, docs, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
         """
-        Takes as an input a new document (bow).
-        Returns the topic distribution for the given document bow, as a list of (topic_id, topic_probability) 2-tuples.
+        Takes as an list of input a documents (documents).
+        Returns matrix of topic distribution for the given document bow, where a_ij
+        indicates (topic_i, topic_probability_j).
         """
-        return self.get_document_topics(
-            bow, minimum_probability=minimum_probability,
-            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
+        X = [[] for i in range(0,len(docs))];
+        for k,v in enumerate(docs):
+            probs = self.get_document_topics(v, minimum_probability=minimum_probability,
+                                             minimum_phi_value=minimum_phi_value, 
+                                             per_word_topics=per_word_topics)
+            probs_k = map(lambda x: x[1], probs)
+            if len(probs_k) != self.num_topics:
+                probs_k.extend([1e-12]*(self.num_topics - len(probs_k)))
+            X[k].extend(probs_k)
+        return np.reshape(np.array(X), (len(docs), self.num_topics))
 
     def partial_fit(self, X):
         """
