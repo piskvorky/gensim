@@ -259,6 +259,9 @@ class SaveLoad(object):
         is encountered.
 
         """
+        import warnings
+        warnings.warn("This method loads pickle dumps. If a corpora was saved with the save_corpus() method," + 
+            "\n Use the default constructor of the corpus class to load the corpus")
         logger.info("loading %s object from %s" % (cls.__name__, fname))
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
@@ -489,6 +492,9 @@ class SaveLoad(object):
         in both Python 2 and 3.
 
         """
+        import corpora.dictionary
+        if isinstance(self, corpora.dictionary.Dictionary):
+            raise TypeError('The method is not built to handle corpora. Use the save_corpus() method')
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object" % self.__class__.__name__)
