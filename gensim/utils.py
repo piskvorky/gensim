@@ -10,8 +10,7 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
-import logging
-import warnings
+import logging, warnings
 
 logger = logging.getLogger(__name__)
 
@@ -836,7 +835,7 @@ class InputQueue(multiprocessing.Process):
         it = iter(self.corpus)
         while True:
             chunk = itertools.islice(it, self.chunksize)
-            if self.as_numpy:
+            if self.as_numpy:   
                 # HACK XXX convert documents to numpy arrays, to save memory.
                 # This also gives a scipy warning at runtime:
                 # "UserWarning: indices array has non-integer dtype (float64)"
