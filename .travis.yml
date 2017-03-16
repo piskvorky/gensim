@@ -18,7 +18,7 @@ install:
   - pip install annoy
   - pip install testfixtures
   - pip install unittest2
-  - conda install -y scikit-learn
+  - pip install scikit-learn
   - pip install Morfessor==2.0.2a4
   - python setup.py install
 script: python setup.py test
