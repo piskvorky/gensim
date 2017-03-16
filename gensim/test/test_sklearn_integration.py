@@ -36,7 +36,21 @@ class TestSklearnLDAWrapper(unittest.TestCase):
     def testTransform(self):
         texts_new = ['graph','eulerian']
         bow = self.model.id2word.doc2bow(texts_new)
-        doc_topics, word_topics, phi_values = self.model.transform(bow,per_word_topics=True)
+        X = self.model.transform(bow)
+        self.assertTrue(X.shape[0], 1)
+        self.assertTrue(X.shape[1], self.model.num_topics)
+        texts_new = [['graph','eulerian'],['server', 'flow'], ['path', 'system']]
+        bow = []
+        for i in texts_new:
+            bow.append(self.model.id2word.doc2bow(i))
+        X = self.model.transform(bow)
+        self.assertTrue(X.shape[0], 3)
+        self.assertTrue(X.shape[1], self.model.num_topics)
+    
+    def testGetTopicDist(self):
+        texts_new = ['graph','eulerian']
+        bow = self.model.id2word.doc2bow(texts_new)
+        doc_topics, word_topics, phi_values = self.model.get_topic_dist(bow,per_word_topics=True)
 
         for k,v in word_topics:
             self.assertTrue(isinstance(v, list))
