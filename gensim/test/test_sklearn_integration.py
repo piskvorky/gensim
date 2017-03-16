@@ -4,6 +4,8 @@ import numpy
 
 from scipy import sparse
 from sklearn.pipeline import Pipeline
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.datasets import fetch_20newsgroups
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklearnWrapperLdaModel
 from gensim.corpora import Dictionary
 from gensim import matutils
@@ -83,14 +85,20 @@ class TestSklearnLDAWrapper(unittest.TestCase):
             self.assertTrue(isinstance(k, int))
 
     def testPipline(self):
-        model = SklearnWrapperLdaModel(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
-        text_lda = Pipeline([('model', model)])
-        text_lda.fit(corpus)
+        model = SklearnWrapperLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
+        vec = CountVectorizer(min_df=10, stop_words='english')
+        rand = numpy.random.mtrand.RandomState(1) # set seed for getting same result
+        cats = ['rec.sport.baseball', 'sci.crypt']
+        data = fetch_20newsgroups(subset='train',
+                                  categories=cats,
+                                  shuffle=True)
+        text_lda = Pipeline([('features', vec),('model', model)])
+        text_lda.fit(data.data)
+
         topic = text_lda.named_steps['model'].print_topics(2)
         for k, v in topic:
             self.assertTrue(isinstance(v, six.string_types))
             self.assertTrue(isinstance(k, int))
-
 
 if __name__ == '__main__':
     unittest.main()
