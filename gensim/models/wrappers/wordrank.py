@@ -141,7 +141,7 @@ class Wordrank(KeyedVectors):
         output = utils.check_output(args=cmd)
 
         # use embeddings from max. iteration's dump
-        max_iter_dump = iter / dump_period * dump_period - 1
+        max_iter_dump = (iter - 1) - (iter - 1) % dump_period
         copyfile('model_word_%d.txt' % max_iter_dump, 'wordrank.words')
         copyfile('model_context_%d.txt' % max_iter_dump, 'wordrank.contexts')
         model = cls.load_wordrank_model('wordrank.words', os.path.join('meta', vocab_file), 'wordrank.contexts', sorted_vocab, ensemble)
