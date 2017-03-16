@@ -1205,8 +1205,8 @@ class Word2Vec(utils.SaveLoad):
 
     def predict_output_word(self, context_words_list, topn=10):
         #verify that required parameters have not been discarded
-        if not hasattr(self.wv, 'syn0') or not hasattr(self, 'syn1'):
-            raise RuntimeError("Parameters required for predicting the output words have been discarded")
+        if not hasattr(self.wv, 'syn0') or not hasattr(self, 'syn1neg'):
+            raise RuntimeError("Parameters required for predicting the output words not found.")
 
         word_vocabs = [self.wv.vocab[w] for w in context_words_list if w in self.wv.vocab]
 
@@ -1218,11 +1218,11 @@ class Word2Vec(utils.SaveLoad):
         if word2_indices and self.cbow_mean:
             l1 /= len(word2_indices)
 
-        prob_values = exp(dot(l1, self.syn1.T))     # propagate hidden -> output and take softmax to get probabilities
-        prob_values /= sum(prob_values)
-        top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
-
-        return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]   #returning the most probable output words with their probabilities
+        if self.negative :
+            prob_values = exp(dot(l1, self.syn1.T))     # propagate hidden -> output and take softmax to get probabilities
+            prob_values /= sum(prob_values)
+            top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
+            return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]   #returning the most probable output words with their probabilities
 
     def init_sims(self, replace=False):
         """
