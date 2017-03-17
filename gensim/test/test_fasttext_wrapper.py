@@ -128,7 +128,7 @@ class TestFastText(unittest.TestCase):
                         1.1446694135665894,
                         0.23417705297470093,
                         0.06000664085149765]
-        self.assertEquals(numpy.allclose(self.test_model["hundred"], expected_vec, 0.001), True)
+        self.assertTrue(numpy.allclose(self.test_model["hundred"], expected_vec, 0.001))
         self.assertEquals(self.test_model.min_count, 5)
         self.assertEquals(self.test_model.window, 5)
         self.assertEquals(self.test_model.iter, 5)
