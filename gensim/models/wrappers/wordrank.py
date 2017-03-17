@@ -46,7 +46,7 @@ class Wordrank(KeyedVectors):
     
     @classmethod
     def train(cls, wr_path, corpus_file, out_path, size=100, window=15, symmetric=1, min_count=5, max_vocab_size=0,
-              sgd_num=100, lrate=0.001, period=10, iter=91, epsilon=0.75, dump_period=10, reg=0, alpha=100,
+              sgd_num=100, lrate=0.001, period=10, iter=90, epsilon=0.75, dump_period=10, reg=0, alpha=100,
               beta=99, loss='hinge', memory=4.0, cleanup_files=True, sorted_vocab=1, ensemble=0):
         """
         `wr_path` is the path to the Wordrank directory.
