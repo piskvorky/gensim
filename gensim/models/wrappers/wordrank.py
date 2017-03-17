@@ -113,6 +113,11 @@ class Wordrank(KeyedVectors):
         with smart_open(meta_file, 'wb') as f:
             meta_info = "{0} {1}\n{2} {3}\n{4} {5}".format(numwords, numwords, numlines, cooccurrence_shuf_file, numwords, vocab_file)
             f.write(meta_info.encode('utf-8'))
+            
+        if iter % dump_period == 0:
+            iter += 1
+        else:
+            logger.warning('Resultant embedding would be from %d iteration', iter - iter % dump_period)
 
         wr_args = {
             'path': 'meta',
@@ -141,7 +146,7 @@ class Wordrank(KeyedVectors):
         output = utils.check_output(args=cmd)
 
         # use embeddings from max. iteration's dump
-        max_iter_dump = (iter - 1) - (iter - 1) % dump_period
+        max_iter_dump = iter - iter % dump_period
         copyfile('model_word_%d.txt' % max_iter_dump, 'wordrank.words')
         copyfile('model_context_%d.txt' % max_iter_dump, 'wordrank.contexts')
         model = cls.load_wordrank_model('wordrank.words', os.path.join('meta', vocab_file), 'wordrank.contexts', sorted_vocab, ensemble)
