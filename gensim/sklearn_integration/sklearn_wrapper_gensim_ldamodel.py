@@ -110,7 +110,7 @@ class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
         for k,v in enumerate(docs):
 
             doc_topics = self.get_document_topics(v, minimum_probability=minimum_probability)
-            probs_docs = map(lambda x: x[1], doc_topics)
+            probs_docs = list(map(lambda x: x[1], doc_topics))
             # Everything should be equal in length
             if len(probs_docs) != self.num_topics:
                 probs_docs.extend([1e-12]*(self.num_topics - len(probs_docs)))
