@@ -5,6 +5,13 @@ Unreleased:
 
 
 ========
+1.0.1, 2017-03-03
+
+* Rebuild cumulative table on load. Fix #1180. (@tmylk,[#1181](https://github.com/RaRe-Technologies/gensim/pull/893))
+* most_similar_cosmul bug fix (@dkim010, [#1177](https://github.com/RaRe-Technologies/gensim/pull/1177))
+* Fix loading old word2vec models pre-1.0.0  (@jayantj, [#1179](https://github.com/RaRe-Technologies/gensim/pull/1179))
+* Load utf-8 words in fasttext  (@jayantj, [#1176](https://github.com/RaRe-Technologies/gensim/pull/1176))
+
 
 1.0.0, 2017-02-24
 

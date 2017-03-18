@@ -106,6 +106,7 @@ from copy import deepcopy
 from collections import defaultdict
 import threading
 import itertools
+import warnings
 
 from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.utils import keep_vocab_item
@@ -475,6 +476,12 @@ class Word2Vec(utils.SaveLoad):
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences)
 
+        else :
+            if trim_rule is not None :
+                logger.warning("The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part of the model. ")
+                logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored." )
+
+
     def initialize_word_vectors(self):
         self.wv = KeyedVectors()
 
@@ -721,7 +728,7 @@ class Word2Vec(utils.SaveLoad):
     def sort_vocab(self):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
         if len(self.wv.syn0):
-            raise RuntimeError("must sort before initializing vectors/weights")
+            raise RuntimeError("cannot sort vocabulary after model weights already initialized.")
         self.wv.index2word.sort(key=lambda word: self.wv.vocab[word].count, reverse=True)
         for i, word in enumerate(self.wv.index2word):
             self.wv.vocab[word].index = i
@@ -989,7 +996,7 @@ class Word2Vec(utils.SaveLoad):
                     run word2vec with hs=1 and negative=0 for this to work.")
 
         def worker_loop():
-            """Train the model, lifting lists of sentences from the jobs queue."""
+            """Compute log probability for each sentence, lifting lists of sentences from the jobs queue."""
             work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
             while True:
@@ -1084,6 +1091,13 @@ class Word2Vec(utils.SaveLoad):
         for i in xrange(len(self.wv.syn0), len(self.wv.vocab)):
             # construct deterministic seed from word AND seed argument
             newsyn0[i-len(self.wv.syn0)] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
+
+        # Raise an error if an online update is run before initial training on a corpus
+        if not len(self.wv.syn0):
+            raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. " \
+                "First build the vocabulary of your model with a corpus " \
+                "before doing an online update.")
+
         self.wv.syn0 = vstack([self.wv.syn0, newsyn0])
 
         if self.hs:
@@ -1239,6 +1253,9 @@ class Word2Vec(utils.SaveLoad):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha)
 
     def _minimize_model(self, save_syn1 = False, save_syn1neg = False, save_syn0_lockf = False):
+        warnings.warn("This method would be deprecated in the future. Keep just_word_vectors = model.wv to retain just the KeyedVectors instance for read-only querying of word vectors.")
+        if save_syn1 and save_syn1neg and save_syn0_lockf:
+            return
         if hasattr(self, 'syn1') and not save_syn1:
             del self.syn1
         if hasattr(self, 'syn1neg') and not save_syn1neg:
