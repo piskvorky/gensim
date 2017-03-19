@@ -3,6 +3,7 @@ import unittest
 import numpy
 import os
 import codecs
+import pickle
 
 from scipy import sparse
 from sklearn.pipeline import Pipeline
@@ -92,7 +93,11 @@ class TestSklearnLDAWrapper(unittest.TestCase):
 
     def testPipline(self):
         model = SklearnWrapperLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
-        data = load_files(datapath('mini_newsgroups'), encoding='latin1')
+        with open(datapath('mini_newsgroup'),'rb') as f:
+            compressed_content = f.read()
+            uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
+            cache = pickle.loads(uncompressed_content)
+        data = cache    
         id2word=Dictionary(map(lambda x : x.split(), data.data))
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         rand = numpy.random.mtrand.RandomState(1) # set seed for getting same result
