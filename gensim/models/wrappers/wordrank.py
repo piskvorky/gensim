@@ -135,7 +135,7 @@ class Wordrank(KeyedVectors):
         # run wordrank executable with wr_args
         cmd = ['mpirun', '-np', '1', '../wordrank']
         for option, value in wr_args.items():
-            cmd.append("--%s" % option)
+            cmd.append('--%s' % option)
             cmd.append(str(value))
         logger.info("Running wordrank binary '%s'", cmd)
         output = utils.check_output(args=cmd)
