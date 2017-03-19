@@ -1,0 +1,208 @@
+Xref: cantaloupe.srv.cs.cmu.edu sci.crypt:15248 sci.answers:129 news.answers:7673
+Path: cantaloupe.srv.cs.cmu.edu!rochester!cornell!batcomputer!caen!uwm.edu!cs.utexas.edu!uunet!noc.near.net!pad-thai.aktis.com!pad-thai.aktis.com!not-for-mail
+From: crypt-comments@math.ncsu.edu
+Newsgroups: sci.crypt,sci.answers,news.answers
+Subject: Cryptography FAQ 03/10 - Basic Cryptology
+Followup-To: poster
+Date: 17 Apr 1993 00:00:19 -0400
+Organization: The Crypt Cabal
+Lines: 187
+Sender: faqserv@GZA.COM
+Approved: news-answers-request@MIT.Edu
+Expires: 22 May 1993 04:00:07 GMT
+Message-ID: <cryptography-faq/part03_735019207@GZA.COM>
+References: <cryptography-faq/part01_735019207@GZA.COM>
+Reply-To: crypt-comments@math.ncsu.edu
+NNTP-Posting-Host: pad-thai.aktis.com
+Summary: Part 3 of 10 of the sci.crypt FAQ, Basic Cryptology.
+ Definitions of basic terms. Beginner references. Cryptanalysis and
+ theoretical/practical strength of ciphers.
+X-Last-Updated: 1993/04/16
+
+Archive-name: cryptography-faq/part03
+Last-modified: 1993/4/15
+
+
+FAQ for sci.crypt, part 3: Basic Cryptology
+
+This is the third of ten parts of the sci.crypt FAQ. The parts are
+mostly independent, but you should read the first part before the rest.
+We don't have the time to send out missing parts by mail, so don't ask.
+Notes such as ``[KAH67]'' refer to the reference list in the last part.
+
+The sections of this FAQ are available via anonymous FTP to rtfm.mit.edu 
+as /pub/usenet/news.answers/cryptography-faq/part[xx].  The Cryptography 
+FAQ is posted to the newsgroups sci.crypt, sci.answers, and news.answers 
+every 21 days.
+
+
+
+Contents:
+
+* What is cryptology? Cryptography? Plaintext? Ciphertext? Encryption? Key?
+* What references can I start with to learn cryptology?
+* How does one go about cryptanalysis?
+* What is a brute-force search and what is its cryptographic relevance?
+* What are some properties satisfied by every strong cryptosystem?
+* If a cryptosystem is theoretically unbreakable, then is it
+  guaranteed analysis-proof in practice?
+* Why are many people still using cryptosystems that are
+  relatively easy to break?
+
+
+* What is cryptology? Cryptography? Plaintext? Ciphertext? Encryption? Key?
+
+  The story begins: When Julius Caesar sent messages to his trusted
+  acquaintances, he didn't trust the messengers. So he replaced every A
+  by a C, every B by a D, and so on through the alphabet. Only someone
+  who knew the ``shift by 2'' rule could decipher his messages.
+
+  A cryptosystem or cipher system is a method of disguising messages so
+  that only certain people can see through the disguise. Cryptography is
+  the art of creating and using cryptosystems. Cryptanalysis is the art
+  of breaking cryptosystems---seeing through the disguise even when
+  you're not supposed to be able to. Cryptology is the study of both
+  cryptography and cryptanalysis.
+
+  The original message is called a plaintext. The disguised message is
+  called a ciphertext. Encryption means any procedure to convert
+  plaintext into ciphertext. Decryption means any procedure to convert
+  ciphertext into plaintext.
+
+  A cryptosystem is usually a whole collection of algorithms. The
+  algorithms are labelled; the labels are called keys. For instance,
+  Caesar probably used ``shift by n'' encryption for several different
+  values of n. It's natural to say that n is the key here.
+
+  The people who are supposed to be able to see through the disguise are
+  called recipients. Other people are enemies, opponents, interlopers,
+  eavesdroppers, or third parties.
+
+* What references can I start with to learn cryptology?
+
+  For an introduction to technical matter, the survey articles given
+  in part 10 are the best place to begin as they are, in general,
+  concise, authored by competent people, and well written. However,
+  these articles are mostly concerned with cryptology as it has
+  developed in the last 50 years or so, and are more abstract and
+  mathematical than historical. The Codebreakers by Kahn [KAH67] is
+  encyclopedic in its history and technical detail of cryptology up
+  to the mid-60's.
+
+  Introductory cryptanalysis can be learned from Gaines [GAI44] or
+  Sinkov [SIN66]. This is recommended especially for people who want
+  to devise their own encryption algorithms since it is a common
+  mistake to try to make a system before knowing how to break one.
+
+  The selection of an algorithm for the DES drew the attention of
+  many public researchers to problems in cryptology. Consequently
+  several textbooks and books to serve as texts have appeared. The
+  book of Denning [DEN82] gives a good introduction to a broad range
+  of security including encryption algorithms, database security,
+  access control, and formal models of security. Similar comments
+  apply to the books of Price & Davies [PRI84] and Pfleeger [PFL89].
+
+  The books of Konheim [KON81] and Meyer & Matyas [MEY82] are quite
+  technical books. Both Konheim and Meyer were directly involved in
+  the development of DES, and both books give a thorough analysis of
+  DES. Konheim's book is quite mathematical, with detailed analyses
+  of many classical cryptosystems. Meyer and Matyas concentrate on
+  modern cryptographic methods, especially pertaining to key management
+  and the integration of security facilities into computer systems and
+  networks.
+
+  The books of Rueppel [RUE86] and Koblitz [KOB89] concentrate on
+  the application of number theory and algebra to cryptography.
+
+* How does one go about cryptanalysis?
+
+  Classical cryptanalysis involves an interesting combination of
+  analytical reasoning, application of mathematical tools, pattern
+  finding, patience, determination, and luck. The best available
+  textbooks on the subject are the Military Cryptanalytics series
+  [FRIE1]. It is clear that proficiency in cryptanalysis is, for
+  the most part, gained through the attempted solution of given
+  systems. Such experience is considered so valuable that some of the
+  cryptanalyses performed during WWII by the Allies are still
+  classified.
+
+  Modern public-key cryptanalysis may consist of factoring an integer,
+  or taking a discrete logarithm. These are not the traditional fare
+  of the cryptanalyst. Computational number theorists are some of the
+  most successful cryptanalysts against public key systems.
+
+* What is a brute-force search and what is its cryptographic relevance?
+
+  In a nutshell: If f(x) = y and you know y and can compute f, you can
+  find x by trying every possible x. That's brute-force search.
+
+  Example: Say a cryptanalyst has found a plaintext and a corresponding
+  ciphertext, but doesn't know the key. He can simply try encrypting the
+  plaintext using each possible key, until the ciphertext matches---or
+  decrypting the ciphertext to match the plaintext, whichever is faster.
+  Every well-designed cryptosystem has such a large key space that this
+  brute-force search is impractical.
+    
+  Advances in technology sometimes change what is considered
+  practical. For example, DES, which has been in use for over 10 years
+  now, has 2^56, or about 10^17, possible keys. A computation with
+  this many operations was certainly unlikely for most users in the
+  mid-70's. The situation is very different today given the dramatic
+  decrease in cost per processor operation. Massively parallel
+  machines threaten the security of DES against brute force search.
+  Some scenarios are described by Garron and Outerbridge [GAR91].
+
+  One phase of a more sophisticated cryptanalysis may involve a
+  brute-force search of some manageably small space of possibilities.
+
+* What are some properties satisfied by every strong cryptosystem?
+
+  The security of a strong system resides with the secrecy of the key
+  rather than with an attempt to keep the algorithm itself secret.
+
+  A strong cryptosystem has a large keyspace, as mentioned above.  The
+  unicity distance is a measure which gives the minimum amount of
+  ciphertext that must be intercepted to uniquely identify the key and
+  if for some key, the unicity distance is much longer than the amount
+  of ciphertext you intend to encrypt under that key, the system is
+  probably strong.
+
+  A strong cryptosystem will certainly produce ciphertext which appears
+  random to all standard statistical tests (see, for example, [CAE90]).
+    
+  A strong cryptosystem will resist all known previous attacks. A
+  system which has never been subjected to scrutiny is suspect.
+
+  If a system passes all the tests mentioned above, is it necessarily
+  strong? Certainly not. Many weak cryptosystems looked good at first.
+  However, sometimes it is possible to show that a cryptosystem is
+  strong by mathematical proof. ``If Joe can break this system, then
+  he can also solve the well-known difficult problem of factoring
+  integers.'' See part 6.  Failing that, it's a crap shoot.
+
+* If a cryptosystem is theoretically unbreakable, then is it
+  guaranteed analysis-proof in practice?
+
+  Cryptanalytic methods include what is known as ``practical
+  cryptanalysis'': the enemy doesn't have to just stare at your
+  ciphertext until he figures out the plaintext. For instance, he might
+  assume ``cribs''---stretches of probable plaintext. If the crib is
+  correct then he might be able to deduce the key and then decipher the
+  rest of the message. Or he might exploit ``isologs''---the same
+  plaintext enciphered in several cryptosystems or several keys. Thus
+  he might obtain solutions even when cryptanalytic theory says he
+  doesn't have a chance.
+
+  Sometimes, cryptosystems malfunction or are misused. The one-time pad,
+  for example, loses all security if it is used more than once! Even
+  chosen-plaintext attacks, where the enemy somehow feeds plaintext into
+  the encryptor until he can deduce the key, have been employed. See
+  [KAH67].
+  
+* Why are many people still using cryptosystems that are
+  relatively easy to break?
+
+  Some don't know any better. Often amateurs think they can design
+  secure systems, and are not aware of what an expert cryptanalyst
+  could do. And sometimes there is insufficient motivation for anybody
+  to invest the work needed to crack a system.

@@ -1,0 +1,80 @@
+Newsgroups: sci.crypt
+Path: cantaloupe.srv.cs.cmu.edu!crabapple.srv.cs.cmu.edu!fs7.ece.cmu.edu!europa.eng.gtefsd.com!howland.reston.ans.net!zaphod.mps.ohio-state.edu!sample.eng.ohio-state.edu!purdue!haven.umd.edu!news.umbc.edu!gmuvax2!gravity.gmu.edu!tfs
+From: tfs@gravity.gmu.edu (Tim Scanlon)
+Subject: Re: Secret algorithm [Re: Clipper Chip and crypto key-escrow]
+Message-ID: <1993Apr21.222512.12164@gmuvax2.gmu.edu>
+Summary: Whatever...
+Keywords: Hmm...
+Sender: usenet@gmuvax2.gmu.edu (usenet administrator)
+Organization:  George Mason University, Fairfax Va.
+References: <PMETZGER.93Apr18141006@snark.shearson.com> <8AOHOnj024n@sktb.demon.co.uk> <C5s6I7.n0M@dcs.ed.ac.uk>
+Distribution: world 
+Date: Wed, 21 Apr 1993 22:25:12 GMT
+Expires: 06/31/93 
+Lines: 65
+
+
+
+	After reading the debate over the Clipper, I have a few things to
+add.
+
+	First, most of the people I know who activly use encryption
+privately do not care about most of the issues that surround this debate,
+and any questions about what is or is not ok to use in the US. All they
+care about is wether or not what they are using is secure or not. That,
+after all IS the bottom line. 
+
+	Second, if I look at all the people I know who use any form
+of encryption at all, and this group spans people from the morons who
+still insist that the DES is a good and secure standard, to people 
+looking at trying to improve upon existing strategies, I can not think
+of anyone of them who would approve blindly of a strategy that leaves
+their methods open to abuse. The Clipper does this, because people make
+mistakes by nature, and the US government is made up of people who are
+just as vulnerable to mistakes as everyone else. 
+
+	Third, since most of the people I know are at least marginaly
+familiar with the vulnerabilities present in current software encryption
+stratigies, I can't see how most of them are going to blindly trust that
+someone will not figure out a good way to compromise the Clipper Chip.
+That despite any strengths or weaknesses that may exist in it. So, I can 
+not see a high degree of confidence developing in the chip.
+
+	Fourth, when it comes to criminal abuse, sure there are many stupid
+people out there. And yes, some will be open to being caught via the 
+built in back door of the Clipper Chip. However, anyone who is going to
+do any serious investigation of how best to secure their data is going
+to run into that problem pretty damned fast and, I would assume, start
+looking around for other easily obtainible methods of encryption. 
+
+
+	If nothing else were avalible, none of this would be an issue. However,
+the truth is that most private encryption users that I've ever run into
+simply do not give a damn about the legal status of RSA or PGP or anything
+else. If it works, they use it. This is not going to change either. I do
+not think for a moment that anyone with serious criminal intent will be
+slowed down by the advent of the Clipper Chip. It is all to easy to 
+convert encrypted data into unintellgible garbage as it is, if anything,
+the Clipper Chip just adds another tool to the user.
+
+
+	The bottom line here is that people will use what works, and
+unavoidibly, I'm sure most criminals would rather face an encryption
+related charge than one which could potentialy lead to death penalty
+charges in the case of criminals who murder as part of their conspiricy.
+	The other thing that has struck me since the advent and wide 
+useage of public encryption has begun is that quite simply the cat is
+out of the bag (Or if you have an interest in snooping, Pandora's Box
+has been opened), and this is not going to change. I've seen a blindness
+to this that I've found utterly stunning, and the Clipper Chip, along
+with the way it has been presented only confirms this to me to a larger
+degree.
+
+
+			Sincerly,
+
+			Tim Scanlon
+
+-- 
+
+tfs@gravity.gmu.edu

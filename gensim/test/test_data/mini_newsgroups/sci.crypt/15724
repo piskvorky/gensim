@@ -1,0 +1,76 @@
+Newsgroups: sci.crypt
+Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!noc.near.net!uunet!dove!csrc.ncsl.nist.gov!clipper
+From: clipper@csrc.ncsl.nist.gov (Clipper Chip Announcement)
+Subject: Re: The [secret] source of that announcement
+Message-ID: <C5w1AC.IK9@dove.nist.gov>
+Sender: news@dove.nist.gov
+Organization: National Institute of Standards & Technology
+References: <MARC.93Apr17211937@oliver.mit.edu> <1r1om5$c5m@slab.mtholyoke.edu> <C5uxGv.Dv7@panix.com>
+Date: Thu, 22 Apr 1993 13:54:11 GMT
+Lines: 65
+
+In article <C5uxGv.Dv7@panix.com> habs@panix.com (Harry Shapiro) writes:
+>In <1r1om5$c5m@slab.mtholyoke.edu> jbotz@mtholyoke.edu (Jurgen Botz)
+>writes:
+>
+>>Even more interesting: the SMTP server at csrc.ncsl.nist.gov no longer
+>>recognizes the 'expn' and 'vrfy' commands...
+>
+>>   telnet csrc.ncsl.nist.gov smtp
+>>   Trying 129.6.54.11...
+>>   Connected to csrc.ncsl.nist.gov.
+>>   Escape character is '^]'.
+>>   220 first.org sendmail 4.1/NIST ready at Tue, 20 Apr 93 17:01:34 EDT
+>>   expn clipper
+>>   500 Command unrecognized
+>
+>>Seems like sombody didn't like your snooping around, Marc.
+>
+>Then it is a good thing we already have this:
+>
+>The csspub mailing list: csspab@mail-gw.ncsl.nist.gov, and address on
+> [rest of names deleted]
+
+Sigh... my version of 'rn' asked me whether I really want to send this
+posting!
+
+You may as well know that all this stuff about the secret source of the
+Clipper announcement is because of a silly mistake.  I am the administrator
+of csrc.ncsl.nist.gov, alias first.org.  It's a system set up to help out
+the needs of FIRST, a Forum of Incident Response and Security Teams, which 
+includes a number of world-wide incident response teams such as CERT/CC and
+other places in Europe.  As to the VRFY and EXPN commands, they are normally
+disabled, since early on we didn't want crackers to find out the names of
+incident response folks on our mailing lists.  We had a disk crash several
+months ago which required completely rebuilding the O/S files - same old
+story, our backups weren't especially helpful.  As you can guess, I didn't
+remember to re-disable VRFY and EXPN until I saw people on the net trying to
+find out who was behind clipper@csrc...  When I saw people's names posted
+here, I felt it was time to clear things up.  So, EXPN and VRFY on csrc have
+always been disabled in the past for reasons having nothing to do with 
+Clipper.
+
+I posted the White House announcements at the request of policy folks here
+because csrc also provides Usenet service.  I posted them from an account
+called 'clipper.'  I also created an alias called 'clipper' that contains
+the addresses of members of the NIST Computer Security Privacy and Advisory
+Board, set up under law of the Computer Security Act of 1987, and addresses
+of other individuals not affiliated with NIST but involved in cryptography,
+security, and privacy - I believe that these individuals were included on
+this list because NIST felt it important to get them the Clipper information
+first-hand.
+
+The 'clipper' alias is there for the benefit of those named above.  It is 
+not a source for information, it was set up solely to monitor any initial
+traffic.  Individuals on the list have requested that they continue to get
+traffic that is not already duplicated on Usenet.
+
+While you can rightfully say we were a bit disorganized in handling this,
+I would ask that people stop speculating about any hidden agendas or motives
+of the individuals on the 'clipper' alias - I've already apologized to them
+for what's happened.  Disabling EXPN and VRFY is an increasingly common
+practice (albeit unfriendly to some), and any effect of disabling it again
+was unintentional.
+
+-John Wack
+  

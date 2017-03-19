@@ -1,0 +1,34 @@
+Newsgroups: sci.crypt
+From: mike@avon.demon.co.uk ("Mike H.")
+Path: cantaloupe.srv.cs.cmu.edu!magnesium.club.cc.cmu.edu!news.sei.cmu.edu!fs7.ece.cmu.edu!europa.eng.gtefsd.com!darwin.sura.net!howland.reston.ans.net!zaphod.mps.ohio-state.edu!cs.utexas.edu!uunet!pipex!demon!avon.demon.co.uk!mike
+Subject: Re: Clipper Chip and crypto key-esc 
+Distribution: world
+References: <1993Apr21.131510.3215@memex.co.uk>
+Organization: boring
+Reply-To: mike@avon.demon.co.uk
+X-Newsreader: Simple NEWS 1.90 (ka9q DIS 1.21)
+Lines: 20
+Date: Thu, 22 Apr 1993 21:05:15 +0000
+Message-ID: <735512715snz@avon.demon.co.uk>
+Sender: usenet@demon.co.uk
+
+In article <1993Apr21.131510.3215@memex.co.uk> peter@memex.co.uk writes:
+
+>I thought it was quite difficult to record a modem session at some
+>intermediate point on the line. Maybe they have taken a crash course
+>in data comms and have a unit that demodulates the tones and stores the
+>digital stream for decryption later. This would still suffer from the
+
+>called BABT. It has been stated, either here or in the uk.telecom group,
+>that they will not approve equipment that does encryption. I don't know
+>if this is true or not, but this would make a good test case.
+>
+>                Peter Ilieve            peter@memex.co.uk
+
+You forget the obvious! If it is an *authorised* tap then it can be done at
+the exchange. If the exchange is *digital* then I suspect that you can
+auto-monitor a line and pickup the full link. Therefore syncing a piggyback
+modem on the line would not be impossible - I suspect.
+-- 
+
+                        Mike H. (mike@avon.demon.co.uk)

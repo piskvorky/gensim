@@ -1,14 +1,20 @@
 import six
 import unittest
 import numpy
+import os
+import codecs
 
 from scipy import sparse
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.datasets import fetch_20newsgroups
+from sklearn.datasets import load_files
+from sklearn import linear_model
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklearnWrapperLdaModel
 from gensim.corpora import Dictionary
 from gensim import matutils
+
+module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 texts = [['complier', 'system', 'computer'],
          ['eulerian', 'node', 'cycle', 'graph', 'tree', 'path'],
@@ -86,19 +92,15 @@ class TestSklearnLDAWrapper(unittest.TestCase):
 
     def testPipline(self):
         model = SklearnWrapperLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
-        vec = CountVectorizer(min_df=10, stop_words='english')
+        data = load_files(datapath('mini_newsgroups'), encoding='latin1')
+        id2word=Dictionary(map(lambda x : x.split(), data.data))
+        corpus = [id2word.doc2bow(i.split()) for i in data.data]
         rand = numpy.random.mtrand.RandomState(1) # set seed for getting same result
-        cats = ['rec.sport.baseball', 'sci.crypt']
-        data = fetch_20newsgroups(subset='train',
-                                  categories=cats,
-                                  shuffle=True)
-        text_lda = Pipeline([('features', vec),('model', model)])
-        text_lda.fit(data.data)
-
-        topic = text_lda.named_steps['model'].print_topics(2)
-        for k, v in topic:
-            self.assertTrue(isinstance(v, six.string_types))
-            self.assertTrue(isinstance(k, int))
+        clf=linear_model.LogisticRegression(penalty='l2', C=0.1)
+        text_lda = Pipeline((('features', model,), ('classifier', clf)))
+        text_lda.fit(corpus, data.target)
+        score = text_lda.score(corpus, data.target)
+        self.assertGreater(score, 0.50)
 
 if __name__ == '__main__':
     unittest.main()

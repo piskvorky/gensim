@@ -1,0 +1,20 @@
+Xref: cantaloupe.srv.cs.cmu.edu comp.org.eff.talk:16899 sci.crypt:15279
+Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!noc.near.net!nic.umass.edu!caen!zaphod.mps.ohio-state.edu!swrinde!elroy.jpl.nasa.gov!ames!olivea!charnel!rat!decwrl!src.dec.com!src.dec.com!murray
+From: murray@src.dec.com (Hal Murray)
+Newsgroups: comp.org.eff.talk,sci.crypt
+Subject: Re: How do they know what keys to ask for?  (Re: Clipper)
+Message-ID: <1993Apr17.173450.5163@src.dec.com>
+Date: 17 Apr 93 17:34:50 GMT
+References: <1993Apr16.051311.10536@umr.edu> <1993Apr16.195927.3952@natasha.portal.com> <1993Apr16.224513.10751@fsl.noaa.gov> <1993Apr17.031520.13902@clarinet.com>
+Sender: news@src.dec.com (News)
+Organization: DEC Systems Research Center
+Lines: 8
+
+In article <1993Apr17.031520.13902@clarinet.com>, brad@clarinet.com (Brad Templeton) writes:
+|> The actual algorithm is classified, however, their main thrust here is
+|> for cellular phones, and encryption is only over the radio end, not
+|> end to end, I think.   End to end will come later.
+
+Encrypting just the radio link doesn't make sense to me.  That means the telco
+has to do the decryption, and hence they need the keys.  How are they going to be
+kept secure?

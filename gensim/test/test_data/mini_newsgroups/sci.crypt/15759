@@ -1,0 +1,62 @@
+Xref: cantaloupe.srv.cs.cmu.edu sci.crypt:15759 alt.privacy.clipper:75
+Newsgroups: sci.crypt,alt.privacy.clipper
+Path: cantaloupe.srv.cs.cmu.edu!magnesium.club.cc.cmu.edu!news.sei.cmu.edu!cis.ohio-state.edu!pacific.mps.ohio-state.edu!zaphod.mps.ohio-state.edu!howland.reston.ans.net!agate!ames!sgi!wdl1!phobos!koontzd
+From: koontzd@phobos.lrmsc.loral.com (David Koontz )
+Subject: Re: new encryption
+Message-ID: <1993Apr22.200205.15384@wdl.loral.com>
+Sender: news@wdl.loral.com
+Organization: Loral Rolm Mil-Spec Computers
+References: <1r4e9d$pdo@sol.TIS.COM> <1993Apr21.225435.6292@wam.umd.edu> <strnlghtC5wC3z.Erw@netcom.com>
+Date: Thu, 22 Apr 1993 20:02:05 GMT
+Lines: 50
+
+>From: denning@guvax.acc.georgetown.edu
+>                     THE CLIPPER CHIP: A TECHNICAL SUMMARY
+
+>                               Dorothy Denning
+
+>                           Revised, April 21, 1993
+
+>The chips are programmed by Mykotronx, Inc., which calls them the
+>"MYK-78."  The silicon is supplied by VLSI Technology Inc.
+
+
+>All Clipper Chips are programmed inside a SCIF (Secure Compartmented
+>Information Facility), which is essentially a vault.  The SCIF contains
+>a laptop computer and equipment to program the chips.  About 300 chips
+>are programmed during a single session.  The SCIF is located at
+>Mykotronx.
+
+>ACKNOWLEDGMENT AND DISTRIBUTION NOTICE.  This article is based on
+>information provided by NSA, NIST, FBI, and Mykotronx.  Permission to
+>distribute this document is granted.
+
+So, who is Mykotronx, Inc.?  It would be nice to know that they were
+not a front company used by an intelligence or other agency of the 
+U.S. government.  Trusting the fox to guard the chickens, and all that.
+Seems suspicious when the rest of the sources are foxes.
+
+While we are at it, the chip design(s) should be examined and verified
+against silicon to insure no trap doors or hidden protocols exist in silicon,
+regardless of the security level of the encryption algorithm.  It would be a 
+shame if some three letter agency had the ability to interrogate my chip, when
+all I'd know is that someone rang, and when I attempted to go off hook the
+line went dead.  Could be even worse if the chip were intended to connect
+directly to a modem.
+
+The design examination should be done to the gate level.  Does anyone have
+a good idea how to tell if there is a piggyback design on silicon?  The model
+would be extra logic sharing pins with the advertised function.  Tip offs
+would be circuitry that would ignore incoming data if formats or sequence
+is not right.  I can think of only two ways an output pin could be used,
+and its possible that might be noticed, but could be edited from the netlist.
+I think the silicon itself needs to be investigated.  Imagine a design
+done in two layer metalization, yet finding a third layer under the
+microscope.  
+
+The government is asking for a lot of blind trust:  the encryption algorithm, 
+operating protocols, the agency having physical control of the devices, the 
+silicon implementation.  I'd feel like keeping one hand on my wallet.
+
+
+

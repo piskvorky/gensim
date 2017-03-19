@@ -1,0 +1,56 @@
+Newsgroups: sci.crypt
+Path: cantaloupe.srv.cs.cmu.edu!crabapple.srv.cs.cmu.edu!fs7.ece.cmu.edu!europa.eng.gtefsd.com!howland.reston.ans.net!zaphod.mps.ohio-state.edu!uwm.edu!msuinfo!uchinews!quads!smk5
+From: smk5@quads.uchicago.edu (Steve Kramarsky)
+Subject: Re: Keeping Your Mouth Shut (was: Hard drive security)
+Message-ID: <1993Apr21.023319.13965@midway.uchicago.edu>
+Keywords: cooperation
+Sender: news@uchinews.uchicago.edu (News System)
+Reply-To: smk5@midway.uchicago.edu
+Organization: University of Chicago
+References: <1993Apr13.143712.15338@cadkey.com> <1993Apr13.214520.2075@magnus.acs.ohio-state.edu> <1993Apr14.055903.5358@qualcomm.com>
+Date: Wed, 21 Apr 1993 02:33:19 GMT
+Lines: 43
+
+In article <1993Apr14.055903.5358@qualcomm.com> karn@servo.qualcomm.com (Phil Karn) writes:
+>
+>
+>I say "in theory" because in another case, a woman was held in
+>contempt for refusing to reveal the location of her child even after
+>taking the 5th. In this case, the woman was suspected of having
+>murdered the kid, so taking the 5th wasn't surprising. Sure, so she
+>was probably guilty, but that's not good enough. In our system you're
+>not supposed to be able to force a suspect to confess to a crime, no
+>matter how strongly you think they're guilty.  You have to develop
+>your evidence independently. Doing otherwise might catch a few more
+>crooks, but only at the cost of turning the clock back to the middle
+>ages, when confessions were routinely tortured out of suspects both
+>guilty and innocent.
+>
+ OK, I should have read the thread before posting my own $0.02.  I would
+just add to Phil's very infomative discussion the following caveat: the
+fifth amendment applies ONLY in crinial cases.  ("...nor shall any person .
+. . be compelled in any criminal case to be a witness against himself...").
+Thus if the father sued for custody of the children, the case would be
+civil and the defendant mother would not have fifth amendment protection.
+Oddly enough, her refusal to give information in a civil case can lead to
+criminal contempt charges (thus landing her in jail.)  The interesting part
+of all this is that in a murder trial, the woman CAN plead the fifth as 
+to the location of the child--this is routine.  A "computer crime" 
+prosecution thus would seem to be fertile ground for this kind of defense, 
+where a suit by a party injured by "hackers" would not.  If I am accused, 
+for example, of sending encrypted kiddie porn over the nets the fifth should 
+protect my key.  If I am accused of sending copyrighted material, however,
+it proabably will not (copyright infringement not being a "crime" in the
+technical sense.)  The REALLY tricky question is, say I do both (naughty
+boy that I am) can the government use the information gained in the civil
+trial (ie. my key) to gain access to my files for use in the criminal
+prosecution.  The answer should certainly be no, but lord only knows how
+this would work out.
+
+Steve.
+ 
+
+-- 
+            Steve Kramarsky, University of Chicago Law School
+           steve@faerie.chi.il.us -or- smk5@quads.uchicago.edu 
+     "All I did was kiss a girl." - Jake, the night before his hanging.

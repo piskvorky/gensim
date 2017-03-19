@@ -1,0 +1,57 @@
+Xref: cantaloupe.srv.cs.cmu.edu sci.crypt:15323 alt.security:9973 comp.org.eff.talk:16922 comp.security.misc:3407 comp.org.acm:1618 comp.org.ieee:1550
+Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!noc.near.net!howland.reston.ans.net!zaphod.mps.ohio-state.edu!sdd.hp.com!network.ucsd.edu!mvb.saic.com!unogate!news.service.uci.edu!ucivax!ucla-cs!ucla-se!wright!ygoland
+From: ygoland@wright.seas.ucla.edu (The Jester)
+Newsgroups: sci.crypt,alt.security,comp.org.eff.talk,comp.security.misc,comp.org.acm,comp.org.ieee
+Subject: Re: Don't fight Clipper Chip, subvert or replace it !
+Message-ID: <ygoland.735123994@wright>
+Date: 18 Apr 93 09:06:34 GMT
+References: <1993Apr17.032828.14262@clarinet.com> <tcmayC5M2xv.JEx@netcom.com> <rlglendeC5nAJI.3uE@netcom.com>
+Sender: news@SEAS.UCLA.EDU
+Followup-To: sci.crypt
+Distribution: na
+Lines: 44
+
+The Clipper chip is just the culmination of Dorthy Denning et all.
+But lets ignore that for the moment.
+
+The fundamental question is:Can the government stop me from using
+encryption?
+
+Ignoring for the moment the question of patented processes (such as
+Public Keys), can the government stop me from using an encryption
+process?
+
+If the answer is yes then what freedom we have in this country is
+truly gone and its time to get out the guns or the lawyers
+(depending upon which causes more damage and to whom).
+
+However assuming that I can still encrypt things as I please, who
+cares about the clipper chip? As far as I'm concerned a phone line
+is insecure PERIOD. I don't care if they encrypt it 10 ways from
+sunday, if I didn't do the encrypting, I don't trust it. This is the
+attitude that everyone else should have. Instead of worrying about a
+clipper chip, simply connect your handset to your computer and feed
+the voice single through, process, encrypt, and transmit over the
+phone. The guy on the other hand then does the same in reverse.
+
+Can't work you say? No Standard you say? Obviously you have never
+uses PGP.
+
+Anyone who expects the government to protect their freedoms is
+kidding themselves. Only you can protect your own freedoms.
+
+One final thought addressed to EFF:
+	1.Do you support the implementation of ANY form of
+	encryption where the encryption key must be revealed?
+	2.If you do, why? If not, why?
+	3.What SPECIFIC actions are you planning to take to either
+	support or stop this proposal?
+	4.If you do not support this proposal, what alternatives do
+	you offer?
+
+				The Jester
+-- 
+Proof Windows is a Virus:It is very widespread, It eats up your disk
+space, It slows down your computer, It takes control over your
+computer, It performs disk access at random times, It displays silly
+messages on your screen, It randomly crashes the computer-Vesselin

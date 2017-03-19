@@ -1,0 +1,77 @@
+Xref: cantaloupe.srv.cs.cmu.edu sci.crypt:15609 alt.security.pgp:2595 alt.privacy.clipper:27
+Newsgroups: sci.crypt,alt.security.pgp,alt.privacy.clipper
+Path: cantaloupe.srv.cs.cmu.edu!magnesium.club.cc.cmu.edu!news.sei.cmu.edu!fs7.ece.cmu.edu!europa.eng.gtefsd.com!emory!wupost!uwm.edu!linac!att!att!ulysses!ulysses!smb
+From: smb@research.att.com (Steven Bellovin)
+Subject: Re: Off the shelf cheap DES keyseach machine (Was: Re: Corporate acceptance of the wiretap chip)
+Message-ID: <1993Apr21.132318.16981@ulysses.att.com>
+Date: Wed, 21 Apr 1993 13:23:18 GMT
+References: <1993Apr19.093227.1093@jarvis.csri.toronto.edu> <1993Apr20.150531.2059@magnus.acs.ohio-state.edu> <1993Apr20.192105.11751@ulysses.att.com> <C5sy1z.4tD@demon.co.uk>
+Organization: AT&T Bell Laboratories
+Lines: 66
+
+In article <C5sy1z.4tD@demon.co.uk>, Graham Toal <gtoal@gtoal.com> writes:
+> In article <1993Apr20.192105.11751@ulysses.att.com> smb@research.att.com (Steven Bellovin) writes:
+> :Thousands?  Tens of thousands?  Do some arithmetic, please...  Skipjack
+> :has 2^80 possible keys.
+> 
+> We don't yet know if all 80 bits count.
+
+That doesn't worry me at all; they're not going to cheat at something
+they can get caught at.  And key size is one of the things that can be
+verified externally.  Feed lots of random key/input pairs into the
+chip, then try flipping random key bits, and see what happens to the
+output.  We already know what *should* happen -- about half the output
+bits should vary, on average, from a 1-bit key change or input change.
+
+If they were out to build a weak cryptosystem, it might be the case that
+some of the bits are much less powerful than others, in the sense that
+they only enter into the encryption very late in the game.  By contrast,
+DES was designed to use each key bit as early as possible; the 50% output
+change rate appears as early as round 5.  Again, though, I don't think
+NSA is going to cheat that crudely; they're likely to get caught.
+
+Remember that they've promised to let a committee of outside experts see
+the cryptosystem design.  If you assume something DES-like, a biased
+subkey generation schedule will stick out like a sore thumb.  The committee
+can and should run lots of tests, and retain the output.  This can be verified
+later against the chip.  And yes, the civilian community has at least some
+secure storage facilities that I don't think even NSA can get into without
+it being noticed, until Fort Meade gets its transporter working again.
+(Oops -- I don't think I was supposed to talk about that...)  The committee
+members can even retain secure copies of the code -- in two halves, which
+you have to XOR together to recover the program...
+
+Seriously, there are, I think, problems with this whole scheme.  But the
+people who invented it aren't stupid, and they've been in the crypto game
+and the smoke-and-mirrors game far longer than most of us.  They're not
+going to lie in ways that can be detected easily, since their credibility
+is the *only* thing they can use to sell this system.  If they've lied
+about the civilian committee, no one will believe them about the absence
+of other back doors.  If they've lied about the key size, no one will
+believe that they haven't copied the programming disk with the U keys.
+If they've lied about obvious aspects of the strength of the cryptosystem,
+no one will believe the escrow agencies aren't in cahoots with them.
+
+That isn't to say that they aren't lying about all those other things
+anyway.  And I'm certainly not claiming that NSA can't build a cryptosystem
+with a back door that the committee can't find -- look how long it took
+for folks to believe that the S-boxes weren't sabotaged.  It's entirely
+possible that the committee will release an ambiguous report, for just
+such reasons.  But that's a subtle point (i.e., one you can't explain to
+a Senator...).
+
+> Anyway, its looking like the
+> keys and escrow arrangements are smoke and mirrors to cover the way the NSA
+> can regenerate the key from the transmitted serial number.
+
+I don't like the unit key generation process any better than you do.
+However -- S1 and S2 are supposed to be under control of the same
+escrow agents.  If they can't be trusted to keep the seed values secure,
+they can't be trusted to keep the half-keys secure.
+
+I still don't know if or when S1 and S2 change.  I thought I had seen
+something about them being constant, but I just reread Denning's technical
+information post, and it doesn't say anything, one way or the other.
+
+
+		--Steve Bellovin

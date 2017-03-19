@@ -1,0 +1,28 @@
+Xref: cantaloupe.srv.cs.cmu.edu alt.security.pgp:2628 sci.crypt:15783
+Newsgroups: alt.security.pgp,sci.crypt
+Path: cantaloupe.srv.cs.cmu.edu!rochester!udel!gatech!howland.reston.ans.net!agate!news.ucdavis.edu!csus.edu!netcom.com!grady
+From: grady@netcom.com (1016/2EF221)
+Subject: Re: transparent cyphertext?
+Message-ID: <gradyC5wqEA.8qx@netcom.com>
+Organization: capriccioso
+X-Newsreader: TIN [version 1.1 PL6]
+References: <93112.16275734AEJ7D@CMUVM.BITNET>
+Date: Thu, 22 Apr 1993 22:56:34 GMT
+Lines: 16
+
+ (34AEJ7D@CMUVM.BITNET) wrote:
+: In light of recent events, it may soon become a very good idea
+: to include the ability to produce transparent, or at least non-obvious,
+: cyphertext in upcoming revisions.
+
+This won't help if the NSA/FBA axis requires all messages to
+undergo textual analysis and reduction to canonical form to
+eliminate concealed messages.
+
+After reading several National Computer Security Center
+documents, I'm convinced that they are already using this
+filter.  DoubleplusgoodNOT.
+
+-- 
+grady@netcom.com  2EF221 / 15 E2 AD D3 D1 C6 F3 FC  58 AC F7 3D 4F 01 1E 2F
+

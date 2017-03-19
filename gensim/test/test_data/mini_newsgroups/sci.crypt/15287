@@ -1,0 +1,59 @@
+Newsgroups: sci.crypt
+Path: cantaloupe.srv.cs.cmu.edu!crabapple.srv.cs.cmu.edu!fs7.ece.cmu.edu!europa.eng.gtefsd.com!emory!swrinde!cs.utexas.edu!zaphod.mps.ohio-state.edu!rpi!smythw
+From: smythw@vccnw03.its.rpi.edu (William Smythe)
+Subject: Re: How to detect use of an illegal cipher?
+Message-ID: <5wv5__m@rpi.edu>
+Sender: SMYTHW@RPI.EDU (Bill Smythe)
+Nntp-Posting-Host: vccnw03.its.rpi.edu
+Organization: Rensselaer Polytechnic Institute, Troy, NY
+References: <1qmugcINNpu9@gap.caltech.edu> <1qn74nINNi38@golden.kaleida.com> <betel.734997645@camelot>
+Date: Sat, 17 Apr 1993 19:53:14 GMT
+Lines: 47
+
+In article <betel.734997645@camelot> betel@camelot.bradley.edu (Robert Crawford) writes:
+>Jay Fenton <Fenton@Kaleida.Com> writes:
+>
+>>How can the government tell which encryption method one is using without
+>>being able to decode the traffic? i.e., In order to accuse me of using an
+>>unauthorized strong encryption technique they would have to take both
+>>keys out of escrow, run them against my ciphertext and "draw a blank".
+>
+>	I was thinking about this, also. It's quite possible the
+>system transmits, in clear, the serial number of the device being
+>used. That way they can start a tap, get the serial number, and use
+>the warrant for the first tap to get the key.
+>
+>	If they tap someone who's apparently using encryption, but
+>don't find that prefix, then they'll assume it's an "un-authorized"
+>encryption scheme.
+
+From the limited details released so far, It seems that the clipper chip 
+system must employ some sort of public key cryptography. Otherwise, the key 
+management problems inherent to symetric ciphers would make the system 
+unworkable. It probably has some sort of public key exchange that takes place
+at the start of each call. Thats how they would identify the private key in 
+their data base?
+
+This means that either the NSA has developed some non RSA public key 
+algorythm or the feds have decided to subsidize PKP & RSADSI. The former is 
+rather an exciting posibility since keeping the algorythm secret while making
+chip implimentations widely avalibe will be exceptionally hard. If the feds
+are forced to make it avalible in order to gain public acceptance than that 
+could break RSA's stranglehold on public key crypto in the U.S.   
+
+As for my impressions of the whole scheme It seems that instead of trying to
+ban strong crypto, they are trying to co-opt it. Their contention that they 
+need to keep the algorythm secret to protect the security of the key
+registration suggests possible inherent weakness to the algorythm. More likely
+is that they dont want anyone constructing black market devices which dont 
+have the keys registered. Anyone else notice that in their Q&A session, they
+talk about releasing the keys only to people with proper autiorization but
+carefully dance around stating that the keys will simply have to be supeonaed.
+They seem to be trying to keep open the posibility of obtaining keys without 
+court order even though tapping a phone line requires one. Also pick up on 
+their implicit threat of eithe accept this or we'll ban strong crypto outright?
+I dont trust this plan at all and plan to oppose it in all (legal) ways
+possible.
+
+Bill Smythe
+

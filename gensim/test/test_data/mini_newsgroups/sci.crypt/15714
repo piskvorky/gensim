@@ -1,0 +1,36 @@
+Newsgroups: sci.crypt
+Path: cantaloupe.srv.cs.cmu.edu!rochester!udel!bogus.sura.net!howland.reston.ans.net!torn!nott!bnrgate!bnr.co.uk!uknet!pavo.csi.cam.ac.uk!gtf1000
+From: gtf1000@cus.cam.ac.uk (G.T. Falk)
+Subject: alt.security.pgp
+Message-ID: <1993Apr22.102016.4080@infodev.cam.ac.uk>
+Sender: news@infodev.cam.ac.uk (USENET news)
+Nntp-Posting-Host: bootes.cus.cam.ac.uk
+Organization: U of Cambridge, England
+Date: Thu, 22 Apr 1993 10:20:16 GMT
+Lines: 25
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Hi all..
+
+Does anyone know of a UNIX utility allowing encrypted telnet sessions using
+public-key? I'd like something so that nobody can snoop my password or
+session text while I'm logging in remotely over the network.
+
+Thanks
+
+g.
+
+- -------------------------------------------------------------------------
+PLEASE REPORT UNSIGNED (HENCE UNAUTHORISED) MESSAGES PURPORTEDLY FROM ME,
+SENT AFTER 22/04/93.                                gtf1000@cus.cam.ac.uk
+- -------------------------------------------------------------------------
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.2
+
+iQBVAgUBK9ZxMTQRcjh0adt3AQFHrwH9HwBPyWwr+/O+pEocO9glPOZ5odKHynW8
+AJIiF6Tsm+YMqBwmVHoLm7bUb4JPybQanpkmz8tdd4tYuinSX68cVg==
+=Gw7z
+-----END PGP SIGNATURE-----

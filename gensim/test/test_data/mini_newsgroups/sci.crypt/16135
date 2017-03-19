@@ -1,0 +1,53 @@
+Xref: cantaloupe.srv.cs.cmu.edu alt.security:10180 sci.crypt:16135
+Newsgroups: alt.security,sci.crypt
+From: oml@eloka.demon.co.uk (Owen Lewis)
+Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!noc.near.net!howland.reston.ans.net!usc!cs.utexas.edu!uunet!mcsun!uknet!bnr.co.uk!demon!eloka.demon.co.uk!oml
+Subject: Re: Tempest 
+Distribution: world
+References: <1993Apr26.193801.12416@lynx.dac.northeastern.edu>
+Organization: Eloka Consultancy & Project Management
+Reply-To: oml@eloka.demon.co.uk
+X-Newsreader: Simple NEWS 1.90 (ka9q DIS 1.21)
+Lines: 44
+Date: Mon, 26 Apr 1993 08:38:59 +0000
+Message-ID: <735813539snz@eloka.demon.co.uk>
+Sender: usenet@demon.co.uk
+
+In article <1993Apr26.193801.12416@lynx.dac.northeastern.edu> angel@Foghorn_Leghorn.coe.northeastern.edu writes:
+
+>I heard somewhere (can't name the source) that TEMPEST does not necessarily
+>pick-up just CRTs, but it can pick up emissions from almost any chip.  If
+>that is true, the kind monitor would not make any difference becuase everything
+>on the screen can be picked-up from the video controller.  Can anybody verify
+>or refute this?
+
+You are correct (several times). TEMPEST is a codeword for a standard, shared between the NATO governments, to limit the inadvertent emission of information by either electromagnetic radiation or conduction. The limits set in the 
+standard are classified but there is open source information to the effect 
+that either the electrical or magnetic components of electromagnetism can be 
+exploited. It is a basic rule of physics that there is an electromagnetic 
+field associated with any path that conducts a flow of electrons.
+
+Among other things, I drive a 1987 Korean built AT clone and an associated 24 pin dotmatrix printer. The major source of unintentional emission is the CRT. To that can be added the video driver card, the RS232 parallel cable and the 
+printer head. The emissions from these are gross can be detected with the 
+crudest of equipment. Were I to apply good test equipment and some 
+intelligence to measuring emission levels, I would find many other potential 
+sources of leaked information.
+
+Where cryptography is used for serious purposes, poor TEMPEST protection 
+becomes an important security hazard.
+
+In the early eighties, the need to allow some commercial concerns, 
+particularly financial institutions, a level of protection against TEMPEST 
+threat led to a series of briefings to invited corporations and to the 
+'release' of a cut-down TEMPEST stansard for commercial use. I say 'release' 
+for while equipment to meet the standard is available (at a price and to 
+approved customers) AFAIK even the commercial standard remains classified. If
+you think about it, it would really have to wouldn't it? 
+   
+-- 
+
+                               -= Owen Lewis =-
+                                      @
+      Tele/fax  +44-(0)794-301731   ELOKA   Consultancy & Project Management
+                            oml@eloka.demon.co.uk
+                        pgp 2.x public key on request

@@ -1,0 +1,56 @@
+Newsgroups: sci.crypt
+Path: cantaloupe.srv.cs.cmu.edu!crabapple.srv.cs.cmu.edu!bb3.andrew.cmu.edu!news.sei.cmu.edu!fs7.ece.cmu.edu!europa.eng.gtefsd.com!gatech!howland.reston.ans.net!usc!sdd.hp.com!nigel.msen.com!yale.edu!yale!cs.yale.edu!news-mail-gateway!daemon
+From: Grant@DOCKMASTER.NCSC.MIL (Lynn R Grant)
+Subject: Another key registration body bites the dust (IMHO)
+Message-ID: <930420210707.956366@DOCKMASTER.NCSC.MIL>
+Sender: Grant.CA1@DOCKMASTER.NCSC.MIL
+Organization: Yale CS Mail/News Gateway
+Date: Tue, 20 Apr 1993 21:07:00 GMT
+Lines: 46
+
+One of the candidates that has been suggested for a key registration
+body is the ACLU.  I think this is poor choice.   The ACLU is
+essentially a group of auditors: they audit how people's civil
+liberties are administered.  Traditionally, auditors do not like to get
+involved in the design or operational aspects of things, and with good
+reason.
+
+When I was a systems programmer, it always infuriated me that the
+auditors would come in and tell us our implementation stunk from a
+security point of view, but wouldn't tell us how to fix it.  I always
+figured they just liked to critcize, without doing the work to help fix
+the problem.
+
+Then I took a stint as an auditor, and I found out the real reason.
+Auditors don't like to recommend solutions, because it puts them in a
+bad position if they have to criticize the implementation later.  The
+auditee can say, "Well, you told us this way would be OK."  It
+compromises the independence that is a necessary part of the auditor's
+job.
+
+Taking the case at hand, suppose ACLU becomes a key half registrar.
+Suppose that, perhaps through some error on ACLU's part, a key half gets
+away that shouldn't, and is used to deprive someone of her civil
+liberties.  The ACLU gets wind of this, and wants to take it to court.
+But they end up being at the same time on the side of the defendant
+and of the plaintiff, which is not an easy position to be in.
+
+There are exceptions to the complete independence of auditors: at one
+place where I worked, when payroll checks were printed, they were signed
+automatically by a signature drum on the bursting machine.  This drum
+was kept by the auditors (who also kept the check stock), and
+was brought down to Data Processing when it was time to do the checks.
+
+I believe the difference between this situation and the key registration
+situation is that it is fairly obvious when it is time to do the payroll
+checks:  if they were done yesterday, and someone wants to do them again
+today, he better be able to produce yesterday's checks so that they can
+be destroyed.  Determining which of the many requests for key halves are
+legit is a trickier process, one much more prone to mistakes that could
+put the ACLU in a protecting-the-client versus protecting-the-ACLU
+conflict of interest.
+
+As always, my opinions are my own.
+
+Lynn Grant
+Grant@Dockmaster.NCSC.MIL

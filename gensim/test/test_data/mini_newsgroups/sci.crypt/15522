@@ -1,0 +1,74 @@
+Path: cantaloupe.srv.cs.cmu.edu!crabapple.srv.cs.cmu.edu!bb3.andrew.cmu.edu!news.sei.cmu.edu!cis.ohio-state.edu!pacific.mps.ohio-state.edu!zaphod.mps.ohio-state.edu!howland.reston.ans.net!agate!doc.ic.ac.uk!uknet!pipex!demon!gtoal.com!gtoal
+Newsgroups: sci.crypt
+From: gtoal@gtoal.com (Graham Toal)
+Subject: Re: Secret algorithm [Re: Clipper Chip and crypto key-escrow]
+Date: Mon, 19 Apr 1993 18:34:40 +0000
+Message-ID: <9304191834.AA16280@pizzabox.demon.co.uk>
+Sender: usenet@demon.co.uk
+Lines: 65
+
+] gtoal@news.ibmpcug.co.uk (Graham Toal) writes:
+] > Try reading between the lines David - there are *strong* hints in there 
+] > that they're angling for NREN next,
+
+] Where?  I honestly didn't see any...
+
+Hint 1:
+
+: Sophisticated encryption technology has been used for years to
+: protect electronic funds transfer.  It is now being used to
+: protect electronic mail and computer files.  While encryption
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Hint 2:
+
+: This new technology will help companies protect proprietary
+: information, protect the privacy of personal phone conversations
+: and prevent unauthorized release of data transmitted
+                                      ^^^^^^^^^^^^^^^^
+: electronically.  At the same time this technology preserves the
+  ^^^^^^^^^^^^^^ 
+:      --   the privacy of our citizens, including the need to
+:           employ voice or data encryption for business purposes;
+                         ^^^^^^^^^^^^^^^^^^
+:      --   the ability of authorized officials to access telephone
+:           calls and data, under proper court or other legal
+                  ^^^^^^^^
+:           order, when necessary to protect our citizens;
+
+VERY BIG HINT 3:
+
+# The Administration is committed to working with the private
+# sector to spur the development of a National Information
+# Infrastructure which will use new telecommunications and computer
+# technologies to give Americans unprecedented access to
+# information.  This infrastructure of high-speed networks
+# ("information superhighways") will transmit video, images, HDTV
+# programming, and huge data files as easily as today's telephone
+# system transmits voice.
+
+VERY BIG HINT 4: (See above)
+
+## Since encryption technology will play an increasingly important
+## role in that infrastructure, the Federal Government must act
+## quickly to develop consistent, comprehensive policies regarding
+## its use.
+
+] > and the only conceivable meaning of 
+] > applying this particular technology to a computer network is that they 
+] > intend it to be used in exclusion to any other means of encryption. 
+
+] I disagree, if for no other reason than that there are already other 
+] standards in place.  Besides, even if they restrict encryption on the NREN, 
+] who cares?  Most of the Internet is commercial anyway.  The NREN is only for 
+] geovernment and university research (read the proposals--it's a "data 
+] superhighway" for Cray users, not anything having to do with the Internet).
+
+Oh, I see your point.  I think you're wrong.  But if you sit back and wait
+to find out if I'm right, it'll be too late.  Just listen *very* carefully
+for the first 'such and such will not be permitted on network XYZ' shoe to
+drop.
+
+G
+
+

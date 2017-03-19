@@ -1,0 +1,119 @@
+Path: cantaloupe.srv.cs.cmu.edu!crabapple.srv.cs.cmu.edu!bb3.andrew.cmu.edu!news.sei.cmu.edu!cis.ohio-state.edu!zaphod.mps.ohio-state.edu!cs.utexas.edu!not-for-mail
+From: nobody@alumni.cco.caltech.edu
+Newsgroups: sci.crypt
+Subject: Jerry Berman on pseudonymous privacy
+Date: 24 Apr 1993 10:38:38 -0500
+Organization: UTexas Mail-to-News Gateway
+Lines: 108
+Sender: daemon@cs.utexas.edu
+Message-ID: <9304241538.AA10342@alumni.cco.caltech.edu>
+NNTP-Posting-Host: cs.utexas.edu
+
+Hello all,
+I thought you all might like to see this. It's a letter from Jerry
+Berman to David Chaum from November of 1985, in response to
+information that Mr. Chaum sent to Mr. Berman.
+
+While I have to congratulate EFF for its prompt response to the
+Clipper Chip announcement from the White House, I think it's important
+to recognize the philosophy of their Executive Director, as explained
+below.
+
+I agree that legal remedies are important, but when pressed, I'd
+prefer to retain the ability to use purely technical solutions to
+preserve my privacy, because they'll hold up under fire.
+
+Mr. Chaum has consented to the publication of this letter on the Net. 
+
+I don't work for, nor am I a member of EFF, ACLU, or any similar
+organizations, but I do agree with them on a great many things. 
+
+					--Aristophanes
+
+----------
+
+
+                     AMERICAN CIVIL LIBERTIES UNION
+
+
+                       WASHINGTON OFFICE        
+                                                               
+                                                    122 Maryland Avenue, NE
+ November 1, 1985                                   Washington, DC 20002
+                                                    --------------------
+                                                    National Headquarters
+Mr. David Chaum                                     132 West 43rd Street    
+Centre for Mathematics and Computer Science         New York. NY 10036    
+P.O. Box 4079                                       (212) 944-9800        
+19O9 AB Amsterdam                                   Norman Dorsen           
+                                              President        
+Dear Mr. Chaum:                                     Ira Glasser
+                                                      Executive Director
+                                                    Eleanor Holmes Norton
+                                                      CHAIR
+                                                    National Advisory       
+                                                  Council
+                                                                         
+                                                                         
+                                                                            
+ 
+                                              
+
+	Thank you for sending me a most interesting article.   A
+society of  individuals  and  organizations  that  would  expend  the
+time and resources to use a  series  of  'digital  pseudonyms' to
+avoid data linkage does not in my opinion make big brother
+obsolete but  acts  on  the  assumption  that  big  brother  is  ever
+present.  I  view  your  system  as  a  form  of  societal  paranoia.
+
+	As a matter of  principle,  we  are  working  to  enact  formal
+legal protections for  individual  privacy  rather  than  relying  on
+technical solutions.   We want to  assume  a  society  of  law  which
+respects legal limits rather than  a  society  that  will  disobey  the
+law, requiring  citizens  to  depend  on  technical  solutions.  e.g.
+require  a  judical  warrant  for  government  interception  of  data
+communications rather than  encrypt  all  messages  on  the  assumption
+that regardless of the lawt  the  government  will  abuse  its  power
+and invade privacy.
+
+	As a  matter  of  practicality,  I  do  not  think  your  system
+offers much hope for privacy.    First, the trend toward universal
+identifiers  is  as  much.-a  movement  generated  by  government  or
+industry's desire to keep track of all citizens as it is by
+citizens seeking simplicity and convenience in all transactions.
+At best,  your  system  would  benefit  the  sophisticated  and  most
+would opt for  simplicity.  The  poor  and  the  undereducated  would
+never use or benefit from it.
+
+	Finally where there's a  will, there's  a  way. If  government
+wants to link data bases, it  will,  by  law, require  the  disclosure
+of various individual pseudonyms used by citizens or prohibit it
+for data bases which the government wants to link.      Since
+corporations  make  money  by  trading  commercial  lists  with   one
+another, they will never adopt  the  system  or  if  it  is  adopted,
+will use "fine printn  contracts  to  permit  selling  various   codes
+used by their customers to other firms.
+
+	The solution remains law, policy, and consensus about limits
+on government or corporate intrusion into areas of individual
+autonomy.  Technique can be used to enforce that consensus or to
+override it. It cannot be used as a substitute for such
+consensus.
+
+
+
+                                            Sincerely Yours,
+
+                                             /Sig/
+
+                                            Jerry J. Berman
+                                            Chief Legislative Counsel
+                                            & Direrector ACLU
+                                            Privacy Technology Project
+
+
+   cc: John Shattuck
+
+
+
+

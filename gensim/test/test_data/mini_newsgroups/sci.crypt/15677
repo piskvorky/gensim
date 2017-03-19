@@ -1,0 +1,30 @@
+Xref: cantaloupe.srv.cs.cmu.edu sci.crypt:15677 alt.privacy.clipper:53
+Newsgroups: sci.crypt,alt.privacy.clipper
+Path: cantaloupe.srv.cs.cmu.edu!crabapple.srv.cs.cmu.edu!fs7.ece.cmu.edu!europa.eng.gtefsd.com!howland.reston.ans.net!usenet.ins.cwru.edu!magnus.acs.ohio-state.edu!csn!news.sinet.slb.com!slcs.slb.com!dcd
+From: dcd@se.houston.geoquest.slb.com (Dan Day)
+Subject: Re: The Escrow Database.
+Message-ID: <1993Apr21.215131.29323@slcs.slb.com>
+Sender: news@slcs.slb.com (News Administrator)
+Nntp-Posting-Host: castor.se.houston.geoquest.slb.com
+Organization: GeoQuest System, Inc. Houston
+References: <strnlghtC5puor.704@netcom.com> <bontchev.735230663@fbihh> <1993Apr20.021846.2423@shearson.com>
+Date: Wed, 21 Apr 93 21:51:31 GMT
+Lines: 17
+
+In article <1993Apr20.021846.2423@shearson.com> pmetzger@snark.shearson.com (Perry E. Metzger) writes:
+>
+>each of the two escrow databases. Fits conveniently on a single very
+>valuable Exabyte tape. This can only get easier with time, but who
+>cares -- I can already hold all the clipper keys in the country in my
+>pocket on two 8mm tapes.
+
+Excellent point, and there's a related point I'd like to make.
+They'll have to back up these databases themselves, won't they?
+How many tape copies will there be, and how secure will the
+tapes be?  If they store them off-site, it wouldn't be too
+hard to hijack them in transit.  If they're all kept on-site,
+one good bomb attack by some group intent on freeing us from
+the threat of government snooping will take care of the problem
+once and for all.  I can see it now -- "Hi, we're from the
+government and we, um, misplaced our copy of your key.  Could
+you mail us a copy?"

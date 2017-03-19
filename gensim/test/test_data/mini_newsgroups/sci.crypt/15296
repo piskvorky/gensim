@@ -1,0 +1,35 @@
+Newsgroups: sci.crypt
+Path: cantaloupe.srv.cs.cmu.edu!crabapple.srv.cs.cmu.edu!fs7.ece.cmu.edu!europa.eng.gtefsd.com!emory!news-feed-1.peachnet.edu!darwin.sura.net!haven.umd.edu!uunet!looking!brad
+From: brad@clarinet.com (Brad Templeton)
+Subject: Re: Secret algorithm [Re: Clipper Chip and crypto key-escrow]
+Organization: ClariNet Communications Corp.
+Date: Sat, 17 Apr 1993 20:48:50 GMT
+Message-ID: <1993Apr17.204850.26711@clarinet.com>
+Keywords: encryption, wiretap, clipper, key-escrow, Mykotronx
+References: <strnlghtC5LGFI.JqA@netcom.com> <jhesseC5LuMC.2Ex@netcom.com> <rdippold.735042679@qualcom>
+Lines: 24
+
+One presumes the system could work as follows:
+
+a) Blank clips are manufactured by Mykotronx and VLSI.  The number
+produced is carefully audited and they are shipped to the first
+escrow house.
+
+It programs the chips with its half the key, and prints out a paper slip
+with the key half and non-secret chip serial number.   The reams of paper
+are filed in locked boxes in the vault, a fuse is burnt in the chip so
+that the key is now unreadable.
+
+The chip then goes to the next escrow house, where the same thing is
+done.  This continues through N escrow houses, perhaps, could be more than
+2.
+
+The last one provides the chip to the cellular phone maker.
+
+And yes, this has to be a public key system or it would be almost
+impossible to handle.  It might not be RSA, but that does not mean
+that PKP doesn't get paid.  Until 1997, PKP has the patent on the
+general concept of public key encryption, as well as the particular
+implementation known as RSA.
+-- 
+Brad Templeton, ClariNet Communications Corp. -- Sunnyvale, CA 408/296-0366
