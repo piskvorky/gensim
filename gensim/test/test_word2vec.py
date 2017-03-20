@@ -207,7 +207,7 @@ class TestWord2VecModel(unittest.TestCase):
             model_file_suffix = '_py2'
         else:
             model_file_suffix = '_py3'
-        
+
         # Model stored in one file
         model_file = 'word2vec_pre_kv%s' % model_file_suffix
         model = word2vec.Word2Vec.load(datapath(model_file))
@@ -620,6 +620,29 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model.delete_temporary_training_data(replace_word_vectors_with_normalized=True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
 
+    def testPredictOutputWord(self):
+        '''Test word2vec predict_output_word method handling for negative sampling scheme'''
+        #under normal circumstances
+        model_with_neg = word2vec.Word2Vec(sentences, min_count=1)
+        predictions_with_neg = model_with_neg.predict_output_word(['system', 'human'], topn=5)
+        self.assertTrue(len(predictions_with_neg)==5)
+
+        #out-of-vobaculary scenario
+        predictions_out_of_vocab = model_with_neg.predict_output_word(['some', 'random', 'words'], topn=5)
+        self.assertEqual(predictions_out_of_vocab, None)
+
+        #when required model parameters have been deleted
+        model_with_neg.init_sims()
+        model_with_neg.wv.save_word2vec_format(testfile(), binary=True)
+        kv_model_with_neg = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        binary_model_with_neg = word2vec.Word2Vec()
+        binary_model_with_neg.wv = kv_model_with_neg
+        self.assertRaises(RuntimeError, binary_model_with_neg.predict_output_word, ['system', 'human'])
+
+        #negative sampling scheme not used
+        model_without_neg = word2vec.Word2Vec(sentences, min_count=1, negative=0)
+        self.assertRaises(RuntimeError, model_without_neg.predict_output_word, ['system', 'human'])
+
     @log_capture()
     def testBuildVocabWarning(self, l):
         """Test if warning is raised on non-ideal input to a word2vec model"""
@@ -644,14 +667,14 @@ class TestWord2VecModel(unittest.TestCase):
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
-    
+
     def test_sentences_should_not_be_a_generator(self):
         """
         Is sentences a generator object?
         """
         gen = (s for s in sentences)
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
-        
+
     def testLoadOnClassError(self):
         """Test if exception is raised when loading word2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
