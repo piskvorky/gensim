@@ -191,6 +191,11 @@ class Similarity(interfaces.SimilarityABC):
             self.output_prefix = utils.randfname(prefix='simserver')
         else:
             self.output_prefix = output_prefix
+            
+        self.shard_dir = self.output_prefix + 'shard/'
+        if not os.path.exists(self.shard_dir):
+            os.makedirs(self.shard_dir)
+            
         logger.info("starting similarity index under %s", self.output_prefix)
         self.num_features = num_features
         self.num_best = num_best
@@ -429,9 +434,9 @@ class Similarity(interfaces.SimilarityABC):
         """
         Update shard locations, in case the server directory has moved on filesystem.
         """
-        dirname = os.path.dirname(self.output_prefix)
+        dirname = self.output_prefix
         for shard in self.shards:
-            shard.dirname = dirname
+            shard.dirname = dirname + '/shard'
 
     def save(self, fname=None, *args, **kwargs):
         """
@@ -443,7 +448,10 @@ class Similarity(interfaces.SimilarityABC):
         """
         self.close_shard()
         if fname is None:
-            fname = self.output_prefix
+            fname = self.shard_dir + 'temp.index' 
+        else:
+            fname = (self.shard_dir  + fname + '.index') if '.index' not in fname else (self.shard_dir + fname)  
+            
         super(Similarity, self).save(fname, *args, **kwargs)
 
     def destroy(self):
