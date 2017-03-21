@@ -91,7 +91,7 @@ class TestSklearnLDAWrapper(unittest.TestCase):
             self.assertTrue(isinstance(v, six.string_types))
             self.assertTrue(isinstance(k, int))
 
-    def testPipline(self):
+    def testPipeline(self):
         model = SklearnWrapperLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
         with open(datapath('mini_newsgroup'),'rb') as f:
             compressed_content = f.read()
