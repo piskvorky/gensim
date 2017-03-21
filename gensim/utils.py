@@ -266,6 +266,10 @@ class SaveLoad(object):
         obj = unpickle(fname)
         obj._load_specials(fname, mmap, compress, subname)
         logger.info("loaded %s", fname)
+        if cls.__name__ is 'Similarity':
+            if obj.output_prefix is not fname:
+                obj.output_prefix = fname[: fname.find("/shard")]
+                obj.check_moved()
         return obj
 
 
