@@ -161,10 +161,10 @@ def _get_combined_keywords(_keywords, split_text):
         if word in _keywords:
             combined_word = [word]
             if i + 1 == len_text:
-                result.append(word)   # appends last word if keyword and doesn't iterate
+                result.append(word)  # appends last word if keyword and doesn't iterate
             for j in xrange(i + 1, len_text):
                 other_word = _strip_word(split_text[j])
-                if other_word in _keywords and other_word == split_text[j] and not other_word in combined_word:
+                if other_word in _keywords and other_word == split_text[j] and other_word not in combined_word:
                     combined_word.append(other_word)
                 else:
                     for keyword in combined_word:
@@ -210,7 +210,8 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
 
     _remove_unreachable_nodes(graph)
 
-    # Ranks the tokens using the PageRank algorithm. Returns dict of lemma -> score
+    # Ranks the tokens using the PageRank algorithm. Returns dict of lemma ->
+    # score
     pagerank_scores = _pagerank(graph)
 
     extracted_lemmas = _extract_tokens(graph.nodes(), pagerank_scores, ratio, words)
@@ -225,7 +226,8 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
 
     keywords = _get_keywords_with_score(extracted_lemmas, lemmas_to_word)
 
-    # text.split() to keep numbers and punctuation marks, so separeted concepts are not combined
+    # text.split() to keep numbers and punctuation marks, so separeted
+    # concepts are not combined
     combined_keywords = _get_combined_keywords(keywords, text.split())
 
     return _format_results(keywords, combined_keywords, split, scores)
