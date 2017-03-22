@@ -678,6 +678,13 @@ class TestWord2VecModel(unittest.TestCase):
     def testLoadOnClassError(self):
         """Test if exception is raised when loading word2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
+
+    def test_reset_from(self):
+        """Test if exception is raised when reset_from is used"""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model2 = word2vec.Word2Vec(new_sentences, min_count=1)
+        self.assertRaises(AttributeError, model.reset_from(model2))
+
 #endclass TestWord2VecModel
 
 class TestWMD(unittest.TestCase):
