@@ -442,16 +442,23 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         index.destroy()
 
 
-class TestWord2VecAnnoyIndexer(unittest.TestCase):
+class _TestIndexer(object):
 
-    def setUp(self):
-        try:
-            import annoy
-        except ImportError:
-            raise unittest.SkipTest("Annoy library is not available")
+    def assertApproxNeighborsMatchExact(self, model, index):
+        vector = model.wv.syn0norm[0]
+        approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
+        exact_neighbors = model.most_similar(positive=[vector], topn=5)
 
-        from gensim.similarities.index import AnnoyIndexer
-        self.indexer = AnnoyIndexer
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+    def assertIndexSaved(self, index):
+        index.save('index')
+        self.assertTrue(os.path.exists('index'))
+
+class _TestWord2VecIndexer(_TestIndexer):
 
     def testWord2Vec(self):
         model = word2vec.Word2Vec(texts, min_count=1)
@@ -478,12 +485,6 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
-    def testLoadMissingRaisesError(self):
-        from gensim.similarities.index import AnnoyIndexer
-        test_index = AnnoyIndexer()
-
-        self.assertRaises(IOError, test_index.load, fname='test-index')
-
     def assertVectorIsSimilarToItself(self, model, index):
         vector = model.wv.syn0norm[0]
         label = model.wv.index2word[0]
@@ -491,21 +492,28 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         word, similarity = approx_neighbors[0]
 
         self.assertEqual(word, label)
-        self.assertEqual(similarity, 1.0)
+        self.assertTrue(numpy.allclose(similarity, 1.0))
 
-    def assertApproxNeighborsMatchExact(self, model, index):
-        vector = model.wv.syn0norm[0]
-        approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
-        exact_neighbors = model.most_similar(positive=[vector], topn=5)
 
-        approx_words = [neighbor[0] for neighbor in approx_neighbors]
-        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+class TestWord2VecAnnoyIndexer(unittest.TestCase, _TestWord2VecIndexer):
 
-        self.assertEqual(approx_words, exact_words)
+    def setUp(self):
+        try:
+            import annoy
+        except ImportError:
+            raise unittest.SkipTest("Annoy library is not available")
+
+        from gensim.similarities.index import AnnoyIndexer
+        self.indexer = AnnoyIndexer
+
+    def testLoadMissingRaisesError(self):
+        from gensim.similarities.index import AnnoyIndexer
+        test_index = AnnoyIndexer()
+
+        self.assertRaises(IOError, test_index.load, fname='test-index')
 
     def assertIndexSaved(self, index):
-        index.save('index')
-        self.assertTrue(os.path.exists('index'))
+        super(TestWord2VecAnnoyIndexer, self).assertIndexSaved(index)
         self.assertTrue(os.path.exists('index.d'))
 
     def assertLoadedIndexEqual(self, index, model):
@@ -522,7 +530,17 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(index.num_trees, index2.num_trees)
 
 
-class TestDoc2VecAnnoyIndexer(unittest.TestCase):
+class _TestDoc2VecIndexer(_TestIndexer):
+
+    def testDocumentIsSimilarToItself(self):
+        approx_neighbors = self.index.most_similar(self.vector, 1)
+        doc, similarity = approx_neighbors[0]
+
+        self.assertEqual(doc, 0)
+        self.assertTrue(numpy.allclose(similarity, 1.0))
+
+
+class TestDoc2VecAnnoyIndexer(unittest.TestCase, _TestDoc2VecIndexer):
 
     def setUp(self):
         try:
@@ -536,28 +554,6 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.model.init_sims()
         self.index = AnnoyIndexer(self.model, 300)
         self.vector = self.model.docvecs.doctag_syn0norm[0]
-
-    def testDocumentIsSimilarToItself(self):
-        approx_neighbors = self.index.most_similar(self.vector, 1)
-        doc, similarity = approx_neighbors[0]
-
-        self.assertEqual(doc, 0)
-        self.assertEqual(similarity, 1.0)
-
-    def testApproxNeighborsMatchExact(self):
-        approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
-        exact_neighbors = self.model.docvecs.most_similar(
-            positive=[self.vector], topn=5)
-
-        approx_words = [neighbor[0] for neighbor in approx_neighbors]
-        exact_words = [neighbor[0] for neighbor in exact_neighbors]
-
-        self.assertEqual(approx_words, exact_words)
-
-    def testSave(self):
-        self.index.save('index')
-        self.assertTrue(os.path.exists('index'))
-        self.assertTrue(os.path.exists('index.d'))
 
     def testLoadNotExist(self):
         from gensim.similarities.index import AnnoyIndexer
@@ -579,7 +575,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(self.index.num_trees, self.index2.num_trees)
 
 
-class TestWord2VecPySpaRNNIndexer(unittest.TestCase):
+class TestWord2VecPySpaRNNIndexer(unittest.TestCase, _TestWord2VecIndexer):
 
     def setUp(self):
         try:
@@ -590,59 +586,11 @@ class TestWord2VecPySpaRNNIndexer(unittest.TestCase):
         from gensim.similarities.index import PySpaRNNIndexer
         self.indexer = PySpaRNNIndexer
 
-    def testWord2Vec(self):
-        model = word2vec.Word2Vec(texts, min_count=1)
-        model.init_sims()
-        index = self.indexer(model)
-
-        self.assertVectorIsSimilarToItself(model, index)
-        self.assertApproxNeighborsMatchExact(model, index)
-        self.assertIndexSaved(index)
-        self.assertLoadedIndexEqual(index, model)
-
-    def testFastText(self):
-        ft_home = os.environ.get('FT_HOME', None)
-        ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
-        if not ft_path:
-            return
-        corpus_file = datapath('lee.cor')
-        model = fasttext.FastText.train(ft_path, corpus_file)
-        model.init_sims()
-        index = self.indexer(model)
-
-        self.assertVectorIsSimilarToItself(model, index)
-        self.assertApproxNeighborsMatchExact(model, index)
-        self.assertIndexSaved(index)
-        self.assertLoadedIndexEqual(index, model)
-
     def testLoadMissingRaisesError(self):
         from gensim.similarities.index import PySpaRNNIndexer
         test_index = PySpaRNNIndexer()
 
         self.assertRaises(IOError, test_index.load, fname='test-index')
-
-    def assertVectorIsSimilarToItself(self, model, index):
-        vector = model.wv.syn0norm[0]
-        label = model.wv.index2word[0]
-        approx_neighbors = index.most_similar(vector, 1)
-        word, similarity = approx_neighbors[0]
-
-        self.assertEqual(word, label)
-        self.assertTrue(numpy.allclose(similarity, 1.0))
-
-    def assertApproxNeighborsMatchExact(self, model, index):
-        vector = model.wv.syn0norm[0]
-        approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
-        exact_neighbors = model.most_similar(positive=[vector], topn=5)
-
-        approx_words = [neighbor[0] for neighbor in approx_neighbors]
-        exact_words = [neighbor[0] for neighbor in exact_neighbors]
-
-        self.assertEqual(approx_words, exact_words)
-
-    def assertIndexSaved(self, index):
-        index.save('index')
-        self.assertTrue(os.path.exists('index'))
 
     def assertLoadedIndexEqual(self, index, model):
         from gensim.similarities.index import PySpaRNNIndexer
@@ -658,7 +606,7 @@ class TestWord2VecPySpaRNNIndexer(unittest.TestCase):
         self.assertEqual(index.num_clusters, index2.num_clusters)
 
 
-class TestDoc2VecPySpaRNNIndexer(unittest.TestCase):
+class TestDoc2VecPySpaRNNIndexer(unittest.TestCase, _TestDoc2VecIndexer):
 
     def setUp(self):
         try:
@@ -672,27 +620,6 @@ class TestDoc2VecPySpaRNNIndexer(unittest.TestCase):
         self.model.init_sims()
         self.index = PySpaRNNIndexer(self.model)
         self.vector = self.model.docvecs.doctag_syn0norm[0]
-
-    def testDocumentIsSimilarToItself(self):
-        approx_neighbors = self.index.most_similar(self.vector, 1)
-        doc, similarity = approx_neighbors[0]
-
-        self.assertEqual(doc, 0)
-        self.assertTrue(numpy.allclose(similarity, 1.0))
-
-    def testApproxNeighborsMatchExact(self):
-        approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
-        exact_neighbors = self.model.docvecs.most_similar(
-            positive=[self.vector], topn=5)
-
-        approx_words = [neighbor[0] for neighbor in approx_neighbors]
-        exact_words = [neighbor[0] for neighbor in exact_neighbors]
-
-        self.assertEqual(approx_words, exact_words)
-
-    def testSave(self):
-        self.index.save('index')
-        self.assertTrue(os.path.exists('index'))
 
     def testLoadNotExist(self):
         from gensim.similarities.index import PySpaRNNIndexer
