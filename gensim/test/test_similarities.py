@@ -579,6 +579,141 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(self.index.num_trees, self.index2.num_trees)
 
 
+class TestWord2VecPySpaRNNIndexer(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import pysparnn
+        except ImportError:
+            raise unittest.SkipTest("PySpaRNN library is not available")
+
+        from gensim.similarities.index import PySpaRNNIndexer
+        self.indexer = PySpaRNNIndexer
+
+    def testWord2Vec(self):
+        model = word2vec.Word2Vec(texts, min_count=1)
+        model.init_sims()
+        index = self.indexer(model)
+
+        self.assertVectorIsSimilarToItself(model, index)
+        self.assertApproxNeighborsMatchExact(model, index)
+        self.assertIndexSaved(index)
+        self.assertLoadedIndexEqual(index, model)
+
+    def testFastText(self):
+        ft_home = os.environ.get('FT_HOME', None)
+        ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
+        if not ft_path:
+            return
+        corpus_file = datapath('lee.cor')
+        model = fasttext.FastText.train(ft_path, corpus_file)
+        model.init_sims()
+        index = self.indexer(model)
+
+        self.assertVectorIsSimilarToItself(model, index)
+        self.assertApproxNeighborsMatchExact(model, index)
+        self.assertIndexSaved(index)
+        self.assertLoadedIndexEqual(index, model)
+
+    def testLoadMissingRaisesError(self):
+        from gensim.similarities.index import PySpaRNNIndexer
+        test_index = PySpaRNNIndexer()
+
+        self.assertRaises(IOError, test_index.load, fname='test-index')
+
+    def assertVectorIsSimilarToItself(self, model, index):
+        vector = model.wv.syn0norm[0]
+        label = model.wv.index2word[0]
+        approx_neighbors = index.most_similar(vector, 1)
+        word, similarity = approx_neighbors[0]
+
+        self.assertEqual(word, label)
+        self.assertTrue(numpy.allclose(similarity, 1.0))
+
+    def assertApproxNeighborsMatchExact(self, model, index):
+        vector = model.wv.syn0norm[0]
+        approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
+        exact_neighbors = model.most_similar(positive=[vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+    def assertIndexSaved(self, index):
+        index.save('index')
+        self.assertTrue(os.path.exists('index'))
+
+    def assertLoadedIndexEqual(self, index, model):
+        from gensim.similarities.index import PySpaRNNIndexer
+
+        index.save('index')
+
+        index2 = PySpaRNNIndexer()
+        index2.load('index')
+        index2.model = model
+
+        self.assertEqual(index.labels, index2.labels)
+        self.assertEqual(index.model, index2.model)
+        self.assertEqual(index.num_clusters, index2.num_clusters)
+
+
+class TestDoc2VecPySpaRNNIndexer(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import pysparnn
+        except ImportError:
+            raise unittest.SkipTest("PySpaRNN library is not available")
+
+        from gensim.similarities.index import PySpaRNNIndexer
+
+        self.model = doc2vec.Doc2Vec(sentences, min_count=1)
+        self.model.init_sims()
+        self.index = PySpaRNNIndexer(self.model)
+        self.vector = self.model.docvecs.doctag_syn0norm[0]
+
+    def testDocumentIsSimilarToItself(self):
+        approx_neighbors = self.index.most_similar(self.vector, 1)
+        doc, similarity = approx_neighbors[0]
+
+        self.assertEqual(doc, 0)
+        self.assertTrue(numpy.allclose(similarity, 1.0))
+
+    def testApproxNeighborsMatchExact(self):
+        approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
+        exact_neighbors = self.model.docvecs.most_similar(
+            positive=[self.vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+    def testSave(self):
+        self.index.save('index')
+        self.assertTrue(os.path.exists('index'))
+
+    def testLoadNotExist(self):
+        from gensim.similarities.index import PySpaRNNIndexer
+        self.test_index = PySpaRNNIndexer()
+
+        self.assertRaises(IOError, self.test_index.load, fname='test-index')
+
+    def testSaveLoad(self):
+        from gensim.similarities.index import PySpaRNNIndexer
+
+        self.index.save('index')
+
+        self.index2 = PySpaRNNIndexer()
+        self.index2.load('index')
+        self.index2.model = self.model
+
+        self.assertEqual(self.index.labels, self.index2.labels)
+        self.assertEqual(self.index.model, self.index2.model)
+        self.assertEqual(self.index.num_clusters, self.index2.num_clusters)
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
