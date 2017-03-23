@@ -1146,28 +1146,34 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
         else:
             return default_res
 
-def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
-    r"""Run command with arguments and return its output as a byte string.
-    Backported from Python 2.7 as it's implemented as pure python on stdlib.
-    >>> check_output(args=['/usr/bin/python', '--version'])
-    Python 2.6.2
-    Added extra KeyboardInterrupt handling
+def check_output(args, flag=True):
+    r"""
+    subprocess.check_output with the flag set to true will spawn a new shell process and execute 'args'
+    if there is an error while executing args, the error message will be displayed on stdout along with the
+    custom error message in the except block. This allows the user to receive an accurate error message if subprocess
+    fails to execute the specified command.
+    If flag is set to true, subprocess.check_output takes 'args' as a string instead of a list. To abstract the user from this,
+    this function will convert the argument list to a string if needed.
+    >>> test_checkoutput(args=['/usr/bin/python', '--version'])
+    Python 2.7.10
+    In case args generates an error
+    >>> test_checkoutput(args=['/usr/bin/pythons', '-ve']) #Incorrect argument
+    /bin/sh: /usr/bin/pythons: command not found
+    subprocess.check_output could not execute command ' /usr/bin/pythons -ve '
     """
+    if flag:
+        args = " ".join(args)
     try:
-        process = subprocess.Popen(stdout=stdout, *popenargs, **kwargs)
-        output, unused_err = process.communicate()
-        retcode = process.poll()
-        if retcode:
-            cmd = kwargs.get("args")
-            if cmd is None:
-                cmd = popenargs[0]
-            error = subprocess.CalledProcessError(retcode, cmd)
-            error.output = output
-            raise error
-        return output
-    except KeyboardInterrupt:
-        process.terminate()
-        raise
+        res = subprocess.check_output(args, shell=flag)
+        return res
+    except subprocess.CalledProcessError:
+        """
+        If this error is raised, it is because check_output could not execute the command.
+        Instead of raising the error, output a more specific error message
+        """
+        error = "subprocess.check_output could not execute command ' " + str(args) + " '"
+        print(error, file=sys.stderr)
+        return error
 
 def sample_dict(d, n=10, use_random=True):
      """
