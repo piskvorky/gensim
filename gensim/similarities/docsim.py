@@ -192,9 +192,10 @@ class Similarity(interfaces.SimilarityABC):
         else:
             self.output_prefix = output_prefix
             
-        self.shard_dir = self.output_prefix + 'shard/'
-        if not os.path.exists(self.shard_dir):
-            os.makedirs(self.shard_dir)
+        self.output_prefix = os.path.join(os.path.dirname(output_prefix), 'shard')
+        
+        if not os.path.exists(self.output_prefix):
+            os.makedirs(self.output_prefix)
             
         logger.info("starting similarity index under %s", self.output_prefix)
         self.num_features = num_features
@@ -434,9 +435,9 @@ class Similarity(interfaces.SimilarityABC):
         """
         Update shard locations, in case the server directory has moved on filesystem.
         """
-        dirname = self.output_prefix
+        dirname = os.path.dirname(self.output_prefix)
         for shard in self.shards:
-            shard.dirname = dirname + '/shard'
+            shard.dirname = dirname
 
     def save(self, fname=None, *args, **kwargs):
         """
@@ -448,9 +449,9 @@ class Similarity(interfaces.SimilarityABC):
         """
         self.close_shard()
         if fname is None:
-            fname = self.shard_dir + 'temp.index' 
+            fname = os.path.join(self.output_prefix ,  'index') #default file name - index
         else:
-            fname = (self.shard_dir  + fname + '.index') if '.index' not in fname else (self.shard_dir + fname)  
+            fname = os.path.join(self.output_prefix , fname)
             
         super(Similarity, self).save(fname, *args, **kwargs)
 
