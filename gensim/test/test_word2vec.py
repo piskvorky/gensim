@@ -683,7 +683,10 @@ class TestWord2VecModel(unittest.TestCase):
         """Test if exception is raised when reset_from is used"""
         model = word2vec.Word2Vec(sentences, min_count=1)
         model2 = word2vec.Word2Vec(new_sentences, min_count=1)
-        self.assertRaises(AttributeError, model.reset_from(model2))
+        try:
+            model.reset_from(model2)
+        except AttributeError:
+            self.fail('AttributeError in reset_from()')
 
 #endclass TestWord2VecModel
 
