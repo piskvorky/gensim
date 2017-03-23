@@ -8,7 +8,7 @@
 This module contains various general utility functions.
 """
 
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 
 import logging, warnings
 
