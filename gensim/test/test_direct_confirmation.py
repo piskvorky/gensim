@@ -14,6 +14,7 @@ import unittest
 from gensim.topic_coherence import direct_confirmation_measure
 
 class TestDirectConfirmationMeasure(unittest.TestCase):
+
     def setUp(self):
         # Set up toy example for better understanding and testing
         # of this module. See the modules for the mathematical formulas
@@ -41,6 +42,25 @@ class TestDirectConfirmationMeasure(unittest.TestCase):
         # Answer should be ~ -0.182321557 / -ln(1 / 5) = -0.113282753
         expected = -0.113282753
         self.assertAlmostEqual(obtained, expected)
+
+    def testAggregationTrueLogConditionalProbability(self):
+        aggregated = True
+        New_obtain = direct_confirmation_measure.log_conditional_probability(self.segmentation,self.posting_list,
+                                                                             self.num_docs, aggregated=True)
+        print(New_obtain)
+        expected = [-0.69314718055494529]
+        self.assertTrue(New_obtain == expected)
+
+    def testAggregationFalseLogConditionalProbability(self):
+        aggregated = False
+        New_obtain = direct_confirmation_measure.log_conditional_probability(self.segmentation, self.posting_list,
+                                                                             self.num_docs, aggregated=False)
+        expected = [[-0.69314718055494529]]
+        self.assertTrue(New_obtain == expected)
+
+
+
+
 
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)
