@@ -774,7 +774,6 @@ class Word2Vec(utils.SaveLoad):
         if (self.model_trimmed_post_training):
             raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
         if FAST_VERSION < 0:
-            import warnings
             warnings.warn("C extension not loaded for Word2Vec, training will be slow. "
                           "Install a C compiler and reinstall gensim for fast training.")
             self.neg_labels = []
@@ -977,7 +976,6 @@ class Word2Vec(utils.SaveLoad):
 
         """
         if FAST_VERSION < 0:
-            import warnings
             warnings.warn("C extension compilation failed, scoring will be slow. "
                           "Install a C compiler and reinstall gensim for fastness.")
 
