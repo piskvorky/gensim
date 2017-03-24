@@ -654,6 +654,9 @@ class TestWord2VecModel(unittest.TestCase):
         with self.assertRaises(ValueError):
             model.train(sentences, epochs=model.iter)
 
+        with self.assertRaises(ValueError):
+            model.train(sentences)
+
     def test_sentences_should_not_be_a_generator(self):
         """
         Is sentences a generator object?
