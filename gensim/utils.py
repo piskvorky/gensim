@@ -268,7 +268,7 @@ class SaveLoad(object):
         logger.info("loaded %s", fname)
         if cls.__name__ == 'Similarity':
             if obj.output_prefix is not fname:
-                obj.output_prefix = os.path.join(fname[: fname.rfind("shard")] , 'shard')
+                obj.output_prefix = os.path.join(fname[: fname.rfind("shard")] , 'shard\\' if os.name == 'nt' else 'shard/')
                 obj.check_moved()
         return obj
 
