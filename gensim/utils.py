@@ -8,7 +8,7 @@
 This module contains various general utility functions.
 """
 
-from __future__ import with_statement, print_function
+from __future__ import with_statement
 
 import logging, warnings
 
@@ -1171,8 +1171,7 @@ def check_output(args, flag=True):
         If this error is raised, it is because check_output could not execute the command.
         Instead of raising the error, output a more specific error message
         """
-        error = "subprocess.check_output could not execute command ' " + str(args) + " '"
-        print(error, file=sys.stderr)
+        logger.error("subprocess.check_output could not execute command ' %s ' " % (str(args)))
         return error
 
 def sample_dict(d, n=10, use_random=True):
