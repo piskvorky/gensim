@@ -683,7 +683,7 @@ class TestWord2VecModel(unittest.TestCase):
         """Test if reset_from() uses pre-built structures from other model"""
         model = word2vec.Word2Vec(sentences, min_count=1)
         other_model = word2vec.Word2Vec(new_sentences, min_count=1) 
-	other_vocab = other_model.wv.vocab        
+        other_vocab = other_model.wv.vocab
         model.reset_from(other_model)
         self.assertEqual(model.wv.vocab, other_vocab)
         
