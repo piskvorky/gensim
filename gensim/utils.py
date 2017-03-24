@@ -1171,7 +1171,8 @@ def check_output(args, flag=True):
         If this error is raised, it is because check_output could not execute the command.
         Instead of raising the error, output a more specific error message
         """
-        logger.error("subprocess.check_output could not execute command ' %s ' " % (str(args)))
+        error = "subprocess.check_output could not execute command ' " + str(args) + " '"
+        logger.error(error)
         return error
 
 def sample_dict(d, n=10, use_random=True):
