@@ -108,8 +108,9 @@ import threading
 import itertools
 import warnings
 
+import operator
+
 from gensim.utils import keep_vocab_item, call_on_class_only
-from gensim.utils import keep_vocab_item
 from gensim.models.keyedvectors import KeyedVectors, Vocab
 
 try:
@@ -361,7 +362,7 @@ class Word2Vec(utils.SaveLoad):
     """
 
     def __init__(
-            self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
+            self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, max_vocab = None,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
@@ -456,6 +457,7 @@ class Word2Vec(utils.SaveLoad):
         self.seed = seed
         self.random = random.RandomState(seed)
         self.min_count = min_count
+        self.max_vocab = max_vocab
         self.sample = sample
         self.workers = int(workers)
         self.min_alpha = float(min_alpha)
@@ -549,6 +551,11 @@ class Word2Vec(utils.SaveLoad):
 
         """
         self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
+
+        # min_count_actual =
+        self.compute_min_count(self.raw_vocab, self.max_vocab)
+        # print min_count_actual
+
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
         self.finalize_vocab(update=update)  # build tables & arrays
 
@@ -581,6 +588,25 @@ class Word2Vec(utils.SaveLoad):
                     len(vocab), total_words, sentence_no + 1)
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
+
+    def compute_min_count(self, vocab1, max_vocab1):
+        vocab_sorted_by_count = sorted(vocab1.items(), key=operator.itemgetter(1), reverse=True)
+        print vocab_sorted_by_count
+        word_counts = zeros(len(vocab_sorted_by_count))
+        for x in range(len(vocab_sorted_by_count)):
+            if x == 0:
+                word_counts[x] = (vocab_sorted_by_count[x][1])
+            else:
+                word_counts[x] = (vocab_sorted_by_count[x][1] + word_counts[x-1])
+
+        print word_counts
+
+        index1 =  word_counts.searchsorted(max_vocab1)
+        print index1
+        if  index1!= len(word_counts):
+            print vocab_sorted_by_count[index1+1][1]
+        else :
+            print 0
 
     def scale_vocab(self, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False, trim_rule=None, update=False):
         """
