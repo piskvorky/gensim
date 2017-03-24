@@ -109,7 +109,6 @@ import itertools
 import warnings
 
 from gensim.utils import keep_vocab_item, call_on_class_only
-from gensim.utils import keep_vocab_item
 from gensim.models.keyedvectors import KeyedVectors, Vocab
 
 try:
