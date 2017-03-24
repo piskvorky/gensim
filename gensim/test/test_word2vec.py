@@ -680,13 +680,13 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertRaises(AttributeError, load_on_instance)
 
     def test_reset_from(self):
-        """Test if exception is raised when reset_from is used"""
+        """Test if reset_from() uses pre-built structures from other model"""
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model2 = word2vec.Word2Vec(new_sentences, min_count=1)
-        try:
-            model.reset_from(model2)
-        except AttributeError:
-            self.fail('AttributeError in reset_from()')
+        other_model = word2vec.Word2Vec(new_sentences, min_count=1) 
+	other_vocab = other_model.wv.vocab        
+        model.reset_from(other_model)
+        self.assertEqual(model.wv.vocab, other_vocab)
+        
 
 #endclass TestWord2VecModel
 
