@@ -192,7 +192,7 @@ class Similarity(interfaces.SimilarityABC):
         else:
             self.output_prefix = output_prefix
             
-        self.output_prefix = os.path.join(os.path.dirname(output_prefix), 'shard')
+        self.output_prefix = os.path.join(os.path.dirname(output_prefix), 'shard\\' if os.name == 'nt' else 'shard/')
         
         if not os.path.exists(self.output_prefix):
             os.makedirs(self.output_prefix)
