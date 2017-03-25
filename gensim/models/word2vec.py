@@ -731,8 +731,8 @@ class Word2Vec(utils.SaveLoad):
         Borrow shareable pre-built structures (like vocab) from the other_model. Useful
         if testing multiple models in parallel on the same corpus.
         """
-        self.wv.vocab = other_model.vocab
-        self.wv.index2word = other_model.index2word
+        self.wv.vocab = other_model.wv.vocab
+        self.wv.index2word = other_model.wv.index2word
         self.cum_table = other_model.cum_table
         self.corpus_count = other_model.corpus_count
         self.reset_weights()
