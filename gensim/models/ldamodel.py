@@ -425,7 +425,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
         for d, doc in enumerate(chunk):
-            if doc and not isinstance(doc[0][0], six.integer_types):
+            if len(doc) > 0 and not isinstance(doc[0][0], six.integer_types):
                 # make sure the term IDs are ints, otherwise np will get upset
                 ids = [int(id) for id, _ in doc]
             else:
@@ -730,7 +730,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Elogthetad = dirichlet_expectation(gammad)
 
             # E[log p(doc | theta, beta)]
-            score += np.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, id]) for id, cnt in doc)
+            score += np.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, int(id)]) for id, cnt in doc)
 
             # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is a vector
             score += np.sum((self.alpha - gammad) * Elogthetad)
@@ -912,7 +912,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             )
             return self._apply(corpus, **kwargs)
 
-        gamma, phis = self.inference([bow], collect_sstats=True)
+        gamma, phis = self.inference([bow], collect_sstats=per_word_topics)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
 
         document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)

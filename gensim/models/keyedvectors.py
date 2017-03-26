@@ -1,4 +1,57 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Copyright (C) 2016 Radim Rehurek <me@radimrehurek.com>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
+"""
+Word vector storage and similarity look-ups. Common code independent of the way the vectors are trained(Word2Vec, FastText, WordRank, VarEmbed etc)
+
+The word vectors are considered read-only in this class.
+
+Initialize the vectors by training e.g. Word2Vec::
+
+>>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
+>>> word_vectors = model.wv
+
+Persist the word vectors to disk with::
+
+>>> word_vectors.save(fname)
+>>> word_vectors = KeyedVectors.load(fname)
+
+The vectors can also be instantiated from an existing file on disk in the original Google's word2vec C format as a KeyedVectors instance::
+
+  >>> from gensim.keyedvectors import KeyedVectors
+  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
+  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+
+You can perform various syntactic/semantic NLP word tasks with the vectors. Some of them
+are already built-in::
+
+  >>> word_vectors.most_similar(positive=['woman', 'king'], negative=['man'])
+  [('queen', 0.50882536), ...]
+
+  >>> word_vectors.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
+  [('queen', 0.71382287), ...]
+
+  >>> word_vectors.doesnt_match("breakfast cereal dinner lunch".split())
+  'cereal'
+
+  >>> word_vectors.similarity('woman', 'man')
+  0.73723527
+
+Correlation with human opinion on word similarity::
+
+  >>> word_vectors.evaluate_word_pairs(os.path.join(module_path, 'test_data','wordsim353.tsv'))
+  0.51, 0.62, 0.13
+
+And on analogies::
+
+  >>> word_vectors.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
+
+and so on.
+
+"""
 from __future__ import division  # py3 "true division"
 
 import logging
@@ -402,13 +455,20 @@ class KeyedVectors(utils.SaveLoad):
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
+        all_words = set([self.vocab[word].index for word in positive+negative
+            if not isinstance(word, ndarray) and word in self.vocab])
 
-        positive = [self.word_vec(word, use_norm=True) for word in positive]
-        negative = [self.word_vec(word, use_norm=True) for word in negative]
+        positive = [
+            self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
+            for word in positive
+        ]
+        negative = [
+            self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
+            for word in negative
+        ]
+
         if not positive:
             raise ValueError("cannot compute similarity with no input")
-
-        all_words = set([self.vocab[word].index for word in positive+negative if word in self.vocab])
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)

@@ -95,6 +95,18 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(len(model_hs.wv.vocab), 14)
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
+    def testOnlineLearningAfterSave(self):
+        """Test that the algorithm is able to add new words to the
+        vocabulary and to a trained model when using a sorted vocabulary"""
+        model_neg = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
+        model_neg.save(testfile())
+        model_neg = word2vec.Word2Vec.load(testfile())
+        self.assertTrue(len(model_neg.wv.vocab), 12)
+        model_neg.build_vocab(new_sentences, update=True)
+        model_neg.train(new_sentences)
+        self.assertEqual(len(model_neg.wv.vocab), 14)
+
+
     def onlineSanity(self, model):
         terro, others = [], []
         for l in list_corpus:
@@ -195,7 +207,7 @@ class TestWord2VecModel(unittest.TestCase):
             model_file_suffix = '_py2'
         else:
             model_file_suffix = '_py3'
-        
+
         # Model stored in one file
         model_file = 'word2vec_pre_kv%s' % model_file_suffix
         model = word2vec.Word2Vec.load(datapath(model_file))
@@ -449,6 +461,17 @@ class TestWord2VecModel(unittest.TestCase):
                                   min_count=5, iter=10, workers=2, sample=0)
         self.model_sanity(model)
 
+    def test_cosmul(self):
+        model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
+        sims = model.most_similar_cosmul('graph', topn=10)
+        # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
+
+        # test querying for "most similar" by vector
+        graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
+        sims2 = model.most_similar_cosmul(positive=[graph_vector], topn=11)
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
+
     def testTrainingCbow(self):
         """Test CBOW word2vec training."""
         # to test training, make the corpus larger by repeating its sentences over and over
@@ -597,6 +620,29 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model.delete_temporary_training_data(replace_word_vectors_with_normalized=True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
 
+    def testPredictOutputWord(self):
+        '''Test word2vec predict_output_word method handling for negative sampling scheme'''
+        #under normal circumstances
+        model_with_neg = word2vec.Word2Vec(sentences, min_count=1)
+        predictions_with_neg = model_with_neg.predict_output_word(['system', 'human'], topn=5)
+        self.assertTrue(len(predictions_with_neg)==5)
+
+        #out-of-vobaculary scenario
+        predictions_out_of_vocab = model_with_neg.predict_output_word(['some', 'random', 'words'], topn=5)
+        self.assertEqual(predictions_out_of_vocab, None)
+
+        #when required model parameters have been deleted
+        model_with_neg.init_sims()
+        model_with_neg.wv.save_word2vec_format(testfile(), binary=True)
+        kv_model_with_neg = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        binary_model_with_neg = word2vec.Word2Vec()
+        binary_model_with_neg.wv = kv_model_with_neg
+        self.assertRaises(RuntimeError, binary_model_with_neg.predict_output_word, ['system', 'human'])
+
+        #negative sampling scheme not used
+        model_without_neg = word2vec.Word2Vec(sentences, min_count=1, negative=0)
+        self.assertRaises(RuntimeError, model_without_neg.predict_output_word, ['system', 'human'])
+
     @log_capture()
     def testBuildVocabWarning(self, l):
         """Test if warning is raised on non-ideal input to a word2vec model"""
@@ -621,14 +667,14 @@ class TestWord2VecModel(unittest.TestCase):
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
-    
+
     def test_sentences_should_not_be_a_generator(self):
         """
         Is sentences a generator object?
         """
         gen = (s for s in sentences)
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
-        
+
     def testLoadOnClassError(self):
         """Test if exception is raised when loading word2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)

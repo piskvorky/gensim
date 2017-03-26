@@ -7,7 +7,7 @@
 
 """
 Deep learning via the distributed memory and distributed bag of words models from
-[1]_, using either hierarchical softmax or negative sampling [2]_ [3]_.
+[1]_, using either hierarchical softmax or negative sampling [2]_ [3]_. See [tutorial]_
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled)
 doc2vec training** (70x speedup [blog]_).
@@ -21,17 +21,23 @@ Persist a model to disk with::
 >>> model.save(fname)
 >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
-The word vectors in the model can also be instantiated from an existing file on disk in the word2vec C format:
-NOTE: document vectors are not loaded/saved with .load/save_word2vec_format(). Use .save()/.load() instead.
+If you're finished training a model (=no more updates, only querying), you can do
 
-  >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-  >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+  >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
+
+to trim unneeded model memory = use (much) less RAM.
+
+
 
 .. [1] Quoc Le and Tomas Mikolov. Distributed Representations of Sentences and Documents. http://arxiv.org/pdf/1405.4053v2.pdf
 .. [2] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 .. [3] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
        In Proceedings of NIPS, 2013.
 .. [blog] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
+
+.. [tutorial] Doc2vec in gensim tutorial, https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
+
+
 
 """
 
@@ -600,12 +606,11 @@ class Doc2Vec(Word2Vec):
         doc-vector training; default is 0 (faster training of doc-vectors only).
 
         `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
-         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
-         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
-         returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
-         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
-          of the model.
-
+        in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
+        Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+        returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
+        Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
+        of the model.
         """
 
         super(Doc2Vec, self).__init__(
@@ -613,7 +618,6 @@ class Doc2Vec(Word2Vec):
             null_word=dm_concat, **kwargs)
         
         self.load = call_on_class_only
-        self.load_word2vec_format = call_on_class_only
 
         if dm_mean is not None:
             self.cbow_mean = dm_mean

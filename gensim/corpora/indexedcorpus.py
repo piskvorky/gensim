@@ -69,6 +69,7 @@ class IndexedCorpus(interfaces.CorpusABC):
            each saved document,
         * the `docbyoffset(offset)` method, which returns a document
           positioned at `offset` bytes within the persistent storage (file).
+        * metadata if set to true will ensure that serialize will write out article titles to a pickle file.
 
         Example:
 

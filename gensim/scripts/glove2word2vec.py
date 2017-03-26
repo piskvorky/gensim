@@ -81,7 +81,7 @@ if __name__ == "__main__":
     num_lines, num_dims = glove2word2vec(args.input, args.output)
     logger.info('Converted model with %i vectors and %i dimensions', num_lines, num_dims)
     # test that the converted model loads successfully
-    model = gensim.models.Word2Vec.load_word2vec_format(args.output, binary=False)
+    model = gensim.models.KeyedVectors.load_word2vec_format(args.output, binary=False)
     logger.info('Model %s successfully loaded', model)
     try:
         logger.info('testing the model....')

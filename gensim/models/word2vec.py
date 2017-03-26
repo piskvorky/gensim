@@ -6,8 +6,10 @@
 
 
 """
-Deep learning via word2vec's "skip-gram and CBOW models", using either
+Produce word vectors with deep learning via word2vec's "skip-gram and CBOW models", using either
 hierarchical softmax or negative sampling [1]_ [2]_.
+
+NOTE: There are more ways to get word vectors in Gensim than just Word2Vec. See wrappers for FastText, VarEmbed and WordRank.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
@@ -26,31 +28,58 @@ Persist a model to disk with::
 >>> model.save(fname)
 >>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
 
-The model can also be instantiated from an existing file on disk in the word2vec C format::
+The word vectors are stored in a KeyedVectors instance in model.wv. This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec.
 
-  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+  >>> model.wv['computer']  # numpy vector of a word
+  array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
 
-You can perform various syntactic/semantic NLP word tasks with the model. Some of them
+The word vectors can also be instantiated from an existing file on disk in the word2vec C format as a KeyedVectors instance::
+
+
+NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights, vocabulary frequency and the binary tree is missing.
+
+
+  >>> from gensim.models.keyedvectors import KeyedVectors
+  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
+  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+
+
+You can perform various NLP word tasks with the model. Some of them
 are already built-in::
 
-  >>> model.most_similar(positive=['woman', 'king'], negative=['man'])
+  >>> model.wv.most_similar(positive=['woman', 'king'], negative=['man'])
   [('queen', 0.50882536), ...]
 
-  >>> model.doesnt_match("breakfast cereal dinner lunch".split())
+  >>> model.wv.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
+  [('queen', 0.71382287), ...]
+
+
+  >>> model.wv.doesnt_match("breakfast cereal dinner lunch".split())
   'cereal'
 
-  >>> model.similarity('woman', 'man')
+  >>> model.wv.similarity('woman', 'man')
   0.73723527
 
-  >>> model['computer']  # raw numpy vector of a word
-  array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
+Probability of a text under the model::
+
+  >>> model.score(["The fox jumped over a lazy dog".split()])
+  0.2158356
+
+Correlation with human opinion on word similarity::
+
+  >>> model.wv.evaluate_word_pairs(os.path.join(module_path, 'test_data','wordsim353.tsv'))
+  0.51, 0.62, 0.13
+
+And on analogies::
+
+  >>> model.wv.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
 
 and so on.
 
-If you're finished training a model (=no more updates, only querying), you can do
+If you're finished training a model (=no more updates, only querying), then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
 
-  >>> model.init_sims(replace=True)
+  >>> word_vectors = model.wv
+  >>> del model
 
 to trim unneeded model memory = use (much) less RAM.
 
@@ -77,6 +106,7 @@ from copy import deepcopy
 from collections import defaultdict
 import threading
 import itertools
+import warnings
 
 from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.utils import keep_vocab_item
@@ -326,7 +356,7 @@ class Word2Vec(utils.SaveLoad):
     Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
 
     The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in a format
-    compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
+    compatible with the original word2vec implementation via `wv.save_word2vec_format()` and `KeyedVectors.load_word2vec_format()`.
 
     """
 
@@ -406,7 +436,6 @@ class Word2Vec(utils.SaveLoad):
         """
 
         self.load = call_on_class_only
-        self.load_word2vec_format = call_on_class_only        
 
         if FAST_VERSION == -1:
             logger.warning('Slow version of {0} is being used'.format(__name__))
@@ -446,6 +475,12 @@ class Word2Vec(utils.SaveLoad):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences)
+
+        else :
+            if trim_rule is not None :
+                logger.warning("The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part of the model. ")
+                logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored." )
+
 
     def initialize_word_vectors(self):
         self.wv = KeyedVectors()
@@ -693,7 +728,7 @@ class Word2Vec(utils.SaveLoad):
     def sort_vocab(self):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
         if len(self.wv.syn0):
-            raise RuntimeError("must sort before initializing vectors/weights")
+            raise RuntimeError("cannot sort vocabulary after model weights already initialized.")
         self.wv.index2word.sort(key=lambda word: self.wv.vocab[word].count, reverse=True)
         for i, word in enumerate(self.wv.index2word):
             self.wv.vocab[word].index = i
@@ -762,7 +797,7 @@ class Word2Vec(utils.SaveLoad):
 
         if not hasattr(self, 'corpus_count'):
             raise ValueError(
-                "The number of sentences in the training corpus is missing. Did you load the model via load_word2vec_format?"
+                "The number of sentences in the training corpus is missing. Did you load the model via KeyedVectors.load_word2vec_format?"
                 "Models loaded via load_word2vec_format don't support further training. "
                 "Instead start with a blank model, scan_vocab on the new corpus, intersect_word2vec_format with the old model, then train.")
 
@@ -961,7 +996,7 @@ class Word2Vec(utils.SaveLoad):
                     run word2vec with hs=1 and negative=0 for this to work.")
 
         def worker_loop():
-            """Train the model, lifting lists of sentences from the jobs queue."""
+            """Compute log probability for each sentence, lifting lists of sentences from the jobs queue."""
             work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
             while True:
@@ -1056,6 +1091,13 @@ class Word2Vec(utils.SaveLoad):
         for i in xrange(len(self.wv.syn0), len(self.wv.vocab)):
             # construct deterministic seed from word AND seed argument
             newsyn0[i-len(self.wv.syn0)] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
+
+        # Raise an error if an online update is run before initial training on a corpus
+        if not len(self.wv.syn0):
+            raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. " \
+                "First build the vocabulary of your model with a corpus " \
+                "before doing an online update.")
+
         self.wv.syn0 = vstack([self.wv.syn0, newsyn0])
 
         if self.hs:
@@ -1168,6 +1210,32 @@ class Word2Vec(utils.SaveLoad):
     def n_similarity(self, ws1, ws2):
         return self.wv.n_similarity(ws1, ws2)
 
+    def predict_output_word(self, context_words_list, topn=10):
+        """Report the probability distribution of the center word given the context words as input to the trained model."""
+        if not self.negative:
+            raise RuntimeError("We have currently only implemented predict_output_word "
+                "for the negative sampling scheme, so you need to have "
+                "run word2vec with negative > 0 for this to work.")
+
+        if not hasattr(self.wv, 'syn0') or not hasattr(self, 'syn1neg'):
+            raise RuntimeError("Parameters required for predicting the output words not found.")
+
+        word_vocabs = [self.wv.vocab[w] for w in context_words_list if w in self.wv.vocab]
+        if not word_vocabs:
+            warnings.warn("All the input context words are out-of-vocabulary for the current model.")
+            return None
+
+        word2_indices = [word.index for word in word_vocabs]
+
+        l1 = np_sum(self.wv.syn0[word2_indices], axis=0)
+        if word2_indices and self.cbow_mean:
+            l1 /= len(word2_indices)
+
+        prob_values = exp(dot(l1, self.syn1neg.T))     # propagate hidden -> output and take softmax to get probabilities
+        prob_values /= sum(prob_values)
+        top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
+        return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]   #returning the most probable output words with their probabilities
+
     def init_sims(self, replace=False):
         """
         init_sims() resides in KeyedVectors because it deals with syn0 mainly, but because syn1 is not an attribute
@@ -1211,6 +1279,9 @@ class Word2Vec(utils.SaveLoad):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha)
 
     def _minimize_model(self, save_syn1 = False, save_syn1neg = False, save_syn0_lockf = False):
+        warnings.warn("This method would be deprecated in the future. Keep just_word_vectors = model.wv to retain just the KeyedVectors instance for read-only querying of word vectors.")
+        if save_syn1 and save_syn1neg and save_syn0_lockf:
+            return
         if hasattr(self, 'syn1') and not save_syn1:
             del self.syn1
         if hasattr(self, 'syn1neg') and not save_syn1neg:
@@ -1243,7 +1314,7 @@ class Word2Vec(utils.SaveLoad):
         # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table
-        if model.negative and hasattr(model, 'index2word'):
+        if model.negative and hasattr(model.wv, 'index2word'):
             model.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
@@ -1263,14 +1334,26 @@ class Word2Vec(utils.SaveLoad):
         return model
 
     def _load_specials(self, *args, **kwargs):
+        super(Word2Vec, self)._load_specials(*args, **kwargs)
         # loading from a pre-KeyedVectors word2vec model
         if not hasattr(self, 'wv'):
             wv = KeyedVectors()
             wv.syn0 = self.__dict__.get('syn0', [])
+            wv.syn0norm = self.__dict__.get('syn0norm', None)
             wv.vocab = self.__dict__.get('vocab', {})
             wv.index2word = self.__dict__.get('index2word', [])
             self.wv = wv
-        super(Word2Vec, self)._load_specials(*args, **kwargs)
+
+    @classmethod
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+                         limit=None, datatype=REAL):
+        """Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead."""
+        raise DeprecationWarning("Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
+
+    def save_word2vec_format(self, fname, fvocab=None, binary=False):
+        """Deprecated. Use model.wv.save_word2vec_format instead."""
+        raise DeprecationWarning("Deprecated. Use model.wv.save_word2vec_format instead.")
+
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
@@ -1419,14 +1502,14 @@ if __name__ == "__main__":
 
     if args.output:
         outfile = args.output
-        model.save_word2vec_format(outfile, binary=args.binary)
+        model.wv.save_word2vec_format(outfile, binary=args.binary)
     else:
         outfile = args.train
         model.save(outfile + '.model')
     if args.binary == 1:
-        model.save_word2vec_format(outfile + '.model.bin', binary=True)
+        model.wv.save_word2vec_format(outfile + '.model.bin', binary=True)
     else:
-        model.save_word2vec_format(outfile + '.model.txt', binary=False)
+        model.wv.save_word2vec_format(outfile + '.model.txt', binary=False)
 
     if args.accuracy:
         model.accuracy(args.accuracy)
