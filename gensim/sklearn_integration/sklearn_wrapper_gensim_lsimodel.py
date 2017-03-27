@@ -86,7 +86,6 @@ class SklearnWrapperLsiModel(models.LsiModel, TransformerMixin, BaseEstimator):
         X = [[] for i in range(0,len(docs))];
         for k,v in enumerate(docs):
             doc_topics = self[v]
-            print doc_topics
             probs_docs = list(map(lambda x: x[1], doc_topics))
             # Everything should be equal in length
             if len(probs_docs) != self.num_topics:
