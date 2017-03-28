@@ -113,7 +113,7 @@ class TestSklearnLSIWrapper(unittest.TestCase):
         self.model = SklearnWrapperLsiModel(id2word=dictionary, num_topics=2)
         self.model.fit(corpus)
 
-    def testPrintTopic(self):
+    def testModelSanity(self):
         topic = self.model.print_topics(2)
         for k, v in topic:
             self.assertTrue(isinstance(v, six.string_types))

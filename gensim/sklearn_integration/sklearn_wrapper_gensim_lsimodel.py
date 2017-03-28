@@ -15,17 +15,13 @@ from gensim import matutils
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
-# accuracy defaults for the multi-pass stochastic algo
-P2_EXTRA_DIMS = 100  # set to `None` for dynamic P2_EXTRA_DIMS=k
-P2_EXTRA_ITERS = 2
-
 class SklearnWrapperLsiModel(models.LsiModel, TransformerMixin, BaseEstimator):
     """
     Base LSI module
     """
 
     def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
-                 decay=1.0, onepass=True, power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS):
+                 decay=1.0, onepass=True, power_iters=2, extra_samples=100):
         """
         Sklearn wrapper for LSI model. Class derived from gensim.model.LsiModel.
         """
