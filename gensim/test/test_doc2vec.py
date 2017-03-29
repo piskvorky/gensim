@@ -183,7 +183,7 @@ class TestDoc2VecModel(unittest.TestCase):
         if keep_training:
             model.save(testfile())
             loaded = doc2vec.Doc2Vec.load(testfile())
-            loaded.train(sentences)
+            loaded.train(sentences, total_examples=loaded.corpus_count, epochs=loaded.iter)
 
     def test_training(self):
         """Test doc2vec training."""
@@ -198,17 +198,6 @@ class TestDoc2VecModel(unittest.TestCase):
         # build vocab and train in one step; must be the same as above
         model2 = doc2vec.Doc2Vec(corpus, size=100, min_count=2, iter=20, workers=1)
         self.models_equal(model, model2)
-
-    def test_reset_from(self):
-        corpus = DocsLeeCorpus()
-        models = [
-            # PV-DBOW
-            doc2vec.Doc2Vec(dm=0, size=100, min_count=2, iter=20, workers=1),
-            # PV-DM w/average
-            doc2vec.Doc2Vec(dm=1, size=100, min_count=2, iter=20, workers=1),
-        ]
-        models[0].build_vocab(corpus)
-        models[1].reset_from(models[0])
 
     def test_dbow_hs(self):
         """Test DBOW doc2vec training."""
