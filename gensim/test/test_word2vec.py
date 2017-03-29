@@ -103,7 +103,7 @@ class TestWord2VecModel(unittest.TestCase):
         model_neg = word2vec.Word2Vec.load(testfile())
         self.assertTrue(len(model_neg.wv.vocab), 12)
         model_neg.build_vocab(new_sentences, update=True)
-        model_neg.train(new_sentences)
+        model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
 
