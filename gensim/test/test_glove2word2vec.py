@@ -37,9 +37,9 @@ class TestGlove2Word2Vec(unittest.TestCase):
             self.assertTrue(numpy.allclose(self.test_model.n_similarity(['the', 'and'], ['and', 'the']), 1.0))
         except:
             if os.path.isfile(os.path.join(self.output_file)):
-                self.fail('model file %s was created but could not be loaded.', self.output_file)
+                self.fail('model file %s was created but could not be loaded.' % self.output_file)
             else:
-                self.fail('model file %s creation failed, check the parameters and input file format.')
+                self.fail('model file %s creation failed, check the parameters and input file format.' % self.output_file)
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
