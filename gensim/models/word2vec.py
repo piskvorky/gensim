@@ -476,7 +476,6 @@ class Word2Vec(utils.SaveLoad):
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
                        start_alpha=self.alpha, end_alpha=self.min_alpha)
-
         else :
             if trim_rule is not None :
                 logger.warning("The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part of the model. ")

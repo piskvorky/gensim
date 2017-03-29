@@ -668,6 +668,17 @@ class TestWord2VecModel(unittest.TestCase):
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
 
+    def test_train_with_explicit_param(self):
+        model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0)
+        model.build_vocab(sentences)
+        with self.assertRaises(ValueError):
+            model.train(sentences, total_examples=model.corpus_count)
+
+        with self.assertRaises(ValueError):
+            model.train(sentences, epochs=model.iter)
+
+        with self.assertRaises(ValueError):
+            model.train(sentences)
     def test_sentences_should_not_be_a_generator(self):
         """
         Is sentences a generator object?
