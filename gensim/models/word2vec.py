@@ -1210,6 +1210,32 @@ class Word2Vec(utils.SaveLoad):
     def n_similarity(self, ws1, ws2):
         return self.wv.n_similarity(ws1, ws2)
 
+    def predict_output_word(self, context_words_list, topn=10):
+        """Report the probability distribution of the center word given the context words as input to the trained model."""
+        if not self.negative:
+            raise RuntimeError("We have currently only implemented predict_output_word "
+                "for the negative sampling scheme, so you need to have "
+                "run word2vec with negative > 0 for this to work.")
+
+        if not hasattr(self.wv, 'syn0') or not hasattr(self, 'syn1neg'):
+            raise RuntimeError("Parameters required for predicting the output words not found.")
+
+        word_vocabs = [self.wv.vocab[w] for w in context_words_list if w in self.wv.vocab]
+        if not word_vocabs:
+            warnings.warn("All the input context words are out-of-vocabulary for the current model.")
+            return None
+
+        word2_indices = [word.index for word in word_vocabs]
+
+        l1 = np_sum(self.wv.syn0[word2_indices], axis=0)
+        if word2_indices and self.cbow_mean:
+            l1 /= len(word2_indices)
+
+        prob_values = exp(dot(l1, self.syn1neg.T))     # propagate hidden -> output and take softmax to get probabilities
+        prob_values /= sum(prob_values)
+        top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
+        return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]   #returning the most probable output words with their probabilities
+
     def init_sims(self, replace=False):
         """
         init_sims() resides in KeyedVectors because it deals with syn0 mainly, but because syn1 is not an attribute
