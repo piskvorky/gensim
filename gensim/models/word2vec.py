@@ -108,9 +108,8 @@ import threading
 import itertools
 import warnings
 
-import operator
-
 from gensim.utils import keep_vocab_item, call_on_class_only
+from gensim.utils import keep_vocab_item
 from gensim.models.keyedvectors import KeyedVectors, Vocab
 
 try:
@@ -362,7 +361,7 @@ class Word2Vec(utils.SaveLoad):
     """
 
     def __init__(
-            self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, max_vocab = None,
+            self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
@@ -424,7 +423,7 @@ class Word2Vec(utils.SaveLoad):
         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
         returns either `utils.RULE_DISCARD`, `utils.RULE_KEEP` or `utils.RULE_DEFAULT`.
-        Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+        Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
         of the model.
 
         `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
@@ -457,7 +456,6 @@ class Word2Vec(utils.SaveLoad):
         self.seed = seed
         self.random = random.RandomState(seed)
         self.min_count = min_count
-        self.max_vocab = max_vocab
         self.sample = sample
         self.workers = int(workers)
         self.min_alpha = float(min_alpha)
@@ -480,7 +478,7 @@ class Word2Vec(utils.SaveLoad):
 
         else :
             if trim_rule is not None :
-                logger.warning("The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model. ")
+                logger.warning("The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part of the model. ")
                 logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored." )
 
 
@@ -551,11 +549,6 @@ class Word2Vec(utils.SaveLoad):
 
         """
         self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
-
-        # min_count_actual =
-        self.compute_min_count(self.raw_vocab, self.max_vocab)
-        # print min_count_actual
-
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
         self.finalize_vocab(update=update)  # build tables & arrays
 
@@ -588,25 +581,6 @@ class Word2Vec(utils.SaveLoad):
                     len(vocab), total_words, sentence_no + 1)
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
-
-    def compute_min_count(self, vocab1, max_vocab1):
-        vocab_sorted_by_count = sorted(vocab1.items(), key=operator.itemgetter(1), reverse=True)
-        print vocab_sorted_by_count
-        word_counts = zeros(len(vocab_sorted_by_count))
-        for x in range(len(vocab_sorted_by_count)):
-            if x == 0:
-                word_counts[x] = (vocab_sorted_by_count[x][1])
-            else:
-                word_counts[x] = (vocab_sorted_by_count[x][1] + word_counts[x-1])
-
-        print word_counts
-
-        index1 =  word_counts.searchsorted(max_vocab1)
-        print index1
-        if  index1!= len(word_counts):
-            print vocab_sorted_by_count[index1+1][1]
-        else :
-            print 0
 
     def scale_vocab(self, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False, trim_rule=None, update=False):
         """
@@ -801,6 +775,7 @@ class Word2Vec(utils.SaveLoad):
         if (self.model_trimmed_post_training):
             raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
         if FAST_VERSION < 0:
+            import warnings
             warnings.warn("C extension not loaded for Word2Vec, training will be slow. "
                           "Install a C compiler and reinstall gensim for fast training.")
             self.neg_labels = []
@@ -1003,6 +978,7 @@ class Word2Vec(utils.SaveLoad):
 
         """
         if FAST_VERSION < 0:
+            import warnings
             warnings.warn("C extension compilation failed, scoring will be slow. "
                           "Install a C compiler and reinstall gensim for fastness.")
 
