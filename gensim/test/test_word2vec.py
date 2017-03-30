@@ -499,7 +499,7 @@ class TestWord2VecModel(unittest.TestCase):
         """Test skip-gram (negative sampling) word2vec training."""
         # to test training, make the corpus larger by repeating its sentences over and over
         # build vocabulary, don't train yet
-        model = word2vec.Word2Vec(size=2, min_count=1, hs=0, negative=2)
+        model = word2vec.Word2Vec(size=2, min_count=1, sg=1, hs=0, negative=2)
         model.build_vocab(sentences)
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), 2))
@@ -515,7 +515,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
-        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=0, negative=2)
+        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=1, hs=0, negative=2)
         self.models_equal(model, model2)
 
     def testTrainingCbowNegative(self):
