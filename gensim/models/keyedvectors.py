@@ -111,6 +111,7 @@ class KeyedVectors(utils.SaveLoad):
         self.syn0norm = None
         self.vocab = {}
         self.index2word = []
+        self.vector_size = None
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors
@@ -194,6 +195,7 @@ class KeyedVectors(utils.SaveLoad):
             if limit:
                 vocab_size = min(vocab_size, limit)
             result = cls()
+            result.vector_size = vector_size
             result.syn0 = zeros((vocab_size, vector_size), dtype=datatype)
 
             def add_word(word, weights):
