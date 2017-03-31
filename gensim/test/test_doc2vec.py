@@ -305,7 +305,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec()
         model.build_vocab(mixed_tag_corpus)
         expected_length = len(sentences) + len(model.docvecs.doctags)  # 9 sentences, 7 unique first tokens
-        self.assertEquals(len(model.docvecs.doctag_syn0), expected_length)
+        self.assertEqual(len(model.docvecs.doctag_syn0), expected_length)
 
     def models_equal(self, model, model2):
         # check words/hidden-weights
