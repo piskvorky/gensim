@@ -48,12 +48,3 @@ class KerasWrapperWord2VecModel(models.Word2Vec):
         weights = self.wv.syn0
         layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights], trainable=False)
         return layer
-
-    def train(self, sentences, total_words=None, word_count=0,
-              total_examples=None, queue_factor=2, report_delay=1.0):
-        """
-        Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
-        For Word2Vec, each sentence must be a list of unicode strings.
-        """
-        models.Word2Vec.train(self, sentences=sentences, total_words=total_words, word_count=word_count,
-              total_examples=total_examples, queue_factor=queue_factor, report_delay=report_delay)
