@@ -114,6 +114,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model.build_vocab(corpus)
         self.assertEqual(len(model.docvecs.doctag_syn0), 300)
         self.assertEqual(model.docvecs[0].shape, (100,))
+        self.assertEqual(model.docvecs[np.int64(0)].shape, (100,))
         self.assertRaises(KeyError, model.__getitem__, '_*0')
 
     def test_missing_string_doctag(self):
