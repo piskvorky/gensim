@@ -25,18 +25,13 @@ sentences = [
 
 class TestKerasWord2VecWrapper(unittest.TestCase):
     def setUp(self):
-        self.model = KerasWrapperWord2VecModel(size=2, min_count=1, hs=1, negative=0)
+        self.model = KerasWrapperWord2VecModel(sentences, size=100, min_count=1, hs=1)
 
     def testWord2VecTraining(self):
         """Test word2vec training."""
-        # build vocabulary, don't train yet
         model = self.model
-        model.build_vocab(sentences)
-
-        self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
-        self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 2))
-
-        model.train(sentences)
+        self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 100))
+        self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 100))
         sims = model.most_similar('graph', topn=10)
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
@@ -47,9 +42,8 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         self.assertEqual(sims, sims2)
 
     def testEmbeddingLayer(self):
+        """Test Keras 'Embedding' layer returned by 'get_embedding_layer' function."""
         keras_w2v_model = self.model
-        keras_w2v_model.build_vocab(sentences)
-        keras_w2v_model.train(sentences)
 
         embedding_layer = keras_w2v_model.get_embedding_layer()
 
@@ -59,13 +53,13 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         embedding_b = embedding_layer(input_b)
         similarity = merge([embedding_a, embedding_b], mode='cos', dot_axes=2)
 
-        model = Model(input=[input_a, input_b], output=[similarity])
+        model = Model(input=[input_a, input_b], output=similarity)
         model.compile(optimizer='sgd', loss='mse')
 
         word_a = 'graph'
         word_b = 'trees'
         output = model.predict([np.asarray([keras_w2v_model.wv.vocab[word_a].index]), np.asarray([keras_w2v_model.wv.vocab[word_b].index])])    #prob of occuring together
-        self.assertLess(0., output)
+        self.assertTrue(type(output[0][0][0][0]) == np.float32)     #verify that  a float is returned
 
 if __name__ == '__main__':
     unittest.main()
