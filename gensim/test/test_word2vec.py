@@ -16,7 +16,6 @@ import tempfile
 import itertools
 import bz2
 import sys
-import warnings
 
 import numpy as np
 
@@ -470,17 +469,20 @@ class TestWord2VecModel(unittest.TestCase):
         CBOW model is used here.
         """
 
-        model = word2vec.Word2Vec(sentences, size=2, sg=0, min_count=1, hs=1, negative=0)
+        model = word2vec.Word2Vec(sentences, size=2, sg=0, min_count=1,
+                                    hs=1, negative=0)
 
         # Testing Error in case of absent words_list
-        self.assertRaises(ValueError, model.wv.most_similar_among, positive=['graph'])
+        self.assertRaises(ValueError, model.wv.most_similar_among,
+                            positive=['graph'])
 
         words_in_voc = model.wv.index2word[:5]
 
         # Testing logs for warnings
-        model.wv.most_similar_among('graph', \
-                                        words_list=words_in_voc+['random_word'], \
-                                        topn="some_gibberish_not_number_or_False")
+        model.wv.most_similar_among('graph',
+                                    words_list=words_in_voc+['random_word'],
+                                    topn="some_gibberish_not_number_or_False")
+
         self.assertIn("topn needs to either be a number or False", str(l))
         self.assertIn("The following words are not in trained vocabulary", str(l))
         self.assertIn("This warning is expensive to calculate", str(l))
@@ -488,31 +490,36 @@ class TestWord2VecModel(unittest.TestCase):
         l.clear()
 
         # Check if warnings are suppressed upon setting suppress_warnings flag
-        model.wv.most_similar_among('graph', \
-                                        words_list=words_in_voc+['random_word'], \
-                                        topn="some_gibberish_not_number_or_False", \
-                                        suppress_warnings=True)
+        model.wv.most_similar_among('graph',
+                                    words_list=words_in_voc+['random_word'],
+                                    topn="some_gibberish_not_number_or_False",
+                                    suppress_warnings=True)
         self.assertIn("No logging captured", str(l))
 
         # Check functionality
         sims = model.wv.most_similar_among('graph', words_list=words_in_voc)
-        sims2 = model.wv.most_similar_among('graph', words_list=words_in_voc+['random_word'], \
-                                                suppress_warnings=True)
+        sims2 = model.wv.most_similar_among('graph',
+                                            words_list=words_in_voc+['random_word'],
+                                            suppress_warnings=True)
         self.assertEqual(sims, sims2)
 
         # Results by vector
         graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
-        sims3 = model.wv.most_similar_among(positive = [graph_vector], words_list=words_in_voc)
+        sims3 = model.wv.most_similar_among(positive = [graph_vector],
+                                            words_list=words_in_voc)
         sims3 = [(w, sim) for w, sim in sims3 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims3)
 
-        sims4 = model.wv.most_similar_among('graph', words_list=model.wv.index2word, \
-                                                topn=False)  # Returns all possible similarities
-        sims5 = model.wv.most_similar_among('graph', words_list=model.wv.index2word, \
-                                                topn=len(model.wv.vocab))
+        sims4 = model.wv.most_similar_among('graph',
+                                            words_list=model.wv.index2word,
+                                            topn=False)  # Returns all possible similarities
+        sims5 = model.wv.most_similar_among('graph',
+                                            words_list=model.wv.index2word,
+                                            topn=len(model.wv.vocab))
         self.assertEqual(sims4, sims5)
         self.assertEqual(len(sims4), len(model.wv.vocab)-1)
-        # Subtracting one as the word itself is not returned in most_similar calculation
+        # Subtracting one as the word itself is not returned
+        # in most_similar calculation
 
     def test_cosmul(self):
         model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
