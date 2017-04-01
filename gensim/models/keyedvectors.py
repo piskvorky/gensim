@@ -345,39 +345,46 @@ class KeyedVectors(utils.SaveLoad):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
-    def most_similar_among(self, positive=[], negative=[], topn=10, words_list=None, indexer=None,
+    def most_similar_among(self, positive=[], negative=[],
+                            topn=10, words_list=None, indexer=None,
                             suppress_warnings=False):
         """
-        Find the top-N most similar words among words_list to given words. Positive words
-        contribute positively towards the similarity, negative words negatively.
+        Find the top-N most similar words among words_list to given words.
+
+        Positive words contribute positively towards the similarity,
+        negative words negatively.
 
         Please refer to docs of most_similar function.
 
-        If topn is False, most_similar returns the vector of similarity scores for all words
-        in vocabulary of model, restriced by the supplied words_list.
+        If topn is False, most_similar returns the vector of similarity scores
+        for all words in vocabulary of model, restriced by the supplied words_list.
 
-        'words_list' should be a list/set of words. The returned word similarities will only
-        contain similarity scores for those words that are in words_list (and in trained vocabulary).
+        'words_list' should be a list/set of words. The returned word similarities
+        will only contain similarity scores for those words that are in words_list
+        (and in trained vocabulary).
 
-        If some words in words_list are not in vocabulary then a warning is issued to the user.
+        If some words in words_list are not in vocabulary then a warning is
+        issued to the user.
 
         Warnings can be supressed by setting the suppress_warnings flag.
 
         Example::
 
-          >>> trained_model.most_similar_among(positive=['man'], topn=1, words_list=['woman','random_word'])
+          >>> trained_model.most_similar_among(positive=['man'], topn=1,
+                                                words_list=['woman','random_word'])
           [('woman', 0.75882536)]
 
         """
 
         if isinstance(words_list, int):
-            raise ValueError("words_list must be a set/list of words. Maybe you wanted the \
-                                most_similar function.")
+            raise ValueError("words_list must be a set/list of words. \
+                                Maybe you wanted the most_similar function.")
         elif isinstance(words_list, list) or isinstance(words_list, set):
             pass
         else:  # This is triggered for empty words_list parameter
-            raise ValueError("words_list must be set/list of words. Maybe you wanted the \
-                                most_similar function. Please read doc string")
+            raise ValueError("words_list must be set/list of words. \
+                                Maybe you wanted the most_similar function. \
+                                Please read doc string")
 
         if type(topn) is not int:
             if topn is False:
@@ -385,16 +392,19 @@ class KeyedVectors(utils.SaveLoad):
             else:
                 if suppress_warnings is False:
                     logger.warning("topn needs to either be a number or False. \
-                                    Please read docstring. Displaying all similarities!")
+                                    Please read docstring. \
+                                    Displaying all similarities!")
             topn = len(self.index2word)
 
         self.init_sims()
 
         if isinstance(positive, string_types) and negative is False:
-            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
+            # allow calls like most_similar('dog'),
+            # as a shorthand for most_similar(['dog'])
             positive = [positive]
 
-        # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
+        # add weights for each word, if not already present;
+        # default to 1.0 for positive and -1.0 for negative words
         positive = [
             (word, 1.0) if isinstance(word, string_types + (ndarray,)) else word
             for word in positive
@@ -426,20 +436,24 @@ class KeyedVectors(utils.SaveLoad):
         words_to_use = vocabulary_words.intersection(words_list)
 
         if not words_to_use:
-            raise ValueError("None of the words in words_list exist in current vocabulary")
+            raise ValueError("None of the words in words_list \
+                                exist in current vocabulary")
 
         if suppress_warnings is False:
             missing_words = words_list.difference(vocabulary_words)
             if not missing_words:  # missing_words is empty
                 pass
             else:
-                logger.warning("The following words are not in trained vocabulary : %s", str(missing_words))
-                logger.info("This warning is expensive to calculate, especially for largs words_list. \
-                                If you would rather not remove the missing_words from words_list \
-                                please set the suppress_warnings flag.")
+                logger.warning("The following words are not in \
+                                trained vocabulary : %s", str(missing_words))
+                logger.info("This warning is expensive to calculate, \
+                                especially for largs words_list. \
+                                If you would rather not remove the missing_words \
+                                from words_list please set the \
+                                suppress_warnings flag.")
 
         words_list_indices = [self.vocab[word].index for word in words_to_use]
-        # limited = self.syn0norm[words_list_indices] #syn0norm is an ndarray so this indexing works
+        # limited = self.syn0norm[words_list_indices]
         # Storing 'limited' might add a huge memory overhead so we avoid doing that
 
         dists = dot(self.syn0norm[words_list_indices], mean)
