@@ -1180,6 +1180,13 @@ class Word2Vec(utils.SaveLoad):
                         self.wv.syn0[self.wv.vocab[word].index] = weights
         logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.wv.syn0.shape, fname))
 
+    def get_words_from_vocab(self):
+        """
+        Returns the words in the currently trained vocabulary as a list.
+        If the model is not trained yet then an empty list is returned.
+        """
+        return self.wv.get_ordered_keys()
+
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         return self.wv.most_similar(positive, negative, topn, restrict_vocab, indexer)
 
