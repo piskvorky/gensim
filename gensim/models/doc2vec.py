@@ -808,13 +808,16 @@ class Doc2Vec(Word2Vec):
         if self.docvecs and hasattr(self.docvecs, 'doctag_syn0_lockf'):
             del self.docvecs.doctag_syn0_lockf
 
-    def save_doc2vec_format(self, fname, word_vec=False, binary=False):
+    def save_word2vec_format(self, fname, doc_vec=True, word_vec=False, prefix='dt_', binary=False):
         """
         Store the input-hidden weight matrix.
 
          `fname` is the file used to save the vectors in
+         `doc_vec` is an optional boolean indicating whether to store document vectors
          `word_vec` is an optional boolean indicating whether to store word vectors
-         in the same file as document vectors
+         (if both doc_vec and word_vec are True, then both vectors are stored in the same file)
+         `prefix` to uniquely indentify doctags from word vocab, and avoid collision
+         in case of repeated string in doctag and word vocab
          `binary` is an optional boolean indicating whether the data is to be saved
          in binary word2vec format (default: False)
 
@@ -825,27 +828,29 @@ class Doc2Vec(Word2Vec):
         logger.info("storing %sx%s projection weights into %s" % (total_vec, self.vector_size, fname))
 
         # save document vectors
-        with utils.smart_open(fname, 'wb') as fout:
-            fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vector_size)))
-            # store as in input order
-            for i in range(len(self.docvecs)):
-                doctag = self.docvecs.index_to_doctag(i)
-                row = self.docvecs.doctag_syn0[i]
-                if binary:
-                    fout.write(utils.to_utf8(doctag) + b" " + row.tostring())
-                else:
-                    fout.write(utils.to_utf8("%s %s\n" % (doctag, ' '.join("%f" % val for val in row))))
-
-        # save word vectors
-        if word_vec:
-            with utils.smart_open(fname, 'ab') as fout:
-                for word, vocab in sorted(iteritems(self.wv.vocab), key=lambda item: -item[1].count):
-                    row = self.wv.syn0[vocab.index]
+        if doc_vec:
+            with utils.smart_open(fname, 'wb') as fout:
+                fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vector_size)))
+                # store as in input order
+                for i in range(len(self.docvecs)):
+                    doctag = prefix + str(self.docvecs.index_to_doctag(i))
+                    row = self.docvecs.doctag_syn0[i]
                     if binary:
-                        fout.write(utils.to_utf8(word) + b" " + row.tostring())
+                        fout.write(utils.to_utf8(doctag) + b" " + row.tostring())
                     else:
-                        fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
-
+                        fout.write(utils.to_utf8("%s %s\n" % (doctag, ' '.join("%f" % val for val in row))))
+            # save word vectors
+            if word_vec:
+                with utils.smart_open(fname, 'ab') as fout:
+                    for word, vocab in sorted(iteritems(self.wv.vocab), key=lambda item: -item[1].count):
+                        row = self.wv.syn0[vocab.index]
+                        if binary:
+                            fout.write(utils.to_utf8(word) + b" " + row.tostring())
+                        else:
+                            fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
+        else:
+            super(Doc2Vec,self).save_word2vec_format(fname, fvocab, binary)
+        
 
 class TaggedBrownCorpus(object):
     """Iterate over documents from the Brown corpus (part of NLTK data), yielding
