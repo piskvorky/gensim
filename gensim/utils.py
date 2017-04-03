@@ -463,6 +463,18 @@ class SaveLoad(object):
         return restores + [(self, asides)]
 
 
+    def assure_path_exists(path):
+        """ Create the folder if user inputs a file name containing
+        a non existant folder path """
+
+        dir = os.path.dirname(path)
+        if not os.path.exists(dir):
+            print("Folder does not exist. Do you want to create it? (Y/N)")
+            user_input = raw_input(">").lower()
+            if user_input == "y":
+                os.makedirs(dir)
+
+
     def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
              ignore=frozenset(), pickle_protocol=2):
         """
@@ -494,6 +506,8 @@ class SaveLoad(object):
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object" % self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
+            if not os.path.exists(fname_or_handle):
+                self.assure_path_exists(fname_or_handle)
             self._smart_save(fname_or_handle, separately, sep_limit, ignore,
                              pickle_protocol=pickle_protocol)
 #endclass SaveLoad
