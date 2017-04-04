@@ -190,7 +190,7 @@ class Similarity(interfaces.SimilarityABC):
             # undocumented feature: set output_prefix=None to create the server in temp
             self.output_prefix = utils.randfname(prefix='simserver')
         else:
-            self.output_prefix = os.path.join(os.path.dirname(output_prefix), 'shard', '') # '' to get the leading slash
+            self.output_prefix = os.path.join(os.path.dirname(output_prefix), 'shard', '')   # '' to get the trailing slash
             
             if not os.path.exists(self.output_prefix):
                 os.makedirs(self.output_prefix)
@@ -447,7 +447,7 @@ class Similarity(interfaces.SimilarityABC):
         """
         self.close_shard()
         if fname is None:
-            fname = os.path.join(self.output_prefix ,  'index') #default file name - index
+            fname = os.path.join(self.output_prefix ,  'index')   #default file name - index
         else:
             fname = os.path.join(self.output_prefix , fname)
             
