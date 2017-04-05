@@ -1,0 +1,10 @@
+1-4 bits per R/G/B gives horrible machbanding visible in almost any picture.
+5 bits per R/G/B (32768, 65000 colors) gives visible machbanding color-gradient picture has almost no machbanding.
+This color-resolution is see some small machbanding on the smooth color-gradient picture, but all in all,
+There are situiations where you get visible mach-banding even in a 24 bit card.
+If you create a very smooth color gradient of dark-green-white-yellow or something and turn up the contrast on the monitor, you will probably see some mach-banding.
+While I don't mean to damn Henrik's attempt to be helpful here, he's using a common misconception that should be corrected.
+Mach banding will occur for any image.
+It is not the color quantization you see when you don't have enough bits.
+It is the human eye's response to transitions or edges between intensities.
+The result is that colors near the transistion look brighter on the brighter side and darker on the darker side.
