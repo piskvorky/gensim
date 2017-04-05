@@ -46,5 +46,5 @@ class KerasWrapperWord2VecModel(models.Word2Vec):
         Return a Keras 'Embedding' layer with weights set as our Word2Vec model's learned word embeddings
         """
         weights = self.wv.syn0
-        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights], trainable=False)
+        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights], trainable=False)      #set `trainable` as `False` to use the pretrained word embedding
         return layer
