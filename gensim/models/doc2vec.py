@@ -63,7 +63,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.models.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg
 from gensim.models.keyedvectors import KeyedVectors
 from six.moves import xrange, zip
-from six import string_types, integer_types, itervalues, iteritems
+from six import string_types, integer_types, itervalues
 
 logger = logging.getLogger(__name__)
 
@@ -809,29 +809,34 @@ class Doc2Vec(Word2Vec):
         if self.docvecs and hasattr(self.docvecs, 'doctag_syn0_lockf'):
             del self.docvecs.doctag_syn0_lockf
 
-    def save_word2vec_format(self, fname, doc_vec=True, word_vec=False, prefix='dt_', fvocab=None, binary=False):
+    def save_word2vec_format(self, fname, doctag_vec=False, word_vec=True, prefix='*dt_', fvocab=None, binary=False):
         """
         Store the input-hidden weight matrix.
 
          `fname` is the file used to save the vectors in
-         `doc_vec` is an optional boolean indicating whether to store document vectors
+         `doctag_vec` is an optional boolean indicating whether to store document vectors
          `word_vec` is an optional boolean indicating whether to store word vectors
-         (if both doc_vec and word_vec are True, then both vectors are stored in the same file)
-         `prefix` to uniquely indentify doctags from word vocab, and avoid collision
+         (if both doctag_vec and word_vec are True, then both vectors are stored in the same file)
+         `prefix` to uniquely identify doctags from word vocab, and avoid collision
          in case of repeated string in doctag and word vocab
          `fvocab` is an optional file used to save the vocabulary
          `binary` is an optional boolean indicating whether the data is to be saved
          in binary word2vec format (default: False)
 
         """
-        total_vec = len(self.docvecs)
+        total_vec = len(self.wv.vocab) + len(self.docvecs)
+        # save word vectors
         if word_vec:
-            total_vec = total_vec + len(self.wv.vocab)
+            if not doctag_vec:
+                total_vec = len(self.wv.vocab)
+            KeyedVectors.save_word2vec_format(self.wv, fname, fvocab, binary, total_vec)
         # save document vectors
-        if doc_vec:
-            logger.info("storing %sx%s projection weights into %s" % (total_vec, self.vector_size, fname))
-            with utils.smart_open(fname, 'wb') as fout:
-                fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vector_size)))
+        if doctag_vec:
+            with utils.smart_open(fname, 'ab') as fout:
+                if not word_vec:
+                    total_vec = len(self.docvecs)
+                    logger.info("storing %sx%s projection weights into %s" % (total_vec, self.vector_size, fname))
+                    fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vector_size)))
                 # store as in input order
                 for i in range(len(self.docvecs)):
                     doctag = prefix + str(self.docvecs.index_to_doctag(i))
@@ -840,17 +845,6 @@ class Doc2Vec(Word2Vec):
                         fout.write(utils.to_utf8(doctag) + b" " + row.tostring())
                     else:
                         fout.write(utils.to_utf8("%s %s\n" % (doctag, ' '.join("%f" % val for val in row))))
-            # save word vectors
-            if word_vec:
-                with utils.smart_open(fname, 'ab') as fout:
-                    for word, vocab in sorted(iteritems(self.wv.vocab), key=lambda item: -item[1].count):
-                        row = self.wv.syn0[vocab.index]
-                        if binary:
-                            fout.write(utils.to_utf8(word) + b" " + row.tostring())
-                        else:
-                            fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
-        else:
-            KeyedVectors.save_word2vec_format(self.wv, fname, fvocab=fvocab, binary=binary)
         
 
 class TaggedBrownCorpus(object):
