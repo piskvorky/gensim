@@ -5,6 +5,7 @@ Unreleased:
 
 New features:
 * Add output word prediction for negative sampling scheme. (@chinmayapancholi13,[#1209](https://github.com/RaRe-Technologies/gensim/pull/1209))
+* Add modified save_word2vec_format for Doc2Vec, to save document vectors. (@parulsethi,[#1256](https://github.com/RaRe-Technologies/gensim/pull/1256))
 
 Improvements:
 * Fix loading large FastText models on Mac. (@jaksmid,[#1196](https://github.com/RaRe-Technologies/gensim/pull/1214))
