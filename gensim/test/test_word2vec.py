@@ -479,6 +479,8 @@ class TestWord2VecModel(unittest.TestCase):
         words_in_voc = model.wv.index2word[:5]
 
         # Testing logs for warnings
+        l.clear()
+
         model.wv.most_similar_among('graph',
                                     words_list=words_in_voc+['random_word'],
                                     topn="some_gibberish_not_number_or_False")

@@ -377,28 +377,28 @@ class KeyedVectors(utils.SaveLoad):
         """
 
         if isinstance(words_list, int):
-            raise ValueError("words_list must be a set/list of words. \
-                                Maybe you wanted the most_similar function.")
+            raise ValueError("words_list must be a set/list of words. " \
+                                "Maybe you wanted the most_similar function.")
         elif isinstance(words_list, list) or isinstance(words_list, set):
             pass
         else:  # This is triggered for empty words_list parameter
-            raise ValueError("words_list must be set/list of words. \
-                                Maybe you wanted the most_similar function. \
-                                Please read doc string")
+            raise ValueError("words_list must be set/list of words. " \
+                                "Maybe you wanted the most_similar function. " \
+                                "Please read doc string")
 
         if type(topn) is not int:
             if topn is False:
                 pass
             else:
                 if suppress_warnings is False:
-                    logger.warning("topn needs to either be a number or False. \
-                                    Please read docstring. \
-                                    Displaying all similarities!")
+                    logger.warning("topn needs to either be a number or False. " \
+                                    "Please read docstring. " \
+                                    "Displaying all similarities!")
             topn = len(self.index2word)
 
         self.init_sims()
 
-        if isinstance(positive, string_types) and negative is False:
+        if isinstance(positive, string_types) and not negative:
             # allow calls like most_similar('dog'),
             # as a shorthand for most_similar(['dog'])
             positive = [positive]
@@ -436,21 +436,21 @@ class KeyedVectors(utils.SaveLoad):
         words_to_use = vocabulary_words.intersection(words_list)
 
         if not words_to_use:
-            raise ValueError("None of the words in words_list \
-                                exist in current vocabulary")
+            raise ValueError("None of the words in words_list " \
+                                "exist in current vocabulary")
 
         if suppress_warnings is False:
             missing_words = words_list.difference(vocabulary_words)
             if not missing_words:  # missing_words is empty
                 pass
             else:
-                logger.warning("The following words are not in \
-                                trained vocabulary : %s", str(missing_words))
-                logger.info("This warning is expensive to calculate, \
-                                especially for largs words_list. \
-                                If you would rather not remove the missing_words \
-                                from words_list please set the \
-                                suppress_warnings flag.")
+                logger.warning("The following words are not in " \
+                                "trained vocabulary : %s", str(missing_words))
+                logger.info("This warning is expensive to calculate, " \
+                                "especially for large words_list. " \
+                                "If you would rather not remove the missing_words " \
+                                "from words_list please set the " \
+                                "suppress_warnings flag.")
 
         words_list_indices = [self.vocab[word].index for word in words_to_use]
         # limited = self.syn0norm[words_list_indices]
