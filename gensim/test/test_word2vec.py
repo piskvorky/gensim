@@ -462,7 +462,7 @@ class TestWord2VecModel(unittest.TestCase):
                                   min_count=5, iter=10, workers=2, sample=0)
         self.model_sanity(model)
 
-    @log_capture
+    @log_capture()
     def test_most_similar_among(self, l):
         """
         Testing most_similar_among method of KeyedVectors Class.
