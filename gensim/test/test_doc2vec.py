@@ -23,7 +23,7 @@ from testfixtures import log_capture
 import numpy as np
 
 from gensim import utils, matutils
-from gensim.models import doc2vec
+from gensim.models import doc2vec, keyedvectors
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -75,6 +75,13 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
         model.save(testfile())
         self.models_equal(model, doc2vec.Doc2Vec.load(testfile()))
+
+    def testPersistenceWord2VecFormat(self):
+        """Test storing the entire model in word2vec format."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
+        model.save_word2vec_format(testfile(), doctag_vec=True, binary=True)
+        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        self.assertEqual(len(model.wv.vocab) + len(model.docvecs), len(binary_model_dv.vocab))
 
     def test_load_mmap(self):
         """Test storing/loading the entire model."""
