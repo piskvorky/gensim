@@ -41,10 +41,12 @@ class KerasWrapperWord2VecModel(models.Word2Vec):
             sg=self.sg, hs=self.hs, negative=self.negative, cbow_mean=self.cbow_mean, hashfxn=self.hashfxn, iter=self.iter, null_word=self.null_word,
             trim_rule=self.trim_rule, sorted_vocab=self.sorted_vocab, batch_words=self.batch_words)
 
-    def get_embedding_layer(self):
+    def get_embedding_layer(self, train_embeddings=False):
         """
         Return a Keras 'Embedding' layer with weights set as our Word2Vec model's learned word embeddings
+
+        `train_embeddings` decides whether the word embeddings would be trained further during the training of the Keras model.
         """
         weights = self.wv.syn0
-        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights], trainable=False)      #set `trainable` as `False` to use the pretrained word embedding
+        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights], trainable=train_embeddings)      #set `trainable` as `False` to use the pretrained word embedding
         return layer
