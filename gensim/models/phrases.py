@@ -81,7 +81,7 @@ import warnings
 from collections import defaultdict
 import itertools as it
 
-from six import iteritems, string_types, next
+from six import iteritems, iterbytes, string_types, next
 
 from gensim import utils, interfaces
 
@@ -566,7 +566,7 @@ class CommonTermsPhrases(CommonTermsUtils, Phrases):
                 new_s.append(word_a)
                 # common terms in front of b
                 last_stop_index = 0
-                for i, w in enumerate(word_b):
+                for i, w in enumerate(iterbytes(word_b)):
                     if w == odelimiter:
                         new_s.append(word_b[last_stop_index:i])
                         last_stop_index = i + 1
@@ -633,7 +633,7 @@ class CommonTermsPhraser(CommonTermsUtils, Phraser):
                 new_s.append(word_a)
                 # common terms in front of b
                 last_stop_index = 0
-                for i, w in enumerate(word_b):
+                for i, w in enumerate(iterbytes(word_b)):
                     if w == odelimiter:
                         new_s.append(word_b[last_stop_index:i])
                         last_stop_index = i + 1
