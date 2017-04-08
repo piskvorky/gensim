@@ -1185,6 +1185,7 @@ class Word2Vec(utils.SaveLoad):
                     if word in self.wv.vocab:
                         overlap_count += 1
                         self.wv.syn0[self.wv.vocab[word].index] = weights
+                        self.syn0_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
         logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.wv.syn0.shape, fname))
 
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
