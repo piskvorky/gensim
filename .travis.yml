@@ -11,11 +11,14 @@ before_install:
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda2/bin:$PATH
   - conda update --yes conda
+  - git clone https://github.com/facebookresearch/pysparnn pysparnn
 install:
   - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
   - source activate gensim-test
   - pip install pyemd
   - pip install annoy
+  - pip install -r pysparnn/requirements.txt
+  - cd pysparnn; python setup.py install; cd ..
   - pip install testfixtures
   - pip install unittest2
   - pip install Morfessor==2.0.2a4
