@@ -6,22 +6,42 @@
 
 """Test for gensim.scripts.glove2word2vec.py."""
 
+import logging
+import unittest
+import os
+import sys
+import tempfile
 
-# import unittest
-# import os
-# import sys
-# import gensim
-# from gensim.utils import check_output
+import numpy
+import gensim
 
-# class TestGlove2Word2Vec(unittest.TestCase):
-#     def setUp(self):
-#         self.module_path = os.path.dirname(gensim.__file__)
-#         self.datapath = os.path.join(self.module_path, 'test', 'test_data', 'test_glove.txt')  # Sample data files are located in the same folder
-#         self.output_file = 'sample_word2vec_out.txt'
+from gensim.utils import check_output
 
-#     def testConversion(self):
-#         output = check_output(['python', '-m', 'gensim.scripts.glove2word2vec', '-i', self.datapath, '-o', self.output_file])
-#         if sys.version_info < (3,):
-#             self.assertEqual(output, '')
-#         else:
-#             self.assertEqual(output, b'')
+module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+
+def testfile():
+    # temporary model will be stored to this file
+    return os.path.join(tempfile.gettempdir(), 'glove2word2vec.test')
+
+class TestGlove2Word2Vec(unittest.TestCase):
+    def setUp(self):
+        self.datapath = datapath('test_glove.txt')
+        self.output_file = testfile()
+
+    def testConversion(self):
+        output = check_output(args=['python', '-m', 'gensim.scripts.glove2word2vec', '--input', self.datapath, '--output', self.output_file])    
+        # test that the converted model loads successfully
+        try:
+            self.test_model = gensim.models.KeyedVectors.load_word2vec_format(self.output_file)
+            self.assertTrue(numpy.allclose(self.test_model.n_similarity(['the', 'and'], ['and', 'the']), 1.0))
+        except:
+            if os.path.isfile(os.path.join(self.output_file)):
+                self.fail('model file %s was created but could not be loaded.' % self.output_file)
+            else:
+                self.fail('model file %s creation failed, check the parameters and input file format.' % self.output_file)
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    unittest.main()
+

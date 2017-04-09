@@ -6,6 +6,9 @@ Unreleased:
 New features:
 * Add output word prediction for negative sampling scheme. (@chinmayapancholi13,[#1209](https://github.com/RaRe-Technologies/gensim/pull/1209))
 
+Improvements:
+* Fix loading large FastText models on Mac. (@jaksmid,[#1196](https://github.com/RaRe-Technologies/gensim/pull/1214))
+
 ========
 1.0.1, 2017-03-03
 
