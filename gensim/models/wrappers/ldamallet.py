@@ -156,9 +156,9 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     def train(self, corpus):
         self.convert_input(corpus, infer=False)
-        cmd = self.mallet_path + " train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s "\
-            "--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s "\
-            "--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s"
+        cmd = self.mallet_path + ' train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s '\
+            '--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s '\
+            '--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s'
         cmd = cmd % (
             self.fcorpusmallet(), self.num_topics, self.alpha, self.optimize_interval, self.workers,
             self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer(), self.topic_threshold)
@@ -177,7 +177,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             bow = [bow]
 
         self.convert_input(bow, infer=True)
-        cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s --doc-topics-threshold %s"
+        cmd = self.mallet_path + ' infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s --doc-topics-threshold %s'
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations, self.topic_threshold)
         logger.info("inferring topics with MALLET LDA '%s'", cmd)
         check_output(args=cmd, shell=True)

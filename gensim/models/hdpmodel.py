@@ -438,8 +438,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def show_topic(self, topic_id, num_words=20, log=False, formatted=False):
         """
-        Print the `num_words` most probable words for `topics` number of topics.
-        Set `topics=-1` to print all topics.
+        Print the `num_words` most probable words for topic `topic_id`.
 
         Set `formatted=True` to return the topics as a list of strings, or
         `False` as lists of (weight, word) pairs.
@@ -453,8 +452,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         
     def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
         """
-        Print the `num_words` most probable words for `topics` number of topics.
-        Set `topics=-1` to print all topics.
+        Print the `num_words` most probable words for `num_topics` number of topics.
+        Set `num_topics=-1` to print all topics.
 
         Set `formatted=True` to return the topics as a list of strings, or
         `False` as lists of (weight, word) pairs.
