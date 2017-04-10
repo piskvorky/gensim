@@ -3,7 +3,6 @@
 #
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-#
 
 
 """
@@ -32,7 +31,7 @@ The algorithm:
 
 
 import logging
-import numpy as np  # for arrays, array broadcasting etc.
+import numpy as np
 import numbers
 import os
 
@@ -292,9 +291,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.random_state = utils.get_random_state(random_state)
 
-        assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
-                "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
-                (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
+        assert self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms), (
+            "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
+            (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
 
         # VB constants
         self.iterations = iterations
@@ -601,17 +600,19 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         evalafter = min(lencorpus, (eval_every or 0) * self.numworkers * chunksize)
 
         updates_per_pass = max(1, lencorpus / updateafter)
-        logger.info("running %s LDA training, %s topics, %i passes over "
-                    "the supplied corpus of %i documents, updating model once "
-                    "every %i documents, evaluating perplexity every %i documents, "
-                    "iterating %ix with a convergence threshold of %f",
-                    updatetype, self.num_topics, passes, lencorpus,
-                        updateafter, evalafter, iterations,
-                        gamma_threshold)
+        logger.info(
+            "running %s LDA training, %s topics, %i passes over "
+            "the supplied corpus of %i documents, updating model once "
+            "every %i documents, evaluating perplexity every %i documents, "
+            "iterating %ix with a convergence threshold of %f",
+            updatetype, self.num_topics, passes, lencorpus,
+            updateafter, evalafter, iterations,
+            gamma_threshold)
 
         if updates_per_pass * passes < 10:
-            logger.warning("too few updates, training might not converge; consider "
-                           "increasing the number of passes or iterations to improve accuracy")
+            logger.warning(
+                "too few updates, training might not converge; consider "
+                "increasing the number of passes or iterations to improve accuracy")
 
         # rho is the "speed" of updating; TODO try other fncs
         # pass_ + num_updates handles increasing the starting t for each pass,
@@ -906,26 +907,28 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
             kwargs = dict(
-                per_word_topics = per_word_topics,
-                minimum_probability = minimum_probability,
-                minimum_phi_value = minimum_phi_value
+                per_word_topics=per_word_topics,
+                minimum_probability=minimum_probability,
+                minimum_phi_value=minimum_phi_value
             )
             return self._apply(corpus, **kwargs)
 
         gamma, phis = self.inference([bow], collect_sstats=per_word_topics)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
 
-        document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                    if topicvalue >= minimum_probability]
+        document_topics = [
+            (topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+            if topicvalue >= minimum_probability
+        ]
 
         if not per_word_topics:
             return document_topics
         else:
-            word_topic = [] # contains word and corresponding topic
-            word_phi = [] # contains word and phi values
+            word_topic = []  # contains word and corresponding topic
+            word_phi = []  # contains word and phi values
             for word_type, weight in bow:
-                phi_values = [] # contains (phi_value, topic) pairing to later be sorted
-                phi_topic = [] # contains topic and corresponding phi value to be returned 'raw' to user
+                phi_values = []  # contains (phi_value, topic) pairing to later be sorted
+                phi_topic = []  # contains topic and corresponding phi value to be returned 'raw' to user
                 for topic_id in range(0, self.num_topics):
                     if phis[topic_id][word_type] >= minimum_phi_value:
                         # appends phi values for each topic for that word
@@ -940,7 +943,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 sorted_phi_values = sorted(phi_values, reverse=True)
                 topics_sorted = [x[1] for x in sorted_phi_values]
                 word_topic.append((word_type, topics_sorted))
-            return (document_topics, word_topic, word_phi) # returns 2-tuple
+            return (document_topics, word_topic, word_phi)  # returns 2-tuple
 
     def get_term_topics(self, word_id, minimum_probability=None):
         """
@@ -961,7 +964,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 values.append((topic_id, self.expElogbeta[topic_id][word_id]))
 
         return values
-
 
     def __getitem__(self, bow, eps=None):
         """
@@ -1006,16 +1008,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if 'id2word' not in ignore:
             utils.pickle(self.id2word, utils.smart_extension(fname, '.id2word'))
 
-        # make sure 'state', 'id2word' and 'dispatcher' are ignored from the pickled object, even if 
+        # make sure 'state', 'id2word' and 'dispatcher' are ignored from the pickled object, even if
         # someone sets the ignore list themselves
         if ignore is not None and ignore:
             if isinstance(ignore, six.string_types):
                 ignore = [ignore]
-            ignore = [e for e in ignore if e] # make sure None and '' are not in the list
+            ignore = [e for e in ignore if e]  # make sure None and '' are not in the list
             ignore = list(set(['state', 'dispatcher', 'id2word']) | set(ignore))
         else:
             ignore = ['state', 'dispatcher', 'id2word']
-        
+
         # make sure 'expElogbeta' and 'sstats' are ignored from the pickled object, even if
         # someone sets the separately list themselves.
         separately_explicit = ['expElogbeta', 'sstats']
@@ -1029,12 +1031,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if separately:
             if isinstance(separately, six.string_types):
                 separately = [separately]
-            separately = [e for e in separately if e] # make sure None and '' are not in the list
+            separately = [e for e in separately if e]  # make sure None and '' are not in the list
             separately = list(set(separately_explicit) | set(separately))
         else:
             separately = separately_explicit
-        super(LdaModel, self).save(fname, ignore=ignore, separately = separately, *args, **kwargs)
-       
+        super(LdaModel, self).save(fname, ignore=ignore, separately=separately, *args, **kwargs)
+
     @classmethod
     def load(cls, fname, *args, **kwargs):
         """
