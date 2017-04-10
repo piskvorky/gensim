@@ -76,12 +76,12 @@ And on analogies::
 
 and so on.
 
-If you're finished training a model (=no more updates, only querying), then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
+If you're finished training a model (i.e. no more updates, only querying), then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
 
   >>> word_vectors = model.wv
   >>> del model
 
-to trim unneeded model memory = use (much) less RAM.
+to trim unneeded model memory = use much less RAM.
 
 Note that there is a :mod:`gensim.models.phrases` module which lets you automatically
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
@@ -810,9 +810,9 @@ class Word2Vec(utils.SaveLoad):
                 "Instead start with a blank model, scan_vocab on the new corpus, intersect_word2vec_format with the old model, then train.")
 
         if total_words is None and total_examples is None:
-            raise ValueError("you must specify either total_examples or total_words, for proper alpha and progress calculations")
+            raise ValueError("You must specify either total_examples or total_words, for proper alpha and progress calculations. The usual value is total_examples=model.corpus_count.")
         if epochs is None:
-            raise ValueError("you must specify an explict epochs count")
+            raise ValueError("You must specify an explict epochs count. The usual value is epochs=model.iter.")
         start_alpha = start_alpha or self.alpha
         end_alpha = end_alpha or self.min_alpha
 
