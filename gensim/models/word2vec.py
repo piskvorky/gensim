@@ -1190,7 +1190,8 @@ class Word2Vec(utils.SaveLoad):
 
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.most_similar`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.most_similar`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
@@ -1199,7 +1200,8 @@ class Word2Vec(utils.SaveLoad):
 
     def wmdistance(self, document1, document2):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.wmdistance`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.wmdistance`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
@@ -1208,7 +1210,8 @@ class Word2Vec(utils.SaveLoad):
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.most_similar_cosmul`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.most_similar_cosmul`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
@@ -1217,7 +1220,8 @@ class Word2Vec(utils.SaveLoad):
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.similar_by_word`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.similar_by_word`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
@@ -1226,7 +1230,8 @@ class Word2Vec(utils.SaveLoad):
 
     def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.similar_by_vector`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.similar_by_vector`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
@@ -1235,7 +1240,8 @@ class Word2Vec(utils.SaveLoad):
 
     def doesnt_match(self, words):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.doesnt_match`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.doesnt_match`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
@@ -1244,7 +1250,8 @@ class Word2Vec(utils.SaveLoad):
 
     def __getitem__(self, words):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.__getitem__`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.__getitem__`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
@@ -1253,7 +1260,8 @@ class Word2Vec(utils.SaveLoad):
 
     def __contains__(self, word):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.__contains__`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.__contains__`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
@@ -1262,7 +1270,8 @@ class Word2Vec(utils.SaveLoad):
 
     def similarity(self, w1, w2):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.similarity`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.similarity`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
@@ -1271,7 +1280,8 @@ class Word2Vec(utils.SaveLoad):
 
     def n_similarity(self, ws1, ws2):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.n_similarity`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.n_similarity`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
@@ -1339,7 +1349,8 @@ class Word2Vec(utils.SaveLoad):
     @staticmethod
     def log_evaluate_word_pairs(pearson, spearman, oov, pairs):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.log_evaluate_word_pairs`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.log_evaluate_word_pairs`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
@@ -1348,7 +1359,8 @@ class Word2Vec(utils.SaveLoad):
 
     def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
         """
-        Please refer to the documentation for `gensim.models.KeyedVectors.evaluate_word_pairs`
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.evaluate_word_pairs`
         This is just a forwarding function.
         In the future please use the `gensim.models.KeyedVectors` instance in wv
         """
