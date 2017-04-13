@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+test_notebooks.py
+===================
+
+
+.. _general_examples:
+
+General examples
+----------------
+
+General-purpose and introductory examples from the sphinx-gallery
+"""
+
 import os
 import sys
 import tempfile
@@ -46,6 +60,6 @@ def test_notebooks():
     for notebook in glob("*.ipynb"):
         if " " in notebook:
             continue
-        print("Testing {}".format(notebook))
+        print("Testing {0}".format(notebook))
         nb, errors = _notebook_run(notebook)
         assert errors == []

@@ -5,6 +5,7 @@ python:
   - "2.7"
   - "3.5"
   - "3.6"
+
 before_install:
   - wget 'http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh' -O miniconda.sh
   - chmod +x miniconda.sh
@@ -12,13 +13,25 @@ before_install:
   - export PATH=/home/travis/miniconda2/bin:$PATH
   - conda update --yes conda
 install:
-  - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
+  - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy matplotlib nltk
   - source activate gensim-test
   - pip install pyemd
   - pip install annoy
   - pip install testfixtures
+  - pip install sphinx==1.4.8
+  - pip install --user travis-sphinx
+  - pip install sphinx-gallery
+  - pip install Pillow
   - pip install unittest2
   - pip install scikit-learn
   - pip install Morfessor==2.0.2a4
   - python setup.py install
-script: python setup.py test
+script:
+  - cd docs/src
+  - make html
+  - travis-sphinx --source=./ --branches=develop,cidocs -n build
+  - cd ../..
+  # - python setup.py test
+after_success:
+  - cd docs/src
+  - travis-sphinx --branches=develop,cidocs -n deploy
