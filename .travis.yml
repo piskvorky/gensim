@@ -11,6 +11,9 @@ before_install:
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda2/bin:$PATH
   - conda update --yes conda
+  - pip install --upgrade pip
+  - pip3 install coala
+  - pip3 install coala-bears
 install:
   - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
   - source activate gensim-test
@@ -21,4 +24,8 @@ install:
   - pip install scikit-learn
   - pip install Morfessor==2.0.2a4
   - python setup.py install
-script: python setup.py test
+
+script:
+  - python setup.py test
+  - coala --non-interactive
+

@@ -1,0 +1,17 @@
+[default]
+files = *.py, gensim/**/*.py
+
+max_line_length = 120
+use_spaces = True
+
+[python]
+bears = PEP8Bear
+pep_ignore = E701,E241
+
+[autopep8]
+bears = PEP8Bear
+default_actions = PEP8Bear: ApplyPatchAction
+
+
+
+
