@@ -427,6 +427,17 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         self.assertTrue(numpy.allclose(expected, sims))
         index.destroy()
 
+    def testShardDir(self):
+        """test where shard and pickles are moved """
+        
+        homedir = os.path.join(os.path.expanduser('~'),'')
+        index = similarities.Similarity(homedir, corpus[:5], num_features=len(dictionary), shardsize=9)
+        index.save('test_index')
+        self.assertTrue(os.path.exists(os.path.join(os.path.dirname(homedir), 'shard', '')))
+        self.assertTrue(os.path.exists(os.path.join(os.path.dirname(homedir), 'shard', '.0')))
+        self.assertTrue(os.path.exists(os.path.join(os.path.dirname(homedir), 'shard', 'test_index')))
+        index.destroy()
+    
     def testMmapCompressed(self):
         pass
         # turns out this test doesn't exercise this because there are no arrays
