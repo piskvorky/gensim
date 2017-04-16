@@ -98,7 +98,7 @@ class HashDictionary(utils.SaveLoad, dict):
 
     def keys(self):
         """Return a list of all token ids."""
-        return range(len(self))
+        return xrange(len(self))
 
     def __str__(self):
         return ("HashDictionary(%i id range)" % len(self))
