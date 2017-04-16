@@ -14,6 +14,7 @@ before_install:
 install:
   - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
   - source activate gensim-test
+  - pip install annoy
   - pip install pyemd
   - pip install annoy
   - pip install testfixtures
