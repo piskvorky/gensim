@@ -212,6 +212,7 @@ def sparse2full(doc, length):
     doc = ((int(id_), float(val_)) for (id_, val_) in doc)
 
     doc = dict(doc)
+    doc = dict((k, v) for (k, v) in doc.items() if k < length)
     # overwrite some of the zeroes with explicit values
     result[list(doc)] = list(itervalues(doc))
     return result
