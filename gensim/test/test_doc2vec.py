@@ -79,9 +79,21 @@ class TestDoc2VecModel(unittest.TestCase):
     def testPersistenceWord2VecFormat(self):
         """Test storing the entire model in word2vec format."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
-        model.save_word2vec_format(testfile(), doctag_vec=True, binary=True)
-        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        # test saving both document and word embedding
+        test_doc_word = os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.dw')
+        model.save_word2vec_format(test_doc_word, doctag_vec=True, word_vec=True, binary=True)
+        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_doc_word, binary=True)
         self.assertEqual(len(model.wv.vocab) + len(model.docvecs), len(binary_model_dv.vocab))
+        # test saving document embedding only
+        test_doc = os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.d')
+        model.save_word2vec_format(test_doc, doctag_vec=True, word_vec=False, binary=True)
+        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_doc, binary=True)
+        self.assertEqual(len(model.docvecs), len(binary_model_dv.vocab))
+        # test saving word embedding only
+        test_word = os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.w')
+        model.save_word2vec_format(test_word, doctag_vec=False, word_vec=True, binary=True)
+        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_word, binary=True)
+        self.assertEqual(len(model.wv.vocab), len(binary_model_dv.vocab))
 
     def test_load_mmap(self):
         """Test storing/loading the entire model."""
