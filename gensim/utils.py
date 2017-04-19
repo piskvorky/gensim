@@ -1173,7 +1173,7 @@ def check_output(args, flag=True):
         """
         error = "subprocess.check_output could not execute command ' " + str(args) + " '"
         logger.error(error)
-        return error
+        raise
 
 def sample_dict(d, n=10, use_random=True):
      """
