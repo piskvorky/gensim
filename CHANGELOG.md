@@ -17,7 +17,7 @@ See the [method documentation](https://github.com/RaRe-Technologies/gensim/blob/
 * Explicit epochs and corpus size in word2vec train(). (@gojomo, @robotcator, [#1139](https://github.com/RaRe-Technologies/gensim/pull/1139), [#1237](https://github.com/RaRe-Technologies/gensim/pull/1237))
 
 New features:
-
+* Add modified save_word2vec_format for Doc2Vec, to save document vectors. (@parulsethi,[#1256](https://github.com/RaRe-Technologies/gensim/pull/1256))
 * Add output word prediction in word2vec. Only for negative sampling scheme. See [ipynb]( https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/word2vec.ipynb) (@chinmayapancholi13,[#1209](https://github.com/RaRe-Technologies/gensim/pull/1209))
 * scikit_learn wrapper for LSI Model in Gensim (@chinmayapancholi13,[#1244](https://github.com/RaRe-Technologies/gensim/pull/1244))
 * Add the 'keep_tokens' parameter to 'filter_extremes'. (@toliwa,[#1210](https://github.com/RaRe-Technologies/gensim/pull/1210))
