@@ -39,7 +39,7 @@ git remote --verbose
 
 # Travis does the git clone with a limited depth (50 at the time of
 # writing). This may not be enough to find the common ancestor with
-# $REMOTE/master so we unshallow the git checkout
+# $REMOTE/develop so we unshallow the git checkout
 if [[ -a .git/shallow ]]; then
     echo -e '\nTrying to unshallow the repo:'
     echo '--------------------------------------------------------------------------------'
@@ -60,7 +60,7 @@ if [[ "$TRAVIS" == "true" ]]; then
         fi
     else
         # We want to fetch the code as it is in the PR branch and not
-        # the result of the merge into master. This way line numbers
+        # the result of the merge into develop. This way line numbers
         # reported by Travis will match with the local code.
         LOCAL_BRANCH_REF=travis_pr_$TRAVIS_PULL_REQUEST
         # In Travis the PR target is always origin
@@ -69,7 +69,7 @@ if [[ "$TRAVIS" == "true" ]]; then
 fi
 
 # If not using the commit range from Travis we need to find the common
-# ancestor between $LOCAL_BRANCH_REF and $REMOTE/master
+# ancestor between $LOCAL_BRANCH_REF and $REMOTE/develop
 if [[ -z "$COMMIT_RANGE" ]]; then
     if [[ -z "$LOCAL_BRANCH_REF" ]]; then
         LOCAL_BRANCH_REF=$(git rev-parse --abbrev-ref HEAD)
@@ -78,11 +78,11 @@ if [[ -z "$COMMIT_RANGE" ]]; then
     echo '--------------------------------------------------------------------------------'
     git log -2 $LOCAL_BRANCH_REF
 
-    REMOTE_MASTER_REF="$REMOTE/master"
+    REMOTE_MASTER_REF="$REMOTE/develop"
     # Make sure that $REMOTE_MASTER_REF is a valid reference
     echo -e "\nFetching $REMOTE_MASTER_REF"
     echo '--------------------------------------------------------------------------------'
-    git fetch $REMOTE master:refs/remotes/$REMOTE_MASTER_REF
+    git fetch $REMOTE develop:refs/remotes/$REMOTE_MASTER_REF
     LOCAL_BRANCH_SHORT_HASH=$(git rev-parse --short $LOCAL_BRANCH_REF)
     REMOTE_MASTER_SHORT_HASH=$(git rev-parse --short $REMOTE_MASTER_REF)
 
@@ -133,6 +133,6 @@ check_files() {
 if [[ "$MODIFIED_FILES" == "no_match" ]]; then
     echo "No file has been modified"
 else
-    check_files "$(echo "$MODIFIED_FILES" )" --ignore=E501,E731,E12,W503
+    check_files "$(echo "$MODIFIED_FILES" )" "--ignore=E501,E731,E12,W503 --exclude=*.sh,*.md"
 fi
 echo -e "No problem detected by flake8\n"

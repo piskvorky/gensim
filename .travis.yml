@@ -21,4 +21,6 @@ install:
   - pip install scikit-learn
   - pip install Morfessor==2.0.2a4
   - python setup.py install
-script: python setup.py test
+script: 
+  - python setup.py test
+  - continuous_integration/travis/flake8_diff.sh
