@@ -444,7 +444,7 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         self.assertTrue(index2.output_prefix == os.path.join(os.path.dirname(homedir), 'test', 'shard', ''))
         index2.destroy()
         rmtree(os.path.join(os.path.dirname(homedir), 'test', ''))
-        
+
     def testMmapCompressed(self):
         pass
         # turns out this test doesn't exercise this because there are no arrays
