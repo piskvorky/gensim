@@ -430,13 +430,21 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
     def testShardDir(self):
         """test where shard and pickles are moved """
         
+        from shutil import move,rmtree
+
         homedir = os.path.join(os.path.expanduser('~'),'')
         index = similarities.Similarity(homedir, corpus[:5], num_features=len(dictionary), shardsize=9)
         index.save('test_index')
         self.assertTrue(os.path.exists(os.path.join(os.path.dirname(homedir), 'shard', '')))
         self.assertTrue(os.path.exists(os.path.join(os.path.dirname(homedir), 'shard', '.0')))
         self.assertTrue(os.path.exists(os.path.join(os.path.dirname(homedir), 'shard', 'test_index')))
-        index.destroy()
+        self.assertTrue(index.output_prefix==os.path.join(os.path.dirname(homedir), 'shard', ''))
+        move(os.path.join(os.path.dirname(homedir), 'shard', ''), os.path.join(os.path.dirname(homedir),'test','shard', ''))
+        index2 = similarities.Similarity.load(os.path.join(os.path.dirname(homedir),'test', 'shard', 'test_index'))
+        self.assertTrue(index2.output_prefix==os.path.join(os.path.dirname(homedir), 'test','shard', ''))
+        index2.destroy()
+        rmtree(os.path.join(os.path.dirname(homedir), 'test', ''))
+        
     
     def testMmapCompressed(self):
         pass
