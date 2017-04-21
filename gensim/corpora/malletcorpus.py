@@ -107,8 +107,8 @@ class MalletCorpus(LowCorpus):
 
         if truncated:
             logger.warning("Mallet format can only save vectors with "
-                            "integer elements; %i float entries were truncated to integer value" %
-                            truncated)
+                           "integer elements; %i float entries were truncated to integer value" %
+                           truncated)
 
         return offsets
 

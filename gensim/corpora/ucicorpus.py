@@ -51,7 +51,7 @@ class UciReader(MmReader):
                 pass
 
         logger.info('accepted corpus with %i documents, %i features, %i non-zero entries' %
-            (self.num_docs, self.num_terms, self.num_nnz))
+                    (self.num_docs, self.num_terms, self.num_nnz))
 
     def skip_headers(self, input_file):
         for lineno, _ in enumerate(input_file):
@@ -118,7 +118,7 @@ class UciWriter(MmWriter):
                 offsets.append(posnow)
                 poslast = posnow
 
-            vector = [(x, int(y)) for (x, y) in bow if int(y) != 0] # integer count, not floating weights
+            vector = [(x, int(y)) for (x, y) in bow if int(y) != 0]  # integer count, not floating weights
             max_id, veclen = writer.write_vector(docno, vector)
             num_terms = max(num_terms, 1 + max_id)
             num_nnz += veclen
@@ -126,10 +126,10 @@ class UciWriter(MmWriter):
 
         if num_docs * num_terms != 0:
             logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" %
-                         (num_docs, num_terms,
-                          100.0 * num_nnz / (num_docs * num_terms),
-                          num_nnz,
-                          num_docs * num_terms))
+                        (num_docs, num_terms,
+                         100.0 * num_nnz / (num_docs * num_terms),
+                         num_nnz,
+                         num_docs * num_terms))
 
         # now write proper headers, by seeking and overwriting the spaces written earlier
         writer.update_headers(num_docs, num_terms, num_nnz)
@@ -165,7 +165,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         (yielding one document at a time).
         """
         for docId, doc in super(UciCorpus, self).__iter__():
-            yield doc # get rid of docId, return the sparse vector only
+            yield doc  # get rid of docId, return the sparse vector only
 
     def create_dictionary(self):
         """
