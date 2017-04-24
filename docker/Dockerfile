@@ -5,14 +5,18 @@ MAINTAINER Daniel Baptista Dias <danielbpdias@gmail.com>
 ENV GENSIM_REPOSITORY https://github.com/danielbdias/gensim/archive
 ENV GENSIM_VERSION develop
 
-# Installs python, pip and setup tools
+# Installs python, pip and setup tools (with fixed versions)
 RUN apt-get update \
     && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-setuptools \
-    unzip \
-    wget
+    g++=4:5.3.1-1ubuntu1 \
+    git=1:2.7.4-0ubuntu1 \
+    libboost-all-dev=1.58.0.1ubuntu1 \
+    mercurial=3.7.3-1ubuntu1 \
+    python3=3.5.1-3 \
+    python3-pip=8.1.1-2ubuntu0.4 \
+    python3-setuptools=20.7.0-1 \
+    unzip=6.0-20ubuntu1 \
+    wget=1.17.1-1ubuntu1.1
 
 # Setup python language
 RUN locale-gen en_US.UTF-8
@@ -23,43 +27,46 @@ ENV LC_ALL en_US.UTF-8
 # Make some symlinks
 RUN cd /usr/bin \
     && ln -s easy_install3 easy_install \
-    && ln -s pydoc3 pydoc \
-    && ln -s python3-config python-config \
-    && ln -s pip3 pip \
-    && ln -s python3 python
+    && ln -s pip3 pip
 
 # Upgrade pip
 RUN pip install --upgrade pip
 
 # Install dependencies
-RUN pip3 install \
-    annoy \
-    cython \
-    gensim \
-    jupyter \
-    matplotlib \
-    nltk \
-    pandas \
-    pyemd \
-    sklearn
+RUN pip install \
+    annoy==1.8.3 \
+    cython==0.25.2 \
+    gensim==2.0.0 \
+    jupyter==1.0.0 \
+    matplotlib==2.0.0 \
+    nltk==3.2.2 \
+    pandas==0.19.2 \
+    pyemd==0.4.3 \
+    sklearn==0.0
 
-# Create gensim directory
-RUN mkdir /gensim
+# # Install WordRank
+RUN mkdir /gensim_dependencies \
+    && cd /gensim_dependencies \
+    && git clone https://bitbucket.org/shihaoji/wordrank \
+    && sh ./wordrank/install.sh
 
-# Download gensim from Github
-RUN mkdir /gensim/download \
-    && cd /gensim/download \
-    && wget --quiet $GENSIM_REPOSITORY/$GENSIM_VERSION.zip \
-    && unzip $GENSIM_VERSION.zip \
-    && mv ./gensim-$GENSIM_VERSION/* /gensim \
-    && rm -rf /gensim/download
+# # Create gensim directory
+# RUN mkdir /gensim
 
-# Run check script
-RUN python /gensim/docker/check_fast_version.py
+# # Download gensim from Github
+# RUN mkdir /gensim/download \
+#     && cd /gensim/download \
+#     && wget --quiet $GENSIM_REPOSITORY/$GENSIM_VERSION.zip \
+#     && unzip $GENSIM_VERSION.zip \
+#     && mv ./gensim-$GENSIM_VERSION/* /gensim \
+#     && rm -rf /gensim/download
 
-# Add running permission to startup script
-RUN chmod +x /gensim/docker/start_jupyter_notebook.sh
+# # Run check script
+# RUN python /gensim/docker/check_fast_version.py
 
-# Define the starting command for this container and expose its running port
-CMD sh -c '/gensim/docker/start_jupyter_notebook.sh 9000'
-EXPOSE 9000
+# # Add running permission to startup script
+# RUN chmod +x /gensim/docker/start_jupyter_notebook.sh
+
+# # Define the starting command for this container and expose its running port
+# CMD sh -c '/gensim/docker/start_jupyter_notebook.sh 9000'
+# EXPOSE 9000
