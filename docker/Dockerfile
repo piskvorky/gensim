@@ -8,7 +8,9 @@ ENV GENSIM_VERSION develop
 # Installs python, pip and setup tools (with fixed versions)
 RUN apt-get update \
     && apt-get install -y \
+    ant=1.9.6-1ubuntu1 \
     cmake=3.5.1-1ubuntu3 \
+    default-jdk=2:1.8-56ubuntu2 \
     g++=4:5.3.1-1ubuntu1 \
     git=1:2.7.4-0ubuntu1 \
     libboost-all-dev=1.58.0.1ubuntu1 \
@@ -81,14 +83,25 @@ RUN cd /gensim_dependencies \
     && cd /gensim_dependencies/dtm/dtm \
     && make
 
+# Install Mallet
+RUN mkdir /gensim_dependencies/mallet \
+    && mkdir /gensim_dependencies/download \
+    && cd /gensim_dependencies/download \
+    && wget --quiet http://mallet.cs.umass.edu/dist/mallet-2.0.8.zip \
+    && unzip mallet-2.0.8.zip \
+    && mv ./mallet-2.0.8/* /gensim_dependencies/mallet \
+    && rm -rf /gensim_dependencies/download \
+    && cd /gensim_dependencies/mallet \
+    && ant
+
 # Start gensim
 
 # Run check script
 # RUN python /gensim/docker/check_fast_version.py
 
 # Add running permission to startup script
-# RUN chmod +x /gensim/docker/start_jupyter_notebook.sh
+RUN chmod +x /gensim/docker/start_jupyter_notebook.sh
 
 # Define the starting command for this container and expose its running port
-# CMD sh -c '/gensim/docker/start_jupyter_notebook.sh 9000'
-# EXPOSE 9000
+CMD sh -c '/gensim/docker/start_jupyter_notebook.sh 9000'
+EXPOSE 9000
