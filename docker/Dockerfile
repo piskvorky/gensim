@@ -12,6 +12,7 @@ RUN apt-get update \
     g++=4:5.3.1-1ubuntu1 \
     git=1:2.7.4-0ubuntu1 \
     libboost-all-dev=1.58.0.1ubuntu1 \
+    libgsl-dev=2.1+dfsg-2 \
     mercurial=3.7.3-1ubuntu1 \
     python3=3.5.1-3 \
     python3-pip=8.1.1-2ubuntu0.4 \
