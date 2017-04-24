@@ -504,6 +504,14 @@ class DocvecsArray(utils.SaveLoad):
         """
         return dot(matutils.unitvec(self[d1]), matutils.unitvec(self[d2]))
 
+    def cosine_similarity(self, d1, d2):
+        """
+        Compute cosine similarity between two given docvecs. 
+        (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
+
+        """
+        return dot(d1, d2)
+
     def n_similarity(self, ds1, ds2):
         """
         Compute cosine similarity between two sets of docvecs from the trained set, specified by int
