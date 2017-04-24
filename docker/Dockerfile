@@ -8,6 +8,7 @@ ENV GENSIM_VERSION develop
 # Installs python, pip and setup tools (with fixed versions)
 RUN apt-get update \
     && apt-get install -y \
+    cmake=3.5.1-1ubuntu3 \
     g++=4:5.3.1-1ubuntu1 \
     git=1:2.7.4-0ubuntu1 \
     libboost-all-dev=1.58.0.1ubuntu1 \
@@ -44,22 +45,26 @@ RUN pip install \
     pyemd==0.4.3 \
     sklearn==0.0
 
-# # Install WordRank
+# Download WordRank
 RUN mkdir /gensim_dependencies \
     && cd /gensim_dependencies \
-    && git clone https://bitbucket.org/shihaoji/wordrank \
-    && sh ./wordrank/install.sh
+    && git clone https://bitbucket.org/shihaoji/wordrank
 
-# # Create gensim directory
-# RUN mkdir /gensim
+# Create gensim directory
+RUN mkdir /gensim
 
-# # Download gensim from Github
-# RUN mkdir /gensim/download \
-#     && cd /gensim/download \
-#     && wget --quiet $GENSIM_REPOSITORY/$GENSIM_VERSION.zip \
-#     && unzip $GENSIM_VERSION.zip \
-#     && mv ./gensim-$GENSIM_VERSION/* /gensim \
-#     && rm -rf /gensim/download
+# Download gensim from Github
+RUN mkdir /gensim/download \
+    && cd /gensim/download \
+    && wget --quiet $GENSIM_REPOSITORY/$GENSIM_VERSION.zip \
+    && unzip $GENSIM_VERSION.zip \
+    && mv ./gensim-$GENSIM_VERSION/* /gensim \
+    && rm -rf /gensim/download
+
+# Copy custom WordRank file to Github and Install it
+RUN cp /gensim/docker/wordrank_install.sh /gensim_dependencies/wordrank/install.sh \
+    && cd /gensim_dependencies/wordrank \
+    && sh ./install.sh
 
 # # Run check script
 # RUN python /gensim/docker/check_fast_version.py
