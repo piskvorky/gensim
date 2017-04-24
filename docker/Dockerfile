@@ -40,18 +40,18 @@ RUN pip install \
     gensim==2.0.0 \
     jupyter==1.0.0 \
     matplotlib==2.0.0 \
+    morfessor==2.0.2a4 \
     nltk==3.2.2 \
     pandas==0.19.2 \
     pyemd==0.4.3 \
-    sklearn==0.0
+    sklearn==0.0 \
+    git+git://github.com/mila-udem/fuel.git@stable \
+    git+git://github.com/mila-udem/blocks.git@stable \
+    -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
-# Download WordRank
-RUN mkdir /gensim_dependencies \
-    && cd /gensim_dependencies \
-    && git clone https://bitbucket.org/shihaoji/wordrank
-
-# Create gensim directory
-RUN mkdir /gensim
+# Create gensim directory and dependencies directory
+RUN mkdir /gensim \
+    && mkdir /gensim_dependencies
 
 # Download gensim from Github
 RUN mkdir /gensim/download \
@@ -61,17 +61,33 @@ RUN mkdir /gensim/download \
     && mv ./gensim-$GENSIM_VERSION/* /gensim \
     && rm -rf /gensim/download
 
-# Copy custom WordRank file to Github and Install it
-RUN cp /gensim/docker/wordrank_install.sh /gensim_dependencies/wordrank/install.sh \
+# Install custom dependencies
+
+# Download WordRank
+RUN cd /gensim_dependencies \
+    && git clone https://bitbucket.org/shihaoji/wordrank \
+    && cp /gensim/docker/wordrank_install.sh /gensim_dependencies/wordrank/install.sh \
     && cd /gensim_dependencies/wordrank \
     && sh ./install.sh
 
-# # Run check script
+# Install MorphologicalPriorsForWordEmbeddings
+RUN cd /gensim_dependencies \
+    && git clone https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings.git
+
+# Install DTM
+RUN cd /gensim_dependencies \
+    && git clone https://github.com/fedorn/dtm.git \
+    && cd /gensim_dependencies/dtm/dtm \
+    && make
+
+# Start gensim
+
+# Run check script
 # RUN python /gensim/docker/check_fast_version.py
 
-# # Add running permission to startup script
+# Add running permission to startup script
 # RUN chmod +x /gensim/docker/start_jupyter_notebook.sh
 
-# # Define the starting command for this container and expose its running port
+# Define the starting command for this container and expose its running port
 # CMD sh -c '/gensim/docker/start_jupyter_notebook.sh 9000'
 # EXPOSE 9000
