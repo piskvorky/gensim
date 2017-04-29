@@ -617,12 +617,12 @@ class Doc2Vec(Word2Vec):
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
             null_word=dm_concat, **kwargs)
-        
+
         self.load = call_on_class_only
 
         if dm_mean is not None:
             self.cbow_mean = dm_mean
-        
+
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
@@ -672,7 +672,7 @@ class Doc2Vec(Word2Vec):
         for document_no, document in enumerate(documents):
             if not checked_string_types:
                 if isinstance(document.words, string_types):
-                    logger.warn("Each 'words' should be a list of words (usually unicode strings)."
+                    logger.warning("Each 'words' should be a list of words (usually unicode strings)."
                                 "First 'words' here is instead plain %s." % type(document.words))
                 checked_string_types += 1
             if document_no % progress_per == 0:
@@ -845,7 +845,7 @@ class Doc2Vec(Word2Vec):
                         fout.write(utils.to_utf8(doctag) + b" " + row.tostring())
                     else:
                         fout.write(utils.to_utf8("%s %s\n" % (doctag, ' '.join("%f" % val for val in row))))
-        
+
 
 class TaggedBrownCorpus(object):
     """Iterate over documents from the Brown corpus (part of NLTK data), yielding
