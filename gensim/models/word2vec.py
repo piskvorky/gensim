@@ -76,12 +76,12 @@ And on analogies::
 
 and so on.
 
-If you're finished training a model (=no more updates, only querying), then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
+If you're finished training a model (i.e. no more updates, only querying), then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
 
   >>> word_vectors = model.wv
   >>> del model
 
-to trim unneeded model memory = use (much) less RAM.
+to trim unneeded model memory = use much less RAM.
 
 Note that there is a :mod:`gensim.models.phrases` module which lets you automatically
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
@@ -356,6 +356,9 @@ class Word2Vec(utils.SaveLoad):
     """
     Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
 
+    If you're finished training a model (=no more updates, only querying)
+    then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
+
     The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in a format
     compatible with the original word2vec implementation via `wv.save_word2vec_format()` and `KeyedVectors.load_word2vec_format()`.
 
@@ -476,8 +479,8 @@ class Word2Vec(utils.SaveLoad):
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
-            self.train(sentences)
-
+            self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
+                       start_alpha=self.alpha, end_alpha=self.min_alpha)
         else :
             if trim_rule is not None :
                 logger.warning("The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model. ")
@@ -787,16 +790,23 @@ class Word2Vec(utils.SaveLoad):
         """Return the number of words in a given job."""
         return sum(len(sentence) for sentence in job)
 
-    def train(self, sentences, total_words=None, word_count=0,
-              total_examples=None, queue_factor=2, report_delay=1.0):
+    def train(self, sentences, total_examples=None, total_words=None,
+              epochs=None, start_alpha=None, end_alpha=None,
+              word_count=0,
+              queue_factor=2, report_delay=1.0):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
 
-        To support linear learning-rate decay from (initial) alpha to min_alpha, either total_examples
-        (count of sentences) or total_words (count of raw words in sentences) should be provided, unless the
-        sentences are the same as those that were used to initially build the vocabulary.
+        To support linear learning-rate decay from (initial) alpha to min_alpha, and accurate
+        progres-percentage logging, either total_examples (count of sentences) or total_words (count of
+        raw words in sentences) MUST be provided. (If the corpus is the same as was provided to
+        `build_vocab()`, the count of examples in that corpus will be available in the model's
+        `corpus_count` property.)
 
+        To avoid common mistakes around the model's ability to do multiple training passes itself, an
+        explicit `epochs` argument MUST be provided. In the common and recommended case, where `train()`
+        is only called once, the model's cached `iter` value should be supplied as `epochs` value.
         """
         if (self.model_trimmed_post_training):
             raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
@@ -827,18 +837,18 @@ class Word2Vec(utils.SaveLoad):
                 "Instead start with a blank model, scan_vocab on the new corpus, intersect_word2vec_format with the old model, then train.")
 
         if total_words is None and total_examples is None:
-            if self.corpus_count:
-                total_examples = self.corpus_count
-                logger.info("expecting %i sentences, matching count from corpus used for vocabulary survey", total_examples)
-            else:
-                raise ValueError("you must provide either total_words or total_examples, to enable alpha and progress calculations")
+            raise ValueError("You must specify either total_examples or total_words, for proper alpha and progress calculations. The usual value is total_examples=model.corpus_count.")
+        if epochs is None:
+            raise ValueError("You must specify an explict epochs count. The usual value is epochs=model.iter.")
+        start_alpha = start_alpha or self.alpha
+        end_alpha = end_alpha or self.min_alpha
 
         job_tally = 0
 
-        if self.iter > 1:
-            sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
-            total_words = total_words and total_words * self.iter
-            total_examples = total_examples and total_examples * self.iter
+        if epochs > 1:
+            sentences = utils.RepeatCorpusNTimes(sentences, epochs)
+            total_words = total_words and total_words * epochs
+            total_examples = total_examples and total_examples * epochs
 
         def worker_loop():
             """Train the model, lifting lists of sentences from the job_queue."""
@@ -860,7 +870,7 @@ class Word2Vec(utils.SaveLoad):
             """Fill jobs queue using the input `sentences` iterator."""
             job_batch, batch_size = [], 0
             pushed_words, pushed_examples = 0, 0
-            next_alpha = self.alpha
+            next_alpha = start_alpha
             if next_alpha > self.min_alpha_yet_reached:
                 logger.warn("Effective 'alpha' higher than previous training cycles")
             self.min_alpha_yet_reached = next_alpha
@@ -883,7 +893,7 @@ class Word2Vec(utils.SaveLoad):
                     job_queue.put((job_batch, next_alpha))
 
                     # update the learning rate for the next job
-                    if self.min_alpha < next_alpha:
+                    if end_alpha < next_alpha:
                         if total_examples:
                             # examples-based decay
                             pushed_examples += len(job_batch)
@@ -892,8 +902,8 @@ class Word2Vec(utils.SaveLoad):
                             # words-based decay
                             pushed_words += self._raw_word_count(job_batch)
                             progress = 1.0 * pushed_words / total_words
-                        next_alpha = self.alpha - (self.alpha - self.min_alpha) * progress
-                        next_alpha = max(self.min_alpha, next_alpha)
+                        next_alpha = start_alpha - (start_alpha - end_alpha) * progress
+                        next_alpha = max(end_alpha, next_alpha)
 
                     # add the sentence that didn't fit as the first item of a new job
                     job_batch, batch_size = [sentence], sentence_length
@@ -1100,6 +1110,11 @@ class Word2Vec(utils.SaveLoad):
         return sentence_scores[:sentence_count]
 
     def clear_sims(self):
+        """
+        Removes all L2-normalized vectors for words from the model.
+        You will have to recompute them using init_sims method.
+        """
+
         self.wv.syn0norm = None
 
     def update_weights(self):
@@ -1202,36 +1217,107 @@ class Word2Vec(utils.SaveLoad):
                     if word in self.wv.vocab:
                         overlap_count += 1
                         self.wv.syn0[self.wv.vocab[word].index] = weights
+                        self.syn0_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
         logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.wv.syn0.shape, fname))
 
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.most_similar`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return self.wv.most_similar(positive, negative, topn, restrict_vocab, indexer)
 
     def wmdistance(self, document1, document2):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.wmdistance`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return self.wv.wmdistance(document1, document2)
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.most_similar_cosmul`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return self.wv.most_similar_cosmul(positive, negative, topn)
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.similar_by_word`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return self.wv.similar_by_word(word, topn, restrict_vocab)
 
     def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.similar_by_vector`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return self.wv.similar_by_vector(vector, topn, restrict_vocab)
 
     def doesnt_match(self, words):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.doesnt_match`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return self.wv.doesnt_match(words)
 
     def __getitem__(self, words):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.__getitem__`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return self.wv.__getitem__(words)
 
     def __contains__(self, word):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.__contains__`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return self.wv.__contains__(word)
 
     def similarity(self, w1, w2):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.similarity`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return self.wv.similarity(w1, w2)
 
     def n_similarity(self, ws1, ws2):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.n_similarity`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return self.wv.n_similarity(ws1, ws2)
 
     def predict_output_word(self, context_words_list, topn=10):
@@ -1294,9 +1380,23 @@ class Word2Vec(utils.SaveLoad):
 
     @staticmethod
     def log_evaluate_word_pairs(pearson, spearman, oov, pairs):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.log_evaluate_word_pairs`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return KeyedVectors.log_evaluate_word_pairs(pearson, spearman, oov, pairs)
 
     def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+        """
+        Please refer to the documentation for
+        `gensim.models.KeyedVectors.evaluate_word_pairs`
+        This is just a forwarding function.
+        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        """
+
         return self.wv.evaluate_word_pairs(pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
 
     def __str__(self):
