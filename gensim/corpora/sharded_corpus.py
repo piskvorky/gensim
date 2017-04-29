@@ -264,7 +264,7 @@ class ShardedCorpus(IndexedCorpus):
                 logger.info('Deriving dataset dimension from corpus: '
                              '{0}'.format(proposed_dim))
             else:
-                logger.warn('Dataset dimension derived from input corpus diffe'
+                logger.warning('Dataset dimension derived from input corpus diffe'
                              'rs from initialization argument, using corpus.'
                              '(corpus {0}, init arg {1})'.format(proposed_dim,
                                                                  self.dim))
@@ -311,7 +311,7 @@ class ShardedCorpus(IndexedCorpus):
             if self.dim is None:
                 logger.info('Loaded dataset dimension: {0}'.format(temp.dim))
             else:
-                logger.warn('Loaded dataset dimension differs from init arg '
+                logger.warning('Loaded dataset dimension differs from init arg '
                              'dimension, using loaded dim. '
                              '(loaded {0}, init {1})'.format(temp.dim, self.dim))
 
@@ -531,12 +531,12 @@ class ShardedCorpus(IndexedCorpus):
                                  'refusing to guess (dimension set to {0},'
                                  'type of corpus: {1}).'.format(self.dim, type(corpus)))
             else:
-                logger.warn('Couldn\'t find number of features, trusting '
+                logger.warning('Couldn\'t find number of features, trusting '
                              'supplied dimension ({0})'.format(self.dim))
                 n_features = self.dim
 
         if self.dim and n_features != self.dim:
-            logger.warn('Discovered inconsistent dataset dim ({0}) and '
+            logger.warning('Discovered inconsistent dataset dim ({0}) and '
                          'feature count from corpus ({1}). Coercing to dimension'
                          ' given by argument.'.format(self.dim, n_features))
 
