@@ -165,7 +165,7 @@ class TestDoc2VecModel(unittest.TestCase):
     def model_sanity(self, model, keep_training=True):
         """Any non-trivial model on DocsLeeCorpus can pass these sanity checks"""
         fire1 = 0  # doc 0 sydney fires
-        fire2 = 8  # doc 8 sydney fires
+        fire2 = np.int64(8)  # doc 8 sydney fires
         tennis1 = 6  # doc 6 tennis
 
         # inferred vector should be top10 close to bulk-trained one
