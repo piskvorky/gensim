@@ -267,8 +267,13 @@ class SaveLoad(object):
         obj._load_specials(fname, mmap, compress, subname)
         logger.info("loaded %s", fname)
         if cls.__name__ == 'Similarity':
+            """ 
+            issubclass should not be called from inside a classmethod function, when we are not calling it from 
+            the class we intend to compare it with (because that class may not even exist at the time of calling) 
+
+            """
             if obj.output_prefix is not fname:
-                obj.output_prefix = os.path.join(fname[: fname.rfind("shard")] , 'shard' ,'')   # '' to get trailing slash
+                obj.output_prefix = os.path.join(fname[: fname.rfind("shard")], 'shard', '')   # '' to get trailing slash
                 obj.check_moved()
         return obj
 
