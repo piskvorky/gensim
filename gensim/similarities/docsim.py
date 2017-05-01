@@ -459,9 +459,13 @@ class Similarity(interfaces.SimilarityABC):
         """
         self.close_shard()
         if fname is None:
-            fname = os.path.join(self.output_prefix, 'index') if self.is_shard else self.output_prefix + '.index'  # default file name - index
+            if(issubclass(self.__class__, Similarity)) :
+                fname = os.path.join(self.output_prefix, 'index') if self.is_shard else self.output_prefix + '.index'  # default file name - index
+            else:
+                fname = self.output_prefix
         else:
-            fname = os.path.join(self.output_prefix, fname) if self.is_shard else self.output_prefix + '.' + fname
+            if(issubclass(self.__class__, Similarity)) :
+                fname = os.path.join(self.output_prefix, fname) if self.is_shard else self.output_prefix + '.' + fname  # default file name - index
 
         super(Similarity, self).save(fname, *args, **kwargs)
 
