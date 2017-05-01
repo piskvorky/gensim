@@ -565,8 +565,10 @@ class Word2Vec(utils.SaveLoad):
         for sentence_no, sentence in enumerate(sentences):
             if not checked_string_types:
                 if isinstance(sentence, string_types):
-                    logger.warning("Each 'sentences' item should be a list of words (usually unicode strings)."
-                                "First item here is instead plain %s.", type(sentence))
+                    logger.warning(
+                        "Each 'sentences' item should be a list of words (usually unicode strings)."
+                        "First item here is instead plain %s.", type(sentence)
+                    )
                 checked_string_types += 1
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
@@ -845,7 +847,9 @@ class Word2Vec(utils.SaveLoad):
             pushed_words, pushed_examples = 0, 0
             next_alpha = start_alpha
             if next_alpha > self.min_alpha_yet_reached:
-                logger.warning("Effective 'alpha' higher than previous training cycles")
+                logger.warning(
+                    "Effective 'alpha' higher than previous training cycles"
+                )
             self.min_alpha_yet_reached = next_alpha
             job_no = 0
 
@@ -953,13 +957,19 @@ class Word2Vec(utils.SaveLoad):
             "training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed)
         if job_tally < 10 * self.workers:
-            logger.warning("under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay")
+            logger.warning(
+                "under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay"
+            )
 
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
-            logger.warning("supplied example count (%i) did not equal expected count (%i)", example_count, total_examples)
+            logger.warning(
+                "supplied example count (%i) did not equal expected count (%i)", example_count, total_examples
+            )
         if total_words and total_words != raw_word_count:
-            logger.warning("supplied raw word count (%i) did not equal expected count (%i)", raw_word_count, total_words)
+            logger.warning(
+                "supplied raw word count (%i) did not equal expected count (%i)", raw_word_count, total_words
+            )
 
         self.train_count += 1  # number of times train() has been called
         self.total_train_time += elapsed

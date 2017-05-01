@@ -672,8 +672,10 @@ class Doc2Vec(Word2Vec):
         for document_no, document in enumerate(documents):
             if not checked_string_types:
                 if isinstance(document.words, string_types):
-                    logger.warning("Each 'words' should be a list of words (usually unicode strings)."
-                                "First 'words' here is instead plain %s." % type(document.words))
+                    logger.warning(
+                        "Each 'words' should be a list of words (usually unicode strings)."
+                        "First 'words' here is instead plain %s." % type(document.words)
+                    )
                 checked_string_types += 1
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)

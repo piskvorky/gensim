@@ -264,10 +264,11 @@ class ShardedCorpus(IndexedCorpus):
                 logger.info('Deriving dataset dimension from corpus: '
                              '{0}'.format(proposed_dim))
             else:
-                logger.warning('Dataset dimension derived from input corpus diffe'
-                             'rs from initialization argument, using corpus.'
-                             '(corpus {0}, init arg {1})'.format(proposed_dim,
-                                                                 self.dim))
+                logger.warning(
+                    'Dataset dimension derived from input corpus diffe'
+                    'rs from initialization argument, using corpus.'
+                    '(corpus {0}, init arg {1})'.format(proposed_dim, self.dim)
+                )
 
         self.dim = proposed_dim
         self.offsets = [0]
@@ -311,9 +312,11 @@ class ShardedCorpus(IndexedCorpus):
             if self.dim is None:
                 logger.info('Loaded dataset dimension: {0}'.format(temp.dim))
             else:
-                logger.warning('Loaded dataset dimension differs from init arg '
-                             'dimension, using loaded dim. '
-                             '(loaded {0}, init {1})'.format(temp.dim, self.dim))
+                logger.warning(
+                    'Loaded dataset dimension differs from init arg '
+                    'dimension, using loaded dim. '
+                    '(loaded {0}, init {1})'.format(temp.dim, self.dim)
+                )
 
         self.dim = temp.dim  # To be consistent with the loaded data!
 
@@ -531,14 +534,18 @@ class ShardedCorpus(IndexedCorpus):
                                  'refusing to guess (dimension set to {0},'
                                  'type of corpus: {1}).'.format(self.dim, type(corpus)))
             else:
-                logger.warning('Couldn\'t find number of features, trusting '
-                             'supplied dimension ({0})'.format(self.dim))
+                logger.warning(
+                    'Couldn\'t find number of features, trusting '
+                    'supplied dimension ({0})'.format(self.dim)
+                )
                 n_features = self.dim
 
         if self.dim and n_features != self.dim:
-            logger.warning('Discovered inconsistent dataset dim ({0}) and '
-                         'feature count from corpus ({1}). Coercing to dimension'
-                         ' given by argument.'.format(self.dim, n_features))
+            logger.warning(
+                'Discovered inconsistent dataset dim ({0}) and '
+                'feature count from corpus ({1}). Coercing to dimension'
+                ' given by argument.'.format(self.dim, n_features)
+            )
 
         return n_features
 
