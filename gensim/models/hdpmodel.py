@@ -618,7 +618,7 @@ class HdpTopicFormatter(object):
             logger.warn("The parameter num_words for print_topic() method would be deprecated in the updated version.\
             Please use topn instead.")
             topn = num_words
-            
+
         return self.show_topic(topic_id, topn, formatted=True)
 
     def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words= None,):
