@@ -248,7 +248,7 @@ class DtmModel(utils.SaveLoad):
 
         Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
 
-        """        
+        """
         if num_topics < 0 or num_topics >= self.num_topics:
             num_topics = self.num_topics
             chosen_topics = range(num_topics)
@@ -283,18 +283,17 @@ class DtmModel(utils.SaveLoad):
                 #     topic))
         return shown
 
-    def show_topic(self, topicid, time, topn=None, num_words=50):
+    def show_topic(self, topicid, time, topn=50, num_words=None):
         """
         Return `num_words` most probable words for the given `topicid`, as a list of
         `(word_probability, word)` 2-tuples.
 
         """
-        if topn is None: #deprecated num_words is used
+        if num_words is not None:  # deprecated num_words is used
             logger.warn("The parameter num_words for show_topic() method would be deprecated in the updated version.\
-            Please use topn instead. Ignore if you didn't use parameter num_words or topn for show_topic() ")
-            #Add ignore comment for corner case when user passes num_words same as default i.e, num_words=20
+            Please use topn instead.")
             topn = num_words
-            
+
         topics = self.lambda_[:, :, time]
         topic = topics[topicid]
         # liklihood to probability
@@ -306,14 +305,13 @@ class DtmModel(utils.SaveLoad):
         beststr = [(topic[id], self.id2word[id]) for id in bestn]
         return beststr
 
-    def print_topic(self, topicid, time, topn=None, num_words=10):
+    def print_topic(self, topicid, time, topn=10, num_words=None):
         """Return the given topic, formatted as a string."""
-        if topn is None: #deprecated num_words is used
+        if num_words is not None:  # deprecated num_words is used
             logger.warn("The parameter num_words for print_topic() method would be deprecated in the updated version.\
-            Please use topn instead. Ignore if you didn't use parameter num_words or topn for print_topic() ")
-            #Add ignore comment for corner case when user passes num_words same as default i.e, num_words=20
+            Please use topn instead.")
             topn = num_words
-            
+
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
 
     def dtm_vis(self, corpus, time):
