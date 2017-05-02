@@ -33,13 +33,8 @@ A tutorial can be found at https://github.com/RaRe-Technologies/gensim/tree/deve
 # are included in the code where this is the case, for example in the log_perplexity
 # and do_estep methods.
 
-import pdb
-from pdb import set_trace as st
-from pprint import pprint
-
 import logging
 import numpy as np  # for arrays, array broadcasting etc.
-import numbers
 from copy import deepcopy
 from shutil import copyfile
 from os.path import isfile
@@ -391,7 +386,7 @@ class AuthorTopicModel(LdaModel):
                 doc_no = d
             # Get the IDs and counts of all the words in the current document.
             # TODO: this is duplication of code in LdaModel. Refactor.
-            if doc and not isinstance(doc[0][0], six.integer_types):
+            if doc and not isinstance(doc[0][0], six.integer_types + (np.integer,)):
                 # make sure the term IDs are ints, otherwise np will get upset
                 ids = [int(id) for id, _ in doc]
             else:
