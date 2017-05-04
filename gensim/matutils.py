@@ -529,6 +529,10 @@ def jaccard(vec1, vec2):
         return 1 - float(len(intersection)) / float(len(union))
 
 
+def jaccard_set(set1, set2):
+    return 1. - float(len(set1 & set2)) / float(len(set1 | set2))
+
+
 def dirichlet_expectation(alpha):
     """
     For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
