@@ -27,10 +27,16 @@ AT_HOME = False
 
 if AT_HOME:
     SOURCE_LIST = [
-                   sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/'),
-                   sources.DmlSource('numdam', '/Users/kofola/workspace/dml/data/numdam/'),
-                   sources.ArxmlivSource('arxmliv', '/Users/kofola/workspace/dml/data/arxmliv/'),
-                   ]
+        sources.DmlCzSource(
+            'dmlcz',
+            '/Users/kofola/workspace/dml/data/dmlcz/'),
+        sources.DmlSource(
+            'numdam',
+            '/Users/kofola/workspace/dml/data/numdam/'),
+        sources.ArxmlivSource(
+            'arxmliv',
+            '/Users/kofola/workspace/dml/data/arxmliv/'),
+    ]
 
 #    SOURCE_LIST = [
 #                   sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/CzechMathJ'),
@@ -41,22 +47,25 @@ if AT_HOME:
 else:
 
     SOURCE_LIST = [
-                   sources.DmlCzSource('dmlcz', '/data/dmlcz/data/share'),
-                   sources.DmlSource('numdam', '/data/dmlcz/data/numdam'),
-                   sources.ArxmlivSource('arxmliv', '/data/dmlcz/data/arxmliv'),
-                   ]
+        sources.DmlCzSource('dmlcz', '/data/dmlcz/data/share'),
+        sources.DmlSource('numdam', '/data/dmlcz/data/numdam'),
+        sources.ArxmlivSource('arxmliv', '/data/dmlcz/data/arxmliv'),
+    ]
 
     RESULT_DIR = '/data/dmlcz/xrehurek/results'
 
 
 def buildDmlCorpus(config):
     dml = dmlcorpus.DmlCorpus()
-    dml.processConfig(config, shuffle = True)
+    dml.processConfig(config, shuffle=True)
     dml.buildDictionary()
-    dml.dictionary.filterExtremes(noBelow=5, noAbove=0.3) # ignore too (in)frequent words
+    # ignore too (in)frequent words
+    dml.dictionary.filterExtremes(noBelow=5, noAbove=0.3)
 
-    dml.save(config.resultFile('.pkl')) # save the mappings as binary data (actual documents are not saved, only their URIs)
-    dml.saveAsText() # save id mappings and documents as text data (matrix market format)
+    # save the mappings as binary data (actual documents are not saved, only
+    # their URIs)
+    dml.save(config.resultFile('.pkl'))
+    dml.saveAsText()  # save id mappings and documents as text data (matrix market format)
     return dml
 
 
@@ -73,8 +82,14 @@ if __name__ == '__main__':
         sys.exit(1)
     language = sys.argv[1]
 
-    # construct the config, which holds information about sources, data file filenames etc.
-    config = dmlcorpus.DmlConfig('%s_%s' % (PREFIX, language), resultDir=RESULT_DIR, acceptLangs=[language])
+    # construct the config, which holds information about sources, data file
+    # filenames etc.
+    config = dmlcorpus.DmlConfig(
+        '%s_%s' %
+        (PREFIX,
+         language),
+        resultDir=RESULT_DIR,
+        acceptLangs=[language])
     for source in SOURCE_LIST:
         config.addSource(source)
     buildDmlCorpus(config)
