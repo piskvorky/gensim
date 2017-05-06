@@ -362,6 +362,7 @@ class Dictionary(utils.SaveLoad, Mapping):
                     raise KeyError('token %s is defined as ID %d and as ID %d' % (word, wordid, result.token2id[word]))
                 result.token2id[word] = wordid
                 result.dfs[wordid] = int(docfreq)
+        result.num_docs = len(result.dfs)
         return result
 
     @staticmethod
