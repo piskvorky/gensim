@@ -159,6 +159,7 @@ class Dispatcher(object):
         """
         self._jobsdone += 1
         logger.info("worker #%s finished job #%i" % (workerid, self._jobsdone))
+        self.workers[workerid]._pyroRelease() # tell the worker to release the connection to the pyro daemon
         self.workers[workerid].requestjob() # tell the worker to ask for another job, asynchronously (one-way)
 
 
