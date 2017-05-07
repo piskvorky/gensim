@@ -580,7 +580,7 @@ class Doc2Vec(Word2Vec):
         need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-                default is 0 (off), useful value is 1e-5.
+                default is 1e-3, useful value is 1e-5.
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
@@ -616,7 +616,8 @@ class Doc2Vec(Word2Vec):
 
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
-            null_word=dm_concat, **kwargs)
+            null_word=dm_concat,
+            **kwargs)
 
         self.load = call_on_class_only
 
