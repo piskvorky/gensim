@@ -1149,12 +1149,11 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
 def check_output(args, flag=True):
     r"""
     subprocess.check_output with the flag set to true will spawn a new shell process and execute 'args'
-    if there is an error while executing args, the error message will be logged. 
+    if there is an error while executing args, the error message will be logged.
     This allows the user to receive an accurate error message if subprocess fails to execute the specified command.
     If flag is set to true, subprocess.check_output takes 'args' as a string instead of a list. To abstract the user from this,
     this function will convert the argument list to a string if needed.
     """
-
     if flag:
         args = " ".join(args)
     try:
