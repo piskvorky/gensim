@@ -1146,12 +1146,16 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
         else:
             return default_res
 
+
 def check_output(args, flag=True):
     r"""
-    subprocess.check_output with the flag set to true will spawn a new shell process and execute 'args'
-    if there is an error while executing args, the error message will be logged.
-    This allows the user to receive an accurate error message if subprocess fails to execute the specified command.
-    If flag is set to true, subprocess.check_output takes 'args' as a string instead of a list. To abstract the user from this,
+    subprocess.check_output with the flag set to true will spawn a new
+    shell process and execute 'args' if there is an error while executing
+    args, the error message will be logged. This allows the user to
+    receive an accurate error message if subprocess fails to execute the
+    specified command.
+    If flag is set to true, subprocess.check_output takes 'args' as a string
+    instead of a list. To abstract the user from this,
     this function will convert the argument list to a string if needed.
     """
     if flag:
@@ -1161,11 +1165,13 @@ def check_output(args, flag=True):
         return res
     except subprocess.CalledProcessError as e:
         """
-        If this error is raised, it is because check_output could not execute the command.
-        Instead of raising the error, output a more specific error message
+        If this error is raised, it is because check_output could not execute
+        the command. Instead of raising the error, output a more specific error
+        message
         """
         logger.error(e)
         raise
+
 
 def sample_dict(d, n=10, use_random=True):
      """

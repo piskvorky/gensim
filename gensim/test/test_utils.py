@@ -93,13 +93,15 @@ class TestSampleDict(unittest.TestCase):
         if sampled_dict_random in expected_dict_random:
             self.assertTrue(True)
 
+
 class TestCheckOutput(unittest.TestCase):
     def test_check_output(self):
         res = utils.check_output(args=["echo", "hello"])
         self.assertEqual(res, b'hello\n')
 
     def test_check_output_exception(self):
-        self.assertRaises(subprocess.CalledProcessError, lambda: utils.check_output(args=["ldfs"]))
+        self.assertRaises(subprocess.CalledProcessError,
+                          lambda: utils.check_output(args=["ldfs"]))
 
 
 if __name__ == '__main__':
