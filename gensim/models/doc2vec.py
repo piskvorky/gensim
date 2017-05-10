@@ -614,6 +614,9 @@ class Doc2Vec(Word2Vec):
         of the model.
         """
 
+        if 'sentences' in kwargs:
+            raise DeprecationWarning("'sentences' in doc2vec was renamed to 'documents'. Please use documents parameter.")
+
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
             null_word=dm_concat,
