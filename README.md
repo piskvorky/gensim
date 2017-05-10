@@ -78,11 +78,9 @@ For alternative modes of installation (without root privileges,
 development installation, optional install features), see the
 [documentation].
 
-This version has been tested under Python 2.6, 2.7, 3.3, 3.4, 3.5 and 3.6
-(support for Python 2.5 was dropped in gensim 0.10.0; install gensim
-0.9.1 if you *must* use Python 2.5). Gensim’s github repo is hooked
+This version has been tested under Python 2.7, 3.5 and 3.6. Gensim’s github repo is hooked
 against [Travis CI for automated testing] on every commit push and pull
-request.
+request. Support for Python 2.6, 3.3 and 3.4 was dropped in gensim 1.0.0. Install gensim 0.13.4 if you *must* use Python 2.6, 3.3 or 3.4. Support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). 
 
 How come gensim is so fast and memory efficient? Isn’t it pure Python, and isn’t Python slow and greedy?
 --------------------------------------------------------------------------------------------------------
@@ -111,6 +109,7 @@ Documentation
   [Tutorials]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
   [Tutorial Videos]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
   [Official Documentation and Walkthrough]: http://radimrehurek.com/gensim/
+  [Official API Documentation]: http://radimrehurek.com/gensim/apiref.html
   
 ---------
 
@@ -122,6 +121,7 @@ Adopters
 | Name                                   | Logo                                                                                                                           | URL                                                                                              | Description                                                                                                                                                                                                           |
 |----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|                                                                                                                         
 | RaRe Technologies                            | <img src="http://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png" width="100"> | [rare-technologies.com](http://rare-technologies.com)                                                           | Machine learning & NLP consulting and training. Creators and maintainers of Gensim. |
+| Mindseye                            | <img src="http://www.mindseyesolutions.com/wp-content/uploads/2015/12/Mindseye_logo_website.jpg" width="100">                                                  | [mindseye.com](http://www.mindseyesolutions.com/)                                                           | Similarities in legal documents                                                    | 
 | Talentpair                            | ![Talentpair](https://avatars3.githubusercontent.com/u/8418395?v=3&s=100)                                                 | [talentpair.com](http://talentpair.com)                                                           | Data science driving high-touch recruiting                                                    | 
 | Tailwind          | <img src="http://blog.tailwindapp.com/wp-content/uploads/2013/10/Tailwind-Square-Logo-Blue-White-300x300.png" width="100"> | [Tailwindapp.com](https://www.tailwindapp.com/)| Post interesting and relevant content to Pinterest              |
 | Issuu          | <img src="https://static.isu.pub/fe/issuu-brandpages/s3/155/press/assets/brand_package_zip/issuu%20logos/png/issuu-logo-stacked-colour.png" width="100"> | [Issuu.com](https://issuu.com/)| Gensim’s LDA module lies at the very core of the analysis we perform on each uploaded publication to figure out what it’s all about.

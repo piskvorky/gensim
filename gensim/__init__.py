@@ -6,11 +6,7 @@ similarities within a corpus of documents.
 from gensim import parsing, matutils, interfaces, corpora, models, similarities, summarization
 import logging
 
-try:
-    __version__ = __import__('pkg_resources').get_distribution('gensim').version
-except:
-    __version__ = '?'
-
+__version__ = '2.0.0'
 
 class NullHandler(logging.Handler):
     """For python versions <= 2.6; same as `logging.NullHandler` in 2.7."""

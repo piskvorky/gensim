@@ -13,6 +13,7 @@ from .rpmodel import RpModel
 from .logentropy_model import LogEntropyModel
 from .word2vec import Word2Vec
 from .doc2vec import Doc2Vec
+from .keyedvectors import KeyedVectors
 from .ldamulticore import LdaMulticore
 from .phrases import Phrases
 from .normmodel import NormModel

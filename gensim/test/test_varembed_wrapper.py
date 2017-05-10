@@ -26,8 +26,8 @@ from gensim.models.wrappers import varembed
 # needed because sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-varembed_model_vector_file = datapath('varembed_leecorpus_vectors.pkl')
-varembed_model_morfessor_file = datapath('varembed_leecorpus_morfessor.bin')
+varembed_model_vector_file = datapath('varembed_vectors.pkl')
+varembed_model_morfessor_file = datapath('varembed_morfessor.bin')
 
 
 class TestVarembed(unittest.TestCase):
@@ -39,7 +39,7 @@ class TestVarembed(unittest.TestCase):
     def testSimilarity(self):
         """Test n_similarity for vocab words"""
         model = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file)
-        self.assertTrue(model.n_similarity(['grim'], ['peace']) == model.similarity('grim', 'peace'))
+        self.assertTrue(model.n_similarity(['result'], ['targets']) == model.similarity('result', 'targets'))
 
     def model_sanity(self, model):
         """Check vocabulary and vector size"""
@@ -67,7 +67,7 @@ class TestVarembed(unittest.TestCase):
     def testLookup(self):
         """Test lookup of vector for a particular word and list"""
         model = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file)
-        self.assertTrue(np.allclose(model['year'], model[['year']]))
+        self.assertTrue(np.allclose(model['language'], model[['language']]))
 
 
 if __name__ == '__main__':

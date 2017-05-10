@@ -41,20 +41,12 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
     """Convert `glove_input_file` in GloVe format into `word2vec_output_file in word2vec format."""
     num_lines, num_dims = get_glove_info(glove_input_file)
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
-    if sys.version_info < (3,):
-        with smart_open(word2vec_output_file, 'wb') as fout:
-            fout.write("%s %s\n" % (num_lines, num_dims))
-            with smart_open(glove_input_file, 'rb') as fin:
-                for line in fin:
-                    fout.write(line)
-        return num_lines, num_dims
-    else:
-        with smart_open(word2vec_output_file, 'w') as fout:
-            fout.write("%s %s\n" % (num_lines, num_dims))
-            with smart_open(glove_input_file, 'r') as fin:
-                for line in fin:
-                    fout.write(line)
-        return num_lines, num_dims
+    with smart_open(word2vec_output_file, 'wb') as fout:
+        fout.write("{0} {1}\n".format(num_lines, num_dims).encode('utf-8'))
+        with smart_open(glove_input_file, 'rb') as fin:
+            for line in fin:
+                fout.write(line)
+    return num_lines, num_dims
 
 
 if __name__ == "__main__":
@@ -80,27 +72,4 @@ if __name__ == "__main__":
     # do the actual conversion
     num_lines, num_dims = glove2word2vec(args.input, args.output)
     logger.info('Converted model with %i vectors and %i dimensions', num_lines, num_dims)
-    # test that the converted model loads successfully
-    model = gensim.models.Word2Vec.load_word2vec_format(args.output, binary=False)
-    logger.info('Model %s successfully loaded', model)
-    try:
-        logger.info('testing the model....')
-        if sys.version_info < (3,):
-            with smart_open(args.output, 'rb') as f:
-                seed_word1, seed_word2 = random.sample([line.split()[0] for line in f], 2)
-        else:
-            with smart_open(args.output, 'r') as f:
-                seed_word1, seed_word2 = random.sample([line.split()[0] for line in f], 2)
-        logger.info('top-10 most similar words to "%s" are: %s', seed_word1, model.most_similar(positive=[seed_word1], topn=10))
-        logger.info('similarity score between %s and %s: %s', seed_word1, seed_word2, model.similarity(seed_word1, seed_word2))
-    except:
-        logger.error('error encountered. checking for model file creation now....')
-        if os.path.isfile(os.path.join(args.output)):
-            logger.info('model file %s was created but could not be loaded.', args.output)
-        else:
-            logger.info('model file %s creation failed. ')
-        logger.info('please check the parameters and input file format.')
-        raise
-
-    logger.info("finished running %s", program)
     
