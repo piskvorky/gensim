@@ -1166,13 +1166,12 @@ def check_output(args, flag=True):
     try:
         res = subprocess.check_output(args, shell=flag)
         return res
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
         """
         If this error is raised, it is because check_output could not execute the command.
         Instead of raising the error, output a more specific error message
         """
-        error = "subprocess.check_output could not execute command ' " + str(args) + " '"
-        logger.error(error)
+        logger.error(e)
         raise
 
 def sample_dict(d, n=10, use_random=True):

@@ -10,6 +10,7 @@ Automated tests for checking various utils functions.
 
 import logging
 import unittest
+import subprocess
 
 from gensim import utils
 from six import iteritems
@@ -98,11 +99,7 @@ class TestCheckOutput(unittest.TestCase):
         self.assertEqual(res, b'hello\n')
 
     def test_check_output_exception(self):
-        error = utils.check_output(args=['ldfs'])
-        self.assertEqual(error, "subprocess.check_output could not execute command ' ldfs '")
-
-    def test_exception(self):
-        self.assertRaises(Exception, utils.check_output(args=['pythons']))
+        self.assertRaises(subprocess.CalledProcessError, lambda : utils.check_output(args=["ldfs"]))
 
 
 
