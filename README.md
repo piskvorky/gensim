@@ -135,6 +135,7 @@ Adopters
 | Stillwater Supercomputing     | <img src="http://www.stillwater-sc.com/img/stillwater-logo.png" width="100"> | [stillwater-sc.com](http://www.stillwater-sc.com/)                                  | Document comprehension and association with word2vec |
 | Channel 4     | <img src="http://www.channel4.com/static/info/images/lib/c4logo_2015_info_corporate.jpg" width="100"> | [channel4.com](http://www.channel4.com/)                                  | Recommendation engine |
 | Amazon     |  <img src="http://g-ec2.images-amazon.com/images/G/01/social/api-share/amazon_logo_500500._V323939215_.png" width="100"> | [amazon.com](http://www.amazon.com/)                                  |  Document similarity|
+| SiteGround Hosting     |  <img src="https://www.siteground.com/img/knox/logos/siteground.png" width="100"> | [siteground.com](https://www.siteground.com/)                                  | Leveraging large amounts of user-generated content|
 
 -------
 
