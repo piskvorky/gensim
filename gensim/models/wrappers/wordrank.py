@@ -117,7 +117,12 @@ class Wordrank(KeyedVectors):
         if iter % dump_period == 0:
             iter += 1
         else:
-            logger.warning('Resultant embedding would be from %d iteration', iter - iter % dump_period)
+            logger.warning(
+                'Resultant embedding will be from %d iterations rather than the input %d iterations, '
+                'as wordrank dumps the embedding only at dump_period intervals. '
+                'Input an appropriate combination of parameters (iter, dump_period) such that '
+                '"iter mod dump_period" is zero.', iter - (iter % dump_period), iter
+                )
 
         wr_args = {
             'path': 'meta',
@@ -146,7 +151,7 @@ class Wordrank(KeyedVectors):
         output = utils.check_output(args=cmd)
 
         # use embeddings from max. iteration's dump
-        max_iter_dump = iter - iter % dump_period
+        max_iter_dump = iter - (iter % dump_period)
         copyfile('model_word_%d.txt' % max_iter_dump, 'wordrank.words')
         copyfile('model_context_%d.txt' % max_iter_dump, 'wordrank.contexts')
         model = cls.load_wordrank_model('wordrank.words', os.path.join('meta', vocab_file), 'wordrank.contexts', sorted_vocab, ensemble)
