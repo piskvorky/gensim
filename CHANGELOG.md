@@ -6,6 +6,33 @@ Unreleased:
 
 ===========
 
+2.1.0, 2017-05-12
+
+:star2: New features:
+* Add modified save_word2vec_format for Doc2Vec, to save document vectors. (@parulsethi, [#1256](https://github.com/RaRe-Technologies/gensim/pull/1256))
+
+
+:+1: Improvements:
+* Add automatic code style check limited only to the code modified in PR (@tmylk, [#1287](https://github.com/RaRe-Technologies/gensim/pull/1287))
+* Replace `logger.warn` by `logger.warning` (@chinmayapancholi13, [#1295](https://github.com/RaRe-Technologies/gensim/pull/1295))
+* Docs word2vec docstring improvement, deprecation labels (@shubhvachher, [#1274](https://github.com/RaRe-Technologies/gensim/pull/1274))
+* Stop passing 'sentences' as parameter to Doc2Vec. Fix #511 (@gogokaradjov, [#1306](https://github.com/RaRe-Technologies/gensim/pull/1306))
+
+
+:red_circle: Bug fixes:
+* Allow indexing with np.int64 in doc2vec. Fix #1231 (@bogdanteleaga, [#1254](https://github.com/RaRe-Technologies/gensim/pull/1254))
+* Update Doc2Vec docstring. Fix #1302 (@datapythonista, [#1307](https://github.com/RaRe-Technologies/gensim/pull/1307))
+* Ignore rst and ipynb file in Travis flake8 validations (@datapythonista, [#1309](https://github.com/RaRe-Technologies/gensim/pull/1309))
+
+
+:books: Tutorial and doc improvements:
+* Update Tensorboard Doc2Vec notebook (@parulsethi, [#1286](https://github.com/RaRe-Technologies/gensim/pull/1286))
+* Update Doc2Vec IMDB Notebook, replace codesc to smart_open (@robotcator, [#1278](https://github.com/RaRe-Technologies/gensim/pull/1278))
+* Add explanation of `size` to Word2Vec Notebook (@jbcoe, [#1305](https://github.com/RaRe-Technologies/gensim/pull/1305))
+* Add extra param to WordRank notebook. Fix #1276 (@parulsethi, [#1300](https://github.com/RaRe-Technologies/gensim/pull/1300))
+* Update warning message in WordRank (@parulsethi, [#1299](https://github.com/RaRe-Technologies/gensim/pull/1299))
+
+
 2.0.0, 2017-04-10
 
 Breaking changes:
@@ -17,7 +44,6 @@ See the [method documentation](https://github.com/RaRe-Technologies/gensim/blob/
 * Explicit epochs and corpus size in word2vec train(). (@gojomo, @robotcator, [#1139](https://github.com/RaRe-Technologies/gensim/pull/1139), [#1237](https://github.com/RaRe-Technologies/gensim/pull/1237))
 
 New features:
-
 * Add output word prediction in word2vec. Only for negative sampling scheme. See [ipynb]( https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/word2vec.ipynb) (@chinmayapancholi13,[#1209](https://github.com/RaRe-Technologies/gensim/pull/1209))
 * scikit_learn wrapper for LSI Model in Gensim (@chinmayapancholi13,[#1244](https://github.com/RaRe-Technologies/gensim/pull/1244))
 * Add the 'keep_tokens' parameter to 'filter_extremes'. (@toliwa,[#1210](https://github.com/RaRe-Technologies/gensim/pull/1210))

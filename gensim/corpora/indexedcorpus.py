@@ -18,7 +18,7 @@ of each document.
 """
 
 import logging
-import shelve
+import six
 
 import numpy
 
@@ -124,7 +124,7 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         if isinstance(docno, (slice, list, numpy.ndarray)):
             return utils.SlicedCorpus(self, docno)
-        elif isinstance(docno, (int, numpy.integer)):
+        elif isinstance(docno, six.integer_types + (numpy.integer,)):
             return self.docbyoffset(self.index[docno])
         else:
             raise ValueError('Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')
