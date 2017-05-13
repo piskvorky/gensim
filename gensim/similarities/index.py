@@ -13,6 +13,7 @@ except ImportError:
 
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
+from gensim.models.keyedvectors import KeyedVectors
 try:
     from annoy import AnnoyIndex
 except ImportError:
