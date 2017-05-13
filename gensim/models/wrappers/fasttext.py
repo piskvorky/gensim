@@ -256,7 +256,7 @@ class FastText(Word2Vec):
             self.load_vectors(f)
 
     def load_model_params(self, file_handle):
-        (dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t) = self.struct_unpack(file_handle, '@12i1d')
+        (_,_,dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t) = self.struct_unpack(file_handle, '@14i1d')
         # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
         self.size = dim
         self.window = ws
@@ -275,7 +275,7 @@ class FastText(Word2Vec):
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
         assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
         assert len(self.wv.vocab) == vocab_size, 'mismatch between vocab sizes'
-        ntokens, = self.struct_unpack(file_handle, '@q')
+        ntokens,pruneidx_size = self.struct_unpack(file_handle, '@2q')
         for i in range(nwords):
             word_bytes = b''
             char_byte = file_handle.read(1)
@@ -288,6 +288,11 @@ class FastText(Word2Vec):
             _ = self.struct_unpack(file_handle, '@i')
             assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
             self.wv.vocab[word].count = count
+
+            for j in range(pruneidx_size):
+                _,_ = self.struct_unpack(file_handle,'@2i')
+
+            _ = self.struct_unpack(file_handle,'@?')
 
     def load_vectors(self, file_handle):
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
