@@ -32,8 +32,10 @@ class AnnoyIndexer(object):
                 self.build_from_doc2vec()
             elif isinstance(self.model, Word2Vec):
                 self.build_from_word2vec()
+            elif isinstance(self.model, KeyedVectors):
+                self.build_from_keyedvectors()
             else:
-                raise ValueError("Only a Word2Vec or Doc2Vec instance can be used")
+                raise ValueError("Only a Word2Vec, Doc2Vec or KeyedVectors instance can be used")
 
     def save(self, fname, protocol=2):
         fname_dict = fname + '.d'
@@ -69,6 +71,12 @@ class AnnoyIndexer(object):
         docvecs.init_sims()
         labels = [docvecs.index_to_doctag(i) for i in range(0, docvecs.count)]
         return self._build_from_model(docvecs.doctag_syn0norm, labels, self.model.vector_size)
+
+    def build_from_keyedvectors(self):
+        """Build an Annoy index using word vectors from a KeyedVectors model"""
+
+        self.model.init_sims()
+        return self._build_from_model(self.model.syn0norm, self.model.index2word, self.model.vector_size)
 
     def _build_from_model(self, vectors, labels, num_features):
         index = AnnoyIndex(num_features)
