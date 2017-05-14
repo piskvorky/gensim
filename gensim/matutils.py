@@ -176,7 +176,7 @@ def any2sparse_clipped(vec, topn, eps=1e-9):
     if isinstance(vec, np.ndarray):
         return full2sparse_clipped(vec, topn, eps)
     vec_sparse = any2sparse(vec, eps)
-    return sorted(vec_sparse,key=lambda x: x[1], reverse=True)
+    return sorted(vec_sparse, key=lambda x: x[1], reverse=True)
 
 
 def scipy2sparse(vec, eps=1e-9):
