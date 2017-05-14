@@ -166,6 +166,19 @@ def any2sparse(vec, eps=1e-9):
     return [(int(fid), float(fw)) for fid, fw in vec if np.abs(fw) > eps]
 
 
+def any2sparse_clipped(vec, topn, eps=1e-9):
+    """
+    Like `any2sparse`, but only returns the `topn` elements of greatest magnitude (abs).
+
+    """
+    if topn <= 0:
+        return []
+    if isinstance(vec, np.ndarray):
+        return full2sparse_clipped(vec, topn, eps)
+    vec_sparse = any2sparse(vec, eps)
+    return sorted(vec_sparse,key=lambda x: x[1], reverse=True)
+
+
 def scipy2sparse(vec, eps=1e-9):
     """Convert a scipy.sparse vector into gensim document format (=list of 2-tuples)."""
     vec = vec.tocsr()
