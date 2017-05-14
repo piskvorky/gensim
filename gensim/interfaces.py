@@ -225,10 +225,10 @@ class SimilarityABC(utils.SaveLoad):
         # if the input query was a corpus (=more documents), compute the top-n
         # most similar for each document in turn
         if matutils.ismatrix(result):
-            return [matutils.full2sparse_clipped(v, self.num_best) for v in result]
+            return [matutils.any2sparse_clipped(v, self.num_best) for v in result]
         else:
             # otherwise, return top-n of the single input document
-            return matutils.full2sparse_clipped(result, self.num_best)
+            return matutils.any2sparse_clipped(result, self.num_best)
 
 
     def __iter__(self):
