@@ -287,7 +287,9 @@ setup(
         'wmd': ['pyemd >= 0.2.0'],
         'test': [
             'testfixtures',
-            'unittest2'
+            'unittest2',
+            'Morfessor==2.0.2a4',
+            'scikit-learn'
         ],
     },
 
