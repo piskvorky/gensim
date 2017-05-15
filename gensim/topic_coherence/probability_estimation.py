@@ -52,7 +52,7 @@ def p_boolean_document(corpus, segmented_topics):
     for id in top_ids:
         per_topic_postings[id] = set()
     # Iterate through the documents, appending the document number to the set for each top_id it contains
-    for n, document in enumerate(corpus):   
+    for n, document in enumerate(corpus):
         doc_words = frozenset(x[0] for x in document)
         top_ids_in_doc = top_ids.intersection(doc_words)
         if len(top_ids_in_doc) > 0:
