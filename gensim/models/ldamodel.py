@@ -1028,7 +1028,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         separately_explicit = ['expElogbeta', 'sstats']
         # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some
         # array manually.
-        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape)) != 1:
+        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
             separately_explicit.append('alpha')
         if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
             separately_explicit.append('eta')
