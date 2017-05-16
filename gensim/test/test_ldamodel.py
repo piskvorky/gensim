@@ -471,7 +471,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertRaises(IOError, self.class_.load, fname, mmap='r')
 
     def testId2WordBackwardCompatibility(self):
-        #load a model saved using a pre-0.13.2 version of Gensim
+        # load a model saved using a pre-0.13.2 version of Gensim
         pre_0_13_2_fname = datapath('pre_0_13_2_model')
         model_pre_0_13_2 = self.class_.load(pre_0_13_2_fname)
 
@@ -482,11 +482,11 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             self.assertTrue(isinstance(i[1], six.string_types))
 
     def testRandomStateBackwardCompatibility(self):
-        #load a model saved using a pre-0.13.2 version of Gensim
+        # load a model saved using a pre-0.13.2 version of Gensim
         pre_0_13_2_fname = datapath('pre_0_13_2_model')
         model_pre_0_13_2 = self.class_.load(pre_0_13_2_fname)
 
-        #set `num_topics` less than `model_pre_0_13_2.num_topics` so that `model_pre_0_13_2.random_state` is used
+        # set `num_topics` less than `model_pre_0_13_2.num_topics` so that `model_pre_0_13_2.random_state` is used
         model_topics = model_pre_0_13_2.print_topics(num_topics=2, num_words=3)
 
         for i in model_topics:
