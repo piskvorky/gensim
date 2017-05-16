@@ -392,12 +392,14 @@ class Similarity(interfaces.SimilarityABC):
         # turn off query normalization (vectors in the index are already normalized, save some CPU)
         norm, self.norm = self.norm, False
 
-        for chunk in self.iter_chunks():
-            if chunk.shape[0] > 1:
-                for sim in self[chunk]:
-                    yield sim
-            else:
-                yield self[chunk]
+        import multiprocessing
+        import functools
+        pool = multiprocessing.Pool()
+        worker = functools.partial(_query_chunk_worker, index=self)
+        for result in pool.map(worker, self.iter_chunks()):
+            for sim in result:
+                yield sim
+        pool.terminate()
 
         self.norm = norm  # restore normalization
 
@@ -456,6 +458,18 @@ class Similarity(interfaces.SimilarityABC):
         for fname in glob.glob(self.output_prefix + '*'):
             logger.info("deleting %s", fname)
             os.remove(fname)
+
+
+def _query_chunk_worker(chunk, index):
+    """ To allow pickling of method for multiprocessing """
+    def _query_chunk_work():
+        if chunk.shape[0] > 1:
+            for sim in index[chunk]:
+                yield sim
+        else:
+            yield index[chunk]
+
+    return list(_query_chunk_work())
 #endclass Similarity
 
 

@@ -3,6 +3,8 @@ Changes
 
 Unreleased:
 
+* Process cross index queries in parallel (@shubhamchaudhary, [#854](https://github.com/RaRe-Technologies/gensim/pull/854)
+
 
 ===========
 
