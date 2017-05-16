@@ -1067,7 +1067,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             logging.warning("random_state not stored on disk so using default value")
             result.random_state = utils.get_random_state(None)
 
-        if not result.id2word :
+        if not result.id2word:
             id2word_fname = utils.smart_extension(fname, '.id2word')
             if (os.path.isfile(id2word_fname)):
                 try:
