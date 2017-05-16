@@ -175,8 +175,14 @@ def any2sparse_clipped(vec, topn, eps=1e-9):
         return []
     if isinstance(vec, np.ndarray):
         return full2sparse_clipped(vec, topn, eps)
-    vec_sparse = any2sparse(vec, eps)
-    return sorted(vec_sparse, key=lambda x: x[1], reverse=True)[:topn]
+    if scipy.sparse.issparse(vec):
+        biggest = argsort(abs(vec).data, topn, reverse=True)
+        return list(zip(vec.indices.take(biggest), vec.data.take(biggest)))
+    else:
+        vec_csr = scipy.sparse.csr_matrix(vec)
+        biggest = argsort(abs(vec_csr).data, topn, reverse=True)
+        return list(zip(vec_csr.indices.take(biggest), vec_csr.data.take(biggest)))
+
 
 
 def scipy2sparse(vec, eps=1e-9):
