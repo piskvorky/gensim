@@ -228,7 +228,7 @@ Copyright (c) 2009-now Radim Rehurek
 
 setup(
     name='gensim',
-    version='2.0.0',
+    version='2.1.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -287,7 +287,9 @@ setup(
         'wmd': ['pyemd >= 0.2.0'],
         'test': [
             'testfixtures',
-            'unittest2'
+            'unittest2',
+            'Morfessor==2.0.2a4',
+            'scikit-learn'
         ],
     },
 

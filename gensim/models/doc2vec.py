@@ -53,9 +53,9 @@ except ImportError:
 from collections import namedtuple, defaultdict
 from timeit import default_timer
 
-from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
+from numpy import zeros, sum as np_sum, add as np_add, concatenate, \
     repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
-    sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide
+    sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide, integer
 
 
 from gensim.utils import call_on_class_only
@@ -63,7 +63,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.models.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg
 from gensim.models.keyedvectors import KeyedVectors
 from six.moves import xrange, zip
-from six import string_types, integer_types, itervalues
+from six import string_types, integer_types
 
 logger = logging.getLogger(__name__)
 
@@ -297,7 +297,7 @@ class DocvecsArray(utils.SaveLoad):
 
     def note_doctag(self, key, document_no, document_length):
         """Note a document tag during initial corpus scan, for structure sizing."""
-        if isinstance(key, int):
+        if isinstance(key, integer_types + (integer,)):
             self.max_rawint = max(self.max_rawint, key)
         else:
             if key in self.doctags:
@@ -319,7 +319,7 @@ class DocvecsArray(utils.SaveLoad):
 
     def _int_index(self, index):
         """Return int index for either string or int index"""
-        if isinstance(index, int):
+        if isinstance(index, integer_types + (integer,)):
             return index
         else:
             return self.max_rawint + 1 + self.doctags[index].offset
@@ -347,7 +347,7 @@ class DocvecsArray(utils.SaveLoad):
         If a list, return designated tags' vector representations as a
         2D numpy array: #tags x #vector_size.
         """
-        if isinstance(index, string_types + (int,)):
+        if isinstance(index, string_types + integer_types + (integer,)):
             return self.doctag_syn0[self._int_index(index)]
 
         return vstack([self[i] for i in index])
@@ -356,7 +356,7 @@ class DocvecsArray(utils.SaveLoad):
         return self.count
 
     def __contains__(self, index):
-        if isinstance(index, int):
+        if isinstance(index, integer_types + (integer,)):
             return index < self.count
         else:
             return index in self.doctags
@@ -439,17 +439,17 @@ class DocvecsArray(utils.SaveLoad):
         self.init_sims()
         clip_end = clip_end or len(self.doctag_syn0norm)
 
-        if isinstance(positive, string_types + integer_types) and not negative:
+        if isinstance(positive, string_types + integer_types + (integer,)) and not negative:
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
             positive = [positive]
 
         # add weights for each doc, if not already present; default to 1.0 for positive and -1.0 for negative docs
         positive = [
-            (doc, 1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
+            (doc, 1.0) if isinstance(doc, string_types + integer_types + (ndarray, integer))
             else doc for doc in positive
         ]
         negative = [
-            (doc, -1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
+            (doc, -1.0) if isinstance(doc, string_types + integer_types + (ndarray, integer))
             else doc for doc in negative
         ]
 
@@ -580,7 +580,7 @@ class Doc2Vec(Word2Vec):
         need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-                default is 0 (off), useful value is 1e-5.
+                default is 1e-3, useful value is 1e-5.
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
@@ -614,15 +614,19 @@ class Doc2Vec(Word2Vec):
         of the model.
         """
 
+        if 'sentences' in kwargs:
+            raise DeprecationWarning("'sentences' in doc2vec was renamed to 'documents'. Please use documents parameter.")
+
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
-            null_word=dm_concat, **kwargs)
-        
+            null_word=dm_concat,
+            **kwargs)
+
         self.load = call_on_class_only
 
         if dm_mean is not None:
             self.cbow_mean = dm_mean
-        
+
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
@@ -672,8 +676,10 @@ class Doc2Vec(Word2Vec):
         for document_no, document in enumerate(documents):
             if not checked_string_types:
                 if isinstance(document.words, string_types):
-                    logger.warn("Each 'words' should be a list of words (usually unicode strings)."
-                                "First 'words' here is instead plain %s." % type(document.words))
+                    logger.warning(
+                        "Each 'words' should be a list of words (usually unicode strings)."
+                        "First 'words' here is instead plain %s." % type(document.words)
+                    )
                 checked_string_types += 1
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
@@ -845,7 +851,7 @@ class Doc2Vec(Word2Vec):
                         fout.write(utils.to_utf8(doctag) + b" " + row.tostring())
                     else:
                         fout.write(utils.to_utf8("%s %s\n" % (doctag, ' '.join("%f" % val for val in row))))
-        
+
 
 class TaggedBrownCorpus(object):
     """Iterate over documents from the Brown corpus (part of NLTK data), yielding

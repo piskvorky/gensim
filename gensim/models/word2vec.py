@@ -565,8 +565,10 @@ class Word2Vec(utils.SaveLoad):
         for sentence_no, sentence in enumerate(sentences):
             if not checked_string_types:
                 if isinstance(sentence, string_types):
-                    logger.warn("Each 'sentences' item should be a list of words (usually unicode strings)."
-                                "First item here is instead plain %s.", type(sentence))
+                    logger.warning(
+                        "Each 'sentences' item should be a list of words (usually unicode strings)."
+                        "First item here is instead plain %s.", type(sentence)
+                    )
                 checked_string_types += 1
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
@@ -845,7 +847,9 @@ class Word2Vec(utils.SaveLoad):
             pushed_words, pushed_examples = 0, 0
             next_alpha = start_alpha
             if next_alpha > self.min_alpha_yet_reached:
-                logger.warn("Effective 'alpha' higher than previous training cycles")
+                logger.warning(
+                    "Effective 'alpha' higher than previous training cycles"
+                )
             self.min_alpha_yet_reached = next_alpha
             job_no = 0
 
@@ -953,13 +957,19 @@ class Word2Vec(utils.SaveLoad):
             "training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed)
         if job_tally < 10 * self.workers:
-            logger.warn("under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay")
+            logger.warning(
+                "under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay"
+            )
 
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
-            logger.warn("supplied example count (%i) did not equal expected count (%i)", example_count, total_examples)
+            logger.warning(
+                "supplied example count (%i) did not equal expected count (%i)", example_count, total_examples
+            )
         if total_words and total_words != raw_word_count:
-            logger.warn("supplied raw word count (%i) did not equal expected count (%i)", raw_word_count, total_words)
+            logger.warning(
+                "supplied raw word count (%i) did not equal expected count (%i)", raw_word_count, total_words
+            )
 
         self.train_count += 1  # number of times train() has been called
         self.total_train_time += elapsed
@@ -1195,100 +1205,80 @@ class Word2Vec(utils.SaveLoad):
 
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.most_similar`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.most_similar() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.most_similar`
         """
 
         return self.wv.most_similar(positive, negative, topn, restrict_vocab, indexer)
 
     def wmdistance(self, document1, document2):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.wmdistance`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.wmdistance() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.wmdistance`
         """
 
         return self.wv.wmdistance(document1, document2)
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.most_similar_cosmul`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.most_similar_cosmul() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.most_similar_cosmul`
         """
 
         return self.wv.most_similar_cosmul(positive, negative, topn)
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.similar_by_word`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.similar_by_word() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.similar_by_word`
         """
 
         return self.wv.similar_by_word(word, topn, restrict_vocab)
 
     def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.similar_by_vector`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.similar_by_vector() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.similar_by_vector`
         """
 
         return self.wv.similar_by_vector(vector, topn, restrict_vocab)
 
     def doesnt_match(self, words):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.doesnt_match`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.doesnt_match() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.doesnt_match`
         """
 
         return self.wv.doesnt_match(words)
 
     def __getitem__(self, words):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.__getitem__`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.__getitem__() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.__getitem__`
         """
 
         return self.wv.__getitem__(words)
 
     def __contains__(self, word):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.__contains__`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.__contains__() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.__contains__`
         """
 
         return self.wv.__contains__(word)
 
     def similarity(self, w1, w2):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.similarity`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.similarity() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.similarity`
         """
 
         return self.wv.similarity(w1, w2)
 
     def n_similarity(self, ws1, ws2):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.n_similarity`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.n_similarity() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.n_similarity`
         """
 
         return self.wv.n_similarity(ws1, ws2)
@@ -1354,20 +1344,16 @@ class Word2Vec(utils.SaveLoad):
     @staticmethod
     def log_evaluate_word_pairs(pearson, spearman, oov, pairs):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.log_evaluate_word_pairs`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.log_evaluate_word_pairs() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.log_evaluate_word_pairs`
         """
 
         return KeyedVectors.log_evaluate_word_pairs(pearson, spearman, oov, pairs)
 
     def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
         """
-        Please refer to the documentation for
-        `gensim.models.KeyedVectors.evaluate_word_pairs`
-        This is just a forwarding function.
-        In the future please use the `gensim.models.KeyedVectors` instance in wv
+        Deprecated. Use self.wv.evaluate_word_pairs() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.evaluate_word_pairs`
         """
 
         return self.wv.evaluate_word_pairs(pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)

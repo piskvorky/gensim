@@ -114,6 +114,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model.build_vocab(corpus)
         self.assertEqual(len(model.docvecs.doctag_syn0), 300)
         self.assertEqual(model.docvecs[0].shape, (100,))
+        self.assertEqual(model.docvecs[np.int64(0)].shape, (100,))
         self.assertRaises(KeyError, model.__getitem__, '_*0')
 
     def test_missing_string_doctag(self):
@@ -164,7 +165,7 @@ class TestDoc2VecModel(unittest.TestCase):
     def model_sanity(self, model, keep_training=True):
         """Any non-trivial model on DocsLeeCorpus can pass these sanity checks"""
         fire1 = 0  # doc 0 sydney fires
-        fire2 = 8  # doc 8 sydney fires
+        fire2 = np.int64(8)  # doc 8 sydney fires
         tennis1 = 6  # doc 6 tennis
 
         # inferred vector should be top10 close to bulk-trained one
@@ -304,7 +305,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec()
         model.build_vocab(mixed_tag_corpus)
         expected_length = len(sentences) + len(model.docvecs.doctags)  # 9 sentences, 7 unique first tokens
-        self.assertEquals(len(model.docvecs.doctag_syn0), expected_length)
+        self.assertEqual(len(model.docvecs.doctag_syn0), expected_length)
 
     def models_equal(self, model, model2):
         # check words/hidden-weights
