@@ -34,7 +34,7 @@ class TestWordrank(unittest.TestCase):
         self.wr_file = datapath('test_glove.txt')
         if not self.wr_path:
             return
-        self.test_model = wordrank.Wordrank.train(self.wr_path, self.corpus_file, self.out_name, iter=6, dump_period=5,period=5)
+        self.test_model = wordrank.Wordrank.train(self.wr_path, self.corpus_file, self.out_name, iter=6, dump_period=5, period=5)
 
     def testLoadWordrankFormat(self):
         """Test model successfully loaded from Wordrank format file"""
