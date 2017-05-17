@@ -113,7 +113,7 @@ class _TestSimilarityABC(object):
         expected = [(0, 0.80000000000000004), (1, 0.20000000000000001), (5, -0.14999999999999999)]
         self.assertTrue(matutils.any2sparse_clipped(vec, topn=3), expected)
 
-        vec_scipy = scipy.csr_matrix(vec)
+        vec_scipy = scipy.sparse.csr_matrix(vec)
         self.assertTrue(matutils.any2sparse_clipped(vec_scipy, topn=3), expected)
 
 
