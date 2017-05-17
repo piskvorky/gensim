@@ -234,20 +234,20 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             if formatted:
                 topic = self.print_topic(i, topn=num_words)
             else:
-                topic = self.show_topic(i, num_words=num_words)
+                topic = self.show_topic(i, topn=num_words)
             shown.append((i, topic))
             if log:
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
         return shown
 
-    def show_topic(self, topicid, num_words=10):
+    def show_topic(self, topicid, topn=10):
         if self.word_topics is None:
             logger.warning(
                 "Run train or load_word_topics before showing topics."
             )
         topic = self.word_topics[topicid]
         topic = topic / topic.sum()  # normalize to probability dist
-        bestn = matutils.argsort(topic, num_words, reverse=True)
+        bestn = matutils.argsort(topic, topn, reverse=True)
         beststr = [(self.id2word[id], topic[id]) for id in bestn]
         return beststr
 

@@ -264,6 +264,9 @@ class SaveLoad(object):
         is encountered.
 
         """
+        import warnings
+        warnings.warn("This method loads pickle dumps. If a corpora was saved with the save_corpus() method," + 
+            "\n Use the default constructor of the corpus class to load the corpus")
         logger.info("loading %s object from %s" % (cls.__name__, fname))
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
@@ -359,6 +362,10 @@ class SaveLoad(object):
         in both Python 2 and 3.
 
         """
+        import os
+        directory = os.path.dirname(fname)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         logger.info(
             "saving %s object under %s, separately %s" % (
                 self.__class__.__name__, fname, separately))
@@ -491,6 +498,13 @@ class SaveLoad(object):
         in both Python 2 and 3.
 
         """
+        import os
+        directory = os.path.dirname(fname_or_handle)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        import corpora.dictionary
+        if isinstance(self, corpora.dictionary.Dictionary):
+            raise TypeError('The method is not built to handle corpora. Use the save_corpus() method')
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object" % self.__class__.__name__)
@@ -834,7 +848,7 @@ class InputQueue(multiprocessing.Process):
         it = iter(self.corpus)
         while True:
             chunk = itertools.islice(it, self.chunksize)
-            if self.as_numpy:
+            if self.as_numpy:   
                 # HACK XXX convert documents to numpy arrays, to save memory.
                 # This also gives a scipy warning at runtime:
                 # "UserWarning: indices array has non-integer dtype (float64)"
