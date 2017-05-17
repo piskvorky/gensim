@@ -1004,11 +1004,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         if self.state is not None:
             self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
-
-        # Save 'random_state' separately
-        if self.random_state is not None:
-            utils.pickle(self.random_state, utils.smart_extension(fname, '.random_state'))
-
         # Save the dictionary separately if not in 'ignore'.
         if 'id2word' not in ignore:
             utils.pickle(self.id2word, utils.smart_extension(fname, '.id2word'))
@@ -1028,9 +1023,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         separately_explicit = ['expElogbeta', 'sstats']
         # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some
         # array manually.
-        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
+        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or len(self.alpha.shape) != 1:
             separately_explicit.append('alpha')
-        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
+        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or len(self.eta.shape) != 1:
             separately_explicit.append('eta')
         # Merge separately_explicit with separately.
         if separately:
@@ -1059,22 +1054,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
         except Exception as e:
             logging.warning("failed to load state from %s: %s", state_fname, e)
-
-        random_state_fname = utils.smart_extension(fname, '.random_state')
-        if (os.path.isfile(random_state_fname)):
-            result.random_state = utils.unpickle(random_state_fname)
+        id2word_fname = utils.smart_extension(fname, '.id2word')
+        if (os.path.isfile(id2word_fname)):
+            try:
+                result.id2word = utils.unpickle(id2word_fname)
+            except Exception as e:
+                logging.warning("failed to load id2word dictionary from %s: %s", id2word_fname, e)
         else:
-            logging.warning("random_state not stored on disk so using default value")
-            result.random_state = utils.get_random_state(None)
-
-        if not result.id2word:
-            id2word_fname = utils.smart_extension(fname, '.id2word')
-            if (os.path.isfile(id2word_fname)):
-                try:
-                    result.id2word = utils.unpickle(id2word_fname)
-                except Exception as e:
-                    logging.warning("failed to load id2word dictionary from %s: %s", id2word_fname, e)
-            else:
-                result.id2word = None
+            result.id2word = None
         return result
 # endclass LdaModel

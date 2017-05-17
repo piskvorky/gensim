@@ -470,17 +470,6 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, self.class_.load, fname, mmap='r')
 
-    def testId2WordBackwardCompatibility(self):
-        # load a model saved using a pre-0.13.2 version of Gensim
-        pre_0_13_2_fname = datapath('pre_0_13_2_model')
-        model_pre_0_13_2 = self.class_.load(pre_0_13_2_fname)
-
-        model_topics = model_pre_0_13_2.print_topics(num_topics=3, num_words=3)
-
-        for i in model_topics:
-            self.assertTrue(isinstance(i[0], int))
-            self.assertTrue(isinstance(i[1], six.string_types))
-
     def testRandomStateBackwardCompatibility(self):
         # load a model saved using a pre-0.13.2 version of Gensim
         pre_0_13_2_fname = datapath('pre_0_13_2_model')
