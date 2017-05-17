@@ -98,11 +98,14 @@ class Wordrank(KeyedVectors):
         input_fnames = [corpus_file.split('/')[-1], corpus_file.split('/')[-1], cooccurrence_file]
         output_fnames = [temp_vocab_file, cooccurrence_file, cooccurrence_shuf_file]
 
-        logger.info("Prepare training data using glove code '%s'", commands)
+        logger.info("Prepare training data using glove code")
         for command, input_fname, output_fname in zip(commands, input_fnames, output_fnames):
+            logger.info("Prepare '%s' using '%s'", output_fname, command)
             with smart_open(input_fname, 'rb') as r:
                 with smart_open(output_fname, 'wb') as w:
                     utils.check_output(w, args=command, stdin=r)
+
+        logger.info("Delete frequencies from vocab file")
         with smart_open(vocab_file, 'wb') as w:
             utils.check_output(w, args=cmd_del_vocab_freq)
 
