@@ -478,6 +478,19 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
+    def testAnnoyIndexingOfKeyedVectors(self):
+        ft_home = os.environ.get('FT_HOME', None)
+        ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
+        if not ft_path:
+            return
+        keyVectors_file = datapath('lee_fasttext.vec')
+        model = KeyedVectors.load_word2vec_format(keyVectors_file)
+        index = AnnoyIndexer(model, 10)
+
+        self.assertEqual(index.num_trees, 10)
+        self.assertVectorIsSimilarToItself(model, index)
+        self.assertApproxNeighborsMatchExact(model, index)
+
     def testLoadMissingRaisesError(self):
         from gensim.similarities.index import AnnoyIndexer
         test_index = AnnoyIndexer()
