@@ -51,8 +51,8 @@ class TestWikiCorpus(unittest.TestCase):
         wc = WikiCorpus(datapath(FILENAME))
 
         l = wc.get_texts()
-        self.assertTrue(b"anarchism" in next(l))
-        self.assertTrue(b"autism" in next(l))
+        self.assertTrue(u'anarchism' in next(l))
+        self.assertTrue(u'autism' in next(l))
 
     def test_first_element_unicode(self):
         """
