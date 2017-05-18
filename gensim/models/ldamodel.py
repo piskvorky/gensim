@@ -967,7 +967,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
-    def diff(self, other, distance="kulback_leibler", num_words=100, n_ann_terms=10):
+    def diff(self, other, distance="kulback_leibler", num_words=100, n_ann_terms=10, normed=True):
         """
         Calculate difference topic2topic between two Lda models
         `other` instances of `LdaMulticore` or `LdaModel`
@@ -981,6 +981,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             annotation[i][j] = [[`int_1`, `int_2`, ...], [`diff_1`, `diff_2`, ...]] and
             `int_k` is word from intersection of `topic_i` and `topic_j` and
             `diff_l` is word from symmetric difference of `topic_i` and `topic_j`
+        `normed` is a flag. If `true`, matrix Z will be normalized
         Example:
         >>> m1, m2 = LdaMulticore.load(path_1), LdaMulticore.load(path_2)
         >>> mdiff, annotation = m1.diff(m2)
@@ -992,35 +993,33 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                      "hellinger": hellinger,
                      "jaccard": jaccard_set}
 
-        assert distance in distances, "Incorrect distance, valid only {}".format(", ".join("`{}`".format(x)
-                                                                                           for x in distances.keys()))
-        assert isinstance(other, self.__class__), "The parameter `other` must be of type `{}`".format(self.__name__)
+        if distance not in distances:
+            valid_keys = ", ".join("`{}`".format(x) for x in distances.keys())
+            raise ValueError("Incorrect distance, valid only {}".format(valid_keys))
+
+        if not isinstance(other, self.__class__):
+            raise ValueError("The parameter `other` must be of type `{}`".format(self.__name__))
 
         distance_func = distances[distance]
         d1, d2 = self.state.get_lambda(), other.state.get_lambda()
         t1_size, t2_size = d1.shape[0], d2.shape[0]
 
-        fst_topics, snd_topics = None, None
+        fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in xrange(t1_size)]
+        snd_topics = [{w for (w, _) in other.show_topic(topic, topn=num_words)} for topic in xrange(t2_size)]
 
         if distance == "jaccard":
-            d1 = fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in range(t1_size)]
-            d2 = snd_topics = [{w for (w, _) in other.show_topic(topic, topn=num_words)} for topic in range(t2_size)]
+            d1, d2 = fst_topics, snd_topics
 
         z = np.zeros((t1_size, t2_size))
-
         for topic1 in range(t1_size):
             for topic2 in range(t2_size):
-
                 z[topic1][topic2] = distance_func(d1[topic1], d2[topic2])
 
-        if np.abs(np.max(z)) > 1e-8:
-            z /= np.max(z)
+        if normed:
+            if np.abs(np.max(z)) > 1e-8:
+                z /= np.max(z)
 
         annotation = [[None for _ in range(t1_size)] for _ in range(t2_size)]
-
-        if fst_topics is None or snd_topics is None:
-            fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in range(t1_size)]
-            snd_topics = [{w for (w, _) in other.show_topic(topic, topn=num_words)} for topic in range(t2_size)]
 
         for topic1 in range(t1_size):
             for topic2 in range(t2_size):

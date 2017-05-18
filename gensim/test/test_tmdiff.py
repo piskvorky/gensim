@@ -26,20 +26,18 @@ class TestLdaDiff(unittest.TestCase):
         self.corpus = [self.dictionary.doc2bow(text) for text in texts]
         self.num_topics = 5
         self.n_ann_terms = 10
+        self.model = LdaModel(corpus=self.corpus, id2word=self.dictionary, num_topics=self.num_topics, passes=10)
 
     def testBasic(self):
-        model = LdaModel(corpus=self.corpus, id2word=self.dictionary, num_topics=self.num_topics, passes=10)
-        mdiff, annotation = model.diff(model, n_ann_terms=self.n_ann_terms)
+        mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms)
 
         self.assertEqual(mdiff.shape, (self.num_topics, self.num_topics))
         self.assertEquals(len(annotation), self.num_topics)
         self.assertEquals(len(annotation[0]), self.num_topics)
 
     def testIdentity(self):
-        model = LdaModel(corpus=self.corpus, id2word=self.dictionary, num_topics=self.num_topics, passes=10)
-
         for dist_name in ["hellinger", "kulback_leibler", "jaccard"]:
-            mdiff, annotation = model.diff(model, n_ann_terms=self.n_ann_terms, distance=dist_name)
+            mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms, distance=dist_name)
 
             for row in annotation:
                 for (int_tokens, diff_tokens) in row:
@@ -50,3 +48,7 @@ class TestLdaDiff(unittest.TestCase):
 
             if dist_name == "jaccard":
                 self.assertTrue(np.allclose(mdiff, np.zeros(mdiff.shape, dtype=mdiff.dtype)))
+
+    def testInput(self):
+        self.assertRaises(ValueError, self.model.diff, self.model, n_ann_terms=self.n_ann_terms, distance='something')
+        self.assertRaises(ValueError, self.model.diff, [], n_ann_terms=self.n_ann_terms, distance='something')
