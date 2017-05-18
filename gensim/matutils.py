@@ -166,23 +166,36 @@ def any2sparse(vec, eps=1e-9):
     return [(int(fid), float(fw)) for fid, fw in vec if np.abs(fw) > eps]
 
 
-def any2sparse_clipped(vec, topn, eps=1e-9):
+def scipy2scipy_clipped(matrix, topn, eps=1e-9):
     """
-    Like `any2sparse`, but only returns the `topn` elements of greatest magnitude (abs).
-
+    Return a scipy.sparse vector/matrix consisting of 'topn' elements of greatest magnitude(abs).
     """
+    if not scipy.sparse.issparse(matrix):
+        raise ValueError("'%s' is not a scipy sparse vector." % matrix)
     if topn <= 0:
-        return []
-    if isinstance(vec, np.ndarray):
-        return full2sparse_clipped(vec, topn, eps)
-    if scipy.sparse.issparse(vec):
-        biggest = argsort(abs(vec).data, topn, reverse=True)
-        return list(zip(vec.indices.take(biggest), vec.data.take(biggest)))
+        return scipy.sparse.csr_matrix([])
+    # Return clipped sparse vector if input is a sparse vector.
+    if matrix.shape[0] == 1:
+        # use np.argpartition/argsort and only form tuples that are actually returned.
+        biggest = argsort(abs(matrix).data, topn, reverse=True)
+        indices, data = matrix.indices.take(biggest), matrix.data.take(biggest)
+        return scipy.sparse.csr_matrix((data, indices, [0, len(indices)]))
+    # Return clipped sparse matrix if input is a matrix, processing row by row.
     else:
-        vec_csr = scipy.sparse.csr_matrix(vec)
-        biggest = argsort(abs(vec_csr).data, topn, reverse=True)
-        return list(zip(vec_csr.indices.take(biggest), vec_csr.data.take(biggest)))
-
+        matrix_indices = []
+        matrix_data = []
+        for v in matrix:
+            # Sort and clip each row vector first.
+            biggest = argsort(abs(v).data, topn, reverse=True)
+            indices, data = v.indices.take(biggest), v.data.take(biggest)
+            # Store the topn indices and values of each row vector.
+            matrix_data.append(data)
+            matrix_indices.append(indices)
+        matrix_indptr = np.array([i * topn for i in range(1 + len(matrix_indices))])
+        matrix_indices = np.concatenate(matrix_indices).ravel()
+        matrix_data = np.concatenate(matrix_data).ravel()
+        # Instantiate and return a sparse csr_matrix which preserves the order of indices/data.
+        return scipy.sparse.csr.csr_matrix((matrix_data, matrix_indices, matrix_indptr), shape=(matrix.shape[0], np.max(matrix_indices) + 1))
 
 
 def scipy2sparse(vec, eps=1e-9):
