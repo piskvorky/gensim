@@ -78,6 +78,7 @@ from gensim.corpora.dictionary import Dictionary
 from six import string_types, iteritems
 from six.moves import xrange
 from scipy import stats
+from keras.layers import Embedding
 
 
 logger = logging.getLogger(__name__)
@@ -809,3 +810,11 @@ class KeyedVectors(utils.SaveLoad):
                 self.syn0norm = self.syn0
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
+
+    def get_embedding_layer(self, train_embeddings=False):
+        """
+        Return a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings
+        """
+        weights = self.syn0
+        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights])
+        return layer

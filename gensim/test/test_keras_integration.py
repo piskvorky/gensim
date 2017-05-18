@@ -6,8 +6,7 @@ import pickle
 import sys
 import keras
 import numpy as np
-from gensim.keras_integration.keras_wrapper_gensim_word2vec import KerasWrapperWord2VecModel
-from gensim.models import word2vec
+from gensim.models import word2vec, keyedvectors
 from keras.engine import Input
 from keras.models import Model
 from keras.layers import merge
@@ -34,8 +33,8 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 class TestKerasWord2VecWrapper(unittest.TestCase):
     def setUp(self):
-        self.model_cos_sim = KerasWrapperWord2VecModel(sentences, size=100, min_count=1, hs=1)
-        self.model_twenty_ng = KerasWrapperWord2VecModel(word2vec.LineSentence(datapath('20_newsgroup_keras_w2v_data.txt')) ,min_count=1)
+        self.model_cos_sim = word2vec.Word2Vec(sentences, size=100, min_count=1, hs=1)
+        self.model_twenty_ng = word2vec.Word2Vec(word2vec.LineSentence(datapath('20_newsgroup_keras_w2v_data.txt')) ,min_count=1)
 
     def testWord2VecTraining(self):
         """Test word2vec training."""
@@ -54,8 +53,9 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
     def testEmbeddingLayerCosineSim(self):
         """Test Keras 'Embedding' layer returned by 'get_embedding_layer' function for a simple word similarity task."""
         keras_w2v_model = self.model_cos_sim
+        keras_w2v_model_wv = keras_w2v_model.wv
 
-        embedding_layer = keras_w2v_model.get_embedding_layer()
+        embedding_layer = keras_w2v_model_wv.get_embedding_layer()
 
         input_a = Input(shape=(1,), dtype='int32', name='input_a')
         input_b = Input(shape=(1,), dtype='int32', name='input_b')
@@ -118,7 +118,8 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
 
         #prepare the embedding layer using the wrapper
         Keras_w2v = self.model_twenty_ng
-        embedding_layer = Keras_w2v.get_embedding_layer()
+        Keras_w2v_wv = Keras_w2v.wv
+        embedding_layer = Keras_w2v_wv.get_embedding_layer()
 
         #create a 1D convnet to solve our classification task
         sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
