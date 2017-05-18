@@ -141,5 +141,6 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         #verify the type of the object returned after training
         self.assertTrue(type(fit_ret_val)==keras.callbacks.History)     #value returned is a `History` instance. Its `history` attribute contains all information collected during training.
 
+
 if __name__ == '__main__':
     unittest.main()
