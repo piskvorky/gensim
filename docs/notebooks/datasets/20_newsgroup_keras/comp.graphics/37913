@@ -1,5 +1,0 @@
-gnuplot, etc. make it easy to plot real valued functions of 2 variables but I want to plot functions whose values are 2-vectors.
-I have been doing this by plotting arrays of arrows (complete with arrowheads) but before going further, I thought I would ask whether someone has already
-done the work.
-Any pointers??
-thanx in advance
