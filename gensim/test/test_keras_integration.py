@@ -25,7 +25,7 @@ sentences = [
     ['graph', 'minors', 'survey']
 ]
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -70,8 +70,8 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
 
         word_a = 'graph'
         word_b = 'trees'
-        output = model.predict([np.asarray([keras_w2v_model.wv.vocab[word_a].index]), np.asarray([keras_w2v_model.wv.vocab[word_b].index])])    #probability of the two words occuring together
-        self.assertTrue(type(output[0][0][0][0]) == np.float32)     #verify that  a float is returned
+        output = model.predict([np.asarray([keras_w2v_model.wv.vocab[word_a].index]), np.asarray([keras_w2v_model.wv.vocab[word_b].index])])    # probability of the two words occuring together
+        self.assertTrue(type(output[0][0][0][0]) == np.float32)     # verify that  a float is returned
 
     def testEmbeddingLayer20NewsGroup(self):
         """
