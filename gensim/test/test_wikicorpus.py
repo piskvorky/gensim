@@ -46,8 +46,6 @@ class TestWikiCorpus(unittest.TestCase):
         1) anarchism
         2) autism
         """
-        if sys.version_info < (2, 7, 0):
-            return
         wc = WikiCorpus(datapath(FILENAME))
 
         l = wc.get_texts()
@@ -59,8 +57,6 @@ class TestWikiCorpus(unittest.TestCase):
         First unicode article in this sample is
         1) папа
         """
-        if sys.version_info < (2, 7, 0):
-            return
         wc = WikiCorpus(datapath(FILENAME_U))
 
         l = wc.get_texts()
