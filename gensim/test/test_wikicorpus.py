@@ -54,7 +54,7 @@ class TestWikiCorpus(unittest.TestCase):
         self.assertTrue(u'anarchism' in next(l))
         self.assertTrue(u'autism' in next(l))
 
-    def test_first_element_unicode(self):
+    def test_unicode_element(self):
         """
         First unicode article in this sample is
         1) папа
