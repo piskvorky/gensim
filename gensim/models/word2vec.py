@@ -1112,7 +1112,7 @@ class Word2Vec(utils.SaveLoad):
         # randomize the remaining words
         for i in xrange(len(self.wv.syn0), len(self.wv.vocab)):
             # construct deterministic seed from word AND seed argument
-            newsyn0[i-len(self.wv.syn0)] = self.seeded_vector(utils.to_unicode(self.wv.index2word[i]) + str(self.seed))
+            newsyn0[i-len(self.wv.syn0)] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
 
         # Raise an error if an online update is run before initial training on a corpus
         if not len(self.wv.syn0):
@@ -1138,7 +1138,7 @@ class Word2Vec(utils.SaveLoad):
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.wv.vocab)):
             # construct deterministic seed from word AND seed argument
-            self.wv.syn0[i] = self.seeded_vector(utils.to_unicode(self.wv.index2word[i]) + str(self.seed))
+            self.wv.syn0[i] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
         if self.hs:
             self.syn1 = zeros((len(self.wv.vocab), self.layer1_size), dtype=REAL)
         if self.negative:
