@@ -123,7 +123,7 @@ class _TestSimilarityABC(object):
         matrix_scipy = scipy.sparse.csr_matrix([vec] * 3)
         matrix_scipy_clipped = matutils.scipy2scipy_clipped(matrix_scipy, topn=3)
         self.assertTrue(scipy.sparse.issparse(matrix_scipy_clipped))
-        self.assertTrue([matutils.scipy2sparse(x) for x in matrix_scipy_clipped], [expected]*3)
+        self.assertTrue([matutils.scipy2sparse(x) for x in matrix_scipy_clipped], [expected] * 3)
 
 
     def testChunking(self):

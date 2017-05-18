@@ -19,8 +19,6 @@ import itertools
 from gensim import utils, matutils
 from six.moves import xrange
 
-import numpy as np
-import scipy.sparse
 
 logger = logging.getLogger('gensim.interfaces')
 
