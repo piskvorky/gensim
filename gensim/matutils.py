@@ -184,6 +184,7 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
     else:
         matrix_indices = []
         matrix_data = []
+        matrix_indptr = [0]
         for v in matrix:
             # Sort and clip each row vector first.
             biggest = argsort(abs(v).data, topn, reverse=True)
@@ -191,7 +192,7 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
             # Store the topn indices and values of each row vector.
             matrix_data.append(data)
             matrix_indices.append(indices)
-        matrix_indptr = np.array([i * topn for i in range(1 + len(matrix_indices))])
+            matrix_indptr.append(matrix_indptr[-1] + min(len(indices), topn))
         matrix_indices = np.concatenate(matrix_indices).ravel()
         matrix_data = np.concatenate(matrix_data).ravel()
         # Instantiate and return a sparse csr_matrix which preserves the order of indices/data.
