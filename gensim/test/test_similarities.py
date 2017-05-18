@@ -20,6 +20,7 @@ import scipy
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
+from gensim.models import KeyedVectors
 from gensim.models.wrappers import fasttext
 from gensim import matutils, utils, similarities
 from gensim.models import Word2Vec
@@ -479,10 +480,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertLoadedIndexEqual(index, model)
 
     def testAnnoyIndexingOfKeyedVectors(self):
-        ft_home = os.environ.get('FT_HOME', None)
-        ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
-        if not ft_path:
-            return
+        from gensim.similarities.index import AnnoyIndexer
         keyVectors_file = datapath('lee_fasttext.vec')
         model = KeyedVectors.load_word2vec_format(keyVectors_file)
         index = AnnoyIndexer(model, 10)
