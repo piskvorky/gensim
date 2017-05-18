@@ -282,6 +282,13 @@ setup(
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
     ],
+    tests_require=[
+        'testfixtures',
+        'unittest2',
+        'Morfessor==2.0.2a4',
+        'scikit-learn',
+        'pyemd'
+    ],
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
         'wmd': ['pyemd >= 0.2.0'],
@@ -289,7 +296,8 @@ setup(
             'testfixtures',
             'unittest2',
             'Morfessor==2.0.2a4',
-            'scikit-learn'
+            'scikit-learn',
+            'pyemd'
         ],
     },
 
