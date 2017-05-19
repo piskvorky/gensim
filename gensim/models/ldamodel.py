@@ -3,7 +3,6 @@
 #
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-#
 
 
 """
@@ -32,13 +31,15 @@ The algorithm:
 
 
 import logging
-import numpy as np  # for arrays, array broadcasting etc.
+import numpy as np
 import numbers
+from random import sample
 import os
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
+from gensim.matutils import kullback_leibler, hellinger, jaccard_set
 
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
@@ -292,9 +293,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.random_state = utils.get_random_state(random_state)
 
-        assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
-                "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
-                (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
+        assert self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms), (
+            "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
+            (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
 
         # VB constants
         self.iterations = iterations
@@ -425,7 +426,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
         for d, doc in enumerate(chunk):
-            if len(doc) > 0 and not isinstance(doc[0][0], six.integer_types):
+            if len(doc) > 0 and not isinstance(doc[0][0], six.integer_types + (np.integer,)):
                 # make sure the term IDs are ints, otherwise np will get upset
                 ids = [int(id) for id, _ in doc]
             else:
@@ -601,17 +602,19 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         evalafter = min(lencorpus, (eval_every or 0) * self.numworkers * chunksize)
 
         updates_per_pass = max(1, lencorpus / updateafter)
-        logger.info("running %s LDA training, %s topics, %i passes over "
-                    "the supplied corpus of %i documents, updating model once "
-                    "every %i documents, evaluating perplexity every %i documents, "
-                    "iterating %ix with a convergence threshold of %f",
-                    updatetype, self.num_topics, passes, lencorpus,
-                        updateafter, evalafter, iterations,
-                        gamma_threshold)
+        logger.info(
+            "running %s LDA training, %s topics, %i passes over "
+            "the supplied corpus of %i documents, updating model once "
+            "every %i documents, evaluating perplexity every %i documents, "
+            "iterating %ix with a convergence threshold of %f",
+            updatetype, self.num_topics, passes, lencorpus,
+            updateafter, evalafter, iterations,
+            gamma_threshold)
 
         if updates_per_pass * passes < 10:
-            logger.warning("too few updates, training might not converge; consider "
-                           "increasing the number of passes or iterations to improve accuracy")
+            logger.warning(
+                "too few updates, training might not converge; consider "
+                "increasing the number of passes or iterations to improve accuracy")
 
         # rho is the "speed" of updating; TODO try other fncs
         # pass_ + num_updates handles increasing the starting t for each pass,
@@ -906,26 +909,28 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
             kwargs = dict(
-                per_word_topics = per_word_topics,
-                minimum_probability = minimum_probability,
-                minimum_phi_value = minimum_phi_value
+                per_word_topics=per_word_topics,
+                minimum_probability=minimum_probability,
+                minimum_phi_value=minimum_phi_value
             )
             return self._apply(corpus, **kwargs)
 
         gamma, phis = self.inference([bow], collect_sstats=per_word_topics)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
 
-        document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                    if topicvalue >= minimum_probability]
+        document_topics = [
+            (topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+            if topicvalue >= minimum_probability
+        ]
 
         if not per_word_topics:
             return document_topics
         else:
-            word_topic = [] # contains word and corresponding topic
-            word_phi = [] # contains word and phi values
+            word_topic = []  # contains word and corresponding topic
+            word_phi = []  # contains word and phi values
             for word_type, weight in bow:
-                phi_values = [] # contains (phi_value, topic) pairing to later be sorted
-                phi_topic = [] # contains topic and corresponding phi value to be returned 'raw' to user
+                phi_values = []  # contains (phi_value, topic) pairing to later be sorted
+                phi_topic = []  # contains topic and corresponding phi value to be returned 'raw' to user
                 for topic_id in range(0, self.num_topics):
                     if phis[topic_id][word_type] >= minimum_phi_value:
                         # appends phi values for each topic for that word
@@ -940,7 +945,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 sorted_phi_values = sorted(phi_values, reverse=True)
                 topics_sorted = [x[1] for x in sorted_phi_values]
                 word_topic.append((word_type, topics_sorted))
-            return (document_topics, word_topic, word_phi) # returns 2-tuple
+            return (document_topics, word_topic, word_phi)  # returns 2-tuple
 
     def get_term_topics(self, word_id, minimum_probability=None):
         """
@@ -962,6 +967,71 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
+    def diff(self, other, distance="kulback_leibler", num_words=100, n_ann_terms=10, normed=True):
+        """
+        Calculate difference topic2topic between two Lda models
+        `other` instances of `LdaMulticore` or `LdaModel`
+        `distance` is function that will be applied to calculate difference between any topic pair.
+        Available values: `kulback_leibler`, `hellinger` and `jaccard`
+        `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
+        `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
+        Returns a matrix Z with shape (m1.num_topics, m2.num_topics), where Z[i][j] - difference between topic_i and topic_j
+        and matrix annotation with shape (m1.num_topics, m2.num_topics, 2, None),
+        where
+            annotation[i][j] = [[`int_1`, `int_2`, ...], [`diff_1`, `diff_2`, ...]] and
+            `int_k` is word from intersection of `topic_i` and `topic_j` and
+            `diff_l` is word from symmetric difference of `topic_i` and `topic_j`
+        `normed` is a flag. If `true`, matrix Z will be normalized
+        Example:
+        >>> m1, m2 = LdaMulticore.load(path_1), LdaMulticore.load(path_2)
+        >>> mdiff, annotation = m1.diff(m2)
+        >>> print(mdiff) # get matrix with difference for each topic pair from `m1` and `m2`
+        >>> print(annotation) # get array with positive/negative words for each topic pair from `m1` and `m2`
+        """
+
+        distances = {"kulback_leibler": kullback_leibler,
+                     "hellinger": hellinger,
+                     "jaccard": jaccard_set}
+
+        if distance not in distances:
+            valid_keys = ", ".join("`{}`".format(x) for x in distances.keys())
+            raise ValueError("Incorrect distance, valid only {}".format(valid_keys))
+
+        if not isinstance(other, self.__class__):
+            raise ValueError("The parameter `other` must be of type `{}`".format(self.__name__))
+
+        distance_func = distances[distance]
+        d1, d2 = self.state.get_lambda(), other.state.get_lambda()
+        t1_size, t2_size = d1.shape[0], d2.shape[0]
+
+        fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in xrange(t1_size)]
+        snd_topics = [{w for (w, _) in other.show_topic(topic, topn=num_words)} for topic in xrange(t2_size)]
+
+        if distance == "jaccard":
+            d1, d2 = fst_topics, snd_topics
+
+        z = np.zeros((t1_size, t2_size))
+        for topic1 in range(t1_size):
+            for topic2 in range(t2_size):
+                z[topic1][topic2] = distance_func(d1[topic1], d2[topic2])
+
+        if normed:
+            if np.abs(np.max(z)) > 1e-8:
+                z /= np.max(z)
+
+        annotation = [[None for _ in range(t1_size)] for _ in range(t2_size)]
+
+        for topic1 in range(t1_size):
+            for topic2 in range(t2_size):
+                pos_tokens = fst_topics[topic1] & snd_topics[topic2]
+                neg_tokens = fst_topics[topic1].symmetric_difference(snd_topics[topic2])
+
+                pos_tokens = sample(pos_tokens, min(len(pos_tokens), n_ann_terms))
+                neg_tokens = sample(neg_tokens, min(len(neg_tokens), n_ann_terms))
+
+                annotation[topic1][topic2] = [pos_tokens, neg_tokens]
+
+        return z, annotation
 
     def __getitem__(self, bow, eps=None):
         """
@@ -1006,16 +1076,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if 'id2word' not in ignore:
             utils.pickle(self.id2word, utils.smart_extension(fname, '.id2word'))
 
-        # make sure 'state', 'id2word' and 'dispatcher' are ignored from the pickled object, even if 
+        # make sure 'state', 'id2word' and 'dispatcher' are ignored from the pickled object, even if
         # someone sets the ignore list themselves
         if ignore is not None and ignore:
             if isinstance(ignore, six.string_types):
                 ignore = [ignore]
-            ignore = [e for e in ignore if e] # make sure None and '' are not in the list
+            ignore = [e for e in ignore if e]  # make sure None and '' are not in the list
             ignore = list(set(['state', 'dispatcher', 'id2word']) | set(ignore))
         else:
             ignore = ['state', 'dispatcher', 'id2word']
-        
+
         # make sure 'expElogbeta' and 'sstats' are ignored from the pickled object, even if
         # someone sets the separately list themselves.
         separately_explicit = ['expElogbeta', 'sstats']
@@ -1029,12 +1099,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if separately:
             if isinstance(separately, six.string_types):
                 separately = [separately]
-            separately = [e for e in separately if e] # make sure None and '' are not in the list
+            separately = [e for e in separately if e]  # make sure None and '' are not in the list
             separately = list(set(separately_explicit) | set(separately))
         else:
             separately = separately_explicit
-        super(LdaModel, self).save(fname, ignore=ignore, separately = separately, *args, **kwargs)
-       
+        super(LdaModel, self).save(fname, ignore=ignore, separately=separately, *args, **kwargs)
+
     @classmethod
     def load(cls, fname, *args, **kwargs):
         """

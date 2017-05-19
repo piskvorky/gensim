@@ -259,7 +259,7 @@ class FastText(Word2Vec):
     def load_model_params(self, file_handle):
         (dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t) = self.struct_unpack(file_handle, '@12i1d')
         # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
-        self.size = dim
+        self.vector_size = dim
         self.window = ws
         self.iter = epoch
         self.min_count = minCount
@@ -293,7 +293,7 @@ class FastText(Word2Vec):
     def load_vectors(self, file_handle):
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
-        assert self.size == dim, 'mismatch between model sizes'
+        assert self.vector_size == dim, 'mismatch between model sizes'
         float_size = struct.calcsize('@f')
         if float_size == 4:
             dtype = np.dtype(np.float32)
@@ -301,9 +301,9 @@ class FastText(Word2Vec):
             dtype = np.dtype(np.float64)
 
         self.num_original_vectors = num_vectors
-        self.wv.syn0_all = np.fromstring(file_handle.read(num_vectors * dim * float_size), dtype=dtype)
+        self.wv.syn0_all = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
         self.wv.syn0_all = self.wv.syn0_all.reshape((num_vectors, dim))
-        assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.size), \
+        assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
             'mismatch between weight matrix shape and vocab/model size'
         self.init_ngrams()
 
