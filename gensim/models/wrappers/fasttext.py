@@ -140,6 +140,7 @@ class FastText(Word2Vec):
 
     def initialize_word_vectors(self):
         self.wv = FastTextKeyedVectors()
+        self.new_format = False
 
     @classmethod
     def train(cls, ft_path, corpus_file, output_file=None, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
@@ -283,7 +284,9 @@ class FastText(Word2Vec):
         if len(self.wv.vocab) != vocab_size:
             logger.warnings("If you are loading any model other than pretrained vector wiki.fr, ")
             logger.warnings("Please report to gensim or fastText.")
-        ntokens, pruneidx_size = self.struct_unpack(file_handle, '@2q')
+        ntokens= self.struct_unpack(file_handle, '@1q')
+        if self.new_format:
+            pruneidx_size = self.struct_unpack(file_handle, '@q')
         for i in range(nwords):
             word_bytes = b''
             char_byte = file_handle.read(1)
@@ -300,7 +303,8 @@ class FastText(Word2Vec):
                 self.wv.vocab[word].count = count
 
     def load_vectors(self, file_handle):
-        _ = self.struct_unpack(file_handle, '@?')
+        if self.new_format:
+            _ = self.struct_unpack(file_handle,'@?')
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.size == dim, 'mismatch between model sizes'
