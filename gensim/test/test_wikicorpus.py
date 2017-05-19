@@ -46,7 +46,7 @@ class TestWikiCorpus(unittest.TestCase):
         1) anarchism
         2) autism
         """
-        wc = WikiCorpus(datapath(FILENAME))
+        wc = WikiCorpus(datapath(FILENAME), processes=1)
 
         l = wc.get_texts()
         self.assertTrue(u'anarchism' in next(l))
@@ -57,7 +57,7 @@ class TestWikiCorpus(unittest.TestCase):
         First unicode article in this sample is
         1) папа
         """
-        wc = WikiCorpus(datapath(FILENAME_U))
+        wc = WikiCorpus(datapath(FILENAME_U), processes=1)
 
         l = wc.get_texts()
         self.assertTrue(u'папа' in next(l))
