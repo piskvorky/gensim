@@ -277,7 +277,7 @@ class FastText(Word2Vec):
         self.wv.max_n = maxn
         self.sample = t
 
-    def load_dict(self, file_handle):
+    def load_dict(self, file_handle, encoding='utf8'):
         vocab_size, nwords, _ = self.struct_unpack(file_handle, '@3i')
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
         assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
@@ -294,7 +294,7 @@ class FastText(Word2Vec):
             while char_byte != b'\x00':
                 word_bytes += char_byte
                 char_byte = file_handle.read(1)
-            word = word_bytes.decode('utf8')
+            word = word_bytes.decode(encoding)
             count, _ = self.struct_unpack(file_handle, '@qb')
             if word in self.wv.vocab:
                 # skip loading info about words in bin file which are not present in vec file
