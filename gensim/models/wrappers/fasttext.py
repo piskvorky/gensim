@@ -294,13 +294,13 @@ class FastText(Word2Vec):
             word = word_bytes.decode('utf8')
             count, _ = self.struct_unpack(file_handle, '@qb')
             if word in self.wv.vocab:
-                # skip loading info about words in bin file which are not present in vec file 
+                # skip loading info about words in bin file which are not present in vec file
                 # handling mismatch in vocab_size in vec and bin files (ref: wiki.fr)
                 assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
                 self.wv.vocab[word].count = count
 
     def load_vectors(self, file_handle):
-        _ = self.struct_unpack(file_handle,'@?')
+        _ = self.struct_unpack(file_handle, '@?')
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.size == dim, 'mismatch between model sizes'
