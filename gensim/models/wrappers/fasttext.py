@@ -256,7 +256,13 @@ class FastText(Word2Vec):
             self.load_vectors(f)
 
     def load_model_params(self, file_handle):
-        (_,_,dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t) = self.struct_unpack(file_handle, '@14i1d')
+        magic, v= self.struct_unpack(file_handle, '@2i')
+        if magic == 793712314:  # newer format 
+            dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
+        else:  # older format
+            dim = magic
+            ws = v
+            epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
         # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
         self.size = dim
         self.window = ws
@@ -271,11 +277,13 @@ class FastText(Word2Vec):
         self.sample = t
 
     def load_dict(self, file_handle):
-        (vocab_size, nwords, _) = self.struct_unpack(file_handle, '@3i')
+        vocab_size, nwords, _ = self.struct_unpack(file_handle, '@3i')
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
         assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
-        assert len(self.wv.vocab) == vocab_size, 'mismatch between vocab sizes'
-        ntokens,pruneidx_size = self.struct_unpack(file_handle, '@2q')
+        if len(self.wv.vocab) != vocab_size:
+            logger.warnings("If you are loading any model other than pretrained vector wiki.fr, ")
+            logger.warnings("Please report to gensim or fastText.")
+        ntokens, pruneidx_size = self.struct_unpack(file_handle, '@2q')
         for i in range(nwords):
             word_bytes = b''
             char_byte = file_handle.read(1)
@@ -284,17 +292,15 @@ class FastText(Word2Vec):
                 word_bytes += char_byte
                 char_byte = file_handle.read(1)
             word = word_bytes.decode('utf8')
-            count, _ = self.struct_unpack(file_handle, '@ib')
-            _ = self.struct_unpack(file_handle, '@i')
-            assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
-            self.wv.vocab[word].count = count
-
-            for j in range(pruneidx_size):
-                _,_ = self.struct_unpack(file_handle,'@2i')
-
-            _ = self.struct_unpack(file_handle,'@?')
+            count, _ = self.struct_unpack(file_handle, '@qb')
+            if word in self.wv.vocab:
+                # skip loading info about words in bin file which are not present in vec file 
+                # handling mismatch in vocab_size in vec and bin files (ref: wiki.fr)
+                assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
+                self.wv.vocab[word].count = count
 
     def load_vectors(self, file_handle):
+        _ = self.struct_unpack(file_handle,'@?')
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.size == dim, 'mismatch between model sizes'
