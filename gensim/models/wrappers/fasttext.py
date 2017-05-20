@@ -259,6 +259,7 @@ class FastText(Word2Vec):
     def load_model_params(self, file_handle):
         magic, v= self.struct_unpack(file_handle, '@2i')
         if magic == 793712314:  # newer format 
+            self.new_format = True
             dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
         else:  # older format
             dim = magic
