@@ -100,7 +100,6 @@ class Wordrank(KeyedVectors):
 
         logger.info("Prepare training data using glove code")
         for command, input_fname, output_fname in zip(commands, input_fnames, output_fnames):
-            logger.info("Prepare '%s' using '%s'", output_fname, command)
             with smart_open(input_fname, 'rb') as r:
                 with smart_open(output_fname, 'wb') as w:
                     utils.check_output(w, args=command, stdin=r)
@@ -150,7 +149,7 @@ class Wordrank(KeyedVectors):
         for option, value in wr_args.items():
             cmd.append('--%s' % option)
             cmd.append(str(value))
-        logger.info("Running wordrank binary '%s'", cmd)
+        logger.info("Running wordrank binary")
         output = utils.check_output(args=cmd)
 
         # use embeddings from max. iteration's dump

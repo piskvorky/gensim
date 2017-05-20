@@ -1164,12 +1164,12 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     Added extra KeyboardInterrupt handling
     """
     try:
-        cmd = kwargs.get("args")
-        logger.info("COMMAND: %s", cmd)
+        logger.debug("COMMAND: %s %s", str(popenargs), str(kwargs))
         process = subprocess.Popen(stdout=stdout, *popenargs, **kwargs)
         output, unused_err = process.communicate()
         retcode = process.poll()
         if retcode:
+            cmd = kwargs.get("args")
             if cmd is None:
                 cmd = popenargs[0]
             error = subprocess.CalledProcessError(retcode, cmd)
