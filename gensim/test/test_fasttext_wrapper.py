@@ -35,8 +35,10 @@ class TestFastText(unittest.TestCase):
         self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
         self.corpus_file = datapath('lee_background.cor')
         self.test_model_file = datapath('lee_fasttext')
+        self.test_new_model_file = datapath('lee_fasttext_new')
         # Load pre-trained model to perform tests in case FastText binary isn't available in test environment
         self.test_model = fasttext.FastText.load_fasttext_format(self.test_model_file)
+        self.test_new_model = fasttext.FastText.load_fasttext_format(self.test_new_model_file)
 
     def model_sanity(self, model):
         """Even tiny models trained on any corpus should pass these sanity checks"""
@@ -119,6 +121,37 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(len(self.test_model.wv.vocab), vocab_size, model_size)
         self.assertEqual(self.test_model.wv.syn0_all.shape, (self.test_model.num_ngram_vectors, model_size))
         self.model_sanity(model)
+
+    def testLoadFastTextNewFormat(self):
+        #Test model successfully loaded from fastText (new format) .vec and .bin files
+        new_model = fasttext.FastText.load_fasttext_format(self.test_new_model_file)
+        vocab_size, model_size = 1763, 10
+        self.assertEqual(self.test_new_model.wv.syn0.shape, (vocab_size, model_size))
+        self.assertEqual(len(self.test_new_model.wv.vocab), vocab_size, model_size)
+        self.assertEqual(self.test_new_model.wv.syn0_all.shape, (self.test_new_model.num_ngram_vectors, model_size))
+
+        expected_vec_new = [-0.025627,
+                            -0.11448,
+                             0.18116,
+                            -0.96779,
+                             0.2532,
+                            -0.93224,
+                             0.3929,
+                             0.12679,
+                            -0.19685,
+                            -0.13179]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin < queries.txt
+
+    
+        self.assertTrue(numpy.allclose(self.test_new_model["hundred"], expected_vec_new, 0.001))
+        self.assertEquals(self.test_new_model.min_count, 5)
+        self.assertEquals(self.test_new_model.window, 5)
+        self.assertEquals(self.test_new_model.iter, 5)
+        self.assertEquals(self.test_new_model.negative, 5)
+        self.assertEquals(self.test_new_model.sample, 0.0001)
+        self.assertEquals(self.test_new_model.bucket, 1000)
+        self.assertEquals(self.test_new_model.wv.max_n, 6)
+        self.assertEquals(self.test_new_model.wv.min_n, 3)
+        self.model_sanity(new_model)
 
     def testLoadModelWithNonAsciiVocab(self):
         model = fasttext.FastText.load_fasttext_format(datapath('non_ascii_fasttext'))
