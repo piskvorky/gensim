@@ -6,7 +6,7 @@
 
 """
 Module for calculating topic coherence in python. This is the implementation of
-the four stage topic coherence pipeline from the paper [1].
+the four stage topic coherence pipeline from the paper [1]_.
 The four stage pipeline is basically:
 
 Segmentation -> Probability Estimation -> Confirmation Measure -> Aggregation.
@@ -14,7 +14,7 @@ Segmentation -> Probability Estimation -> Confirmation Measure -> Aggregation.
 Implementation of this pipeline allows for the user to in essence "make" a
 coherence measure of his/her choice by choosing a method in each of the pipelines.
 
-[1] Michael Roeder, Andreas Both and Alexander Hinneburg. Exploring the space of topic
+.. [1] Michael Roeder, Andreas Both and Alexander Hinneburg. Exploring the space of topic
 coherence measures. http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf.
 """
 
@@ -75,15 +75,17 @@ class CoherenceModel(interfaces.TransformationABC):
     2. the ``get_coherence()`` method, which returns the topic coherence.
 
     One way of using this feature is through providing a trained topic model. A dictionary has to be explicitly
-    provided if the model does not contain a dictionary already.
-    >>> cm = CoherenceModel(model=tm, corpus=corpus, coherence='u_mass')  # tm is the trained topic model
-    >>> cm.get_coherence()
+    provided if the model does not contain a dictionary already::
 
-    Another way of using this feature is through providing tokenized topics such as:
-    >>> topics = [['human', 'computer', 'system', 'interface'],
+        cm = CoherenceModel(model=tm, corpus=corpus, coherence='u_mass')  # tm is the trained topic model
+        cm.get_coherence()
+
+    Another way of using this feature is through providing tokenized topics such as::
+
+        topics = [['human', 'computer', 'system', 'interface'],
                   ['graph', 'minors', 'trees', 'eps']]
-    >>> cm = CoherenceModel(topics=topics, corpus=corpus, dictionary=dictionary, coherence='u_mass') # note that a dictionary has to be provided.
-    >>> cm.get_coherence()
+        cm = CoherenceModel(topics=topics, corpus=corpus, dictionary=dictionary, coherence='u_mass') # note that a dictionary has to be provided.
+        cm.get_coherence()
 
     Model persistency is achieved via its load/save methods.
     """
@@ -94,11 +96,11 @@ class CoherenceModel(interfaces.TransformationABC):
         model : Pre-trained topic model. Should be provided if topics is not provided.
                 Currently supports LdaModel, LdaMallet wrapper and LdaVowpalWabbit wrapper. Use 'topics'
                 parameter to plug in an as yet unsupported model.
-        topics : List of tokenized topics. If this is preferred over model, dictionary should be provided.
-                 eg. topics = [['human', 'machine', 'computer', 'interface'],
+        topics : List of tokenized topics. If this is preferred over model, dictionary should be provided. eg::
+                 topics = [['human', 'machine', 'computer', 'interface'],
                                ['graph', 'trees', 'binary', 'widths']]
-        texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator.
-                eg. texts = [['system', 'human', 'system', 'eps'],
+        texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator, eg::
+                texts = [['system', 'human', 'system', 'eps'],
                              ['user', 'response', 'time'],
                              ['trees'],
                              ['graph', 'trees'],

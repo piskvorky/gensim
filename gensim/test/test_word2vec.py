@@ -103,7 +103,7 @@ class TestWord2VecModel(unittest.TestCase):
         model_neg = word2vec.Word2Vec.load(testfile())
         self.assertTrue(len(model_neg.wv.vocab), 12)
         model_neg.build_vocab(new_sentences, update=True)
-        model_neg.train(new_sentences)
+        model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
 
@@ -116,12 +116,12 @@ class TestWord2VecModel(unittest.TestCase):
                 others.append(l)
         self.assertTrue(all(['terrorism' not in l for l in others]))
         model.build_vocab(others)
-        model.train(others)
+        model.train(others, total_examples=model.corpus_count, epochs=model.iter)
         self.assertFalse('terrorism' in model.wv.vocab)
         model.build_vocab(terro, update=True)
         self.assertTrue('terrorism' in model.wv.vocab)
         orig0 = np.copy(model.wv.syn0)
-        model.train(terro)
+        model.train(terro, total_examples=len(terro), epochs=model.iter)
         self.assertFalse(np.allclose(model.wv.syn0, orig0))
         sim = model.n_similarity(['war'], ['terrorism'])
         self.assertLess(0., sim)
@@ -207,7 +207,7 @@ class TestWord2VecModel(unittest.TestCase):
             model_file_suffix = '_py2'
         else:
             model_file_suffix = '_py3'
-        
+
         # Model stored in one file
         model_file = 'word2vec_pre_kv%s' % model_file_suffix
         model = word2vec.Word2Vec.load(datapath(model_file))
@@ -363,7 +363,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
         self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 2))
 
-        model.train(sentences)
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
@@ -399,7 +399,7 @@ class TestWord2VecModel(unittest.TestCase):
             # lock the vector in slot 0 against change
             model.syn0_lockf[0] = 0.0
 
-            model.train(corpus)
+            model.train(corpus, total_examples=model.corpus_count, epochs=model.iter)
             self.assertFalse((unlocked1 == model.wv.syn0[1]).all())  # unlocked vector should vary
             self.assertTrue((locked0 == model.wv.syn0[0]).all())  # locked vector should not vary
 
@@ -428,7 +428,7 @@ class TestWord2VecModel(unittest.TestCase):
         if train:
             model.build_vocab(list_corpus)
             orig0 = np.copy(model.wv.syn0[0])
-            model.train(list_corpus)
+            model.train(list_corpus, total_examples=model.corpus_count, epochs=model.iter)
             self.assertFalse((orig0 == model.wv.syn0[1]).all())  # vector should vary after training
         sims = model.most_similar('war', topn=len(model.wv.index2word))
         t_rank = [word for word, score in sims].index('terrorism')
@@ -481,7 +481,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
         self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 2))
 
-        model.train(sentences)
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
@@ -499,12 +499,12 @@ class TestWord2VecModel(unittest.TestCase):
         """Test skip-gram (negative sampling) word2vec training."""
         # to test training, make the corpus larger by repeating its sentences over and over
         # build vocabulary, don't train yet
-        model = word2vec.Word2Vec(size=2, min_count=1, hs=0, negative=2)
+        model = word2vec.Word2Vec(size=2, min_count=1, sg=1, hs=0, negative=2)
         model.build_vocab(sentences)
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), 2))
 
-        model.train(sentences)
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
@@ -515,7 +515,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
-        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=0, negative=2)
+        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=1, hs=0, negative=2)
         self.models_equal(model, model2)
 
     def testTrainingCbowNegative(self):
@@ -527,7 +527,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), 2))
 
-        model.train(sentences)
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
@@ -546,7 +546,7 @@ class TestWord2VecModel(unittest.TestCase):
         # The model is trained using CBOW
         model = word2vec.Word2Vec(size=2, min_count=1, sg=0, hs=0, negative=2)
         model.build_vocab(sentences)
-        model.train(sentences)
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
 
         self.assertTrue(model.n_similarity(['graph', 'trees'], ['trees', 'graph']))
         self.assertTrue(model.n_similarity(['graph'], ['trees']) == model.similarity('graph', 'trees'))
@@ -620,6 +620,29 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model.delete_temporary_training_data(replace_word_vectors_with_normalized=True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
 
+    def testPredictOutputWord(self):
+        '''Test word2vec predict_output_word method handling for negative sampling scheme'''
+        #under normal circumstances
+        model_with_neg = word2vec.Word2Vec(sentences, min_count=1)
+        predictions_with_neg = model_with_neg.predict_output_word(['system', 'human'], topn=5)
+        self.assertTrue(len(predictions_with_neg)==5)
+
+        #out-of-vobaculary scenario
+        predictions_out_of_vocab = model_with_neg.predict_output_word(['some', 'random', 'words'], topn=5)
+        self.assertEqual(predictions_out_of_vocab, None)
+
+        #when required model parameters have been deleted
+        model_with_neg.init_sims()
+        model_with_neg.wv.save_word2vec_format(testfile(), binary=True)
+        kv_model_with_neg = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        binary_model_with_neg = word2vec.Word2Vec()
+        binary_model_with_neg.wv = kv_model_with_neg
+        self.assertRaises(RuntimeError, binary_model_with_neg.predict_output_word, ['system', 'human'])
+
+        #negative sampling scheme not used
+        model_without_neg = word2vec.Word2Vec(sentences, min_count=1, negative=0)
+        self.assertRaises(RuntimeError, model_without_neg.predict_output_word, ['system', 'human'])
+
     @log_capture()
     def testBuildVocabWarning(self, l):
         """Test if warning is raised on non-ideal input to a word2vec model"""
@@ -637,24 +660,45 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(min_count=1)
         model.build_vocab(sentences)
         for epoch in range(10):
-            model.train(sentences)
+            model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
             model.alpha -= 0.002
             model.min_alpha = model.alpha
             if epoch == 5:
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
-    
+
+    def test_train_with_explicit_param(self):
+        model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0)
+        model.build_vocab(sentences)
+        with self.assertRaises(ValueError):
+            model.train(sentences, total_examples=model.corpus_count)
+
+        with self.assertRaises(ValueError):
+            model.train(sentences, epochs=model.iter)
+
+        with self.assertRaises(ValueError):
+            model.train(sentences)
     def test_sentences_should_not_be_a_generator(self):
         """
         Is sentences a generator object?
         """
         gen = (s for s in sentences)
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
-        
+
     def testLoadOnClassError(self):
         """Test if exception is raised when loading word2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
+
+    def test_reset_from(self):
+        """Test if reset_from() uses pre-built structures from other model"""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        other_model = word2vec.Word2Vec(new_sentences, min_count=1)
+        other_vocab = other_model.wv.vocab
+        model.reset_from(other_model)
+        self.assertEqual(model.wv.vocab, other_vocab)
+
+
 #endclass TestWord2VecModel
 
 class TestWMD(unittest.TestCase):

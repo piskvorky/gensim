@@ -309,7 +309,6 @@ class FastText(Word2Vec):
         for j in range(pruneidx_size):  
             _,_ = self.struct_unpack(file_handle,'@2i')
 
-
     def load_vectors(self, file_handle):
         if self.new_format:
             _ = self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
