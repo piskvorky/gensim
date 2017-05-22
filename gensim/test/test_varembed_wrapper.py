@@ -53,15 +53,15 @@ class TestVarembed(unittest.TestCase):
         """
         try:
             import morfessor
+        except:
+            raise unittest.SkipTest("Test requires Morfessor to be installed, which is not available")
             model = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file)
             model_with_morphemes = varembed.VarEmbed.load_varembed_format(
                 vectors=varembed_model_vector_file, morfessor_model=varembed_model_morfessor_file)
             self.model_sanity(model_with_morphemes)
             # Check syn0 is different for both models.
             self.assertFalse(np.allclose(model.syn0, model_with_morphemes.syn0))
-        except:
-            raise unittest.SkipTest("Test requires Morfessor to be installed, which is not available")
-
+        
     @unittest.skipUnless(sys.version_info < (2, 7), 'Test to check throwing exception in Python 2.6 and earlier')
     def testAddMorphemesThrowsExceptionInPython26(self):
         self.assertRaises(
