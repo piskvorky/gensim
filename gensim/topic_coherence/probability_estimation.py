@@ -9,13 +9,13 @@ This module contains functions to perform segmentation on a list of topics.
 """
 
 import logging
+from itertools import chain, islice
+from collections import defaultdict
+
 import numpy as np
 
-from gensim.corpora import Dictionary
-
-from itertools import chain, islice
-
 logger = logging.getLogger(__name__)
+
 
 def _ret_top_ids(segmented_topics):
     """
@@ -23,13 +23,30 @@ def _ret_top_ids(segmented_topics):
     """
     top_ids = set()  # is a set of all the unique ids contained in topics.
     for s_i in segmented_topics:
-        for id in chain.from_iterable(s_i):
-            if isinstance(id, np.ndarray):
-                for i in id:
+        for word_id in chain.from_iterable(s_i):
+            if isinstance(word_id, np.ndarray):
+                for i in word_id:
                     top_ids.add(i)
             else:
-                top_ids.add(id)
+                top_ids.add(word_id)
+
     return top_ids
+
+
+def _ids_to_words(ids, dictionary):
+    """Convert an iterable of ids to their corresponding words using a dictionary.
+    This function abstracts away the differences between the HashDictionary and the standard one.
+    """
+    top_words = set()
+    for word_id in ids:
+        word = dictionary[word_id]
+        if isinstance(word, set):
+            top_words = top_words.union(word)
+        else:
+            top_words.add(word)
+
+    return top_words
+
 
 def p_boolean_document(corpus, segmented_topics):
     """
@@ -48,18 +65,65 @@ def p_boolean_document(corpus, segmented_topics):
     """
     top_ids = _ret_top_ids(segmented_topics)
     # Instantiate the dictionary with empty sets for each top_id
-    per_topic_postings = {}
-    for id in top_ids:
-        per_topic_postings[id] = set()
+    per_topic_postings = {word_id: set() for word_id in top_ids}
+
     # Iterate through the documents, appending the document number to the set for each top_id it contains
     for n, document in enumerate(corpus):
         doc_words = frozenset(x[0] for x in document)
         top_ids_in_doc = top_ids.intersection(doc_words)
         if len(top_ids_in_doc) > 0:
-            for id in top_ids_in_doc:
-                per_topic_postings[id].add(n)
-    num_docs = len(corpus)
-    return (per_topic_postings, num_docs)
+            for word_id in top_ids_in_doc:
+                per_topic_postings[word_id].add(n)
+
+    return per_topic_postings, len(corpus)
+
+
+def _iter_windows(texts, window_size):
+    """Produce a generator over the given texts using a sliding window of `window_size`.
+    
+    Args:
+    ----
+    texts: List of string sentences.
+    window_size: Size of sliding window.
+        
+    """
+    for document in texts:
+        it = iter(document)
+        window = tuple(islice(it, window_size))
+        yield window
+
+        for elem in it:
+            window = window[1:] + (elem,)
+            yield window
+
+
+class WordOccurrenceAccumulator(object):
+    """Accumulate word occurrences from a sequence of documents."""
+
+    def __init__(self, relevant_words):
+        """
+        Args:
+        ----
+        relevant_words: the set of words that occurrences should be accumulated for.
+        """
+        self.relevant_words = set(relevant_words)
+        self.window_id = 0  # id of next document to be observed
+        self.word_occurrences = defaultdict(set)  # map from words to ids of docs they occur in
+
+    def filter_to_relevant_words(self, doc):
+        return (word for word in doc if word in self.relevant_words)
+
+    def add_occurrences_from_doc(self, window):
+        for word in self.filter_to_relevant_words(window):
+            self.word_occurrences[word].add(self.window_id)
+
+        self.window_id += 1
+
+    def accumulate(self, texts, window_size):
+        for virtual_document in _iter_windows(texts, window_size):
+            self.add_occurrences_from_doc(virtual_document)
+        return self
+
 
 def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     """
@@ -81,26 +145,13 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     window_id[0] : Total no of windows
     """
     top_ids = _ret_top_ids(segmented_topics)
-    window_id = 0  # Each window assigned a window id.
-    per_topic_postings = {}
-    token2id_dict = dictionary.token2id
-    def add_topic_posting(top_ids, window, per_topic_postings, window_id, token2id_dict):
-        for word in window:
-            word_id = token2id_dict[word]
-            if word_id in top_ids:
-                if word_id in per_topic_postings:
-                    per_topic_postings[word_id].add(window_id)
-                else:
-                    per_topic_postings[word_id] = set([window_id])
-        window_id += 1
-        return (window_id, per_topic_postings)
-    # Apply boolean sliding window to each document in texts.
-    for document in texts:
-        it = iter(document)
-        window = tuple(islice(it, window_size))
-        window_id, per_topic_postings = add_topic_posting(top_ids, window, per_topic_postings, window_id, token2id_dict)
-        for elem in it:
-            window = window[1:] + (elem,)
-            window_id, per_topic_postings = add_topic_posting(top_ids, window, per_topic_postings, window_id, token2id_dict)
+    top_words = _ids_to_words(top_ids, dictionary)
+    occurrence_accumulator = WordOccurrenceAccumulator(top_words)\
+        .accumulate(texts, window_size)
 
-    return per_topic_postings, window_id
+    # Replace words with their ids.
+    occurrences = occurrence_accumulator.word_occurrences
+    per_topic_postings = {dictionary.token2id[word]: id_set
+                          for word, id_set in occurrences.iteritems()}
+
+    return per_topic_postings, occurrence_accumulator.window_id
