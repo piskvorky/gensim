@@ -119,8 +119,15 @@ class WordOccurrenceAccumulator(object):
 
         self.window_id += 1
 
+    def text_is_relevant(self, text):
+        for word in text:
+            if word in self.relevant_words:
+                return True
+        return False
+
     def accumulate(self, texts, window_size):
-        for virtual_document in _iter_windows(texts, window_size):
+        relevant_texts = (text for text in texts if self.text_is_relevant(text))
+        for virtual_document in _iter_windows(relevant_texts, window_size):
             self.add_occurrences_from_doc(virtual_document)
         return self
 
@@ -153,5 +160,10 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     occurrences = occurrence_accumulator.word_occurrences
     per_topic_postings = {dictionary.token2id[word]: id_set
                           for word, id_set in occurrences.iteritems()}
+
+    # Ensure all top ids have a corresponding set, even if it's an empty one.
+    for word_id in top_ids:
+        if word_id not in per_topic_postings:
+            per_topic_postings[word_id] = set()
 
     return per_topic_postings, occurrence_accumulator.window_id

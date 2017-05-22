@@ -65,7 +65,7 @@ class TestProbabilityEstimation(ProbabilityEstimationBase):
         # Test with window size as 2. window_id is zero indexed.
         obtained, _ = probability_estimation.p_boolean_sliding_window(
             self.texts, self.segmented_topics, self.dictionary, 2)
-        expected = {10608: {1}, 12736: {8, 2, 3}, 18451: {11}, 5798: {4, 5, 6, 7}}
+        expected = {10608: {1}, 12736: {8, 2, 3}, 18451: {10}, 5798: {4, 5, 6, 7}}
         self.assertEqual(expected, obtained)
 
 
@@ -109,7 +109,7 @@ class TestProbabilityEstimationWithNormalDictionary(ProbabilityEstimationBase):
         # Test with window size as 2. window_id is zero indexed.
         obtained, _ = probability_estimation.p_boolean_sliding_window(
             self.texts, self.segmented_topics, self.dictionary, 2)
-        expected = {1: {1}, 3: {8, 2, 3}, 9: {11}, 4: {4, 5, 6, 7}}
+        expected = {1: {1}, 3: {8, 2, 3}, 9: {10}, 4: {4, 5, 6, 7}}
         self.assertEqual(expected, obtained)
 
 
