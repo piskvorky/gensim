@@ -19,20 +19,18 @@ coherence measures. http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public
 """
 
 import logging
-import multiprocessing as mp
-
-from gensim import interfaces
-from gensim.topic_coherence import (segmentation, probability_estimation,
-                                    direct_confirmation_measure, indirect_confirmation_measure,
-                                    aggregation)
-from gensim.matutils import argsort
-from gensim.utils import is_corpus, FakeDict
-from gensim.models.ldamodel import LdaModel
-from gensim.models.wrappers import LdaVowpalWabbit, LdaMallet
+from collections import namedtuple
 
 import numpy as np
 
-from collections import namedtuple
+from gensim import interfaces
+from gensim.matutils import argsort
+from gensim.models.ldamodel import LdaModel
+from gensim.models.wrappers import LdaVowpalWabbit, LdaMallet
+from gensim.topic_coherence import (segmentation, probability_estimation,
+                                    direct_confirmation_measure, indirect_confirmation_measure,
+                                    aggregation)
+from gensim.utils import is_corpus, FakeDict
 
 logger = logging.getLogger(__name__)
 
