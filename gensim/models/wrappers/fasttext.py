@@ -260,13 +260,13 @@ class FastText(Word2Vec):
 
     def load_model_params(self, file_handle):
         magic, version = self.struct_unpack(file_handle, '@2i')
-        if magic == FASTTEXT_FILEFORMAT_MAGIC :  # newer format
+        if magic == FASTTEXT_FILEFORMAT_MAGIC:  # newer format
             self.new_format = True
             dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
         else:  # older format
             self.new_format = True
             dim = magic
-            ws = v
+            ws = version
             epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
         # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
         self.vector_size = dim
@@ -286,7 +286,7 @@ class FastText(Word2Vec):
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
         assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
         assert len(self.wv.vocab) == vocab_size, 'mismatch between vocab sizes'
-        ntokens= self.struct_unpack(file_handle, '@1q')
+        ntokens = self.struct_unpack(file_handle, '@1q')
         if self.new_format:
             pruneidx_size = self.struct_unpack(file_handle, '@q')
         for i in range(nwords):
@@ -301,8 +301,8 @@ class FastText(Word2Vec):
             assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
             self.wv.vocab[word].count = count
 
-        for j in range(pruneidx_size):  
-            _,_ = self.struct_unpack(file_handle,'@2i')
+        for j in range(pruneidx_size):
+            _, _ = self.struct_unpack(file_handle, '@2i')
 
 
     def load_vectors(self, file_handle):

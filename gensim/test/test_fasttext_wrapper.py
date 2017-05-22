@@ -142,7 +142,7 @@ class TestFastText(unittest.TestCase):
         self.model_sanity(model)
 
     def testLoadFastTextNewFormat(self):
-        #Test model successfully loaded from fastText (new format) .vec and .bin files
+        """ Test model successfully loaded from fastText (new format) .vec and .bin files """
         new_model = fasttext.FastText.load_fasttext_format(self.test_new_model_file)
         vocab_size, model_size = 1763, 10
         self.assertEqual(self.test_new_model.wv.syn0.shape, (vocab_size, model_size))
