@@ -8,7 +8,6 @@
 Automated tests for checking transformation algorithms (the models package).
 """
 
-
 import logging
 import unittest
 import os
@@ -19,7 +18,7 @@ import numpy
 from gensim.models.wrappers import fasttext
 from gensim.models import keyedvectors
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 logger = logging.getLogger(__name__)
 
@@ -27,6 +26,7 @@ logger = logging.getLogger(__name__)
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_fasttext.tst')
+
 
 class TestFastText(unittest.TestCase):
     @classmethod
@@ -42,8 +42,8 @@ class TestFastText(unittest.TestCase):
 
     def model_sanity(self, model):
         """Even tiny models trained on any corpus should pass these sanity checks"""
-        self.assertEqual(model.wv.syn0.shape, (len(model.wv.vocab), model.size))
-        self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model.size))
+        self.assertEqual(model.wv.syn0.shape, (len(model.wv.vocab), model.vector_size))
+        self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model.vector_size))
 
     def models_equal(self, model1, model2):
         self.assertEqual(len(model1.wv.vocab), len(model2.wv.vocab))
@@ -76,7 +76,7 @@ class TestFastText(unittest.TestCase):
             return  # Use self.skipTest once python < 2.7 is no longer supported
         self.assertTrue('forests' not in self.test_model.wv.vocab)
         test_model_min_count_1 = fasttext.FastText.train(
-                self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=1)
+            self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=1)
         self.assertTrue('forests' in test_model_min_count_1.wv.vocab)
 
     def testModelSize(self):
@@ -85,8 +85,8 @@ class TestFastText(unittest.TestCase):
             logger.info("FT_HOME env variable not set, skipping test")
             return  # Use self.skipTest once python < 2.7 is no longer supported
         test_model_size_20 = fasttext.FastText.train(
-                self.ft_path, self.corpus_file, output_file=testfile(), size=20)
-        self.assertEqual(test_model_size_20.size, 20)
+            self.ft_path, self.corpus_file, output_file=testfile(), size=20)
+        self.assertEqual(test_model_size_20.vector_size, 20)
         self.assertEqual(test_model_size_20.wv.syn0.shape[1], 20)
         self.assertEqual(test_model_size_20.wv.syn0_all.shape[1], 20)
 
@@ -120,6 +120,25 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(self.test_model.wv.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(self.test_model.wv.vocab), vocab_size, model_size)
         self.assertEqual(self.test_model.wv.syn0_all.shape, (self.test_model.num_ngram_vectors, model_size))
+        expected_vec = [-0.5714373588562012,
+                        -0.008556111715734005,
+                        0.15747803449630737,
+                        -0.6785456538200378,
+                        -0.25458523631095886,
+                        -0.5807671546936035,
+                        -0.09912964701652527,
+                        1.1446694135665894,
+                        0.23417705297470093,
+                        0.06000664085149765]
+        self.assertTrue(numpy.allclose(self.test_model["hundred"], expected_vec, 0.001))
+        self.assertEquals(self.test_model.min_count, 5)
+        self.assertEquals(self.test_model.window, 5)
+        self.assertEquals(self.test_model.iter, 5)
+        self.assertEquals(self.test_model.negative, 5)
+        self.assertEquals(self.test_model.sample, 0.0001)
+        self.assertEquals(self.test_model.bucket, 1000)
+        self.assertEquals(self.test_model.wv.max_n, 6)
+        self.assertEquals(self.test_model.wv.min_n, 3)
         self.model_sanity(model)
 
     def testLoadFastTextNewFormat(self):
@@ -154,12 +173,22 @@ class TestFastText(unittest.TestCase):
         self.model_sanity(new_model)
 
     def testLoadModelWithNonAsciiVocab(self):
+        """Test loading model with non-ascii words in vocab"""
         model = fasttext.FastText.load_fasttext_format(datapath('non_ascii_fasttext'))
         self.assertTrue(u'který' in model)
         try:
             vector = model[u'který']
         except UnicodeDecodeError:
-            self.fail('Unable to access vector for non-ascii word')
+            self.fail('Unable to access vector for utf8 encoded non-ascii word')
+
+    def testLoadModelNonUtf8Encoding(self):
+        """Test loading model with words in user-specified encoding"""
+        model = fasttext.FastText.load_fasttext_format(datapath('cp852_fasttext'), encoding='cp852')
+        self.assertTrue(u'který' in model)
+        try:
+            vector = model[u'který']
+        except KeyError:
+            self.fail('Unable to access vector for cp-852 word')
 
     def testNSimilarity(self):
         """Test n_similarity for in-vocab and out-of-vocab words"""
@@ -168,7 +197,8 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(self.test_model.n_similarity(['the'], ['and']), self.test_model.n_similarity(['and'], ['the']))
         # Out of vocab check
         self.assertTrue(numpy.allclose(self.test_model.n_similarity(['night', 'nights'], ['nights', 'night']), 1.0))
-        self.assertEqual(self.test_model.n_similarity(['night'], ['nights']), self.test_model.n_similarity(['nights'], ['night']))
+        self.assertEqual(self.test_model.n_similarity(['night'], ['nights']),
+                         self.test_model.n_similarity(['nights'], ['night']))
 
     def testSimilarity(self):
         """Test similarity for in-vocab and out-of-vocab words"""
@@ -192,10 +222,14 @@ class TestFastText(unittest.TestCase):
         """Test most_similar_cosmul for in-vocab and out-of-vocab words"""
         # In vocab, sanity check
         self.assertEqual(len(self.test_model.most_similar_cosmul(positive=['the', 'and'], topn=5)), 5)
-        self.assertEqual(self.test_model.most_similar_cosmul('the'), self.test_model.most_similar_cosmul(positive=['the']))
+        self.assertEqual(
+            self.test_model.most_similar_cosmul('the'),
+            self.test_model.most_similar_cosmul(positive=['the']))
         # Out of vocab check
         self.assertEqual(len(self.test_model.most_similar_cosmul(['night', 'nights'], topn=5)), 5)
-        self.assertEqual(self.test_model.most_similar_cosmul('nights'), self.test_model.most_similar_cosmul(positive=['nights']))
+        self.assertEqual(
+            self.test_model.most_similar_cosmul('nights'),
+            self.test_model.most_similar_cosmul(positive=['nights']))
 
     def testLookup(self):
         """Tests word vector lookup for in-vocab and out-of-vocab words"""
@@ -248,6 +282,7 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(ft_hash, 2949673445)
         ft_hash = fasttext.FastText.ft_hash('word')
         self.assertEqual(ft_hash, 1788406269)
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

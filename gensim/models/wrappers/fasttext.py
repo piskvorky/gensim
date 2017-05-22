@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
+# Author: Jayant Jain <jayantjain1992@gmail.com>
+# Copyright (C) 2017 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
@@ -222,7 +223,7 @@ class FastText(Word2Vec):
         return FastTextKeyedVectors.load_word2vec_format(*args, **kwargs)
 
     @classmethod
-    def load_fasttext_format(cls, model_file):
+    def load_fasttext_format(cls, model_file, encoding='utf8'):
         """
         Load the input-hidden weight matrix from the fast text output files.
 
@@ -235,8 +236,8 @@ class FastText(Word2Vec):
 
         """
         model = cls()
-        model.wv = cls.load_word2vec_format('%s.vec' % model_file)
-        model.load_binary_data('%s.bin' % model_file)
+        model.wv = cls.load_word2vec_format('%s.vec' % model_file, encoding=encoding)
+        model.load_binary_data('%s.bin' % model_file, encoding=encoding)
         return model
 
     @classmethod
@@ -249,11 +250,11 @@ class FastText(Word2Vec):
             logger.debug('Training files %s not found when attempting to delete', model_file)
             pass
 
-    def load_binary_data(self, model_binary_file):
+    def load_binary_data(self, model_binary_file, encoding='utf8'):
         """Loads data from the output binary file created by FastText training"""
         with utils.smart_open(model_binary_file, 'rb') as f:
             self.load_model_params(f)
-            self.load_dict(f)
+            self.load_dict(f, encoding=encoding)
             self.load_vectors(f)
 
     def load_model_params(self, file_handle):
@@ -266,7 +267,7 @@ class FastText(Word2Vec):
             ws = v
             epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
         # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
-        self.size = dim
+        self.vector_size = dim
         self.window = ws
         self.iter = epoch
         self.min_count = minCount
@@ -303,12 +304,13 @@ class FastText(Word2Vec):
                 assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
                 self.wv.vocab[word].count = count
 
+
     def load_vectors(self, file_handle):
         if self.new_format:
             _ = self.struct_unpack(file_handle,'@?')
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
-        assert self.size == dim, 'mismatch between model sizes'
+        assert self.vector_size == dim, 'mismatch between model sizes'
         float_size = struct.calcsize('@f')
         if float_size == 4:
             dtype = np.dtype(np.float32)
@@ -316,9 +318,9 @@ class FastText(Word2Vec):
             dtype = np.dtype(np.float64)
 
         self.num_original_vectors = num_vectors
-        self.wv.syn0_all = np.fromstring(file_handle.read(num_vectors * dim * float_size), dtype=dtype)
+        self.wv.syn0_all = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
         self.wv.syn0_all = self.wv.syn0_all.reshape((num_vectors, dim))
-        assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.size), \
+        assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
             'mismatch between weight matrix shape and vocab/model size'
         self.init_ngrams()
 

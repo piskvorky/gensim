@@ -46,7 +46,7 @@ class Wordrank(KeyedVectors):
     
     @classmethod
     def train(cls, wr_path, corpus_file, out_path, size=100, window=15, symmetric=1, min_count=5, max_vocab_size=0,
-              sgd_num=100, lrate=0.001, period=10, iter=91, epsilon=0.75, dump_period=10, reg=0, alpha=100,
+              sgd_num=100, lrate=0.001, period=10, iter=90, epsilon=0.75, dump_period=10, reg=0, alpha=100,
               beta=99, loss='hinge', memory=4.0, cleanup_files=True, sorted_vocab=1, ensemble=0):
         """
         `wr_path` is the path to the Wordrank directory.
@@ -113,6 +113,16 @@ class Wordrank(KeyedVectors):
         with smart_open(meta_file, 'wb') as f:
             meta_info = "{0} {1}\n{2} {3}\n{4} {5}".format(numwords, numwords, numlines, cooccurrence_shuf_file, numwords, vocab_file)
             f.write(meta_info.encode('utf-8'))
+            
+        if iter % dump_period == 0:
+            iter += 1
+        else:
+            logger.warning(
+                'Resultant embedding will be from %d iterations rather than the input %d iterations, '
+                'as wordrank dumps the embedding only at dump_period intervals. '
+                'Input an appropriate combination of parameters (iter, dump_period) such that '
+                '"iter mod dump_period" is zero.', iter - (iter % dump_period), iter
+                )
 
         wr_args = {
             'path': 'meta',
@@ -135,13 +145,13 @@ class Wordrank(KeyedVectors):
         # run wordrank executable with wr_args
         cmd = ['mpirun', '-np', '1', '../wordrank']
         for option, value in wr_args.items():
-            cmd.append("--%s" % option)
+            cmd.append('--%s' % option)
             cmd.append(str(value))
         logger.info("Running wordrank binary '%s'", cmd)
         output = utils.check_output(args=cmd)
 
         # use embeddings from max. iteration's dump
-        max_iter_dump = iter / dump_period * dump_period - 1
+        max_iter_dump = iter - (iter % dump_period)
         copyfile('model_word_%d.txt' % max_iter_dump, 'wordrank.words')
         copyfile('model_context_%d.txt' % max_iter_dump, 'wordrank.contexts')
         model = cls.load_wordrank_model('wordrank.words', os.path.join('meta', vocab_file), 'wordrank.contexts', sorted_vocab, ensemble)

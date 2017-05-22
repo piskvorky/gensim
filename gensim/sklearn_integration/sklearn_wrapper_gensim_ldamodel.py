@@ -8,12 +8,17 @@
 Scikit learn interface for gensim for easy use of gensim with scikit-learn
 follows on scikit learn API conventions
 """
+import numpy as np
+
 from gensim import models
 from gensim import matutils
 from scipy import sparse
+from sklearn.base import TransformerMixin, BaseEstimator
 
 
-class SklearnWrapperLdaModel(models.LdaModel):
+
+
+class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """
@@ -56,14 +61,13 @@ class SklearnWrapperLdaModel(models.LdaModel):
         """
         Returns all parameters as dictionary.
         """
-        if deep:
-            return {
-                "corpus": self.corpus, "num_topics": self.num_topics, "id2word": self.id2word,
+        return {"corpus": self.corpus, "num_topics": self.num_topics, "id2word": self.id2word,
                 "chunksize": self.chunksize, "passes": self.passes,
-                "update_every": self.update_every, "alpha": self.alpha, " eta": self.eta, " decay": self.decay,
-                "offset": self.offset, "eval_every": self.eval_every, " iterations": self.iterations,
+                "update_every": self.update_every, "alpha": self.alpha, "eta": self.eta, "decay": self.decay,
+                "offset": self.offset, "eval_every": self.eval_every, "iterations": self.iterations,
                 "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
                 "random_state": self.random_state}
+
 
     def set_params(self, **parameters):
         """
@@ -73,7 +77,7 @@ class SklearnWrapperLdaModel(models.LdaModel):
             self.parameter = value
         return self
 
-    def fit(self, X):
+    def fit(self, X,  y=None):
         """
         For fitting corpus into the class object.
         Calls gensim.model.LdaModel:
@@ -93,7 +97,28 @@ class SklearnWrapperLdaModel(models.LdaModel):
             random_state=self.random_state)
         return self
 
-    def transform(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
+    def transform(self, docs, minimum_probability=None):
+        """
+        Takes as an list of input a documents (documents).
+        Returns matrix of topic distribution for the given document bow, where a_ij
+        indicates (topic_i, topic_probability_j).
+        """
+        # The input as array of array
+        check = lambda x: [x] if isinstance(x[0], tuple) else x
+        docs = check(docs)
+        X = [[] for i in range(0,len(docs))];
+        for k,v in enumerate(docs):
+
+            doc_topics = self.get_document_topics(v, minimum_probability=minimum_probability)
+            probs_docs = list(map(lambda x: x[1], doc_topics))
+            # Everything should be equal in length
+            if len(probs_docs) != self.num_topics:
+                probs_docs.extend([1e-12]*(self.num_topics - len(probs_docs)))
+            X[k] = probs_docs
+            probs_docs = []
+        return np.reshape(np.array(X), (len(docs), self.num_topics))
+
+    def get_topic_dist(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
         """
         Takes as an input a new document (bow).
         Returns the topic distribution for the given document bow, as a list of (topic_id, topic_probability) 2-tuples.
