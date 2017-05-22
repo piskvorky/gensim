@@ -160,7 +160,6 @@ class TestFastText(unittest.TestCase):
                             -0.19685,
                             -0.13179]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin < queries.txt
 
-    
         self.assertTrue(numpy.allclose(self.test_new_model["hundred"], expected_vec_new, 0.001))
         self.assertEquals(self.test_new_model.min_count, 5)
         self.assertEquals(self.test_new_model.window, 5)

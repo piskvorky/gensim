@@ -42,6 +42,8 @@ from six import string_types
 
 logger = logging.getLogger(__name__)
 
+FASTTEXT_FILEFORMAT_MAGIC = 793712314
+
 
 class FastTextKeyedVectors(KeyedVectors):
     """
@@ -141,7 +143,6 @@ class FastText(Word2Vec):
 
     def initialize_word_vectors(self):
         self.wv = FastTextKeyedVectors()
-        self.new_format = False
 
     @classmethod
     def train(cls, ft_path, corpus_file, output_file=None, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
@@ -258,11 +259,12 @@ class FastText(Word2Vec):
             self.load_vectors(f)
 
     def load_model_params(self, file_handle):
-        magic, v= self.struct_unpack(file_handle, '@2i')
-        if magic == 793712314:  # newer format 
+        magic, version = self.struct_unpack(file_handle, '@2i')
+        if magic == FASTTEXT_FILEFORMAT_MAGIC :  # newer format
             self.new_format = True
             dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
         else:  # older format
+            self.new_format = True
             dim = magic
             ws = v
             epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
@@ -298,16 +300,16 @@ class FastText(Word2Vec):
                 char_byte = file_handle.read(1)
             word = word_bytes.decode(encoding)
             count, _ = self.struct_unpack(file_handle, '@qb')
-            if word in self.wv.vocab:
-                # skip loading info about words in bin file which are not present in vec file
-                # handling mismatch in vocab_size in vec and bin files (ref: wiki.fr)
-                assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
-                self.wv.vocab[word].count = count
+            assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
+            self.wv.vocab[word].count = count
+
+        for j in range(pruneidx_size):  
+            _,_ = self.struct_unpack(file_handle,'@2i')
 
 
     def load_vectors(self, file_handle):
         if self.new_format:
-            _ = self.struct_unpack(file_handle,'@?')
+            _ = self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.vector_size == dim, 'mismatch between model sizes'
