@@ -264,7 +264,7 @@ class FastText(Word2Vec):
             self.new_format = True
             dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
         else:  # older format
-            self.new_format = True
+            self.new_format = False
             dim = magic
             ws = version
             epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
@@ -288,7 +288,7 @@ class FastText(Word2Vec):
         assert len(self.wv.vocab) == vocab_size, 'mismatch between vocab sizes'
         ntokens = self.struct_unpack(file_handle, '@1q')
         if self.new_format:
-            pruneidx_size = self.struct_unpack(file_handle, '@q')
+            pruneidx_size, = self.struct_unpack(file_handle, '@q')
         for i in range(nwords):
             word_bytes = b''
             char_byte = file_handle.read(1)
