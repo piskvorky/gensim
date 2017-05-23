@@ -301,9 +301,9 @@ class FastText(Word2Vec):
             assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
             self.wv.vocab[word].count = count
 
-        for j in range(pruneidx_size):
-            _, _ = self.struct_unpack(file_handle, '@2i')
-
+        if self.new_format:
+            for j in range(pruneidx_size):
+                _, _ = self.struct_unpack(file_handle, '@2i')
 
     def load_vectors(self, file_handle):
         if self.new_format:
