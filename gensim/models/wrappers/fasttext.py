@@ -264,7 +264,7 @@ class FastText(Word2Vec):
             self.new_format = True
             dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
         else:  # older format
-            self.new_format = True
+            self.new_format = False
             dim = magic
             ws = version
             epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
@@ -290,7 +290,7 @@ class FastText(Word2Vec):
             logger.warnings("Please report to gensim or fastText.")
         ntokens= self.struct_unpack(file_handle, '@1q')
         if self.new_format:
-            pruneidx_size = self.struct_unpack(file_handle, '@q')
+            pruneidx_size, = self.struct_unpack(file_handle, '@q')
         for i in range(vocab_size):
             word_bytes = b''
             char_byte = file_handle.read(1)
@@ -307,11 +307,15 @@ class FastText(Word2Vec):
                 self.wv.vocab[word].count = count
 
         for j in range(pruneidx_size):
-            _, _ = self.struct_unpack(file_handle, '@2i')
+            self.struct_unpack(file_handle, '@2i')
+
+        if self.new_format:
+            for j in range(pruneidx_size):
+                self.struct_unpack(file_handle, '@2i')
 
     def load_vectors(self, file_handle):
         if self.new_format:
-            _ = self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
+            self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.vector_size == dim, 'mismatch between model sizes'
