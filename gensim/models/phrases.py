@@ -52,6 +52,22 @@ two tokens (e.g. `new_york_times`):
 >>> print(trigram[bigram[sent]])
 [u'the', u'new_york_times', u'is', u'a', u'newspaper']
 
+The CommonTermsPhrases add a way to give special treatment to common terms (aka stop words)
+such that their presence between two words
+won't prevent bigram detection.
+It allows to detect expressions like "bank of america" or "eye of the beholder".
+
+>>> common_terms = ["of", "with", "without", "and", "or", "the", "a"]
+>>> ct_phrases = CommonTermsPhrases(sentence_stream, common_terms=common_terms)
+
+It has its own Phraser:
+
+>>> ct_bigram = CommonTermsPhraser(ct_phrases)
+>>> sent = [u'the', u'mayor', u'shows', u'his', u'lack', u'of', u'interest']
+>>> print(bigram[sent])
+[u'the', u'mayor', u'shows', u'his', u'lack_of_interest']
+
+
 .. [1] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean.
        Distributed Representations of Words and Phrases and their Compositionality.
        In Proceedings of NIPS, 2013.
@@ -65,7 +81,7 @@ import warnings
 from collections import defaultdict
 import itertools as it
 
-from six import iteritems, string_types, next
+from six import iteritems, iterbytes, string_types, next
 
 from gensim import utils, interfaces
 
@@ -339,7 +355,7 @@ class Phraser(interfaces.TransformationABC):
         self.min_count = phrases_model.min_count
         self.delimiter = phrases_model.delimiter
         self.phrasegrams = {}
-        corpus = pseudocorpus(phrases_model.vocab, phrases_model.delimiter)
+        corpus = self.pseudocorpus(phrases_model)
         logger.info('source_vocab length %i', len(phrases_model.vocab))
         count = 0
         for bigram, score in phrases_model.export_phrases(corpus, self.delimiter, as_tuples=True):
@@ -350,6 +366,9 @@ class Phraser(interfaces.TransformationABC):
             if not count % 50000:
                 logger.info('Phraser added %i phrasegrams', count)
         logger.info('Phraser built with %i %i phrasegrams', count, len(self.phrasegrams))
+
+    def pseudocorpus(self, phrases_model):
+        return pseudocorpus(phrases_model.vocab, phrases_model.delimiter)
 
     def __getitem__(self, sentence):
         """
@@ -382,6 +401,243 @@ class Phraser(interfaces.TransformationABC):
 
             if not last_bigram:
                 new_s.append(word_a)
+            last_bigram = False
+
+        if s:  # add last word skipped by previous loop
+            last_token = s[-1]
+            if not last_bigram:
+                new_s.append(last_token)
+
+        return [utils.to_unicode(w) for w in new_s]
+
+
+class CommonTermsUtils:
+
+    def lrsentence(self, sentence, delimiter, common_terms):
+        # first part does not us stop words
+        lsentence = [w for w in sentence if w not in common_terms]
+        # second sentence join stop words and following word
+        rsentence = []
+        common_terms = []
+        for w in sentence:
+            if w in self.common_terms:
+                common_terms.append(w)
+            else:
+                w = delimiter.join(common_terms +  [w])
+                rsentence.append(w)
+                common_terms = []
+        return lsentence, rsentence
+
+
+
+class CommonTermsPhrases(CommonTermsUtils, Phrases):
+    """
+    This class is a variation of :py:class:`Phrases` capable of handling common grams
+    that appears between words, like *with* in *car with driver*.
+
+    It take inspirations from elastic search `common grams filter`_.
+
+    .. _`common grams filter`:: `common grams filter`
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        see py:class:`Phrase`.
+
+        It has the following required parameters:
+
+        :param common_terms: a list of common terms
+        """
+        if "common_terms" not in kwargs:
+            raise ValueError("common_terms parameter is mandatory")
+        self.common_terms = frozenset(utils.any2utf8(w) for w in kwargs.pop("common_terms"))
+        super(CommonTermsPhrases, self).__init__(*args, **kwargs)
+
+    # no more static, we wan't to access stop words
+    def learn_vocab(self, sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
+        """Collect unigram/bigram counts from the `sentences` iterable."""
+        common_terms = self.common_terms
+        sentence_no = -1
+        total_words = 0
+        #logger.info("collecting all words and their counts")
+        vocab = defaultdict(int)
+        min_reduce = 1
+        for sentence_no, sentence in enumerate(sentences):
+            if sentence_no % progress_per == 0:
+                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
+                            (sentence_no, total_words, len(vocab)))
+            sentence = [utils.any2utf8(w) for w in sentence]
+            lsentence, rsentence = self.lrsentence(sentence, delimiter, common_terms)
+            for bigram in zip(lsentence, rsentence[1:]):
+                vocab[bigram[0]] += 1
+                vocab[delimiter.join(bigram)] += 1
+                total_words += 1
+
+            if lsentence:  # add last word skipped by previous loop
+                word = lsentence[-1]
+                vocab[word] += 1
+
+            if len(vocab) > max_vocab_size:
+                utils.prune_vocab(vocab, min_reduce)
+                min_reduce += 1
+
+        logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
+                    (len(vocab), total_words, sentence_no + 1))
+        return min_reduce, vocab
+
+    def export_phrases(self, sentences, out_delimiter=b' ', as_tuples=False):
+        """
+        Generate an iterator that contains all phrases in given 'sentences'
+
+        see :py:meth:`Phrases.export_phrases`
+        """
+        vocab = self.vocab
+        threshold = self.threshold
+        delimiter = self.delimiter  # delimiter used for lookup
+        min_count = self.min_count
+        common_terms = self.common_terms
+        for sentence in sentences:
+            s = [utils.any2utf8(w) for w in sentence]
+            last_bigram = False
+            lsentence, rsentence = self.lrsentence(s, delimiter, common_terms)
+            for word_a, word_b, orig_b in zip(lsentence, rsentence[1:], lsentence[1:]):
+                if word_a in vocab and orig_b in vocab:
+                    bigram_word = delimiter.join((word_a, word_b))
+                    if bigram_word in vocab and not last_bigram:
+                        pa = float(vocab[word_a])
+                        pb = float(vocab[orig_b])
+                        pab = float(vocab[bigram_word])
+                        score = (pab - min_count) / pa / pb * len(vocab)
+                        if score > threshold:
+                            if as_tuples:
+                                yield ((word_a, word_b), score)
+                            else:
+                                yield (out_delimiter.join([word_a] + list(word_b.split(delimiter))), score)
+                            last_bigram = True
+                            continue
+                        last_bigram = False
+
+    def __getitem__(self, sentence):
+        """
+        Convert the input tokens `sentence` (=list of unicode strings) into phrase
+        tokens (=list of unicode strings, where detected phrases are joined by u'_').
+
+        see :py:meth:`Phrases.__getitem__`
+        """
+        #FIXME
+        # warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
+
+        common_terms = self.common_terms
+        is_single, sentence = _is_single(sentence)
+        if not is_single:
+            # if the input is an entire corpus (rather than a single sentence),
+            # return an iterable stream.
+            return self._apply(sentence)
+
+        s, new_s = [utils.any2utf8(w) for w in sentence], []
+        last_bigram = False
+        vocab = self.vocab
+        threshold = self.threshold
+        delimiter = self.delimiter
+        odelimiter = ord(delimiter)
+        min_count = self.min_count
+        lsentence, rsentence = self.lrsentence(s, delimiter, common_terms)
+        for w in s:  # initial common term
+            if w not in common_terms:
+                break
+            new_s.append(w)
+        for word_a, word_b, orig_b in zip(lsentence, rsentence[1:], lsentence[1:]):
+            if word_a in vocab and orig_b in vocab:
+                bigram_word = delimiter.join((word_a, word_b))
+                if bigram_word in vocab and not last_bigram:
+                    pa = float(vocab[word_a])
+                    pb = float(vocab[orig_b])
+                    pab = float(vocab[bigram_word])
+                    score = (pab - min_count) / pa / pb * len(vocab)
+                    # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
+                    #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
+                    if score > threshold:
+                        new_s.append(bigram_word)
+                        last_bigram = True
+                        continue
+
+            if not last_bigram:
+                new_s.append(word_a)
+                # common terms in front of b
+                last_stop_index = 0
+                for i, w in enumerate(iterbytes(word_b)):
+                    if w == odelimiter:
+                        new_s.append(word_b[last_stop_index:i])
+                        last_stop_index = i + 1
+
+            last_bigram = False
+
+        if s:  # add last word skipped by previous loop
+            last_token = s[-1]
+            if not last_bigram:
+                new_s.append(last_token)
+
+        return [utils.to_unicode(w) for w in new_s]
+
+
+class CommonTermsPhraser(CommonTermsUtils, Phraser):
+    """
+    Minimal state & functionality to apply results of a CommonTermsPhrases model to tokens.
+    """
+
+    def __init__(self, phrases_model):
+        """see :py:meth:`Phraser.__init__`
+        """
+        self.common_terms = phrases_model.common_terms
+        super(CommonTermsPhraser, self).__init__(phrases_model)
+
+    def pseudocorpus(self, phrases_model):
+        """Feeds source_vocab's compound keys back to it, to discover phrases"""
+        sep = phrases_model.delimiter
+        for k in phrases_model.vocab:
+            if sep not in k:
+                continue
+            yield k.split(sep)
+
+    def __getitem__(self, sentence):
+        """
+        """
+        is_single, sentence = _is_single(sentence)
+        if not is_single:
+            # if the input is an entire corpus (rather than a single sentence),
+            # return an iterable stream.
+            return self._apply(sentence)
+
+        s, new_s = [utils.any2utf8(w) for w in sentence], []
+        last_bigram = False
+        phrasegrams = self.phrasegrams
+        threshold = self.threshold
+        delimiter = self.delimiter
+        odelimiter = ord(delimiter)
+        common_terms = self.common_terms
+        lsentence, rsentence = self.lrsentence(s, delimiter, common_terms)
+        for w in s:  # initial common term
+            if w not in common_terms:
+                break
+            new_s.append(w)
+        for word_a, word_b, orig_b in zip(lsentence, rsentence[1:], lsentence[1:]):
+            bigram_tuple = (word_a, word_b)
+            if not last_bigram and phrasegrams.get(bigram_tuple, (-1, -1))[1] > self.threshold:
+                bigram_word = delimiter.join((word_a, word_b))
+                new_s.append(bigram_word)
+                last_bigram = True
+                continue
+
+            if not last_bigram:
+                new_s.append(word_a)
+                # common terms in front of b
+                last_stop_index = 0
+                for i, w in enumerate(iterbytes(word_b)):
+                    if w == odelimiter:
+                        new_s.append(word_b[last_stop_index:i])
+                        last_stop_index = i + 1
+
             last_bigram = False
 
         if s:  # add last word skipped by previous loop
