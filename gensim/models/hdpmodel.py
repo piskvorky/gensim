@@ -47,7 +47,6 @@ logger = logging.getLogger(__name__)
 meanchangethresh = 0.00001
 rhot_bound = 0.0
 
-
 def expect_log_sticks(sticks):
     """
     For stick-breaking hdp, return the E[log(sticks)]
@@ -436,7 +435,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
 
-    def show_topic(self, topic_id, num_words=20, log=False, formatted=False):
+    def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words=None):
         """
         Print the `num_words` most probable words for topic `topic_id`.
 
@@ -444,12 +443,17 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         `False` as lists of (weight, word) pairs.
 
         """
+        if num_words is not None:  # deprecated num_words is used
+            logger.warning("The parameter num_words for show_topic() would be deprecated in the updated version.")
+            logger.warning("Please use topn instead.")
+            topn = num_words
+
         if not self.m_status_up_to_date:
             self.update_expectations()
         betas = self.m_lambda + self.m_eta
         hdp_formatter = HdpTopicFormatter(self.id2word, betas)
-        return hdp_formatter.show_topic(topic_id, num_words, log, formatted)
-        
+        return hdp_formatter.show_topic(topic_id, topn, log, formatted)
+
     def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
         """
         Print the `num_words` most probable words for `num_topics` number of topics.
@@ -608,10 +612,19 @@ class HdpTopicFormatter(object):
 
         return shown
 
-    def print_topic(self, topic_id, num_words):
-        return self.show_topic(topic_id, num_words, formatted=True)
+    def print_topic(self, topic_id, topn= None, num_words=None):
+        if num_words is not None:  # deprecated num_words is used
+            logger.warning("The parameter num_words for print_topic() would be deprecated in the updated version.")
+            logger.warning("Please use topn instead.")
+            topn = num_words
 
-    def show_topic(self, topic_id, num_words, log=False, formatted=False):
+        return self.show_topic(topic_id, topn, formatted=True)
+
+    def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words= None,):
+        if num_words is not None:  # deprecated num_words is used
+            logger.warning("The parameter num_words for show_topic() would be deprecated in the updated version.")
+            logger.warning("Please use topn instead.")
+            topn = num_words
 
         lambdak = list(self.data[topic_id, :])
         lambdak = lambdak / sum(lambdak)
@@ -619,7 +632,7 @@ class HdpTopicFormatter(object):
         temp = zip(lambdak, xrange(len(lambdak)))
         temp = sorted(temp, key=lambda x: x[0], reverse=True)
 
-        topic_terms = self.show_topic_terms(temp, num_words)
+        topic_terms = self.show_topic_terms(temp, topn)
 
         if formatted:
             topic = self.format_topic(topic_id, topic_terms)
