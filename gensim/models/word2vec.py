@@ -140,7 +140,7 @@ except ImportError:
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
-    def train_batch_sg(model, sentences, alpha, work=None):
+    def train_batch_sg(model, sentences, alpha, work=None, print_freq=0):
         """
         Update skip-gram model by training on a sequence of sentences.
 
@@ -151,6 +151,7 @@ except ImportError:
         will use the optimized version from word2vec_inner instead.
 
         """
+        p_iter = 0
         result = 0
         for sentence in sentences:
             word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
@@ -163,7 +164,15 @@ except ImportError:
                 for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                     # don't train on the `word` itself
                     if pos2 != pos:
-                        train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha)
+                        if print_freq != 0:
+                            if p_iter == 0:
+                                train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha, enable_loss_logging=True)
+                            else  :
+                                train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha, enable_loss_logging=False)
+                            p_iter = (p_iter + 1) % print_freq
+                        else :
+                            train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha, enable_loss_logging=False)
+
             result += len(word_vocabs)
         return result
 
@@ -256,7 +265,7 @@ except ImportError:
 
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
-                  context_vectors=None, context_locks=None):
+                  context_vectors=None, context_locks=None, enable_loss_logging=False):
     if context_vectors is None:
         context_vectors = model.wv.syn0
     if context_locks is None:
@@ -271,6 +280,9 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
 
     neu1e = zeros(l1.shape)
 
+    if enable_loss_logging :
+        train_error_value = 0
+
     if model.hs:
         # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
         l2a = deepcopy(model.syn1[predict_word.point])  # 2d matrix, codelen x layer1_size
@@ -280,6 +292,12 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             model.syn1[predict_word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
 
+        #loss component corresponding to hierarchical softmax
+        if enable_loss_logging :
+            sgn = (-1.0)**predict_word.code  # ch function, 0-> 1, 1 -> -1
+            lprob = -log(expit( -sgn * dot(l1, l2a.T)))
+            train_error_value += sum(lprob)
+
     if model.negative:
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
         word_indices = [predict_word.index]
@@ -288,11 +306,18 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             if w != predict_word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
+        prod_term = dot(l1, l2b.T)
+        fb = expit(prod_term)  # propagate hidden -> output
         gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
+
+        #loss component corresponding to negative sampling
+        if enable_loss_logging :
+            train_error_value -= sum(log(expit(-1 * prod_term[range(1, len(prod_term))])))      #for the sampled words
+            train_error_value -= log(expit(prod_term[0]))       #for the output word
+            logger.info("current training loss : %f", train_error_value)
 
     if learn_vectors:
         l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
