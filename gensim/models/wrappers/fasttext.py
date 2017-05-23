@@ -286,7 +286,7 @@ class FastText(Word2Vec):
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
         assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
         assert len(self.wv.vocab) == vocab_size, 'mismatch between vocab sizes'
-        ntokens = self.struct_unpack(file_handle, '@1q')
+        self.struct_unpack(file_handle, '@1q') # number of tokens 
         if self.new_format:
             pruneidx_size, = self.struct_unpack(file_handle, '@q')
         for i in range(nwords):
@@ -303,11 +303,11 @@ class FastText(Word2Vec):
 
         if self.new_format:
             for j in range(pruneidx_size):
-                _, _ = self.struct_unpack(file_handle, '@2i')
+                self.struct_unpack(file_handle, '@2i')
 
     def load_vectors(self, file_handle):
         if self.new_format:
-            _ = self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
+            self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.vector_size == dim, 'mismatch between model sizes'
