@@ -359,6 +359,10 @@ class SaveLoad(object):
         in both Python 2 and 3.
 
         """
+        import os
+        directory = os.path.dirname(fname)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         logger.info(
             "saving %s object under %s, separately %s" % (
                 self.__class__.__name__, fname, separately))
@@ -491,6 +495,10 @@ class SaveLoad(object):
         in both Python 2 and 3.
 
         """
+        import os
+        directory = os.path.dirname(fname_or_handle)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object" % self.__class__.__name__)
