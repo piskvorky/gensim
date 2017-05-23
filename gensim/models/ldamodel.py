@@ -1117,6 +1117,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
+
+        random_state_fname = utils.smart_extension(fname, '.random_state')
+        try:
+            result.random_state = super(LdaModel, cls).load(random_state_fname, *args, **kwargs)
+        except Exception as e:
+            logging.warning("failed to load random_state from %s: %s", random_state_fname, e)
         state_fname = utils.smart_extension(fname, '.state')
         try:
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
