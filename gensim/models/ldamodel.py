@@ -1049,6 +1049,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
+        if not hasattr(result, 'random_state'):
+            result.random_state = utils.get_random_state(None)
         state_fname = utils.smart_extension(fname, '.state')
         try:
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
@@ -1060,7 +1062,5 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 result.id2word = utils.unpickle(id2word_fname)
             except Exception as e:
                 logging.warning("failed to load id2word dictionary from %s: %s", id2word_fname, e)
-        else:
-            result.id2word = None
         return result
 # endclass LdaModel
