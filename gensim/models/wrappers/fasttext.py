@@ -286,7 +286,7 @@ class FastText(Word2Vec):
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
         assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
         assert len(self.wv.vocab) == vocab_size, 'mismatch between vocab sizes'
-        self.struct_unpack(file_handle, '@1q') # number of tokens 
+        self.struct_unpack(file_handle, '@1q')  # number of tokens
         if self.new_format:
             pruneidx_size, = self.struct_unpack(file_handle, '@q')
         for i in range(nwords):
