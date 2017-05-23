@@ -167,10 +167,10 @@ except ImportError:
                         if print_freq != 0:
                             if p_iter == 0:
                                 train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha, enable_loss_logging=True)
-                            else  :
+                            else:
                                 train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha, enable_loss_logging=False)
                             p_iter = (p_iter + 1) % print_freq
-                        else :
+                        else:
                             train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha, enable_loss_logging=False)
 
             result += len(word_vocabs)
@@ -280,7 +280,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
 
     neu1e = zeros(l1.shape)
 
-    if enable_loss_logging :
+    if enable_loss_logging:
         train_error_value = 0
 
     if model.hs:
@@ -292,10 +292,10 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             model.syn1[predict_word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
 
-        #loss component corresponding to hierarchical softmax
-        if enable_loss_logging :
+        # loss component corresponding to hierarchical softmax
+        if enable_loss_logging:
             sgn = (-1.0)**predict_word.code  # ch function, 0-> 1, 1 -> -1
-            lprob = -log(expit( -sgn * dot(l1, l2a.T)))
+            lprob = -log(expit(-sgn * dot(l1, l2a.T)))
             train_error_value += sum(lprob)
 
     if model.negative:
@@ -313,10 +313,10 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
 
-        #loss component corresponding to negative sampling
-        if enable_loss_logging :
-            train_error_value -= sum(log(expit(-1 * prod_term[range(1, len(prod_term))])))      #for the sampled words
-            train_error_value -= log(expit(prod_term[0]))       #for the output word
+        # loss component corresponding to negative sampling
+        if enable_loss_logging:
+            train_error_value -= sum(log(expit(-1 * prod_term[range(1, len(prod_term))])))      # for the sampled words
+            train_error_value -= log(expit(prod_term[0]))       # for the output word
             logger.info("current training loss : %f", train_error_value)
 
     if learn_vectors:
