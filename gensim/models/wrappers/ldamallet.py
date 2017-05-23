@@ -190,7 +190,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         if hasattr(self.id2word, 'token2id'):
             word2id = self.id2word.token2id
         else:
-            word2id = dict((v, k) for k, v in iteritems(self.id2word))
+            word2id = dict((v, k) for k, v in iteritems(dict(self.id2word)))
 
         with utils.smart_open(self.fstate()) as fin:
             _ = next(fin)  # header
