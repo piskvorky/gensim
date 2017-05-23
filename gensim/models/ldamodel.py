@@ -1051,6 +1051,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
         if not hasattr(result, 'random_state'):
             result.random_state = utils.get_random_state(None)
+            logging.warning("random_state not set so using default value")
         state_fname = utils.smart_extension(fname, '.state')
         try:
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
