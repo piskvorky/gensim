@@ -130,7 +130,6 @@ class TestPhrasesModel(unittest.TestCase):
         seen_bigrams = set()
 
         for phrase, score in bigram.export_phrases(sentences):
-            print(phrase)
             seen_bigrams.add(phrase)
 
         assert seen_bigrams == set([
