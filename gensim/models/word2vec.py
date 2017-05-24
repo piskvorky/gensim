@@ -132,6 +132,7 @@ from scipy import stats
 logger = logging.getLogger(__name__)
 
 try:
+    raise ImportError
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
@@ -140,7 +141,7 @@ except ImportError:
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
-    def train_batch_sg(model, sentences, alpha, work=None, enable_loss_logging=False):
+    def train_batch_sg(model, sentences, alpha, work=None, compute_loss=False):
         """
         Update skip-gram model by training on a sequence of sentences.
 
@@ -163,7 +164,7 @@ except ImportError:
                 for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                     # don't train on the `word` itself
                     if pos2 != pos:
-                        train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha, enable_loss_logging=enable_loss_logging)
+                        train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha, compute_loss=compute_loss)
 
             result += len(word_vocabs)
         return result
@@ -257,7 +258,7 @@ except ImportError:
 
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
-                  context_vectors=None, context_locks=None, enable_loss_logging=False):
+                  context_vectors=None, context_locks=None, compute_loss=False):
     if context_vectors is None:
         context_vectors = model.wv.syn0
     if context_locks is None:
@@ -282,8 +283,8 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         neu1e += dot(ga, l2a)  # save error
 
         # loss component corresponding to hierarchical softmax
-        if enable_loss_logging:
-            sgn = (-1.0)**predict_word.code  # ch function, 0-> 1, 1 -> -1
+        if compute_loss:
+            sgn = (-1.0)**predict_word.code  # `ch` function, 0 -> 1, 1 -> -1
             lprob = -log(expit(-sgn * dot(l1, l2a.T)))
             model.cumulative_training_loss += sum(lprob)
 
@@ -303,7 +304,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         neu1e += dot(gb, l2b)  # save error
 
         # loss component corresponding to negative sampling
-        if enable_loss_logging:
+        if compute_loss:
             model.cumulative_training_loss -= sum(log(expit(-1 * prod_term[range(1, len(prod_term))])))      # for the sampled words
             model.cumulative_training_loss -= log(expit(prod_term[0]))       # for the output word
 
@@ -762,7 +763,7 @@ class Word2Vec(utils.SaveLoad):
         self.corpus_count = other_model.corpus_count
         self.reset_weights()
 
-    def _do_train_job(self, sentences, alpha, inits, enable_loss_logging=False):
+    def _do_train_job(self, sentences, alpha, inits, compute_loss=False):
         """
         Train a single batch of sentences. Return 2-tuple `(effective word count after
         ignoring unknown words and sentence length trimming, total word count)`.
@@ -770,7 +771,7 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work, enable_loss_logging)
+            tally += train_batch_sg(self, sentences, alpha, work, compute_loss)
         else:
             tally += train_batch_cbow(self, sentences, alpha, work, neu1)
         return tally, self._raw_word_count(sentences)
@@ -782,7 +783,7 @@ class Word2Vec(utils.SaveLoad):
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
               word_count=0,
-              queue_factor=2, report_delay=1.0, enable_loss_logging=False):
+              queue_factor=2, report_delay=1.0, compute_loss=False):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
@@ -852,7 +853,7 @@ class Word2Vec(utils.SaveLoad):
                     progress_queue.put(None)
                     break  # no more jobs => quit this worker
                 sentences, alpha = job
-                tally, raw_tally = self._do_train_job(sentences, alpha, (work, neu1), enable_loss_logging)
+                tally, raw_tally = self._do_train_job(sentences, alpha, (work, neu1), compute_loss=compute_loss)
                 progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
                 jobs_processed += 1
             logger.debug("worker exiting, processed %i jobs", jobs_processed)
