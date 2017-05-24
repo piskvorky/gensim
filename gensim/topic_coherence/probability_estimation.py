@@ -9,10 +9,11 @@ This module contains functions to perform segmentation on a list of topics.
 """
 
 import logging
-from itertools import chain, islice
-from collections import defaultdict
+import itertools
 
 import numpy as np
+
+from gensim.topic_coherence.text_analysis import InvertedIndexAccumulator
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ def _ret_top_ids(segmented_topics):
     """
     top_ids = set()  # is a set of all the unique ids contained in topics.
     for s_i in segmented_topics:
-        for word_id in chain.from_iterable(s_i):
+        for word_id in itertools.chain.from_iterable(s_i):
             if isinstance(word_id, np.ndarray):
                 for i in word_id:
                     top_ids.add(i)
@@ -78,60 +79,6 @@ def p_boolean_document(corpus, segmented_topics):
     return per_topic_postings, len(corpus)
 
 
-def _iter_windows(texts, window_size):
-    """Produce a generator over the given texts using a sliding window of `window_size`.
-    
-    Args:
-    ----
-    texts: List of string sentences.
-    window_size: Size of sliding window.
-        
-    """
-    for document in texts:
-        it = iter(document)
-        window = tuple(islice(it, window_size))
-        yield window
-
-        for elem in it:
-            window = window[1:] + (elem,)
-            yield window
-
-
-class WordOccurrenceAccumulator(object):
-    """Accumulate word occurrences from a sequence of documents."""
-
-    def __init__(self, relevant_words):
-        """
-        Args:
-        ----
-        relevant_words: the set of words that occurrences should be accumulated for.
-        """
-        self.relevant_words = set(relevant_words)
-        self.window_id = 0  # id of next document to be observed
-        self.word_occurrences = defaultdict(set)  # map from words to ids of docs they occur in
-
-    def filter_to_relevant_words(self, doc):
-        return (word for word in doc if word in self.relevant_words)
-
-    def add_occurrences_from_doc(self, window):
-        for word in self.filter_to_relevant_words(window):
-            self.word_occurrences[word].add(self.window_id)
-
-        self.window_id += 1
-
-    def text_is_relevant(self, text):
-        for word in text:
-            if word in self.relevant_words:
-                return True
-        return False
-
-    def accumulate(self, texts, window_size):
-        relevant_texts = (text for text in texts if self.text_is_relevant(text))
-        for virtual_document in _iter_windows(relevant_texts, window_size):
-            self.add_occurrences_from_doc(virtual_document)
-        return self
-
-
 def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     """
     This function performs the boolean sliding window probability estimation. Boolean sliding window
@@ -153,17 +100,8 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     """
     top_ids = _ret_top_ids(segmented_topics)
     top_words = _ids_to_words(top_ids, dictionary)
-    occurrence_accumulator = WordOccurrenceAccumulator(top_words)\
+    occurrence_accumulator = InvertedIndexAccumulator(top_words, dictionary.token2id)\
         .accumulate(texts, window_size)
 
-    # Replace words with their ids.
-    occurrences = occurrence_accumulator.word_occurrences
-    per_topic_postings = {dictionary.token2id[word]: id_set
-                          for word, id_set in occurrences.iteritems()}
-
-    # Ensure all top ids have a corresponding set, even if it's an empty one.
-    for word_id in top_ids:
-        if word_id not in per_topic_postings:
-            per_topic_postings[word_id] = set()
-
+    per_topic_postings = occurrence_accumulator.index_to_dict()
     return per_topic_postings, occurrence_accumulator.window_id
