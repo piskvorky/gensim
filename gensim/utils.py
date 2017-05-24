@@ -1217,13 +1217,18 @@ def strided_windows(ndarray, window_size):
              copies of `ndarray`. Changes to one view modifies the others and the original.
     """
     ndarray = np.asarray(ndarray)
+    if window_size == ndarray.shape[0]:
+        return np.array([ndarray])
+    elif window_size > ndarray.shape[0]:
+        return np.ndarray((0, 0))
+
     stride = ndarray.strides[0]
     return np.lib.stride_tricks.as_strided(
         ndarray, shape=(ndarray.shape[0] - window_size + 1, window_size),
         strides=(stride, stride))
 
 
-def iter_windows(texts, window_size, copy=False):
+def iter_windows(texts, window_size, copy=False, ignore_below_size=True):
     """Produce a generator over the given texts using a sliding window of `window_size`.
     The windows produced are views of some subsequence of a text. To use deep copies
     instead, pass `copy=True`.
@@ -1233,8 +1238,15 @@ def iter_windows(texts, window_size, copy=False):
     texts: List of string sentences.
     window_size: Size of sliding window.
     copy: False to use views of the texts (default) or True to produce deep copies.
+    ignore_below_size: ignore documents that are not at least `window_size` in length (default behavior).
+                       If False, the documents below `window_size` will be yielded as the full document.
         
     """
     for document in texts:
-        for doc_window in strided_windows(document, window_size):
-            yield doc_window.copy() if copy else doc_window
+        doc_windows = strided_windows(document, window_size)
+        if doc_windows.shape[0] == 0:
+            if not ignore_below_size:
+                yield document.copy() if copy else document
+        else:
+            for doc_window in doc_windows:
+                yield doc_window.copy() if copy else doc_window

@@ -128,6 +128,28 @@ class TestWindowing(unittest.TestCase):
         out[0, 0] = 10
         self.assertEqual(10, input_arr[0], "should make view rather than copy")
 
+    def test_strided_windows_window_size_exceeds_size(self):
+        input_arr = np.array(['this', 'is', 'test'], dtype='object')
+        out = utils.strided_windows(input_arr, 4)
+        expected = np.ndarray((0, 0))
+        self._assert_arrays_equal(expected, out)
+
+    def test_strided_windows_window_size_equals_size(self):
+        input_arr = np.array(['this', 'is', 'test'], dtype='object')
+        out = utils.strided_windows(input_arr, 3)
+        expected = np.array([input_arr.copy()])
+        self._assert_arrays_equal(expected, out)
+
+    def test_iter_windows_include_below_window_size(self):
+        texts = [['this', 'is', 'a'], ['test', 'document']]
+        out = utils.iter_windows(texts, 3, ignore_below_size=False)
+        windows = [list(w) for w in out]
+        self.assertEqual(texts, windows)
+
+        out = utils.iter_windows(texts, 3)
+        windows = [list(w) for w in out]
+        self.assertEqual([texts[0]], windows)
+
     def test_iter_windows_list_texts(self):
         texts = [['this', 'is', 'a'], ['test', 'document']]
         windows = list(utils.iter_windows(texts, 2))
