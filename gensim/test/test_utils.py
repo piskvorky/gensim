@@ -13,6 +13,8 @@ import unittest
 
 from gensim import utils
 from six import iteritems
+import numpy as np
+
 
 class TestIsCorpus(unittest.TestCase):
     def test_None(self):
@@ -90,8 +92,70 @@ class TestSampleDict(unittest.TestCase):
         self.assertEqual(sampled_dict,expected_dict)
         sampled_dict_random = utils.sample_dict(d,2)
         if sampled_dict_random in expected_dict_random:
-            self.assertTrue(True)    
+            self.assertTrue(True)
 
+
+class TestWindowing(unittest.TestCase):
+
+    arr10_5 = np.array([
+        [0, 1, 2, 3, 4],
+        [1, 2, 3, 4, 5],
+        [2, 3, 4, 5, 6],
+        [3, 4, 5, 6, 7],
+        [4, 5, 6, 7, 8],
+        [5, 6, 7, 8, 9]
+    ])
+
+    def _assert_arrays_equal(self, expected, actual):
+        self.assertEqual(expected.shape, actual.shape)
+        self.assertTrue((actual == expected).all())
+
+    def test_strided_windows1(self):
+        out = utils.strided_windows(range(5), 2)
+        expected = np.array([
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [3, 4]
+        ])
+        self._assert_arrays_equal(expected, out)
+
+    def test_strided_windows2(self):
+        input_arr = np.arange(10)
+        out = utils.strided_windows(input_arr, 5)
+        expected = self.arr10_5.copy()
+        self._assert_arrays_equal(expected, out)
+        out[0, 0] = 10
+        self.assertEqual(10, input_arr[0], "should make view rather than copy")
+
+    def test_iter_windows_list_texts(self):
+        texts = [['this', 'is', 'a'], ['test', 'document']]
+        windows = list(utils.iter_windows(texts, 2))
+        list_windows = [list(iterable) for iterable in windows]
+        expected = [['this', 'is'], ['is', 'a'], ['test', 'document']]
+        self.assertListEqual(list_windows, expected)
+
+    def test_iter_windows_uses_views(self):
+        texts = [np.array(['this', 'is', 'a'], dtype='object'), ['test', 'document']]
+        windows = list(utils.iter_windows(texts, 2))
+        list_windows = [list(iterable) for iterable in windows]
+        expected = [['this', 'is'], ['is', 'a'], ['test', 'document']]
+        self.assertListEqual(list_windows, expected)
+        windows[0][0] = 'modified'
+        self.assertEqual('modified', texts[0][0])
+
+    def test_iter_windows_with_copy(self):
+        texts = [
+            np.array(['this', 'is', 'a'], dtype='object'),
+            np.array(['test', 'document'], dtype='object')
+        ]
+        windows = list(utils.iter_windows(texts, 2, copy=True))
+
+        windows[0][0] = 'modified'
+        self.assertEqual('this', texts[0][0])
+
+        windows[2][0] = 'modified'
+        self.assertEqual('test', texts[1][0])
 
 
 if __name__ == '__main__':

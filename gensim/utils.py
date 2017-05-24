@@ -1188,3 +1188,53 @@ def sample_dict(d, n=10, use_random=True):
     """
     selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
     return [(key, d[key]) for key in selected_keys]
+
+
+def strided_windows(ndarray, window_size):
+    """
+    Produce a numpy.ndarray of windows, as from a sliding window.
+    
+    >>> strided_windows(np.arange(5), 2)
+    array([[0, 1],
+           [1, 2],
+           [2, 3],
+           [3, 4]])
+    >>> strided_windows(np.arange(10), 5)
+    array([[0, 1, 2, 3, 4],
+           [1, 2, 3, 4, 5],
+           [2, 3, 4, 5, 6],
+           [3, 4, 5, 6, 7],
+           [4, 5, 6, 7, 8],
+           [5, 6, 7, 8, 9]])
+    
+    Args:
+    ----
+    ndarray: either a numpy.ndarray or something that can be converted into one.
+    window_size: sliding window size.
+    :param window_size: 
+    :return: numpy.ndarray of the subsequences produced by sliding a window of the given size over
+             the `ndarray`. Since this uses striding, the individual arrays are views rather than
+             copies of `ndarray`. Changes to one view modifies the others and the original.
+    """
+    ndarray = np.asarray(ndarray)
+    stride = ndarray.strides[0]
+    return np.lib.stride_tricks.as_strided(
+        ndarray, shape=(ndarray.shape[0] - window_size + 1, window_size),
+        strides=(stride, stride))
+
+
+def iter_windows(texts, window_size, copy=False):
+    """Produce a generator over the given texts using a sliding window of `window_size`.
+    The windows produced are views of some subsequence of a text. To use deep copies
+    instead, pass `copy=True`.
+    
+    Args:
+    ----
+    texts: List of string sentences.
+    window_size: Size of sliding window.
+    copy: False to use views of the texts (default) or True to produce deep copies.
+        
+    """
+    for document in texts:
+        for doc_window in strided_windows(document, window_size):
+            yield doc_window.copy() if copy else doc_window
