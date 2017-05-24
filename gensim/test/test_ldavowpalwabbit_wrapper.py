@@ -220,8 +220,8 @@ class TestLdaVowpalWabbit(unittest.TestCase):
         tm1 = LdaVowpalWabbit(vw_path=self.vw_path, corpus=self.corpus, num_topics=2, id2word=self.dictionary)
         tm2 = ldavowpalwabbit.vwmodel2ldamodel(tm1)
         for document in self.corpus:
-            element1_1, element1_2=tm1[document][0]
-            element2_1, element2_2=tm2[document][0]
+            element1_1, element1_2 = tm1[document][0]
+            element2_1, element2_2 = tm2[document][0]
             self.assertAlmostEqual(element1_1, element2_1)
             self.assertAlmostEqual(element1_2, element2_2, 5)
             logging.debug('%d %d', element1_1, element2_1)
