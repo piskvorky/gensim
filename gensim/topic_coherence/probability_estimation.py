@@ -47,14 +47,17 @@ def p_boolean_document(corpus, segmented_topics):
     num_docs : Total number of documents in corpus.
     """
     top_ids = _ret_top_ids(segmented_topics)
-    # Perform boolean document now to create document word list.
+    # Instantiate the dictionary with empty sets for each top_id
     per_topic_postings = {}
     for id in top_ids:
-        id_list = set()
-        for n, document in enumerate(corpus):
-            if id in frozenset(x[0] for x in document):
-                id_list.add(n)
-        per_topic_postings[id] = id_list
+        per_topic_postings[id] = set()
+    # Iterate through the documents, appending the document number to the set for each top_id it contains
+    for n, document in enumerate(corpus):
+        doc_words = frozenset(x[0] for x in document)
+        top_ids_in_doc = top_ids.intersection(doc_words)
+        if len(top_ids_in_doc) > 0:
+            for id in top_ids_in_doc:
+                per_topic_postings[id].add(n)
     num_docs = len(corpus)
     return (per_topic_postings, num_docs)
 

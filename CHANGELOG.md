@@ -3,13 +3,92 @@ Changes
 
 Unreleased:
 
+
+===========
+
+2.1.0, 2017-05-12
+
+:star2: New features:
+* Add modified save_word2vec_format for Doc2Vec, to save document vectors. (@parulsethi, [#1256](https://github.com/RaRe-Technologies/gensim/pull/1256))
+
+
+:+1: Improvements:
+* Add automatic code style check limited only to the code modified in PR (@tmylk, [#1287](https://github.com/RaRe-Technologies/gensim/pull/1287))
+* Replace `logger.warn` by `logger.warning` (@chinmayapancholi13, [#1295](https://github.com/RaRe-Technologies/gensim/pull/1295))
+* Docs word2vec docstring improvement, deprecation labels (@shubhvachher, [#1274](https://github.com/RaRe-Technologies/gensim/pull/1274))
+* Stop passing 'sentences' as parameter to Doc2Vec. Fix #511 (@gogokaradjov, [#1306](https://github.com/RaRe-Technologies/gensim/pull/1306))
+
+
+:red_circle: Bug fixes:
+* Allow indexing with np.int64 in doc2vec. Fix #1231 (@bogdanteleaga, [#1254](https://github.com/RaRe-Technologies/gensim/pull/1254))
+* Update Doc2Vec docstring. Fix #1302 (@datapythonista, [#1307](https://github.com/RaRe-Technologies/gensim/pull/1307))
+* Ignore rst and ipynb file in Travis flake8 validations (@datapythonista, [#1309](https://github.com/RaRe-Technologies/gensim/pull/1309))
+
+
+:books: Tutorial and doc improvements:
+* Update Tensorboard Doc2Vec notebook (@parulsethi, [#1286](https://github.com/RaRe-Technologies/gensim/pull/1286))
+* Update Doc2Vec IMDB Notebook, replace codesc to smart_open (@robotcator, [#1278](https://github.com/RaRe-Technologies/gensim/pull/1278))
+* Add explanation of `size` to Word2Vec Notebook (@jbcoe, [#1305](https://github.com/RaRe-Technologies/gensim/pull/1305))
+* Add extra param to WordRank notebook. Fix #1276 (@parulsethi, [#1300](https://github.com/RaRe-Technologies/gensim/pull/1300))
+* Update warning message in WordRank (@parulsethi, [#1299](https://github.com/RaRe-Technologies/gensim/pull/1299))
+
+
+2.0.0, 2017-04-10
+
+Breaking changes:
+
+Any direct calls to method train() of Word2Vec/Doc2Vec now require an explicit epochs parameter and explicit estimate of corpus size. The most usual way to call `train` is `vec_model.train(sentences, total_examples=self.corpus_count, epochs=self.iter)`
+See the [method documentation](https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/models/word2vec.py#L766) for more information.
+
+
+* Explicit epochs and corpus size in word2vec train(). (@gojomo, @robotcator, [#1139](https://github.com/RaRe-Technologies/gensim/pull/1139), [#1237](https://github.com/RaRe-Technologies/gensim/pull/1237))
+
 New features:
-* Add output word prediction for negative sampling scheme. (@chinmayapancholi13,[#1209](https://github.com/RaRe-Technologies/gensim/pull/1209))
+* Add output word prediction in word2vec. Only for negative sampling scheme. See [ipynb]( https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/word2vec.ipynb) (@chinmayapancholi13,[#1209](https://github.com/RaRe-Technologies/gensim/pull/1209))
+* scikit_learn wrapper for LSI Model in Gensim (@chinmayapancholi13,[#1244](https://github.com/RaRe-Technologies/gensim/pull/1244))
+* Add the 'keep_tokens' parameter to 'filter_extremes'. (@toliwa,[#1210](https://github.com/RaRe-Technologies/gensim/pull/1210))
+* Load FastText models with specified encoding (@jayantj,[#1210](https://github.com/RaRe-Technologies/gensim/pull/1189))
+
 
 Improvements:
 * Fix loading large FastText models on Mac. (@jaksmid,[#1196](https://github.com/RaRe-Technologies/gensim/pull/1214))
+* Sklearn LDA wrapper now works in sklearn pipeline (@kris-singh,[#1213](https://github.com/RaRe-Technologies/gensim/pull/1213))
+* glove2word2vec conversion script refactoring (@parulsethi,[#1247](https://github.com/RaRe-Technologies/gensim/pull/1247))
+* Word2vec error message when update called before train . Fix #1162 (@hemavakade,[#1205](https://github.com/RaRe-Technologies/gensim/pull/1205))
+* Allow training if model is not modified by "_minimize_model". Add deprecation warning. (@chinmayapancholi13,[#1207](https://github.com/RaRe-Technologies/gensim/pull/1207))
+* Update the warning text when building vocab on a trained w2v model (@prakhar2b,[#1190](https://github.com/RaRe-Technologies/gensim/pull/1190))
 
-========
+Bug fixes:
+
+*  Fix word2vec reset_from bug in v1.0.1 Fix #1230. (@Kreiswolke,[#1234](https://github.com/RaRe-Technologies/gensim/pull/1234))
+
+* Distributed LDA: checking the length of docs instead of the boolean value, plus int index conversion (@saparina ,[#1191](https://github.com/RaRe-Technologies/gensim/pull/1191))
+
+* syn0_lockf initialised with zero in intersect_word2vec_format() (@KiddoZhu,[#1267](https://github.com/RaRe-Technologies/gensim/pull/1267))
+
+* Fix wordrank max_iter_dump calculation. Fix #1216 (@ajkl,[#1217](https://github.com/RaRe-Technologies/gensim/pull/1217))
+
+* Make SgNegative test use sg (@shubhvachher ,[#1252](https://github.com/RaRe-Technologies/gensim/pull/1252))
+
+* pep8/pycodestyle fixes for hanging indents in Summarization module (@SamriddhiJain  ,[#1202](https://github.com/RaRe-Technologies/gensim/pull/1202))
+
+* WordRank and Mallet wrappers single vs double quote issue in windows.(@prakhar2b,[#1208](https://github.com/RaRe-Technologies/gensim/pull/1208))
+
+
+* Fix #824 : no corpus in init, but trim_rule in init (@prakhar2b ,[#1186](https://github.com/RaRe-Technologies/gensim/pull/1186))
+
+* Hardcode version number. Fix #1138. ( @tmylk, [#1138](https://github.com/RaRe-Technologies/gensim/pull/1138))
+
+Tutorial and doc improvements:
+
+* Color dictionary according to topic notebook update (@bhargavvader, [#1164](https://github.com/RaRe-Technologies/gensim/pull/1164))
+
+* Fix hdp show_topic/s docstring ( @parulsethi, [#1264](https://github.com/RaRe-Technologies/gensim/pull/1264))
+
+* Add docstrings for word2vec.py forwarding functions ( @shubhvachher, [#1251](https://github.com/RaRe-Technologies/gensim/pull/1251))
+
+* updated description for worker_loop function used in score function ( @chinmayapancholi13 , [#1206](https://github.com/RaRe-Technologies/gensim/pull/1206))
+
 1.0.1, 2017-03-03
 
 * Rebuild cumulative table on load. Fix #1180. (@tmylk,[#1181](https://github.com/RaRe-Technologies/gensim/pull/893))
