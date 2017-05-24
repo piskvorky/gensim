@@ -1,5 +1,6 @@
 import logging
 import unittest
+from collections import namedtuple
 
 from gensim.topic_coherence.text_analysis import \
     InvertedIndexAccumulator, WordOccurrenceAccumulator
@@ -20,12 +21,14 @@ class BaseTestCases(object):
             'test': 21,
             'document': 17
         }
-        top_words = token2id.keys()
+        id2token = {v: k for k, v in token2id.items()}
+        dictionary = namedtuple('Dictionary', 'token2id, id2token')(token2id, id2token)
+        top_ids = set(token2id.values())
 
         accumulator_cls = None
 
         def test_occurrence_counting(self):
-            accumulator = self.accumulator_cls(self.top_words, self.token2id) \
+            accumulator = self.accumulator_cls(self.top_ids, self.dictionary) \
                 .accumulate(self.texts, 3)
             self.assertEqual(2, accumulator.get_occurrences("this"))
             self.assertEqual(1, accumulator.get_occurrences("is"))
@@ -35,7 +38,7 @@ class BaseTestCases(object):
             self.assertEqual(1, accumulator.get_co_occurrences("is", "a"))
 
         def test_occurences_for_irrelevant_words(self):
-            accumulator = WordOccurrenceAccumulator(self.top_words, self.token2id) \
+            accumulator = WordOccurrenceAccumulator(self.top_ids, self.dictionary) \
                 .accumulate(self.texts, 2)
             with self.assertRaises(KeyError):
                 accumulator.get_occurrences("irrelevant")
@@ -47,7 +50,7 @@ class TestInvertedIndexAccumulator(BaseTestCases.TextAnalyzerTestBase):
     accumulator_cls = InvertedIndexAccumulator
 
     def test_accumulate1(self):
-        accumulator = InvertedIndexAccumulator(self.top_words, self.token2id)\
+        accumulator = InvertedIndexAccumulator(self.top_ids, self.dictionary)\
             .accumulate(self.texts, 2)
         # [['this', 'is'], ['is', 'a'], ['test', 'document'], ['this', 'test'], ['test', 'document']]
         inverted_index = accumulator.index_to_dict()
@@ -61,7 +64,7 @@ class TestInvertedIndexAccumulator(BaseTestCases.TextAnalyzerTestBase):
         self.assertDictEqual(expected, inverted_index)
 
     def test_accumulate2(self):
-        accumulator = InvertedIndexAccumulator(self.top_words, self.token2id) \
+        accumulator = InvertedIndexAccumulator(self.top_ids, self.dictionary) \
             .accumulate(self.texts, 3)
         # [['this', 'is', 'a'], ['test', 'document'], ['this', 'test', 'document']]
         inverted_index = accumulator.index_to_dict()

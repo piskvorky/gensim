@@ -13,7 +13,7 @@ import itertools
 
 import numpy as np
 
-from gensim.topic_coherence.text_analysis import InvertedIndexAccumulator
+from gensim.topic_coherence.text_analysis import InvertedIndexAccumulator, CorpusAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -34,21 +34,6 @@ def _ret_top_ids(segmented_topics):
     return top_ids
 
 
-def _ids_to_words(ids, dictionary):
-    """Convert an iterable of ids to their corresponding words using a dictionary.
-    This function abstracts away the differences between the HashDictionary and the standard one.
-    """
-    top_words = set()
-    for word_id in ids:
-        word = dictionary[word_id]
-        if isinstance(word, set):
-            top_words = top_words.union(word)
-        else:
-            top_words.add(word)
-
-    return top_words
-
-
 def p_boolean_document(corpus, segmented_topics):
     """
     This function performs the boolean document probability estimation. Boolean document estimates the probability
@@ -65,18 +50,8 @@ def p_boolean_document(corpus, segmented_topics):
     num_docs : Total number of documents in corpus.
     """
     top_ids = _ret_top_ids(segmented_topics)
-    # Instantiate the dictionary with empty sets for each top_id
-    per_topic_postings = {word_id: set() for word_id in top_ids}
-
-    # Iterate through the documents, appending the document number to the set for each top_id it contains
-    for n, document in enumerate(corpus):
-        doc_words = frozenset(x[0] for x in document)
-        top_ids_in_doc = top_ids.intersection(doc_words)
-        if len(top_ids_in_doc) > 0:
-            for word_id in top_ids_in_doc:
-                per_topic_postings[word_id].add(n)
-
-    return per_topic_postings, len(corpus)
+    accumulator = CorpusAnalyzer(top_ids).accumulate(corpus)
+    return accumulator
 
 
 def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
@@ -99,9 +74,5 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     window_id[0] : Total no of windows
     """
     top_ids = _ret_top_ids(segmented_topics)
-    top_words = _ids_to_words(top_ids, dictionary)
-    occurrence_accumulator = InvertedIndexAccumulator(top_words, dictionary.token2id)\
+    return InvertedIndexAccumulator(top_ids, dictionary)\
         .accumulate(texts, window_size)
-
-    per_topic_postings = occurrence_accumulator.index_to_dict()
-    return per_topic_postings, occurrence_accumulator.window_id

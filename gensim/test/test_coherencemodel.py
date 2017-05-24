@@ -14,7 +14,7 @@ import os
 import os.path
 import tempfile
 
-from gensim.models.coherencemodel import CoherenceModel
+from gensim.models.coherencemodel import CoherenceModel, boolean_document_based
 from gensim.models.ldamodel import LdaModel
 from gensim.models.wrappers import LdaMallet
 from gensim.models.wrappers import LdaVowpalWabbit
@@ -35,13 +35,12 @@ texts = [['human', 'interface', 'computer'],
          ['graph', 'minors', 'survey']]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
-boolean_document_based = ['u_mass']
-sliding_window_based = ['c_v', 'c_uci', 'c_npmi']
 
 
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
+
 
 def checkCoherenceMeasure(topics1, topics2, coherence):
     """Check provided topic coherence algorithm on given topics"""
@@ -52,6 +51,7 @@ def checkCoherenceMeasure(topics1, topics2, coherence):
         cm1 = CoherenceModel(topics=topics1, texts=texts, dictionary=dictionary, coherence=coherence)
         cm2 = CoherenceModel(topics=topics2, texts=texts, dictionary=dictionary, coherence=coherence)
     return cm1.get_coherence() > cm2.get_coherence()
+
 
 class TestCoherenceModel(unittest.TestCase):
     def setUp(self):
@@ -218,6 +218,7 @@ class TestCoherenceModel(unittest.TestCase):
         model.save(fname)
         model2 = CoherenceModel.load(fname)
         self.assertTrue(model.get_coherence() == model2.get_coherence())
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

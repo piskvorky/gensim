@@ -48,7 +48,8 @@ def _present(w_prime_star, w, w_backtrack):
         return -1
     return index
 
-def _make_seg(w_prime, w, per_topic_postings, measure, gamma, backtrack, num_docs):
+
+def _make_seg(w_prime, w, accumulator, measure, gamma, backtrack):
     """
     Internal helper function to return context vectors for segmentations.
     """
@@ -57,7 +58,7 @@ def _make_seg(w_prime, w, per_topic_postings, measure, gamma, backtrack, num_doc
         for w_j in w:
             for w_i in w_prime:
                 if (w_i, w_j) not in backtrack:
-                    backtrack[(w_i, w_j)] = measure[0]([[(w_i, w_j)]], per_topic_postings, num_docs, measure[1])[0]
+                    backtrack[(w_i, w_j)] = measure[0]([[(w_i, w_j)]], accumulator, measure[1])[0]
                 if w_j not in context_vectors:
                     context_vectors[w_j] = backtrack[(w_i, w_j)] ** gamma
                 else:
@@ -65,11 +66,13 @@ def _make_seg(w_prime, w, per_topic_postings, measure, gamma, backtrack, num_doc
     else:
         for w_j in w:
             if (w_prime, w_j) not in backtrack:
-                backtrack[(w_prime, w_j)] = measure[0]([[(w_prime, w_j)]], per_topic_postings, num_docs, measure[1])[0]
+                backtrack[(w_prime, w_j)] = measure[0]([[(w_prime, w_j)]], accumulator, measure[1])[0]
             context_vectors[w_j] = backtrack[(w_prime, w_j)] ** gamma
-    return (context_vectors, backtrack)
 
-def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gamma, num_docs):
+    return context_vectors, backtrack
+
+
+def cosine_similarity(topics, segmented_topics, accumulator, measure, gamma):
     """
     This function calculates the indirect cosine measure. Given context vectors
     _   _         _   _
@@ -116,7 +119,7 @@ def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gam
             if w_backtrack and w_prime_index != -1:
                 w_prime_context_vectors = context_vector_backtrack[w_prime_index]
             else:
-                w_prime_context_vectors, backtrack_i = _make_seg(w_prime, top_words, per_topic_postings, measure, gamma, backtrack, num_docs)
+                w_prime_context_vectors, backtrack_i = _make_seg(w_prime, top_words, accumulator, measure, gamma, backtrack)
                 backtrack.update(backtrack_i)
                 # Update backtracking lists
                 w_backtrack.append((w_prime, top_words))
@@ -128,7 +131,7 @@ def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gam
             if w_backtrack and w_star_index != -1:
                 w_star_context_vectors = context_vector_backtrack[w_star_index]
             else:
-                w_star_context_vectors, backtrack_i = _make_seg(w_star, top_words, per_topic_postings, measure, gamma, backtrack, num_docs)
+                w_star_context_vectors, backtrack_i = _make_seg(w_star, top_words, accumulator, measure, gamma, backtrack)
                 backtrack.update(backtrack_i)
                 # Update all backtracking lists
                 w_backtrack.append((w_star, top_words))

@@ -63,6 +63,7 @@ sliding_windows_dict = {
     'c_npmi': 10
 }
 
+
 class CoherenceModel(interfaces.TransformationABC):
     """
     Objects of this class allow for building and maintaining a model for topic
@@ -143,6 +144,7 @@ class CoherenceModel(interfaces.TransformationABC):
             self.dictionary = dictionary
 
         # Check for correct inputs for u_mass coherence measure.
+        self.coherence = coherence
         if coherence in boolean_document_based:
             if is_corpus(corpus)[0]:
                 self.corpus = corpus
@@ -155,6 +157,8 @@ class CoherenceModel(interfaces.TransformationABC):
         # Check for correct inputs for c_v coherence measure.
         elif coherence in sliding_window_based:
             self.window_size = window_size
+            if self.window_size is None:
+                self.window_size = sliding_windows_dict[self.coherence]
             if texts is None:
                 raise ValueError("'texts' should be provided for %s coherence." % coherence)
             else:
@@ -173,7 +177,6 @@ class CoherenceModel(interfaces.TransformationABC):
                 for n, _ in enumerate(topic):
                     t_i.append(dictionary.token2id[topic[n]])
                 self.topics.append(np.array(t_i))
-        self.coherence = coherence
 
     def __str__(self):
         return coherence_dict[self.coherence].__str__()
@@ -203,18 +206,16 @@ class CoherenceModel(interfaces.TransformationABC):
         segmented_topics = measure.seg(self.topics)
 
         if self.coherence in boolean_document_based:
-            per_topic_postings, num_docs = measure.prob(self.corpus, segmented_topics)
-            return measure.conf(segmented_topics, per_topic_postings, num_docs)
+            accumulator = measure.prob(self.corpus, segmented_topics)
+            return measure.conf(segmented_topics, accumulator)
 
-        if self.window_size is not None:
-            self.window_size = sliding_windows_dict[self.coherence]
-        per_topic_postings, num_windows = measure.prob(texts=self.texts, segmented_topics=segmented_topics,
-                                                       dictionary=self.dictionary, window_size=self.window_size)
+        accumulator = measure.prob(texts=self.texts, segmented_topics=segmented_topics,
+                                   dictionary=self.dictionary, window_size=self.window_size)
         if self.coherence == 'c_v':
-            return measure.conf(self.topics, segmented_topics, per_topic_postings, 'nlr', 1, num_windows)
+            return measure.conf(self.topics, segmented_topics, accumulator, 'nlr', 1)
         else:
             normalize = self.coherence == 'c_npmi'
-            return measure.conf(segmented_topics, per_topic_postings, num_windows, normalize=normalize)
+            return measure.conf(segmented_topics, accumulator, normalize=normalize)
 
     def aggregate_measures(self, confirmed_measures):
         measure = coherence_dict[self.coherence]

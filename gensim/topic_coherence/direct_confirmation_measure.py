@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 EPSILON = 1e-12  # Should be small. Value as suggested in paper.
 
-def log_conditional_probability(segmented_topics, per_topic_postings, num_docs):
+
+def log_conditional_probability(segmented_topics, accumulator):
     """
     This function calculates the log-conditional-probability measure
     which is used by coherence measures such as U_mass.
@@ -24,28 +25,29 @@ def log_conditional_probability(segmented_topics, per_topic_postings, num_docs):
     Args:
     ----
     segmented_topics : Output from the segmentation module of the segmented topics. Is a list of list of tuples.
-    per_topic_postings : Output from the probability_estimation module. Is a dictionary of the posting list of all topics.
-    num_docs : Total number of documents in corresponding corpus.
+    accumulator: word occurrence accumulator from probability_estimation.
 
     Returns:
     -------
     m_lc : List of log conditional probability measure on each set in segmented topics.
     """
     m_lc = []
+    num_docs = float(accumulator.num_docs)
     for s_i in segmented_topics:
         for w_prime, w_star in s_i:
-            w_prime_docs = per_topic_postings[w_prime]
-            w_star_docs = per_topic_postings[w_star]
-            co_docs = w_prime_docs.intersection(w_star_docs)
-            if  w_star_docs:
-                m_lc_i = np.log(((len(co_docs) / float(num_docs)) + EPSILON) / (len(w_star_docs) / float(num_docs)))
-            else:
+            try:
+                w_star_count = accumulator[w_star]
+                co_occur_count = accumulator[w_prime, w_star]
+                m_lc_i = np.log(((co_occur_count / num_docs) + EPSILON) / (w_star_count / num_docs))
+            except KeyError:
                 m_lc_i = 0.0
+
             m_lc.append(m_lc_i)
 
     return m_lc
 
-def log_ratio_measure(segmented_topics, per_topic_postings, num_docs, normalize=False):
+
+def log_ratio_measure(segmented_topics, accumulator, normalize=False):
     """
     If normalize=False:
         Popularly known as PMI.
@@ -61,28 +63,29 @@ def log_ratio_measure(segmented_topics, per_topic_postings, num_docs, normalize=
     Args:
     ----
     segmented topics : Output from the segmentation module of the segmented topics. Is a list of list of tuples.
-    per_topic_postings : Output from the probability_estimation module. Is a dictionary of the posting list of all topics
-    num_docs : Total number of documents in corpus. Used for calculating probability.
+    accumulator: word occurrence accumulator from probability_estimation.
 
     Returns:
     -------
     m_lr : List of log ratio measures on each set in segmented topics.
     """
     m_lr = []
+    num_docs = float(accumulator.num_docs)
     for s_i in segmented_topics:
         for w_prime, w_star in s_i:
-            w_prime_docs = per_topic_postings[w_prime]
-            w_star_docs = per_topic_postings[w_star]
-            co_docs = w_prime_docs.intersection(w_star_docs)
+            w_prime_count = accumulator[w_prime]
+            w_star_count = accumulator[w_star]
+            co_occur_count = accumulator[w_prime, w_star]
+
             if normalize:
                 # For normalized log ratio measure
-                numerator = log_ratio_measure([[(w_prime, w_star)]], per_topic_postings, num_docs)[0]
-                co_doc_prob = len(co_docs) / float(num_docs)
+                numerator = log_ratio_measure([[(w_prime, w_star)]], accumulator)[0]
+                co_doc_prob = co_occur_count / num_docs
                 m_lr_i = numerator / (-np.log(co_doc_prob + EPSILON))
             else:
                 # For log ratio measure without normalization
-                numerator = (len(co_docs) / float(num_docs)) + EPSILON
-                denominator = (len(w_prime_docs) / float(num_docs)) * (len(w_star_docs) / float(num_docs))
+                numerator = (co_occur_count / num_docs) + EPSILON
+                denominator = (w_prime_count / num_docs) * (w_star_count / num_docs)
                 m_lr_i = np.log(numerator / denominator)
             m_lr.append(m_lr_i)
 
