@@ -1117,15 +1117,24 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
+
+        # check if `random_state` attribute has been set after main pickel load
+        # if set -> the model to be loaded was saved using a >= 0.13.2 version of Gensim
+        # if not set -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so set `random_state` as the default value
         if not hasattr(result, 'random_state'):
-            result.random_state = utils.get_random_state(None)
+            result.random_state = utils.get_random_state(None)  # using default value `get_random_state(None)`
             logging.warning("random_state not set so using default value")
+
         state_fname = utils.smart_extension(fname, '.state')
         try:
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
         except Exception as e:
             logging.warning("failed to load state from %s: %s", state_fname, e)
+
         id2word_fname = utils.smart_extension(fname, '.id2word')
+        # check if `id2word_fname` file is present on disk
+        # if present -> the model to be loaded was saved using a >= 0.13.2 version of Gensim, so set `result.id2word` using the `id2word_fname` file
+        # if not present -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so `result.id2word` already set after the main pickel load
         if (os.path.isfile(id2word_fname)):
             try:
                 result.id2word = utils.unpickle(id2word_fname)
