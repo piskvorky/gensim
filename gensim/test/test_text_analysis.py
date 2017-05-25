@@ -4,6 +4,7 @@ from collections import namedtuple
 
 from gensim.topic_coherence.text_analysis import \
     InvertedIndexAccumulator, WordOccurrenceAccumulator
+from gensim.corpora.dictionary import Dictionary
 
 
 class BaseTestCases(object):
@@ -25,6 +26,20 @@ class BaseTestCases(object):
         dictionary = namedtuple('Dictionary', 'token2id, id2token')(token2id, id2token)
         top_ids = set(token2id.values())
 
+        texts2 = [['human', 'interface', 'computer'],
+                  ['survey', 'user', 'computer', 'system', 'response', 'time'],
+                  ['eps', 'user', 'interface', 'system'],
+                  ['system', 'human', 'system', 'eps'],
+                  ['user', 'response', 'time'],
+                  ['trees'],
+                  ['graph', 'trees'],
+                  ['graph', 'minors', 'trees'],
+                  ['graph', 'minors', 'survey'],
+                  ['user', 'user']]
+        dictionary2 = Dictionary(texts2)
+        dictionary2.id2token = {v: k for k, v in dictionary2.token2id.items()}
+        top_ids2 = set(dictionary2.token2id.values())
+
         accumulator_cls = None
 
         def test_occurrence_counting(self):
@@ -36,6 +51,34 @@ class BaseTestCases(object):
 
             self.assertEqual(2, accumulator.get_co_occurrences("test", "document"))
             self.assertEqual(1, accumulator.get_co_occurrences("is", "a"))
+
+        def test_occurrence_counting2(self):
+            accumulator = self.accumulator_cls(self.top_ids2, self.dictionary2) \
+                .accumulate(self.texts2, 110)
+            self.assertEqual(2, accumulator.get_occurrences("human"))
+            self.assertEqual(4, accumulator.get_occurrences("user"))
+            self.assertEqual(3, accumulator.get_occurrences("graph"))
+            self.assertEqual(3, accumulator.get_occurrences("trees"))
+
+            cases = [
+                (1, ("human", "interface")),
+                (2, ("system", "user")),
+                (2, ("graph", "minors")),
+                (2, ("graph", "trees")),
+                (4, ("user", "user")),
+                (3, ("graph", "graph")),
+                (0, ("time", "eps"))
+            ]
+            for expected_count, (word1, word2) in cases:
+                # Verify co-occurrence counts are correct, regardless of word order.
+                self.assertEqual(expected_count, accumulator.get_co_occurrences(word1, word2))
+                self.assertEqual(expected_count, accumulator.get_co_occurrences(word2, word1))
+
+                # Also verify that using token ids instead of tokens works the same.
+                word_id1 = self.dictionary2.token2id[word1]
+                word_id2 = self.dictionary2.token2id[word2]
+                self.assertEqual(expected_count, accumulator.get_co_occurrences(word_id1, word_id2))
+                self.assertEqual(expected_count, accumulator.get_co_occurrences(word_id2, word_id1))
 
         def test_occurences_for_irrelevant_words(self):
             accumulator = WordOccurrenceAccumulator(self.top_ids, self.dictionary) \

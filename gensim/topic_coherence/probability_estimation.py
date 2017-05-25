@@ -13,7 +13,7 @@ import itertools
 
 import numpy as np
 
-from gensim.topic_coherence.text_analysis import InvertedIndexAccumulator, CorpusAnalyzer
+from gensim.topic_coherence.text_analysis import CorpusAccumulator, WordOccurrenceAccumulator
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ def p_boolean_document(corpus, segmented_topics):
     num_docs : Total number of documents in corpus.
     """
     top_ids = _ret_top_ids(segmented_topics)
-    accumulator = CorpusAnalyzer(top_ids).accumulate(corpus)
+    accumulator = CorpusAccumulator(top_ids).accumulate(corpus)
     return accumulator
 
 
@@ -74,5 +74,5 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     window_id[0] : Total no of windows
     """
     top_ids = _ret_top_ids(segmented_topics)
-    return InvertedIndexAccumulator(top_ids, dictionary)\
+    return WordOccurrenceAccumulator(top_ids, dictionary)\
         .accumulate(texts, window_size)

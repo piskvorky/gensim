@@ -42,17 +42,6 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-def checkCoherenceMeasure(topics1, topics2, coherence):
-    """Check provided topic coherence algorithm on given topics"""
-    if coherence in boolean_document_based:
-        cm1 = CoherenceModel(topics=topics1, corpus=corpus, dictionary=dictionary, coherence=coherence)
-        cm2 = CoherenceModel(topics=topics2, corpus=corpus, dictionary=dictionary, coherence=coherence)
-    else:
-        cm1 = CoherenceModel(topics=topics1, texts=texts, dictionary=dictionary, coherence=coherence)
-        cm2 = CoherenceModel(topics=topics2, texts=texts, dictionary=dictionary, coherence=coherence)
-    return cm1.get_coherence() > cm2.get_coherence()
-
-
 class TestCoherenceModel(unittest.TestCase):
     def setUp(self):
         # Suppose given below are the topics which two different LdaModels come up with.
@@ -77,21 +66,33 @@ class TestCoherenceModel(unittest.TestCase):
             self.vw_path = vw_path
             self.vwmodel = LdaVowpalWabbit(self.vw_path, corpus=corpus, id2word=dictionary, num_topics=2, passes=0)
 
+    def check_coherence_measure(self, coherence):
+        """Check provided topic coherence algorithm on given topics"""
+        if coherence in boolean_document_based:
+            kwargs = dict(corpus=corpus, dictionary=dictionary, coherence=coherence)
+            cm1 = CoherenceModel(topics=self.topics1, **kwargs)
+            cm2 = CoherenceModel(topics=self.topics2, **kwargs)
+        else:
+            kwargs = dict(texts=texts, dictionary=dictionary, coherence=coherence)
+            cm1 = CoherenceModel(topics=self.topics1, **kwargs)
+            cm2 = CoherenceModel(topics=self.topics2, **kwargs)
+        self.assertGreater(cm1.get_coherence(), cm2.get_coherence())
+
     def testUMass(self):
         """Test U_Mass topic coherence algorithm on given topics"""
-        self.assertTrue(checkCoherenceMeasure(self.topics1, self.topics2, 'u_mass'))
+        self.check_coherence_measure('u_mass')
 
     def testCv(self):
         """Test C_v topic coherence algorithm on given topics"""
-        self.assertTrue(checkCoherenceMeasure(self.topics1, self.topics2, 'c_v'))
+        self.check_coherence_measure('c_v')
 
     def testCuci(self):
         """Test C_uci topic coherence algorithm on given topics"""
-        self.assertTrue(checkCoherenceMeasure(self.topics1, self.topics2, 'c_uci'))
+        self.check_coherence_measure('c_uci')
 
     def testCnpmi(self):
         """Test C_npmi topic coherence algorithm on given topics"""
-        self.assertTrue(checkCoherenceMeasure(self.topics1, self.topics2, 'c_npmi'))
+        self.check_coherence_measure('c_npmi')
 
     def testUMassLdaModel(self):
         """Perform sanity check to see if u_mass coherence works with LDA Model"""

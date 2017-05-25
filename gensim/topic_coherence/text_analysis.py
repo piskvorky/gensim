@@ -20,8 +20,13 @@ from gensim import utils
 def _ids_to_words(ids, dictionary):
     """Convert an iterable of ids to their corresponding words using a dictionary.
     This function abstracts away the differences between the HashDictionary and the standard one.
+    
+    Args:
+    ----
+    ids: list of list of tuples, where each tuple contains (token_id, iterable of token_ids).
+         This is the format returned by the topic_coherence.segmentation functions.
     """
-    if not dictionary.id2token:
+    if not dictionary.id2token:  # may not be initialized in the standard gensim.corpora.Dictionary
         setattr(dictionary, 'id2token', {v: k for k, v in dictionary.token2id.items()})
 
     top_words = set()
@@ -72,7 +77,9 @@ class BaseAnalyzer(object):
 
 
 class UsesDictionary(BaseAnalyzer):
-    """Base class for corpus and text analyzers."""
+    """A BaseAnalyzer that uses a Dictionary, hence can translate tokens to counts.
+    The standard BaseAnalyzer can only deal with token ids since it does not have access to the token2id mapping.
+    """
 
     def __init__(self, relevant_ids, dictionary):
         super(UsesDictionary, self).__init__(relevant_ids)
@@ -90,17 +97,18 @@ class UsesDictionary(BaseAnalyzer):
             word_id = word
         return self._get_occurrences(self.id2contiguous[word_id])
 
+    def _word2_contiguous_id(self, word):
+        try:
+            word_id = self.token2id[word]
+        except KeyError:
+            word_id = word
+        return self.id2contiguous[word_id]
+
     def get_co_occurrences(self, word1, word2):
         """Return number of docs the words co-occur in, once `accumulate` has been called."""
-        try:
-            word_id1 = self.token2id[word1]
-        except KeyError:
-            word_id1 = word1
-        try:
-            word_id2 = self.token2id[word2]
-        except KeyError:
-            word_id2 = word2
-        return self._get_co_occurrences(self.id2contiguous[word_id1], self.id2contiguous[word_id2])
+        word_id1 = self._word2_contiguous_id(word1)
+        word_id2 = self._word2_contiguous_id(word2)
+        return self._get_co_occurrences(word_id1, word_id2)
 
 
 class InvertedIndexBased(BaseAnalyzer):
@@ -124,7 +132,7 @@ class InvertedIndexBased(BaseAnalyzer):
         return {contiguous2id[n]: doc_id_list for n, doc_id_list in enumerate(self._inverted_index)}
 
 
-class CorpusAnalyzer(InvertedIndexBased):
+class CorpusAccumulator(InvertedIndexBased):
     """Gather word occurrence stats from a corpus by iterating over its BoW representation."""
 
     def analyze_text(self, text):
@@ -192,15 +200,21 @@ class WordOccurrenceAccumulator(TextsAnalyzer):
 
     def analyze_text(self, window):
         relevant_words = list(self.filter_to_relevant_words(window))
-        uniq_words = np.array(relevant_words)
-        self._occurrences[uniq_words] += 1
+        if relevant_words:
+            uniq_words = np.array(relevant_words)
+            self._occurrences[uniq_words] += 1
 
-        for combo in itertools.combinations(relevant_words, 2):
-            self._co_occurrences[combo] += 1
+            for combo in itertools.combinations(relevant_words, 2):
+                self._co_occurrences[combo] += 1
 
     def _symmetrize(self):
+        """Word pairs may have been encountered in (i, j) and (j, i) order.
+        Rather than enforcing a particular ordering during the update process,
+        we choose to symmetrize the co-occurrence matrix after accumulation has completed.
+        """
         co_occ = self._co_occurrences
-        return co_occ + co_occ.T - np.diag(co_occ.diagonal())
+        co_occ.setdiag(self._occurrences)  # diagonal should be equal to occurrence counts
+        self._co_occurrences = co_occ + co_occ.T - sps.diags(co_occ.diagonal(), dtype='uint32')
 
     def accumulate(self, texts, window_size):
         super(WordOccurrenceAccumulator, self).accumulate(texts, window_size)

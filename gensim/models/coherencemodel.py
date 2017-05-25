@@ -178,6 +178,8 @@ class CoherenceModel(interfaces.TransformationABC):
                     t_i.append(dictionary.token2id[topic[n]])
                 self.topics.append(np.array(t_i))
 
+        self._accumulator = None
+
     def __str__(self):
         return coherence_dict[self.coherence].__str__()
 
@@ -206,16 +208,16 @@ class CoherenceModel(interfaces.TransformationABC):
         segmented_topics = measure.seg(self.topics)
 
         if self.coherence in boolean_document_based:
-            accumulator = measure.prob(self.corpus, segmented_topics)
-            return measure.conf(segmented_topics, accumulator)
+            self._accumulator = measure.prob(self.corpus, segmented_topics)
+            return measure.conf(segmented_topics, self._accumulator)
 
-        accumulator = measure.prob(texts=self.texts, segmented_topics=segmented_topics,
-                                   dictionary=self.dictionary, window_size=self.window_size)
+        self._accumulator = measure.prob(texts=self.texts, segmented_topics=segmented_topics,
+                                         dictionary=self.dictionary, window_size=self.window_size)
         if self.coherence == 'c_v':
-            return measure.conf(self.topics, segmented_topics, accumulator, 'nlr', 1)
+            return measure.conf(self.topics, segmented_topics, self._accumulator, 'nlr', 1)
         else:
             normalize = self.coherence == 'c_npmi'
-            return measure.conf(segmented_topics, accumulator, normalize=normalize)
+            return measure.conf(segmented_topics, self._accumulator, normalize=normalize)
 
     def aggregate_measures(self, confirmed_measures):
         measure = coherence_dict[self.coherence]
