@@ -1091,9 +1091,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         separately_explicit = ['expElogbeta', 'sstats']
         # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some
         # array manually.
-        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or len(self.alpha.shape) != 1:
+        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
             separately_explicit.append('alpha')
-        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or len(self.eta.shape) != 1:
+        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
             separately_explicit.append('eta')
         # Merge separately_explicit with separately.
         if separately:
@@ -1117,6 +1117,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
+        if not hasattr(result, 'random_state'):
+            result.random_state = utils.get_random_state(None)
+            logging.warning("random_state not set so using default value")
         state_fname = utils.smart_extension(fname, '.state')
         try:
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
@@ -1128,7 +1131,5 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 result.id2word = utils.unpickle(id2word_fname)
             except Exception as e:
                 logging.warning("failed to load id2word dictionary from %s: %s", id2word_fname, e)
-        else:
-            result.id2word = None
         return result
 # endclass LdaModel
