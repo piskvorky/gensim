@@ -1,17 +1,21 @@
 import unittest
 import os
 import sys
-import keras
 import numpy as np
 from gensim.models import word2vec
-from keras.engine import Input
-from keras.models import Model
-from keras.layers import merge
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from keras.utils.np_utils import to_categorical
-from keras.layers import Dense, Flatten
-from keras.layers import Conv1D, MaxPooling1D
+
+try:
+    import keras
+    from keras.engine import Input
+    from keras.models import Model
+    from keras.layers import merge
+    from keras.preprocessing.text import Tokenizer
+    from keras.preprocessing.sequence import pad_sequences
+    from keras.utils.np_utils import to_categorical
+    from keras.layers import Dense, Flatten
+    from keras.layers import Conv1D, MaxPooling1D
+except:
+    raise unittest.SkipTest("Test requires Keras to be installed, which is not available")
 
 sentences = [
     ['human', 'interface', 'computer'],
