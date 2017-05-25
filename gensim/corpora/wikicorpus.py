@@ -23,6 +23,7 @@ import logging
 import re
 from xml.etree.cElementTree import iterparse  # LXML isn't faster, so let's go with the built-in solution
 import multiprocessing
+import signal
 
 from gensim import utils
 
@@ -249,6 +250,10 @@ def process_article(args):
     return result, title, pageid
 
 
+def init_worker():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
 class WikiCorpus(TextCorpus):
     """
     Treat a wikipedia articles dump (\*articles.xml.bz2) as a (read-only) corpus.
@@ -300,22 +305,26 @@ class WikiCorpus(TextCorpus):
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0
         texts = ((text, self.lemmatize, title, pageid) for title, text, pageid in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
-        pool = multiprocessing.Pool(self.processes)
+        pool = multiprocessing.Pool(self.processes, init_worker)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
-        for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
-            for tokens, title, pageid in pool.imap(process_article, group):  # chunksize=10):
-                articles_all += 1
-                positions_all += len(tokens)
-                # article redirects and short stubs are pruned here
-                if len(tokens) < ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
-                    continue
-                articles += 1
-                positions += len(tokens)
-                if self.metadata:
-                    yield (tokens, (pageid, title))
-                else:
-                    yield tokens
+        try:
+            for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
+                for tokens, title, pageid in pool.imap(process_article, group):  # chunksize=10):
+                    articles_all += 1
+                    positions_all += len(tokens)
+                    # article redirects and short stubs are pruned here
+                    if len(tokens) < ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
+                        continue
+                    articles += 1
+                    positions += len(tokens)
+                    if self.metadata:
+                        yield (tokens, (pageid, title))
+                    else:
+                        yield tokens
+        except KeyboardInterrupt:
+            pass
+
         pool.terminate()
 
         logger.info(
