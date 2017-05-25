@@ -78,7 +78,11 @@ from gensim.corpora.dictionary import Dictionary
 from six import string_types, iteritems
 from six.moves import xrange
 from scipy import stats
-from keras.layers import Embedding
+try:
+    from keras.layers import Embedding
+    KERAS_INSTALLED = True
+except:
+    KERAS_INSTALLED = False
 
 
 logger = logging.getLogger(__name__)
@@ -821,6 +825,8 @@ class KeyedVectors(utils.SaveLoad):
         """
         Return a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings
         """
+        if not KERAS_INSTALLED:
+            raise ImportError("Please install Keras to use this function")
         weights = self.syn0
         layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights])
         return layer
