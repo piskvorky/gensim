@@ -482,6 +482,19 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             self.assertTrue(isinstance(i[0], int))
             self.assertTrue(isinstance(i[1], six.string_types))
 
+        # save back the loaded model using a post-0.13.2 version of Gensim
+        post_0_13_2_fname = datapath('post_0_13_2_model')
+        model_pre_0_13_2.save(post_0_13_2_fname)
+
+        # load a model saved using a post-0.13.2 version of Gensim
+        model_post_0_13_2 = self.class_.load(post_0_13_2_fname)
+        model_topics_new = model_post_0_13_2.print_topics(num_topics=2, num_words=3)
+
+        for i in model_topics_new:
+            self.assertTrue(isinstance(i[0], int))
+            self.assertTrue(isinstance(i[1], six.string_types))
+
+
 #endclass TestLdaModel
 
 
