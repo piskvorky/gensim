@@ -20,6 +20,7 @@ coherence measures. http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public
 
 import logging
 from collections import namedtuple
+import multiprocessing as mp
 
 import numpy as np
 
@@ -90,7 +91,7 @@ class CoherenceModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     """
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None, window_size=None,
-                 coherence='c_v', topn=10):
+                 coherence='c_v', topn=10, processes=-1):
         """
         Args:
         ----
@@ -178,6 +179,7 @@ class CoherenceModel(interfaces.TransformationABC):
                     t_i.append(dictionary.token2id[topic[n]])
                 self.topics.append(np.array(t_i))
 
+        self.processes = processes if processes > 1 else max(1, mp.cpu_count() - 1)
         self._accumulator = None
 
     def __str__(self):
@@ -212,7 +214,8 @@ class CoherenceModel(interfaces.TransformationABC):
             return measure.conf(segmented_topics, self._accumulator)
 
         self._accumulator = measure.prob(texts=self.texts, segmented_topics=segmented_topics,
-                                         dictionary=self.dictionary, window_size=self.window_size)
+                                         dictionary=self.dictionary, window_size=self.window_size,
+                                         processes=self.processes)
         if self.coherence == 'c_v':
             return measure.conf(self.topics, segmented_topics, self._accumulator, 'nlr', 1)
         else:

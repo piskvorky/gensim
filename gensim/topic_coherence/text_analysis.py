@@ -9,12 +9,17 @@ This module contains classes for analyzing the texts of a corpus to accumulate
 statistical information about word occurrences.
 """
 
+import sys
 import itertools
+import logging
+import multiprocessing as mp
 
 import numpy as np
 import scipy.sparse as sps
 
 from gensim import utils
+
+logger = logging.getLogger(__name__)
 
 
 def _ids_to_words(ids, dictionary):
@@ -46,11 +51,19 @@ class BaseAnalyzer(object):
     def __init__(self, relevant_ids):
         self.relevant_ids = relevant_ids
         self.id2contiguous = {word_id: n for n, word_id in enumerate(self.relevant_ids)}
+        self.log_every = 1000
         self._num_docs = 0
 
     @property
     def num_docs(self):
         return self._num_docs
+
+    @num_docs.setter
+    def num_docs(self, num):
+        self._num_docs = num
+        if self._num_docs % self.log_every == 0:
+            logger.info("%s accumulated stats from %d documents" % (
+                self.__class__.__name__, self._num_docs))
 
     def analyze_text(self, text):
         raise NotImplementedError("Base classes should implement analyze_text.")
@@ -84,6 +97,7 @@ class UsesDictionary(BaseAnalyzer):
     def __init__(self, relevant_ids, dictionary):
         super(UsesDictionary, self).__init__(relevant_ids)
         self.relevant_words = _ids_to_words(self.relevant_ids, dictionary)
+        self.dictionary = dictionary
         self.token2id = dictionary.token2id
 
     def analyze_text(self, text):
@@ -177,7 +191,7 @@ class TextsAnalyzer(UsesDictionary):
         relevant_texts = (text for text in texts if self.text_is_relevant(text))
         for virtual_document in utils.iter_windows(relevant_texts, window_size, ignore_below_size=False):
             self.analyze_text(virtual_document)
-            self._num_docs += 1
+            self.num_docs += 1
         return self
 
 
@@ -198,6 +212,9 @@ class WordOccurrenceAccumulator(TextsAnalyzer):
         self._occurrences = np.zeros(vocab_size, dtype='uint32')
         self._co_occurrences = sps.lil_matrix((vocab_size, vocab_size), dtype='uint32')
 
+    def __str__(self):
+        return self.__class__.__name__
+
     def analyze_text(self, window):
         relevant_words = list(self.filter_to_relevant_words(window))
         if relevant_words:
@@ -217,6 +234,7 @@ class WordOccurrenceAccumulator(TextsAnalyzer):
         self._co_occurrences = co_occ + co_occ.T - sps.diags(co_occ.diagonal(), dtype='uint32')
 
     def accumulate(self, texts, window_size):
+        self._co_occurrences = self._co_occurrences.tolil()
         super(WordOccurrenceAccumulator, self).accumulate(texts, window_size)
         self._symmetrize()
         return self
@@ -226,3 +244,141 @@ class WordOccurrenceAccumulator(TextsAnalyzer):
 
     def _get_co_occurrences(self, word_id1, word_id2):
         return self._co_occurrences[word_id1, word_id2]
+
+    def merge(self, other):
+        self._occurrences += other._occurrences
+        self._co_occurrences += other._co_occurrences
+        self._num_docs += other._num_docs
+
+
+class _WordOccurrenceAccumulator(WordOccurrenceAccumulator):
+    """Monkey patched to avoid symmetrizing co-occurrence matrix after each batch."""
+    def accumulate(self, texts, window_size):
+        TextsAnalyzer.accumulate(self, texts, window_size)
+        return self
+
+
+class ParallelWordOccurrenceAccumulator(TextsAnalyzer):
+    """Accumulate word occurrences in parallel."""
+
+    def __init__(self, processes, *args, **kwargs):
+        super(ParallelWordOccurrenceAccumulator, self).__init__(*args)
+        if processes < 2:
+            raise ValueError("Must have at least 2 processes to run in parallel; got %d" % processes)
+        self.processes = processes
+        self.batch_size = kwargs.get('batch_size', 16)
+
+    def __str__(self):
+        return "%s(processes=%s, batch_size=%s)" % (
+            self.__class__.__name__, self.processes, self.batch_size)
+
+    def accumulate(self, texts, window_size):
+        workers, input_q, output_q = self.start_workers(window_size)
+        try:
+            self.queue_all_texts(input_q, texts, window_size)
+            interrupted = False
+        except KeyboardInterrupt:
+            logger.warn("stats accumulation interrupted; <= %d documents processed" % self._num_docs)
+            interrupted = True
+
+        accumulators = self.terminate_workers(input_q, output_q, workers, interrupted)
+        return self.merge_accumulators(accumulators)
+
+    def start_workers(self, window_size):
+        input_q = mp.Queue(maxsize=self.processes)
+        output_q = mp.Queue()
+        workers = []
+        for _ in range(self.processes):
+            accumulator = _WordOccurrenceAccumulator(self.relevant_ids, self.dictionary)
+            worker = AccumulatingWorker(input_q, output_q, accumulator, window_size)
+            worker.start()
+            workers.append(worker)
+
+        return workers, input_q, output_q
+
+    def yield_batches(self, texts):
+        batch = []
+        for text in texts:
+            batch.append(text)
+            if len(batch) == self.batch_size:
+                yield batch
+                batch = []
+
+        if batch:
+            yield batch
+
+    def queue_all_texts(self, q, texts, window_size):
+        relevant_texts = (text for text in texts if self.text_is_relevant(text))
+        for batch_num, batch in enumerate(self.yield_batches(relevant_texts)):
+            q.put(batch, block=True)
+            before = self._num_docs / self.log_every
+            self._num_docs += sum(len(doc) - window_size + 1 for doc in batch)
+            if before < (self._num_docs / self.log_every):
+                logger.info("submitted %d batches to accumulate stats from %d documents (%d virtual)" % (
+                    batch_num, batch_num * self.batch_size, self._num_docs))
+
+    def terminate_workers(self, input_q, output_q, workers, interrupted=False):
+        if not interrupted:
+            for _ in workers:
+                input_q.put(None, block=True)
+
+        accumulators = []
+        while len(accumulators) != len(workers):
+            accumulators.append(output_q.get())
+        logger.info("%d accumulators retrieved from output queue" % len(accumulators))
+
+        for worker in workers:
+            if worker.is_alive():
+                worker.terminate()
+
+        input_q.close()
+        output_q.close()
+        return accumulators
+
+    def merge_accumulators(self, accumulators):
+        accumulator = accumulators[0]
+        for other_accumulator in accumulators[1:]:
+            accumulator.merge(other_accumulator)
+        accumulator._symmetrize()
+        return accumulator
+
+
+class AccumulatingWorker(mp.Process):
+    """Accumulate stats from texts fed in from queue."""
+
+    def __init__(self, input_q, output_q, accumulator, window_size):
+        super(AccumulatingWorker, self).__init__()
+        self.input_q = input_q
+        self.output_q = output_q
+        self.accumulator = accumulator
+        self.accumulator.log_every = sys.maxint  # avoid logging in workers
+        self.window_size = window_size
+
+    def run(self):
+        try:
+            self._run()
+        except KeyboardInterrupt:
+            logger.info("%s interrupted after processing %d documents" % (
+                self.__class__.__name__, self.accumulator.num_docs))
+        finally:
+            self.reply_to_master()
+
+    def _run(self):
+        batch_num = 0
+        n_docs = 0
+        while True:
+            docs = self.input_q.get(block=True)
+            if docs is None:  # sentinel value
+                break
+
+            self.accumulator.accumulate(docs, self.window_size)
+            n_docs += len(docs)
+            logger.debug("completed batch %d; %d documents processed (%d virtual)" % (
+                batch_num, n_docs, self.accumulator.num_docs))
+            batch_num += 1
+
+    def reply_to_master(self):
+        logger.info("serializing accumulator to return to master...")
+        self.output_q.put(self.accumulator, block=False)
+        logger.info("accumulator serialized")
+

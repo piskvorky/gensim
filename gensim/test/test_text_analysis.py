@@ -1,9 +1,8 @@
 import logging
 import unittest
-from collections import namedtuple
 
 from gensim.topic_coherence.text_analysis import \
-    InvertedIndexAccumulator, WordOccurrenceAccumulator
+    InvertedIndexAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator
 from gensim.corpora.dictionary import Dictionary
 
 
@@ -22,8 +21,9 @@ class BaseTestCases(object):
             'test': 21,
             'document': 17
         }
-        id2token = {v: k for k, v in token2id.items()}
-        dictionary = namedtuple('Dictionary', 'token2id, id2token')(token2id, id2token)
+        dictionary = Dictionary(texts)
+        dictionary.token2id = token2id
+        dictionary.id2token = {v: k for k, v in token2id.items()}
         top_ids = set(token2id.values())
 
         texts2 = [['human', 'interface', 'computer'],
@@ -42,8 +42,14 @@ class BaseTestCases(object):
 
         accumulator_cls = None
 
+        def init_accumulator(self):
+            return self.accumulator_cls(self.top_ids, self.dictionary)
+
+        def init_accumulator2(self):
+            return self.accumulator_cls(self.top_ids2, self.dictionary2)
+
         def test_occurrence_counting(self):
-            accumulator = self.accumulator_cls(self.top_ids, self.dictionary) \
+            accumulator = self.init_accumulator()\
                 .accumulate(self.texts, 3)
             self.assertEqual(2, accumulator.get_occurrences("this"))
             self.assertEqual(1, accumulator.get_occurrences("is"))
@@ -53,7 +59,7 @@ class BaseTestCases(object):
             self.assertEqual(1, accumulator.get_co_occurrences("is", "a"))
 
         def test_occurrence_counting2(self):
-            accumulator = self.accumulator_cls(self.top_ids2, self.dictionary2) \
+            accumulator = self.init_accumulator2()\
                 .accumulate(self.texts2, 110)
             self.assertEqual(2, accumulator.get_occurrences("human"))
             self.assertEqual(4, accumulator.get_occurrences("user"))
@@ -81,7 +87,7 @@ class BaseTestCases(object):
                 self.assertEqual(expected_count, accumulator.get_co_occurrences(word_id2, word_id1))
 
         def test_occurences_for_irrelevant_words(self):
-            accumulator = WordOccurrenceAccumulator(self.top_ids, self.dictionary) \
+            accumulator = self.init_accumulator() \
                 .accumulate(self.texts, 2)
             with self.assertRaises(KeyError):
                 accumulator.get_occurrences("irrelevant")
@@ -123,6 +129,16 @@ class TestInvertedIndexAccumulator(BaseTestCases.TextAnalyzerTestBase):
 
 class TestWordOccurrenceAccumulator(BaseTestCases.TextAnalyzerTestBase):
     accumulator_cls = WordOccurrenceAccumulator
+
+
+class TestParallelWordOccurrenceAccumulator(BaseTestCases.TextAnalyzerTestBase):
+    accumulator_cls = ParallelWordOccurrenceAccumulator
+
+    def init_accumulator(self):
+        return self.accumulator_cls(2, self.top_ids, self.dictionary)
+
+    def init_accumulator2(self):
+        return self.accumulator_cls(2, self.top_ids2, self.dictionary2)
 
 
 if __name__ == '__main__':

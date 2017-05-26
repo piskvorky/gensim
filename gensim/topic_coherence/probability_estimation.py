@@ -13,7 +13,8 @@ import itertools
 
 import numpy as np
 
-from gensim.topic_coherence.text_analysis import CorpusAccumulator, WordOccurrenceAccumulator
+from gensim.topic_coherence.text_analysis import \
+    CorpusAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +51,10 @@ def p_boolean_document(corpus, segmented_topics):
     num_docs : Total number of documents in corpus.
     """
     top_ids = _ret_top_ids(segmented_topics)
-    accumulator = CorpusAccumulator(top_ids).accumulate(corpus)
-    return accumulator
+    return CorpusAccumulator(top_ids).accumulate(corpus)
 
 
-def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
+def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, processes=1):
     """
     This function performs the boolean sliding window probability estimation. Boolean sliding window
     determines word counts using a sliding window. The window moves over the documents one word token per step.
@@ -74,5 +74,9 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     window_id[0] : Total no of windows
     """
     top_ids = _ret_top_ids(segmented_topics)
-    return WordOccurrenceAccumulator(top_ids, dictionary)\
-        .accumulate(texts, window_size)
+    if processes <= 1:
+        accumulator = WordOccurrenceAccumulator(top_ids, dictionary)
+    else:
+        accumulator = ParallelWordOccurrenceAccumulator(processes, top_ids, dictionary)
+    logger.info("using %s to estimate probabilities from sliding windows" % accumulator)
+    return accumulator.accumulate(texts, window_size)
