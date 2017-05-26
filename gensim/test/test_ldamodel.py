@@ -502,7 +502,7 @@ class TestLdaMulticore(TestLdaModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamulticore.LdaMulticore
-        self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
+        self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100, batch=True, chunksize=1)
 
     # override LdaModel because multicore does not allow alpha=auto
     def testAlphaAuto(self):
