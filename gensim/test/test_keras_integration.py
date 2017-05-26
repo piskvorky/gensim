@@ -5,6 +5,11 @@ import numpy as np
 from gensim.models import word2vec
 
 try:
+    from sklearn.datasets import fetch_20newsgroups
+except:
+    raise unittest.SkipTest("Test requires sklearn to be installed, which is not available")
+
+try:
     import keras
     from keras.engine import Input
     from keras.models import Model
@@ -36,7 +41,8 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 class TestKerasWord2VecWrapper(unittest.TestCase):
     def setUp(self):
         self.model_cos_sim = word2vec.Word2Vec(sentences, size=100, min_count=1, hs=1)
-        self.model_twenty_ng = word2vec.Word2Vec(word2vec.LineSentence(datapath('20_newsgroup_keras_w2v_data.txt')), min_count=1)
+        # self.model_twenty_ng = word2vec.Word2Vec(word2vec.LineSentence(datapath('20_newsgroup_keras_w2v_data.txt')), min_count=1)
+        self.model_twenty_ng = word2vec.Word2Vec(min_count=1)
 
     def testWord2VecTraining(self):
         """
@@ -88,26 +94,30 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
 
         # Processing text dataset
         texts = []  # list of text samples
-        labels_index = {}  # dictionary mapping label name to numeric id
+        texts_w2v = []  # used to train the word embeddings
         labels = []  # list of label ids
-        for name in sorted(os.listdir(TEXT_DATA_DIR)):
-            path = os.path.join(TEXT_DATA_DIR, name)
-            if os.path.isdir(path):
-                label_id = len(labels_index)
-                labels_index[name] = label_id
-                for fname in sorted(os.listdir(path)):
-                    fpath = os.path.join(path, fname)
-                    if sys.version_info < (3,):
-                        f = open(fpath)
-                    else:
-                        f = open(fpath, encoding='latin-1')
-                    t = f.read()
-                    i = t.find('\n\n')  # skip header
-                    if 0 < i:
-                        t = t[i:]
-                    texts.append(t)
-                    f.close()
+        labels_index = {}
+
+        count = 0
+
+        # data = fetch_20newsgroups(subset='train', categories=['alt.atheism', 'comp.graphics', 'rec.sport.baseball'])
+        data = fetch_20newsgroups(subset='train', categories=['alt.atheism'])
+        for index in range(len(data)):
+            label_id = data.target[index]
+            file_data = data.data[index]
+            i = file_data.find('\n\n')  # skip header
+            if i > 0:
+                file_data = file_data[i:]
+            try:
+                curr_str = str(file_data)
+                sentence_list = curr_str.split('\n')
+                for sentence in sentence_list:
+                    sentence = (sentence.strip()).lower()
+                    texts.append(sentence)
+                    texts_w2v.append(sentence.split(' '))
                     labels.append(label_id)
+            except:
+                None
 
         # Vectorize the text samples into a 2D integer tensor
         tokenizer = Tokenizer()
@@ -119,10 +129,12 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         labels = to_categorical(np.asarray(labels))
 
         x_train = data
-        y_train = labels
+        y_train = labels.reshape((-1, 1))
 
         # prepare the embedding layer using the wrapper
         Keras_w2v = self.model_twenty_ng
+        Keras_w2v.build_vocab(texts_w2v)
+        Keras_w2v.train(texts, total_examples=Keras_w2v.corpus_count, epochs=Keras_w2v.iter)
         Keras_w2v_wv = Keras_w2v.wv
         embedding_layer = Keras_w2v_wv.get_embedding_layer()
 
@@ -137,11 +149,11 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         x = MaxPooling1D(35)(x)  # global max pooling
         x = Flatten()(x)
         x = Dense(128, activation='relu')(x)
-        preds = Dense(len(labels_index), activation='softmax')(x)
+        preds = Dense(len(labels), activation='softmax')(x)
 
         model = Model(sequence_input, preds)
-        model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['acc'])
-        fit_ret_val = model.fit(x_train, y_train, batch_size=1)
+        model.compile(loss='sparse_categorical_crossentropy', optimizer='rmsprop', metrics=['acc'])
+        fit_ret_val = model.fit(x_train, y_train, epochs=1)
 
         # verify the type of the object returned after training
         self.assertTrue(type(fit_ret_val) == keras.callbacks.History)  # value returned is a `History` instance. Its `history` attribute contains all information collected during training.
