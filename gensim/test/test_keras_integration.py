@@ -87,7 +87,6 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         """
         Test Keras 'Embedding' layer returned by 'get_embedding_layer' function for a smaller version of the 20NewsGroup classification problem.
         """
-        TEXT_DATA_DIR = datapath('./20_newsgroup_keras/')
         MAX_SEQUENCE_LENGTH = 1000
 
         # Prepare text samples and their labels
@@ -96,12 +95,8 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         texts = []  # list of text samples
         texts_w2v = []  # used to train the word embeddings
         labels = []  # list of label ids
-        labels_index = {}
 
-        count = 0
-
-        # data = fetch_20newsgroups(subset='train', categories=['alt.atheism', 'comp.graphics', 'rec.sport.baseball'])
-        data = fetch_20newsgroups(subset='train', categories=['alt.atheism'])
+        data = fetch_20newsgroups(subset='train', categories=['alt.atheism', 'comp.graphics', 'sci.space'])
         for index in range(len(data)):
             label_id = data.target[index]
             file_data = data.data[index]
@@ -129,7 +124,7 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         labels = to_categorical(np.asarray(labels))
 
         x_train = data
-        y_train = labels.reshape((-1, 1))
+        y_train = labels
 
         # prepare the embedding layer using the wrapper
         Keras_w2v = self.model_twenty_ng
@@ -149,11 +144,11 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         x = MaxPooling1D(35)(x)  # global max pooling
         x = Flatten()(x)
         x = Dense(128, activation='relu')(x)
-        preds = Dense(len(labels), activation='softmax')(x)
+        preds = Dense(y_train.shape[1], activation='softmax')(x)
 
         model = Model(sequence_input, preds)
-        model.compile(loss='sparse_categorical_crossentropy', optimizer='rmsprop', metrics=['acc'])
-        fit_ret_val = model.fit(x_train, y_train, epochs=1)
+        model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['acc'])
+        fit_ret_val = model.fit(x_train, y_train, epochs=2)
 
         # verify the type of the object returned after training
         self.assertTrue(type(fit_ret_val) == keras.callbacks.History)  # value returned is a `History` instance. Its `history` attribute contains all information collected during training.
