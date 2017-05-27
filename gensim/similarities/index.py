@@ -87,7 +87,7 @@ class AnnoyIndexer(object):
             vector, num_neighbors, include_distances=True)
 
         return [(self.labels[ids[i]], 1 - distances[i] / 2) for i in range(len(ids))]
-    
+
 try:
     import faiss
 except ImportError:
@@ -105,9 +105,9 @@ class FaissIndexer(object):
         self.nlist = nlist
         self.nprobe = None
         if model and nlist:
-            if isinstance(self.model,  Doc2Vec):
+            if isinstance(self.model, Doc2Vec):
                 self.build_from_doc2vec()
-            elif isinstance(self.model,  Word2Vec):
+            elif isinstance(self.model, Word2Vec):
                 self.build_from_word2vec()
             else:
                 raise ValueError("Only Word2Vec or Doc2Vec models can be used")
@@ -140,7 +140,7 @@ class FaissIndexer(object):
         query = self.model[query_vec]
         query = query.reshape((1, query.shape[0]))
         self.index.nprobe = nprobe
-        D,  I = self.index.search(query, num_neighbors)
+        D, I = self.index.search(query, num_neighbors)
         list_similar = []
         for ind, distance in zip(I, D):
             for ind_i, dist_j in zip(ind, distance):
@@ -155,7 +155,7 @@ class FaissIndexer(object):
         query = self.model[query_vec]
         query = query.reshape((1, query.shape[0]))
         self.index.nprobe = nprobe
-        D,  I = self.index.search(query, num_neighbors)
+        D, I = self.index.search(query, num_neighbors)
         list_similar = []
         for ind, dot_product in zip(I, D):
             for ind_i, dot_product_j in zip(ind, dot_product):
