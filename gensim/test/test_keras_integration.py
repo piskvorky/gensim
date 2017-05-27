@@ -1,6 +1,5 @@
 import unittest
 import os
-import sys
 import numpy as np
 from gensim.models import word2vec
 
