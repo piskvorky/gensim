@@ -989,9 +989,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> print(annotation) # get array with positive/negative words for each topic pair from `m1` and `m2`
         """
 
-        distances = {"kulback_leibler": kullback_leibler,
-                     "hellinger": hellinger,
-                     "jaccard": jaccard_set}
+        distances = {
+            "kulback_leibler": kullback_leibler,
+            "hellinger": hellinger,
+            "jaccard": jaccard_set,
+        }
 
         if distance not in distances:
             valid_keys = ", ".join("`{}`".format(x) for x in distances.keys())

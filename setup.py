@@ -226,11 +226,13 @@ Copyright (c) 2009-now Radim Rehurek
 """
 
 
-test_env = ['testfixtures',
-            'unittest2',
-            'Morfessor==2.0.2a4',
-            'scikit-learn',
-            'pyemd']
+test_env = [
+    'testfixtures',
+    'unittest2',
+    'Morfessor==2.0.2a4',
+    'scikit-learn',
+    'pyemd',
+]
 
 setup(
     name='gensim',
