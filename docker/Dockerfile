@@ -49,7 +49,6 @@ RUN pip install \
     pandas \
     pyemd \
     sklearn \
-    fasttext \
     testfixtures \
     unittest2 \
     git+git://github.com/mila-udem/fuel.git@stable \
