@@ -533,7 +533,17 @@ def jaccard(vec1, vec2):
 
 
 def jaccard_set(set1, set2):
-    return 1. - float(len(set1 & set2)) / float(len(set1 | set2))
+    """
+    A distance metric between set representation.
+    Returns 1 minus the intersection divided by union.
+    Returns a value in range <0, 1> where values closer to 0 mean less distance and thus higher similarity.
+    """
+
+    union_cardinality = len(set1 | set2)
+    if union_cardinality == 0:  # Both sets are empty
+        return 1.
+
+    return 1. - float(len(set1 & set2)) / float(union_cardinality)
 
 
 def dirichlet_expectation(alpha):

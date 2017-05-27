@@ -1021,7 +1021,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             if np.abs(np.max(z)) > 1e-8:
                 z /= np.max(z)
 
-        annotation = [[None for _ in range(t1_size)] for _ in range(t2_size)]
+        annotation = [[None] * t1_size for _ in range(t2_size)]
 
         for topic1 in range(t1_size):
             for topic2 in range(t2_size):
