@@ -12,9 +12,11 @@ import logging
 import unittest
 
 from gensim.topic_coherence import indirect_confirmation_measure
+from gensim.topic_coherence import text_analysis
+from gensim.corpora.dictionary import Dictionary
 
 import numpy as np
-from numpy import array
+
 
 class TestIndirectConfirmation(unittest.TestCase):
     def setUp(self):
@@ -22,17 +24,21 @@ class TestIndirectConfirmation(unittest.TestCase):
         # of this module. See the modules for the mathematical formulas
         self.topics = [np.array([1, 2])]
         # Result from s_one_set segmentation:
-        self.segmentation = [[(1, array([1, 2])), (2, array([1, 2]))]]
-        self.posting_list = {1: set([2, 3, 4]), 2: set([3, 5])}
+        self.segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
         self.gamma = 1
         self.measure = 'nlr'
-        self.num_docs = 5
+
+        dictionary = Dictionary()
+        dictionary.id2token = {1: 'fake', 2: 'tokens'}
+        self.accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
+        self.accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
+        self.accumulator._num_docs = 5
 
     def testCosineSimilarity(self):
         """Test cosine_similarity()"""
-        obtained = indirect_confirmation_measure.cosine_similarity(self.topics, self.segmentation,
-                                                                   self.posting_list, self.measure,
-                                                                   self.gamma, self.num_docs)
+        obtained = indirect_confirmation_measure.cosine_similarity(
+            self.topics, self.segmentation, self.accumulator, self.measure, self.gamma)
+
         # The steps involved in this calculation are as follows:
         # 1. Take (1, array([1, 2]). Take w' which is 1.
         # 2. Calculate nlr(1, 1), nlr(1, 2). This is our first vector.
@@ -41,8 +47,9 @@ class TestIndirectConfirmation(unittest.TestCase):
         # 5. Find out cosine similarity between these two vectors.
         # 6. Similarly for the second segmentation.
         expected = [0.6230, 0.6230]  # To account for EPSILON approximation
-        self.assertAlmostEqual(obtained[0], expected[0], 4)
-        self.assertAlmostEqual(obtained[1], expected[1], 4)
+        for i in range(len(expected)):
+            self.assertAlmostEqual(obtained[i], expected[i], 4)
+
 
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)
