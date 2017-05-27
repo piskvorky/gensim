@@ -93,7 +93,7 @@ class DtmModel(utils.SaveLoad):
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
             raise ValueError("cannot compute DTM over an empty corpus")
-        if model == "fixed" and any([i == 0 for i in [len(text) for text in corpus.get_texts()]]):
+        if model == "fixed" and any([i == 0 for i in [len(text) for text in corpus]]):
             raise ValueError("""There is a text without words in the input corpus.
                     This breaks method='fixed' (The DIM model).""")
         if lencorpus != sum(time_slices):
@@ -283,12 +283,17 @@ class DtmModel(utils.SaveLoad):
                 #     topic))
         return shown
 
-    def show_topic(self, topicid, time, num_words=50):
+    def show_topic(self, topicid, time, topn=50, num_words=None):
         """
         Return `num_words` most probable words for the given `topicid`, as a list of
         `(word_probability, word)` 2-tuples.
 
         """
+        if num_words is not None:  # deprecated num_words is used
+            logger.warning("The parameter num_words for show_topic() would be deprecated in the updated version.")
+            logger.warning("Please use topn instead.")
+            topn = num_words
+
         topics = self.lambda_[:, :, time]
         topic = topics[topicid]
         # liklihood to probability
@@ -296,13 +301,18 @@ class DtmModel(utils.SaveLoad):
         # normalize to probability dist
         topic = topic / topic.sum()
         # sort according to prob
-        bestn = matutils.argsort(topic, num_words, reverse=True)
+        bestn = matutils.argsort(topic, topn, reverse=True)
         beststr = [(topic[id], self.id2word[id]) for id in bestn]
         return beststr
 
-    def print_topic(self, topicid, time, num_words=10):
+    def print_topic(self, topicid, time, topn=10, num_words=None):
         """Return the given topic, formatted as a string."""
-        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, num_words)])
+        if num_words is not None:  # deprecated num_words is used
+            logger.warning("The parameter num_words for print_topic(() would be deprecated in the updated version.")
+            logger.warning("Please use topn instead.")
+            topn = num_words
+
+        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
 
     def dtm_vis(self, corpus, time):
         """

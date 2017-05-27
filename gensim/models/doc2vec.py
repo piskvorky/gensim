@@ -597,7 +597,7 @@ class Doc2Vec(Word2Vec):
 
         `dm_concat` = if 1, use concatenation of context vectors rather than sum/average;
         default is 0 (off). Note concatenation results in a much-larger model, as the input
-        is no longer the size of one (sampled or arithmatically combined) word vector, but the
+        is no longer the size of one (sampled or arithmetically combined) word vector, but the
         size of the tag(s) and all words in the context strung together.
 
         `dm_tag_count` = expected constant number of document tags per document, when using
