@@ -232,6 +232,7 @@ test_env = [
     'Morfessor==2.0.2a4',
     'scikit-learn',
     'pyemd',
+    'annoy',
 ]
 
 setup(
@@ -289,7 +290,6 @@ setup(
         'scipy >= 0.7.0',
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
-        'morfessor==2.0.2alpha4',
     ],
     tests_require=test_env,
     extras_require={
