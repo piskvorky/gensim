@@ -20,7 +20,7 @@ RUN apt-get update \
     python3-pip=8.1.1-2ubuntu0.4 \
     python3-setuptools=20.7.0-1 \
     unzip=6.0-20ubuntu1 \
-    wget=1.17.1-1ubuntu1.1
+    wget=1.17.1-1ubuntu1.1 \
     libboost-program-options-dev \
     libboost-python-dev \
     zlib1g-dev
@@ -112,9 +112,9 @@ RUN mkdir /gensim_dependencies/mallet \
 
 # Install Vowpal wabbit
 RUN cd /gensim_dependencies \
-    && git clone https://github.com/JohnLangford/vowpal_wabbit.git
+    && git clone https://github.com/JohnLangford/vowpal_wabbit.git \
     && cd /gensim_dependencies/vowpal_wabbit \
-    && make
+    && make \
     && make install
 
 # Start gensim
