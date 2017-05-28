@@ -39,7 +39,7 @@ import os
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
-from gensim.matutils import kullback_leibler, hellinger, jaccard_set
+from gensim.matutils import kullback_leibler, hellinger, jaccard_distance
 
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
@@ -992,7 +992,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         distances = {
             "kulback_leibler": kullback_leibler,
             "hellinger": hellinger,
-            "jaccard": jaccard_set,
+            "jaccard": jaccard_distance,
         }
 
         if distance not in distances:

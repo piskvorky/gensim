@@ -532,11 +532,10 @@ def jaccard(vec1, vec2):
         return 1 - float(len(intersection)) / float(len(union))
 
 
-def jaccard_set(set1, set2):
+def jaccard_distance(set1, set2):
     """
-    A distance metric between set representation.
-    Returns 1 minus the intersection divided by union.
-    Returns a value in range <0, 1> where values closer to 0 mean less distance and thus higher similarity.
+    Calculate a distance between set representation (1 minus the intersection divided by union).
+    Return a value in range <0, 1> where values closer to 0 mean smaller distance and thus higher similarity.
     """
 
     union_cardinality = len(set1 | set2)
