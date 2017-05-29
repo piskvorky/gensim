@@ -81,7 +81,7 @@ from scipy import stats
 try:
     from keras.layers import Embedding
     KERAS_INSTALLED = True
-except:
+except ImportError:
     KERAS_INSTALLED = False
 
 

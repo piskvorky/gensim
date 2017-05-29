@@ -5,7 +5,7 @@ from gensim.models import word2vec
 
 try:
     from sklearn.datasets import fetch_20newsgroups
-except:
+except ImportError:
     raise unittest.SkipTest("Test requires sklearn to be installed, which is not available")
 
 try:
@@ -18,7 +18,7 @@ try:
     from keras.utils.np_utils import to_categorical
     from keras.layers import Dense, Flatten
     from keras.layers import Conv1D, MaxPooling1D
-except:
+except ImportError:
     raise unittest.SkipTest("Test requires Keras to be installed, which is not available")
 
 sentences = [
