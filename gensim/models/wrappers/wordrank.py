@@ -52,7 +52,7 @@ class Wordrank(KeyedVectors):
         `wr_path` is the path to the Wordrank directory.
         `corpus_file` is the filename of the text file to be used for training the Wordrank model.
         Expects file to contain space-separated tokens in a single line
-        `out_name` is name of the directory which will be created(in wordrank folder) to save embeddings and training data.
+        `out_name` is name of the directory which will be created (in wordrank folder) to save embeddings and training data.
         `size` is the dimensionality of the feature vectors.
         `window` is the number of context words to the left (and to the right, if symmetric = 1).
         `symmetric` if 0, only use left context words, else use left and right both.
@@ -98,13 +98,13 @@ class Wordrank(KeyedVectors):
         input_fnames = [corpus_file.split('/')[-1], corpus_file.split('/')[-1], cooccurrence_file]
         output_fnames = [temp_vocab_file, cooccurrence_file, cooccurrence_shuf_file]
 
-        logger.info("Prepare training data using glove code")
+        logger.info("Prepare training data (%s) using glove code", ", ".join(input_fnames))
         for command, input_fname, output_fname in zip(commands, input_fnames, output_fnames):
             with smart_open(input_fname, 'rb') as r:
                 with smart_open(output_fname, 'wb') as w:
                     utils.check_output(w, args=command, stdin=r)
 
-        logger.info("Delete frequencies from vocab file")
+        logger.info("Deleting frequencies from vocab file")
         with smart_open(vocab_file, 'wb') as w:
             utils.check_output(w, args=cmd_del_vocab_freq)
 

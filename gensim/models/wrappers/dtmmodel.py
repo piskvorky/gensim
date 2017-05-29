@@ -22,6 +22,7 @@ Example:
 
 import logging
 import random
+import warnings
 import tempfile
 import os
 from subprocess import PIPE
@@ -93,7 +94,7 @@ class DtmModel(utils.SaveLoad):
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
             raise ValueError("cannot compute DTM over an empty corpus")
-        if model == "fixed" and any([i == 0 for i in [len(text) for text in corpus]]):
+        if model == "fixed" and any(not text for text in corpus):
             raise ValueError("""There is a text without words in the input corpus.
                     This breaks method='fixed' (The DIM model).""")
         if lencorpus != sum(time_slices):
@@ -308,8 +309,7 @@ class DtmModel(utils.SaveLoad):
     def print_topic(self, topicid, time, topn=10, num_words=None):
         """Return the given topic, formatted as a string."""
         if num_words is not None:  # deprecated num_words is used
-            logger.warning("The parameter num_words for print_topic(() would be deprecated in the updated version.")
-            logger.warning("Please use topn instead.")
+            warnings.warn("The parameter num_words for print_topic() would be deprecated in the updated version. Please use topn instead.")
             topn = num_words
 
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
