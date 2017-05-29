@@ -105,9 +105,9 @@ class FaissIndexer(object):
         self.nlist = nlist
         self.nprobe = None
         if model and nlist:
-            if isinstance(self.model, Doc2Vec):
+            if isinstance(self.model,  Doc2Vec):
                 self.build_from_doc2vec()
-            elif isinstance(self.model, Word2Vec):
+            elif isinstance(self.model,  Word2Vec):
                 self.build_from_word2vec()
             else:
                 raise ValueError("Only Word2Vec or Doc2Vec models can be used")
@@ -131,31 +131,31 @@ class FaissIndexer(object):
         self.quantizer = faiss.IndexFlatL2(num_features)
         self.labels = labels
 
-    def most_similar_l2(self, query_vec, num_neighbors, nprobe=1):
+    def most_similar_l2(self, query, num_neighbors, nprobe=1):
         self.nprobe = nprobe
         self.index = faiss.IndexIVFFlat(self.quantizer, self.d, self.nlist,
                                         faiss.METRIC_L2)
         self.index.train(self.vectors)
         self.index.add(self.vectors)
-        query = self.model[query_vec]
-        query = query.reshape((1, query.shape[0]))
+        query_vec=self.model.wv.syn0norm[self.labels.index(query)]
+        query_vec = query_vec.reshape((1, query_vec.shape[0]))
         self.index.nprobe = nprobe
-        D, I = self.index.search(query, num_neighbors)
+        D, I = self.index.search(query_vec, num_neighbors)
         list_similar = []
         for ind, distance in zip(I, D):
             for ind_i, dist_j in zip(ind, distance):
                 list_similar.append([self.labels[ind_i], dist_j])
         return list_similar
 
-    def most_similar_dot_product(self, query_vec, num_neighbors, nprobe=1):
+    def most_similar_dot_product(self, query, num_neighbors, nprobe=1):
         self.nprobe = nprobe
         self.index = faiss.IndexIVFFlat(self.quantizer, self.d, self.nlist)
         self.index.train(self.vectors)
         self.index.add(self.vectors)
-        query = self.model[query_vec]
-        query = query.reshape((1, query.shape[0]))
+        query_vec=self.model.wv.syn0norm[self.labels.index(query)]
+        query_vec = query_vec.reshape((1, query_vec.shape[0]))
         self.index.nprobe = nprobe
-        D, I = self.index.search(query, num_neighbors)
+        D, I = self.index.search(query_vec, num_neighbors)
         list_similar = []
         for ind, dot_product in zip(I, D):
             for ind_i, dot_product_j in zip(ind, dot_product):
