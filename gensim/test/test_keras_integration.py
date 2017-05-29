@@ -12,7 +12,7 @@ try:
     import keras
     from keras.engine import Input
     from keras.models import Model
-    from keras.layers import merge
+    from keras.layers.merge import dot
     from keras.preprocessing.text import Tokenizer
     from keras.preprocessing.sequence import pad_sequences
     from keras.utils.np_utils import to_categorical
@@ -72,14 +72,14 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         input_b = Input(shape=(1,), dtype='int32', name='input_b')
         embedding_a = embedding_layer(input_a)
         embedding_b = embedding_layer(input_b)
-        similarity = merge([embedding_a, embedding_b], mode='cos', dot_axes=2)
+        similarity = dot([embedding_a, embedding_b], axes=2, normalize=True)
 
         model = Model(input=[input_a, input_b], output=similarity)
         model.compile(optimizer='sgd', loss='mse')
 
         word_a = 'graph'
         word_b = 'trees'
-        output = model.predict([np.asarray([keras_w2v_model.wv.vocab[word_a].index]), np.asarray([keras_w2v_model.wv.vocab[word_b].index])])    # probability of the two words occuring together
+        output = model.predict([np.asarray([keras_w2v_model.wv.vocab[word_a].index]), np.asarray([keras_w2v_model.wv.vocab[word_b].index])])    # output is the cosine distance between the two words (as a similarity measure)
         self.assertTrue(type(output[0][0][0][0]) == np.float32)     # verify that  a float is returned
 
     def testEmbeddingLayer20NewsGroup(self):
