@@ -943,7 +943,7 @@ def revdict(d):
     result (which one is kept is arbitrary).
 
     """
-    return dict((v, k) for (k, v) in iteritems(d))
+    return dict((v, k) for (k, v) in iteritems(dict(d)))
 
 
 def toptexts(query, texts, index, n=10):
@@ -1164,7 +1164,7 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     Added extra KeyboardInterrupt handling
     """
     try:
-        logger.debug("COMMAND: %s %s", str(popenargs), str(kwargs))
+        logger.debug("COMMAND: %s %s", popenargs, kwargs)
         process = subprocess.Popen(stdout=stdout, *popenargs, **kwargs)
         output, unused_err = process.communicate()
         retcode = process.poll()
