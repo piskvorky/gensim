@@ -56,17 +56,20 @@ class TestProbabilityEstimation(ProbabilityEstimationBase):
     def testPBooleanDocument(self):
         """Test p_boolean_document()"""
         # Unique topic ids are 5798, 10608, 12736 and 18451
-        obtained, _ = probability_estimation.p_boolean_document(self.corpus, self.segmented_topics)
+        accumulator = probability_estimation.p_boolean_document(self.corpus, self.segmented_topics)
+        obtained = accumulator.index_to_dict()
         expected = {18451: {5}, 12736: {1, 3}, 5798: {1, 2}, 10608: {0}}
         self.assertEqual(expected, obtained)
 
     def testPBooleanSlidingWindow(self):
         """Test p_boolean_sliding_window()"""
         # Test with window size as 2. window_id is zero indexed.
-        obtained, _ = probability_estimation.p_boolean_sliding_window(
+        accumulator = probability_estimation.p_boolean_sliding_window(
             self.texts, self.segmented_topics, self.dictionary, 2)
-        expected = {10608: {1}, 12736: {8, 2, 3}, 18451: {10}, 5798: {4, 5, 6, 7}}
-        self.assertEqual(expected, obtained)
+        self.assertEqual(1, accumulator[10608])
+        self.assertEqual(3, accumulator[12736])
+        self.assertEqual(1, accumulator[18451])
+        self.assertEqual(4, accumulator[5798])
 
 
 class TestProbabilityEstimationWithNormalDictionary(ProbabilityEstimationBase):
@@ -100,17 +103,20 @@ class TestProbabilityEstimationWithNormalDictionary(ProbabilityEstimationBase):
 
     def testPBooleanDocument(self):
         """Test p_boolean_document()"""
-        obtained, _ = probability_estimation.p_boolean_document(self.corpus, self.segmented_topics)
+        accumulator = probability_estimation.p_boolean_document(self.corpus, self.segmented_topics)
+        obtained = accumulator.index_to_dict()
         expected = {9: {5}, 3: {1, 3}, 4: {1, 2}, 1: {0}}
         self.assertEqual(expected, obtained)
 
     def testPBooleanSlidingWindow(self):
         """Test p_boolean_sliding_window()"""
         # Test with window size as 2. window_id is zero indexed.
-        obtained, _ = probability_estimation.p_boolean_sliding_window(
+        accumulator = probability_estimation.p_boolean_sliding_window(
             self.texts, self.segmented_topics, self.dictionary, 2)
-        expected = {1: {1}, 3: {8, 2, 3}, 9: {10}, 4: {4, 5, 6, 7}}
-        self.assertEqual(expected, obtained)
+        self.assertEqual(1, accumulator[1])
+        self.assertEqual(3, accumulator[3])
+        self.assertEqual(1, accumulator[9])
+        self.assertEqual(4, accumulator[4])
 
 
 if __name__ == '__main__':

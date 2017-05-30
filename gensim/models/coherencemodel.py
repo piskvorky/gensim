@@ -31,12 +31,13 @@ from gensim.models.wrappers import LdaVowpalWabbit, LdaMallet
 from gensim.topic_coherence import (segmentation, probability_estimation,
                                     direct_confirmation_measure, indirect_confirmation_measure,
                                     aggregation)
+from gensim.topic_coherence.probability_estimation import unique_ids_from_segments
 from gensim.utils import is_corpus, FakeDict
 
 logger = logging.getLogger(__name__)
 
-boolean_document_based = ['u_mass']
-sliding_window_based = ['c_v', 'c_uci', 'c_npmi']
+boolean_document_based = {'u_mass'}
+sliding_window_based = {'c_v', 'c_uci', 'c_npmi'}
 make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
 
 coherence_dict = {
@@ -66,9 +67,7 @@ sliding_windows_dict = {
 
 
 class CoherenceModel(interfaces.TransformationABC):
-    """
-    Objects of this class allow for building and maintaining a model for topic
-    coherence.
+    """Objects of this class allow for building and maintaining a model for topic coherence.
 
     The main methods are:
 
@@ -169,21 +168,57 @@ class CoherenceModel(interfaces.TransformationABC):
 
         self.topn = topn
         self.model = model
-        if model is not None:
-            self.topics = self._get_topics()
-        elif topics is not None:
-            self.topics = []
-            for topic in topics:
-                t_i = []
-                for n, _ in enumerate(topic):
-                    t_i.append(dictionary.token2id[topic[n]])
-                self.topics.append(np.array(t_i))
+
+        self._accumulator = None
+        self._topics = None
+        self.topics = topics
 
         self.processes = processes if processes > 1 else max(1, mp.cpu_count() - 1)
-        self._accumulator = None
 
     def __str__(self):
-        return coherence_dict[self.coherence].__str__()
+        return str(self.measure)
+
+    @property
+    def measure(self):
+        return coherence_dict[self.coherence]
+
+    @property
+    def topics(self):
+        return self._topics
+
+    @topics.setter
+    def topics(self, topics):
+        new_topics = None
+        if self.model is not None:
+            new_topics = self._get_topics()
+            if topics is not None:
+                logger.warn("Ignoring topics you are attempting to set in favor of model's topics: %s" % self.model)
+        elif topics is not None:
+            new_topics = []
+            for topic in topics:
+                t_i = np.array([self.dictionary.token2id[topic[n]] for n, _ in enumerate(topic)])
+                new_topics.append(np.array(t_i))
+
+        if self._relevant_ids_will_differ(new_topics):
+            logger.debug("Wiping cached accumulator since it does not contain all relevant ids.")
+            self._accumulator = None
+
+        self._topics = new_topics
+
+    def _relevant_ids_will_differ(self, new_topics):
+        if not self._topics_differ(new_topics):
+            return False
+
+        measure = self.measure
+        current_set = unique_ids_from_segments(measure.seg(self.topics))
+        new_set = unique_ids_from_segments(measure.seg(new_topics))
+        return not current_set.issuperset(new_set)
+
+    def _topics_differ(self, new_topics):
+        return (new_topics is not None and
+                self._topics is not None and
+                self._accumulator is not None and
+                not np.equal(new_topics, self._topics).all())
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""
@@ -205,26 +240,49 @@ class CoherenceModel(interfaces.TransformationABC):
                              "LdaModel, LdaVowpalWabbit and LdaMallet.")
         return topics
 
-    def get_coherence_per_topic(self):
-        measure = coherence_dict[self.coherence]
-        segmented_topics = measure.seg(self.topics)
+    def segment_topics(self):
+        return self.measure.seg(self.topics)
+
+    def estimate_probabilities(self, segmented_topics=None):
+        """Accumulate word occurrences and co-occurrences from texts or corpus using
+        the optimal method for the chosen coherence metric. This operation may take
+        quite some time for the sliding window based coherence methods.
+        """
+        if segmented_topics is None:
+            segmented_topics = self.segment_topics()
 
         if self.coherence in boolean_document_based:
-            self._accumulator = measure.prob(self.corpus, segmented_topics)
-            return measure.conf(segmented_topics, self._accumulator)
-
-        self._accumulator = measure.prob(texts=self.texts, segmented_topics=segmented_topics,
-                                         dictionary=self.dictionary, window_size=self.window_size,
-                                         processes=self.processes)
-        if self.coherence == 'c_v':
-            return measure.conf(self.topics, segmented_topics, self._accumulator, 'nlr', 1)
+            self._accumulator = self.measure.prob(self.corpus, segmented_topics)
         else:
-            normalize = self.coherence == 'c_npmi'
-            return measure.conf(segmented_topics, self._accumulator, normalize=normalize)
+            self._accumulator = self.measure.prob(
+                texts=self.texts, segmented_topics=segmented_topics,
+                dictionary=self.dictionary, window_size=self.window_size,
+                processes=self.processes)
+
+        return self._accumulator
+
+    def get_coherence_per_topic(self, segmented_topics=None):
+        """Return list of coherence values for each topic based on pipeline parameters."""
+        measure = self.measure
+        if segmented_topics is None:
+            segmented_topics = measure.seg(self.topics)
+        if self._accumulator is None:
+            self.estimate_probabilities(segmented_topics)
+
+        if self.coherence in boolean_document_based:
+            kwargs = {}
+        elif self.coherence == 'c_v':
+            kwargs = dict(topics=self.topics, measure='nlr', gamma=1)
+        else:
+            kwargs = dict(normalize=(self.coherence == 'c_npmi'))
+
+        return measure.conf(segmented_topics, self._accumulator, **kwargs)
 
     def aggregate_measures(self, confirmed_measures):
-        measure = coherence_dict[self.coherence]
-        return measure.aggr(confirmed_measures)
+        """Aggregate the individual topic coherence measures using
+        the pipeline's aggregation function.
+        """
+        return self.measure.aggr(confirmed_measures)
 
     def get_coherence(self):
         """Return coherence value based on pipeline parameters."""

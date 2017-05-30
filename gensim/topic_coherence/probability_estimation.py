@@ -11,28 +11,10 @@ This module contains functions to perform segmentation on a list of topics.
 import logging
 import itertools
 
-import numpy as np
-
 from gensim.topic_coherence.text_analysis import \
     CorpusAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator
 
 logger = logging.getLogger(__name__)
-
-
-def _ret_top_ids(segmented_topics):
-    """
-    Helper function to return a set of all the unique topic ids in segmented topics.
-    """
-    top_ids = set()  # is a set of all the unique ids contained in topics.
-    for s_i in segmented_topics:
-        for word_id in itertools.chain.from_iterable(s_i):
-            if isinstance(word_id, np.ndarray):
-                for i in word_id:
-                    top_ids.add(i)
-            else:
-                top_ids.add(word_id)
-
-    return top_ids
 
 
 def p_boolean_document(corpus, segmented_topics):
@@ -50,7 +32,7 @@ def p_boolean_document(corpus, segmented_topics):
     per_topic_postings : Boolean document posting list for each unique topic id.
     num_docs : Total number of documents in corpus.
     """
-    top_ids = _ret_top_ids(segmented_topics)
+    top_ids = unique_ids_from_segments(segmented_topics)
     return CorpusAccumulator(top_ids).accumulate(corpus)
 
 
@@ -73,10 +55,23 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
     per_topic_postings : Boolean sliding window postings list of all the unique topic ids.
     window_id[0] : Total no of windows
     """
-    top_ids = _ret_top_ids(segmented_topics)
+    top_ids = unique_ids_from_segments(segmented_topics)
     if processes <= 1:
         accumulator = WordOccurrenceAccumulator(top_ids, dictionary)
     else:
         accumulator = ParallelWordOccurrenceAccumulator(processes, top_ids, dictionary)
     logger.info("using %s to estimate probabilities from sliding windows" % accumulator)
     return accumulator.accumulate(texts, window_size)
+
+
+def unique_ids_from_segments(segmented_topics):
+    """Return the set of all unique ids in a list of segmented topics."""
+    top_ids = set()  # is a set of all the unique ids contained in topics.
+    for s_i in segmented_topics:
+        for word_id in itertools.chain.from_iterable(s_i):
+            if hasattr(word_id, '__iter__'):
+                top_ids = top_ids.union(word_id)
+            else:
+                top_ids.add(word_id)
+
+    return top_ids

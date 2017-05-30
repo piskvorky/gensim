@@ -37,7 +37,7 @@ class TestIndirectConfirmation(unittest.TestCase):
     def testCosineSimilarity(self):
         """Test cosine_similarity()"""
         obtained = indirect_confirmation_measure.cosine_similarity(
-            self.topics, self.segmentation, self.accumulator, self.measure, self.gamma)
+            self.segmentation, self.accumulator, self.topics, self.measure, self.gamma)
 
         # The steps involved in this calculation are as follows:
         # 1. Take (1, array([1, 2]). Take w' which is 1.

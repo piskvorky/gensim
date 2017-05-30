@@ -34,7 +34,7 @@ from gensim.topic_coherence import direct_confirmation_measure
 logger = logging.getLogger(__name__)
 
 
-def cosine_similarity(topics, segmented_topics, accumulator, measure, gamma):
+def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamma=1):
     """
     This function calculates the indirect cosine measure. Given context vectors
     _   _         _   _
@@ -48,11 +48,11 @@ def cosine_similarity(topics, segmented_topics, accumulator, measure, gamma):
 
     Args:
     ----
-    topics : Topics obtained from the trained topic model.
     segmented_topics : segmented_topics : Output from the segmentation module of the segmented topics. Is a list of list of tuples.
     accumulator : Output from the probability_estimation module. Is an accumulator of word occurrences (see text_analysis module).
+    topics : Topics obtained from the trained topic model.
     measure : String. Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
-    gamma : Gamma value for computing W', W* vectors.
+    gamma : Gamma value for computing W', W* vectors; default is 1.
 
     Returns:
     -------

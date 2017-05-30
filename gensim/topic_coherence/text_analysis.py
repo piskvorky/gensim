@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 def _ids_to_words(ids, dictionary):
     """Convert an iterable of ids to their corresponding words using a dictionary.
     This function abstracts away the differences between the HashDictionary and the standard one.
-    
+
     Args:
     ----
     ids: list of list of tuples, where each tuple contains (token_id, iterable of token_ids).
@@ -159,20 +159,21 @@ class CorpusAccumulator(InvertedIndexBased):
     def accumulate(self, corpus):
         for document in corpus:
             self.analyze_text(document)
-            self._num_docs += 1
+            self.num_docs += 1
         return self
 
 
-class TextsAnalyzer(UsesDictionary):
-    """Gather some statistics about relevant terms a corpus by iterating over texts."""
+class WindowedTextsAnalyzer(UsesDictionary):
+    """Gather some statistics about relevant terms of a corpus by iterating over windows of texts."""
 
     def __init__(self, relevant_ids, dictionary):
         """
         Args:
         ----
-        relevant_words: the set of words that occurrences should be accumulated for.
+        relevant_ids: the set of words that occurrences should be accumulated for.
+        dictionary: gensim.corpora.dictionary.Dictionary instance with mappings for the relevant_ids.
         """
-        super(TextsAnalyzer, self).__init__(relevant_ids, dictionary)
+        super(WindowedTextsAnalyzer, self).__init__(relevant_ids, dictionary)
 
     def filter_to_relevant_words(self, text):
         """Lazily filter the text to only those words which are relevant."""
@@ -195,7 +196,7 @@ class TextsAnalyzer(UsesDictionary):
         return self
 
 
-class InvertedIndexAccumulator(TextsAnalyzer, InvertedIndexBased):
+class InvertedIndexAccumulator(WindowedTextsAnalyzer, InvertedIndexBased):
     """Build an inverted index from a sequence of corpus texts."""
 
     def analyze_text(self, window):
@@ -203,8 +204,8 @@ class InvertedIndexAccumulator(TextsAnalyzer, InvertedIndexBased):
             self._inverted_index[word_id].add(self._num_docs)
 
 
-class WordOccurrenceAccumulator(TextsAnalyzer):
-    """Accumulate word occurrences and co-occurrences from a corpus of texts."""
+class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
+    """Accumulate word occurrences and co-occurrences from a sequence of corpus texts."""
 
     def __init__(self, *args):
         super(WordOccurrenceAccumulator, self).__init__(*args)
@@ -224,6 +225,20 @@ class WordOccurrenceAccumulator(TextsAnalyzer):
             for combo in itertools.combinations(relevant_words, 2):
                 self._co_occurrences[combo] += 1
 
+    def accumulate(self, texts, window_size):
+        self._co_occurrences = self._co_occurrences.tolil()
+        self.partial_accumulate(texts, window_size)
+        self._symmetrize()
+        return self
+
+    def partial_accumulate(self, texts, window_size):
+        """Meant to be called several times to accumulate partial results. The final
+        accumulation should be performed with the `accumulate` method as opposed to this one.
+        This method does not ensure the co-occurrence matrix is in lil format and does not
+        symmetrize it after accumulation.
+        """
+        super(WordOccurrenceAccumulator, self).accumulate(texts, window_size)
+
     def _symmetrize(self):
         """Word pairs may have been encountered in (i, j) and (j, i) order.
         Rather than enforcing a particular ordering during the update process,
@@ -232,12 +247,6 @@ class WordOccurrenceAccumulator(TextsAnalyzer):
         co_occ = self._co_occurrences
         co_occ.setdiag(self._occurrences)  # diagonal should be equal to occurrence counts
         self._co_occurrences = co_occ + co_occ.T - sps.diags(co_occ.diagonal(), dtype='uint32')
-
-    def accumulate(self, texts, window_size):
-        self._co_occurrences = self._co_occurrences.tolil()
-        super(WordOccurrenceAccumulator, self).accumulate(texts, window_size)
-        self._symmetrize()
-        return self
 
     def _get_occurrences(self, word_id):
         return self._occurrences[word_id]
@@ -251,14 +260,7 @@ class WordOccurrenceAccumulator(TextsAnalyzer):
         self._num_docs += other._num_docs
 
 
-class _WordOccurrenceAccumulator(WordOccurrenceAccumulator):
-    """Monkey patched to avoid symmetrizing co-occurrence matrix after each batch."""
-    def accumulate(self, texts, window_size):
-        TextsAnalyzer.accumulate(self, texts, window_size)
-        return self
-
-
-class ParallelWordOccurrenceAccumulator(TextsAnalyzer):
+class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
     """Accumulate word occurrences in parallel."""
 
     def __init__(self, processes, *args, **kwargs):
@@ -285,11 +287,17 @@ class ParallelWordOccurrenceAccumulator(TextsAnalyzer):
         return self.merge_accumulators(accumulators)
 
     def start_workers(self, window_size):
+        """Set up an input and output queue and start processes for each worker.
+        
+        The input queue is used to transmit batches of documents to the workers.
+        The output queue is used by workers to transmit the WordOccurrenceAccumulator instances.
+        Returns: tuple of (list of workers, input queue, output queue).
+        """
         input_q = mp.Queue(maxsize=self.processes)
         output_q = mp.Queue()
         workers = []
         for _ in range(self.processes):
-            accumulator = _WordOccurrenceAccumulator(self.relevant_ids, self.dictionary)
+            accumulator = WordOccurrenceAccumulator(self.relevant_ids, self.dictionary)
             worker = AccumulatingWorker(input_q, output_q, accumulator, window_size)
             worker.start()
             workers.append(worker)
@@ -297,6 +305,9 @@ class ParallelWordOccurrenceAccumulator(TextsAnalyzer):
         return workers, input_q, output_q
 
     def yield_batches(self, texts):
+        """Return a generator over the given texts that yields batches of
+        `batch_size` texts at a time.
+        """
         batch = []
         for text in texts:
             batch.append(text)
@@ -308,6 +319,9 @@ class ParallelWordOccurrenceAccumulator(TextsAnalyzer):
             yield batch
 
     def queue_all_texts(self, q, texts, window_size):
+        """Sequentially place batches of texts on the given queue until `texts` is consumed.
+        The texts are filtered so that only those with at least one relevant token are queued.
+        """
         relevant_texts = (text for text in texts if self.text_is_relevant(text))
         for batch_num, batch in enumerate(self.yield_batches(relevant_texts)):
             q.put(batch, block=True)
@@ -318,6 +332,18 @@ class ParallelWordOccurrenceAccumulator(TextsAnalyzer):
                     batch_num, batch_num * self.batch_size, self._num_docs))
 
     def terminate_workers(self, input_q, output_q, workers, interrupted=False):
+        """Wait until all workers have transmitted their WordOccurrenceAccumulator instances,
+        then terminate each. We do not use join here because it has been shown to have some issues
+        in Python 2.7 (and even in later versions). This method also closes both the input and output
+        queue.
+        
+        If `interrupted` is False (normal execution), a None value is placed on the input queue for
+        each worker. The workers are looking for this sentinel value and interpret it as a signal to
+        terminate themselves. If `interrupted` is True, a KeyboardInterrupt occurred. The workers are
+        programmed to recover from this and continue on to transmit their results before terminating.
+        So in this instance, the sentinel values are not queued, but the rest of the execution
+        continues as usual.
+        """
         if not interrupted:
             for _ in workers:
                 input_q.put(None, block=True)
@@ -336,9 +362,15 @@ class ParallelWordOccurrenceAccumulator(TextsAnalyzer):
         return accumulators
 
     def merge_accumulators(self, accumulators):
+        """Merge the list of accumulators into a single `WordOccurrenceAccumulator` with all
+        occurrence and co-occurrence counts, and a `num_docs` that reflects the total observed
+        by all the individual accumulators.
+        """
         accumulator = accumulators[0]
         for other_accumulator in accumulators[1:]:
             accumulator.merge(other_accumulator)
+        # Workers perform partial accumulation, so none of the co-occurrence matrices are symmetrized.
+        # This is by design, to avoid unnecessary matrix additions during accumulation.
         accumulator._symmetrize()
         return accumulator
 
@@ -371,7 +403,7 @@ class AccumulatingWorker(mp.Process):
             if docs is None:  # sentinel value
                 break
 
-            self.accumulator.accumulate(docs, self.window_size)
+            self.accumulator.partial_accumulate(docs, self.window_size)
             n_docs += len(docs)
             logger.debug("completed batch %d; %d documents processed (%d virtual)" % (
                 batch_num, n_docs, self.accumulator.num_docs))
@@ -381,4 +413,3 @@ class AccumulatingWorker(mp.Process):
         logger.info("serializing accumulator to return to master...")
         self.output_q.put(self.accumulator, block=False)
         logger.info("accumulator serialized")
-
