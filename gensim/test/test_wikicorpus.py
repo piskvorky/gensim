@@ -21,6 +21,7 @@ from gensim.corpora.wikicorpus import WikiCorpus
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 FILENAME = 'enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2'
+FILENAME_U = 'bgwiki-latest-pages-articles-shortened.xml.bz2'
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +46,21 @@ class TestWikiCorpus(unittest.TestCase):
         1) anarchism
         2) autism
         """
-        if sys.version_info < (2, 7, 0):
-            return
-        wc = WikiCorpus(datapath(FILENAME))
+        wc = WikiCorpus(datapath(FILENAME), processes=1)
 
         l = wc.get_texts()
-        self.assertTrue(b"anarchism" in next(l))
-        self.assertTrue(b"autism" in next(l))
+        self.assertTrue(u'anarchism' in next(l))
+        self.assertTrue(u'autism' in next(l))
 
+    def test_unicode_element(self):
+        """
+        First unicode article in this sample is
+        1) папа
+        """
+        wc = WikiCorpus(datapath(FILENAME_U), processes=1)
+
+        l = wc.get_texts()
+        self.assertTrue(u'папа' in next(l))
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

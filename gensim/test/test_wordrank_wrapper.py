@@ -30,11 +30,11 @@ class TestWordrank(unittest.TestCase):
         wr_home = os.environ.get('WR_HOME', None)
         self.wr_path = wr_home if wr_home else None
         self.corpus_file = datapath('lee.cor')
-        self.out_path = 'testmodel'
+        self.out_name = 'testmodel'
         self.wr_file = datapath('test_glove.txt')
         if not self.wr_path:
             return
-        self.test_model = wordrank.Wordrank.train(self.wr_path, self.corpus_file, self.out_path, iter=6, dump_period=5,period=5)
+        self.test_model = wordrank.Wordrank.train(self.wr_path, self.corpus_file, self.out_name, iter=6, dump_period=5, period=5)
 
     def testLoadWordrankFormat(self):
         """Test model successfully loaded from Wordrank format file"""
