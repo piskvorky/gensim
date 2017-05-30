@@ -39,6 +39,8 @@ from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
 
+import gensim
+
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
@@ -527,6 +529,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
+    def log_coherence(self, model, chunk):
+        cm = gensim.models.CoherenceModel(model=model, corpus=chunk, coherence='u_mass')
+        corpus_words = sum(cnt for document in chunk for _, cnt in document)
+        logger.info("%.3f coherence estimate based on a held-out corpus of %i documents with %i words", cm.get_coherence(), len(chunk), corpus_words)
+        return cm.get_coherence()
+
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
                gamma_threshold=None, chunks_as_numpy=False):
@@ -634,6 +642,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
                     self.log_perplexity(chunk, total_docs=lencorpus)
+                    self.log_coherence(self, chunk)
 
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
