@@ -216,9 +216,9 @@ class CoherenceModel(interfaces.TransformationABC):
 
     def _topics_differ(self, new_topics):
         return (new_topics is not None and
-                self._topics is not None and
-                self._accumulator is not None and
-                not np.equal(new_topics, self._topics).all())
+                    self._topics is not None and
+                    self._accumulator is not None and
+                    not np.equal(new_topics, self._topics).all())
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""

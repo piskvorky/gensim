@@ -288,7 +288,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
     def start_workers(self, window_size):
         """Set up an input and output queue and start processes for each worker.
-        
+
         The input queue is used to transmit batches of documents to the workers.
         The output queue is used by workers to transmit the WordOccurrenceAccumulator instances.
         Returns: tuple of (list of workers, input queue, output queue).
@@ -336,7 +336,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         then terminate each. We do not use join here because it has been shown to have some issues
         in Python 2.7 (and even in later versions). This method also closes both the input and output
         queue.
-        
+
         If `interrupted` is False (normal execution), a None value is placed on the input queue for
         each worker. The workers are looking for this sentinel value and interpret it as a signal to
         terminate themselves. If `interrupted` is True, a KeyboardInterrupt occurred. The workers are
