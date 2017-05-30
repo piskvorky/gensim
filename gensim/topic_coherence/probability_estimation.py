@@ -9,13 +9,12 @@ This module contains functions to perform segmentation on a list of topics.
 """
 
 import logging
+from itertools import chain, islice
 import numpy as np
 
-from gensim.corpora import Dictionary
-
-from itertools import chain, islice
 
 logger = logging.getLogger(__name__)
+
 
 def _ret_top_ids(segmented_topics):
     """
@@ -23,13 +22,14 @@ def _ret_top_ids(segmented_topics):
     """
     top_ids = set()  # is a set of all the unique ids contained in topics.
     for s_i in segmented_topics:
-        for id in chain.from_iterable(s_i):
-            if isinstance(id, np.ndarray):
-                for i in id:
+        for t_id in chain.from_iterable(s_i):
+            if isinstance(t_id, np.ndarray):
+                for i in t_id:
                     top_ids.add(i)
             else:
-                top_ids.add(id)
+                top_ids.add(t_id)
     return top_ids
+
 
 def p_boolean_document(corpus, segmented_topics):
     """
@@ -49,17 +49,16 @@ def p_boolean_document(corpus, segmented_topics):
     top_ids = _ret_top_ids(segmented_topics)
     # Instantiate the dictionary with empty sets for each top_id
     per_topic_postings = {}
-    for id in top_ids:
-        per_topic_postings[id] = set()
+    for t_id in top_ids:
+        per_topic_postings[t_id] = set()
     # Iterate through the documents, appending the document number to the set for each top_id it contains
     for n, document in enumerate(corpus):
         doc_words = frozenset(x[0] for x in document)
-        top_ids_in_doc = top_ids.intersection(doc_words)
-        if len(top_ids_in_doc) > 0:
-            for id in top_ids_in_doc:
-                per_topic_postings[id].add(n)
+        for word_id in top_ids.intersection(doc_words):
+            per_topic_postings[word_id].add(n)
     num_docs = len(corpus)
-    return (per_topic_postings, num_docs)
+    return per_topic_postings, num_docs
+
 
 def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     """
@@ -84,6 +83,7 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     window_id = 0  # Each window assigned a window id.
     per_topic_postings = {}
     token2id_dict = dictionary.token2id
+
     def add_topic_posting(top_ids, window, per_topic_postings, window_id, token2id_dict):
         for word in window:
             word_id = token2id_dict[word]
@@ -91,9 +91,10 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
                 if word_id in per_topic_postings:
                     per_topic_postings[word_id].add(window_id)
                 else:
-                    per_topic_postings[word_id] = set([window_id])
+                    per_topic_postings[word_id] = {window_id}
         window_id += 1
-        return (window_id, per_topic_postings)
+        return window_id, per_topic_postings
+
     # Apply boolean sliding window to each document in texts.
     for document in texts:
         it = iter(document)

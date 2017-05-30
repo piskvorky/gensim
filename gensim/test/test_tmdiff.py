@@ -13,15 +13,17 @@ from gensim.models import LdaModel
 
 class TestLdaDiff(unittest.TestCase):
     def setUp(self):
-        texts = [['human', 'interface', 'computer'],
-                 ['survey', 'user', 'computer', 'system', 'response', 'time'],
-                 ['eps', 'user', 'interface', 'system'],
-                 ['system', 'human', 'system', 'eps'],
-                 ['user', 'response', 'time'],
-                 ['trees'],
-                 ['graph', 'trees'],
-                 ['graph', 'minors', 'trees'],
-                 ['graph', 'minors', 'survey']]
+        texts = [
+            ['human', 'interface', 'computer'],
+            ['survey', 'user', 'computer', 'system', 'response', 'time'],
+            ['eps', 'user', 'interface', 'system'],
+            ['system', 'human', 'system', 'eps'],
+            ['user', 'response', 'time'],
+            ['trees'],
+            ['graph', 'trees'],
+            ['graph', 'minors', 'trees'],
+            ['graph', 'minors', 'survey'],
+        ]
         self.dictionary = Dictionary(texts)
         self.corpus = [self.dictionary.doc2bow(text) for text in texts]
         self.num_topics = 5
