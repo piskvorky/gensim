@@ -65,7 +65,7 @@ class BaseAnalyzer(object):
             logger.info("%s accumulated stats from %d documents" % (
                 self.__class__.__name__, self._num_docs))
 
-    def analyze_text(self, text):
+    def analyze_text(self, text, doc_num=None):
         raise NotImplementedError("Base classes should implement analyze_text.")
 
     def __getitem__(self, word_or_words):
@@ -99,9 +99,6 @@ class UsesDictionary(BaseAnalyzer):
         self.relevant_words = _ids_to_words(self.relevant_ids, dictionary)
         self.dictionary = dictionary
         self.token2id = dictionary.token2id
-
-    def analyze_text(self, text):
-        raise NotImplementedError("Base classes should implement analyze_text.")
 
     def get_occurrences(self, word):
         """Return number of docs the word occurs in, once `accumulate` has been called."""
@@ -149,7 +146,7 @@ class InvertedIndexBased(BaseAnalyzer):
 class CorpusAccumulator(InvertedIndexBased):
     """Gather word occurrence stats from a corpus by iterating over its BoW representation."""
 
-    def analyze_text(self, text):
+    def analyze_text(self, text, doc_num=None):
         doc_words = frozenset(x[0] for x in text)
         top_ids_in_doc = self.relevant_ids.intersection(doc_words)
         if len(top_ids_in_doc) > 0:
@@ -164,7 +161,7 @@ class CorpusAccumulator(InvertedIndexBased):
 
 
 class WindowedTextsAnalyzer(UsesDictionary):
-    """Gather some statistics about relevant terms of a corpus by iterating over windows of texts."""
+    """Gather some stats about relevant terms of a corpus by iterating over windows of texts."""
 
     def __init__(self, relevant_ids, dictionary):
         """
@@ -181,6 +178,22 @@ class WindowedTextsAnalyzer(UsesDictionary):
         relevant_ids = (self.token2id[word] for word in relevant_words)
         return (self.id2contiguous[word_id] for word_id in relevant_ids)
 
+    def accumulate(self, texts, window_size):
+        relevant_texts = self._iter_texts(texts)
+        windows = utils.iter_windows(relevant_texts, window_size, ignore_below_size=False,
+                                     include_doc_num=True)
+        for doc_num, virtual_document in windows:
+            self.analyze_text(virtual_document, doc_num)
+            self.num_docs += 1
+        return self
+
+    def _iter_texts(self, texts):
+        for text in texts:
+            if self.text_is_relevant(text):
+                token_ids = (self.token2id[word] if word in self.relevant_words else None
+                             for word in text)
+                yield [self.id2contiguous[_id] if _id is not None else None for _id in token_ids]
+
     def text_is_relevant(self, text):
         """Return True if the text has any relevant words, else False."""
         for word in text:
@@ -188,20 +201,14 @@ class WindowedTextsAnalyzer(UsesDictionary):
                 return True
         return False
 
-    def accumulate(self, texts, window_size):
-        relevant_texts = (text for text in texts if self.text_is_relevant(text))
-        for virtual_document in utils.iter_windows(relevant_texts, window_size, ignore_below_size=False):
-            self.analyze_text(virtual_document)
-            self.num_docs += 1
-        return self
-
 
 class InvertedIndexAccumulator(WindowedTextsAnalyzer, InvertedIndexBased):
     """Build an inverted index from a sequence of corpus texts."""
 
-    def analyze_text(self, window):
-        for word_id in self.filter_to_relevant_words(window):
-            self._inverted_index[word_id].add(self._num_docs)
+    def analyze_text(self, window, doc_num=None):
+        for word_id in window:
+            if word_id is not None:
+                self._inverted_index[word_id].add(self._num_docs)
 
 
 class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
@@ -216,15 +223,6 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
     def __str__(self):
         return self.__class__.__name__
 
-    def analyze_text(self, window):
-        relevant_words = list(self.filter_to_relevant_words(window))
-        if relevant_words:
-            uniq_words = np.array(relevant_words)
-            self._occurrences[uniq_words] += 1
-
-            for combo in itertools.combinations(relevant_words, 2):
-                self._co_occurrences[combo] += 1
-
     def accumulate(self, texts, window_size):
         self._co_occurrences = self._co_occurrences.tolil()
         self.partial_accumulate(texts, window_size)
@@ -237,7 +235,31 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         This method does not ensure the co-occurrence matrix is in lil format and does not
         symmetrize it after accumulation.
         """
+        self._current_doc_num = -1
+        self._token_at_edge = None
         super(WordOccurrenceAccumulator, self).accumulate(texts, window_size)
+        return self
+
+    def analyze_text(self, window, doc_num=None):
+        if doc_num != self._current_doc_num:
+            self._uniq_words = set(window)
+            self._uniq_words.discard(None)
+            self._token_at_edge = window[0]
+            self._current_doc_num = doc_num
+        else:
+            if self._token_at_edge is not None:
+                self._uniq_words.remove(self._token_at_edge)
+            self._token_at_edge = window[0]
+
+            if window[-1] is not None:
+                self._uniq_words.add(window[-1])
+
+        if self._uniq_words:
+            words_idx = np.array(list(self._uniq_words))
+            self._occurrences[words_idx] += 1
+
+            for combo in itertools.combinations(words_idx, 2):
+                self._co_occurrences[combo] += 1
 
     def _symmetrize(self):
         """Word pairs may have been encountered in (i, j) and (j, i) order.

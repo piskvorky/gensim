@@ -1229,7 +1229,7 @@ def strided_windows(ndarray, window_size):
         strides=(stride, stride))
 
 
-def iter_windows(texts, window_size, copy=False, ignore_below_size=True):
+def iter_windows(texts, window_size, copy=False, ignore_below_size=True, include_doc_num=False):
     """Produce a generator over the given texts using a sliding window of `window_size`.
     The windows produced are views of some subsequence of a text. To use deep copies
     instead, pass `copy=True`.
@@ -1243,11 +1243,20 @@ def iter_windows(texts, window_size, copy=False, ignore_below_size=True):
                        If False, the documents below `window_size` will be yielded as the full document.
 
     """
-    for document in texts:
-        doc_windows = strided_windows(document, window_size)
-        if doc_windows.shape[0] == 0:
-            if not ignore_below_size:
-                yield document.copy() if copy else document
-        else:
-            for doc_window in doc_windows:
-                yield doc_window.copy() if copy else doc_window
+    for doc_num, document in enumerate(texts):
+        for window in _iter_windows(document, window_size, copy, ignore_below_size):
+            if include_doc_num:
+                yield (doc_num, window)
+            else:
+                yield window
+
+
+def _iter_windows(document, window_size, copy=False, ignore_below_size=True):
+    doc_windows = strided_windows(document, window_size)
+    if doc_windows.shape[0] == 0:
+        if not ignore_below_size:
+            yield document.copy() if copy else document
+    else:
+        for doc_window in doc_windows:
+            yield doc_window.copy() if copy else doc_window
+

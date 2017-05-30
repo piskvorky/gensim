@@ -12,7 +12,8 @@ class BaseTestCases(object):
         texts = [
             ['this', 'is', 'a'],
             ['test', 'document'],
-            ['this', 'test', 'document']
+            ['this', 'test', 'document'],
+            ['test', 'test', 'this']
         ]
         token2id = {
             'this': 10,
@@ -51,11 +52,12 @@ class BaseTestCases(object):
         def test_occurrence_counting(self):
             accumulator = self.init_accumulator()\
                 .accumulate(self.texts, 3)
-            self.assertEqual(2, accumulator.get_occurrences("this"))
+            self.assertEqual(3, accumulator.get_occurrences("this"))
             self.assertEqual(1, accumulator.get_occurrences("is"))
             self.assertEqual(1, accumulator.get_occurrences("a"))
 
             self.assertEqual(2, accumulator.get_co_occurrences("test", "document"))
+            self.assertEqual(2, accumulator.get_co_occurrences("test", "this"))
             self.assertEqual(1, accumulator.get_co_occurrences("is", "a"))
 
         def test_occurrence_counting2(self):
@@ -101,13 +103,14 @@ class TestInvertedIndexAccumulator(BaseTestCases.TextAnalyzerTestBase):
     def test_accumulate1(self):
         accumulator = InvertedIndexAccumulator(self.top_ids, self.dictionary)\
             .accumulate(self.texts, 2)
-        # [['this', 'is'], ['is', 'a'], ['test', 'document'], ['this', 'test'], ['test', 'document']]
+        # [['this', 'is'], ['is', 'a'], ['test', 'document'], ['this', 'test'],
+        #  ['test', 'document'], ['test', 'test'], ['test', 'this']]
         inverted_index = accumulator.index_to_dict()
         expected = {
-            10: {0, 3},
+            10: {0, 3, 6},
             15: {0, 1},
             20: {1},
-            21: {2, 3, 4},
+            21: {2, 3, 4, 5, 6},
             17: {2, 4}
         }
         self.assertDictEqual(expected, inverted_index)
@@ -115,13 +118,14 @@ class TestInvertedIndexAccumulator(BaseTestCases.TextAnalyzerTestBase):
     def test_accumulate2(self):
         accumulator = InvertedIndexAccumulator(self.top_ids, self.dictionary) \
             .accumulate(self.texts, 3)
-        # [['this', 'is', 'a'], ['test', 'document'], ['this', 'test', 'document']]
+        # [['this', 'is', 'a'], ['test', 'document'], ['this', 'test', 'document'],
+        #  ['test', 'test', 'this']
         inverted_index = accumulator.index_to_dict()
         expected = {
-            10: {0, 2},
+            10: {0, 2, 3},
             15: {0},
             20: {0},
-            21: {1, 2},
+            21: {1, 2, 3},
             17: {1, 2}
         }
         self.assertDictEqual(expected, inverted_index)
