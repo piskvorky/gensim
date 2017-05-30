@@ -73,6 +73,19 @@ class CoherenceModel(interfaces.TransformationABC):
 
     1. constructor, which initializes the four stage pipeline by accepting a coherence measure,
     2. the ``get_coherence()`` method, which returns the topic coherence.
+    
+    Pipeline phases can also be executed individually. Methods for doing this are:
+    
+    1. `segment_topics()`, which performs segmentation of the given topics into their comparison sets.
+    2. `estimate_probabilities()`, which accumulates word occurrence stats from the given corpus or texts.
+        The output of this is also cached on the `CoherenceModel`, so calling this method can be used as
+        a precomputation step for the next phase.
+    3. `get_coherence_per_topic()`, which uses the segmented topics and estimated probabilities to compute
+        the coherence of each topic. This output can be used to rank topics in order of most coherent to
+        least. Such a ranking is useful if the intended use case of a topic model is document exploration
+        by a human. It is also useful for filtering out incoherent topics (keep top-n from ranked list).
+    4. `aggregate_measures(topic_coherences)`, which uses the pipeline's aggregation method to compute
+        the overall coherence from the topic coherences.
 
     One way of using this feature is through providing a trained topic model. A dictionary has to be explicitly
     provided if the model does not contain a dictionary already::
@@ -108,8 +121,8 @@ class CoherenceModel(interfaces.TransformationABC):
                              ['graph', 'minors', 'trees'],
                              ['graph', 'minors', 'survey']]
         corpus : Gensim document corpus.
-        dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present, this is not needed.
-                     If both are provided, dictionary will be used.
+        dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present,
+                     this is not needed. If both are provided, dictionary will be used.
         window_size : Is the size of the window to be used for coherence measures using boolean sliding window as their
                       probability estimator. For 'u_mass' this doesn't matter.
                       If left 'None' the default window sizes are used which are:
@@ -121,9 +134,12 @@ class CoherenceModel(interfaces.TransformationABC):
                     'c_v'
                     'c_uci' also popularly known as c_pmi
                     'c_npmi'
-                    For 'u_mass' corpus should be provided. If texts is provided, it will be converted to corpus using the dictionary.
-                    For 'c_v', 'c_uci' and 'c_npmi' texts should be provided. Corpus is not needed.
+                    For 'u_mass' corpus should be provided. If texts is provided, it will be converted
+                    to corpus using the dictionary. For 'c_v', 'c_uci' and 'c_npmi' texts should be provided.
+                    Corpus is not needed.
         topn : Integer corresponding to the number of top words to be extracted from each topic.
+        processes : number of processes to use for probability estimation phase; any value less than 1 will be
+                    interpreted to mean num_cpus - 1; default is -1.
         """
         if model is None and topics is None:
             raise ValueError("One of model or topics has to be provided.")
@@ -196,8 +212,8 @@ class CoherenceModel(interfaces.TransformationABC):
         elif topics is not None:
             new_topics = []
             for topic in topics:
-                t_i = np.array([self.dictionary.token2id[topic[n]] for n, _ in enumerate(topic)])
-                new_topics.append(np.array(t_i))
+                topic_token_ids = np.array([self.dictionary.token2id[token] for token in topic])
+                new_topics.append(topic_token_ids)
 
         if self._relevant_ids_will_differ(new_topics):
             logger.debug("Wiping cached accumulator since it does not contain all relevant ids.")
@@ -278,11 +294,11 @@ class CoherenceModel(interfaces.TransformationABC):
 
         return measure.conf(segmented_topics, self._accumulator, **kwargs)
 
-    def aggregate_measures(self, confirmed_measures):
+    def aggregate_measures(self, topic_coherences):
         """Aggregate the individual topic coherence measures using
         the pipeline's aggregation function.
         """
-        return self.measure.aggr(confirmed_measures)
+        return self.measure.aggr(topic_coherences)
 
     def get_coherence(self):
         """Return coherence value based on pipeline parameters."""
