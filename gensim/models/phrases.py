@@ -18,10 +18,11 @@ For example, if your input stream (=an iterable, with each value a list of token
 
 you'd train the detector with:
 
->>> bigram = Phrases(sentence_stream)
+>>> phrases = Phrases(sentence_stream)
 
-and then transform any sentence (list of token strings) using the standard gensim syntax:
+and then create a performant Phraser object to transform any sentence (list of token strings) using the standard gensim syntax:
 
+>>> bigram = Phraser(phrases)
 >>> sent = [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there']
 >>> print(bigram[sent])
 [u'the', u'mayor', u'of', u'new_york', u'was', u'there']

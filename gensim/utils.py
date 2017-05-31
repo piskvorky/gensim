@@ -10,7 +10,8 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
-import logging, warnings
+import logging
+import warnings
 
 logger = logging.getLogger(__name__)
 
@@ -82,17 +83,17 @@ RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
 def get_random_state(seed):
-     """ Turn seed into a np.random.RandomState instance.
-
-         Method originally from maciejkula/glove-python, and written by @joshloyal
-     """
-     if seed is None or seed is np.random:
-         return np.random.mtrand._rand
-     if isinstance(seed, (numbers.Integral, np.integer)):
-         return np.random.RandomState(seed)
-     if isinstance(seed, np.random.RandomState):
+    """
+    Turn seed into a np.random.RandomState instance.
+    Method originally from maciejkula/glove-python, and written by @joshloyal.
+    """
+    if seed is None or seed is np.random:
+        return np.random.mtrand._rand
+    if isinstance(seed, (numbers.Integral, np.integer)):
+        return np.random.RandomState(seed)
+    if isinstance(seed, np.random.RandomState):
         return seed
-     raise ValueError('%r cannot be used to seed a np.random.RandomState instance' % seed)
+    raise ValueError('%r cannot be used to seed a np.random.RandomState instance' % seed)
 
 
 def synchronous(tlockname):
@@ -107,7 +108,7 @@ def synchronous(tlockname):
             tlock = getattr(self, tlockname)
             logger.debug("acquiring lock %r for %s" % (tlockname, func.__name__))
 
-            with tlock: # use lock as a context manager to perform safe acquire/release pairs
+            with tlock:  # use lock as a context manager to perform safe acquire/release pairs
                 logger.debug("acquired lock %r for %s" % (tlockname, func.__name__))
                 result = func(self, *args, **kwargs)
                 logger.debug("releasing lock %r for %s" % (tlockname, func.__name__))
@@ -119,10 +120,13 @@ def synchronous(tlockname):
 class NoCM(object):
     def acquire(self):
         pass
+
     def release(self):
         pass
+
     def __enter__(self):
         pass
+
     def __exit__(self, type, value, traceback):
         pass
 nocm = NoCM()
@@ -231,6 +235,7 @@ def any2unicode(text, encoding='utf8', errors='strict'):
     return unicode(text, encoding, errors=errors)
 to_unicode = any2unicode
 
+
 def call_on_class_only(*args, **kwargs):
     """Raise exception when load methods are called on instance"""
     raise AttributeError('This method should be called on a class object.')
@@ -267,7 +272,6 @@ class SaveLoad(object):
         obj._load_specials(fname, mmap, compress, subname)
         logger.info("loaded %s", fname)
         return obj
-
 
     def _load_specials(self, fname, mmap, compress, subname):
         """
@@ -322,7 +326,6 @@ class SaveLoad(object):
             logger.info("setting ignored attribute %s to None" % (attrib))
             setattr(self, attrib, None)
 
-
     @staticmethod
     def _adapt_by_suffix(fname):
         """Give appropriate compress setting and filename formula"""
@@ -333,7 +336,6 @@ class SaveLoad(object):
             compress = False
             subname = lambda *args: '.'.join(list(args) + ['npy'])
         return (compress, subname)
-
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2,
                     ignore=frozenset(), pickle_protocol=2):
@@ -374,7 +376,6 @@ class SaveLoad(object):
                     setattr(obj, attrib, val)
         logger.info("saved %s", fname)
 
-
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
         """
         Save aside any attributes that need to be handled separately, including
@@ -406,9 +407,10 @@ class SaveLoad(object):
         for attrib, val in iteritems(self.__dict__):
             if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
-                cfname = '.'.join((fname,attrib))
-                restores.extend(val._save_specials(cfname, None, sep_limit, ignore,
-                                                   pickle_protocol, compress, subname))
+                cfname = '.'.join((fname, attrib))
+                restores.extend(val._save_specials(
+                    cfname, None, sep_limit, ignore,
+                    pickle_protocol, compress, subname))
 
         try:
             numpys, scipys, ignoreds = [], [], []
@@ -429,10 +431,11 @@ class SaveLoad(object):
                         attrib, subname(fname, attrib)))
 
                     if compress:
-                        np.savez_compressed(subname(fname, attrib, 'sparse'),
-                                               data=val.data,
-                                               indptr=val.indptr,
-                                               indices=val.indices)
+                        np.savez_compressed(
+                            subname(fname, attrib, 'sparse'),
+                            data=val.data,
+                            indptr=val.indptr,
+                            indices=val.indices)
                     else:
                         np.save(subname(fname, attrib, 'data'), val.data)
                         np.save(subname(fname, attrib, 'indptr'), val.indptr)
@@ -460,7 +463,6 @@ class SaveLoad(object):
                 setattr(self, attrib, val)
             raise
         return restores + [(self, asides)]
-
 
     def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
              ignore=frozenset(), pickle_protocol=2):
@@ -512,7 +514,7 @@ def get_max_id(corpus):
     """
     maxid = -1
     for document in corpus:
-        maxid = max(maxid, max([-1] + [fieldid for fieldid, _ in document])) # [-1] to avoid exceptions from max(empty)
+        maxid = max(maxid, max([-1] + [fieldid for fieldid, _ in document]))  # [-1] to avoid exceptions from max(empty)
     return maxid
 
 
@@ -528,10 +530,8 @@ class FakeDict(object):
     def __init__(self, num_terms):
         self.num_terms = num_terms
 
-
     def __str__(self):
         return "FakeDict(num_terms=%s)" % self.num_terms
-
 
     def __getitem__(self, val):
         if 0 <= val < self.num_terms:
@@ -668,6 +668,7 @@ class RepeatCorpus(SaveLoad):
     def __iter__(self):
         return itertools.islice(itertools.cycle(self.corpus), self.reps)
 
+
 class RepeatCorpusNTimes(SaveLoad):
 
     def __init__(self, corpus, n):
@@ -685,6 +686,7 @@ class RepeatCorpusNTimes(SaveLoad):
         for _ in xrange(self.n):
             for document in self.corpus:
                 yield document
+
 
 class ClippedCorpus(SaveLoad):
     def __init__(self, corpus, max_docs=None):
@@ -704,6 +706,7 @@ class ClippedCorpus(SaveLoad):
 
     def __len__(self):
         return min(self.max_docs, len(self.corpus))
+
 
 class SlicedCorpus(SaveLoad):
     def __init__(self, corpus, slice_):
@@ -742,6 +745,7 @@ class SlicedCorpus(SaveLoad):
 
         return self.length
 
+
 def safe_unichr(intval):
     try:
         return unichr(intval)
@@ -750,6 +754,7 @@ def safe_unichr(intval):
         s = "\\U%08x" % intval
         # return UTF16 surrogate pair
         return s.decode('unicode-escape')
+
 
 def decode_htmlentities(text):
     """
@@ -929,6 +934,7 @@ def unpickle(fname):
         else:
             return _pickle.loads(f.read())
 
+
 def revdict(d):
     """
     Reverse a dictionary mapping.
@@ -951,11 +957,11 @@ def toptexts(query, texts, index, n=10):
     Return a list of 3-tuples (docid, doc's similarity to the query, texts[docid]).
 
     """
-    sims = index[query] # perform a similarity query against the corpus
+    sims = index[query]  # perform a similarity query against the corpus
     sims = sorted(enumerate(sims), key=lambda item: -item[1])
 
     result = []
-    for topid, topcosine in sims[:n]: # only consider top-n most similar docs
+    for topid, topcosine in sims[:n]:  # only consider top-n most similar docs
         result.append((topid, topcosine, texts[topid]))
     return result
 
@@ -1031,7 +1037,8 @@ def has_pattern():
         return False
 
 
-def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
+def lemmatize(
+        content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
         stopwords=frozenset(), min_length=2, max_length=15):
     """
     This function is only available when the optional 'pattern' package is installed.
@@ -1174,10 +1181,10 @@ def check_output(args, flag=True):
 
 
 def sample_dict(d, n=10, use_random=True):
-     """
-     Pick `n` items from dictionary `d` and return them as a list.
-     The items are picked randomly if `use_random` is True, otherwise picked
-     according to natural dict iteration.
-     """
-     selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
-     return [(key, d[key]) for key in selected_keys]
+    """
+    Pick `n` items from dictionary `d` and return them as a list.
+    The items are picked randomly if `use_random` is True, otherwise picked
+    according to natural dict iteration.
+    """
+    selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
+    return [(key, d[key]) for key in selected_keys]

@@ -18,7 +18,7 @@ of each document.
 """
 
 import logging
-import shelve
+import six
 
 import numpy
 
@@ -69,6 +69,7 @@ class IndexedCorpus(interfaces.CorpusABC):
            each saved document,
         * the `docbyoffset(offset)` method, which returns a document
           positioned at `offset` bytes within the persistent storage (file).
+        * metadata if set to true will ensure that serialize will write out article titles to a pickle file.
 
         Example:
 
@@ -123,7 +124,7 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         if isinstance(docno, (slice, list, numpy.ndarray)):
             return utils.SlicedCorpus(self, docno)
-        elif isinstance(docno, (int, numpy.integer)):
+        elif isinstance(docno, six.integer_types + (numpy.integer,)):
             return self.docbyoffset(self.index[docno])
         else:
             raise ValueError('Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')

@@ -1,4 +1,57 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Copyright (C) 2016 Radim Rehurek <me@radimrehurek.com>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
+"""
+Word vector storage and similarity look-ups. Common code independent of the way the vectors are trained(Word2Vec, FastText, WordRank, VarEmbed etc)
+
+The word vectors are considered read-only in this class.
+
+Initialize the vectors by training e.g. Word2Vec::
+
+>>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
+>>> word_vectors = model.wv
+
+Persist the word vectors to disk with::
+
+>>> word_vectors.save(fname)
+>>> word_vectors = KeyedVectors.load(fname)
+
+The vectors can also be instantiated from an existing file on disk in the original Google's word2vec C format as a KeyedVectors instance::
+
+  >>> from gensim.keyedvectors import KeyedVectors
+  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
+  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+
+You can perform various syntactic/semantic NLP word tasks with the vectors. Some of them
+are already built-in::
+
+  >>> word_vectors.most_similar(positive=['woman', 'king'], negative=['man'])
+  [('queen', 0.50882536), ...]
+
+  >>> word_vectors.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
+  [('queen', 0.71382287), ...]
+
+  >>> word_vectors.doesnt_match("breakfast cereal dinner lunch".split())
+  'cereal'
+
+  >>> word_vectors.similarity('woman', 'man')
+  0.73723527
+
+Correlation with human opinion on word similarity::
+
+  >>> word_vectors.evaluate_word_pairs(os.path.join(module_path, 'test_data','wordsim353.tsv'))
+  0.51, 0.62, 0.13
+
+And on analogies::
+
+  >>> word_vectors.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
+
+and so on.
+
+"""
 from __future__ import division  # py3 "true division"
 
 import logging
@@ -58,13 +111,14 @@ class KeyedVectors(utils.SaveLoad):
         self.syn0norm = None
         self.vocab = {}
         self.index2word = []
+        self.vector_size = None
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
         super(KeyedVectors, self).save(*args, **kwargs)
 
-    def save_word2vec_format(self, fname, fvocab=None, binary=False):
+    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
         """
         Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
@@ -73,18 +127,22 @@ class KeyedVectors(utils.SaveLoad):
          `fvocab` is an optional file used to save the vocabulary
          `binary` is an optional boolean indicating whether the data is to be saved
          in binary word2vec format (default: False)
+         `total_vec` is an optional parameter to explicitly specify total no. of vectors
+         (in case word vectors are appended with document vectors afterwards)
 
         """
+        if total_vec is None:
+            total_vec = len(self.vocab)
         vector_size = self.syn0.shape[1]
         if fvocab is not None:
             logger.info("storing vocabulary in %s" % (fvocab))
             with utils.smart_open(fvocab, 'wb') as vout:
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
-        logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), vector_size, fname))
+        logger.info("storing %sx%s projection weights into %s" % (total_vec, vector_size, fname))
         assert (len(self.vocab), vector_size) == self.syn0.shape
         with utils.smart_open(fname, 'wb') as fout:
-            fout.write(utils.to_utf8("%s %s\n" % self.syn0.shape))
+            fout.write(utils.to_utf8("%s %s\n" % (total_vec, vector_size)))
             # store in sorted order: most frequent words at the top
             for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                 row = self.syn0[vocab.index]
@@ -141,6 +199,7 @@ class KeyedVectors(utils.SaveLoad):
             if limit:
                 vocab_size = min(vocab_size, limit)
             result = cls()
+            result.vector_size = vector_size
             result.syn0 = zeros((vocab_size, vector_size), dtype=datatype)
 
             def add_word(word, weights):
@@ -402,13 +461,20 @@ class KeyedVectors(utils.SaveLoad):
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
+        all_words = set([self.vocab[word].index for word in positive+negative
+            if not isinstance(word, ndarray) and word in self.vocab])
 
-        positive = [self.word_vec(word, use_norm=True) for word in positive]
-        negative = [self.word_vec(word, use_norm=True) for word in negative]
+        positive = [
+            self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
+            for word in positive
+        ]
+        negative = [
+            self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
+            for word in negative
+        ]
+
         if not positive:
             raise ValueError("cannot compute similarity with no input")
-
-        all_words = set([self.vocab[word].index for word in positive+negative if word in self.vocab])
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)
