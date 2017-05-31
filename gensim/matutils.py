@@ -185,9 +185,13 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
         matrix_indices = []
         matrix_data = []
         matrix_indptr = [0]
-        for v in matrix:
+        matrix.sort_indices()  # ensure data is stored in row major, sorts inplace
+        # calling abs() on entire matrix once is faster than calling abs() iteratively for each row
+        matrix_abs = abs(matrix.data)
+        for i in range(matrix.shape[0]):
+            v = matrix.getrow(i)
             # Sort and clip each row vector first.
-            biggest = argsort(abs(v.data), topn, reverse=True)
+            biggest = argsort(matrix_abs[matrix.indptr[i]:matrix.indptr[i + 1]], topn, reverse=True)
             indices, data = v.indices.take(biggest), v.data.take(biggest)
             # Store the topn indices and values of each row vector.
             matrix_data.append(data)
