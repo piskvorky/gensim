@@ -425,7 +425,7 @@ class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
         """Tests that sparsity is correctly maintained when maintain_sparsity=True and num_best is not None"""
         num_features = len(dictionary)
 
-        index = self.cls(corpus, num_features=num_features, num_best=3)
+        index = self.cls(corpus, num_features=num_features, maintain_sparsity=False, num_best=3)
         dense_topn_sims = index[corpus]
 
         index = self.cls(corpus, num_features=num_features, maintain_sparsity=True, num_best=3)

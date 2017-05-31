@@ -168,7 +168,7 @@ def any2sparse(vec, eps=1e-9):
 
 def scipy2scipy_clipped(matrix, topn, eps=1e-9):
     """
-    Return a scipy.sparse vector/matrix consisting of 'topn' elements of greatest magnitude(abs).
+    Return a scipy.sparse vector/matrix consisting of 'topn' elements of the greatest magnitude (absolute value).
     """
     if not scipy.sparse.issparse(matrix):
         raise ValueError("'%s' is not a scipy sparse vector." % matrix)
@@ -177,7 +177,7 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
     # Return clipped sparse vector if input is a sparse vector.
     if matrix.shape[0] == 1:
         # use np.argpartition/argsort and only form tuples that are actually returned.
-        biggest = argsort(abs(matrix).data, topn, reverse=True)
+        biggest = argsort(abs(matrix.data), topn, reverse=True)
         indices, data = matrix.indices.take(biggest), matrix.data.take(biggest)
         return scipy.sparse.csr_matrix((data, indices, [0, len(indices)]))
     # Return clipped sparse matrix if input is a matrix, processing row by row.
@@ -187,7 +187,7 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
         matrix_indptr = [0]
         for v in matrix:
             # Sort and clip each row vector first.
-            biggest = argsort(abs(v).data, topn, reverse=True)
+            biggest = argsort(abs(v.data), topn, reverse=True)
             indices, data = v.indices.take(biggest), v.data.take(biggest)
             # Store the topn indices and values of each row vector.
             matrix_data.append(data)
