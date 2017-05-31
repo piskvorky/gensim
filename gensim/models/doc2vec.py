@@ -580,7 +580,7 @@ class Doc2Vec(Word2Vec):
         need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-                default is 0 (off), useful value is 1e-5.
+                default is 1e-3, useful value is 1e-5.
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
@@ -597,7 +597,7 @@ class Doc2Vec(Word2Vec):
 
         `dm_concat` = if 1, use concatenation of context vectors rather than sum/average;
         default is 0 (off). Note concatenation results in a much-larger model, as the input
-        is no longer the size of one (sampled or arithmatically combined) word vector, but the
+        is no longer the size of one (sampled or arithmetically combined) word vector, but the
         size of the tag(s) and all words in the context strung together.
 
         `dm_tag_count` = expected constant number of document tags per document, when using
@@ -614,9 +614,13 @@ class Doc2Vec(Word2Vec):
         of the model.
         """
 
+        if 'sentences' in kwargs:
+            raise DeprecationWarning("'sentences' in doc2vec was renamed to 'documents'. Please use documents parameter.")
+
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
-            null_word=dm_concat, **kwargs)
+            null_word=dm_concat,
+            **kwargs)
 
         self.load = call_on_class_only
 

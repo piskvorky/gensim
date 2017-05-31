@@ -226,9 +226,18 @@ Copyright (c) 2009-now Radim Rehurek
 """
 
 
+test_env = [
+    'testfixtures',
+    'unittest2',
+    'Morfessor==2.0.2a4',
+    'scikit-learn',
+    'pyemd',
+    'annoy',
+]
+
 setup(
     name='gensim',
-    version='2.0.0',
+    version='2.1.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -282,13 +291,11 @@ setup(
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
     ],
+    tests_require=test_env,
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
         'wmd': ['pyemd >= 0.2.0'],
-        'test': [
-            'testfixtures',
-            'unittest2'
-        ],
+        'test': test_env,
     },
 
     include_package_data=True,

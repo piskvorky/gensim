@@ -8,7 +8,7 @@ The wrapped model can NOT be updated with new documents for online training -- u
 `Word2Vec` for that.
 
 Example:
->>> model = gensim.models.wrappers.Wordrank('/Users/dummy/wordrank', corpus_file='text8', out_path='wr_model')
+>>> model = gensim.models.wrappers.Wordrank('/Users/dummy/wordrank', corpus_file='text8', out_name='wr_model')
 >>> print model[word]  # prints vector for given words
 
 .. [1] https://bitbucket.org/shihaoji/wordrank/
@@ -45,14 +45,14 @@ class Wordrank(KeyedVectors):
     """
     
     @classmethod
-    def train(cls, wr_path, corpus_file, out_path, size=100, window=15, symmetric=1, min_count=5, max_vocab_size=0,
+    def train(cls, wr_path, corpus_file, out_name, size=100, window=15, symmetric=1, min_count=5, max_vocab_size=0,
               sgd_num=100, lrate=0.001, period=10, iter=90, epsilon=0.75, dump_period=10, reg=0, alpha=100,
               beta=99, loss='hinge', memory=4.0, cleanup_files=True, sorted_vocab=1, ensemble=0):
         """
         `wr_path` is the path to the Wordrank directory.
         `corpus_file` is the filename of the text file to be used for training the Wordrank model.
         Expects file to contain space-separated tokens in a single line
-        `out_path` is the path to directory which will be created to save embeddings and training data.
+        `out_name` is name of the directory which will be created (in wordrank folder) to save embeddings and training data.
         `size` is the dimensionality of the feature vectors.
         `window` is the number of context words to the left (and to the right, if symmetric = 1).
         `symmetric` if 0, only use left context words, else use left and right both.
@@ -82,7 +82,7 @@ class Wordrank(KeyedVectors):
         meta_file = 'meta'
 
         # prepare training data (cooccurrence matrix and vocab)
-        model_dir = os.path.join(wr_path, out_path)
+        model_dir = os.path.join(wr_path, out_name)
         meta_dir = os.path.join(model_dir, 'meta')
         os.makedirs(meta_dir)
         logger.info("Dumped data will be stored in '%s'", model_dir)
@@ -95,14 +95,16 @@ class Wordrank(KeyedVectors):
         cmd_del_vocab_freq = ['cut', '-d', " ", '-f', '1', temp_vocab_file]
 
         commands = [cmd_vocab_count, cmd_cooccurence_count, cmd_shuffle_cooccurences]
-        logger.info("Prepare training data using glove code '%s'", commands)
         input_fnames = [corpus_file.split('/')[-1], corpus_file.split('/')[-1], cooccurrence_file]
         output_fnames = [temp_vocab_file, cooccurrence_file, cooccurrence_shuf_file]
 
+        logger.info("Prepare training data (%s) using glove code", ", ".join(input_fnames))
         for command, input_fname, output_fname in zip(commands, input_fnames, output_fnames):
             with smart_open(input_fname, 'rb') as r:
                 with smart_open(output_fname, 'wb') as w:
                     utils.check_output(w, args=command, stdin=r)
+
+        logger.info("Deleting frequencies from vocab file")
         with smart_open(vocab_file, 'wb') as w:
             utils.check_output(w, args=cmd_del_vocab_freq)
 
@@ -117,7 +119,12 @@ class Wordrank(KeyedVectors):
         if iter % dump_period == 0:
             iter += 1
         else:
-            logger.warning('Resultant embedding would be from %d iteration', iter - iter % dump_period)
+            logger.warning(
+                'Resultant embedding will be from %d iterations rather than the input %d iterations, '
+                'as wordrank dumps the embedding only at dump_period intervals. '
+                'Input an appropriate combination of parameters (iter, dump_period) such that '
+                '"iter mod dump_period" is zero.', iter - (iter % dump_period), iter
+                )
 
         wr_args = {
             'path': 'meta',
@@ -142,11 +149,11 @@ class Wordrank(KeyedVectors):
         for option, value in wr_args.items():
             cmd.append('--%s' % option)
             cmd.append(str(value))
-        logger.info("Running wordrank binary '%s'", cmd)
+        logger.info("Running wordrank binary")
         output = utils.check_output(args=cmd)
 
         # use embeddings from max. iteration's dump
-        max_iter_dump = iter - iter % dump_period
+        max_iter_dump = iter - (iter % dump_period)
         copyfile('model_word_%d.txt' % max_iter_dump, 'wordrank.words')
         copyfile('model_context_%d.txt' % max_iter_dump, 'wordrank.contexts')
         model = cls.load_wordrank_model('wordrank.words', os.path.join('meta', vocab_file), 'wordrank.contexts', sorted_vocab, ensemble)
