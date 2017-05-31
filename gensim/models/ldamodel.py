@@ -195,7 +195,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, ns_conf={},
-                 minimum_phi_value=0.01, per_word_topics=False):
+                 minimum_phi_value=0.01, per_word_topics=False, texts=None,
+                 coherence='u_mass', window_size=None, topn=10):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -239,6 +240,31 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         `random_state` can be a np.random.RandomState object or the seed for one
 
+        `texts` : Tokenized texts. Needed for coherence models that use sliding window based probability estimator, eg::
+                texts = [['system', 'human', 'system', 'eps'],
+                             ['user', 'response', 'time'],
+                             ['trees'],
+                             ['graph', 'trees'],
+                             ['graph', 'minors', 'trees'],
+                             ['graph', 'minors', 'survey']]
+        
+        `coherence` : Coherence measure to be used. Supported values are:
+                    'u_mass'
+                    'c_v'
+                    'c_uci' also popularly known as c_pmi
+                    'c_npmi'
+                    For 'u_mass' corpus should be provided. If texts is provided, it will be converted to corpus using the dictionary.
+                    For 'c_v', 'c_uci' and 'c_npmi' texts should be provided. Corpus is not needed.
+
+        `window_size` : Is the size of the window to be used for coherence measures using boolean sliding window as their
+                      probability estimator. For 'u_mass' this doesn't matter.
+                      If left 'None' the default window sizes are used which are:
+                      'c_v' : 110
+                      'c_uci' : 10
+                      'c_npmi' : 10
+        
+        `topn` Integer corresponding to the number of top words to be extracted from each topic.
+
         Example:
 
         >>> lda = LdaModel(corpus, num_topics=100)  # train model
@@ -280,6 +306,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eval_every = eval_every
         self.minimum_phi_value = minimum_phi_value
         self.per_word_topics = per_word_topics
+
+        self.texts = texts
+        self.coherence = coherence
+        self.window_size = window_size
+        self.topn = topn
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
@@ -529,15 +560,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
-    def log_coherence(self, model, chunk):
-        cm = gensim.models.CoherenceModel(model=model, corpus=chunk, coherence='u_mass')
+    def log_coherence(self, model, chunk, texts, coherence, window_size, topn):
+        cm = gensim.models.CoherenceModel(model=model, corpus=chunk, texts=texts, window_size=window_size, coherence=coherence, topn=topn)
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         logger.info("%.3f coherence estimate based on a held-out corpus of %i documents with %i words", cm.get_coherence(), len(chunk), corpus_words)
         return cm.get_coherence()
 
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None, chunks_as_numpy=False):
+               gamma_threshold=None, chunks_as_numpy=False, texts=None,
+               coherence=None, window_size=None, topn=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -584,6 +616,14 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             iterations = self.iterations
         if gamma_threshold is None:
             gamma_threshold = self.gamma_threshold
+        if texts is None:
+            texts = self.texts
+        if coherence is None:
+            coherence = self.coherence
+        if window_size is None:
+            window_size = self.window_size
+        if topn is None:
+            topn = self.topn
 
         try:
             lencorpus = len(corpus)
@@ -642,7 +682,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
                     self.log_perplexity(chunk, total_docs=lencorpus)
-                    self.log_coherence(self, chunk)
+                    if self.texts is not None:
+                        init = (chunk_no + 1) * chunksize - chunksize
+                        end = init + chunksize
+                        if end > lencorpus:
+                            end = lencorpus
+                        texts = self.texts[init:end]
+                    self.log_coherence(self, chunk, texts, coherence, window_size, topn)
 
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
