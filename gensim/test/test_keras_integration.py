@@ -147,7 +147,7 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
 
         model = Model(sequence_input, preds)
         model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['acc'])
-        fit_ret_val = model.fit(x_train, y_train, epochs=2)
+        fit_ret_val = model.fit(x_train, y_train, epochs=1)
 
         # verify the type of the object returned after training
         self.assertTrue(type(fit_ret_val) == keras.callbacks.History)  # value returned is a `History` instance. Its `history` attribute contains all information collected during training.
