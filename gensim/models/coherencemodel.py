@@ -73,9 +73,9 @@ class CoherenceModel(interfaces.TransformationABC):
 
     1. constructor, which initializes the four stage pipeline by accepting a coherence measure,
     2. the ``get_coherence()`` method, which returns the topic coherence.
-    
+
     Pipeline phases can also be executed individually. Methods for doing this are:
-    
+
     1. `segment_topics()`, which performs segmentation of the given topics into their comparison sets.
     2. `estimate_probabilities()`, which accumulates word occurrence stats from the given corpus or texts.
         The output of this is also cached on the `CoherenceModel`, so calling this method can be used as

@@ -10,8 +10,9 @@ statistical information about word occurrences.
 """
 
 import sys
-import itertools
 import logging
+import itertools
+import traceback
 import multiprocessing as mp
 
 import numpy as np
@@ -248,7 +249,7 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
             self._current_doc_num = doc_num
         else:
             if self._token_at_edge is not None:
-                self._uniq_words.remove(self._token_at_edge)
+                self._uniq_words.discard(self._token_at_edge)  # may be irrelevant token
             self._token_at_edge = window[0]
 
             if window[-1] is not None:
@@ -351,7 +352,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
             self._num_docs += sum(len(doc) - window_size + 1 for doc in batch)
             if before < (self._num_docs / self.log_every):
                 logger.info("submitted %d batches to accumulate stats from %d documents (%d virtual)" % (
-                    batch_num, batch_num * self.batch_size, self._num_docs))
+                    batch_num, (batch_num + 1) * self.batch_size, self._num_docs))
 
     def terminate_workers(self, input_q, output_q, workers, interrupted=False):
         """Wait until all workers have transmitted their WordOccurrenceAccumulator instances,
@@ -394,6 +395,8 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         # Workers perform partial accumulation, so none of the co-occurrence matrices are symmetrized.
         # This is by design, to avoid unnecessary matrix additions during accumulation.
         accumulator._symmetrize()
+        logger.info("accumulated word occurrence stats for %d virtual documents" %
+                    accumulator.num_docs)
         return accumulator
 
 
@@ -411,9 +414,13 @@ class AccumulatingWorker(mp.Process):
     def run(self):
         try:
             self._run()
+            print("finished normally")
         except KeyboardInterrupt:
             logger.info("%s interrupted after processing %d documents" % (
                 self.__class__.__name__, self.accumulator.num_docs))
+        except Exception as e:
+            logger.error("worker encountered unexpected exception: %s" % e)
+            logger.error(traceback.format_exc())
         finally:
             self.reply_to_master()
 
@@ -423,6 +430,7 @@ class AccumulatingWorker(mp.Process):
         while True:
             docs = self.input_q.get(block=True)
             if docs is None:  # sentinel value
+                logger.debug("observed sentinel value; terminating")
                 break
 
             self.accumulator.partial_accumulate(docs, self.window_size)
