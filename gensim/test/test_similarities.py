@@ -578,6 +578,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(self.index.labels, self.index2.labels)
         self.assertEqual(self.index.num_trees, self.index2.num_trees)
 
+
 class TestWord2VecFaissIndexerDotProductSimilarity(unittest.TestCase):
 
     def setUp(self):
@@ -610,7 +611,6 @@ class TestWord2VecFaissIndexerDotProductSimilarity(unittest.TestCase):
         self.assertApproxNeighborsMatchExact(model, index)
 
     def assertVectorIsSimilarToItself(self, model, index):
-        vector = model.wv.syn0norm[0]
         label = model.wv.index2word[0]
         approx_neighbors = index.most_similar_dot_product(label, 1, 7)
         word, similarity = approx_neighbors[0]
@@ -662,7 +662,6 @@ class TestWord2VecFaissIndexerL2Similarity(unittest.TestCase):
         self.assertApproxNeighborsMatchExact(model, index)
 
     def assertVectorIsSimilarToItself(self, model, index):
-        vector = model.wv.syn0norm[0]
         label = model.wv.index2word[0]
         approx_neighbors = index.most_similar_l2(label, 1, 7)
         word, similarity = approx_neighbors[0]
