@@ -14,6 +14,7 @@ import logging
 import itertools
 import traceback
 import multiprocessing as mp
+from collections import Counter
 
 import numpy as np
 import scipy.sparse as sps
@@ -93,7 +94,7 @@ class BaseAnalyzer(object):
 
 class UsesDictionary(BaseAnalyzer):
     """A BaseAnalyzer that uses a Dictionary, hence can translate tokens to counts.
-    The standard BaseAnalyzer can only deal with token ids since it doesn't have the token2id 
+    The standard BaseAnalyzer can only deal with token ids since it doesn't have the token2id
     mapping.
     """
 
@@ -220,6 +221,7 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
         self._uniq_words = np.zeros((self._vocab_size + 1,), dtype=bool)  # add 1 for none token
         self._mask = self._uniq_words[:-1]  # to exclude none token
+        self._counter = Counter()
 
     def __str__(self):
         return self.__class__.__name__
@@ -238,18 +240,21 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         """
         self._current_doc_num = -1
         self._token_at_edge = None
+        self._counter.clear()
+
         super(WordOccurrenceAccumulator, self).accumulate(texts, window_size)
+        for combo, count in self._counter.iteritems():
+            self._co_occurrences[combo] += count
+
         return self
 
     def analyze_text(self, window, doc_num=None):
-        self.slide_window(window, doc_num)
+        self._slide_window(window, doc_num)
         if self._mask.any():
             self._occurrences[self._mask] += 1
+            self._counter.update(itertools.combinations(np.nonzero(self._mask)[0], 2))
 
-            for combo in itertools.combinations(np.nonzero(self._mask)[0], 2):
-                self._co_occurrences[combo] += 1
-
-    def slide_window(self, window, doc_num):
+    def _slide_window(self, window, doc_num):
         if doc_num != self._current_doc_num:
             self._uniq_words[:] = False
             self._uniq_words[np.unique(window)] = True
@@ -298,14 +303,14 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         ----
         processes : number of processes to use; must be at least two.
         args : should include `relevant_ids` and `dictionary` (see `UsesDictionary.__init__`).
-        kwargs : can include `batch_size`, which is the number of docs to send to a worker at a 
-                 time. If not included, it defaults to 32.
+        kwargs : can include `batch_size`, which is the number of docs to send to a worker at a
+                 time. If not included, it defaults to 64.
         """
         super(ParallelWordOccurrenceAccumulator, self).__init__(*args)
         if processes < 2:
             raise ValueError("Must have at least 2 processes to run in parallel; got %d", processes)
         self.processes = processes
-        self.batch_size = kwargs.get('batch_size', 32)
+        self.batch_size = kwargs.get('batch_size', 64)
 
     def __str__(self):
         return "%s(processes=%s, batch_size=%s)" % (
