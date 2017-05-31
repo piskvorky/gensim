@@ -246,7 +246,7 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         if self._mask.any():
             self._occurrences[self._mask] += 1
 
-            for combo in itertools.combinations(np.nonzero(mask)[0], 2):
+            for combo in itertools.combinations(np.nonzero(self._mask)[0], 2):
                 self._co_occurrences[combo] += 1
 
     def slide_window(self, window, doc_num):
