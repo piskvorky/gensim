@@ -12,7 +12,6 @@ statistical information about word occurrences.
 import sys
 import logging
 import itertools
-import traceback
 import multiprocessing as mp
 from collections import Counter
 
