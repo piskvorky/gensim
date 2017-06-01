@@ -113,6 +113,10 @@ class KeyedVectors(utils.SaveLoad):
         self.index2word = []
         self.vector_size = None
 
+    @property
+    def wv(self):
+        return self
+
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
