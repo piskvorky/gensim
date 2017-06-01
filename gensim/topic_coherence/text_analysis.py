@@ -17,6 +17,7 @@ from collections import Counter
 
 import numpy as np
 import scipy.sparse as sps
+from six import iteritems
 
 from gensim import utils
 
@@ -141,7 +142,7 @@ class InvertedIndexBased(BaseAnalyzer):
         return len(s1.intersection(s2))
 
     def index_to_dict(self):
-        contiguous2id = {n: word_id for word_id, n in self.id2contiguous.iteritems()}
+        contiguous2id = {n: word_id for word_id, n in iteritems(self.id2contiguous)}
         return {contiguous2id[n]: doc_id_list for n, doc_id_list in enumerate(self._inverted_index)}
 
 
@@ -242,7 +243,7 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         self._counter.clear()
 
         super(WordOccurrenceAccumulator, self).accumulate(texts, window_size)
-        for combo, count in self._counter.iteritems():
+        for combo, count in iteritems(self._counter):
             self._co_occurrences[combo] += count
 
         return self
@@ -427,7 +428,7 @@ class AccumulatingWorker(mp.Process):
         self.input_q = input_q
         self.output_q = output_q
         self.accumulator = accumulator
-        self.accumulator.log_every = sys.maxint  # avoid logging in workers
+        self.accumulator.log_every = sys.maxsize  # avoid logging in workers
         self.window_size = window_size
 
     def run(self):
