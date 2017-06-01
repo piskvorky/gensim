@@ -682,11 +682,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
                     self.log_perplexity(chunk, total_docs=lencorpus)
+                    # texts input is needed for sliding window based coherence measures (c_v, c_uci, c_npmi)
                     if self.texts is not None:
                         init = (chunk_no + 1) * chunksize - chunksize
                         end = init + chunksize
                         if end > lencorpus:
                             end = lencorpus
+                        # texts subarray corresponding to chunk
                         texts = self.texts[init:end]
                     self.log_coherence(self, chunk, texts, coherence, window_size, topn)
 
