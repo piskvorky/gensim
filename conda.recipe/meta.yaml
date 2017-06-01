@@ -1,0 +1,44 @@
+package:
+  name: gensim
+  version: 0.12.3
+
+source:
+  path: ..
+
+build:
+  number: 2
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - scipy >=0.7.0
+    - numpy >=1.3
+    - pyro4 >=4.27
+    - smart_open >=1.2.1
+    - six >=1.5.0
+
+  run:
+    - python
+    - scipy >=0.7.0
+    - numpy >=1.3
+    - six >=1.5.0
+    - smart_open >=1.2.1
+    - pyro4 >=4.27
+
+test:
+  # Python imports
+  imports:
+    - gensim.similarities
+    - gensim.test
+    - gensim.corpora
+    - gensim.models
+    - gensim.scripts
+    - gensim.parsing
+    - gensim
+
+
+about:
+  home: http://radimrehurek.com/gensim
+  license: GNU Library or Lesser General Public License (LGPL)
+
