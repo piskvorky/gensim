@@ -1259,4 +1259,3 @@ def _iter_windows(document, window_size, copy=False, ignore_below_size=True):
     else:
         for doc_window in doc_windows:
             yield doc_window.copy() if copy else doc_window
-

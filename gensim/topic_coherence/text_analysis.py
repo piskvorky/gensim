@@ -65,8 +65,8 @@ class BaseAnalyzer(object):
     def num_docs(self, num):
         self._num_docs = num
         if self._num_docs % self.log_every == 0:
-            logger.info("%s accumulated stats from %d documents" % (
-                self.__class__.__name__, self._num_docs))
+            logger.info("%s accumulated stats from %d documents",
+                        self.__class__.__name__, self._num_docs)
 
     def analyze_text(self, text, doc_num=None):
         raise NotImplementedError("Base classes should implement analyze_text.")
@@ -370,9 +370,9 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
             before = self._num_docs / self.log_every
             self._num_docs += sum(len(doc) - window_size + 1 for doc in batch)
             if before < (self._num_docs / self.log_every):
-                logger.info("%d batches submitted to accumulate stats from %d documents (%d "
-                            "virtual)",
-                            (batch_num + 1), (batch_num + 1) * self.batch_size, self._num_docs)
+                logger.info(
+                    "%d batches submitted to accumulate stats from %d documents (%d virtual)",
+                    (batch_num + 1), (batch_num + 1) * self.batch_size, self._num_docs)
 
     def terminate_workers(self, input_q, output_q, workers, interrupted=False):
         """Wait until all workers have transmitted their WordOccurrenceAccumulator instances,
@@ -394,7 +394,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         accumulators = []
         while len(accumulators) != len(workers):
             accumulators.append(output_q.get())
-        logger.info("%d accumulators retrieved from output queue" % len(accumulators))
+        logger.info("%d accumulators retrieved from output queue", len(accumulators))
 
         for worker in workers:
             if worker.is_alive():
@@ -437,9 +437,8 @@ class AccumulatingWorker(mp.Process):
         except KeyboardInterrupt:
             logger.info("%s interrupted after processing %d documents",
                         self.__class__.__name__, self.accumulator.num_docs)
-        except Exception as e:
-            logger.error("worker encountered unexpected exception: %s\n%s",
-                         e, traceback.format_exc())
+        except:
+            logger.exception("worker encountered unexpected exception")
         finally:
             self.reply_to_master()
 
