@@ -301,7 +301,8 @@ class DocvecsArray(utils.SaveLoad):
             self.max_rawint = max(self.max_rawint, key)
         else:
             if key in self.doctags:
-                self.doctags[key] = self.doctags[key].repeat(document_length)
+                #self.doctags[key] = self.doctags[key].repeat(document_length)
+                return
             else:
                 self.doctags[key] = Doctag(len(self.offset2doctag), document_length, 1)
                 self.offset2doctag.append(key)
@@ -705,10 +706,24 @@ class Doc2Vec(Word2Vec):
         self.corpus_count = document_no + 1
         self.raw_vocab = vocab
 
+    def train_new_doc(self, documents, total_words=None, word_count=0, chunksize=100, total_examples=None, queue_factor=2, report_delay=1):
+        # rebuild doctag dict
+        for document in documents:
+            document_length = len(document.words)
+            for tag in document.tags:
+                self.docvecs.note_doctag(tag, 0, document_length)
+        self.docvecs.reset_weights(self)
+        self.train(documents, total_words, word_count, chunksize, total_examples, queue_factor, report_delay)
+        
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
         tally = 0
         for doc in job:
+            # add the doc to dict if it's not already there
+            #document_length = len(doc.words)
+            #for tag in doc.tags:
+                #self.docvecs.note_doctag(tag, 0, document_length)
+
             indexed_doctags = self.docvecs.indexed_doctags(doc.tags)
             doctag_indexes, doctag_vectors, doctag_locks, ignored = indexed_doctags
             if self.sg:
