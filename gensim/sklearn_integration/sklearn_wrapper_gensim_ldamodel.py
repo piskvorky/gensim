@@ -16,8 +16,6 @@ from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
 
-
-
 class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
     """
     Base LDA module
@@ -68,7 +66,6 @@ class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
                 "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
                 "random_state": self.random_state}
 
-
     def set_params(self, **parameters):
         """
         Set all parameters.
@@ -81,7 +78,7 @@ class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
         """
         For fitting corpus into the class object.
         Calls gensim.model.LdaModel:
-        >>>gensim.models.LdaModel(corpus=corpus,num_topics=num_topics,id2word=id2word,passes=passes,update_every=update_every,alpha=alpha,iterations=iterations,eta=eta,random_state=random_state)
+        >>> gensim.models.LdaModel(corpus=corpus, num_topics=num_topics, id2word=id2word, passes=passes, update_every=update_every, alpha=alpha, iterations=iterations, eta=eta, random_state=random_state)
         """
         if sparse.issparse(X):
             self.corpus = matutils.Sparse2Corpus(X)
@@ -106,16 +103,15 @@ class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
         # The input as array of array
         check = lambda x: [x] if isinstance(x[0], tuple) else x
         docs = check(docs)
-        X = [[] for i in range(0,len(docs))];
-        for k,v in enumerate(docs):
+        X = [[] for _ in range(0, len(docs))]
 
+        for k, v in enumerate(docs):
             doc_topics = self.get_document_topics(v, minimum_probability=minimum_probability)
             probs_docs = list(map(lambda x: x[1], doc_topics))
             # Everything should be equal in length
             if len(probs_docs) != self.num_topics:
                 probs_docs.extend([1e-12]*(self.num_topics - len(probs_docs)))
             X[k] = probs_docs
-            probs_docs = []
         return np.reshape(np.array(X), (len(docs), self.num_topics))
 
     def get_topic_dist(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
