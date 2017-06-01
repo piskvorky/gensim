@@ -16,107 +16,82 @@ from gensim.corpora.hashdictionary import HashDictionary
 from gensim.corpora.dictionary import Dictionary
 
 
-class ProbabilityEstimationBase(unittest.TestCase):
-    texts = [['human', 'interface', 'computer'],
-             ['eps', 'user', 'interface', 'system'],
-             ['system', 'human', 'system', 'eps'],
-             ['user', 'response', 'time'],
-             ['trees'],
-             ['graph', 'trees']]
+class BaseTestCases(object):
 
+    class ProbabilityEstimationBase(unittest.TestCase):
+        texts = [['human', 'interface', 'computer'],
+                 ['eps', 'user', 'interface', 'system'],
+                 ['system', 'human', 'system', 'eps'],
+                 ['user', 'response', 'time'],
+                 ['trees'],
+                 ['graph', 'trees']]
+        dictionary = None
 
-class TestProbabilityEstimation(ProbabilityEstimationBase):
-    def setUp(self):
-        self.dictionary = HashDictionary(self.texts)
-        # Following is the mapping:
-        # {'computer': 10608,
-        #  'eps': 31049,
-        #  'graph': 18451,
-        #  'human': 31002,
-        #  'interface': 12466,
-        #  'response': 5232,
-        #  'system': 5798,
-        #  'time': 29104,
-        #  'trees': 23844,
-        #  'user': 12736}
-        self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
-        # Suppose the segmented topics from s_one_pre are:
-        self.segmented_topics = [
-            [
-                (5798, 18451),
-                (10608, 18451),
-                (10608, 5798)
-            ], [
-                (10608, 18451),
-                (12736, 18451),
-                (12736, 10608)
+        def build_segmented_topics(self):
+            # Suppose the segmented topics from s_one_pre are:
+            token2id = self.dictionary.token2id
+            computer_id = token2id['computer']
+            system_id = token2id['system']
+            user_id = token2id['user']
+            graph_id = token2id['graph']
+            self.segmented_topics = [
+                [
+                    (system_id, graph_id),
+                    (computer_id, graph_id),
+                    (computer_id, system_id)
+                ], [
+                    (computer_id, graph_id),
+                    (user_id, graph_id),
+                    (user_id, computer_id)
+                ]
             ]
-        ]
 
-    def testPBooleanDocument(self):
-        """Test p_boolean_document()"""
-        # Unique topic ids are 5798, 10608, 12736 and 18451
-        accumulator = probability_estimation.p_boolean_document(self.corpus, self.segmented_topics)
-        obtained = accumulator.index_to_dict()
-        expected = {18451: {5}, 12736: {1, 3}, 5798: {1, 2}, 10608: {0}}
-        self.assertEqual(expected, obtained)
+            self.computer_id = computer_id
+            self.system_id = system_id
+            self.user_id = user_id
+            self.graph_id = graph_id
 
-    def testPBooleanSlidingWindow(self):
-        """Test p_boolean_sliding_window()"""
-        # Test with window size as 2. window_id is zero indexed.
-        accumulator = probability_estimation.p_boolean_sliding_window(
-            self.texts, self.segmented_topics, self.dictionary, 2)
-        self.assertEqual(1, accumulator[10608])
-        self.assertEqual(3, accumulator[12736])
-        self.assertEqual(1, accumulator[18451])
-        self.assertEqual(4, accumulator[5798])
+        def setup_dictionary(self):
+            raise NotImplementedError
+
+        def setUp(self):
+            self.setup_dictionary()
+            self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
+            self.build_segmented_topics()
+
+        def testPBooleanDocument(self):
+            """Test p_boolean_document()"""
+            accumulator = probability_estimation.p_boolean_document(
+                self.corpus, self.segmented_topics)
+            obtained = accumulator.index_to_dict()
+            expected = {
+                self.graph_id: {5},
+                self.user_id: {1, 3},
+                self.system_id: {1, 2},
+                self.computer_id: {0}
+            }
+            self.assertEqual(expected, obtained)
+
+        def testPBooleanSlidingWindow(self):
+            """Test p_boolean_sliding_window()"""
+            # Test with window size as 2. window_id is zero indexed.
+            accumulator = probability_estimation.p_boolean_sliding_window(
+                self.texts, self.segmented_topics, self.dictionary, 2)
+            self.assertEqual(1, accumulator[self.computer_id])
+            self.assertEqual(3, accumulator[self.user_id])
+            self.assertEqual(1, accumulator[self.graph_id])
+            self.assertEqual(4, accumulator[self.system_id])
 
 
-class TestProbabilityEstimationWithNormalDictionary(ProbabilityEstimationBase):
-    def setUp(self):
+class TestProbabilityEstimation(BaseTestCases.ProbabilityEstimationBase):
+    def setup_dictionary(self):
+        self.dictionary = HashDictionary(self.texts)
+
+
+class TestProbabilityEstimationWithNormalDictionary(BaseTestCases.ProbabilityEstimationBase):
+    def setup_dictionary(self):
         self.dictionary = Dictionary(self.texts)
         self.dictionary.id2token = {v: k for k, v in self.dictionary.token2id.items()}
-        # Following is the mapping:
-        # {u'computer': 1,
-        #  u'eps': 5,
-        #  u'graph': 9,
-        #  u'human': 2,
-        #  u'interface': 0,
-        #  u'response': 6,
-        #  u'system': 4,
-        #  u'time': 7,
-        #  u'trees': 8,
-        #  u'user': 3}
-        self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
-        # Suppose the segmented topics from s_one_pre are:
-        self.segmented_topics = [
-            [
-                (4, 9),
-                (1, 9),
-                (1, 4)
-            ], [
-                (1, 9),
-                (3, 9),
-                (3, 1)
-            ]
-        ]
-
-    def testPBooleanDocument(self):
-        """Test p_boolean_document()"""
-        accumulator = probability_estimation.p_boolean_document(self.corpus, self.segmented_topics)
-        obtained = accumulator.index_to_dict()
-        expected = {9: {5}, 3: {1, 3}, 4: {1, 2}, 1: {0}}
-        self.assertEqual(expected, obtained)
-
-    def testPBooleanSlidingWindow(self):
-        """Test p_boolean_sliding_window()"""
-        # Test with window size as 2. window_id is zero indexed.
-        accumulator = probability_estimation.p_boolean_sliding_window(
-            self.texts, self.segmented_topics, self.dictionary, 2)
-        self.assertEqual(1, accumulator[1])
-        self.assertEqual(3, accumulator[3])
-        self.assertEqual(1, accumulator[9])
-        self.assertEqual(4, accumulator[4])
 
 
 if __name__ == '__main__':

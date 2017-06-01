@@ -17,7 +17,7 @@ from collections import Counter
 
 import numpy as np
 import scipy.sparse as sps
-from six import viewitems
+from six import viewitems, string_types
 
 from gensim import utils
 
@@ -72,10 +72,10 @@ class BaseAnalyzer(object):
         raise NotImplementedError("Base classes should implement analyze_text.")
 
     def __getitem__(self, word_or_words):
-        if hasattr(word_or_words, '__iter__'):
-            return self.get_co_occurrences(*word_or_words)
-        else:
+        if isinstance(word_or_words, string_types) or not hasattr(word_or_words, '__iter__'):
             return self.get_occurrences(word_or_words)
+        else:
+            return self.get_co_occurrences(*word_or_words)
 
     def get_occurrences(self, word_id):
         """Return number of docs the word occurs in, once `accumulate` has been called."""
