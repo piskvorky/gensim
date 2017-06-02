@@ -53,16 +53,17 @@ except ImportError:
 from collections import namedtuple, defaultdict
 from timeit import default_timer
 
-from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
+from numpy import zeros, sum as np_sum, add as np_add, concatenate, \
     repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
-    sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide
+    sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide, integer
 
 
 from gensim.utils import call_on_class_only
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg
+from gensim.models.keyedvectors import KeyedVectors
 from six.moves import xrange, zip
-from six import string_types, integer_types, itervalues
+from six import string_types, integer_types
 
 logger = logging.getLogger(__name__)
 
@@ -296,7 +297,7 @@ class DocvecsArray(utils.SaveLoad):
 
     def note_doctag(self, key, document_no, document_length):
         """Note a document tag during initial corpus scan, for structure sizing."""
-        if isinstance(key, int):
+        if isinstance(key, integer_types + (integer,)):
             self.max_rawint = max(self.max_rawint, key)
         else:
             if key in self.doctags:
@@ -318,7 +319,7 @@ class DocvecsArray(utils.SaveLoad):
 
     def _int_index(self, index):
         """Return int index for either string or int index"""
-        if isinstance(index, int):
+        if isinstance(index, integer_types + (integer,)):
             return index
         else:
             return self.max_rawint + 1 + self.doctags[index].offset
@@ -346,7 +347,7 @@ class DocvecsArray(utils.SaveLoad):
         If a list, return designated tags' vector representations as a
         2D numpy array: #tags x #vector_size.
         """
-        if isinstance(index, string_types + (int,)):
+        if isinstance(index, string_types + integer_types + (integer,)):
             return self.doctag_syn0[self._int_index(index)]
 
         return vstack([self[i] for i in index])
@@ -355,7 +356,7 @@ class DocvecsArray(utils.SaveLoad):
         return self.count
 
     def __contains__(self, index):
-        if isinstance(index, int):
+        if isinstance(index, integer_types + (integer,)):
             return index < self.count
         else:
             return index in self.doctags
@@ -438,17 +439,17 @@ class DocvecsArray(utils.SaveLoad):
         self.init_sims()
         clip_end = clip_end or len(self.doctag_syn0norm)
 
-        if isinstance(positive, string_types + integer_types) and not negative:
+        if isinstance(positive, string_types + integer_types + (integer,)) and not negative:
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
             positive = [positive]
 
         # add weights for each doc, if not already present; default to 1.0 for positive and -1.0 for negative docs
         positive = [
-            (doc, 1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
+            (doc, 1.0) if isinstance(doc, string_types + integer_types + (ndarray, integer))
             else doc for doc in positive
         ]
         negative = [
-            (doc, -1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
+            (doc, -1.0) if isinstance(doc, string_types + integer_types + (ndarray, integer))
             else doc for doc in negative
         ]
 
@@ -579,7 +580,7 @@ class Doc2Vec(Word2Vec):
         need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-                default is 0 (off), useful value is 1e-5.
+                default is 1e-3, useful value is 1e-5.
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
@@ -596,7 +597,7 @@ class Doc2Vec(Word2Vec):
 
         `dm_concat` = if 1, use concatenation of context vectors rather than sum/average;
         default is 0 (off). Note concatenation results in a much-larger model, as the input
-        is no longer the size of one (sampled or arithmatically combined) word vector, but the
+        is no longer the size of one (sampled or arithmetically combined) word vector, but the
         size of the tag(s) and all words in the context strung together.
 
         `dm_tag_count` = expected constant number of document tags per document, when using
@@ -606,23 +607,26 @@ class Doc2Vec(Word2Vec):
         doc-vector training; default is 0 (faster training of doc-vectors only).
 
         `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
-         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
-         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
-         returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
-         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
-          of the model.
-
+        in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
+        Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+        returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
+        Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
+        of the model.
         """
+
+        if 'sentences' in kwargs:
+            raise DeprecationWarning("'sentences' in doc2vec was renamed to 'documents'. Please use documents parameter.")
 
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
-            null_word=dm_concat, **kwargs)
-        
+            null_word=dm_concat,
+            **kwargs)
+
         self.load = call_on_class_only
 
         if dm_mean is not None:
             self.cbow_mean = dm_mean
-        
+
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
@@ -633,7 +637,7 @@ class Doc2Vec(Word2Vec):
         self.comment = comment
         if documents is not None:
             self.build_vocab(documents, trim_rule=trim_rule)
-            self.train(documents)
+            self.train(documents, total_examples=self.corpus_count, epochs=self.iter)
 
     @property
     def dm(self):
@@ -672,8 +676,10 @@ class Doc2Vec(Word2Vec):
         for document_no, document in enumerate(documents):
             if not checked_string_types:
                 if isinstance(document.words, string_types):
-                    logger.warn("Each 'words' should be a list of words (usually unicode strings)."
-                                "First 'words' here is instead plain %s." % type(document.words))
+                    logger.warning(
+                        "Each 'words' should be a list of words (usually unicode strings)."
+                        "First 'words' here is instead plain %s." % type(document.words)
+                    )
                 checked_string_types += 1
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
@@ -808,6 +814,44 @@ class Doc2Vec(Word2Vec):
             del self.docvecs.doctag_syn0
         if self.docvecs and hasattr(self.docvecs, 'doctag_syn0_lockf'):
             del self.docvecs.doctag_syn0_lockf
+
+    def save_word2vec_format(self, fname, doctag_vec=False, word_vec=True, prefix='*dt_', fvocab=None, binary=False):
+        """
+        Store the input-hidden weight matrix.
+
+         `fname` is the file used to save the vectors in
+         `doctag_vec` is an optional boolean indicating whether to store document vectors
+         `word_vec` is an optional boolean indicating whether to store word vectors
+         (if both doctag_vec and word_vec are True, then both vectors are stored in the same file)
+         `prefix` to uniquely identify doctags from word vocab, and avoid collision
+         in case of repeated string in doctag and word vocab
+         `fvocab` is an optional file used to save the vocabulary
+         `binary` is an optional boolean indicating whether the data is to be saved
+         in binary word2vec format (default: False)
+
+        """
+        total_vec = len(self.wv.vocab) + len(self.docvecs)
+        # save word vectors
+        if word_vec:
+            if not doctag_vec:
+                total_vec = len(self.wv.vocab)
+            KeyedVectors.save_word2vec_format(self.wv, fname, fvocab, binary, total_vec)
+        # save document vectors
+        if doctag_vec:
+            with utils.smart_open(fname, 'ab') as fout:
+                if not word_vec:
+                    total_vec = len(self.docvecs)
+                    logger.info("storing %sx%s projection weights into %s" % (total_vec, self.vector_size, fname))
+                    fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vector_size)))
+                # store as in input order
+                for i in range(len(self.docvecs)):
+                    doctag = prefix + str(self.docvecs.index_to_doctag(i))
+                    row = self.docvecs.doctag_syn0[i]
+                    if binary:
+                        fout.write(utils.to_utf8(doctag) + b" " + row.tostring())
+                    else:
+                        fout.write(utils.to_utf8("%s %s\n" % (doctag, ' '.join("%f" % val for val in row))))
+
 
 class TaggedBrownCorpus(object):
     """Iterate over documents from the Brown corpus (part of NLTK data), yielding

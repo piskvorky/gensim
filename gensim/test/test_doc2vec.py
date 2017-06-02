@@ -23,7 +23,7 @@ from testfixtures import log_capture
 import numpy as np
 
 from gensim import utils, matutils
-from gensim.models import doc2vec
+from gensim.models import doc2vec, keyedvectors
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -76,6 +76,25 @@ class TestDoc2VecModel(unittest.TestCase):
         model.save(testfile())
         self.models_equal(model, doc2vec.Doc2Vec.load(testfile()))
 
+    def testPersistenceWord2VecFormat(self):
+        """Test storing the entire model in word2vec format."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
+        # test saving both document and word embedding
+        test_doc_word = os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.dw')
+        model.save_word2vec_format(test_doc_word, doctag_vec=True, word_vec=True, binary=True)
+        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_doc_word, binary=True)
+        self.assertEqual(len(model.wv.vocab) + len(model.docvecs), len(binary_model_dv.vocab))
+        # test saving document embedding only
+        test_doc = os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.d')
+        model.save_word2vec_format(test_doc, doctag_vec=True, word_vec=False, binary=True)
+        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_doc, binary=True)
+        self.assertEqual(len(model.docvecs), len(binary_model_dv.vocab))
+        # test saving word embedding only
+        test_word = os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.w')
+        model.save_word2vec_format(test_word, doctag_vec=False, word_vec=True, binary=True)
+        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_word, binary=True)
+        self.assertEqual(len(model.wv.vocab), len(binary_model_dv.vocab))
+
     def test_load_mmap(self):
         """Test storing/loading the entire model."""
         model = doc2vec.Doc2Vec(sentences, min_count=1)
@@ -95,6 +114,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model.build_vocab(corpus)
         self.assertEqual(len(model.docvecs.doctag_syn0), 300)
         self.assertEqual(model.docvecs[0].shape, (100,))
+        self.assertEqual(model.docvecs[np.int64(0)].shape, (100,))
         self.assertRaises(KeyError, model.__getitem__, '_*0')
 
     def test_missing_string_doctag(self):
@@ -145,7 +165,7 @@ class TestDoc2VecModel(unittest.TestCase):
     def model_sanity(self, model, keep_training=True):
         """Any non-trivial model on DocsLeeCorpus can pass these sanity checks"""
         fire1 = 0  # doc 0 sydney fires
-        fire2 = 8  # doc 8 sydney fires
+        fire2 = np.int64(8)  # doc 8 sydney fires
         tennis1 = 6  # doc 6 tennis
 
         # inferred vector should be top10 close to bulk-trained one
@@ -183,7 +203,7 @@ class TestDoc2VecModel(unittest.TestCase):
         if keep_training:
             model.save(testfile())
             loaded = doc2vec.Doc2Vec.load(testfile())
-            loaded.train(sentences)
+            loaded.train(sentences, total_examples=loaded.corpus_count, epochs=loaded.iter)
 
     def test_training(self):
         """Test doc2vec training."""
@@ -191,7 +211,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20, workers=1)
         model.build_vocab(corpus)
         self.assertEqual(model.docvecs.doctag_syn0.shape, (300, 100))
-        model.train(corpus)
+        model.train(corpus, total_examples=model.corpus_count, epochs=model.iter)
 
         self.model_sanity(model)
 
@@ -285,7 +305,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec()
         model.build_vocab(mixed_tag_corpus)
         expected_length = len(sentences) + len(model.docvecs.doctags)  # 9 sentences, 7 unique first tokens
-        self.assertEquals(len(model.docvecs.doctag_syn0), expected_length)
+        self.assertEqual(len(model.docvecs.doctag_syn0), expected_length)
 
     def models_equal(self, model, model2):
         # check words/hidden-weights
@@ -347,7 +367,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(alpha=0.025, min_alpha=0.025, min_count=1, workers=8, size=5)
         model.build_vocab(sentences)
         for epoch in range(10):
-            model.train(sentences)
+            model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
             model.alpha -= 0.002
             model.min_alpha = model.alpha
             if epoch == 5:
