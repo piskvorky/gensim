@@ -121,7 +121,7 @@ class TestSklearnLDAWrapper(unittest.TestCase):
         self.assertEqual(model_params["num_topics"], 3)
 
         # updating multiple params
-        param_dict = {"eval_every" : 20 , "decay" : 0.7}
+        param_dict = {"eval_every": 20, "decay": 0.7}
         self.model.set_params(**param_dict)
         model_params = self.model.get_params()
         for key in param_dict.keys():
@@ -185,7 +185,7 @@ class TestSklearnLSIWrapper(unittest.TestCase):
         self.assertEqual(model_params["num_topics"], 3)
 
         # updating multiple params
-        param_dict = {"chunksize" : 10000 , "decay" : 0.9}
+        param_dict = {"chunksize": 10000, "decay": 0.9}
         self.model.set_params(**param_dict)
         model_params = self.model.get_params()
         for key in param_dict.keys():
