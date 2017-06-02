@@ -39,7 +39,7 @@ import os
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
-from gensim.matutils import kullback_leibler, hellinger, jaccard_set
+from gensim.matutils import kullback_leibler, hellinger, jaccard_distance
 
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
@@ -989,9 +989,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> print(annotation) # get array with positive/negative words for each topic pair from `m1` and `m2`
         """
 
-        distances = {"kulback_leibler": kullback_leibler,
-                     "hellinger": hellinger,
-                     "jaccard": jaccard_set}
+        distances = {
+            "kulback_leibler": kullback_leibler,
+            "hellinger": hellinger,
+            "jaccard": jaccard_distance,
+        }
 
         if distance not in distances:
             valid_keys = ", ".join("`{}`".format(x) for x in distances.keys())
@@ -1019,7 +1021,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             if np.abs(np.max(z)) > 1e-8:
                 z /= np.max(z)
 
-        annotation = [[None for _ in range(t1_size)] for _ in range(t2_size)]
+        annotation = [[None] * t1_size for _ in range(t2_size)]
 
         for topic1 in range(t1_size):
             for topic2 in range(t2_size):
@@ -1091,9 +1093,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         separately_explicit = ['expElogbeta', 'sstats']
         # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some
         # array manually.
-        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or len(self.alpha.shape) != 1:
+        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
             separately_explicit.append('alpha')
-        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or len(self.eta.shape) != 1:
+        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
             separately_explicit.append('eta')
         # Merge separately_explicit with separately.
         if separately:
@@ -1117,18 +1119,28 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
+
+        # check if `random_state` attribute has been set after main pickle load
+        # if set -> the model to be loaded was saved using a >= 0.13.2 version of Gensim
+        # if not set -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so set `random_state` as the default value
+        if not hasattr(result, 'random_state'):
+            result.random_state = utils.get_random_state(None)  # using default value `get_random_state(None)`
+            logging.warning("random_state not set so using default value")
+
         state_fname = utils.smart_extension(fname, '.state')
         try:
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
         except Exception as e:
             logging.warning("failed to load state from %s: %s", state_fname, e)
+
         id2word_fname = utils.smart_extension(fname, '.id2word')
+        # check if `id2word_fname` file is present on disk
+        # if present -> the model to be loaded was saved using a >= 0.13.2 version of Gensim, so set `result.id2word` using the `id2word_fname` file
+        # if not present -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so `result.id2word` already set after the main pickle load
         if (os.path.isfile(id2word_fname)):
             try:
                 result.id2word = utils.unpickle(id2word_fname)
             except Exception as e:
                 logging.warning("failed to load id2word dictionary from %s: %s", id2word_fname, e)
-        else:
-            result.id2word = None
         return result
 # endclass LdaModel

@@ -56,7 +56,7 @@ class TestFastText(unittest.TestCase):
         if self.ft_path is None:
             logger.info("FT_HOME env variable not set, skipping test")
             return  # Use self.skipTest once python < 2.7 is no longer supported
-        vocab_size, model_size = 1762, 10
+        vocab_size, model_size = 1763, 10
         trained_model = fasttext.FastText.train(
             self.ft_path, self.corpus_file, size=model_size, output_file=testfile())
 
