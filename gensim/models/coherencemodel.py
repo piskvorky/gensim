@@ -38,28 +38,28 @@ logger = logging.getLogger(__name__)
 
 boolean_document_based = {'u_mass'}
 sliding_window_based = {'c_v', 'c_uci', 'c_npmi'}
-make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
+_make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
 
-coherence_dict = {
-    'u_mass': make_pipeline(segmentation.s_one_pre,
-                            probability_estimation.p_boolean_document,
-                            direct_confirmation_measure.log_conditional_probability,
-                            aggregation.arithmetic_mean),
-    'c_v': make_pipeline(segmentation.s_one_set,
-                         probability_estimation.p_boolean_sliding_window,
-                         indirect_confirmation_measure.cosine_similarity,
-                         aggregation.arithmetic_mean),
-    'c_uci': make_pipeline(segmentation.s_one_one,
-                           probability_estimation.p_boolean_sliding_window,
-                           direct_confirmation_measure.log_ratio_measure,
-                           aggregation.arithmetic_mean),
-    'c_npmi': make_pipeline(segmentation.s_one_one,
+COHERENCE_MEASURES = {
+    'u_mass': _make_pipeline(segmentation.s_one_pre,
+                             probability_estimation.p_boolean_document,
+                             direct_confirmation_measure.log_conditional_probability,
+                             aggregation.arithmetic_mean),
+    'c_v': _make_pipeline(segmentation.s_one_set,
+                          probability_estimation.p_boolean_sliding_window,
+                          indirect_confirmation_measure.cosine_similarity,
+                          aggregation.arithmetic_mean),
+    'c_uci': _make_pipeline(segmentation.s_one_one,
                             probability_estimation.p_boolean_sliding_window,
                             direct_confirmation_measure.log_ratio_measure,
                             aggregation.arithmetic_mean),
+    'c_npmi': _make_pipeline(segmentation.s_one_one,
+                             probability_estimation.p_boolean_sliding_window,
+                             direct_confirmation_measure.log_ratio_measure,
+                             aggregation.arithmetic_mean),
 }
 
-sliding_windows_dict = {
+SLIDING_WINDOW_SIZES = {
     'c_v': 110,
     'c_uci': 10,
     'c_npmi': 10
@@ -174,7 +174,7 @@ class CoherenceModel(interfaces.TransformationABC):
         elif coherence in sliding_window_based:
             self.window_size = window_size
             if self.window_size is None:
-                self.window_size = sliding_windows_dict[self.coherence]
+                self.window_size = SLIDING_WINDOW_SIZES[self.coherence]
             if texts is None:
                 raise ValueError("'texts' should be provided for %s coherence." % coherence)
             else:
@@ -183,8 +183,7 @@ class CoherenceModel(interfaces.TransformationABC):
             raise ValueError("%s coherence is not currently supported." % coherence)
 
         self.topn = topn
-        self.model = model
-
+        self._model = model
         self._accumulator = None
         self._topics = None
         self.topics = topics
@@ -195,8 +194,20 @@ class CoherenceModel(interfaces.TransformationABC):
         return str(self.measure)
 
     @property
+    def model(self):
+        return self._model
+
+    @model.setter
+    def model(self, model):
+        self._model = model
+        if model is not None:
+            new_topics = self._get_topics()
+            self._update_accumulator(new_topics)
+            self._topics = new_topics
+
+    @property
     def measure(self):
-        return coherence_dict[self.coherence]
+        return COHERENCE_MEASURES[self.coherence]
 
     @property
     def topics(self):
@@ -208,33 +219,34 @@ class CoherenceModel(interfaces.TransformationABC):
         if self.model is not None:
             new_topics = self._get_topics()
             if topics is not None:
-                logger.warn("Ignoring topics you are attempting to set in favor of model's topics: %s" % self.model)
+                logger.warning(
+                    "Ignoring topics you are attempting to set in favor of model's topics: %s",
+                    self.model)
         elif topics is not None:
             new_topics = []
             for topic in topics:
                 topic_token_ids = np.array([self.dictionary.token2id[token] for token in topic])
                 new_topics.append(topic_token_ids)
 
+        self._update_accumulator(new_topics)
+        self._topics = new_topics
+
+    def _update_accumulator(self, new_topics):
         if self._relevant_ids_will_differ(new_topics):
             logger.debug("Wiping cached accumulator since it does not contain all relevant ids.")
             self._accumulator = None
 
-        self._topics = new_topics
-
     def _relevant_ids_will_differ(self, new_topics):
-        if not self._topics_differ(new_topics):
+        if self._accumulator is None or not self._topics_differ(new_topics):
             return False
 
-        measure = self.measure
-        current_set = unique_ids_from_segments(measure.seg(self.topics))
-        new_set = unique_ids_from_segments(measure.seg(new_topics))
-        return not current_set.issuperset(new_set)
+        new_set = unique_ids_from_segments(self.measure.seg(new_topics))
+        return not self._accumulator.relevant_ids.issuperset(new_set)
 
     def _topics_differ(self, new_topics):
         return (new_topics is not None and
                     self._topics is not None and
-                    self._accumulator is not None and
-                    not np.equal(new_topics, self._topics).all())
+                    not np.array_equal(new_topics, self._topics))
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""
