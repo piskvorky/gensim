@@ -374,7 +374,7 @@ class TestDoc2VecModel(unittest.TestCase):
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
-        
+
     def testLoadOnClassError(self):
         """Test if exception is raised when loading doc2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
@@ -408,7 +408,10 @@ class ConcatenatedDoc2Vec(object):
     def infer_vector(self, document, alpha=0.1, min_alpha=0.0001, steps=5):
         return np.concatenate([model.infer_vector(document, alpha, min_alpha, steps) for model in self.models])
 
-    def train(self, ignored):
+    def train(self, sentences, total_examples=None, total_words=None,
+              epochs=None, start_alpha=None, end_alpha=None,
+              word_count=0,
+              queue_factor=2, report_delay=1.0):
         pass  # train subcomponents individually
 
 
