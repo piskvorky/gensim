@@ -16,6 +16,7 @@ from gensim import matutils
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
+
 class SklearnWrapperLdaModel(models.LdaModel, sklearn_wrapper_gensim_basetopicmodel.SklearnWrapperBaseTopicModel, TransformerMixin, BaseEstimator):
     """
     Base LDA module
