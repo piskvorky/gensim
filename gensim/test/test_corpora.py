@@ -336,6 +336,71 @@ class TestTextCorpus(CorpusTestCase):
         pass
 
 
+class TestTextDirectoryCorpus(unittest.TestCase):
+
+    def write_one_level(self, *args):
+        if not args:
+            args = ('doc1', 'doc2')
+        dirpath = tempfile.mkdtemp()
+        self.write_docs_to_directory(dirpath, *args)
+        return dirpath
+
+    def write_docs_to_directory(self, dirpath, *args):
+        for doc_num, name in enumerate(args):
+            with open(os.path.join(dirpath, name), 'w') as f:
+                f.write('document %d content' % doc_num)
+
+    def test_one_level_directory(self):
+        dirpath = self.write_one_level()
+
+        corpus = textcorpus.TextDirectoryCorpus(dirpath)
+        self.assertEqual(len(corpus), 2)
+        docs = list(corpus)
+        self.assertEqual(len(docs), 2)
+
+    def write_two_levels(self):
+        dirpath = self.write_one_level()
+        next_level = os.path.join(dirpath, 'level_two')
+        os.mkdir(next_level)
+        self.write_docs_to_directory(next_level, 'doc1', 'doc2')
+        return dirpath, next_level
+
+    def test_two_level_directory(self):
+        dirpath, next_level = self.write_two_levels()
+
+        corpus = textcorpus.TextDirectoryCorpus(dirpath)
+        self.assertEqual(len(corpus), 4)
+        docs = list(corpus)
+        self.assertEqual(len(docs), 4)
+
+        corpus = textcorpus.TextDirectoryCorpus(dirpath, min_depth=1)
+        self.assertEqual(len(corpus), 2)
+        docs = list(corpus)
+        self.assertEqual(len(docs), 2)
+
+        corpus = textcorpus.TextDirectoryCorpus(dirpath, max_depth=0)
+        self.assertEqual(len(corpus), 2)
+        docs = list(corpus)
+        self.assertEqual(len(docs), 2)
+
+    def test_filename_filtering(self):
+        dirpath = self.write_one_level('test1.log', 'test1.txt', 'test2.log', 'other1.log')
+        corpus = textcorpus.TextDirectoryCorpus(dirpath, pattern="test.*\.log")
+        filenames = list(corpus.iter_filepaths())
+        expected = [os.path.join(dirpath, name) for name in ('test1.log', 'test2.log')]
+        self.assertEqual(expected, filenames)
+
+        corpus.pattern = ".*.txt"
+        filenames = list(corpus.iter_filepaths())
+        expected = [os.path.join(dirpath, 'test1.txt')]
+        self.assertEqual(expected, filenames)
+
+        corpus.pattern = None
+        corpus.exclude_pattern = ".*.log"
+        filenames = list(corpus.iter_filepaths())
+        self.assertEqual(expected, filenames)
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     unittest.main()
