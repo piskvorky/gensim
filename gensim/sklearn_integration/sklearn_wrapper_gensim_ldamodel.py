@@ -21,6 +21,7 @@ class SklearnWrapperLdaModel(models.LdaModel, sklearn_wrapper_gensim_basetopicmo
     Base LDA module
     """
 
+
     def __init__(
             self, corpus=None, num_topics=100, id2word=None,
             chunksize=2000, passes=1, update_every=1,

@@ -21,6 +21,7 @@ class SklearnWrapperLsiModel(models.LsiModel, sklearn_wrapper_gensim_basetopicmo
     Base LSI module
     """
 
+
     def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
                  decay=1.0, onepass=True, power_iters=2, extra_samples=100):
         """
