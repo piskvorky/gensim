@@ -9,10 +9,10 @@ Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
 import numpy as np
-import sklearn_wrapper_gensim_basetopicmodel
 
 from gensim import models
 from gensim import matutils
+from gensim.sklearn_integration import sklearn_wrapper_gensim_basetopicmodel
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
