@@ -9,14 +9,14 @@ Scikit learn interface for gensim for easy use of gensim with scikit-learn
 follows on scikit learn API conventions
 """
 import numpy as np
+import sklearn_wrapper_gensim_basetopicmodel
 
 from gensim import models
 from gensim import matutils
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
-
-class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
+class SklearnWrapperLdaModel(models.LdaModel, sklearn_wrapper_gensim_basetopicmodel.SklearnWrapperBaseTopicModel, TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """
@@ -65,14 +65,6 @@ class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
                 "offset": self.offset, "eval_every": self.eval_every, "iterations": self.iterations,
                 "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
                 "random_state": self.random_state}
-
-    def set_params(self, **parameters):
-        """
-        Set all parameters.
-        """
-        for parameter, value in parameters.items():
-            self.parameter = value
-        return self
 
     def fit(self, X,  y=None):
         """

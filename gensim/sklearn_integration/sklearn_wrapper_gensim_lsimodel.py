@@ -9,13 +9,14 @@ Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
 import numpy as np
+import sklearn_wrapper_gensim_basetopicmodel
 
 from gensim import models
 from gensim import matutils
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
-class SklearnWrapperLsiModel(models.LsiModel, TransformerMixin, BaseEstimator):
+class SklearnWrapperLsiModel(models.LsiModel, sklearn_wrapper_gensim_basetopicmodel.SklearnWrapperBaseTopicModel, TransformerMixin, BaseEstimator):
     """
     Base LSI module
     """
@@ -46,14 +47,6 @@ class SklearnWrapperLsiModel(models.LsiModel, TransformerMixin, BaseEstimator):
         return {"corpus": self.corpus, "num_topics": self.num_topics, "id2word": self.id2word,
                 "chunksize": self.chunksize, "decay": self.decay, "onepass": self.onepass,
                 "extra_samples": self.extra_samples, "power_iters": self.power_iters}
-
-    def set_params(self, **parameters):
-        """
-        Set all parameters.
-        """
-        for parameter, value in parameters.items():
-            self.parameter = value
-        return self
 
     def fit(self, X,  y=None):
         """
