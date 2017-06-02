@@ -532,6 +532,19 @@ def jaccard(vec1, vec2):
         return 1 - float(len(intersection)) / float(len(union))
 
 
+def jaccard_distance(set1, set2):
+    """
+    Calculate a distance between set representation (1 minus the intersection divided by union).
+    Return a value in range <0, 1> where values closer to 0 mean smaller distance and thus higher similarity.
+    """
+
+    union_cardinality = len(set1 | set2)
+    if union_cardinality == 0:  # Both sets are empty
+        return 1.
+
+    return 1. - float(len(set1 & set2)) / float(union_cardinality)
+
+
 def dirichlet_expectation(alpha):
     """
     For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.

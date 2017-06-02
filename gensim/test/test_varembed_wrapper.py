@@ -56,19 +56,13 @@ class TestVarembed(unittest.TestCase):
         """Test add morphemes to Embeddings
            Test only in Python 2.7 and above. Add Morphemes is not supported in earlier versions.
         """
-            model = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file)
-            model_with_morphemes = varembed.VarEmbed.load_varembed_format(
-                vectors=varembed_model_vector_file, morfessor_model=varembed_model_morfessor_file)
-            self.model_sanity(model_with_morphemes)
-            # Check syn0 is different for both models.
-            self.assertFalse(np.allclose(model.syn0, model_with_morphemes.syn0))
-        
-    @unittest.skipUnless(sys.version_info < (2, 7), 'Test to check throwing exception in Python 2.6 and earlier')
-    def testAddMorphemesThrowsExceptionInPython26(self):
-        self.assertRaises(
-            Exception, varembed.VarEmbed.load_varembed_format, vectors=varembed_model_vector_file,
-            morfessor_model=varembed_model_morfessor_file)
-
+        model = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file)
+        model_with_morphemes = varembed.VarEmbed.load_varembed_format(
+            vectors=varembed_model_vector_file, morfessor_model=varembed_model_morfessor_file)
+        self.model_sanity(model_with_morphemes)
+        # Check syn0 is different for both models.
+        self.assertFalse(np.allclose(model.syn0, model_with_morphemes.syn0))
+    
     def testLookup(self):
         """Test lookup of vector for a particular word and list"""
         model = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file)
