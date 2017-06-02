@@ -195,6 +195,26 @@ class TestCoherenceModel(unittest.TestCase):
         model2 = CoherenceModel.load(fname)
         self.assertTrue(model.get_coherence() == model2.get_coherence())
 
+    def testPersistenceAfterProbabilityEstimationUsingCorpus(self):
+        fname = testfile()
+        model = CoherenceModel(topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary,
+                               coherence='u_mass')
+        model.estimate_probabilities()
+        model.save(fname)
+        model2 = CoherenceModel.load(fname)
+        self.assertIsNotNone(model2._accumulator)
+        self.assertTrue(model.get_coherence() == model2.get_coherence())
+
+    def testPersistenceAfterProbabilityEstimationUsingTexts(self):
+        fname = testfile()
+        model = CoherenceModel(topics=self.topics1, texts=self.texts, dictionary=self.dictionary,
+                               coherence='c_v')
+        model.estimate_probabilities()
+        model.save(fname)
+        model2 = CoherenceModel.load(fname)
+        self.assertIsNotNone(model2._accumulator)
+        self.assertTrue(model.get_coherence() == model2.get_coherence())
+
     def testAccumulatorCachingSameSizeTopics(self):
         kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass')
         cm1 = CoherenceModel(topics=self.topics1, **kwargs)
