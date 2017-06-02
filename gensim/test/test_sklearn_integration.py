@@ -114,6 +114,19 @@ class TestSklearnLDAWrapper(unittest.TestCase):
         score = text_lda.score(corpus, data.target)
         self.assertGreater(score, 0.40)
 
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
+
+        # updating multiple params
+        param_dict = {"eval_every" : 20 , "decay" : 0.7}
+        self.model.set_params(**param_dict)
+        model_params = self.model.get_params()
+        for key in param_dict.keys():
+            self.assertEqual(model_params[key], param_dict[key])
+
 
 class TestSklearnLSIWrapper(unittest.TestCase):
     def setUp(self):
@@ -164,6 +177,20 @@ class TestSklearnLSIWrapper(unittest.TestCase):
         text_lda.fit(corpus, data.target)
         score = text_lda.score(corpus, data.target)
         self.assertGreater(score, 0.50)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
+
+        # updating multiple params
+        param_dict = {"chunksize" : 10000 , "decay" : 0.9}
+        self.model.set_params(**param_dict)
+        model_params = self.model.get_params()
+        for key in param_dict.keys():
+            self.assertEqual(model_params[key], param_dict[key])
+
 
 if __name__ == '__main__':
     unittest.main()
