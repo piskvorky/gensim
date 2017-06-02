@@ -8,7 +8,7 @@ The wrapped model can NOT be updated with new documents for online training -- u
 `Word2Vec` for that.
 
 Example:
->>> model = gensim.models.wrappers.Wordrank('/Users/dummy/wordrank', corpus_file='text8', out_name='wr_model')
+>>> model = gensim.models.wrappers.Wordrank.train('/Users/dummy/wordrank', corpus_file='text8', out_name='wr_model')
 >>> print model[word]  # prints vector for given words
 
 .. [1] https://bitbucket.org/shihaoji/wordrank/
