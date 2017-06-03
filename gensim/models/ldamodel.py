@@ -595,7 +595,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if update_every:
             updatetype = "online"
-            if passes ==1:
+            if passes == 1:
                 updatetype += " (single-pass)"
             else:
                 updatetype += " (multi-pass)"
