@@ -72,42 +72,7 @@ from gensim import utils, interfaces
 logger = logging.getLogger(__name__)
 #from gensim.models.phrases_inner import learn_vocab
 
-try:
-    from gensim.models.phrases_inner import learn_vocabd
-    logger.info("Cython file loaded")
-except ImportError:
-    logger.info("Cython file not loaded")
-    #failed... fall back to plain numpy (20-80x slower training than the above)
 
-    
-    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
-        #Collect unigram/bigram counts from the `sentences` iterable.
-        sentence_no = -1
-        total_words = 0
-        logger.info("collecting all words and their counts")
-        vocab = defaultdict(int)
-        min_reduce = 1
-        for sentence_no, sentence in enumerate(sentences):
-            if sentence_no % progress_per == 0:
-                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
-                            (sentence_no, total_words, len(vocab)))
-            sentence = [utils.any2utf8(w) for w in sentence] 
-            for bigram in zip(sentence, sentence[1:]):
-                vocab[bigram[0]] += 1
-                vocab[delimiter.join(bigram)] += 1
-                total_words += 1
-
-            if sentence:  # add last word skipped by previous loop
-                word = sentence[-1]
-                vocab[word] += 1
-
-            if len(vocab) > max_vocab_size:
-                utils.prune_vocab(vocab, min_reduce)
-                min_reduce += 1
-
-        logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
-                    (len(vocab), total_words, sentence_no + 1))
-        return min_reduce, vocab
 
 
 
@@ -144,6 +109,44 @@ class Phrases(interfaces.TransformationABC):
     and `phrases[corpus]` syntax.
 
     """
+    #from gensim.models.phrases_inner import learn_vocab
+    try:
+        from gensim.models.phrases_inner import learn_vocab
+        logger.info("Cython file loaded")
+    except ImportError:
+        logger.info("Cython file not loaded")
+        #failed... fall back to plain numpy (20-80x slower training than the above)
+
+    
+        def learn_vocab(self,sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
+            #Collect unigram/bigram counts from the `sentences` iterable.
+            sentence_no = -1
+            total_words = 0
+            logger.info("collecting all words and their counts")
+            vocab = defaultdict(int)
+            min_reduce = 1
+            for sentence_no, sentence in enumerate(sentences):
+                if sentence_no % progress_per == 0:
+                    logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
+                                (sentence_no, total_words, len(vocab)))
+                #sentence = [utils.any2utf8(w) for w in sentence] 
+                for bigram in zip(sentence, sentence[1:]):
+                    vocab[bigram[0]] += 1
+                    vocab[delimiter.join(bigram)] += 1
+                    total_words += 1
+
+                if sentence:  # add last word skipped by previous loop
+                    word = sentence[-1]
+                    vocab[word] += 1
+
+                if len(vocab) > max_vocab_size:
+                    utils.prune_vocab(vocab, min_reduce)
+                    min_reduce += 1
+
+            logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
+                        (len(vocab), total_words, sentence_no + 1))
+            return min_reduce, vocab
+
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
                  max_vocab_size=40000000, delimiter=b'_', progress_per=10000):
         """
@@ -208,7 +211,7 @@ class Phrases(interfaces.TransformationABC):
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab = learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
+        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
 
         if len(self.vocab) > 0:
             logger.info("merging %i counts into %s", len(vocab), self)

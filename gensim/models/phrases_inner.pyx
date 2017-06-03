@@ -1,6 +1,5 @@
 #!/usr/bin/env cython
 # cython: boundscheck=False
-# cython: wraparound=False
 # cython: cdivision=True
 # coding: utf-8
 
@@ -9,6 +8,8 @@
 import cython
 import numpy as np
 cimport numpy as np
+
+REAL = np.float32
 
 import sys
 import os
@@ -25,18 +26,24 @@ def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
 
     cdef int sentence_no = -1
     cdef int total_words = 0
+    cdef _progress_per = progress_per
+    cdef _max_vocab_size = max_vocab_size
 
     logger.info("collecting all words and their counts")
-    vocab = defaultdict(int)
+    cdef vocab = defaultdict(int)
+    #cdef int vocab[]
+    #cdef int vocab = {}
+    #vocab = (struct vocab_word *)calloc(vocab_max_size, sizeof(struct vocab_word));
 
     cdef int min_reduce = 1
+    #cdef 
     #cdef int l = -1
 
     for sentence_no, sentence in enumerate(sentences):
-        if sentence_no % progress_per == 0:
+        if sentence_no % _progress_per == 0:
             logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                         (sentence_no, total_words, len(vocab)))
-        sentence = [utils.any2utf8(w) for w in sentence]
+        #sentence = [utils.any2utf8(w) for w in sentence]
         for bigram in zip(sentence, sentence[1:]):
             vocab[bigram[0]] += 1
             vocab[delimiter.join(bigram)] += 1
@@ -47,7 +54,7 @@ def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
             word = sentence[-1]   # error about negative index
             vocab[word] += 1
 
-        if len(vocab) > max_vocab_size:
+        if len(vocab) > _max_vocab_size:
             utils.prune_vocab(vocab, min_reduce)
             min_reduce += 1
 
