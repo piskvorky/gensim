@@ -152,9 +152,8 @@ class CorpusAccumulator(InvertedIndexBased):
     def analyze_text(self, text, doc_num=None):
         doc_words = frozenset(x[0] for x in text)
         top_ids_in_doc = self.relevant_ids.intersection(doc_words)
-        if len(top_ids_in_doc) > 0:
-            for word_id in top_ids_in_doc:
-                self._inverted_index[self.id2contiguous[word_id]].add(self._num_docs)
+        for word_id in top_ids_in_doc:
+            self._inverted_index[self.id2contiguous[word_id]].add(self._num_docs)
 
     def accumulate(self, corpus):
         for document in corpus:
