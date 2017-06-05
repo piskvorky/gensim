@@ -8,13 +8,16 @@
 Scikit learn interface for gensim for easy use of gensim with scikit-learn
 follows on scikit learn API conventions
 """
+from abc import ABCMeta, abstractmethod
 
 
-class SklearnWrapperBaseTopicModel(object):
+class BaseSklearnWrapper(object):
     """
-    BaseTopicModel module
+    Base sklearn wrapper module
     """
+    __metaclass__ = ABCMeta
 
+    @abstractmethod
     def set_params(self, **parameters):
         """
         Set all parameters.

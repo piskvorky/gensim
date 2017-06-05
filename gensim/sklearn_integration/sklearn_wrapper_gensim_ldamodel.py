@@ -12,16 +12,15 @@ import numpy as np
 
 from gensim import models
 from gensim import matutils
-from gensim.sklearn_integration import sklearn_wrapper_gensim_basetopicmodel
+from gensim.sklearn_integration import base_sklearn_wrapper
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
 
-class SklearnWrapperLdaModel(models.LdaModel, sklearn_wrapper_gensim_basetopicmodel.SklearnWrapperBaseTopicModel, TransformerMixin, BaseEstimator):
+class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """
-
 
     def __init__(
             self, corpus=None, num_topics=100, id2word=None,
@@ -67,6 +66,12 @@ class SklearnWrapperLdaModel(models.LdaModel, sklearn_wrapper_gensim_basetopicmo
                 "offset": self.offset, "eval_every": self.eval_every, "iterations": self.iterations,
                 "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
                 "random_state": self.random_state}
+
+    def set_params(self, **parameters):
+        """
+        Set all parameters.
+        """
+        super(SklearnWrapperLdaModel, self).set_params(**parameters)
 
     def fit(self, X,  y=None):
         """

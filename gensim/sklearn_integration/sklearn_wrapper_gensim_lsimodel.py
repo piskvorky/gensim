@@ -12,16 +12,15 @@ import numpy as np
 
 from gensim import models
 from gensim import matutils
-from gensim.sklearn_integration import sklearn_wrapper_gensim_basetopicmodel
+from gensim.sklearn_integration import base_sklearn_wrapper
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
 
-class SklearnWrapperLsiModel(models.LsiModel, sklearn_wrapper_gensim_basetopicmodel.SklearnWrapperBaseTopicModel, TransformerMixin, BaseEstimator):
+class SklearnWrapperLsiModel(models.LsiModel, base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LSI module
     """
-
 
     def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
                  decay=1.0, onepass=True, power_iters=2, extra_samples=100):
@@ -49,6 +48,12 @@ class SklearnWrapperLsiModel(models.LsiModel, sklearn_wrapper_gensim_basetopicmo
         return {"corpus": self.corpus, "num_topics": self.num_topics, "id2word": self.id2word,
                 "chunksize": self.chunksize, "decay": self.decay, "onepass": self.onepass,
                 "extra_samples": self.extra_samples, "power_iters": self.power_iters}
+
+    def set_params(self, **parameters):
+        """
+        Set all parameters.
+        """
+        super(SklearnWrapperLsiModel, self).set_params(**parameters)
 
     def fit(self, X,  y=None):
         """
