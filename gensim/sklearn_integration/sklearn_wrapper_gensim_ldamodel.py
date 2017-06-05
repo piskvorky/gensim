@@ -129,7 +129,7 @@ class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
         By default, 'online (single-pass)' mode is used for training the LDA model.
         Configure `passes` and `update_every` params at init to choose the mode among :
             - online (single-pass) : update_every != None and passes == 1
-            - online (multi-pass) : update_every != None and passes != 1
+            - online (multi-pass) : update_every != None and passes > 1
             - batch : update_every == None
         """
         if sparse.issparse(X):
