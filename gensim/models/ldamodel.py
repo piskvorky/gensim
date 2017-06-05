@@ -532,7 +532,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         Log 'u_mass' coherence using the `chunk` of documents as evaluation corpus.
         """
-        cm = gensim.models.CoherenceModel(model=model, corpus=chunk, coherence='u_mass')
+        cm = gensim.models.CoherenceModel(model=model, corpus=chunk, dictionary=self.id2word, coherence='u_mass')
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         logger.info("%.3f coherence estimate based on a held-out corpus of %i documents with %i words", cm.get_coherence(), len(chunk), corpus_words)
         return cm.get_coherence()
