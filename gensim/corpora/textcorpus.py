@@ -37,9 +37,22 @@ import random
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
+from gensim.parsing.preprocessing import STOPWORDS, strip_multiple_whitespaces
+from gensim.utils import deaccent, simple_tokenize
 
 logger = logging.getLogger('gensim.corpora.textcorpus')
 
+
+def remove_stopwords(tokens, stopwords=STOPWORDS):
+    return [token for token in tokens if token not in stopwords]
+
+
+def remove_short(tokens, minsize=3):
+    return [token for token in tokens if len(token) >= minsize]
+
+
+def lower_to_unicode(text):
+    return utils.to_unicode(text.lower(), 'utf8', 'strict')
 
 class TextCorpus(interfaces.CorpusABC):
     """
@@ -57,15 +70,25 @@ class TextCorpus(interfaces.CorpusABC):
     `preprocess_text` method.
 
     """
-    def __init__(self, input=None, metadata=False, lowercase=True, encoding='utf8',
-                 encoding_errors='strict'):
+    def __init__(self, input=None, metadata=False, character_filters=None, tokenizer=None,
+                 token_filters=None):
         super(TextCorpus, self).__init__()
         self.input = input
         self.dictionary = Dictionary()
         self.metadata = metadata
-        self.lowercase = lowercase
-        self.encoding = encoding
-        self.encoding_errors = encoding_errors
+
+        self.character_filters = character_filters
+        if self.character_filters is None:
+            self.character_filters = [lower_to_unicode, deaccent, strip_multiple_whitespaces]
+
+        self.tokenizer = tokenizer
+        if self.tokenizer is None:
+            self.tokenizer = simple_tokenize
+
+        self.token_filters = token_filters
+        if self.token_filters is None:
+            self.token_filters = [remove_short, remove_stopwords]
+
         if input is not None:
             self.dictionary.add_documents(self.get_texts())
         else:
@@ -73,8 +96,7 @@ class TextCorpus(interfaces.CorpusABC):
                            "dictionary will be initialized some other way.")
 
     def __iter__(self):
-        """
-        The function that defines a corpus.
+        """The function that defines a corpus.
 
         Iterating over the corpus must yield sparse vectors, one for each document.
         """
@@ -86,6 +108,10 @@ class TextCorpus(interfaces.CorpusABC):
                 yield self.dictionary.doc2bow(text, allow_update=False)
 
     def getstream(self):
+        """Yield documents from the underlying plain text collection (of one or more files).
+        Each item yielded from this method will be considered a document by subsequent
+        preprocessing methods.
+        """
         with utils.file_or_filename(self.input) as f:
             for line in f:
                 yield line
@@ -94,8 +120,14 @@ class TextCorpus(interfaces.CorpusABC):
         """Apply preprocessing to a single text document. This should perform tokenization
         in addition to any other desired preprocessing steps.
         """
-        return utils.tokenize(text, encoding=self.encoding, lowercase=self.lowercase,
-                              errors=self.encoding_errors)
+        for character_filter in self.character_filters:
+            text = character_filter(text)
+
+        tokens = self.tokenizer(text)
+        for token_filter in self.token_filters:
+            tokens = token_filter(tokens)
+
+        return tokens
 
     def get_texts(self):
         """

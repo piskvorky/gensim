@@ -8,18 +8,18 @@
 Automated tests for checking corpus I/O formats (the corpora package).
 """
 
+import itertools
 import logging
 import os.path
-import unittest
 import tempfile
-import itertools
+import unittest
 
 import numpy as np
 
-from gensim.utils import to_unicode
-from gensim.interfaces import TransformedCorpus
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
+from gensim.interfaces import TransformedCorpus
+from gensim.utils import to_unicode
 
 # needed because sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
@@ -47,6 +47,10 @@ class DummyTransformer(object):
 
 class CorpusTestCase(unittest.TestCase):
     TEST_CORPUS = [[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]
+
+    def setUp(self):
+        self.corpus_class = None
+        self.file_extension = None
 
     def run(self, result=None):
         if type(self) is not CorpusTestCase:
@@ -151,7 +155,7 @@ class CorpusTestCase(unittest.TestCase):
             firstdoc = next(iter(corpus))
             testdoc = set((to_unicode(corpus.id2word[x]), y) for x, y in firstdoc)
 
-            self.assertEqual(testdoc, set([('computer', 1), ('human', 1), ('interface', 1)]))
+            self.assertEqual(testdoc, {('computer', 1), ('human', 1), ('interface', 1)})
 
             d = corpus.id2word
             d[0], d[1] = d[1], d[0]
@@ -159,7 +163,7 @@ class CorpusTestCase(unittest.TestCase):
 
             firstdoc2 = next(iter(corpus))
             testdoc2 = set((to_unicode(corpus.id2word[x]), y) for x, y in firstdoc2)
-            self.assertEqual(testdoc2, set([('computer', 1), ('human', 1), ('interface', 1)]))
+            self.assertEqual(testdoc2, {('computer', 1), ('human', 1), ('interface', 1)})
 
     def test_indexing(self):
         fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
@@ -190,7 +194,7 @@ class CorpusTestCase(unittest.TestCase):
             return corpus[slice_]
 
         # make sure proper input validation for sliced corpora is done
-        self.assertRaises(ValueError, _get_slice, corpus, set([1]))
+        self.assertRaises(ValueError, _get_slice, corpus, {1})
         self.assertRaises(ValueError, _get_slice, corpus, 1.0)
 
         # check sliced corpora that use fancy indexing
@@ -202,16 +206,16 @@ class CorpusTestCase(unittest.TestCase):
 
         # check that TransformedCorpus supports indexing when the underlying
         # corpus does, and throws an error otherwise
+        corpus_ = TransformedCorpus(DummyTransformer(), corpus)
         if hasattr(corpus, 'index') and corpus.index is not None:
-            corpus_ = TransformedCorpus(DummyTransformer(), corpus)
             self.assertEqual(corpus_[0][0][1], docs[0][0][1] + 1)
-            self.assertRaises(ValueError, _get_slice, corpus_, set([1]))
+            self.assertRaises(ValueError, _get_slice, corpus_, {1})
             transformed_docs = [val + 1 for i, d in enumerate(docs) for _, val in d if i in [1, 3, 4]]
             self.assertEquals(transformed_docs, list(v for doc in corpus_[[1, 3, 4]] for _, v in doc))
             self.assertEqual(3, len(corpus_[[1, 3, 4]]))
         else:
             self.assertRaises(RuntimeError, _get_slice, corpus_, [1, 3, 4])
-            self.assertRaises(RuntimeError, _get_slice, corpus_, set([1]))
+            self.assertRaises(RuntimeError, _get_slice, corpus_, {1})
             self.assertRaises(RuntimeError, _get_slice, corpus_, 1.0)
 
 
@@ -322,6 +326,26 @@ class TestTextCorpus(CorpusTestCase):
         for i, docmeta in enumerate(docs):
             doc, metadata = docmeta
             self.assertEqual(metadata[0], i)
+
+    def test_default_preprocessing(self):
+        lines = [
+            "Šéf chomutovských komunistů dostal poštou bílý prášek",
+            "this is a test for stopwords",
+            "zf tooth   spaces   "
+        ]
+        expected = [
+            ['Sef', 'chomutovskych', 'komunistu', 'dostal', 'postou', 'bily', 'prasek'],
+            ['test', 'stopwords'],
+            ['tooth', 'spaces']
+        ]
+
+        fpath = tempfile.mktemp()
+        with open(fpath, 'w') as f:
+            f.write('\n'.join(lines))
+
+        corpus = self.corpus_class(fpath)
+        texts = list(corpus.get_texts())
+        self.assertEqual(expected, texts)
 
     def test_save(self):
         pass
