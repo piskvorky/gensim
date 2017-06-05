@@ -17,6 +17,11 @@ class BaseSklearnWrapper(object):
     """
     __metaclass__ = ABCMeta
 
+
+    @abstractmethod
+    def get_params(self, deep=True):
+        pass
+
     @abstractmethod
     def set_params(self, **parameters):
         """
@@ -25,3 +30,15 @@ class BaseSklearnWrapper(object):
         for parameter, value in parameters.items():
             setattr(self, parameter, value)
         return self
+
+    @abstractmethod
+    def fit(self, X,  y=None):
+        pass
+
+    @abstractmethod
+    def transform(self, docs, minimum_probability=None):
+        pass
+
+    @abstractmethod
+    def partial_fit(self, X):
+        pass
