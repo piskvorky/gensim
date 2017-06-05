@@ -9,10 +9,10 @@ This module contains classes for analyzing the texts of a corpus to accumulate
 statistical information about word occurrences.
 """
 
-import sys
-import logging
 import itertools
+import logging
 import multiprocessing as mp
+import sys
 from collections import Counter
 
 import numpy as np
@@ -65,8 +65,9 @@ class BaseAnalyzer(object):
     def num_docs(self, num):
         self._num_docs = num
         if self._num_docs % self.log_every == 0:
-            logger.info("%s accumulated stats from %d documents",
-                        self.__class__.__name__, self._num_docs)
+            logger.info(
+                "%s accumulated stats from %d documents",
+                self.__class__.__name__, self._num_docs)
 
     def analyze_text(self, text, doc_num=None):
         raise NotImplementedError("Base classes should implement analyze_text.")
@@ -143,7 +144,7 @@ class InvertedIndexBased(BaseAnalyzer):
 
     def index_to_dict(self):
         contiguous2id = {n: word_id for word_id, n in viewitems(self.id2contiguous)}
-        return {contiguous2id[n]: doc_id_list for n, doc_id_list in enumerate(self._inverted_index)}
+        return {contiguous2id[n]: doc_id_set for n, doc_id_set in enumerate(self._inverted_index)}
 
 
 class CorpusAccumulator(InvertedIndexBased):
@@ -177,8 +178,9 @@ class WindowedTextsAnalyzer(UsesDictionary):
 
     def accumulate(self, texts, window_size):
         relevant_texts = self._iter_texts(texts)
-        windows = utils.iter_windows(relevant_texts, window_size, ignore_below_size=False,
-                                     include_doc_num=True)
+        windows = utils.iter_windows(
+            relevant_texts, window_size, ignore_below_size=False, include_doc_num=True)
+
         for doc_num, virtual_document in windows:
             self.analyze_text(virtual_document, doc_num)
             self.num_docs += 1
@@ -307,7 +309,8 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         """
         super(ParallelWordOccurrenceAccumulator, self).__init__(*args)
         if processes < 2:
-            raise ValueError("Must have at least 2 processes to run in parallel; got %d", processes)
+            raise ValueError(
+                "Must have at least 2 processes to run in parallel; got %d" % processes)
         self.processes = processes
         self.batch_size = kwargs.get('batch_size', 64)
 
@@ -321,8 +324,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
             self.queue_all_texts(input_q, texts, window_size)
             interrupted = False
         except KeyboardInterrupt:
-            logger.warn("stats accumulation interrupted; <= %d documents processed",
-                        self._num_docs)
+            logger.warn("stats accumulation interrupted; <= %d documents processed", self._num_docs)
             interrupted = True
 
         accumulators = self.terminate_workers(input_q, output_q, workers, interrupted)
@@ -414,8 +416,9 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         # Workers do partial accumulation, so none of the co-occurrence matrices are symmetrized.
         # This is by design, to avoid unnecessary matrix additions/conversions during accumulation.
         accumulator._symmetrize()
-        logger.info("accumulated word occurrence stats for %d virtual documents",
-                    accumulator.num_docs)
+        logger.info(
+            "accumulated word occurrence stats for %d virtual documents",
+            accumulator.num_docs)
         return accumulator
 
 
@@ -434,8 +437,9 @@ class AccumulatingWorker(mp.Process):
         try:
             self._run()
         except KeyboardInterrupt:
-            logger.info("%s interrupted after processing %d documents",
-                        self.__class__.__name__, self.accumulator.num_docs)
+            logger.info(
+                "%s interrupted after processing %d documents",
+                self.__class__.__name__, self.accumulator.num_docs)
         except:
             logger.exception("worker encountered unexpected exception")
         finally:
@@ -453,11 +457,13 @@ class AccumulatingWorker(mp.Process):
 
             self.accumulator.partial_accumulate(docs, self.window_size)
             n_docs += len(docs)
-            logger.debug("completed batch %d; %d documents processed (%d virtual)",
-                         batch_num, n_docs, self.accumulator.num_docs)
+            logger.debug(
+                "completed batch %d; %d documents processed (%d virtual)",
+                batch_num, n_docs, self.accumulator.num_docs)
 
-        logger.debug("finished all batches; %d documents processed (%d virtual)",
-                     n_docs, self.accumulator.num_docs)
+        logger.debug(
+            "finished all batches; %d documents processed (%d virtual)",
+            n_docs, self.accumulator.num_docs)
 
     def reply_to_master(self):
         logger.info("serializing accumulator to return to master...")

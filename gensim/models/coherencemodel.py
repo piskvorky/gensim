@@ -19,8 +19,8 @@ coherence measures. http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public
 """
 
 import logging
-from collections import namedtuple
 import multiprocessing as mp
+from collections import namedtuple
 
 import numpy as np
 
@@ -41,22 +41,30 @@ sliding_window_based = {'c_v', 'c_uci', 'c_npmi'}
 _make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
 
 COHERENCE_MEASURES = {
-    'u_mass': _make_pipeline(segmentation.s_one_pre,
-                             probability_estimation.p_boolean_document,
-                             direct_confirmation_measure.log_conditional_probability,
-                             aggregation.arithmetic_mean),
-    'c_v': _make_pipeline(segmentation.s_one_set,
-                          probability_estimation.p_boolean_sliding_window,
-                          indirect_confirmation_measure.cosine_similarity,
-                          aggregation.arithmetic_mean),
-    'c_uci': _make_pipeline(segmentation.s_one_one,
-                            probability_estimation.p_boolean_sliding_window,
-                            direct_confirmation_measure.log_ratio_measure,
-                            aggregation.arithmetic_mean),
-    'c_npmi': _make_pipeline(segmentation.s_one_one,
-                             probability_estimation.p_boolean_sliding_window,
-                             direct_confirmation_measure.log_ratio_measure,
-                             aggregation.arithmetic_mean),
+    'u_mass': _make_pipeline(
+        segmentation.s_one_pre,
+        probability_estimation.p_boolean_document,
+        direct_confirmation_measure.log_conditional_probability,
+        aggregation.arithmetic_mean
+    ),
+    'c_v': _make_pipeline(
+        segmentation.s_one_set,
+        probability_estimation.p_boolean_sliding_window,
+        indirect_confirmation_measure.cosine_similarity,
+        aggregation.arithmetic_mean
+    ),
+    'c_uci': _make_pipeline(
+        segmentation.s_one_one,
+        probability_estimation.p_boolean_sliding_window,
+        direct_confirmation_measure.log_ratio_measure,
+        aggregation.arithmetic_mean
+    ),
+    'c_npmi': _make_pipeline(
+        segmentation.s_one_one,
+        probability_estimation.p_boolean_sliding_window,
+        direct_confirmation_measure.log_ratio_measure,
+        aggregation.arithmetic_mean
+    ),
 }
 
 SLIDING_WINDOW_SIZES = {
@@ -102,8 +110,8 @@ class CoherenceModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None, window_size=None,
-                 coherence='c_v', topn=10, processes=-1):
+    def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
+                 window_size=None, coherence='c_v', topn=10, processes=-1):
         """
         Args:
         ----
@@ -152,8 +160,9 @@ class CoherenceModel(interfaces.TransformationABC):
         # Check if associated dictionary is provided.
         if dictionary is None:
             if isinstance(model.id2word, FakeDict):
-                raise ValueError("The associated dictionary should be provided with the corpus or 'id2word' for topic model"
-                                 " should be set as the associated dictionary.")
+                raise ValueError(
+                    "The associated dictionary should be provided with the corpus or 'id2word'"
+                    " for topic model should be set as the associated dictionary.")
             else:
                 self.dictionary = model.id2word
         else:
@@ -168,7 +177,9 @@ class CoherenceModel(interfaces.TransformationABC):
                 self.texts = texts
                 self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
             else:
-                raise ValueError("Either 'corpus' with 'dictionary' or 'texts' should be provided for %s coherence." % coherence)
+                raise ValueError(
+                    "Either 'corpus' with 'dictionary' or 'texts' should "
+                    "be provided for %s coherence.", coherence)
 
         # Check for correct inputs for c_v coherence measure.
         elif coherence in sliding_window_based:
@@ -176,11 +187,11 @@ class CoherenceModel(interfaces.TransformationABC):
             if self.window_size is None:
                 self.window_size = SLIDING_WINDOW_SIZES[self.coherence]
             if texts is None:
-                raise ValueError("'texts' should be provided for %s coherence." % coherence)
+                raise ValueError("'texts' should be provided for %s coherence.", coherence)
             else:
                 self.texts = texts
         else:
-            raise ValueError("%s coherence is not currently supported." % coherence)
+            raise ValueError("%s coherence is not currently supported.", coherence)
 
         self.topn = topn
         self._model = model
@@ -245,8 +256,8 @@ class CoherenceModel(interfaces.TransformationABC):
 
     def _topics_differ(self, new_topics):
         return (new_topics is not None and
-                    self._topics is not None and
-                    not np.array_equal(new_topics, self._topics))
+                self._topics is not None and
+                not np.array_equal(new_topics, self._topics))
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""
@@ -264,8 +275,8 @@ class CoherenceModel(interfaces.TransformationABC):
                 bestn = argsort(topic, topn=self.topn, reverse=True)
                 topics.append(bestn)
         else:
-            raise ValueError("This topic model is not currently supported. Supported topic models are"
-                             "LdaModel, LdaVowpalWabbit and LdaMallet.")
+            raise ValueError("This topic model is not currently supported. Supported topic models "
+                             " are LdaModel, LdaVowpalWabbit and LdaMallet.")
         return topics
 
     def segment_topics(self):

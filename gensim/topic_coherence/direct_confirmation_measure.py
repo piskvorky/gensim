@@ -9,6 +9,7 @@ This module contains functions to compute direct confirmation on a pair of words
 """
 
 import logging
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,8 @@ def log_conditional_probability(segmented_topics, accumulator):
 
     Args:
     ----
-    segmented_topics : Output from the segmentation module of the segmented topics. Is a list of list of tuples.
+    segmented_topics : Output from the segmentation module of the segmented topics.
+                       Is a list of list of tuples.
     accumulator: word occurrence accumulator from probability_estimation.
 
     Returns:
@@ -62,7 +64,8 @@ def log_ratio_measure(segmented_topics, accumulator, normalize=False):
 
     Args:
     ----
-    segmented topics : Output from the segmentation module of the segmented topics. Is a list of list of tuples.
+    segmented topics : Output from the segmentation module of the segmented topics.
+                       Is a list of list of tuples.
     accumulator: word occurrence accumulator from probability_estimation.
 
     Returns:

@@ -20,13 +20,13 @@ module.
 
 import bz2
 import logging
-import re
-from xml.etree.cElementTree import iterparse  # LXML isn't faster, so let's go with the built-in solution
 import multiprocessing
+import re
 import signal
+from xml.etree.cElementTree import \
+    iterparse  # LXML isn't faster, so let's go with the built-in solution
 
 from gensim import utils
-
 # cannot import whole gensim.corpora, because that imports wikicorpus...
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
@@ -266,7 +266,8 @@ class WikiCorpus(TextCorpus):
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
-    def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None, filter_namespaces=('0',)):
+    def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
+                 filter_namespaces=('0',)):
         """
         Initialize the corpus. Unless a dictionary is provided, this scans the
         corpus once, to determine its vocabulary.
@@ -305,9 +306,10 @@ class WikiCorpus(TextCorpus):
         """
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0
-        texts = ((text, self.lemmatize, title, pageid)
-                 for title, text, pageid
-                 in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
+        texts = \
+            ((text, self.lemmatize, title, pageid)
+             for title, text, pageid
+             in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
         pool = multiprocessing.Pool(self.processes, init_to_ignore_interrupt)
 
         try:
@@ -327,9 +329,10 @@ class WikiCorpus(TextCorpus):
                     else:
                         yield tokens
         except KeyboardInterrupt:
-            logger.warn("user terminated iteration over Wikipedia corpus after %i documents with %i positions"
-                        " (total %i articles, %i positions before pruning articles shorter than %i words)",
-                        articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS)
+            logger.warn(
+                "user terminated iteration over Wikipedia corpus after %i documents with %i positions"
+                " (total %i articles, %i positions before pruning articles shorter than %i words)",
+                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS)
         else:
             logger.info(
                 "finished iterating over Wikipedia corpus of %i documents with %i positions"

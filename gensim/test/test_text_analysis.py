@@ -1,10 +1,10 @@
 import logging
 import unittest
 
+from gensim.corpora.dictionary import Dictionary
 from gensim.topic_coherence.text_analysis import \
     InvertedIndexAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator, \
     CorpusAccumulator
-from gensim.corpora.dictionary import Dictionary
 
 
 class BaseTestCases(object):
@@ -28,16 +28,18 @@ class BaseTestCases(object):
         dictionary.id2token = {v: k for k, v in token2id.items()}
         top_ids = set(token2id.values())
 
-        texts2 = [['human', 'interface', 'computer'],
-                  ['survey', 'user', 'computer', 'system', 'response', 'time'],
-                  ['eps', 'user', 'interface', 'system'],
-                  ['system', 'human', 'system', 'eps'],
-                  ['user', 'response', 'time'],
-                  ['trees'],
-                  ['graph', 'trees'],
-                  ['graph', 'minors', 'trees'],
-                  ['graph', 'minors', 'survey'],
-                  ['user', 'user']]
+        texts2 = [
+            ['human', 'interface', 'computer'],
+            ['survey', 'user', 'computer', 'system', 'response', 'time'],
+            ['eps', 'user', 'interface', 'system'],
+            ['system', 'human', 'system', 'eps'],
+            ['user', 'response', 'time'],
+            ['trees'],
+            ['graph', 'trees'],
+            ['graph', 'minors', 'trees'],
+            ['graph', 'minors', 'survey'],
+            ['user', 'user']
+        ]
         dictionary2 = Dictionary(texts2)
         dictionary2.id2token = {v: k for k, v in dictionary2.token2id.items()}
         top_ids2 = set(dictionary2.token2id.values())
@@ -51,8 +53,7 @@ class BaseTestCases(object):
             return self.accumulator_cls(self.top_ids2, self.dictionary2)
 
         def test_occurrence_counting(self):
-            accumulator = self.init_accumulator()\
-                .accumulate(self.texts, 3)
+            accumulator = self.init_accumulator().accumulate(self.texts, 3)
             self.assertEqual(3, accumulator.get_occurrences("this"))
             self.assertEqual(1, accumulator.get_occurrences("is"))
             self.assertEqual(1, accumulator.get_occurrences("a"))
@@ -62,8 +63,7 @@ class BaseTestCases(object):
             self.assertEqual(1, accumulator.get_co_occurrences("is", "a"))
 
         def test_occurrence_counting2(self):
-            accumulator = self.init_accumulator2()\
-                .accumulate(self.texts2, 110)
+            accumulator = self.init_accumulator2().accumulate(self.texts2, 110)
             self.assertEqual(2, accumulator.get_occurrences("human"))
             self.assertEqual(4, accumulator.get_occurrences("user"))
             self.assertEqual(3, accumulator.get_occurrences("graph"))
@@ -90,8 +90,7 @@ class BaseTestCases(object):
                 self.assertEqual(expected_count, accumulator.get_co_occurrences(word_id2, word_id1))
 
         def test_occurences_for_irrelevant_words(self):
-            accumulator = self.init_accumulator() \
-                .accumulate(self.texts, 2)
+            accumulator = self.init_accumulator().accumulate(self.texts, 2)
             with self.assertRaises(KeyError):
                 accumulator.get_occurrences("irrelevant")
             with self.assertRaises(KeyError):
@@ -117,7 +116,7 @@ class TestInvertedIndexAccumulator(BaseTestCases.TextAnalyzerTestBase):
         self.assertDictEqual(expected, inverted_index)
 
     def test_accumulate2(self):
-        accumulator = InvertedIndexAccumulator(self.top_ids, self.dictionary) \
+        accumulator = InvertedIndexAccumulator(self.top_ids, self.dictionary)\
             .accumulate(self.texts, 3)
         # [['this', 'is', 'a'], ['test', 'document'], ['this', 'test', 'document'],
         #  ['test', 'test', 'this']
@@ -151,12 +150,11 @@ class TestCorpusAnalyzer(unittest.TestCase):
     def setUp(self):
         self.dictionary = BaseTestCases.TextAnalyzerTestBase.dictionary
         self.top_ids = BaseTestCases.TextAnalyzerTestBase.top_ids
-        self.corpus = [self.dictionary.doc2bow(doc)
-                       for doc in BaseTestCases.TextAnalyzerTestBase.texts]
+        self.corpus = \
+            [self.dictionary.doc2bow(doc) for doc in BaseTestCases.TextAnalyzerTestBase.texts]
 
     def test_index_accumulation(self):
-        accumulator = CorpusAccumulator(self.top_ids)\
-            .accumulate(self.corpus)
+        accumulator = CorpusAccumulator(self.top_ids).accumulate(self.corpus)
         inverted_index = accumulator.index_to_dict()
         expected = {
             10: {0, 2, 3},

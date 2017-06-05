@@ -5,12 +5,13 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-This module contains functions to compute confirmation on a pair of words or word subsets. The advantage of indirect
-confirmation measure is that it computes similarity of words in W' and W* with respect to direct confirmations to all words.
-Eg. Suppose x and z are both competing brands of cars, which semantically support each other. However, both brands are
-seldom mentioned together in documents in the reference corpus. But their confirmations to other words like “road”
-or “speed” do strongly correlate. This would be reflected by an indirect confirmation measure. Thus, indirect confirmation
-measures may capture semantic support that direct measures would miss.
+This module contains functions to compute confirmation on a pair of words or word subsets.
+The advantage of indirect confirmation measure is that it computes similarity of words in W' and
+W* with respect to direct confirmations to all words. Eg. Suppose x and z are both competing
+brands of cars, which semantically support each other. However, both brands are seldom mentioned
+together in documents in the reference corpus. But their confirmations to other words like “road”
+or “speed” do strongly correlate. This would be reflected by an indirect confirmation measure.
+Thus, indirect confirmation measures may capture semantic support that direct measures would miss.
 
 The formula used to compute indirect confirmation measure is:
 
@@ -23,11 +24,11 @@ where s_sim can be cosine, dice or jaccard similarity and
 Here 'm' is the direct confirmation measure used.
 """
 
-import logging
 import itertools
+import logging
 
-import scipy.sparse as sps
 import numpy as np
+import scipy.sparse as sps
 
 from gensim.topic_coherence import direct_confirmation_measure
 
@@ -48,10 +49,13 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
 
     Args:
     ----
-    segmented_topics : segmented_topics : Output from the segmentation module of the segmented topics. Is a list of list of tuples.
-    accumulator : Output from the probability_estimation module. Is an accumulator of word occurrences (see text_analysis module).
+    segmented_topics : Output from the segmentation module of the segmented topics.
+                       Is a list of list of tuples.
+    accumulator : Output from the probability_estimation module.
+                  Is an accumulator of word occurrences (see text_analysis module).
     topics : Topics obtained from the trained topic model.
-    measure : String. Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
+    measure : String. Direct confirmation measure to be used.
+              Supported values are "nlr" (normalized log ratio).
     gamma : Gamma value for computing W', W* vectors; default is 1.
 
     Returns:
@@ -78,13 +82,14 @@ class ContextVectorComputer(object):
         if measure == 'nlr':
             self.similarity = _pair_npmi
         else:
-            raise ValueError("The direct confirmation measure you entered is not currently supported.")
+            raise ValueError(
+                "The direct confirmation measure you entered is not currently supported.")
 
         self.mapping = _map_to_contiguous(topics)
         self.vocab_size = len(self.mapping)
         self.accumulator = accumulator
         self.gamma = gamma
-        self.sim_cache = {}  # Cache similarities between tokens represented as pairs of word ids, e.g. (1, 2)
+        self.sim_cache = {}  # Cache similarities between tokens (pairs of word ids), e.g. (1, 2)
         self.context_vector_cache = {}  # mapping from (segment, topic_words) --> context_vector
 
     def __getitem__(self, idx):

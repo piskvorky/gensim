@@ -8,8 +8,8 @@
 This module contains functions to perform segmentation on a list of topics.
 """
 
-import logging
 import itertools
+import logging
 
 from gensim.topic_coherence.text_analysis import \
     CorpusAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator
@@ -60,7 +60,7 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
         accumulator = WordOccurrenceAccumulator(top_ids, dictionary)
     else:
         accumulator = ParallelWordOccurrenceAccumulator(processes, top_ids, dictionary)
-    logger.info("using %s to estimate probabilities from sliding windows" % accumulator)
+    logger.info("using %s to estimate probabilities from sliding windows", accumulator)
     return accumulator.accumulate(texts, window_size)
 
 
