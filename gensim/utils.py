@@ -201,6 +201,10 @@ def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict
         text = text.lower()
     if deacc:
         text = deaccent(text)
+    return simple_tokenize(text)
+
+
+def simple_tokenize(text):
     for match in PAT_ALPHABETIC.finditer(text):
         yield match.group()
 
