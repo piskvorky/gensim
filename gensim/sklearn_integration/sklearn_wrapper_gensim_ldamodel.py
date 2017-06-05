@@ -73,7 +73,7 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
         """
         super(SklearnWrapperLdaModel, self).set_params(**parameters)
 
-    def fit(self, X,  y=None):
+    def fit(self, X, y=None):
         """
         For fitting corpus into the class object.
         Calls gensim.model.LdaModel:

@@ -55,7 +55,7 @@ class SklearnWrapperLsiModel(models.LsiModel, base_sklearn_wrapper.BaseSklearnWr
         """
         super(SklearnWrapperLsiModel, self).set_params(**parameters)
 
-    def fit(self, X,  y=None):
+    def fit(self, X, y=None):
         """
         For fitting corpus into the class object.
         Calls gensim.model.LsiModel:

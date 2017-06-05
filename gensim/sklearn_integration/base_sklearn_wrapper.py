@@ -17,7 +17,6 @@ class BaseSklearnWrapper(object):
     """
     __metaclass__ = ABCMeta
 
-
     @abstractmethod
     def get_params(self, deep=True):
         pass
@@ -32,7 +31,7 @@ class BaseSklearnWrapper(object):
         return self
 
     @abstractmethod
-    def fit(self, X,  y=None):
+    def fit(self, X, y=None):
         pass
 
     @abstractmethod
