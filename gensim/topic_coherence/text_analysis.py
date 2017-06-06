@@ -20,6 +20,7 @@ import scipy.sparse as sps
 from six import viewitems, string_types
 
 from gensim import utils
+from gensim.models.word2vec import Word2Vec
 
 logger = logging.getLogger(__name__)
 
@@ -467,3 +468,62 @@ class AccumulatingWorker(mp.Process):
         logger.info("serializing accumulator to return to master...")
         self.output_q.put(self.accumulator, block=False)
         logger.info("accumulator serialized")
+
+
+class WordVectorsAccumulator(UsesDictionary):
+    """Accumulate context vectors for words using word vector embeddings."""
+
+    def __init__(self, relevant_ids, dictionary, model=None, **model_kwargs):
+        """
+        Args:
+        ----
+        model: if None, a new Word2Vec model is trained on the given text corpus. If not None,
+               it should be a pre-trained Word2Vec context 
+               vectors (gensim.models.keyedvectors.KeyedVectors instance).
+        model_kwargs: if model is None, these keyword arguments will be passed through to the
+                      Word2Vec constructor.
+        """
+        super(WordVectorsAccumulator, self).__init__(relevant_ids, dictionary)
+        self.model = model
+        self.model_kwargs = model_kwargs
+
+    def get_occurrences(self, word):
+        """Return number of docs the word occurs in, once `accumulate` has been called."""
+        try:
+            self.token2id[word]  # is this a token or an id?
+        except KeyError:
+            word = self.dictionary.id2token[word]
+        return self.model.vocab[word].count
+
+    def get_co_occurrences(self, word1, word2):
+        """Return number of docs the words co-occur in, once `accumulate` has been called."""
+        raise NotImplementedError("Word2Vec model does not support co-occurrence counting")
+
+    def accumulate(self, texts, window_size):
+        if self.model is not None:
+            logger.debug("model is already trained; no accumulation necessary")
+            return
+
+        kwargs = self.model_kwargs.copy()
+        if window_size is not None:
+            kwargs['window'] = window_size
+        kwargs['min_count'] = kwargs.get('min_count', 1)
+        kwargs['sg'] = kwargs.get('sg', 1)
+        kwargs['hs'] = kwargs.get('hw', 0)
+
+        self.model = Word2Vec(**kwargs)
+        self.model.build_vocab(texts)
+        self.model.train(texts, total_examples=self.model.corpus_count, epochs=self.model.iter)
+        self.model = self.model.wv  # retain KeyedVectors
+        return self
+
+    def ids_similarity(self, ids1, ids2):
+        if not hasattr(ids1, '__iter__'):
+            ids1 = [ids1]
+        if not hasattr(ids2, '__iter__'):
+            ids2 = [ids2]
+
+        words1 = [self.dictionary.id2token[word_id] for word_id in ids1]
+        words2 = [self.dictionary.id2token[word_id] for word_id in ids2]
+        return self.model.n_similarity(words1, words2)
+

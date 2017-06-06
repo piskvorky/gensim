@@ -35,6 +35,26 @@ from gensim.topic_coherence import direct_confirmation_measure
 logger = logging.getLogger(__name__)
 
 
+def word2vec_similarity(segmented_topics, accumulator):
+    """For each topic segmentation, compute average cosine similarity using a
+    WordVectorsAccumulator.
+    """
+    topic_similarities = np.zeros(len(segmented_topics))
+    for i, topic_segments in enumerate(segmented_topics):
+        segment_similarities = np.zeros(len(topic_segments))
+        for j, (w_prime, w_star) in enumerate(topic_segments):
+            if not hasattr(w_prime, '__iter__'):
+                w_prime = [w_prime]
+            if not hasattr(w_star, '__iter__'):
+                w_star = [w_star]
+
+            segment_similarities[j] = accumulator.ids_similarity(w_prime, w_star)
+
+        topic_similarities[i] = segment_similarities.mean()
+
+    return topic_similarities
+
+
 def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamma=1):
     """
     This function calculates the indirect cosine measure. Given context vectors

@@ -17,7 +17,7 @@ import numpy as np
 
 from gensim.corpora.dictionary import Dictionary
 from gensim.matutils import argsort
-from gensim.models.coherencemodel import CoherenceModel, boolean_document_based
+from gensim.models.coherencemodel import CoherenceModel, BOOLEAN_DOCUMENT_BASED
 from gensim.models.ldamodel import LdaModel
 from gensim.models.wrappers import LdaMallet
 from gensim.models.wrappers import LdaVowpalWabbit
@@ -82,7 +82,7 @@ class TestCoherenceModel(unittest.TestCase):
 
     def check_coherence_measure(self, coherence):
         """Check provided topic coherence algorithm on given topics"""
-        if coherence in boolean_document_based:
+        if coherence in BOOLEAN_DOCUMENT_BASED:
             kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, coherence=coherence)
         else:
             kwargs = dict(texts=self.texts, dictionary=self.dictionary, coherence=coherence)
@@ -118,6 +118,10 @@ class TestCoherenceModel(unittest.TestCase):
         """Perform sanity check to see if c_v coherence works with LDA Model"""
         CoherenceModel(model=self.ldamodel, texts=self.texts, coherence='c_v')
 
+    def testCw2vLdaModel(self):
+        """Perform sanity check to see if c_w2v coherence works with LDAModel."""
+        CoherenceModel(model=self.ldamodel, texts=self.texts, coherence='c_w2v')
+
     def testCuciLdaModel(self):
         """Perform sanity check to see if c_uci coherence works with LDA Model"""
         CoherenceModel(model=self.ldamodel, texts=self.texts, coherence='c_uci')
@@ -137,6 +141,12 @@ class TestCoherenceModel(unittest.TestCase):
         if not self.mallet_path:
             return
         CoherenceModel(model=self.malletmodel, texts=self.texts, coherence='c_v')
+
+    def testCw2vMalletModel(self):
+        """Perform sanity check to see if c_w2v coherence works with LDA Mallet gensim wrapper"""
+        if not self.mallet_path:
+            return
+        CoherenceModel(model=self.malletmodel, texts=self.texts, coherence='c_w2v')
 
     def testCuciMalletModel(self):
         """Perform sanity check to see if c_uci coherence works with LDA Mallet gensim wrapper"""
@@ -161,6 +171,12 @@ class TestCoherenceModel(unittest.TestCase):
         if not self.vw_path:
             return
         CoherenceModel(model=self.vwmodel, texts=self.texts, coherence='c_v')
+
+    def testCw2vVWModel(self):
+        """Perform sanity check to see if c_w2v coherence works with LDA VW gensim wrapper"""
+        if not self.vw_path:
+            return
+        CoherenceModel(model=self.vwmodel, texts=self.texts, coherence='c_w2v')
 
     def testCuciVWModel(self):
         """Perform sanity check to see if c_uci coherence works with LDA VW gensim wrapper"""

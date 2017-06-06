@@ -36,10 +36,10 @@ from gensim.utils import is_corpus, FakeDict
 
 logger = logging.getLogger(__name__)
 
-boolean_document_based = {'u_mass'}
-sliding_window_based = {'c_v', 'c_uci', 'c_npmi'}
-_make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
+BOOLEAN_DOCUMENT_BASED = {'u_mass'}
+SLIDING_WINDOW_BASED = {'c_v', 'c_uci', 'c_npmi', 'c_w2v'}
 
+_make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
 COHERENCE_MEASURES = {
     'u_mass': _make_pipeline(
         segmentation.s_one_pre,
@@ -51,6 +51,12 @@ COHERENCE_MEASURES = {
         segmentation.s_one_set,
         probability_estimation.p_boolean_sliding_window,
         indirect_confirmation_measure.cosine_similarity,
+        aggregation.arithmetic_mean
+    ),
+    'c_w2v': _make_pipeline(
+        segmentation.s_one_set,
+        probability_estimation.p_word2vec,
+        indirect_confirmation_measure.word2vec_similarity,
         aggregation.arithmetic_mean
     ),
     'c_uci': _make_pipeline(
@@ -69,6 +75,7 @@ COHERENCE_MEASURES = {
 
 SLIDING_WINDOW_SIZES = {
     'c_v': 110,
+    'c_w2v': 5,
     'c_uci': 10,
     'c_npmi': 10
 }
@@ -177,7 +184,7 @@ class CoherenceModel(interfaces.TransformationABC):
 
         # Check for correct inputs for u_mass coherence measure.
         self.coherence = coherence
-        if coherence in boolean_document_based:
+        if coherence in BOOLEAN_DOCUMENT_BASED:
             if is_corpus(corpus)[0]:
                 self.corpus = corpus
             elif texts is not None:
@@ -189,7 +196,7 @@ class CoherenceModel(interfaces.TransformationABC):
                     "be provided for %s coherence.", coherence)
 
         # Check for correct inputs for c_v coherence measure.
-        elif coherence in sliding_window_based:
+        elif coherence in SLIDING_WINDOW_BASED:
             self.window_size = window_size
             if self.window_size is None:
                 self.window_size = SLIDING_WINDOW_SIZES[self.coherence]
@@ -297,7 +304,7 @@ class CoherenceModel(interfaces.TransformationABC):
         if segmented_topics is None:
             segmented_topics = self.segment_topics()
 
-        if self.coherence in boolean_document_based:
+        if self.coherence in BOOLEAN_DOCUMENT_BASED:
             self._accumulator = self.measure.prob(self.corpus, segmented_topics)
         else:
             self._accumulator = self.measure.prob(
@@ -315,7 +322,7 @@ class CoherenceModel(interfaces.TransformationABC):
         if self._accumulator is None:
             self.estimate_probabilities(segmented_topics)
 
-        if self.coherence in boolean_document_based:
+        if self.coherence in BOOLEAN_DOCUMENT_BASED or self.coherence == 'c_w2v':
             kwargs = {}
         elif self.coherence == 'c_v':
             kwargs = dict(topics=self.topics, measure='nlr', gamma=1)
