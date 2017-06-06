@@ -11,8 +11,9 @@ This module contains functions to perform segmentation on a list of topics.
 import itertools
 import logging
 
-from gensim.topic_coherence.text_analysis import \
-    CorpusAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator
+from gensim.topic_coherence.text_analysis import (
+    CorpusAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator,
+    WordVectorsAccumulator)
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,18 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
     else:
         accumulator = ParallelWordOccurrenceAccumulator(processes, top_ids, dictionary)
     logger.info("using %s to estimate probabilities from sliding windows", accumulator)
+    return accumulator.accumulate(texts, window_size)
+
+
+def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=1, model=None):
+    """Train word2vec model on `texts` if model is not None.
+    Returns:
+    ----
+    accumulator: text accumulator with trained context vectors.
+    """
+    top_ids = unique_ids_from_segments(segmented_topics)
+    accumulator = WordVectorsAccumulator(
+        top_ids, dictionary, model, window=window_size, workers=processes)
     return accumulator.accumulate(texts, window_size)
 
 
