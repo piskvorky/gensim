@@ -581,11 +581,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if isinstance(corpus, list):
             logger.warning(
-                "taking plain list as a corpus for LDA;"
-                "we strongly recommend you to use corpus streaming instead of lists;"
-                "LDA is processing the corpus in batches and"
-                "it only loads one batch of documents into memory at once;"
-                "please take a look at the tutorial on corpus streaming: "
+                "Taking plain list as a corpus for LDA.\n"
+                "We strongly recommend you to use corpus streaming instead of lists. "
+                "LDA is processing the corpus in batches and "
+                "it only loads one batch of documents into memory at once.\n"
+                "Please take a look at the tutorial on corpus streaming: "
                 "https://radimrehurek.com/gensim/tut1.html#corpus-streaming-one-document-at-a-time")
 
         try:
