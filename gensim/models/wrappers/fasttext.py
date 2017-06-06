@@ -335,6 +335,7 @@ class FastText(Word2Vec):
                 self.struct_unpack(file_handle, '@2i')
 
     def load_vectors(self, file_handle, bin_only = False):
+        logger.info("here??")
         if self.new_format:
             self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
@@ -366,13 +367,15 @@ class FastText(Word2Vec):
         """
         self.wv.ngrams = {}
         all_ngrams = []
+        if bin_only:
+            self.wv.syn0 = zeros((len(self.wv.vocab), self.vector_size), dtype=REAL)
         for w, v in self.wv.vocab.items():
             word_ngrams = self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
             all_ngrams += word_ngrams
 
             
             if bin_only:
-                self.wv.syn0 = zeros((len(self.wv.vocab), self.vector_size), dtype=REAL)
+                #self.wv.syn0 = zeros((len(self.wv.vocab), self.vector_size), dtype=REAL)
                 word_vec = np.zeros(self.wv.syn0.shape[1])
 
                 num_word_ngram_vectors = len(word_ngrams)
