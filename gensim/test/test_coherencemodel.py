@@ -8,19 +8,19 @@
 Automated tests for checking transformation algorithms (the models package).
 """
 
-import os
 import logging
-import unittest
+import os
 import tempfile
+import unittest
 
 import numpy as np
 
+from gensim.corpora.dictionary import Dictionary
+from gensim.matutils import argsort
 from gensim.models.coherencemodel import CoherenceModel, boolean_document_based
 from gensim.models.ldamodel import LdaModel
 from gensim.models.wrappers import LdaMallet
 from gensim.models.wrappers import LdaVowpalWabbit
-from gensim.corpora.dictionary import Dictionary
-from gensim.matutils import argsort
 
 
 def testfile():
@@ -76,12 +76,11 @@ class TestCoherenceModel(unittest.TestCase):
         """Check provided topic coherence algorithm on given topics"""
         if coherence in boolean_document_based:
             kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, coherence=coherence)
-            cm1 = CoherenceModel(topics=self.topics1, **kwargs)
-            cm2 = CoherenceModel(topics=self.topics2, **kwargs)
         else:
             kwargs = dict(texts=self.texts, dictionary=self.dictionary, coherence=coherence)
-            cm1 = CoherenceModel(topics=self.topics1, **kwargs)
-            cm2 = CoherenceModel(topics=self.topics2, **kwargs)
+
+        cm1 = CoherenceModel(topics=self.topics1, **kwargs)
+        cm2 = CoherenceModel(topics=self.topics2, **kwargs)
         self.assertGreater(cm1.get_coherence(), cm2.get_coherence())
 
     def testUMass(self):

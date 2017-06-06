@@ -67,10 +67,12 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
     s_cos_sim = []
     for topic_words, topic_segments in zip(topics, segmented_topics):
         topic_words = tuple(topic_words)  # because tuples are hashable
-        for w_prime, w_star in topic_segments:
+        segment_sims = np.zeros(len(topic_segments))
+        for i, (w_prime, w_star) in enumerate(topic_segments):
             w_prime_cv = context_vectors[w_prime, topic_words]
             w_star_cv = context_vectors[w_star, topic_words]
-            s_cos_sim.append(_cossim(w_prime_cv, w_star_cv))
+            segment_sims[i] = _cossim(w_prime_cv, w_star_cv)
+        s_cos_sim.append(np.mean(segment_sims))
 
     return s_cos_sim
 

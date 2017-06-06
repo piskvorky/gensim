@@ -11,11 +11,11 @@ Automated tests for indirect confirmation measures in the indirect_confirmation_
 import logging
 import unittest
 
+import numpy as np
+
+from gensim.corpora.dictionary import Dictionary
 from gensim.topic_coherence import indirect_confirmation_measure
 from gensim.topic_coherence import text_analysis
-from gensim.corpora.dictionary import Dictionary
-
-import numpy as np
 
 
 class TestIndirectConfirmation(unittest.TestCase):
@@ -46,9 +46,8 @@ class TestIndirectConfirmation(unittest.TestCase):
         # 4. Calculate nlr(1, 1) + nlr(2, 1). Calculate nlr(1, 2), nlr(2, 2). This is our second vector.
         # 5. Find out cosine similarity between these two vectors.
         # 6. Similarly for the second segmentation.
-        expected = [0.6230, 0.6230]  # To account for EPSILON approximation
-        for i in range(len(expected)):
-            self.assertAlmostEqual(obtained[i], expected[i], 4)
+        expected = (0.6230 + 0.6230) / 2.  # To account for EPSILON approximation
+        self.assertAlmostEqual(expected, obtained[0], 4)
 
 
 if __name__ == '__main__':

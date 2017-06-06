@@ -410,8 +410,8 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         occurrence and co-occurrence counts, and a `num_docs` that reflects the total observed
         by all the individual accumulators.
         """
-        accumulator = accumulators[0]
-        for other_accumulator in accumulators[1:]:
+        accumulator = WordOccurrenceAccumulator(self.relevant_ids, self.dictionary)
+        for other_accumulator in accumulators:
             accumulator.merge(other_accumulator)
         # Workers do partial accumulation, so none of the co-occurrence matrices are symmetrized.
         # This is by design, to avoid unnecessary matrix additions/conversions during accumulation.
