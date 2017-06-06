@@ -263,7 +263,7 @@ class FastText(Word2Vec):
         with utils.smart_open(model_binary_file, 'rb') as f:
             self.load_model_params(f)
             self.load_dict(f, bin_only, encoding=encoding)
-            self.load_vectors(f)
+            self.load_vectors(f, bin_only)
 
     def load_model_params(self, file_handle):
         magic, version = self.struct_unpack(file_handle, '@2i')
@@ -296,11 +296,10 @@ class FastText(Word2Vec):
             if len(self.wv.vocab) != vocab_size:
                 logger.warnings("If you are loading any model other than pretrained vector wiki.fr, ")
                 logger.warnings("Please report to gensim or fastText.")
-        else:
-            self.wv.syn0 = zeros((vocab_size, self.vector_size), dtype=REAL)
-            logger.info("here?")
+        #else:
+            #self.wv.syn0 = zeros((vocab_size, self.vector_size), dtype=REAL)
             # TO-DO : how to update this
-        ntokens= self.struct_unpack(file_handle, '@1q')
+        self.struct_unpack(file_handle, '@1q')  # number of tokens
         if self.new_format:
             pruneidx_size, = self.struct_unpack(file_handle, '@q')
         for i in range(vocab_size):
@@ -312,7 +311,7 @@ class FastText(Word2Vec):
                 char_byte = file_handle.read(1)
             word = word_bytes.decode(encoding)
             count, _ = self.struct_unpack(file_handle, '@qb')
-            if bin_only and word not in self.wv.vocab:
+            if bin_only:
                 self.wv.vocab[word] = Vocab(index=i, count=count)
             elif not bin_only:
                 assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
@@ -322,20 +321,20 @@ class FastText(Word2Vec):
                 #self.wv.syn0[i] = weight  # How to get weight vector for each word ?
                 self.wv.index2word.append(word)
 
-        if bin_only:
+        """if bin_only:
             if self.wv.syn0.shape[0] != len(self.wv.vocab):
                 logger.info(
                     "duplicate words detected, shrinking matrix size from %i to %i",
                     self.wv.syn0.shape[0], len(self.wv.vocab)
                 )
                 self.wv.syn0 = ascontiguousarray(result.syn0[: len(self.wv.vocab)])
-            assert (len(self.wv.vocab), self.vector_size) == self.wv.syn0.shape
+            assert (len(self.wv.vocab), self.vector_size) == self.wv.syn0.shape"""
 
         if self.new_format:
             for j in range(pruneidx_size):
                 self.struct_unpack(file_handle, '@2i')
 
-    def load_vectors(self, file_handle):
+    def load_vectors(self, file_handle, bin_only = False):
         if self.new_format:
             self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
@@ -352,13 +351,13 @@ class FastText(Word2Vec):
         self.wv.syn0_all = self.wv.syn0_all.reshape((num_vectors, dim))
         assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
             'mismatch between weight matrix shape and vocab/model size'
-        self.init_ngrams()
+        self.init_ngrams(bin_only)
 
     def struct_unpack(self, file_handle, fmt):
         num_bytes = struct.calcsize(fmt)
         return struct.unpack(fmt, file_handle.read(num_bytes))
 
-    def init_ngrams(self):
+    def init_ngrams(self, bin_only = False):
         """
         Computes ngrams of all words present in vocabulary and stores vectors for only those ngrams.
         Vectors for other ngrams are initialized with a random uniform distribution in FastText. These
@@ -368,7 +367,23 @@ class FastText(Word2Vec):
         self.wv.ngrams = {}
         all_ngrams = []
         for w, v in self.wv.vocab.items():
-            all_ngrams += self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
+            word_ngrams = self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
+            all_ngrams += word_ngrams
+
+            
+            if bin_only:
+                self.wv.syn0 = zeros((len(self.wv.vocab), self.vector_size), dtype=REAL)
+                word_vec = np.zeros(self.wv.syn0.shape[1])
+
+                num_word_ngram_vectors = len(word_ngrams)
+                for word_ngram in word_ngrams:
+                    ngram_hash = self.ft_hash(word_ngram)
+                    word_vec += np.array(self.wv.syn0_all[(len(self.wv.vocab) + ngram_hash) % self.bucket])
+
+                self.wv.syn0[self.wv.vocab[w].index] = word_vec / num_word_ngram_vectors
+                # Still not working 
+
+
         all_ngrams = set(all_ngrams)
         self.num_ngram_vectors = len(all_ngrams)
         ngram_indices = []
