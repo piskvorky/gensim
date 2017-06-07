@@ -26,10 +26,6 @@ class SklearnWrapperRpModel(models.RpModel, base_sklearn_wrapper.BaseSklearnWrap
         self.id2word = id2word
         self.num_topics = num_topics
 
-        # if 'fit' function is not used, then 'corpus' is given in init
-        if self.corpus:
-            models.RpModel.__init__(self, corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
-
     def get_params(self, deep=True):
         """
         Returns all parameters as dictionary.
@@ -44,15 +40,18 @@ class SklearnWrapperRpModel(models.RpModel, base_sklearn_wrapper.BaseSklearnWrap
 
     def fit(self, X, y=None):
         """
+        For fitting corpus into class object.
+        Calls gensim.models.RpModel
+        >>>gensim.models.RpModel(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
         """
-        pass
+        super(SklearnWrapperRpModel, self).__init__(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
 
-    def transform(self, docs):
+    def transform(self, doc):
         """
+        Take document/corpus as input.
+        Return RP representation of the input document/corpus.
         """
-        pass
+        return self[doc]
 
     def partial_fit(self, X):
-        """
-        """
-        pass
+        raise NotImplementedError("'partial_fit' has not been implemented for the RandomProjections model")
