@@ -77,7 +77,8 @@ SLIDING_WINDOW_SIZES = {
     'c_v': 110,
     'c_w2v': 5,
     'c_uci': 10,
-    'c_npmi': 10
+    'c_npmi': 10,
+    'u_mass': None
 }
 
 
@@ -118,7 +119,7 @@ class CoherenceModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     """
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
-                 window_size=None, coherence='c_v', topn=10, processes=-1):
+                 window_size=None, keyed_vectors=None, coherence='c_v', topn=10, processes=-1):
         """
         Args:
         ----
@@ -161,7 +162,8 @@ class CoherenceModel(interfaces.TransformationABC):
         elif topics is not None and dictionary is None:
             raise ValueError("dictionary has to be provided if topics are to be used.")
 
-        if texts is None and corpus is None:
+        self.keyed_vectors = keyed_vectors
+        if keyed_vectors is None and texts is None and corpus is None:
             raise ValueError("One of texts or corpus has to be provided.")
 
         # Check if associated dictionary is provided.
@@ -177,26 +179,28 @@ class CoherenceModel(interfaces.TransformationABC):
 
         # Check for correct inputs for u_mass coherence measure.
         self.coherence = coherence
+        self.window_size = window_size
+        if self.window_size is None:
+            self.window_size = SLIDING_WINDOW_SIZES[self.coherence]
+        self.texts = texts
+        self.corpus = corpus
+
         if coherence in BOOLEAN_DOCUMENT_BASED:
             if is_corpus(corpus)[0]:
                 self.corpus = corpus
-            elif texts is not None:
-                self.texts = texts
+            elif self.texts is not None:
                 self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
             else:
                 raise ValueError(
                     "Either 'corpus' with 'dictionary' or 'texts' should "
                     "be provided for %s coherence.", coherence)
 
-        # Check for correct inputs for c_v coherence measure.
+        # Check for correct inputs for sliding window coherence measure.
+        elif coherence == 'c_w2v' and keyed_vectors is not None:
+            pass
         elif coherence in SLIDING_WINDOW_BASED:
-            self.window_size = window_size
-            if self.window_size is None:
-                self.window_size = SLIDING_WINDOW_SIZES[self.coherence]
-            if texts is None:
+            if self.texts is None:
                 raise ValueError("'texts' should be provided for %s coherence.", coherence)
-            else:
-                self.texts = texts
         else:
             raise ValueError("%s coherence is not currently supported.", coherence)
 
@@ -300,14 +304,18 @@ class CoherenceModel(interfaces.TransformationABC):
         if self.coherence in BOOLEAN_DOCUMENT_BASED:
             self._accumulator = self.measure.prob(self.corpus, segmented_topics)
         else:
-            self._accumulator = self.measure.prob(
+            kwargs = dict(
                 texts=self.texts, segmented_topics=segmented_topics,
                 dictionary=self.dictionary, window_size=self.window_size,
                 processes=self.processes)
+            if self.coherence == 'c_w2v':
+                kwargs['model'] = self.keyed_vectors
+
+            self._accumulator = self.measure.prob(**kwargs)
 
         return self._accumulator
 
-    def get_coherence_per_topic(self, segmented_topics=None):
+    def get_coherence_per_topic(self, segmented_topics=None, with_std=False):
         """Return list of coherence values for each topic based on pipeline parameters."""
         measure = self.measure
         if segmented_topics is None:
@@ -316,7 +324,7 @@ class CoherenceModel(interfaces.TransformationABC):
             self.estimate_probabilities(segmented_topics)
 
         if self.coherence in BOOLEAN_DOCUMENT_BASED or self.coherence == 'c_w2v':
-            kwargs = {}
+            kwargs = dict(with_std=with_std)
         elif self.coherence == 'c_v':
             kwargs = dict(topics=self.topics, measure='nlr', gamma=1)
         else:

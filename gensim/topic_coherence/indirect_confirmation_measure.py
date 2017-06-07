@@ -35,27 +35,47 @@ from gensim.topic_coherence import direct_confirmation_measure
 logger = logging.getLogger(__name__)
 
 
-def word2vec_similarity(segmented_topics, accumulator):
+def word2vec_similarity(segmented_topics, accumulator, with_std=False):
     """For each topic segmentation, compute average cosine similarity using a
     WordVectorsAccumulator.
+    
+    Args:
+    ----
+    segmented_topics : Output from the segmentation module of the segmented topics.
+                       Is a list of list of tuples.
+    accumulator : Output from the probability_estimation module.
+                  Is an accumulator of word occurrences (see text_analysis module).
+    with_std : True to also include standard deviation across topic segment sets in addition
+               to the mean coherence for each topic; default is False.
+               
+    Returns:
+    -------
+    topic_coherences : list of word2vec cosine similarities per topic.
     """
-    topic_similarities = np.zeros(len(segmented_topics))
+    topic_coherences = np.zeros(len(segmented_topics))
     for i, topic_segments in enumerate(segmented_topics):
-        segment_similarities = np.zeros(len(topic_segments))
-        for j, (w_prime, w_star) in enumerate(topic_segments):
+        segment_similarities = []
+        for w_prime, w_star in topic_segments:
             if not hasattr(w_prime, '__iter__'):
                 w_prime = [w_prime]
             if not hasattr(w_star, '__iter__'):
                 w_star = [w_star]
 
-            segment_similarities[j] = accumulator.ids_similarity(w_prime, w_star)
+            try:
+                segment_similarities.append(accumulator.ids_similarity(w_prime, w_star))
+            except ZeroDivisionError:
+                logger.warn("at least one topic word not in word2vec model")
 
-        topic_similarities[i] = segment_similarities.mean()
+        if with_std:
+            topic_coherences[i] = (np.mean(segment_similarities), np.std(segment_similarities))
+        else:
+            topic_coherences[i] = np.mean(segment_similarities)
 
-    return topic_similarities
+    return topic_coherences
 
 
-def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamma=1):
+def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamma=1,
+                      with_std=False):
     """
     This function calculates the indirect cosine measure. Given context vectors
     _   _         _   _
@@ -77,6 +97,8 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
     measure : String. Direct confirmation measure to be used.
               Supported values are "nlr" (normalized log ratio).
     gamma : Gamma value for computing W', W* vectors; default is 1.
+    with_std : True to also include standard deviation across topic segment sets in addition
+               to the mean coherence for each topic; default is False.
 
     Returns:
     -------
@@ -92,7 +114,11 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
             w_prime_cv = context_vectors[w_prime, topic_words]
             w_star_cv = context_vectors[w_star, topic_words]
             segment_sims[i] = _cossim(w_prime_cv, w_star_cv)
-        s_cos_sim.append(np.mean(segment_sims))
+
+        if with_std:
+            s_cos_sim.append((np.mean(segment_sims), np.std(segment_sims)))
+        else:
+            s_cos_sim.append(np.mean(segment_sims))
 
     return s_cos_sim
 
