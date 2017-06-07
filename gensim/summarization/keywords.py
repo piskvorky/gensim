@@ -10,7 +10,7 @@ from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
 from gensim.utils import to_unicode
 from itertools import combinations as _combinations
-from six.moves.queue import Queue as _Queue
+from six.moves import queue
 from six.moves import xrange
 from six import iteritems
 
@@ -69,11 +69,11 @@ def _process_first_window(graph, tokens, split_text):
 
 
 def _init_queue(split_text):
-    queue = _Queue()
+    q = queue.Queue()
     first_window = _get_first_window(split_text)
     for word in first_window[1:]:
-        queue.put(word)
-    return queue
+        q.put(word)
+    return q
 
 
 def _process_word(graph, tokens, queue, word):
