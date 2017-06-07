@@ -14,6 +14,7 @@ import os
 import tempfile
 
 import numpy
+from decimal import Decimal
 
 from gensim.models.wrappers import fasttext
 from gensim.models import keyedvectors
@@ -31,7 +32,7 @@ def testfile():
 class TestFastText(unittest.TestCase):
     @classmethod
     def setUp(self):
-        ft_home = os.environ.get('FT_HOME', None)
+        ft_home = os.environ.get('/home/prakhar/fastText/fasttext', None)
         self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
         self.corpus_file = datapath('lee_background.cor')
         self.test_model_file = datapath('lee_fasttext')
@@ -171,35 +172,42 @@ class TestFastText(unittest.TestCase):
         self.assertEquals(self.test_new_model.wv.min_n, 3)
         self.model_sanity(new_model)
 
+
     def testLoadBinOnly(self):
-        """ Test model succesfully loaded from fastText (new format) .bin files only """
-        new_model = fasttext.FastText.load_fasttext_format(self.test_new_model_file, bin_only = True)
-        vocab_size, model_size = 1763, 10
-        self.assertEqual(self.test_new_model.wv.syn0.shape, (vocab_size, model_size))
-        self.assertEqual(len(self.test_new_model.wv.vocab), vocab_size, model_size)
-        self.assertEqual(self.test_new_model.wv.syn0_all.shape, (self.test_new_model.num_ngram_vectors, model_size))
+        """ Compare the word vectors obtained from .vec file with word vectors obtained using all the
+            ngrams from .bin file """
 
-        expected_vec_new = [-0.025627,
-                            -0.11448,
-                             0.18116,
-                            -0.96779,
-                             0.2532,
-                            -0.93224,
-                             0.3929,
-                             0.12679,
-                            -0.19685,
-                            -0.13179]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin < queries.txt
+        model_bin_only = fasttext.FastText.load_fasttext_format(os.path.abspath('/home/prakhar/prakhar'), bin_only = True)
+        # compare with self.test_new_model
+        """ Note for @jayantj -- model_bin_only file will be trained here using bin_only = True, and 
+            we can use already loaded file from bin and vec - self.test_new_model, right ?
+            Here, remodelling becuse I wanted to use different corpus. 
 
-        self.assertTrue(numpy.allclose(self.test_new_model["hundred"], expected_vec_new, 0.001))
-        self.assertEquals(self.test_new_model.min_count, 5)
-        self.assertEquals(self.test_new_model.window, 5)
-        self.assertEquals(self.test_new_model.iter, 5)
-        self.assertEquals(self.test_new_model.negative, 5)
-        self.assertEquals(self.test_new_model.sample, 0.0001)
-        self.assertEquals(self.test_new_model.bucket, 1000)
-        self.assertEquals(self.test_new_model.wv.max_n, 6)
-        self.assertEquals(self.test_new_model.wv.min_n, 3)
-        self.model_sanity(new_model)
+            For text8 modelled corpus, out of 71290, 64278 words doesn't match"""
+        model_fasttext_only = fasttext.FastText.load_fasttext_format(os.path.abspath('/home/prakhar/prakhar'))
+        
+
+        self.assertEquals(len(model_bin_only.wv.syn0), len(model_fasttext_only.wv.syn0))
+        
+
+        #count =0
+
+        for i in xrange(len(model_bin_only.wv.syn0)):
+            a = model_bin_only.wv.syn0[i]
+            #a = [float(Decimal("%.5f" % e)) for e in a]  # without this, np.allclose won't give true
+            b = model_fasttext_only.wv.syn0[i]
+            #b = [float(Decimal("%.5f" % e)) for e in b]
+
+            self.assertTrue(numpy.allclose(a,b))
+
+            #try:
+            #    self.assertTrue(numpy.allclose(a,b))
+            #except:
+            #    count +=1
+            #    logger.info(model_bin_only.wv.index2word[i])
+
+        #logger.info("count")
+        #logger.info(count)
 
 
     def testLoadModelWithNonAsciiVocab(self):
