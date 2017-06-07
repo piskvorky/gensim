@@ -1061,9 +1061,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             valid_keys = ", ".join("`{}`".format(x) for x in distances.keys())
             raise ValueError("Incorrect distance, valid only {}".format(valid_keys))
 
-        # if other is None:
-        #     d1, 
-
         if not isinstance(other, self.__class__):
             raise ValueError("The parameter `other` must be of type `{}`".format(self.__name__))
 
