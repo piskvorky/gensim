@@ -369,22 +369,11 @@ class FastText(Word2Vec):
         all_ngrams = []
         if bin_only:
             self.wv.syn0 = zeros((len(self.wv.vocab), self.vector_size), dtype=REAL)
+
         for w, v in self.wv.vocab.items():
-            word_ngrams = self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
-            all_ngrams += word_ngrams
-
-            
+            all_ngrams += self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
             if bin_only:
-                #self.wv.syn0 = zeros((len(self.wv.vocab), self.vector_size), dtype=REAL)
-                word_vec = np.zeros(self.wv.syn0.shape[1])
-
-                num_word_ngram_vectors = len(word_ngrams)
-                for word_ngram in word_ngrams:
-                    ngram_hash = self.ft_hash(word_ngram)
-                    word_vec += np.array(self.wv.syn0_all[(len(self.wv.vocab) + ngram_hash) % self.bucket])
-
-                self.wv.syn0[self.wv.vocab[w].index] = word_vec / num_word_ngram_vectors
-                # Still not working 
+                self.wv.syn0[self.wv.vocab[w].index] += np.array(self.wv.syn0_all[self.wv.vocab[w].index])
 
 
         all_ngrams = set(all_ngrams)
@@ -395,6 +384,16 @@ class FastText(Word2Vec):
             ngram_indices.append((len(self.wv.vocab) + ngram_hash) % self.bucket)
             self.wv.ngrams[ngram] = i
         self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
+
+        ngram_weights = self.wv.syn0_all
+
+        if bin_only:
+            for w,v in self.wv.vocab.items():
+                word_ngrams = self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
+                for word_ngram in word_ngrams:
+                    self.wv.syn0[self.wv.vocab[w].index] += np.array(ngram_weights[self.wv.ngrams[word_ngram]])
+                    
+                self.wv.syn0[self.wv.vocab[w].index] /= (len(word_ngrams)+1)
 
     @staticmethod
     def compute_ngrams(word, min_n, max_n):
