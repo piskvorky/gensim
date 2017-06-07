@@ -28,7 +28,7 @@ class SklearnWrapperRpModel(models.RpModel, base_sklearn_wrapper.BaseSklearnWrap
 
         # if 'fit' function is not used, then 'corpus' is given in init
         if self.corpus:
-            models.RpModel.__init__(self, self.corpus=corpus, self.id2word=id2word, self.num_topics=num_topics)
+            models.RpModel.__init__(self, corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
 
     def get_params(self, deep=True):
         """
