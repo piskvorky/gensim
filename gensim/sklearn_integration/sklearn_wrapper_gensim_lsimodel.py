@@ -61,7 +61,7 @@ class SklearnWrapperLsiModel(models.LsiModel, base_sklearn_wrapper.BaseSklearnWr
         else:
             self.corpus = X
 
-        super(SklearnWrapperLsiModel, self).__init__(self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize,
+        super(SklearnWrapperLsiModel, self).__init__(corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize,
              decay=self.decay, onepass=self.onepass, power_iters=self.power_iters, extra_samples=self.extra_samples)
         return self
 

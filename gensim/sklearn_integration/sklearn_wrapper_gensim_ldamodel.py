@@ -76,7 +76,7 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
             self.corpus = X
 
         super(SklearnWrapperLdaModel, self).__init__(
-            self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
+            corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
             chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
             alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
             eval_every=self.eval_every, iterations=self.iterations,
