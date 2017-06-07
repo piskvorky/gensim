@@ -16,6 +16,7 @@ except ImportError:
 
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklearnWrapperLdaModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklearnWrapperLsiModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import SklearnWrapperRpModel
 from gensim.corpora import Dictionary
 from gensim import matutils
 
@@ -190,6 +191,27 @@ class TestSklearnLSIWrapper(unittest.TestCase):
         model_params = self.model.get_params()
         for key in param_dict.keys():
             self.assertEqual(model_params[key], param_dict[key])
+
+class TestSklearnRpModelWrapper(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(13)
+        self.model = SklearnWrapperRpModel(corpus, num_topics=2)
+        self.model.fit(corpus)
+
+    def testTransform(self):
+        # transform one document
+        doc = list(self.model.corpus)[0]
+        transformed_doc = self.model.transform(doc)
+        vec = matutils.sparse2full(transformed_doc, 2)  # convert to dense vector, for easier equality tests
+
+        expected_vec = numpy.array([-0.70710677, 0.70710677])
+        self.assertTrue(numpy.allclose(vec, expected_vec))  # transformed entries must be equal up to sign
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
 
 
 if __name__ == '__main__':
