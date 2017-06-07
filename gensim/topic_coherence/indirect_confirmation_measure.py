@@ -52,7 +52,7 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False):
     -------
     topic_coherences : list of word2vec cosine similarities per topic.
     """
-    topic_coherences = np.zeros(len(segmented_topics))
+    topic_coherences = []
     for i, topic_segments in enumerate(segmented_topics):
         segment_similarities = []
         for w_prime, w_star in topic_segments:
@@ -67,9 +67,9 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False):
                 logger.warn("at least one topic word not in word2vec model")
 
         if with_std:
-            topic_coherences[i] = (np.mean(segment_similarities), np.std(segment_similarities))
+            topic_coherences.append((np.mean(segment_similarities), np.std(segment_similarities)))
         else:
-            topic_coherences[i] = np.mean(segment_similarities)
+            topic_coherences.append(np.mean(segment_similarities))
 
     return topic_coherences
 
