@@ -31,11 +31,12 @@ def log_conditional_probability(segmented_topics, accumulator):
 
     Returns:
     -------
-    m_lc : List of log conditional probability measure on each set in segmented topics.
+    m_lc : List of log conditional probability measure for each topic.
     """
     m_lc = []
     num_docs = float(accumulator.num_docs)
     for s_i in segmented_topics:
+        segment_sims = []
         for w_prime, w_star in s_i:
             try:
                 w_star_count = accumulator[w_star]
@@ -44,7 +45,8 @@ def log_conditional_probability(segmented_topics, accumulator):
             except KeyError:
                 m_lc_i = 0.0
 
-            m_lc.append(m_lc_i)
+            segment_sims.append(m_lc_i)
+        m_lc.append(np.mean(segment_sims))
 
     return m_lc
 
@@ -70,11 +72,12 @@ def log_ratio_measure(segmented_topics, accumulator, normalize=False):
 
     Returns:
     -------
-    m_lr : List of log ratio measures on each set in segmented topics.
+    m_lr : List of log ratio measures for each topic.
     """
     m_lr = []
     num_docs = float(accumulator.num_docs)
     for s_i in segmented_topics:
+        segment_sims = []
         for w_prime, w_star in s_i:
             w_prime_count = accumulator[w_prime]
             w_star_count = accumulator[w_star]
@@ -90,6 +93,8 @@ def log_ratio_measure(segmented_topics, accumulator, normalize=False):
                 numerator = (co_occur_count / num_docs) + EPSILON
                 denominator = (w_prime_count / num_docs) * (w_star_count / num_docs)
                 m_lr_i = np.log(numerator / denominator)
-            m_lr.append(m_lr_i)
+
+            segment_sims.append(m_lr_i)
+        m_lr.append(np.mean(segment_sims))
 
     return m_lr

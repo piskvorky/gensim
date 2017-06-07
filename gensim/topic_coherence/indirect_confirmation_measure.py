@@ -60,7 +60,7 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
 
     Returns:
     -------
-    s_cos_sim : array of cosine similarity of the context vectors for each segmentation
+    s_cos_sim : list of indirect cosine similarity measure for each topic.
     """
     context_vectors = ContextVectorComputer(measure, topics, accumulator, gamma)
 
