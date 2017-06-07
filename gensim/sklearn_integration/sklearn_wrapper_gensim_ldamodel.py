@@ -12,11 +12,12 @@ import numpy as np
 
 from gensim import models
 from gensim import matutils
+from gensim.sklearn_integration import base_sklearn_wrapper
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
 
-class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
+class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """
@@ -70,11 +71,9 @@ class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
         """
         Set all parameters.
         """
-        for parameter, value in parameters.items():
-            self.parameter = value
-        return self
+        super(SklearnWrapperLdaModel, self).set_params(**parameters)
 
-    def fit(self, X,  y=None):
+    def fit(self, X, y=None):
         """
         For fitting corpus into the class object.
         Calls gensim.model.LdaModel:
@@ -126,6 +125,11 @@ class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
     def partial_fit(self, X):
         """
         Train model over X.
+        By default, 'online (single-pass)' mode is used for training the LDA model.
+        Configure `passes` and `update_every` params at init to choose the mode among :
+            - online (single-pass): update_every != None and passes == 1
+            - online (multi-pass): update_every != None and passes > 1
+            - batch: update_every == None
         """
         if sparse.issparse(X):
             X = matutils.Sparse2Corpus(X)
