@@ -46,15 +46,6 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
         self.gamma_threshold = gamma_threshold
         self.minimum_probability = minimum_probability
         self.random_state = random_state
-        # if no fit function is used , then corpus is given in init
-        if self.corpus:
-            models.LdaModel.__init__(
-                self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
-                chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
-                alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
-                eval_every=self.eval_every, iterations=self.iterations,
-                gamma_threshold=self.gamma_threshold, minimum_probability=self.minimum_probability,
-                random_state=self.random_state)
 
     def get_params(self, deep=True):
         """
@@ -84,7 +75,7 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
         else:
             self.corpus = X
 
-        models.LdaModel.__init__(
+        super(SklearnWrapperLdaModel, self).__init__(
             self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
             chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
             alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
