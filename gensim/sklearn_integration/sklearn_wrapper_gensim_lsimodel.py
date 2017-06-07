@@ -36,11 +36,6 @@ class SklearnWrapperLsiModel(models.LsiModel, base_sklearn_wrapper.BaseSklearnWr
         self.extra_samples = extra_samples
         self.power_iters = power_iters
 
-        # if 'fit' function is not used, then 'corpus' is given in init
-        if self.corpus:
-            models.LsiModel.__init__(self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize,
-                 decay=self.decay, onepass=self.onepass, power_iters=self.power_iters, extra_samples=self.extra_samples)
-
     def get_params(self, deep=True):
         """
         Returns all parameters as dictionary.
@@ -66,7 +61,7 @@ class SklearnWrapperLsiModel(models.LsiModel, base_sklearn_wrapper.BaseSklearnWr
         else:
             self.corpus = X
 
-        models.LsiModel.__init__(self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize,
+        super(SklearnWrapperLsiModel, self).__init__(self, corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize,
              decay=self.decay, onepass=self.onepass, power_iters=self.power_iters, extra_samples=self.extra_samples)
         return self
 
