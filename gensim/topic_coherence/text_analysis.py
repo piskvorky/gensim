@@ -502,7 +502,7 @@ class WordVectorsAccumulator(UsesDictionary):
     def accumulate(self, texts, window_size):
         if self.model is not None:
             logger.debug("model is already trained; no accumulation necessary")
-            return
+            return self
 
         kwargs = self.model_kwargs.copy()
         if window_size is not None:
@@ -518,12 +518,14 @@ class WordVectorsAccumulator(UsesDictionary):
         return self
 
     def ids_similarity(self, ids1, ids2):
-        if not hasattr(ids1, '__iter__'):
-            ids1 = [ids1]
-        if not hasattr(ids2, '__iter__'):
-            ids2 = [ids2]
-
-        words1 = [self.dictionary.id2token[word_id] for word_id in ids1]
-        words2 = [self.dictionary.id2token[word_id] for word_id in ids2]
+        words1 = self._words_with_embeddings(ids1)
+        words2 = self._words_with_embeddings(ids2)
         return self.model.n_similarity(words1, words2)
+
+    def _words_with_embeddings(self, ids):
+        if not hasattr(ids, '__iter__'):
+            ids = [ids]
+
+        words = [self.dictionary.id2token[word_id] for word_id in ids]
+        return [word for word in words if word in self.model.vocab]
 
