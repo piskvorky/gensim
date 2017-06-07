@@ -58,7 +58,7 @@ class SklearnWrapperLsiModel(models.LsiModel, base_sklearn_wrapper.BaseSklearnWr
     def fit(self, X, y=None):
         """
         For fitting corpus into the class object.
-        Calls gensim.model.LsiModel:
+        Calls gensim.models.LsiModel:
         >>>gensim.models.LsiModel(corpus=corpus, num_topics=num_topics, id2word=id2word, chunksize=chunksize, decay=decay, onepass=onepass, power_iters=power_iters, extra_samples=extra_samples)
         """
         if sparse.issparse(X):
