@@ -35,6 +35,8 @@ import numpy as np
 import numbers
 from random import sample
 import os
+import gensim
+import copy
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
@@ -195,7 +197,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, ns_conf={},
-                 minimum_phi_value=0.01, per_word_topics=False):
+                 minimum_phi_value=0.01, per_word_topics=False, log_tensorboard=False):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -280,6 +282,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eval_every = eval_every
         self.minimum_phi_value = minimum_phi_value
         self.per_word_topics = per_word_topics
+        self.log_tensorboard = log_tensorboard
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
@@ -531,7 +534,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None, chunks_as_numpy=False):
+               gamma_threshold=None, chunks_as_numpy=False, log_tensorboard=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -578,6 +581,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             iterations = self.iterations
         if gamma_threshold is None:
             gamma_threshold = self.gamma_threshold
+        if log_tensorboard is None:
+            log_tensorboard = self.log_tensorboard
+
+        if log_tensorboard is True:
+            models = []
 
         try:
             lencorpus = len(corpus)
@@ -686,7 +694,57 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self.do_mstep(rho(), other, pass_ > 0)
                 del other
                 dirty = False
+
+            # save the current epoch model for tensorboard logging
+            if log_tensorboard is True:
+                current_model = copy.deepcopy(self)
+                models.append(current_model)
+
+        # update finished, pass the models list for tensorboard logging
+        if log_tensorboard is True:
+            self.save_tensorboard_dir(models, corpus)
+
         # endfor entire corpus update
+
+    def save_tensorboard_dir(self, models, corpus):
+        """
+        Save log parameters from each epoch in a dict.
+
+        """
+        # parameters to log for tensorboard visualization
+        coherence = {}
+        perplexity = {}
+        alpha = {}
+        diff = {}
+        doc_topic_dist = {}
+
+        for epoch, model in enumerate(models):
+            # save coherence from each epoch
+            cm = gensim.models.CoherenceModel(model=model, corpus=corpus, coherence='u_mass')
+            coherence[epoch] = cm.get_coherence()
+            # save perplexity from each epoch
+            perplexity[epoch] = np.exp2(-(model.log_perplexity(corpus)))
+            # save alpha from each epoch
+            alpha[epoch] = model.alpha
+            # save diff from each epoch
+            if epoch != 0:
+                diff[epoch] = model.diff(model=models[epoch-1])
+            # save document-topic distribution from each epoch
+            all_topics = model.get_document_topics(corpus, minimum_probability=0)
+            tensors = []
+            for doc_topics in all_topics:
+                doc_tensor = []
+                for topics in doc_topics:
+                    doc_tensor.append(topics[1])
+                tensors.append(doc_tensor)
+            doc_topic_dist[epoch] = tensors
+
+        # viz = TensorboardViz(log_dir = "ldalogs")
+        # viz.scalar(coherence)
+        # viz.scalar(perplexity)
+        # viz.scalar(alpha)
+        # viz.histogram(diff)
+        # viz.embedding(doc_topic_dist)
 
     def do_mstep(self, rho, other, extra_pass=False):
         """
@@ -1002,6 +1060,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if distance not in distances:
             valid_keys = ", ".join("`{}`".format(x) for x in distances.keys())
             raise ValueError("Incorrect distance, valid only {}".format(valid_keys))
+
+        # if other is None:
+        #     d1, 
 
         if not isinstance(other, self.__class__):
             raise ValueError("The parameter `other` must be of type `{}`".format(self.__name__))
