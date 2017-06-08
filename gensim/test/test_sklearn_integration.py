@@ -192,6 +192,7 @@ class TestSklearnLSIWrapper(unittest.TestCase):
         for key in param_dict.keys():
             self.assertEqual(model_params[key], param_dict[key])
 
+
 class TestSklearnRpModelWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(13)
