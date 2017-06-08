@@ -36,7 +36,6 @@ import numbers
 from random import sample
 import os
 import gensim
-import copy
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
@@ -532,12 +531,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
-    def log_epoch_diff(self, fst_model, scnd_model):
-        mdiff, annotation = fst_model.diff(scnd_model)
-
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None, chunks_as_numpy=False, log_diff=None, log_tensorboard=None):
+               gamma_threshold=None, chunks_as_numpy=False, log_tensorboard=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -586,8 +582,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             gamma_threshold = self.gamma_threshold
         if log_tensorboard is None:
             log_tensorboard = self.log_tensorboard
-        if log_diff is None:
-            log_diff = self.log_diff
         if log_tensorboard is True:
             models = []
 
@@ -698,11 +692,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self.do_mstep(rho(), other, pass_ > 0)
                 del other
                 dirty = False
-
-            if log_diff is True:
-                if pass_ > 0:
-                    self.log_epoch_diff(self, previous)
-                previous = copy.deepcopy(self)
 
             # save the current epoch model for tensorboard logging
             if log_tensorboard is True:
