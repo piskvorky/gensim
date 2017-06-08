@@ -23,7 +23,7 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
     """
 
     def __init__(
-            self, corpus=None, num_topics=100, id2word=None,
+            self, num_topics=100, id2word=None,
             chunksize=2000, passes=1, update_every=1,
             alpha='symmetric', eta=None, decay=0.5, offset=1.0,
             eval_every=10, iterations=50, gamma_threshold=0.001,
@@ -31,7 +31,7 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
         """
         Sklearn wrapper for LDA model. derived class for gensim.model.LdaModel .
         """
-        self.corpus = corpus
+        self.corpus = None
         self.num_topics = num_topics
         self.id2word = id2word
         self.chunksize = chunksize
