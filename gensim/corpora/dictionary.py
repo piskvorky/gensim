@@ -297,7 +297,7 @@ class Dictionary(utils.SaveLoad, Mapping):
                     line = "%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0))
                     fout.write(utils.to_utf8(line))
             else:
-                for tokenid, freq in sorted(iteritems(self.dfs), key=lambda item: item[1]):
+                for tokenid, freq in sorted(iteritems(self.dfs), key=lambda item: -item[1]):
                     line = "%i\t%s\t%i\n" % (tokenid, self[tokenid], freq)
                     fout.write(utils.to_utf8(line))
 

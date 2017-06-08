@@ -201,9 +201,9 @@ class TestDictionary(unittest.TestCase):
             serialized_lines = file.readlines()
             self.assertEqual(serialized_lines[0], "3\n")
             self.assertEqual(len(serialized_lines), 4)
-            self.assertEqual(serialized_lines[1][1:], "\tprvé\t1\n")
+            self.assertEqual(serialized_lines[1][1:], "\tslovo\t3\n")
             self.assertEqual(serialized_lines[2][1:], "\tdruhé\t2\n")
-            self.assertEqual(serialized_lines[3][1:], "\tslovo\t3\n")
+            self.assertEqual(serialized_lines[3][1:], "\tprvé\t1\n")
 
     def test_loadFromText(self):
         tmpf = get_tmpfile('load_dict_test.txt')
