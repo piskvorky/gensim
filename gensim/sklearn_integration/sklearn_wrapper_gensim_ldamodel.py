@@ -66,7 +66,7 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
 
     def fit(self, X, y=None):
         """
-        For fitting corpus into the class object.
+        Fit the model according to the given training data.
         Calls gensim.model.LdaModel:
         >>> gensim.models.LdaModel(corpus=corpus, num_topics=num_topics, id2word=id2word, passes=passes, update_every=update_every, alpha=alpha, iterations=iterations, eta=eta, random_state=random_state)
         """
