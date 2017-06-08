@@ -36,6 +36,7 @@ import numbers
 from random import sample
 import os
 import gensim
+import copy
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
@@ -196,7 +197,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, ns_conf={},
-                 minimum_phi_value=0.01, per_word_topics=False, log_tensorboard=False):
+                 minimum_phi_value=0.01, per_word_topics=False, log_diff=False, log_tensorboard=False):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -281,6 +282,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eval_every = eval_every
         self.minimum_phi_value = minimum_phi_value
         self.per_word_topics = per_word_topics
+        self.log_diff = log_diff
         self.log_tensorboard = log_tensorboard
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
@@ -531,9 +533,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
+    def log_epoch_diff(self, epoch, other_model):
+        diff_matrix, annotation = self.diff(other_model)
+        diff_diagonal = diff_matrix.diagonal()
+        logger.info("Topic difference between %i and %i epoch %s", epoch-1, epoch, diff_diagonal)
+        return diff_diagonal
+
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None, chunks_as_numpy=False, log_tensorboard=None):
+               gamma_threshold=None, chunks_as_numpy=False, log_diff=None, log_tensorboard=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -580,10 +588,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             iterations = self.iterations
         if gamma_threshold is None:
             gamma_threshold = self.gamma_threshold
+        if log_diff is None:
+            log_diff = self.log_diff
         if log_tensorboard is None:
             log_tensorboard = self.log_tensorboard
-        if log_tensorboard is True:
-            models = []
 
         try:
             lencorpus = len(corpus)
@@ -631,6 +639,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # while allowing it to "reset" on the first pass of each update
         def rho():
             return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
+
+        if log_tensorboard is True:
+            
+            from tensorboard.summary import scalar
+            from tensorboard import FileWriter
+            from tensorboard import summary
+
+            logdir = 'LdaLogs'
+            writer = FileWriter(logdir)
 
         for pass_ in xrange(passes):
             if self.dispatcher:
@@ -693,56 +710,38 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 del other
                 dirty = False
 
-            # save the current epoch model for tensorboard logging
-            if log_tensorboard is True:
-                current_model = copy.deepcopy(self)
-                models.append(current_model)
+            # log diff between consecutive epochs
+            if log_diff is True:
+                if pass_ > 0:
+                    self.log_epoch_diff(pass_, self, previous)
+                previous = copy.deepcopy(self)
 
-        # update finished, pass the models list for tensorboard logging
-        if log_tensorboard is True:
-            self.save_tensorboard_dir(models, corpus)
+            # write current epoch parameters to tensorboard log directory
+            if log_tensorboard is True:
+                # write coherence log
+                cm = gensim.models.CoherenceModel(model=self, corpus=corpus, coherence='u_mass')
+                coherence = scalar('Coherence', cm.get_coherence())
+                writer.add_summary(coherence, pass_+1)
+
+                # write perplexity log
+                perplexity = scalar('Perplexity', np.exp2(-(self.log_perplexity(corpus))))
+                writer.add_summary(perplexity, pass_+1)
+
+                # write alpha log
+                # alpha = scalar('Alpha', self.alpha)
+                # writer.add_summary(alpha, pass_+1)
+
+                # write diff log
+                if pass_ > 0:
+                    diff = self.log_epoch_diff(pass_, previous)
+                    hist = summary.histogram('Diff', diff)
+                    writer.add_summary(hist, pass_+1)
+                previous = copy.deepcopy(self)
+
+        writer.flush()
+        writer.close()
 
         # endfor entire corpus update
-
-    def save_tensorboard_dir(self, models, corpus):
-        """
-        Save log parameters from each epoch in a dict.
-
-        """
-        # parameters to log for tensorboard visualization
-        coherence = {}
-        perplexity = {}
-        alpha = {}
-        diff = {}
-        doc_topic_dist = {}
-
-        for epoch, model in enumerate(models):
-            # save coherence from each epoch
-            cm = gensim.models.CoherenceModel(model=model, corpus=corpus, coherence='u_mass')
-            coherence[epoch] = cm.get_coherence()
-            # save perplexity from each epoch
-            perplexity[epoch] = np.exp2(-(model.log_perplexity(corpus)))
-            # save alpha from each epoch
-            alpha[epoch] = model.alpha
-            # save diff from each epoch
-            if epoch != 0:
-                diff[epoch] = model.diff(model=models[epoch-1])
-            # save document-topic distribution from each epoch
-            all_topics = model.get_document_topics(corpus, minimum_probability=0)
-            tensors = []
-            for doc_topics in all_topics:
-                doc_tensor = []
-                for topics in doc_topics:
-                    doc_tensor.append(topics[1])
-                tensors.append(doc_tensor)
-            doc_topic_dist[epoch] = tensors
-
-        # viz = TensorboardViz(log_dir = "ldalogs")
-        # viz.scalar(coherence)
-        # viz.scalar(perplexity)
-        # viz.scalar(alpha)
-        # viz.histogram(diff)
-        # viz.embedding(doc_topic_dist)
 
     def do_mstep(self, rho, other, extra_pass=False):
         """
