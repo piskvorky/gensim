@@ -40,7 +40,7 @@ class SklearnWrapperRpModel(models.RpModel, base_sklearn_wrapper.BaseSklearnWrap
 
     def fit(self, X, y=None):
         """
-        For fitting corpus into class object.
+        Fit the model according to the given training data.
         Calls gensim.models.RpModel
         >>>gensim.models.RpModel(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
         """
