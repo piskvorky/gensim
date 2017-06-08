@@ -67,36 +67,36 @@ class TextCorpus(interfaces.CorpusABC):
     will be automatically initialized with a dictionary in `self.dictionary` and
     will support the `iter` corpus method. You have a few different ways of utilizing
     this class via subclassing or by construction with different preprocessing arguments.
-    
+
     The `iter` method converts the lists of tokens produced by `get_texts` to BoW format
     using `Dictionary.doc2bow`. `get_texts` does the following:
-    
+
     1.  Calls `getstream` to get a generator over the texts. It yields each document in
         turn from the underlying text file or files.
     2.  For each document from the stream, calls `preprocess_text` to produce a list of
         tokens; if metadata is enabled, it yields a 2-`tuple` with the document number as
         the second element.
-        
-    
+
+
     Preprocessing consists of 0+ `character_filters`, a `tokenizer`, and 0+ `token_filters`.
-    
-    The preprocessing consists of calling each filter in `character_filters` with the document 
-    text; unicode is not guaranteed, and if desired, the first filter should convert to unicode. 
+
+    The preprocessing consists of calling each filter in `character_filters` with the document
+    text; unicode is not guaranteed, and if desired, the first filter should convert to unicode.
     The output of each character filter should be another string. The output from the final
     filter is fed to the `tokenizer`, which should split the string into a list of tokens (strings).
     Afterwards, the list of tokens is fed through each filter in `token_filters`. The final
     output returned from `preprocess_text` is the output from the final token filter.
-    
+
     So to use this class, you can either pass in different preprocessing functions using the
     `character_filters`, `tokenizer`, and `token_filters` arguments, or you can subclass it.
-    If subclassing: override `getstream` to take text from different input sources in different 
+    If subclassing: override `getstream` to take text from different input sources in different
     formats. Overrride `preprocess_text` if you must provide different initial preprocessing,
     then call the `TextCorpus.preprocess_text` method to apply the normal preprocessing. You
     can also overrride `get_texts` in order to tag the documents (token lists) with different
     metadata.
-    
+
     The default preprocessing consists of:
-    
+
     1.  lowercase and convert to unicode; assumes utf8 encoding
     2.  deaccent (asciifolding)
     3.  collapse multiple whitespaces into a single one
