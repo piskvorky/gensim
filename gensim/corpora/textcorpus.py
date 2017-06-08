@@ -54,6 +54,7 @@ def remove_short(tokens, minsize=3):
 def lower_to_unicode(text):
     return utils.to_unicode(text.lower(), 'utf8', 'strict')
 
+
 class TextCorpus(interfaces.CorpusABC):
     """
     Helper class to simplify the pipeline of getting bag-of-words vectors (= a
@@ -64,10 +65,44 @@ class TextCorpus(interfaces.CorpusABC):
 
     Given a filename (or a file-like object) in constructor, the corpus object
     will be automatically initialized with a dictionary in `self.dictionary` and
-    will support the `iter` corpus method. You must only provide a correct `get_texts`
-    implementation. The default implementation simply lowercases and tokenizes. To
-    keep the default behavior but add preprocessing steps, one can override the
-    `preprocess_text` method.
+    will support the `iter` corpus method. You have a few different ways of utilizing
+    this class via subclassing or by construction with different preprocessing arguments.
+    
+    The `iter` method converts the lists of tokens produced by `get_texts` to BoW format
+    using `Dictionary.doc2bow`. `get_texts` does the following:
+    
+    1.  Calls `getstream` to get a generator over the texts. It yields each document in
+        turn from the underlying text file or files.
+    2.  For each document from the stream, calls `preprocess_text` to produce a list of
+        tokens; if metadata is enabled, it yields a 2-`tuple` with the document number as
+        the second element.
+        
+    
+    Preprocessing consists of 0+ `character_filters`, a `tokenizer`, and 0+ `token_filters`.
+    
+    The preprocessing consists of calling each filter in `character_filters` with the document 
+    text; unicode is not guaranteed, and if desired, the first filter should convert to unicode. 
+    The output of each character filter should be another string. The output from the final
+    filter is fed to the `tokenizer`, which should split the string into a list of tokens (strings).
+    Afterwards, the list of tokens is fed through each filter in `token_filters`. The final
+    output returned from `preprocess_text` is the output from the final token filter.
+    
+    So to use this class, you can either pass in different preprocessing functions using the
+    `character_filters`, `tokenizer`, and `token_filters` arguments, or you can subclass it.
+    If subclassing: override `getstream` to take text from different input sources in different 
+    formats. Overrride `preprocess_text` if you must provide different initial preprocessing,
+    then call the `TextCorpus.preprocess_text` method to apply the normal preprocessing. You
+    can also overrride `get_texts` in order to tag the documents (token lists) with different
+    metadata.
+    
+    The default preprocessing consists of:
+    
+    1.  lowercase and convert to unicode; assumes utf8 encoding
+    2.  deaccent (asciifolding)
+    3.  collapse multiple whitespaces into a single one
+    4.  tokenize by splitting on whitespace
+    5.  remove words less than 3 characters long
+    6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
 
     """
     def __init__(self, input=None, metadata=False, character_filters=None, tokenizer=None,
@@ -204,7 +239,6 @@ class TextCorpus(interfaces.CorpusABC):
             # cache the corpus length
             self.length = sum(1 for _ in self.get_texts())
         return self.length
-
 # endclass TextCorpus
 
 
@@ -215,8 +249,8 @@ class TextDirectoryCorpus(TextCorpus):
 
     def __init__(self, input, metadata=False, min_depth=0, max_depth=None, pattern=None,
                  exclude_pattern=None, **kwargs):
-        self.min_depth = min_depth
-        self.max_depth = sys.maxsize if max_depth is None else max_depth
+        self._min_depth = min_depth
+        self._max_depth = sys.maxsize if max_depth is None else max_depth
         self.pattern = pattern
         self.exclude_pattern = exclude_pattern
         super(TextDirectoryCorpus, self).__init__(input, metadata, **kwargs)
@@ -228,6 +262,7 @@ class TextDirectoryCorpus(TextCorpus):
     @pattern.setter
     def pattern(self, pattern):
         self._pattern = None if pattern is None else re.compile(pattern)
+        self.length = None
 
     @property
     def exclude_pattern(self):
@@ -236,6 +271,25 @@ class TextDirectoryCorpus(TextCorpus):
     @exclude_pattern.setter
     def exclude_pattern(self, pattern):
         self._exclude_pattern = None if pattern is None else re.compile(pattern)
+        self.length = None
+
+    @property
+    def min_depth(self):
+        return self._min_depth
+
+    @min_depth.setter
+    def min_depth(self, min_depth):
+        self._min_depth = min_depth
+        self.length = None
+
+    @property
+    def max_depth(self):
+        return self._max_depth
+
+    @max_depth.setter
+    def max_depth(self, max_depth):
+        self._max_depth = max_depth
+        self.length = None
 
     def iter_filepaths(self):
         """Lazily yield paths to each file in the directory structure within the specified
@@ -259,10 +313,11 @@ class TextDirectoryCorpus(TextCorpus):
             yield doc_content
 
     def __len__(self):
-        if not hasattr(self, 'length'):
+        if self.length is None:
             # cache the corpus length
             self.length = sum(1 for _ in self.iter_filepaths())
         return self.length
+# endclass TextDirectoryCorpus
 
 
 def walk(top, topdown=True, onerror=None, followlinks=False, depth=0):
