@@ -18,11 +18,11 @@ class SklearnWrapperRpModel(models.RpModel, base_sklearn_wrapper.BaseSklearnWrap
     Base RP module
     """
 
-    def __init__(self, corpus, id2word=None, num_topics=300):
+    def __init__(self, id2word=None, num_topics=300):
         """
         Sklearn wrapper for RP model. Class derived from gensim.models.RpModel.
         """
-        self.corpus = corpus
+        self.corpus = None
         self.id2word = id2word
         self.num_topics = num_topics
 
@@ -44,6 +44,7 @@ class SklearnWrapperRpModel(models.RpModel, base_sklearn_wrapper.BaseSklearnWrap
         Calls gensim.models.RpModel
         >>>gensim.models.RpModel(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
         """
+        self.corpus = X
         super(SklearnWrapperRpModel, self).__init__(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
 
     def transform(self, doc):

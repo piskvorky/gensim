@@ -196,7 +196,7 @@ class TestSklearnLSIWrapper(unittest.TestCase):
 class TestSklearnRpModelWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(13)
-        self.model = SklearnWrapperRpModel(corpus, num_topics=2)
+        self.model = SklearnWrapperRpModel(num_topics=2)
         self.model.fit(corpus)
 
     def testTransform(self):
