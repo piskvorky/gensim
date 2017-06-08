@@ -22,12 +22,12 @@ class SklearnWrapperLsiModel(models.LsiModel, base_sklearn_wrapper.BaseSklearnWr
     Base LSI module
     """
 
-    def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
+    def __init__(self, num_topics=200, id2word=None, chunksize=20000,
                  decay=1.0, onepass=True, power_iters=2, extra_samples=100):
         """
         Sklearn wrapper for LSI model. Class derived from gensim.model.LsiModel.
         """
-        self.corpus = corpus
+        self.corpus = None
         self.num_topics = num_topics
         self.id2word = id2word
         self.chunksize = chunksize
