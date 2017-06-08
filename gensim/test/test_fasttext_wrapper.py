@@ -32,7 +32,7 @@ def testfile():
 class TestFastText(unittest.TestCase):
     @classmethod
     def setUp(self):
-        ft_home = os.environ.get('/home/prakhar/fastText/fasttext', None)
+        ft_home = os.environ.get('FT_HOME', None)
         self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
         self.corpus_file = datapath('lee_background.cor')
         self.test_model_file = datapath('lee_fasttext')
@@ -177,37 +177,18 @@ class TestFastText(unittest.TestCase):
         """ Compare the word vectors obtained from .vec file with word vectors obtained using all the
             ngrams from .bin file """
 
-        model_bin_only = fasttext.FastText.load_fasttext_format(os.path.abspath('/home/prakhar/prakhar'), bin_only = True)
+        model_bin_only = fasttext.FastText.load_fasttext_format(os.path.abspath('self.test_new_model_file'), bin_only = True)
         # compare with self.test_new_model
-        """ Note for @jayantj -- model_bin_only file will be trained here using bin_only = True, and 
-            we can use already loaded file from bin and vec - self.test_new_model, right ?
-            Here, remodelling becuse I wanted to use different corpus. 
 
-            For text8 modelled corpus, out of 71290, 64278 words doesn't match"""
-        model_fasttext_only = fasttext.FastText.load_fasttext_format(os.path.abspath('/home/prakhar/prakhar'))
-        
-
-        self.assertEquals(len(model_bin_only.wv.syn0), len(model_fasttext_only.wv.syn0))
-        
-
-        #count =0
+        self.assertEquals(len(model_bin_only.wv.syn0), len(self.test_new_model.wv.syn0))
 
         for i in xrange(len(model_bin_only.wv.syn0)):
             a = model_bin_only.wv.syn0[i]
-            #a = [float(Decimal("%.5f" % e)) for e in a]  # without this, np.allclose won't give true
-            b = model_fasttext_only.wv.syn0[i]
-            #b = [float(Decimal("%.5f" % e)) for e in b]
+            a = [float(Decimal("%.5f" % e)) for e in a]  # rounding off to 5 deciml digits
+            b = self.test_new_model.wv.syn0[i]
+            b = [float(Decimal("%.5f" % e)) for e in b]
 
             self.assertTrue(numpy.allclose(a,b))
-
-            #try:
-            #    self.assertTrue(numpy.allclose(a,b))
-            #except:
-            #    count +=1
-            #    logger.info(model_bin_only.wv.index2word[i])
-
-        #logger.info("count")
-        #logger.info(count)
 
 
     def testLoadModelWithNonAsciiVocab(self):
