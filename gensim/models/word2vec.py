@@ -360,12 +360,37 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `wv.save_word2vec_format()` and `KeyedVectors.load_word2vec_format()`.
 
     """
+    DEFAULT_SENTENCES = None
+    DEFAULT_SIZE = 100
+    DEFAULT_ALPHA = 0.025
+    DEFAULT_WINDOW = 5
+    DEFAULT_MIN_COUNT = 5
+    DEFAULT_MAX_VOCAB_SIZE = None
+    DEFAULT_SAMPLE = 1e-3
+    DEFAULT_SEED = 1
+    DEFAULT_WORKERS = 3
+    DEFAULT_MIN_ALPHA = 0.0001
+    DEFAULT_SG = 0
+    DEFAULT_HS = 0
+    DEFAULT_NEGATIVE = 5
+    DEFAULT_CBOW_MEAN = 1
+    DEFAULT_HASHFXN = hash
+    DEFAULT_ITER = 5
+    DEFAULT_NULL_WORD = 0
+    DEFAULT_TRIM_RULE = None
+    DEFAULT_SORTED_VOCAB = 1
+    DEFAULT_BATCH_WORDS = MAX_WORDS_IN_BATCH
 
     def __init__(
-            self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-            max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-            sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
+            self, sentences=DEFAULT_SENTENCES, size=DEFAULT_SIZE,
+            alpha=DEFAULT_ALPHA, window=DEFAULT_WINDOW,
+            min_count=DEFAULT_MIN_COUNT, max_vocab_size=DEFAULT_MAX_VOCAB_SIZE,
+            sample=DEFAULT_SAMPLE, seed=DEFAULT_SEED, workers=DEFAULT_WORKERS,
+            min_alpha=DEFAULT_MIN_ALPHA, sg=DEFAULT_SG, hs=DEFAULT_HS,
+            negative=DEFAULT_NEGATIVE, cbow_mean=DEFAULT_CBOW_MEAN,
+            hashfxn=DEFAULT_HASHFXN, iter=DEFAULT_ITER,
+            null_word=DEFAULT_NULL_WORD, trim_rule=DEFAULT_TRIM_RULE,
+            sorted_vocab=DEFAULT_SORTED_VOCAB, batch_words=DEFAULT_BATCH_WORDS):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
