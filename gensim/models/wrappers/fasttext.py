@@ -40,10 +40,6 @@ from gensim.models.word2vec import Word2Vec
 
 from six import string_types
 
-from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
-    double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
-
 logger = logging.getLogger(__name__)
 
 FASTTEXT_FILEFORMAT_MAGIC = 793712314
@@ -239,7 +235,12 @@ class FastText(Word2Vec):
         FastText outputs two training files - `/path/to/train.vec` and `/path/to/train.bin`
         Expected value for this example: `/path/to/train`
 
+        `bin_only` is the optional parameter added to load the entire fastText model using
+        the .bin file only. 
+
+        TO-DO : finally update here if it improves loading time
         """
+
         model = cls()
         if bin_only:
             model.load_binary_data('%s.bin' % model_file, bin_only, encoding=encoding)
@@ -294,11 +295,9 @@ class FastText(Word2Vec):
         if not bin_only:
             assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
             if len(self.wv.vocab) != vocab_size:
-                logger.warnings("If you are loading any model other than pretrained vector wiki.fr, ")
-                logger.warnings("Please report to gensim or fastText.")
-        #else:
-            #self.wv.syn0 = zeros((vocab_size, self.vector_size), dtype=REAL)
-            # TO-DO : how to update this
+                logger.warning("If you are loading any model other than pretrained vector wiki.fr, ")
+                logger.warning("Please report to gensim or fastText.")
+
         self.struct_unpack(file_handle, '@1q')  # number of tokens
         if self.new_format:
             pruneidx_size, = self.struct_unpack(file_handle, '@q')
@@ -311,31 +310,20 @@ class FastText(Word2Vec):
                 char_byte = file_handle.read(1)
             word = word_bytes.decode(encoding)
             count, _ = self.struct_unpack(file_handle, '@qb')
+
             if bin_only:
                 self.wv.vocab[word] = Vocab(index=i, count=count)
-            elif not bin_only:
+                self.wv.index2word.append(word)
+            else:
                 assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
                 self.wv.vocab[word].count = count
 
-            if bin_only:
-                #self.wv.syn0[i] = weight  # How to get weight vector for each word ?
-                self.wv.index2word.append(word)
-
-        """if bin_only:
-            if self.wv.syn0.shape[0] != len(self.wv.vocab):
-                logger.info(
-                    "duplicate words detected, shrinking matrix size from %i to %i",
-                    self.wv.syn0.shape[0], len(self.wv.vocab)
-                )
-                self.wv.syn0 = ascontiguousarray(result.syn0[: len(self.wv.vocab)])
-            assert (len(self.wv.vocab), self.vector_size) == self.wv.syn0.shape"""
 
         if self.new_format:
             for j in range(pruneidx_size):
                 self.struct_unpack(file_handle, '@2i')
 
     def load_vectors(self, file_handle, bin_only = False):
-        logger.info("here??")
         if self.new_format:
             self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
@@ -392,7 +380,7 @@ class FastText(Word2Vec):
                 word_ngrams = self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
                 for word_ngram in word_ngrams:
                     self.wv.syn0[self.wv.vocab[w].index] += np.array(ngram_weights[self.wv.ngrams[word_ngram]])
-                    
+
                 self.wv.syn0[self.wv.vocab[w].index] /= (len(word_ngrams)+1)
 
     @staticmethod
