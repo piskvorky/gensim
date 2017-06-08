@@ -233,6 +233,7 @@ test_env = [
     'scikit-learn',
     'pyemd',
     'annoy',
+    'tensorflow',
     'keras >= 2.0.4'
 ]
 
