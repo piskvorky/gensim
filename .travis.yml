@@ -18,6 +18,12 @@ install:
   - pip install annoy
   - pip install testfixtures
   - pip install unittest2
+  - pip install scikit-learn
+  - pip install tensorflow
+  - pip install keras
   - pip install Morfessor==2.0.2a4
   - python setup.py install
-script: python setup.py test
+script:
+  - python setup.py test
+  - pip install flake8
+  - continuous_integration/travis/flake8_diff.sh

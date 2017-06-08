@@ -21,7 +21,7 @@ Persist the word vectors to disk with::
 
 The vectors can also be instantiated from an existing file on disk in the original Google's word2vec C format as a KeyedVectors instance::
 
-  >>> from gensim.keyedvectors import KeyedVectors
+  >>> from gensim.models.keyedvectors import KeyedVectors
   >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
   >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
 
@@ -78,6 +78,11 @@ from gensim.corpora.dictionary import Dictionary
 from six import string_types, iteritems
 from six.moves import xrange
 from scipy import stats
+try:
+    from keras.layers import Embedding
+    KERAS_INSTALLED = True
+except ImportError:
+    KERAS_INSTALLED = False
 
 
 logger = logging.getLogger(__name__)
@@ -111,13 +116,14 @@ class KeyedVectors(utils.SaveLoad):
         self.syn0norm = None
         self.vocab = {}
         self.index2word = []
+        self.vector_size = None
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
         super(KeyedVectors, self).save(*args, **kwargs)
 
-    def save_word2vec_format(self, fname, fvocab=None, binary=False):
+    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
         """
         Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
@@ -126,18 +132,22 @@ class KeyedVectors(utils.SaveLoad):
          `fvocab` is an optional file used to save the vocabulary
          `binary` is an optional boolean indicating whether the data is to be saved
          in binary word2vec format (default: False)
+         `total_vec` is an optional parameter to explicitly specify total no. of vectors
+         (in case word vectors are appended with document vectors afterwards)
 
         """
+        if total_vec is None:
+            total_vec = len(self.vocab)
         vector_size = self.syn0.shape[1]
         if fvocab is not None:
             logger.info("storing vocabulary in %s" % (fvocab))
             with utils.smart_open(fvocab, 'wb') as vout:
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
-        logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), vector_size, fname))
+        logger.info("storing %sx%s projection weights into %s" % (total_vec, vector_size, fname))
         assert (len(self.vocab), vector_size) == self.syn0.shape
         with utils.smart_open(fname, 'wb') as fout:
-            fout.write(utils.to_utf8("%s %s\n" % self.syn0.shape))
+            fout.write(utils.to_utf8("%s %s\n" % (total_vec, vector_size)))
             # store in sorted order: most frequent words at the top
             for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                 row = self.syn0[vocab.index]
@@ -194,6 +204,7 @@ class KeyedVectors(utils.SaveLoad):
             if limit:
                 vocab_size = min(vocab_size, limit)
             result = cls()
+            result.vector_size = vector_size
             result.syn0 = zeros((vocab_size, vector_size), dtype=datatype)
 
             def add_word(word, weights):
@@ -809,3 +820,13 @@ class KeyedVectors(utils.SaveLoad):
                 self.syn0norm = self.syn0
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
+
+    def get_embedding_layer(self, train_embeddings=False):
+        """
+        Return a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings
+        """
+        if not KERAS_INSTALLED:
+            raise ImportError("Please install Keras to use this function")
+        weights = self.syn0
+        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights])  # No extra mem usage here as `Embedding` layer doesn't create any new matrix for weights
+        return layer

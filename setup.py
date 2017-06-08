@@ -172,7 +172,7 @@ you'd run::
 
 
 For alternative modes of installation (without root privileges, development
-installation, optional install features), see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
+installation, optional install features), see the `install documentation <http://radimrehurek.com/gensim/install.html>`_.
 
 This version has been tested under Python 2.7, 3.5 and 3.6. Support for Python 2.6, 3.3 and 3.4 was dropped in gensim 1.0.0. Install gensim 0.13.4 if you *must* use Python 2.6, 3.3 or 3.4. Support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). Gensim's github repo is hooked against `Travis CI for automated testing <https://travis-ci.org/RaRe-Technologies/gensim>`_ on every commit push and pull request.
 
@@ -205,7 +205,7 @@ When `citing gensim in academic papers and theses <https://scholar.google.cz/cit
         month = May,
         day = 22,
         publisher = {ELRA},
-        address = {Valletta, Malta}, 
+        address = {Valletta, Malta},
         language={English}
   }
 
@@ -226,9 +226,19 @@ Copyright (c) 2009-now Radim Rehurek
 """
 
 
+test_env = [
+    'testfixtures',
+    'unittest2',
+    'Morfessor==2.0.2a4',
+    'scikit-learn',
+    'pyemd',
+    'annoy',
+    'keras >= 2.0.4'
+]
+
 setup(
     name='gensim',
-    version='1.0.1',
+    version='2.1.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -282,13 +292,11 @@ setup(
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
     ],
+    tests_require=test_env,
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
         'wmd': ['pyemd >= 0.2.0'],
-        'test': [
-            'testfixtures',
-            'unittest2'
-        ],
+        'test': test_env,
     },
 
     include_package_data=True,

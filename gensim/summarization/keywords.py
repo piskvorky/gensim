@@ -164,7 +164,7 @@ def _get_combined_keywords(_keywords, split_text):
                 result.append(word)   # appends last word if keyword and doesn't iterate
             for j in xrange(i + 1, len_text):
                 other_word = _strip_word(split_text[j])
-                if other_word in _keywords and other_word == split_text[j] and not other_word in combined_word:
+                if other_word in _keywords and other_word == split_text[j] and other_word not in combined_word:
                     combined_word.append(other_word)
                 else:
                     for keyword in combined_word:

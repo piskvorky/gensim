@@ -194,9 +194,10 @@ class Dictionary(utils.SaveLoad, Mapping):
         # determine which tokens to keep
         if keep_tokens:
             keep_ids = [self.token2id[v] for v in keep_tokens if v in self.token2id]
-            good_ids = (v for v in itervalues(self.token2id)
-                        if no_below <= self.dfs.get(v, 0) <= no_above_abs or
-                        v in keep_ids)
+            good_ids = (
+                v for v in itervalues(self.token2id)
+                if no_below <= self.dfs.get(v, 0) <= no_above_abs or v in keep_ids
+            )
         else:
             good_ids = (
                 v for v in itervalues(self.token2id)

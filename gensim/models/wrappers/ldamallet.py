@@ -43,7 +43,7 @@ from six import iteritems
 from smart_open import smart_open
 
 from gensim import utils, matutils
-from gensim.utils import check_output
+from gensim.utils import check_output, revdict
 from gensim.models.ldamodel import LdaModel
 from gensim.models import basemodel
 
@@ -156,9 +156,9 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     def train(self, corpus):
         self.convert_input(corpus, infer=False)
-        cmd = self.mallet_path + " train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s "\
-            "--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s "\
-            "--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s"
+        cmd = self.mallet_path + ' train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s '\
+            '--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s '\
+            '--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s'
         cmd = cmd % (
             self.fcorpusmallet(), self.num_topics, self.alpha, self.optimize_interval, self.workers,
             self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer(), self.topic_threshold)
@@ -177,7 +177,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             bow = [bow]
 
         self.convert_input(bow, infer=True)
-        cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s --doc-topics-threshold %s"
+        cmd = self.mallet_path + ' infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s --doc-topics-threshold %s'
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations, self.topic_threshold)
         logger.info("inferring topics with MALLET LDA '%s'", cmd)
         check_output(args=cmd, shell=True)
@@ -190,7 +190,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         if hasattr(self.id2word, 'token2id'):
             word2id = self.id2word.token2id
         else:
-            word2id = dict((v, k) for k, v in iteritems(self.id2word))
+            word2id = revdict(self.id2word)
 
         with utils.smart_open(self.fstate()) as fin:
             _ = next(fin)  # header
@@ -240,12 +240,19 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
         return shown
 
-    def show_topic(self, topicid, num_words=10):
+    def show_topic(self, topicid, topn=10, num_words=None):
+        if num_words is not None:  # deprecated num_words is used
+            logger.warning("The parameter num_words for show_topic() would be deprecated in the updated version.")
+            logger.warning("Please use topn instead.")
+            topn = num_words
+
         if self.word_topics is None:
-            logger.warn("Run train or load_word_topics before showing topics.")
+            logger.warning(
+                "Run train or load_word_topics before showing topics."
+            )
         topic = self.word_topics[topicid]
         topic = topic / topic.sum()  # normalize to probability dist
-        bestn = matutils.argsort(topic, num_words, reverse=True)
+        bestn = matutils.argsort(topic, topn, reverse=True)
         beststr = [(self.id2word[id], topic[id]) for id in bestn]
         return beststr
 
