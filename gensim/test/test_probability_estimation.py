@@ -11,20 +11,22 @@ Automated tests for probability estimation algorithms in the probability_estimat
 import logging
 import unittest
 
-from gensim.topic_coherence import probability_estimation
-from gensim.corpora.hashdictionary import HashDictionary
 from gensim.corpora.dictionary import Dictionary
+from gensim.corpora.hashdictionary import HashDictionary
+from gensim.topic_coherence import probability_estimation
 
 
 class BaseTestCases(object):
 
     class ProbabilityEstimationBase(unittest.TestCase):
-        texts = [['human', 'interface', 'computer'],
-                 ['eps', 'user', 'interface', 'system'],
-                 ['system', 'human', 'system', 'eps'],
-                 ['user', 'response', 'time'],
-                 ['trees'],
-                 ['graph', 'trees']]
+        texts = [
+            ['human', 'interface', 'computer'],
+            ['eps', 'user', 'interface', 'system'],
+            ['system', 'human', 'system', 'eps'],
+            ['user', 'response', 'time'],
+            ['trees'],
+            ['graph', 'trees']
+        ]
         dictionary = None
 
         def build_segmented_topics(self):

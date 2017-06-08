@@ -70,7 +70,7 @@ def unique_ids_from_segments(segmented_topics):
     for s_i in segmented_topics:
         for word_id in itertools.chain.from_iterable(s_i):
             if hasattr(word_id, '__iter__'):
-                top_ids = top_ids.union(word_id)
+                top_ids.update(word_id)
             else:
                 top_ids.add(word_id)
 
