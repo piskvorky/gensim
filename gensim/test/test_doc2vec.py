@@ -162,6 +162,16 @@ class TestDoc2VecModel(unittest.TestCase):
         model.build_vocab(corpus)
         self.assertTrue(model.docvecs.similarity_unseen_docs(model, rome_str, rome_str) > model.docvecs.similarity_unseen_docs(model, rome_str, car_str))
 
+    def test_cosine_similarity(self):
+        """Test docvec_similarity of out of vectors of training sentences"""
+        corpus = list(DocsLeeCorpus(True))
+
+        model = doc2vec.Doc2Vec(min_count=1)
+        model.build_vocab(corpus)
+        self.assertTrue(
+            model.docvecs.cosine_similarity(model.docvecs[0], model.docvecs[0]) > model.docvecs.cosine_similarity(
+                model.docvecs[0], model.docvecs[1]))
+
     def model_sanity(self, model, keep_training=True):
         """Any non-trivial model on DocsLeeCorpus can pass these sanity checks"""
         fire1 = 0  # doc 0 sydney fires
