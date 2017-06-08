@@ -67,7 +67,7 @@ test_script:
   - "mkdir empty_folder"
   - "cd empty_folder"
   - "pip install pyemd testfixtures unittest2 sklearn Morfessor==2.0.2a4"
-  
+
   - "python -c \"import nose; nose.main()\" -s -v gensim"
   # Move back to the project folder
   - "cd .."
