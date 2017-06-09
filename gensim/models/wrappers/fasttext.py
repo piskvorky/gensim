@@ -81,13 +81,13 @@ class FastTextKeyedVectors(KeyedVectors):
         else:
             word_vec = np.zeros(self.syn0_all.shape[1])
             ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
+            ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:
                 ngram_weights = self.syn0_all_norm
             else:
                 ngram_weights = self.syn0_all
             for ngram in ngrams:
-                if ngram in self.ngrams:
-                    word_vec += ngram_weights[self.ngrams[ngram]]
+                word_vec += ngram_weights[self.ngrams[ngram]]
             if word_vec.any():
                 return word_vec / len(ngrams)
             else: # No ngrams of the word are present in self.ngrams
@@ -344,7 +344,7 @@ class FastText(Word2Vec):
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
             ngram_hash = self.ft_hash(ngram)
-            ngram_indices.append((len(self.wv.vocab) + ngram_hash) % self.bucket)
+            ngram_indices.append((len(self.wv.vocab)) + ngram_hash % self.bucket)
             self.wv.ngrams[ngram] = i
         self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
 
@@ -353,10 +353,10 @@ class FastText(Word2Vec):
         ngram_indices = []
         BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
         extended_word = BOW + word + EOW
-        ngrams = set()
-        for i in range(len(extended_word) - min_n + 1):
-            for j in range(min_n, max(len(extended_word) - max_n, max_n + 1)):
-                ngrams.add(extended_word[i:i+j])
+        ngrams = []
+        for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+            for i in range(0, len(extended_word) - ngram_length +1):
+                ngrams.append(extended_word[i:i+ngram_length])
         return ngrams
 
     @staticmethod
