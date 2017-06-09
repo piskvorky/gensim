@@ -528,14 +528,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
-    def log_coherence(self, model, chunk):
+    def log_coherence(self, chunk):
         """
         Log 'u_mass' coherence using the `chunk` of documents as evaluation corpus.
         """
-        cm = gensim.models.CoherenceModel(model=model, corpus=chunk, dictionary=self.id2word, coherence='u_mass')
+        cm = gensim.models.CoherenceModel(model=self, corpus=chunk, dictionary=self.id2word, coherence='u_mass')
+        coherence =  cm.get_coherence()
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
-        logger.info("%.3f coherence estimate based on a held-out corpus of %i documents with %i words", cm.get_coherence(), len(chunk), corpus_words)
-        return cm.get_coherence()
+        logger.info("%.3f coherence estimate based on a held-out corpus of %i documents with %i words", coherence, len(chunk), corpus_words)
+        return coherence
 
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
@@ -644,7 +645,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
                     self.log_perplexity(chunk, total_docs=lencorpus)
-                    self.log_coherence(self, chunk)
+                    self.log_coherence(chunk)
 
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
