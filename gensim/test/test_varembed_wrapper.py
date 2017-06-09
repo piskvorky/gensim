@@ -23,6 +23,11 @@ else:
 
 from gensim.models.wrappers import varembed
 
+try:
+    import morfessor
+except ImportError:
+    raise unittest.SkipTest("Test requires Morfessor to be installed, which is not available")
+
 # needed because sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
