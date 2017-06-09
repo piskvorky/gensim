@@ -350,10 +350,10 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if isinstance(corpus, list):
             logger.warning(
-                "Taking plain list as a corpus for LSI.\n"
+                "Taking plain list as a corpus for LSI."
                 "We strongly recommend you to use corpus streaming instead of lists. "
                 "LSI is processing the corpus in batches and "
-                "it only loads one batch of documents into memory at once.\n"
+                "it only loads one batch of documents into memory at once."
                 "Please take a look at the tutorial on corpus streaming: "
                 "https://radimrehurek.com/gensim/tut1.html#corpus-streaming-one-document-at-a-time")
 
