@@ -8,8 +8,6 @@
 Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
-import numpy as np
-
 from gensim import models
 from gensim.sklearn_integration import base_sklearn_wrapper
 from sklearn.base import TransformerMixin, BaseEstimator
@@ -69,16 +67,30 @@ class SklearnWrapperATModel(models.AuthorTopicModel, base_sklearn_wrapper.BaseSk
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
+        Calls gensim.models.AuthorTopicModel:
+        >>> gensim.models.AuthorTopicModel(corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word, author2doc=self.author2doc, doc2author=self.doc2author,
+                    chunksize=self.chunksize, passes=self.passes, iterations=self.iterations, decay=self.decay, offset=self.offset, alpha=self.alpha, eta=self.eta update_every=self.update_every,
+                    eval_every=self.eval_every, gamma_threshold=self.gamma_threshold, serialized=self.serialized, serialization_path=self.serialization_path, minimum_probability=self.minimum_probability, random_state=self.random_state)
         """
-        pass
+        self.corpus = X
 
-    def transform(self, docs):
-        """
-        """
-        pass
+        super(SklearnWrapperATModel, self).__init__(
+            corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word, author2doc=self.author2doc,
+            doc2author=self.doc2author, chunksize=self.chunksize, passes=self.passes, iterations=self.iterations,
+            decay=self.decay, offset=self.offset, alpha=self.alpha, eta=self.eta, update_every=self.update_every,
+            eval_every=self.eval_every, gamma_threshold=self.gamma_threshold, serialized=self.serialized,
+            serialization_path=self.serialization_path, minimum_probability=self.minimum_probability, random_state=self.random_state
+            )
 
-    def partial_fit(self, X):
+    def transform(self, author_names):
+        """
+        Return topic distribution for input author as a list of
+        (topic_id, topic_probabiity) 2-tuples.
+        """
+        return self[author_names]
+
+    def partial_fit(self, X, author2doc=None, doc2author=None):
         """
         Train model over X.
         """
-        pass
+        self.update(corpus=X, author2doc=author2doc, doc2author=doc2author)
