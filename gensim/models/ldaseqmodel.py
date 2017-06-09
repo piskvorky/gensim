@@ -49,7 +49,7 @@ class LdaSeqModel(utils.SaveLoad):
     """
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
-                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
+                initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
                 random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
         """
         `corpus` is any iterable gensim corpus
@@ -979,8 +979,8 @@ class LdaPost(utils.SaveLoad):
 
         return lhood
 
-    def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED = 1e-8,
-                    lda_inference_max_iter = 25, g=None, g3_matrix=None, g4_matrix=None, g5_matrix=None):
+    def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED=1e-8,
+                    lda_inference_max_iter=25, g=None, g3_matrix=None, g4_matrix=None, g5_matrix=None):
         """
         Posterior inference for lda.
         g, g3, g4 and g5 are matrices used in Document Influence Model and not used currently.

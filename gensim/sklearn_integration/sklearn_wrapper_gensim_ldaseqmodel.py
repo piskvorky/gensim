@@ -19,7 +19,7 @@ class SklearnWrapperLDASeqModel(models.LdaSeqModel, base_sklearn_wrapper.BaseSkl
     """
 
     def __init__(self, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
-                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
+                initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
                 random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
         """
         Sklearn wrapper for LdaSeq model. Class derived from gensim.models.LdaSeqModel
