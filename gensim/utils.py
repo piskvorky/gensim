@@ -1154,7 +1154,8 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
             return default_res
 
 
-def check_output(args, flag=True):
+
+def check_output(**kwargs):
     """
     subprocess.check_output with the flag set to true will spawn a new
     shell process and execute 'args' if there is an error while executing
@@ -1165,10 +1166,10 @@ def check_output(args, flag=True):
     instead of a list. To abstract the user from this,
     this function will convert the argument list to a string if needed.
     """
-    if flag:
-        args = " ".join(args)
+    args = kwargs.get("args")
+    args = " ".join(args)
     try:
-        res = subprocess.check_output(args, shell=flag)
+        res = subprocess.check_output(args, shell=True)
         return res
     except subprocess.CalledProcessError as e:
         """
@@ -1176,8 +1177,12 @@ def check_output(args, flag=True):
         the command. Instead of raising the error, output a more specific error
         message
         """
+        logger.debug("Error cause due to argument passed to check_output - %s", args)
         logger.error(e)
         raise
+    except KeyboardInterrupt:
+        raise
+
 
 
 def sample_dict(d, n=10, use_random=True):
