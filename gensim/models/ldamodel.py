@@ -194,10 +194,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
     def __init__(self, corpus=None, num_topics=100, id2word=None,
                  distributed=False, chunksize=2000, passes=1, update_every=1,
-                 alpha='symmetric', eta=None, decay=0.5, offset=1.0,
-                 eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01, random_state=None, ns_conf={},
-                 minimum_phi_value=0.01, per_word_topics=False, log_diff=False, log_tensorboard=False):
+                 alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
+                 iterations=50, gamma_threshold=0.001, minimum_probability=0.01, 
+                 random_state=None, ns_conf={}, minimum_phi_value=0.01, 
+                 per_word_topics=False, log_diff=False, log_tensorboard=False, log_dir=None):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -284,6 +284,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.per_word_topics = per_word_topics
         self.log_diff = log_diff
         self.log_tensorboard = log_tensorboard
+        self.log_dir = log_dir
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
@@ -539,9 +540,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         logger.info("Topic difference between %i and %i epoch %s", epoch-1, epoch, diff_diagonal)
         return diff_diagonal
 
-    def update(self, corpus, chunksize=None, decay=None, offset=None,
-               passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None, chunks_as_numpy=False, log_diff=None, log_tensorboard=None):
+    def update(self, corpus, chunksize=None, decay=None, offset=None, passes=None,
+               update_every=None, eval_every=None, iterations=None, gamma_threshold=None, 
+               chunks_as_numpy=False, log_diff=None, log_tensorboard=None, log_dir=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -592,6 +593,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             log_diff = self.log_diff
         if log_tensorboard is None:
             log_tensorboard = self.log_tensorboard
+        if log_dir is None:
+            log_dir = self.log_dir
 
         try:
             lencorpus = len(corpus)
@@ -641,14 +644,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
 
         if log_tensorboard is True:
-
             from tensorboard.summary import scalar
             from tensorboard import FileWriter
             from tensorboard import summary
 
-            logdir = 'LdaLogs'
-            writer = FileWriter(logdir)
-
+            writer = FileWriter(log_dir)
+            # save first randomly initialized model for diff log
             previous = copy.deepcopy(self)
 
         for pass_ in xrange(passes):
@@ -714,8 +715,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             # log diff between consecutive epochs
             if log_diff is True:
-                if pass_ > 0:
-                    self.log_epoch_diff(pass_, self, previous)
+                if pass_ == 0:
+                    previous = copy.deepcopy(self)
+                self.log_epoch_diff(pass_, previous)
                 previous = copy.deepcopy(self)
 
             # write current epoch parameters to tensorboard log directory
@@ -725,24 +727,30 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 coherence = scalar('Coherence', cm.get_coherence())
                 writer.add_summary(coherence, pass_+1)
 
+                # calculate perplexity
+                corpus_words = sum(cnt for document in corpus for _, cnt in document)
+                perwordbound = self.bound(corpus) / corpus_words
+
                 # write perplexity log
-                perplexity = scalar('Perplexity', np.exp2(-(self.log_perplexity(corpus))))
+                perplexity = scalar('Perplexity', np.exp2(-perwordbound))
                 writer.add_summary(perplexity, pass_+1)
 
+                # calculate diff
                 diff_matrix = self.diff(previous)[0]
                 diff_diagonal = np.flipud(np.diagonal(np.fliplr(diff_matrix)))
                 previous = copy.deepcopy(self)
-
-                # write topic convergence log
-                convergence = scalar('Convergence', np.sum(diff_diagonal))
-                writer.add_summary(convergence, pass_+1)
 
                 # write diff log
                 hist = summary.histogram('Diff', diff_diagonal)
                 writer.add_summary(hist, pass_+1)
 
-        writer.flush()
-        writer.close()
+                # write topic convergence log
+                convergence = scalar('Convergence', np.sum(diff_diagonal))
+                writer.add_summary(convergence, pass_+1)
+
+        if log_tensorboard is True:
+            writer.flush()
+            writer.close()
 
         # endfor entire corpus update
 
