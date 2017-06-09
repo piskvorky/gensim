@@ -16,6 +16,7 @@ except ImportError:
 
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklearnWrapperLdaModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklearnWrapperLsiModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklearnWrapperATModel
 from gensim.corpora import Dictionary
 from gensim import matutils
 
@@ -35,6 +36,12 @@ texts = [
 ]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
+author2doc = {'john': [0, 1, 2, 3, 4, 5, 6], 'jane': [2, 3, 4, 5, 6, 7, 8], 'jack': [0, 2, 4, 6, 8], 'jill': [1, 3, 5, 7]}
+
+texts_new = texts[0:3]
+author2doc_new = {'jill': [0], 'bob': [0, 1], 'sally': [1, 2]}
+dictionary_new = Dictionary(texts_new)
+corpus_new = [dictionary_new.doc2bow(text) for text in texts_new]
 
 
 class TestSklearnLDAWrapper(unittest.TestCase):
@@ -186,6 +193,38 @@ class TestSklearnLSIWrapper(unittest.TestCase):
 
         # updating multiple params
         param_dict = {"chunksize": 10000, "decay": 0.9}
+        self.model.set_params(**param_dict)
+        model_params = self.model.get_params()
+        for key in param_dict.keys():
+            self.assertEqual(model_params[key], param_dict[key])
+
+
+class TestSklearnATModelWrapper(unittest.TestCase):
+    def setUp(self):
+        self.model = SklearnWrapperATModel(id2word=dictionary, author2doc=author2doc, num_topics=2, passes=100)
+        self.model.fit(corpus)
+
+    def testTransform(self):
+        jill_topics = self.model['jill']
+        jill_topics = matutils.sparse2full(jill_topics, self.model.num_topics)
+        self.assertTrue(all(jill_topics > 0))
+
+    def testPartialFit(self):
+        self.model.partial_fit(corpus_new, author2doc=author2doc_new)
+
+        # Did we learn something about Sally?
+        sally_topics = self.model.get_author_topics('sally')
+        sally_topics = matutils.sparse2full(sally_topics, self.model.num_topics)
+        self.assertTrue(all(sally_topics > 0))
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
+
+        # updating multiple params
+        param_dict = {"passes": 5, "iterations": 10}
         self.model.set_params(**param_dict)
         model_params = self.model.get_params()
         for key in param_dict.keys():
