@@ -17,6 +17,10 @@ try:
     from annoy import AnnoyIndex
 except ImportError:
     raise ImportError("Annoy has not been installed, if you wish to use the annoy indexer, please run `pip install annoy`")
+try:
+    from pysparnn.cluster_index import MultiClusterIndex
+except ImportError:
+    raise ImportError("PySpaRNN has not been installed")
 
 
 class AnnoyIndexer(object):
@@ -87,3 +91,60 @@ class AnnoyIndexer(object):
             vector, num_neighbors, include_distances=True)
 
         return [(self.labels[ids[i]], 1 - distances[i] / 2) for i in range(len(ids))]
+
+
+class PySpaRNNIndexer(object):
+
+    def __init__(self, model = None, num_clusters = 10):
+        self.index = None
+        self.labels = None
+        self.model = model
+        self.num_clusters = num_clusters
+
+        if model:
+            if isinstance(self.model, Doc2Vec):
+                self.build_from_doc2vec()
+            elif isinstance(self.model, Word2Vec):
+                self.build_from_word2vec()
+            else:
+                raise ValueError("Only a Word2Vec or Doc2Vec instance can be used")
+
+    def save(self, fname, protocol=2):
+        d = {'index' : self.index, 'model' : self.model, 'num_clusters': self.num_clusters, 'labels': self.labels}
+        with smart_open(fname, 'wb') as fout:
+            _pickle.dump(d, fout, protocol=protocol)
+
+    def load(self, fname):
+        if not os.path.exists(fname):
+            raise IOError("Can't find index file '%s' - Unable to restore PySpaRNNIndexer state." % (fname,))
+        else:
+            with smart_open(fname) as f:
+                d = _pickle.loads(f.read())
+            self.index = d['index']
+            self.labels = d['labels']
+            self.model = d['model']
+            self.num_clusters = d['num_clusters']
+
+    def build_from_word2vec(self):
+        """Build a PySpaRNN index using document vectors from a Word2Vec model"""
+
+        self.model.init_sims()
+        return self._build_from_model(self.model.wv.syn0norm, self.model.wv.index2word)
+
+    def build_from_doc2vec(self):
+        """Build a PySpaRNN index using document vectors from a Doc2Vec model"""
+
+        docvecs = self.model.docvecs
+        docvecs.init_sims()
+        labels = [docvecs.index_to_doctag(i) for i in range(0, docvecs.count)]
+        return self._build_from_model(docvecs.doctag_syn0norm, labels)
+
+    def _build_from_model(self, vectors, labels):
+        self.index = MultiClusterIndex(vectors, labels)
+        self.labels = labels
+
+    def most_similar(self, vector, num_neighbors):
+        """Find the top-N most similar items"""
+
+        result = self.index.search(vector, k = num_neighbors, k_clusters = self.num_clusters)[0]
+        return [(word, 1.0 - float(similarity)) for similarity, word in result]
