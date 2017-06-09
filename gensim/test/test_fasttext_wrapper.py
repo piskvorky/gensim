@@ -124,17 +124,35 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(model.wv.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(model.wv.vocab), vocab_size, model_size)
         self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model_size))
-        expected_vec = [-0.5714373588562012,
-                        -0.008556111715734005,
-                        0.15747803449630737,
-                        -0.6785456538200378,
-                        -0.25458523631095886,
-                        -0.5807671546936035,
-                        -0.09912964701652527,
-                        1.1446694135665894,
-                        0.23417705297470093,
-                        0.06000664085149765]
-        self.assertTrue(numpy.allclose(model["hundred"], expected_vec, 0.001))
+
+        expected_vec = [
+            -0.57144,
+            -0.0085561,
+            0.15748,
+            -0.67855,
+            -0.25459,
+            -0.58077,
+            -0.09913,
+            1.1447,
+            0.23418,
+            0.060007
+        ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin < queries.txt
+        self.assertTrue(numpy.allclose(model["hundred"], expected_vec, atol=1e-4))
+
+        expected_vec = [
+            -0.21929,
+            -0.53779,
+            -0.22464,
+            -0.41735,
+            0.71737,
+            -1.5976,
+            -0.24834,
+            0.62029,
+            0.53204,
+            0.77568
+        ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin < queries.txt
+        self.assertTrue(numpy.allclose(model["rejection"], expected_vec, atol=1e-4))
+
         self.assertEquals(model.min_count, 5)
         self.assertEquals(model.window, 5)
         self.assertEquals(model.iter, 5)
@@ -156,18 +174,34 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(len(new_model.wv.vocab), vocab_size, model_size)
         self.assertEqual(new_model.wv.syn0_all.shape, (new_model.num_ngram_vectors, model_size))
 
-        expected_vec_new = [-0.025627,
-                            -0.11448,
-                             0.18116,
-                            -0.96779,
-                             0.2532,
-                            -0.93224,
-                             0.3929,
-                             0.12679,
-                            -0.19685,
-                            -0.13179]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin < queries.txt
+        expected_vec = [
+            -0.025627,
+            -0.11448,
+             0.18116,
+            -0.96779,
+             0.2532,
+            -0.93224,
+             0.3929,
+             0.12679,
+            -0.19685,
+            -0.13179
+        ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin < queries.txt
+        self.assertTrue(numpy.allclose(new_model["hundred"], expected_vec, atol=1e-4))
 
-        self.assertTrue(numpy.allclose(new_model["hundred"], expected_vec_new, 0.001))
+        expected_vec_oov = [
+            -0.49112,
+            -0.13123,
+            -0.021091,
+            -0.8877,
+            -0.20106,
+            -0.91733,
+            0.47244,
+            0.19709,
+            -0.17857,
+            0.19815
+        ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin
+        self.assertTrue(numpy.allclose(new_model["rejection"], expected_vec, atol=1e-4))
+
         self.assertEquals(new_model.min_count, 5)
         self.assertEquals(new_model.window, 5)
         self.assertEquals(new_model.iter, 5)
