@@ -1154,7 +1154,6 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
             return default_res
 
 
-
 def check_output(**kwargs):
     """
     subprocess.check_output with the flag set to true will spawn a new
@@ -1177,12 +1176,12 @@ def check_output(**kwargs):
         the command. Instead of raising the error, output a more specific error
         message
         """
-        logger.debug("Error cause due to argument passed to check_output - %s", args)
+        logger.debug("Error cause due to argument passed to check_output - %s",
+                     args)
         logger.error(e)
         raise
     except KeyboardInterrupt:
         raise
-
 
 
 def sample_dict(d, n=10, use_random=True):
