@@ -535,7 +535,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def log_epoch_diff(self, epoch, other_model):
         diff_matrix, annotation = self.diff(other_model)
-        diff_diagonal = diff_matrix.diagonal()
+        diff_diagonal = np.flipud(np.diagonal(np.fliplr(diff_matrix)))
         logger.info("Topic difference between %i and %i epoch %s", epoch-1, epoch, diff_diagonal)
         return diff_diagonal
 
@@ -641,13 +641,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
 
         if log_tensorboard is True:
-            
+
             from tensorboard.summary import scalar
             from tensorboard import FileWriter
             from tensorboard import summary
 
             logdir = 'LdaLogs'
             writer = FileWriter(logdir)
+
+            previous = copy.deepcopy(self)
 
         for pass_ in xrange(passes):
             if self.dispatcher:
@@ -727,16 +729,17 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 perplexity = scalar('Perplexity', np.exp2(-(self.log_perplexity(corpus))))
                 writer.add_summary(perplexity, pass_+1)
 
-                # write alpha log
-                # alpha = scalar('Alpha', self.alpha)
-                # writer.add_summary(alpha, pass_+1)
+                diff_matrix = self.diff(previous)[0]
+                diff_diagonal = np.flipud(np.diagonal(np.fliplr(diff_matrix)))
+                previous = copy.deepcopy(self)
+
+                # write topic convergence log
+                convergence = scalar('Convergence', np.sum(diff_diagonal))
+                writer.add_summary(convergence, pass_+1)
 
                 # write diff log
-                if pass_ > 0:
-                    diff = self.log_epoch_diff(pass_, previous)
-                    hist = summary.histogram('Diff', diff)
-                    writer.add_summary(hist, pass_+1)
-                previous = copy.deepcopy(self)
+                hist = summary.histogram('Diff', diff_diagonal)
+                writer.add_summary(hist, pass_+1)
 
         writer.flush()
         writer.close()
