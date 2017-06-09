@@ -15,6 +15,7 @@ install:
   - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
   - source activate gensim-test
   - python setup.py install
+  - pip install .[test]
 script:
   - python setup.py test
   - pip install flake8
