@@ -195,8 +195,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def __init__(self, corpus=None, num_topics=100, id2word=None,
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
-                 iterations=50, gamma_threshold=0.001, minimum_probability=0.01, 
-                 random_state=None, ns_conf={}, minimum_phi_value=0.01, 
+                 iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
+                 random_state=None, ns_conf={}, minimum_phi_value=0.01,
                  per_word_topics=False, log_diff=False, log_tensorboard=False, log_dir=None):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
@@ -240,6 +240,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         `minimum_probability` controls filtering the topics returned for a document (bow).
 
         `random_state` can be a np.random.RandomState object or the seed for one
+
+        `log_diff` set to True to log topic diff between consecutive epochs
+
+        `log_tensorboard` set to True to log training stats for tensorboard visualization
+
+        `log_dir` is the directory name to which Tensorboard log event files should be saved
 
         Example:
 
@@ -535,13 +541,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return perwordbound
 
     def log_epoch_diff(self, epoch, other_model):
+        """
+        Log topic diff between consecutive epochs
+        """
         diff_matrix, annotation = self.diff(other_model)
-        diff_diagonal = np.flipud(np.diagonal(np.fliplr(diff_matrix)))
-        logger.info("Topic difference between %i and %i epoch %s", epoch-1, epoch, diff_diagonal)
+        diff_diagonal = np.diagonal(diff_matrix)
+        logger.info("Topic difference between %i and %i epoch %s", epoch - 1, epoch, diff_diagonal)
         return diff_diagonal
 
     def update(self, corpus, chunksize=None, decay=None, offset=None, passes=None,
-               update_every=None, eval_every=None, iterations=None, gamma_threshold=None, 
+               update_every=None, eval_every=None, iterations=None, gamma_threshold=None,
                chunks_as_numpy=False, log_diff=None, log_tensorboard=None, log_dir=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
@@ -644,12 +653,14 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
 
         if log_tensorboard is True:
+            # Install with `pip install tensorboard`
             from tensorboard.summary import scalar
             from tensorboard import FileWriter
             from tensorboard import summary
 
+            # run tensorboard --logdir=path/to/log_dir to visualize logs
             writer = FileWriter(log_dir)
-            # save first randomly initialized model for diff log
+            # save randomly initialized model for diff with first pass
             previous = copy.deepcopy(self)
 
         for pass_ in xrange(passes):
@@ -716,6 +727,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # log diff between consecutive epochs
             if log_diff is True:
                 if pass_ == 0:
+                    # save randomly initialized model for diff with first pass
                     previous = copy.deepcopy(self)
                 self.log_epoch_diff(pass_, previous)
                 previous = copy.deepcopy(self)
@@ -725,7 +737,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 # write coherence log
                 cm = gensim.models.CoherenceModel(model=self, corpus=corpus, coherence='u_mass')
                 coherence = scalar('Coherence', cm.get_coherence())
-                writer.add_summary(coherence, pass_+1)
+                writer.add_summary(coherence, pass_ + 1)
 
                 # calculate perplexity
                 corpus_words = sum(cnt for document in corpus for _, cnt in document)
@@ -733,20 +745,20 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 # write perplexity log
                 perplexity = scalar('Perplexity', np.exp2(-perwordbound))
-                writer.add_summary(perplexity, pass_+1)
+                writer.add_summary(perplexity, pass_ + 1)
 
                 # calculate diff
                 diff_matrix = self.diff(previous)[0]
-                diff_diagonal = np.flipud(np.diagonal(np.fliplr(diff_matrix)))
+                diff_diagonal = np.diagonal(diff_matrix)
                 previous = copy.deepcopy(self)
 
                 # write diff log
                 hist = summary.histogram('Diff', diff_diagonal)
-                writer.add_summary(hist, pass_+1)
+                writer.add_summary(hist, pass_ + 1)
 
                 # write topic convergence log
                 convergence = scalar('Convergence', np.sum(diff_diagonal))
-                writer.add_summary(convergence, pass_+1)
+                writer.add_summary(convergence, pass_ + 1)
 
         if log_tensorboard is True:
             writer.flush()
