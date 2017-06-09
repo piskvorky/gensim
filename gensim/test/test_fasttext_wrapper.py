@@ -136,22 +136,24 @@ class TestFastText(unittest.TestCase):
             1.1447,
             0.23418,
             0.060007
-        ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin < queries.txt
+        ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin
         self.assertTrue(numpy.allclose(model["hundred"], expected_vec, atol=1e-4))
 
-        expected_vec = [
-            -0.21929,
-            -0.53779,
-            -0.22464,
-            -0.41735,
-            0.71737,
-            -1.5976,
-            -0.24834,
-            0.62029,
-            0.53204,
-            0.77568
-        ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin < queries.txt
-        self.assertTrue(numpy.allclose(model["rejection"], expected_vec, atol=1e-4))
+        # vector for oov words are slightly different from original FastText due to discarding unused ngrams
+        # obtained using a modified version of ./fasttext print-word-vectors lee_fasttext_new.bin
+        expected_vec_oov = [
+            -0.23825,
+            -0.58482,
+            -0.22276,
+            -0.41215,
+            0.91015,
+            -1.6786,
+            -0.26724,
+            0.58818,
+            0.57828,
+            0.75801
+        ]
+        self.assertTrue(numpy.allclose(model["rejection"], expected_vec_oov, atol=1e-4))
 
         self.assertEquals(model.min_count, 5)
         self.assertEquals(model.window, 5)
@@ -185,22 +187,24 @@ class TestFastText(unittest.TestCase):
              0.12679,
             -0.19685,
             -0.13179
-        ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin < queries.txt
+        ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin
         self.assertTrue(numpy.allclose(new_model["hundred"], expected_vec, atol=1e-4))
 
+        # vector for oov words are slightly different from original FastText due to discarding unused ngrams
+        # obtained using a modified version of ./fasttext print-word-vectors lee_fasttext_new.bin
         expected_vec_oov = [
-            -0.49112,
-            -0.13123,
-            -0.021091,
-            -0.8877,
-            -0.20106,
-            -0.91733,
-            0.47244,
-            0.19709,
-            -0.17857,
-            0.19815
-        ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin
-        self.assertTrue(numpy.allclose(new_model["rejection"], expected_vec, atol=1e-4))
+            -0.53378,
+            -0.19,
+            0.013482,
+            -0.86767,
+            -0.21684,
+            -0.89928,
+            0.45124,
+            0.18025,
+            -0.14128,
+            0.22508
+        ]
+        self.assertTrue(numpy.allclose(new_model["rejection"], expected_vec_oov, atol=1e-4))
 
         self.assertEquals(new_model.min_count, 5)
         self.assertEquals(new_model.window, 5)
