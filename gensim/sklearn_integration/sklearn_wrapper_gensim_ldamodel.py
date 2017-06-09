@@ -12,13 +12,12 @@ import numpy as np
 
 from gensim import models
 from gensim import matutils
+from gensim.sklearn_integration import base_sklearn_wrapper
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
 
-
-
-class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
+class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """
@@ -68,20 +67,17 @@ class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
                 "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
                 "random_state": self.random_state}
 
-
     def set_params(self, **parameters):
         """
         Set all parameters.
         """
-        for parameter, value in parameters.items():
-            self.parameter = value
-        return self
+        super(SklearnWrapperLdaModel, self).set_params(**parameters)
 
-    def fit(self, X,  y=None):
+    def fit(self, X, y=None):
         """
         For fitting corpus into the class object.
         Calls gensim.model.LdaModel:
-        >>>gensim.models.LdaModel(corpus=corpus,num_topics=num_topics,id2word=id2word,passes=passes,update_every=update_every,alpha=alpha,iterations=iterations,eta=eta,random_state=random_state)
+        >>> gensim.models.LdaModel(corpus=corpus, num_topics=num_topics, id2word=id2word, passes=passes, update_every=update_every, alpha=alpha, iterations=iterations, eta=eta, random_state=random_state)
         """
         if sparse.issparse(X):
             self.corpus = matutils.Sparse2Corpus(X)
@@ -106,16 +102,15 @@ class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
         # The input as array of array
         check = lambda x: [x] if isinstance(x[0], tuple) else x
         docs = check(docs)
-        X = [[] for i in range(0,len(docs))];
-        for k,v in enumerate(docs):
+        X = [[] for _ in range(0, len(docs))]
 
+        for k, v in enumerate(docs):
             doc_topics = self.get_document_topics(v, minimum_probability=minimum_probability)
             probs_docs = list(map(lambda x: x[1], doc_topics))
             # Everything should be equal in length
             if len(probs_docs) != self.num_topics:
                 probs_docs.extend([1e-12]*(self.num_topics - len(probs_docs)))
             X[k] = probs_docs
-            probs_docs = []
         return np.reshape(np.array(X), (len(docs), self.num_topics))
 
     def get_topic_dist(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
@@ -130,6 +125,11 @@ class SklearnWrapperLdaModel(models.LdaModel, TransformerMixin, BaseEstimator):
     def partial_fit(self, X):
         """
         Train model over X.
+        By default, 'online (single-pass)' mode is used for training the LDA model.
+        Configure `passes` and `update_every` params at init to choose the mode among :
+            - online (single-pass): update_every != None and passes == 1
+            - online (multi-pass): update_every != None and passes > 1
+            - batch: update_every == None
         """
         if sparse.issparse(X):
             X = matutils.Sparse2Corpus(X)

@@ -12,10 +12,12 @@ import numpy as np
 
 from gensim import models
 from gensim import matutils
+from gensim.sklearn_integration import base_sklearn_wrapper
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
-class SklearnWrapperLsiModel(models.LsiModel, TransformerMixin, BaseEstimator):
+
+class SklearnWrapperLsiModel(models.LsiModel, base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LSI module
     """
@@ -51,11 +53,9 @@ class SklearnWrapperLsiModel(models.LsiModel, TransformerMixin, BaseEstimator):
         """
         Set all parameters.
         """
-        for parameter, value in parameters.items():
-            self.parameter = value
-        return self
+        super(SklearnWrapperLsiModel, self).set_params(**parameters)
 
-    def fit(self, X,  y=None):
+    def fit(self, X, y=None):
         """
         For fitting corpus into the class object.
         Calls gensim.model.LsiModel:
