@@ -18,12 +18,13 @@ import unittest
 from gensim.corpora.wikicorpus import WikiCorpus
 
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 FILENAME = 'enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2'
 FILENAME_U = 'bgwiki-latest-pages-articles-shortened.xml.bz2'
 
 logger = logging.getLogger(__name__)
+
 
 class TestWikiCorpus(unittest.TestCase):
 
@@ -61,6 +62,13 @@ class TestWikiCorpus(unittest.TestCase):
 
         l = wc.get_texts()
         self.assertTrue(u'папа' in next(l))
+
+    def test_sample_text(self):
+        wc = WikiCorpus(datapath(FILENAME_U), processes=1)
+        print(len(wc))
+        for x in wc.sample_texts(1):
+            print(x)
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
