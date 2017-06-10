@@ -212,8 +212,8 @@ class TestDictionary(unittest.TestCase):
             file.write(no_num_docs_serialization)
 
         d = Dictionary.load_from_text(tmpf)
-        self.assertEqual(d.token2id["prvé"], 1)
-        self.assertEqual(d.token2id["slovo"], 2)
+        self.assertEqual(d.token2id[u"prvé"], 1)
+        self.assertEqual(d.token2id[u"slovo"], 2)
         self.assertEqual(d.dfs[1], 1)
         self.assertEqual(d.dfs[2], 2)
         self.assertEqual(d.num_docs, 0)
@@ -223,8 +223,8 @@ class TestDictionary(unittest.TestCase):
             file.write(no_num_docs_serialization)
 
         d = Dictionary.load_from_text(tmpf)
-        self.assertEqual(d.token2id["prvé"], 1)
-        self.assertEqual(d.token2id["slovo"], 2)
+        self.assertEqual(d.token2id[u"prvé"], 1)
+        self.assertEqual(d.token2id[u"slovo"], 2)
         self.assertEqual(d.dfs[1], 1)
         self.assertEqual(d.dfs[2], 2)
         self.assertEqual(d.num_docs, 2)
