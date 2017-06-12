@@ -76,13 +76,11 @@ class SklearnWrapperLDASeqModel(models.LdaSeqModel, base_sklearn_wrapper.BaseSkl
             em_min_iter=self.em_min_iter, em_max_iter=self.em_max_iter, chunksize=self.chunksize
             )
 
-    def transform(self, author_names):
+    def transform(self, doc):
         """
+        Return the topic proportions for the document passed.
         """
-        pass
+        return self[doc]
 
-    def partial_fit(self, X, author2doc=None, doc2author=None):
-        """
-        Train model over X.
-        """
-        pass
+    def partial_fit(self, X):
+        raise NotImplementedError("'partial_fit' has not been implemented for the LDA Seq model")
