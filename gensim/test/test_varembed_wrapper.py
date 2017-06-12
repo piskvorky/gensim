@@ -24,7 +24,7 @@ else:
 from gensim.models.wrappers import varembed
 
 try:
-    import morfessor
+    import morfessor  # noqa: F401
 except ImportError:
     raise unittest.SkipTest("Test requires Morfessor to be installed, which is not available")
 
