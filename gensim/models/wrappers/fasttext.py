@@ -224,7 +224,7 @@ class FastText(Word2Vec):
         return FastTextKeyedVectors.load_word2vec_format(*args, **kwargs)
 
     @classmethod
-    def load_fasttext_format(cls, model_file, bin_only = False, encoding='utf8'):
+    def load_fasttext_format(cls, model_file, bin_only=False, encoding='utf8'):
         """
         Load the input-hidden weight matrix from the fast text output files.
 
@@ -236,7 +236,7 @@ class FastText(Word2Vec):
         Expected value for this example: `/path/to/train`
 
         `bin_only` is the optional parameter added to load the entire fastText model using
-        the .bin file only. 
+        the .bin file only.
 
         TO-DO : finally update here if it improves loading time
         """
@@ -259,7 +259,7 @@ class FastText(Word2Vec):
             logger.debug('Training files %s not found when attempting to delete', model_file)
             pass
 
-    def load_binary_data(self, model_binary_file, bin_only = False, encoding='utf8'):
+    def load_binary_data(self, model_binary_file, bin_only=False, encoding='utf8'):
         """Loads data from the output binary file created by FastText training"""
         with utils.smart_open(model_binary_file, 'rb') as f:
             self.load_model_params(f)
@@ -289,7 +289,7 @@ class FastText(Word2Vec):
         self.wv.max_n = maxn
         self.sample = t
 
-    def load_dict(self, file_handle, bin_only = False, encoding='utf8'):
+    def load_dict(self, file_handle, bin_only=False, encoding='utf8'):
         vocab_size, nwords, _ = self.struct_unpack(file_handle, '@3i')
         self.nwords = nwords
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
@@ -324,7 +324,7 @@ class FastText(Word2Vec):
 
         # now assert
         if bin_only:
-            #assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
+            # assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
             assert len(self.wv.vocab) == vocab_size
 
 
@@ -332,7 +332,7 @@ class FastText(Word2Vec):
             for j in range(pruneidx_size):
                 self.struct_unpack(file_handle, '@2i')
 
-    def load_vectors(self, file_handle, bin_only = False):
+    def load_vectors(self, file_handle, bin_only=False):
         if self.new_format:
             self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
@@ -355,7 +355,7 @@ class FastText(Word2Vec):
         num_bytes = struct.calcsize(fmt)
         return struct.unpack(fmt, file_handle.read(num_bytes))
 
-    def init_ngrams(self, bin_only = False):
+    def init_ngrams(self, bin_only=False):
         """
         Computes ngrams of all words present in vocabulary and stores vectors for only those ngrams.
         Vectors for other ngrams are initialized with a random uniform distribution in FastText. These
@@ -385,12 +385,12 @@ class FastText(Word2Vec):
         ngram_weights = self.wv.syn0_all
 
         if bin_only:
-            for w,v in self.wv.vocab.items():
+            for w, v in self.wv.vocab.items():
                 word_ngrams = self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
                 for word_ngram in word_ngrams:
                     self.wv.syn0[self.wv.vocab[w].index] += np.array(ngram_weights[self.wv.ngrams[word_ngram]])
 
-                self.wv.syn0[self.wv.vocab[w].index] /= (len(word_ngrams)+1)
+                self.wv.syn0[self.wv.vocab[w].index] /= (len(word_ngrams) + 1)
             logger.info("loaded %s matrix from %s" % (self.wv.syn0.shape))
 
     @staticmethod
