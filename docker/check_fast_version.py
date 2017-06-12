@@ -1,7 +1,7 @@
 import sys
 
 try:
-    from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
+    from gensim.models.word2vec_inner import FAST_VERSION
 
     print('FAST_VERSION ok ! Retrieved with value ', FAST_VERSION)
     sys.exit()

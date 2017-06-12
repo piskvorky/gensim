@@ -2,8 +2,9 @@ FROM ubuntu:16.04
 
 MAINTAINER Daniel Baptista Dias <danielbpdias@gmail.com>
 
-ENV GENSIM_REPOSITORY https://github.com/RaRe-Technologies/gensim/archive
-ENV GENSIM_VERSION master
+ENV GENSIM_REPOSITORY https://github.com/parulsethi/gensim/archive
+ENV GENSIM_BRANCH gensim_docker
+ENV PYTHONPATH "/usr/local/lib/python3/dist-packages:/usr/local/lib/python3.5/site-packages:/usr/lib/python3/dist-packages"
 
 # Installs python, pip and setup tools (with fixed versions)
 RUN apt-get update \
@@ -21,6 +22,7 @@ RUN apt-get update \
     python3-setuptools=20.7.0-1 \
     unzip=6.0-20ubuntu1 \
     wget=1.17.1-1ubuntu1.1 \
+    libopenblas-dev \
     libboost-program-options-dev \
     libboost-python-dev \
     zlib1g-dev
@@ -41,18 +43,19 @@ RUN pip install --upgrade pip
 
 # Install dependencies
 RUN pip install \
-    annoy \
-    cython \
-    jupyter \
-    matplotlib \
-    nltk \
-    pandas \
-    pyemd \
-    sklearn \
+    annoy==1.8.3 \
+    cython==0.25.2 \
+    jupyter==1.0.0 \
+    matplotlib==2.0.0 \
+    morfessor==2.0.2a4 \
+    nltk==3.2.2 \
+    pandas==0.19.2 \
+    pyemd==0.4.3 \
+    scikit-learn==0.18.1 \
     testfixtures \
     unittest2 \
-    git+git://github.com/mila-udem/fuel.git@stable \
-    git+git://github.com/mila-udem/blocks.git@stable \
+    git+https://github.com/mila-udem/fuel.git@stable \
+    git+https://github.com/mila-udem/blocks.git@stable \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
 # Create gensim directory and dependencies directory
@@ -62,9 +65,9 @@ RUN mkdir /gensim \
 # Download gensim from Github
 RUN mkdir /gensim/download \
     && cd /gensim/download \
-    && wget --quiet $GENSIM_REPOSITORY/$GENSIM_VERSION.zip \
-    && unzip $GENSIM_VERSION.zip \
-    && mv ./gensim-$GENSIM_VERSION/* /gensim \
+    && wget --quiet $GENSIM_REPOSITORY/$GENSIM_BRANCH.zip \
+    && unzip $GENSIM_BRANCH.zip \
+    && mv ./gensim-$GENSIM_BRANCH/* /gensim \
     && rm -rf /gensim/download \
     && cd /gensim \
     && python setup.py install
@@ -78,18 +81,18 @@ ENV VOWPAL_WABBIT_PATH gensim_dependencies/vowpal_wabbit/vowpalwabbit/vw
 
 # Install custom dependencies
 
+# Install fastText
+RUN cd /gensim_dependencies \
+    && git clone https://github.com/facebookresearch/fastText.git \
+    && cd /gensim_dependencies/fastText \
+    && make
+
 # Install WordRank
 RUN cd /gensim_dependencies \
     && git clone https://bitbucket.org/shihaoji/wordrank \
     && cp /gensim/docker/wordrank_install.sh /gensim_dependencies/wordrank/install.sh \
     && cd /gensim_dependencies/wordrank \
     && sh ./install.sh
-
-# Install fastText
-RUN cd /gensim_dependencies \
-    && git clone https://github.com/facebookresearch/fastText.git \
-    && cd /gensim_dependencies/fastText \
-    && make
 
 # Install MorphologicalPriorsForWordEmbeddings
 RUN cd /gensim_dependencies \
