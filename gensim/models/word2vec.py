@@ -285,7 +285,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         if compute_loss:
             sgn = (-1.0)**predict_word.code  # `ch` function, 0 -> 1, 1 -> -1
             lprob = -log(expit(-sgn * dot(l1, l2a.T)))
-            model.cumulative_training_loss += sum(lprob)
+            model.running_training_loss += sum(lprob)
 
     if model.negative:
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
@@ -304,8 +304,8 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
 
         # loss component corresponding to negative sampling
         if compute_loss:
-            model.cumulative_training_loss -= sum(log(expit(-1 * prod_term[range(1, len(prod_term))])))      # for the sampled words
-            model.cumulative_training_loss -= log(expit(prod_term[0]))       # for the output word
+            model.running_training_loss -= sum(log(expit(-1 * prod_term[range(1, len(prod_term))])))  # for the sampled words
+            model.running_training_loss -= log(expit(prod_term[0]))  # for the output word
 
     if learn_vectors:
         l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
@@ -485,7 +485,7 @@ class Word2Vec(utils.SaveLoad):
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
         self.model_trimmed_post_training = False
-        self.cumulative_training_loss = 0
+        self.running_training_loss = 0
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -808,7 +808,7 @@ class Word2Vec(utils.SaveLoad):
                 self.neg_labels = zeros(self.negative + 1)
                 self.neg_labels[0] = 1.
 
-        self.cumulative_training_loss = 0
+        self.running_training_loss = 0
 
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
@@ -841,7 +841,7 @@ class Word2Vec(utils.SaveLoad):
             total_words = total_words and total_words * epochs
             total_examples = total_examples and total_examples * epochs
 
-        def worker_loop():
+        def worker_loop(compute_loss=False):
             """Train the model, lifting lists of sentences from the job_queue."""
             work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
@@ -1454,7 +1454,7 @@ class Word2Vec(utils.SaveLoad):
         raise DeprecationWarning("Deprecated. Use model.wv.save_word2vec_format instead.")
 
     def get_latest_training_loss(self):
-        return self.cumulative_training_loss
+        return self.running_training_loss
 
 
 class BrownCorpus(object):
