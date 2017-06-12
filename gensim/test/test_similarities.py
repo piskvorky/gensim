@@ -590,6 +590,177 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(self.index.num_trees, self.index2.num_trees)
 
 
+class TestWord2VecFaissIndexerDotProductSimilarity(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import faiss
+        except ImportError:
+            raise unittest.SkipTest("Faiss library is not available")
+        from gensim.similarities.faiss_index import FaissIndexer
+        self.indexer = FaissIndexer
+
+    def testWord2Vec(self):
+        model = word2vec.Word2Vec(texts, min_count=1)
+        model.init_sims()
+        index = self.indexer(model, 10)
+
+        self.assertVectorIsSimilarToItself(model, index)
+        self.assertApproxNeighborsMatchExact(model, index)
+
+    def testFastText(self):
+        ft_home = os.environ.get('FT_HOME', None)
+        ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
+        if not ft_path:
+            return
+        corpus_file = datapath('lee.cor')
+        model = fasttext.FastText.train(ft_path, corpus_file)
+        model.init_sims()
+        index = self.indexer(model, 10)
+
+        self.assertVectorIsSimilarToItself(model, index)
+        self.assertApproxNeighborsMatchExact(model, index)
+
+    def assertVectorIsSimilarToItself(self, model, index):
+        label = model.wv.index2word[0]
+        approx_neighbors = index.most_similar_dot_product(label, 1, 7)
+        word, similarity = approx_neighbors[0]
+
+        self.assertEqual(word, label)
+        self.assertEqual(similarity, 1.0)
+
+    def assertApproxNeighborsMatchExact(self, model, index):
+        vector = model.wv.syn0norm[0]
+        label = model.wv.index2word[0]
+        approx_neighbors = index.most_similar_dot_product(label, 5, 7)
+        exact_neighbors = model.most_similar(positive=[vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+
+class TestWord2VecFaissIndexerL2Similarity(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import faiss
+        except ImportError:
+            raise unittest.SkipTest("Faiss library is not available")
+        from gensim.similarities.faiss_index import FaissIndexer
+        self.indexer = FaissIndexer
+
+    def testWord2Vec(self):
+        model = word2vec.Word2Vec(texts, min_count=1)
+        model.init_sims()
+        index = self.indexer(model, 10)
+
+        self.assertVectorIsSimilarToItself(model, index)
+        self.assertApproxNeighborsMatchExact(model, index)
+
+    def testFastText(self):
+        ft_home = os.environ.get('FT_HOME', None)
+        ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
+        if not ft_path:
+            return
+        corpus_file = datapath('lee.cor')
+        model = fasttext.FastText.train(ft_path, corpus_file)
+        model.init_sims()
+        index = self.indexer(model, 10)
+
+        self.assertVectorIsSimilarToItself(model, index)
+        self.assertApproxNeighborsMatchExact(model, index)
+
+    def assertVectorIsSimilarToItself(self, model, index):
+        label = model.wv.index2word[0]
+        approx_neighbors = index.most_similar_l2(label, 1, 7)
+        word, similarity = approx_neighbors[0]
+
+        self.assertEqual(word, label)
+        self.assertEqual(similarity, 0.0)
+
+    def assertApproxNeighborsMatchExact(self, model, index):
+        vector = model.wv.syn0norm[0]
+        label = model.wv.index2word[0]
+        approx_neighbors = index.most_similar_l2(label, 5, 7)
+        exact_neighbors = model.most_similar(positive=[vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+        self.assertEqual(approx_words, exact_words)
+
+
+class TestDoc2VecFaissIndexerDotProductSimilarity(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import faiss
+        except ImportError:
+            raise unittest.SkipTest("Faiss library is not available")
+        from gensim.similarities.faiss_index import FaissIndexer
+
+        self.model = doc2vec.Doc2Vec(sentences, min_count=1)
+        docvecs = self.model.docvecs
+        self.model.init_sims()
+        self.index = FaissIndexer(self.model, 5)
+        self.label = docvecs.index_to_doctag(0)
+        self.vector = self.model.docvecs.doctag_syn0norm[0]
+
+    def testDocumentIsSimilarToItselfDotProduct(self):
+        approx_neighbors = self.index.most_similar_dot_product(self.label,
+                                                               1, 2)
+        doc, similarity = approx_neighbors[0]
+
+        self.assertEqual(doc, self.label)
+        self.assertEqual(similarity, 1.0)
+
+    def testApproxNeighborsMatchExactDotProduct(self):
+        approx_neighbors = self.index.most_similar_dot_product(self.label,
+                                                               5, 2)
+        exact_neighbors = self.model.docvecs.most_similar(
+                                    positive=[self.vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+
+class TestDoc2VecFaissIndexerL2Similarity(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import faiss
+        except ImportError:
+            raise unittest.SkipTest("Faiss library is not available")
+        from gensim.similarities.faiss_index import FaissIndexer
+
+        self.model = doc2vec.Doc2Vec(sentences, min_count=1)
+        docvecs = self.model.docvecs
+        self.model.init_sims()
+        self.index = FaissIndexer(self.model, 3)
+        self.label = docvecs.index_to_doctag(0)
+        self.vector = self.model.docvecs.doctag_syn0norm[0]
+
+    def testDocumentIsSimilarToItselfL2(self):
+        approx_neighbors = self.index.most_similar_l2(self.label, 1, 2)
+        doc, difference = approx_neighbors[0]
+
+        self.assertEqual(doc, self.label)
+        self.assertEqual(difference, 0.0)
+
+    def testApproxNeighborsMatchExactL2(self):
+        approx_neighbors = self.index.most_similar_l2(self.label, 5, 2)
+        exact_neighbors = self.model.docvecs.most_similar(positive=[self.vector],
+                                                          topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
