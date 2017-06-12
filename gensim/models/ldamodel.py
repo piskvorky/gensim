@@ -197,7 +197,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf={}, minimum_phi_value=0.01,
-                 per_word_topics=False, log_diff=False, log_tensorboard=False, log_dir=None):
+                 per_word_topics=False, log_diff=False, log_tensorboard=False,
+                 coherence='u_mass', distance="kulback_leibler", log_dir=None):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -245,6 +246,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         `log_tensorboard` set to True to log training stats for tensorboard visualization
 
+        `coherence` is the coherence measure for model coherence to use in tensorboard visualization
+
+        `distance` is the distance measure for `diff` to use in tensorboard visualization
+
         `log_dir` is the directory name to which Tensorboard log event files should be saved
 
         Example:
@@ -290,6 +295,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.per_word_topics = per_word_topics
         self.log_diff = log_diff
         self.log_tensorboard = log_tensorboard
+        self.coherence = coherence
+        self.distance = distance
         self.log_dir = log_dir
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
@@ -551,7 +558,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def update(self, corpus, chunksize=None, decay=None, offset=None, passes=None,
                update_every=None, eval_every=None, iterations=None, gamma_threshold=None,
-               chunks_as_numpy=False, log_diff=None, log_tensorboard=None, log_dir=None):
+               chunks_as_numpy=False, log_diff=None, log_tensorboard=None, coherence=None, distance=None, log_dir=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -602,6 +609,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             log_diff = self.log_diff
         if log_tensorboard is None:
             log_tensorboard = self.log_tensorboard
+        if coherence is None:
+            coherence = self.coherence
+        if distance is None:
+            distance = self.distance
         if log_dir is None:
             log_dir = self.log_dir
 
@@ -735,9 +746,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # write current epoch parameters to tensorboard log directory
             if log_tensorboard is True:
                 # write coherence log
-                cm = gensim.models.CoherenceModel(model=self, corpus=corpus, coherence='u_mass')
-                coherence = scalar('Coherence', cm.get_coherence())
-                writer.add_summary(coherence, pass_ + 1)
+                cm = gensim.models.CoherenceModel(model=self, corpus=corpus, coherence=coherence)
+                coherence_summ = scalar('Coherence ' + coherence, cm.get_coherence())
+                writer.add_summary(coherence_summ, pass_ + 1)
 
                 # calculate perplexity
                 corpus_words = sum(cnt for document in corpus for _, cnt in document)
@@ -753,11 +764,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 previous = copy.deepcopy(self)
 
                 # write diff log
-                hist = summary.histogram('Diff', diff_diagonal)
+                hist = summary.histogram('Diff ' + distance, diff_diagonal)
                 writer.add_summary(hist, pass_ + 1)
 
                 # write topic convergence log
-                convergence = scalar('Convergence', np.sum(diff_diagonal))
+                convergence = scalar('Convergence ' + distance, np.sum(diff_diagonal))
                 writer.add_summary(convergence, pass_ + 1)
 
         if log_tensorboard is True:
