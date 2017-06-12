@@ -179,12 +179,12 @@ class TestFastText(unittest.TestCase):
         expected_vec = [
             -0.025627,
             -0.11448,
-             0.18116,
+            0.18116,
             -0.96779,
-             0.2532,
+            0.2532,
             -0.93224,
-             0.3929,
-             0.12679,
+            0.3929,
+            0.12679,
             -0.19685,
             -0.13179
         ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin

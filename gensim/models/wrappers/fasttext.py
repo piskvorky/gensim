@@ -355,8 +355,8 @@ class FastText(Word2Vec):
         extended_word = BOW + word + EOW
         ngrams = []
         for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
-            for i in range(0, len(extended_word) - ngram_length +1):
-                ngrams.append(extended_word[i:i+ngram_length])
+            for i in range(0, len(extended_word) - ngram_length + 1):
+                ngrams.append(extended_word[i:i + ngram_length])
         return ngrams
 
     @staticmethod
