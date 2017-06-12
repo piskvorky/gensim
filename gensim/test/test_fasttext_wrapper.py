@@ -218,7 +218,7 @@ class TestFastText(unittest.TestCase):
 
     def testLoadModelWithNonAsciiVocab(self):
         """Test loading model with non-ascii words in vocab"""
-        model = fasttext.FastText.load(datapath('non_ascii_fasttext'))
+        model = fasttext.FastText.load_fasttext_format(datapath('non_ascii_fasttext'))
         self.assertTrue(u'který' in model)
         try:
             vector = model[u'který']
@@ -227,7 +227,7 @@ class TestFastText(unittest.TestCase):
 
     def testLoadModelNonUtf8Encoding(self):
         """Test loading model with words in user-specified encoding"""
-        model = fasttext.FastText.load(datapath('cp852_fasttext'))
+        model = fasttext.FastText.load_fasttext_format(datapath('cp852_fasttext'), encoding='cp852')
         self.assertTrue(u'který' in model)
         try:
             vector = model[u'který']
