@@ -222,18 +222,18 @@ class TestFastText(unittest.TestCase):
         """ Compare the word vectors obtained from .vec file with word vectors obtained using all the
             ngrams from .bin file """
 
-        model_bin_only = fasttext.FastText.load_fasttext_format(os.path.abspath('self.test_new_model_file'), bin_only = True)
-        # compare with self.test_new_model
+        model_bin_only = fasttext.FastText.load_fasttext_format(os.path.abspath(self.test_model_file), bin_only = True)
+        model = fasttext.FastText.load_fasttext_format(os.path.abspath(self.test_model_file))
 
-        self.assertEquals(len(model_bin_only.wv.syn0), len(self.test_new_model.wv.syn0))
+        self.assertEquals(len(model_bin_only.wv.syn0), len(model.wv.syn0))
 
         for i in xrange(len(model_bin_only.wv.syn0)):
-            a = model_bin_only.wv.syn0[i]
-            a = [float(Decimal("%.5f" % e)) for e in a]  # rounding off to 5 deciml digits
-            b = self.test_new_model.wv.syn0[i]
-            b = [float(Decimal("%.5f" % e)) for e in b]
 
-            self.assertTrue(numpy.allclose(a,b))
+            a = model_bin_only.wv.syn0[i]
+            b = model.wv.syn0[i]
+
+            self.assertTrue(numpy.allclose(a,b,atol=1e-3))
+            
 
 
     def testLoadModelWithNonAsciiVocab(self):
