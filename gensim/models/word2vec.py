@@ -274,8 +274,8 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
     if model.hs:
         # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
         l2a = deepcopy(model.syn1[predict_word.point])  # 2d matrix, codelen x layer1_size
-        prod = dot(l1, l2a.T)
-        fa = expit(prod)  # propagate hidden -> output
+        prod_term = dot(l1, l2a.T)
+        fa = expit(prod_term)  # propagate hidden -> output
         ga = (1 - predict_word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1[predict_word.point] += outer(ga, l1)  # learn hidden -> output
@@ -284,7 +284,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         # loss component corresponding to hierarchical softmax
         if compute_loss:
             sgn = (-1.0)**predict_word.code  # `ch` function, 0 -> 1, 1 -> -1
-            lprob = -log(expit(-sgn * prod))
+            lprob = -log(expit(-sgn * prod_term))
             model.running_training_loss += sum(lprob)
 
     if model.negative:
@@ -317,8 +317,8 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
 
     if model.hs:
         l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-        prod = dot(l1, l2a.T)
-        fa = expit(prod)  # propagate hidden -> output
+        prod_term = dot(l1, l2a.T)
+        fa = expit(prod_term)  # propagate hidden -> output
         ga = (1. - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
@@ -327,7 +327,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
         # loss component corresponding to hierarchical softmax
         if compute_loss:
             sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
-            model.running_training_loss += sum(-log(expit(-sgn * prod)))
+            model.running_training_loss += sum(-log(expit(-sgn * prod_term)))
 
     if model.negative:
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
