@@ -205,7 +205,7 @@ class TestSklearnATModelWrapper(unittest.TestCase):
         self.model.fit(corpus)
 
     def testTransform(self):
-        jill_topics = self.model['jill']
+        jill_topics = self.model.transform('jill')
         jill_topics = matutils.sparse2full(jill_topics, self.model.num_topics)
         self.assertTrue(all(jill_topics > 0))
 
@@ -213,7 +213,7 @@ class TestSklearnATModelWrapper(unittest.TestCase):
         self.model.partial_fit(corpus_new, author2doc=author2doc_new)
 
         # Did we learn something about Sally?
-        sally_topics = self.model.get_author_topics('sally')
+        sally_topics = self.model.model.get_author_topics('sally')
         sally_topics = matutils.sparse2full(sally_topics, self.model.num_topics)
         self.assertTrue(all(sally_topics > 0))
 
