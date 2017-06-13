@@ -13,7 +13,7 @@ from gensim.sklearn_integration import base_sklearn_wrapper
 from sklearn.base import TransformerMixin, BaseEstimator
 
 
-class SklearnWrapperRpModel(models.RpModel, base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class SklearnWrapperRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base RP module
     """
@@ -23,6 +23,7 @@ class SklearnWrapperRpModel(models.RpModel, base_sklearn_wrapper.BaseSklearnWrap
         Sklearn wrapper for RP model. Class derived from gensim.models.RpModel.
         """
         self.corpus = None
+        self.model = None
         self.id2word = id2word
         self.num_topics = num_topics
 
@@ -45,14 +46,14 @@ class SklearnWrapperRpModel(models.RpModel, base_sklearn_wrapper.BaseSklearnWrap
         >>>gensim.models.RpModel(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
         """
         self.corpus = X
-        super(SklearnWrapperRpModel, self).__init__(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
+        self.model = models.RpModel(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
 
     def transform(self, doc):
         """
         Take document/corpus as input.
         Return RP representation of the input document/corpus.
         """
-        return self[doc]
+        return self.model[doc]
 
     def partial_fit(self, X):
         raise NotImplementedError("'partial_fit' has not been implemented for the RandomProjections model")
