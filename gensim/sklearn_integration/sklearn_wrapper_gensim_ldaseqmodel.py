@@ -3,17 +3,19 @@
 #
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-#
+
 """
 Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
-from gensim import models
-from gensim.sklearn_integration import base_sklearn_wrapper
+
 from sklearn.base import TransformerMixin, BaseEstimator
 
+from gensim import models
+from gensim.sklearn_integration import base_sklearn_wrapper
 
-class SklearnWrapperLDASeqModel(models.LdaSeqModel, base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+
+class SklearnWrapperLDASeqModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LdaSeq module
     """
@@ -25,6 +27,7 @@ class SklearnWrapperLDASeqModel(models.LdaSeqModel, base_sklearn_wrapper.BaseSkl
         Sklearn wrapper for LdaSeq model. Class derived from gensim.models.LdaSeqModel
         """
         self.corpus = None
+        self.model = None
         self.time_slice = time_slice
         self.id2word = id2word
         self.alphas = alphas
@@ -67,20 +70,17 @@ class SklearnWrapperLDASeqModel(models.LdaSeqModel, base_sklearn_wrapper.BaseSkl
                 random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100)
         """
         self.corpus = X
-
-        super(SklearnWrapperLDASeqModel, self).__init__(
-            corpus=self.corpus, time_slice=self.time_slice, id2word=self.id2word, alphas=self.alphas,
-            num_topics=self.num_topics, initialize=self.initialize, sstats=self.sstats, lda_model=self.lda_model,
-            obs_variance=self.obs_variance, chain_variance=self.chain_variance, passes=self.passes,
-            random_state=self.random_state, lda_inference_max_iter=self.lda_inference_max_iter,
-            em_min_iter=self.em_min_iter, em_max_iter=self.em_max_iter, chunksize=self.chunksize
-            )
+        self.model = models.LdaSeqModel(corpus=self.corpus, time_slice=self.time_slice, id2word=self.id2word,
+            alphas=self.alphas, num_topics=self.num_topics, initialize=self.initialize, sstats=self.sstats,
+            lda_model=self.lda_model, obs_variance=self.obs_variance, chain_variance=self.chain_variance,
+            passes=self.passes, random_state=self.random_state, lda_inference_max_iter=self.lda_inference_max_iter,
+            em_min_iter=self.em_min_iter, em_max_iter=self.em_max_iter, chunksize=self.chunksize)
 
     def transform(self, doc):
         """
         Return the topic proportions for the document passed.
         """
-        return self[doc]
+        return self.model[doc]
 
     def partial_fit(self, X):
         raise NotImplementedError("'partial_fit' has not been implemented for the LDA Seq model")
