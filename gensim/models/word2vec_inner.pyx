@@ -92,7 +92,6 @@ cdef void fast_sentence_sg_hs(
             if lprob <= -MAX_EXP or lprob >= MAX_EXP:
                 continue
             lprob = LOG_TABLE[<int>((lprob + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            f = LOG_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
             _running_training_loss_param[0] = _running_training_loss_param[0] - lprob
 
         our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
@@ -123,12 +122,13 @@ cdef unsigned long long fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
-    unsigned long long next_random, REAL_t *word_locks) nogil:
+    unsigned long long next_random, REAL_t *word_locks,
+    const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
 
     cdef long long a
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t f, g, label
+    cdef REAL_t f, g, label, f_dot, log_e_f_dot
     cdef np.uint32_t target_index
     cdef int d
 
@@ -146,11 +146,19 @@ cdef unsigned long long fast_sentence_sg_neg(
             label = <REAL_t>0.0
 
         row2 = target_index * size
-        f = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
-        if f <= -MAX_EXP or f >= MAX_EXP:
+        f_dot = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
+        if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
-        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (label - f) * alpha
+
+        if _compute_loss == 1:
+            f_dot = (f_dot if d == 0  else -f_dot)
+            if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
+                continue
+            log_e_f_dot = LOG_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+            _running_training_loss_param[0] = _running_training_loss_param[0] - log_e_f_dot
+
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
 
@@ -367,7 +375,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
                     if hs:
                         fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
                     if negative:
-                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
+                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
 
     model.running_training_loss = _running_training_loss
     return effective_words

@@ -132,6 +132,7 @@ from scipy import stats
 logger = logging.getLogger(__name__)
 
 try:
+    raise ImportError
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
@@ -304,7 +305,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
 
         # loss component corresponding to negative sampling
         if compute_loss:
-            model.running_training_loss -= sum(log(expit(-1 * prod_term[range(1, len(prod_term))])))  # for the sampled words
+            model.running_training_loss -= sum(log(expit(-1 * prod_term[1:])))  # for the sampled words
             model.running_training_loss -= log(expit(prod_term[0]))  # for the output word
 
     if learn_vectors:
