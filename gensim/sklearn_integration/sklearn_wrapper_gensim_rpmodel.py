@@ -3,14 +3,16 @@
 #
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-#
+
 """
 Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
+
+from sklearn.base import TransformerMixin, BaseEstimator
+
 from gensim import models
 from gensim.sklearn_integration import base_sklearn_wrapper
-from sklearn.base import TransformerMixin, BaseEstimator
 
 
 class SklearnWrapperRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
