@@ -260,7 +260,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                       'c_v' : 110
                       'c_uci' : 10
                       'c_npmi' : 10
-        
+
         `topn` Integer corresponding to the number of top words to be extracted from each topic for coherence logging.
 
         Example:
@@ -690,6 +690,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         end = init + chunksize
                         # texts subarray corresponding to current chunk
                         texts_chunk = texts[init:end]
+                    else:
+                        texts_chunk = None
                     self.log_coherence(chunk, texts_chunk, coherence, window_size, topn)
 
                 if self.dispatcher:
