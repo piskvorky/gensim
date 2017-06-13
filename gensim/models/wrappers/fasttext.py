@@ -344,7 +344,7 @@ class FastText(Word2Vec):
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
             ngram_hash = self.ft_hash(ngram)
-            ngram_indices.append((len(self.wv.vocab)) + ngram_hash % self.bucket)
+            ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
             self.wv.ngrams[ngram] = i
         self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
 
