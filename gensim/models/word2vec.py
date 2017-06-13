@@ -168,7 +168,7 @@ except ImportError:
             result += len(word_vocabs)
         return result
 
-    def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
+    def train_batch_cbow(model, sentences, alpha, work=None, neu1=None, compute_loss=False):
         """
         Update CBOW model by training on a sequence of sentences.
 
@@ -191,7 +191,7 @@ except ImportError:
                 l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x vector_size
                 if word2_indices and model.cbow_mean:
                     l1 /= len(word2_indices)
-                train_cbow_pair(model, word, word2_indices, l1, alpha)
+                train_cbow_pair(model, word, word2_indices, l1, alpha, compute_loss=compute_loss)
             result += len(word_vocabs)
         return result
 
@@ -274,7 +274,8 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
     if model.hs:
         # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
         l2a = deepcopy(model.syn1[predict_word.point])  # 2d matrix, codelen x layer1_size
-        fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
+        prod = dot(l1, l2a.T)
+        fa = expit(prod)  # propagate hidden -> output
         ga = (1 - predict_word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1[predict_word.point] += outer(ga, l1)  # learn hidden -> output
@@ -283,7 +284,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         # loss component corresponding to hierarchical softmax
         if compute_loss:
             sgn = (-1.0)**predict_word.code  # `ch` function, 0 -> 1, 1 -> -1
-            lprob = -log(expit(-sgn * dot(l1, l2a.T)))
+            lprob = -log(expit(-sgn * prod))
             model.running_training_loss += sum(lprob)
 
     if model.negative:
@@ -311,16 +312,22 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
     return neu1e
 
 
-def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
+def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True, compute_loss=False):
     neu1e = zeros(l1.shape)
 
     if model.hs:
         l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-        fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
+        prod = dot(l1, l2a.T)
+        fa = expit(prod)  # propagate hidden -> output
         ga = (1. - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
+
+        # loss component corresponding to hierarchical softmax
+        if compute_loss:
+            sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
+            model.running_training_loss += sum(-log(expit(-sgn * prod)))
 
     if model.negative:
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
@@ -330,11 +337,17 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
             if w != word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
+        prod_term = dot(l1, l2b.T)
+        fb = expit(prod_term)  # propagate hidden -> output
         gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
+
+        # loss component corresponding to negative sampling
+        if compute_loss:
+            model.running_training_loss -= sum(log(expit(-1 * prod_term[1:])))  # for the sampled words
+            model.running_training_loss -= log(expit(prod_term[0]))  # for the output word
 
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
@@ -771,7 +784,7 @@ class Word2Vec(utils.SaveLoad):
         if self.sg:
             tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss)
         else:
-            tally += train_batch_cbow(self, sentences, alpha, work, neu1)
+            tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
         return tally, self._raw_word_count(sentences)
 
     def _raw_word_count(self, job):
