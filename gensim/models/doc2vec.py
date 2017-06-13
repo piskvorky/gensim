@@ -768,6 +768,33 @@ class Doc2Vec(Word2Vec):
         report['doctag_lookup'] = self.docvecs.estimated_lookup_memory()
         report['doctag_syn0'] = self.docvecs.count * self.vector_size * dtype(REAL).itemsize
         return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
+    
+    def save_word2vec_format(self, fname, dfname=None, fvocab=None, binary=False):
+        """
+        Store the input-hidden weight matrix in the same format used by the original
+        C word2vec-tool, for compatibility.
+
+         `fname` is the file used to save the words vectors in
+         `dfname` is an optional file used to save the documents vectors in
+         `fvocab` is an optional file used to save the vocabulary
+         `binary` is an optional boolean indicating whether the data is to be saved
+         in binary word2vec format (default: False)
+
+        """
+        super(Doc2Vec,self).save_word2vec_format(fname, fvocab, binary)
+
+        if dfname is not None:
+            logger.info("storing %sx%s projection weights into %s" % (len(self.docvecs), self.vector_size, dfname))
+            assert (len(self.docvecs), self.vector_size) == self.docvecs.doctag_syn0.shape
+            with utils.smart_open(dfname, 'wb') as fout:
+                fout.write(utils.to_utf8("%s %s\n" % self.docvecs.doctag_syn0.shape))
+                # store in random order
+                for key, doctag in iteritems(self.docvecs.doctags):
+                    row = self.docvecs.doctag_syn0[doctag.offset]
+                    if binary:
+                        fout.write(utils.to_utf8(key) + b" " + row.tostring())
+                    else:
+                        fout.write(utils.to_utf8("%s %s\n" % (key, ' '.join("%f" % val for val in row))))
 
     def __str__(self):
         """Abbreviated name reflecting major configuration paramaters."""
