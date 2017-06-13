@@ -205,7 +205,7 @@ When `citing gensim in academic papers and theses <https://scholar.google.cz/cit
         month = May,
         day = 22,
         publisher = {ELRA},
-        address = {Valletta, Malta}, 
+        address = {Valletta, Malta},
         language={English}
   }
 
@@ -226,11 +226,16 @@ Copyright (c) 2009-now Radim Rehurek
 """
 
 
-test_env = ['testfixtures',
-            'unittest2',
-            'Morfessor==2.0.2a4',
-            'scikit-learn',
-            'pyemd']
+test_env = [
+    'testfixtures',
+    'unittest2',
+    'Morfessor==2.0.2a4',
+    'scikit-learn',
+    'pyemd',
+    'annoy',
+    'tensorflow >= 1.1.0',
+    'keras >= 2.0.4',
+]
 
 setup(
     name='gensim',
@@ -287,7 +292,6 @@ setup(
         'scipy >= 0.7.0',
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
-        'morfessor==2.0.2alpha4',
     ],
     tests_require=test_env,
     extras_require={

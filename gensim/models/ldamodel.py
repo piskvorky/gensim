@@ -39,7 +39,7 @@ import os
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
-from gensim.matutils import kullback_leibler, hellinger, jaccard_set
+from gensim.matutils import kullback_leibler, hellinger, jaccard_distance
 
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
@@ -595,6 +595,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if update_every:
             updatetype = "online"
+            if passes == 1:
+                updatetype += " (single-pass)"
+            else:
+                updatetype += " (multi-pass)"
             updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
         else:
             updatetype = "batch"
@@ -989,9 +993,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> print(annotation) # get array with positive/negative words for each topic pair from `m1` and `m2`
         """
 
-        distances = {"kulback_leibler": kullback_leibler,
-                     "hellinger": hellinger,
-                     "jaccard": jaccard_set}
+        distances = {
+            "kulback_leibler": kullback_leibler,
+            "hellinger": hellinger,
+            "jaccard": jaccard_distance,
+        }
 
         if distance not in distances:
             valid_keys = ", ".join("`{}`".format(x) for x in distances.keys())
@@ -1019,7 +1025,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             if np.abs(np.max(z)) > 1e-8:
                 z /= np.max(z)
 
-        annotation = [[None for _ in range(t1_size)] for _ in range(t2_size)]
+        annotation = [[None] * t1_size for _ in range(t2_size)]
 
         for topic1 in range(t1_size):
             for topic2 in range(t2_size):
@@ -1118,7 +1124,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
 
-        # check if `random_state` attribute has been set after main pickel load
+        # check if `random_state` attribute has been set after main pickle load
         # if set -> the model to be loaded was saved using a >= 0.13.2 version of Gensim
         # if not set -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so set `random_state` as the default value
         if not hasattr(result, 'random_state'):
@@ -1134,7 +1140,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         id2word_fname = utils.smart_extension(fname, '.id2word')
         # check if `id2word_fname` file is present on disk
         # if present -> the model to be loaded was saved using a >= 0.13.2 version of Gensim, so set `result.id2word` using the `id2word_fname` file
-        # if not present -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so `result.id2word` already set after the main pickel load
+        # if not present -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so `result.id2word` already set after the main pickle load
         if (os.path.isfile(id2word_fname)):
             try:
                 result.id2word = utils.unpickle(id2word_fname)
