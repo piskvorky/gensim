@@ -379,7 +379,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
+            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -485,6 +485,7 @@ class Word2Vec(utils.SaveLoad):
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
         self.model_trimmed_post_training = False
+        self.compute_loss = compute_loss
         self.running_training_loss = 0
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -762,7 +763,7 @@ class Word2Vec(utils.SaveLoad):
         self.corpus_count = other_model.corpus_count
         self.reset_weights()
 
-    def _do_train_job(self, sentences, alpha, inits, compute_loss=False):
+    def _do_train_job(self, sentences, alpha, inits):
         """
         Train a single batch of sentences. Return 2-tuple `(effective word count after
         ignoring unknown words and sentence length trimming, total word count)`.
@@ -770,7 +771,7 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work, compute_loss)
+            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss)
         else:
             tally += train_batch_cbow(self, sentences, alpha, work, neu1)
         return tally, self._raw_word_count(sentences)
@@ -782,7 +783,7 @@ class Word2Vec(utils.SaveLoad):
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
               word_count=0,
-              queue_factor=2, report_delay=1.0, compute_loss=False):
+              queue_factor=2, report_delay=1.0, compute_loss=None):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
@@ -808,6 +809,8 @@ class Word2Vec(utils.SaveLoad):
                 self.neg_labels = zeros(self.negative + 1)
                 self.neg_labels[0] = 1.
 
+        if compute_loss:
+            self.compute_loss = compute_loss
         self.running_training_loss = 0
 
         logger.info(
@@ -841,7 +844,7 @@ class Word2Vec(utils.SaveLoad):
             total_words = total_words and total_words * epochs
             total_examples = total_examples and total_examples * epochs
 
-        def worker_loop(compute_loss=False):
+        def worker_loop():
             """Train the model, lifting lists of sentences from the job_queue."""
             work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
@@ -852,7 +855,7 @@ class Word2Vec(utils.SaveLoad):
                     progress_queue.put(None)
                     break  # no more jobs => quit this worker
                 sentences, alpha = job
-                tally, raw_tally = self._do_train_job(sentences, alpha, (work, neu1), compute_loss=compute_loss)
+                tally, raw_tally = self._do_train_job(sentences, alpha, (work, neu1))
                 progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
                 jobs_processed += 1
             logger.debug("worker exiting, processed %i jobs", jobs_processed)
