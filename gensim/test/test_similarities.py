@@ -20,6 +20,7 @@ import scipy
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
+from gensim.models import KeyedVectors
 from gensim.models.wrappers import fasttext
 from gensim import matutils, utils, similarities
 from gensim.models import Word2Vec
@@ -458,8 +459,8 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         model.init_sims()
         index = self.indexer(model, 10)
 
-        self.assertVectorIsSimilarToItself(model, index)
-        self.assertApproxNeighborsMatchExact(model, index)
+        self.assertVectorIsSimilarToItself(model.wv, index)
+        self.assertApproxNeighborsMatchExact(model, model.wv, index)
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
@@ -473,10 +474,20 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         model.init_sims()
         index = self.indexer(model, 10)
 
-        self.assertVectorIsSimilarToItself(model, index)
-        self.assertApproxNeighborsMatchExact(model, index)
+        self.assertVectorIsSimilarToItself(model.wv, index)
+        self.assertApproxNeighborsMatchExact(model, model.wv, index)
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
+
+    def testAnnoyIndexingOfKeyedVectors(self):
+        from gensim.similarities.index import AnnoyIndexer
+        keyVectors_file = datapath('lee_fasttext.vec')
+        model = KeyedVectors.load_word2vec_format(keyVectors_file)
+        index = AnnoyIndexer(model, 10)
+
+        self.assertEqual(index.num_trees, 10)
+        self.assertVectorIsSimilarToItself(model, index)
+        self.assertApproxNeighborsMatchExact(model, model, index)
 
     def testLoadMissingRaisesError(self):
         from gensim.similarities.index import AnnoyIndexer
@@ -484,17 +495,17 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
         self.assertRaises(IOError, test_index.load, fname='test-index')
 
-    def assertVectorIsSimilarToItself(self, model, index):
-        vector = model.wv.syn0norm[0]
-        label = model.wv.index2word[0]
+    def assertVectorIsSimilarToItself(self, wv, index):
+        vector = wv.syn0norm[0]
+        label = wv.index2word[0]
         approx_neighbors = index.most_similar(vector, 1)
         word, similarity = approx_neighbors[0]
 
         self.assertEqual(word, label)
         self.assertEqual(similarity, 1.0)
 
-    def assertApproxNeighborsMatchExact(self, model, index):
-        vector = model.wv.syn0norm[0]
+    def assertApproxNeighborsMatchExact(self, model, wv, index):
+        vector = wv.syn0norm[0]
         approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
         exact_neighbors = model.most_similar(positive=[vector], topn=5)
 
