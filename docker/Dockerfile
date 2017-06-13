@@ -4,7 +4,6 @@ MAINTAINER Daniel Baptista Dias <danielbpdias@gmail.com>
 
 ENV GENSIM_REPOSITORY https://github.com/parulsethi/gensim/archive
 ENV GENSIM_BRANCH gensim_docker
-ENV PYTHONPATH "/usr/local/lib/python3/dist-packages:/usr/local/lib/python3.5/site-packages:/usr/lib/python3/dist-packages"
 
 # Installs python, pip and setup tools (with fixed versions)
 RUN apt-get update \
@@ -22,6 +21,8 @@ RUN apt-get update \
     python3-setuptools=20.7.0-1 \
     unzip=6.0-20ubuntu1 \
     wget=1.17.1-1ubuntu1.1 \
+    subversion \
+    locales \
     libopenblas-dev \
     libboost-program-options-dev \
     libboost-python-dev \
