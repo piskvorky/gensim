@@ -1154,30 +1154,33 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
             return default_res
 
 
-def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
+def check_output(**kwargs):
     """
-    Run command with arguments and return its output as a byte string.
-    Backported from Python 2.7 as it's implemented as pure python on stdlib.
-
-    >>> check_output(args=['/usr/bin/python', '--version'])
-    Python 2.6.2
-    Added extra KeyboardInterrupt handling
+    subprocess.check_output with the flag set to true will spawn a new
+    shell process and execute 'args' if there is an error while executing
+    args, the error message will be logged. This allows the user to
+    receive an accurate error message if subprocess fails to execute the
+    specified command.
+    If flag is set to true, subprocess.check_output takes 'args' as a string
+    instead of a list. To abstract the user from this,
+    this function will convert the argument list to a string if needed.
     """
+    args = kwargs.get("args")
+    args = " ".join(args)
     try:
-        logger.debug("COMMAND: %s %s", popenargs, kwargs)
-        process = subprocess.Popen(stdout=stdout, *popenargs, **kwargs)
-        output, unused_err = process.communicate()
-        retcode = process.poll()
-        if retcode:
-            cmd = kwargs.get("args")
-            if cmd is None:
-                cmd = popenargs[0]
-            error = subprocess.CalledProcessError(retcode, cmd)
-            error.output = output
-            raise error
-        return output
+        res = subprocess.check_output(args, shell=True)
+        return res
+    except subprocess.CalledProcessError as e:
+        """
+        If this error is raised, it is because check_output could not execute
+        the command. Instead of raising the error, output a more specific error
+        message
+        """
+        logger.debug("Error cause due to argument passed to check_output - %s",
+                     args)
+        logger.error(e)
+        raise
     except KeyboardInterrupt:
-        process.terminate()
         raise
 
 

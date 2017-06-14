@@ -10,6 +10,7 @@ Automated tests for checking various utils functions.
 
 import logging
 import unittest
+import subprocess
 
 from gensim import utils
 from six import iteritems
@@ -79,7 +80,7 @@ class TestUtils(unittest.TestCase):
         # create a string that fails to decode with unichr on narrow python builds
         body = u'It&#146;s the Year of the Horse. YES VIN DIESEL &#128588; &#128175;'
         expected = u'It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af'
-        self.assertEquals(utils.decode_htmlentities(body), expected)
+        self.assertEqual(utils.decode_htmlentities(body), expected)
 
 class TestSampleDict(unittest.TestCase):
     def test_sample_dict(self):
@@ -90,8 +91,17 @@ class TestSampleDict(unittest.TestCase):
         self.assertEqual(sampled_dict,expected_dict)
         sampled_dict_random = utils.sample_dict(d,2)
         if sampled_dict_random in expected_dict_random:
-            self.assertTrue(True)    
+            self.assertTrue(True)
 
+
+class TestCheckOutput(unittest.TestCase):
+    def test_check_output(self):
+        res = utils.check_output(args=["echo", "hello"])
+        self.assertEqual(res, b'hello\n')
+
+    def test_check_output_exception(self):
+        self.assertRaises(subprocess.CalledProcessError,
+                          lambda: utils.check_output(args=["ldfs"]))
 
 
 if __name__ == '__main__':
