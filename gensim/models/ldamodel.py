@@ -31,21 +31,21 @@ The algorithm:
 
 
 import logging
-import numpy as np
 import numbers
-from random import sample
 import os
-
-from gensim import interfaces, utils, matutils
-from gensim.matutils import dirichlet_expectation
-from gensim.models import basemodel
-from gensim.matutils import kullback_leibler, hellinger, jaccard_distance
-
 from itertools import chain
+from random import sample
+
+import numpy as np
+import six
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
 from six.moves import xrange
-import six
+
+from gensim import interfaces, utils, matutils
+from gensim.matutils import dirichlet_expectation
+from gensim.matutils import kullback_leibler, hellinger, jaccard_distance
+from gensim.models import basemodel
 
 # log(sum(exp(x))) that tries to avoid overflow
 try:
@@ -811,6 +811,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         return [(self.id2word[id], value) for id, value in self.get_topic_terms(topicid, topn)]
 
+    def get_topics(self):
+        """
+        Return the term topic matrix learned during inference.
+        This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
+        """
+        return self.state.get_lambda()
+
     def get_topic_terms(self, topicid, topn=10):
         """
         Return a list of `(word_id, probability)` 2-tuples for the most
@@ -819,7 +826,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Only return 2-tuples for the topn most probable words (ignore the rest).
 
         """
-        topic = self.state.get_lambda()[topicid]
+        topic = self.get_topics()[topicid]
         topic = topic / topic.sum()  # normalize to probability distribution
         bestn = matutils.argsort(topic, topn, reverse=True)
         return [(id, topic[id]) for id in bestn]
@@ -836,7 +843,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         topics = []
         str_topics = []
-        for topic in self.state.get_lambda():
+        for topic in self.get_topics():
             topic = topic / topic.sum()  # normalize to probability distribution
             bestn = matutils.argsort(topic, topn=num_words, reverse=True)
             topics.append(bestn)
@@ -1003,7 +1010,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             raise ValueError("The parameter `other` must be of type `{}`".format(self.__name__))
 
         distance_func = distances[distance]
-        d1, d2 = self.state.get_lambda(), other.state.get_lambda()
+        d1, d2 = self.get_topics(), other.get_topics()
         t1_size, t2_size = d1.shape[0], d2.shape[0]
 
         fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in xrange(t1_size)]
