@@ -15,7 +15,7 @@ from gensim import models
 from gensim.sklearn_integration import base_sklearn_wrapper
 
 
-class SklearnWrapperRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class SklRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base RP module
     """
@@ -24,8 +24,8 @@ class SklearnWrapperRpModel(base_sklearn_wrapper.BaseSklearnWrapper, Transformer
         """
         Sklearn wrapper for RP model. Class derived from gensim.models.RpModel.
         """
+        self.__model = None
         self.corpus = None
-        self.model = None
         self.id2word = id2word
         self.num_topics = num_topics
 
@@ -39,7 +39,7 @@ class SklearnWrapperRpModel(base_sklearn_wrapper.BaseSklearnWrapper, Transformer
         """
         Set all parameters.
         """
-        super(SklearnWrapperRpModel, self).set_params(**parameters)
+        super(SklRpModel, self).set_params(**parameters)
 
     def fit(self, X, y=None):
         """
@@ -48,14 +48,14 @@ class SklearnWrapperRpModel(base_sklearn_wrapper.BaseSklearnWrapper, Transformer
         >>>gensim.models.RpModel(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
         """
         self.corpus = X
-        self.model = models.RpModel(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
+        self.__model = models.RpModel(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
 
     def transform(self, doc):
         """
         Take document/corpus as input.
         Return RP representation of the input document/corpus.
         """
-        return self.model[doc]
+        return self.__model[doc]
 
     def partial_fit(self, X):
         raise NotImplementedError("'partial_fit' has not been implemented for the RandomProjections model")

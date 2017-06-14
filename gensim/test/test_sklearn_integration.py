@@ -16,7 +16,7 @@ except ImportError:
 
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklearnWrapperLdaModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklearnWrapperLsiModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import SklearnWrapperRpModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import SklRpModel
 from gensim.corpora import Dictionary
 from gensim import matutils
 
@@ -193,10 +193,10 @@ class TestSklearnLSIWrapper(unittest.TestCase):
             self.assertEqual(model_params[key], param_dict[key])
 
 
-class TestSklearnRpModelWrapper(unittest.TestCase):
+class TestSklRpModelWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(13)
-        self.model = SklearnWrapperRpModel(num_topics=2)
+        self.model = SklRpModel(num_topics=2)
         self.model.fit(corpus)
 
     def testTransform(self):
