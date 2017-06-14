@@ -63,12 +63,6 @@ class TestWikiCorpus(unittest.TestCase):
         l = wc.get_texts()
         self.assertTrue(u'папа' in next(l))
 
-    def test_sample_text(self):
-        wc = WikiCorpus(datapath(FILENAME_U), processes=1)
-        print(len(wc))
-        for x in wc.sample_texts(1):
-            print(x)
-
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
