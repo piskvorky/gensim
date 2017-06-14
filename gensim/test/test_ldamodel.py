@@ -25,6 +25,7 @@ from gensim.models import ldamodel, ldamulticore
 from gensim import matutils, utils
 from gensim.test import basetests
 
+import glob
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -494,6 +495,10 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             self.assertTrue(isinstance(i[0], int))
             self.assertTrue(isinstance(i[1], six.string_types))
 
+        # data cleanup for post_0_13_2*
+        files = [f for f in glob.glob(datapath('post_0_13_2*'))]
+        for f in files:
+            os.remove(f)
 
 #endclass TestLdaModel
 
