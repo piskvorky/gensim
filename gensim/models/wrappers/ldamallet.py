@@ -215,7 +215,8 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         Return the term topic matrix learned during inference.
         This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
         """
-        return self.word_topics
+        topics = self.word_topics
+        return topics / topics.sum(axis=1)[:, None]
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """

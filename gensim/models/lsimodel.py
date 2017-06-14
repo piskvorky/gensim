@@ -479,7 +479,11 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         projections = self.projection.u.T
         num_topics = len(projections)
-        topics = [np.asarray(projections[i, :]).flatten() for i in range(num_topics)]
+        topics = []
+        for i in range(num_topics):
+            c = np.asarray(projections[i, :]).flatten()
+            norm = np.sqrt(np.sum(np.dot(c, c)))
+            topics.append(1.0 * c / norm)
         return np.array(topics)
 
     def show_topic(self, topicno, topn=10):

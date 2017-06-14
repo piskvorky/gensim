@@ -816,7 +816,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Return the term topic matrix learned during inference.
         This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
         """
-        return self.state.get_lambda()
+        topics = self.state.get_lambda()
+        return topics / topics.sum(axis=1)[:, None]
 
     def get_topic_terms(self, topicid, topn=10):
         """
