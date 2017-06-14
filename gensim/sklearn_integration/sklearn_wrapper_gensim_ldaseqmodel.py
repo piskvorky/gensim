@@ -15,7 +15,7 @@ from gensim import models
 from gensim.sklearn_integration import base_sklearn_wrapper
 
 
-class SklearnWrapperLDASeqModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class SklLdaSeqModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LdaSeq module
     """
@@ -26,8 +26,8 @@ class SklearnWrapperLDASeqModel(base_sklearn_wrapper.BaseSklearnWrapper, Transfo
         """
         Sklearn wrapper for LdaSeq model. Class derived from gensim.models.LdaSeqModel
         """
+        self.__model = None
         self.corpus = None
-        self.model = None
         self.time_slice = time_slice
         self.id2word = id2word
         self.alphas = alphas
@@ -59,7 +59,7 @@ class SklearnWrapperLDASeqModel(base_sklearn_wrapper.BaseSklearnWrapper, Transfo
         """
         Set all parameters.
         """
-        super(SklearnWrapperLDASeqModel, self).set_params(**parameters)
+        super(SklLdaSeqModel, self).set_params(**parameters)
 
     def fit(self, X, y=None):
         """
@@ -70,7 +70,7 @@ class SklearnWrapperLDASeqModel(base_sklearn_wrapper.BaseSklearnWrapper, Transfo
                 random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100)
         """
         self.corpus = X
-        self.model = models.LdaSeqModel(corpus=self.corpus, time_slice=self.time_slice, id2word=self.id2word,
+        self.__model = models.LdaSeqModel(corpus=self.corpus, time_slice=self.time_slice, id2word=self.id2word,
             alphas=self.alphas, num_topics=self.num_topics, initialize=self.initialize, sstats=self.sstats,
             lda_model=self.lda_model, obs_variance=self.obs_variance, chain_variance=self.chain_variance,
             passes=self.passes, random_state=self.random_state, lda_inference_max_iter=self.lda_inference_max_iter,
@@ -80,7 +80,7 @@ class SklearnWrapperLDASeqModel(base_sklearn_wrapper.BaseSklearnWrapper, Transfo
         """
         Return the topic proportions for the document passed.
         """
-        return self.model[doc]
+        return self.__model[doc]
 
     def partial_fit(self, X):
         raise NotImplementedError("'partial_fit' has not been implemented for the LDA Seq model")

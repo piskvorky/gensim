@@ -16,7 +16,7 @@ except ImportError:
 
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklearnWrapperLdaModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklearnWrapperLsiModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import SklearnWrapperLDASeqModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel
 from gensim.corpora import Dictionary
 from gensim import matutils
 
@@ -231,9 +231,9 @@ class TestSklearnLSIWrapper(unittest.TestCase):
             self.assertEqual(model_params[key], param_dict[key])
 
 
-class TestSklearnLDASeqModelWrapper(unittest.TestCase):
+class TestSklLdaSeqModelWrapper(unittest.TestCase):
     def setUp(self):
-        self.model = SklearnWrapperLDASeqModel(id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='own', sstats=sstats_ldaseq)
+        self.model = SklLdaSeqModel(id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='own', sstats=sstats_ldaseq)
         self.model.fit(corpus_ldaseq)
 
     def testTransform(self):
