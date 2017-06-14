@@ -491,6 +491,9 @@ class SaveLoad(object):
         in both Python 2 and 3.
 
         """
+        if self.__class__.__name__ == 'Phrases':   # issubclass throws error, why ?
+            self.vocab = [any2utf8(w) for w in self.vocab]
+
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object" % self.__class__.__name__)
