@@ -17,7 +17,7 @@ from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 
 
-class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class SklLdaModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """
@@ -31,7 +31,7 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
         """
         Sklearn wrapper for LDA model. derived class for gensim.model.LdaModel .
         """
-        self.corpus = None
+        self.__model = None
         self.num_topics = num_topics
         self.id2word = id2word
         self.chunksize = chunksize
@@ -51,10 +51,9 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
         """
         Returns all parameters as dictionary.
         """
-        return {"corpus": self.corpus, "num_topics": self.num_topics, "id2word": self.id2word,
-                "chunksize": self.chunksize, "passes": self.passes,
-                "update_every": self.update_every, "alpha": self.alpha, "eta": self.eta, "decay": self.decay,
-                "offset": self.offset, "eval_every": self.eval_every, "iterations": self.iterations,
+        return {"num_topics": self.num_topics, "id2word": self.id2word, "chunksize": self.chunksize,
+                "passes": self.passes, "update_every": self.update_every, "alpha": self.alpha, "eta": self.eta,
+                "decay": self.decay, "offset": self.offset, "eval_every": self.eval_every, "iterations": self.iterations,
                 "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
                 "random_state": self.random_state}
 
@@ -62,21 +61,19 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
         """
         Set all parameters.
         """
-        super(SklearnWrapperLdaModel, self).set_params(**parameters)
+        super(SklLdaModel, self).set_params(**parameters)
 
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
-        Calls gensim.model.LdaModel:
-        >>> gensim.models.LdaModel(corpus=corpus, num_topics=num_topics, id2word=id2word, passes=passes, update_every=update_every, alpha=alpha, iterations=iterations, eta=eta, random_state=random_state)
+        Calls gensim.models.LdaModel
         """
         if sparse.issparse(X):
-            self.corpus = matutils.Sparse2Corpus(X)
+            corpus = matutils.Sparse2Corpus(X)
         else:
-            self.corpus = X
+            corpus = X
 
-        super(SklearnWrapperLdaModel, self).__init__(
-            corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
+        self.__model = models.LdaModel(corpus=corpus, num_topics=self.num_topics, id2word=self.id2word,
             chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
             alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
             eval_every=self.eval_every, iterations=self.iterations,
@@ -96,22 +93,13 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
         X = [[] for _ in range(0, len(docs))]
 
         for k, v in enumerate(docs):
-            doc_topics = self.get_document_topics(v, minimum_probability=minimum_probability)
+            doc_topics = self.__model.get_document_topics(v, minimum_probability=minimum_probability)
             probs_docs = list(map(lambda x: x[1], doc_topics))
             # Everything should be equal in length
             if len(probs_docs) != self.num_topics:
                 probs_docs.extend([1e-12]*(self.num_topics - len(probs_docs)))
             X[k] = probs_docs
         return np.reshape(np.array(X), (len(docs), self.num_topics))
-
-    def get_topic_dist(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
-        """
-        Takes as an input a new document (bow).
-        Returns the topic distribution for the given document bow, as a list of (topic_id, topic_probability) 2-tuples.
-        """
-        return self.get_document_topics(
-            bow, minimum_probability=minimum_probability,
-            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
 
     def partial_fit(self, X):
         """
@@ -125,4 +113,4 @@ class SklearnWrapperLdaModel(models.LdaModel, base_sklearn_wrapper.BaseSklearnWr
         if sparse.issparse(X):
             X = matutils.Sparse2Corpus(X)
 
-        self.update(corpus=X)
+        self.__model.update(corpus=X)
