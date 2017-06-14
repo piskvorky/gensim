@@ -348,6 +348,15 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         logger.info("updating model with new documents")
 
+        if isinstance(corpus, list):
+            logger.warning(
+                "Taking plain list as a corpus for LSI. "
+                "We strongly recommend you to use corpus streaming instead of lists. "
+                "LSI is processing the corpus in batches and "
+                "it only loads one batch of documents into memory at once. "
+                "Please take a look at the tutorial on corpus streaming: "
+                "https://radimrehurek.com/gensim/tut1.html#corpus-streaming-one-document-at-a-time")
+
         # get computation parameters; if not specified, use the ones from constructor
         if chunksize is None:
             chunksize = self.chunksize
