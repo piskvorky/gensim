@@ -47,6 +47,8 @@ from scipy.special import polygamma
 from six.moves import xrange
 import six
 
+from gensim.models.coherencemodel import CoherenceModel 
+
 # log(sum(exp(x))) that tries to avoid overflow
 try:
     # try importing from here if older scipy is installed
@@ -843,49 +845,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         for topic in self.state.get_lambda():
             topic = topic / topic.sum()  # normalize to probability distribution
             bestn = matutils.argsort(topic, topn=num_words, reverse=True)
-            topics.append(bestn)
+            topics.append([self.id2word[id] for id in bestn]) # Coherence Model requires a list of tokenized topics
             beststr = [(topic[id], self.id2word[id]) for id in bestn]
             str_topics.append(beststr)
 
-        # top_ids are limited to every topics top words. should not exceed the
-        # vocabulary size.
-        top_ids = set(chain.from_iterable(topics))
-
-        # create a document occurence sparse matrix for each word
-        doc_word_list = {}
-        for id in top_ids:
-            id_list = set()
-            for n, document in enumerate(corpus):
-                if id in frozenset(x[0] for x in document):
-                    id_list.add(n)
-
-            doc_word_list[id] = id_list
+        cm  = CoherenceModel(topics=topics, corpus=corpus, dictionary=self.id2word, coherence='u_mass', topn=num_words, aggregated=False)
+        coherence = cm.get_coherence()
 
         coherence_scores = []
-        for t, top_words in enumerate(topics):
-            # Calculate each coherence score C(t, top_words)
-            coherence = 0.0
-            # Sum of top words m=2..M
-            for m in top_words[1:]:
-                # m_docs is v_m^(t)
-                m_docs = doc_word_list[m]
-                m_index = np.where(top_words == m)[0][0]
-
-                # Sum of top words l=1..m
-                # i.e., all words ranked higher than the current word m
-                for l in top_words[:m_index]:
-                    # l_docs is v_l^(t)
-                    l_docs = doc_word_list[l]
-
-                    # make sure this word appears in some documents.
-                    if len(l_docs) > 0:
-                        # co_doc_frequency is D(v_m^(t), v_l^(t))
-                        co_doc_frequency = len(m_docs.intersection(l_docs))
-
-                        # add to the coherence sum for these two words m, l
-                        coherence += np.log((co_doc_frequency + 1.0) / len(l_docs))
-
-            coherence_scores.append((str_topics[t], coherence))
+        for t, _ in enumerate(topics):
+            coherence_scores.append((str_topics[t], coherence[t]))
 
         top_topics = sorted(coherence_scores, key=lambda t: t[1], reverse=True)
         return top_topics

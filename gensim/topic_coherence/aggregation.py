@@ -27,4 +27,6 @@ def arithmetic_mean(confirmed_measures):
     -------
     mean : Arithmetic mean of all the values contained in confirmation measures.
     """
+    if isinstance(confirmed_measures[0], list): 
+        return np.mean(confirmed_measures, axis=1) # This will generate non-aggregated coherence scores
     return np.mean(confirmed_measures)
