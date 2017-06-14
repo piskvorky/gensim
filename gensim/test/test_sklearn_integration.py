@@ -201,7 +201,7 @@ class TestSklRpModelWrapper(unittest.TestCase):
 
     def testTransform(self):
         # transform one document
-        doc = list(self.model.corpus)[0]
+        doc = list(corpus)[0]
         transformed_doc = self.model.transform(doc)
         vec = matutils.sparse2full(transformed_doc, 2)  # convert to dense vector, for easier equality tests
 

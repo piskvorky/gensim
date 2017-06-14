@@ -25,7 +25,6 @@ class SklRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         Sklearn wrapper for RP model. Class derived from gensim.models.RpModel.
         """
         self.__model = None
-        self.corpus = None
         self.id2word = id2word
         self.num_topics = num_topics
 
@@ -33,7 +32,7 @@ class SklRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         """
         Returns all parameters as dictionary.
         """
-        return {"corpus": self.corpus, "id2word": self.id2word, "num_topics": self.num_topics}
+        return {"id2word": self.id2word, "num_topics": self.num_topics}
 
     def set_params(self, **parameters):
         """
@@ -45,10 +44,8 @@ class SklRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         """
         Fit the model according to the given training data.
         Calls gensim.models.RpModel
-        >>>gensim.models.RpModel(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
         """
-        self.corpus = X
-        self.__model = models.RpModel(corpus=self.corpus, id2word=self.id2word, num_topics=self.num_topics)
+        self.__model = models.RpModel(corpus=X, id2word=self.id2word, num_topics=self.num_topics)
 
     def transform(self, doc):
         """
