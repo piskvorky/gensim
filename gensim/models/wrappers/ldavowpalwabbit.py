@@ -240,7 +240,8 @@ class LdaVowpalWabbit(utils.SaveLoad):
         Return the term topic matrix learned during inference.
         This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
         """
-        return self._get_topics()
+        topics = self._get_topics()
+        return topics / topics.sum(axis=1)[:, None]
 
     def print_topics(self, num_topics=10, num_words=10):
         return self.show_topics(num_topics, num_words, log=True)

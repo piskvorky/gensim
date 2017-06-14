@@ -50,4 +50,4 @@ class TestBaseTopicModel(object):
             self.assertTrue(isinstance(topic, np.ndarray))
             self.assertEqual(topic.dtype, np.float64)
             self.assertEqual(vocab_size, topic.shape[0])
-
+            self.assertAlmostEqual(np.sum(topic), 1.0, 5)
