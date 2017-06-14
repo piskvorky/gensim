@@ -53,15 +53,15 @@ logging to view this.
 .. [2] http://www.cs.princeton.edu/~mdhoffma/
 """
 
-from __future__ import unicode_literals
-from __future__ import print_function
 from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
-import os
 import logging
-import tempfile
+import os
 import shutil
 import subprocess
+import tempfile
 
 import numpy
 
@@ -234,6 +234,13 @@ class LdaVowpalWabbit(utils.SaveLoad):
                  vw_data['corpus_size'],
                  corpus_words)
         return bound
+
+    def get_topics(self):
+        """
+        Return the term topic matrix learned during inference.
+        This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
+        """
+        return self._get_topics()
 
     def print_topics(self, num_topics=10, num_words=10):
         return self.show_topics(num_topics, num_words, log=True)

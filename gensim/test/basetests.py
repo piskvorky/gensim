@@ -8,8 +8,9 @@
 Automated tests for checking transformation algorithms (the models package).
 """
 
-import six
 import numpy as np
+import six
+
 
 class TestBaseTopicModel(object):
     def testPrintTopic(self):
@@ -41,3 +42,12 @@ class TestBaseTopicModel(object):
             for k, v in topic:
                 self.assertTrue(isinstance(k, six.string_types))
                 self.assertTrue(isinstance(v, (np.floating, float)))
+
+    def testGetTopics(self):
+        topics = self.model.get_topics()
+        vocab_size = len(self.model.id2word)
+        for topic in topics:
+            self.assertTrue(isinstance(topic, np.ndarray))
+            self.assertEqual(topic.dtype, np.float64)
+            self.assertEqual(vocab_size, topic.shape[0])
+

@@ -57,13 +57,11 @@ import numpy as np
 import scipy.linalg
 import scipy.sparse
 from scipy.sparse import sparsetools
-
-from gensim import interfaces, matutils, utils
-from gensim.models import basemodel
-
 from six import iterkeys
 from six.moves import xrange
 
+from gensim import interfaces, matutils, utils
+from gensim.models import basemodel
 
 logger = logging.getLogger(__name__)
 
@@ -469,6 +467,20 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # lsi[chunk of documents]
             result = matutils.Dense2Corpus(topic_dist)
         return result
+
+    def get_topics(self):
+        """
+        Return the term topic matrix learned during inference.
+        This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
+        
+        NOTE: The number of topics can actually be smaller than `self.num_topics`,
+        if there were not enough factors (real rank of input matrix smaller than
+        `self.num_topics`).
+        """
+        projections = self.projection.u.T
+        num_topics = len(projections)
+        topics = [np.asarray(projections[i, :]).flatten() for i in range(num_topics)]
+        return np.array(topics)
 
     def show_topic(self, topicno, topn=10):
         """
