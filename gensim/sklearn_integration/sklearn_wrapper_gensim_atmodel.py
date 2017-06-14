@@ -15,7 +15,7 @@ from gensim import models
 from gensim.sklearn_integration import base_sklearn_wrapper
 
 
-class SklearnWrapperATModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class SklATModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base AuthorTopic module
     """
@@ -28,8 +28,8 @@ class SklearnWrapperATModel(base_sklearn_wrapper.BaseSklearnWrapper, Transformer
         """
         Sklearn wrapper for AuthorTopic model. Class derived from gensim.models.AuthorTopicModel
         """
+        self.__model = None
         self.corpus = None
-        self.model = None
         self.num_topics = num_topics
         self.id2word = id2word
         self.author2doc = author2doc
@@ -65,7 +65,7 @@ class SklearnWrapperATModel(base_sklearn_wrapper.BaseSklearnWrapper, Transformer
         """
         Set all parameters.
         """
-        super(SklearnWrapperATModel, self).set_params(**parameters)
+        super(SklATModel, self).set_params(**parameters)
 
     def fit(self, X, y=None):
         """
@@ -76,7 +76,7 @@ class SklearnWrapperATModel(base_sklearn_wrapper.BaseSklearnWrapper, Transformer
                     eval_every=self.eval_every, gamma_threshold=self.gamma_threshold, serialized=self.serialized, serialization_path=self.serialization_path, minimum_probability=self.minimum_probability, random_state=self.random_state)
         """
         self.corpus = X
-        self.model = models.AuthorTopicModel(corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
+        self.__model = models.AuthorTopicModel(corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
             author2doc=self.author2doc, doc2author=self.doc2author, chunksize=self.chunksize, passes=self.passes,
             iterations=self.iterations, decay=self.decay, offset=self.offset, alpha=self.alpha, eta=self.eta,
             update_every=self.update_every, eval_every=self.eval_every, gamma_threshold=self.gamma_threshold, serialized=self.serialized,
@@ -87,10 +87,10 @@ class SklearnWrapperATModel(base_sklearn_wrapper.BaseSklearnWrapper, Transformer
         Return topic distribution for input author as a list of
         (topic_id, topic_probabiity) 2-tuples.
         """
-        return self.model[author_names]
+        return self.__model[author_names]
 
     def partial_fit(self, X, author2doc=None, doc2author=None):
         """
         Train model over X.
         """
-        self.model.update(corpus=X, author2doc=author2doc, doc2author=doc2author)
+        self.__model.update(corpus=X, author2doc=author2doc, doc2author=doc2author)

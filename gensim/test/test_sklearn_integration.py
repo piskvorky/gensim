@@ -16,7 +16,7 @@ except ImportError:
 
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklearnWrapperLdaModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklearnWrapperLsiModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklearnWrapperATModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklATModel
 from gensim.corpora import Dictionary
 from gensim import matutils
 
@@ -199,9 +199,9 @@ class TestSklearnLSIWrapper(unittest.TestCase):
             self.assertEqual(model_params[key], param_dict[key])
 
 
-class TestSklearnATModelWrapper(unittest.TestCase):
+class TestSklATModelWrapper(unittest.TestCase):
     def setUp(self):
-        self.model = SklearnWrapperATModel(id2word=dictionary, author2doc=author2doc, num_topics=2, passes=100)
+        self.model = SklATModel(id2word=dictionary, author2doc=author2doc, num_topics=2, passes=100)
         self.model.fit(corpus)
 
     def testTransform(self):
@@ -213,7 +213,7 @@ class TestSklearnATModelWrapper(unittest.TestCase):
         self.model.partial_fit(corpus_new, author2doc=author2doc_new)
 
         # Did we learn something about Sally?
-        sally_topics = self.model.model.get_author_topics('sally')
+        sally_topics = self.model.transform('sally')
         sally_topics = matutils.sparse2full(sally_topics, self.model.num_topics)
         self.assertTrue(all(sally_topics > 0))
 
