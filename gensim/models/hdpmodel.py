@@ -36,13 +36,14 @@ from __future__ import with_statement
 import logging
 import time
 import warnings
+
 import numpy as np
 from scipy.special import gammaln, psi  # gamma function utils
+from six.moves import xrange
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel, ldamodel
-from six.moves import xrange
 
 logger = logging.getLogger(__name__)
 
@@ -455,6 +456,14 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         betas = self.m_lambda + self.m_eta
         hdp_formatter = HdpTopicFormatter(self.id2word, betas)
         return hdp_formatter.show_topic(topic_id, topn, log, formatted)
+
+    def get_topics(self):
+        """
+        Return the term topic matrix learned during inference.
+        This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
+        """
+        topics = self.m_lambda + self.m_eta
+        return topics / topics.sum(axis=1)[:, None]
 
     def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
         """
