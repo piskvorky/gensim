@@ -29,7 +29,6 @@ class SklATModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         Sklearn wrapper for AuthorTopic model. Class derived from gensim.models.AuthorTopicModel
         """
         self.__model = None
-        self.corpus = None
         self.num_topics = num_topics
         self.id2word = id2word
         self.author2doc = author2doc
@@ -53,7 +52,7 @@ class SklATModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         """
         Returns all parameters as dictionary.
         """
-        return {"corpus": self.corpus, "num_topics": self.num_topics, "id2word": self.id2word,
+        return {"num_topics": self.num_topics, "id2word": self.id2word,
                 "author2doc": self.author2doc, "doc2author": self.doc2author, "chunksize": self.chunksize,
                 "passes": self.passes, "iterations": self.iterations, "decay": self.decay,
                 "offset": self.offset, "alpha": self.alpha, "eta": self.eta, "update_every": self.update_every,
@@ -70,13 +69,9 @@ class SklATModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
-        Calls gensim.models.AuthorTopicModel:
-        >>> gensim.models.AuthorTopicModel(corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word, author2doc=self.author2doc, doc2author=self.doc2author,
-                    chunksize=self.chunksize, passes=self.passes, iterations=self.iterations, decay=self.decay, offset=self.offset, alpha=self.alpha, eta=self.eta update_every=self.update_every,
-                    eval_every=self.eval_every, gamma_threshold=self.gamma_threshold, serialized=self.serialized, serialization_path=self.serialization_path, minimum_probability=self.minimum_probability, random_state=self.random_state)
+        Calls gensim.models.AuthorTopicModel
         """
-        self.corpus = X
-        self.__model = models.AuthorTopicModel(corpus=self.corpus, num_topics=self.num_topics, id2word=self.id2word,
+        self.__model = models.AuthorTopicModel(corpus=X, num_topics=self.num_topics, id2word=self.id2word,
             author2doc=self.author2doc, doc2author=self.doc2author, chunksize=self.chunksize, passes=self.passes,
             iterations=self.iterations, decay=self.decay, offset=self.offset, alpha=self.alpha, eta=self.eta,
             update_every=self.update_every, eval_every=self.eval_every, gamma_threshold=self.gamma_threshold, serialized=self.serialized,
