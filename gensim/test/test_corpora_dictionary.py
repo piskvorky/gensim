@@ -155,9 +155,10 @@ class TestDictionary(unittest.TestCase):
         removed_word = d[0]
         d.filter_tokens([0])
 
-        expected = {'computer': 0, 'eps': 8, 'graph': 10, 'human': 1,
-                    'interface': 2, 'minors': 11, 'response': 3, 'survey': 4,
-                    'system': 5, 'time': 6, 'trees': 9, 'user': 7}
+        expected = {
+            'computer': 0, 'eps': 8, 'graph': 10, 'human': 1,
+            'interface': 2, 'minors': 11, 'response': 3, 'survey': 4,
+            'system': 5, 'time': 6, 'trees': 9, 'user': 7}
         del expected[removed_word]
         self.assertEqual(sorted(d.token2id.keys()), sorted(expected.keys()))
 
@@ -180,9 +181,10 @@ class TestDictionary(unittest.TestCase):
     def test_saveAsText(self):
         """`Dictionary` can be saved as textfile. """
         tmpf = get_tmpfile('save_dict_test.txt')
-        small_text = [["prvé", "slovo"],
-                      ["slovo", "druhé"],
-                      ["druhé", "slovo"]]
+        small_text = [
+            ["prvé", "slovo"],
+            ["slovo", "druhé"],
+            ["druhé", "slovo"]]
 
         d = Dictionary(small_text)
 
@@ -205,8 +207,12 @@ class TestDictionary(unittest.TestCase):
             self.assertEqual(serialized_lines[2][1:], "\tdruhé\t2\n")
             self.assertEqual(serialized_lines[3][1:], "\tprvé\t1\n")
 
-    def test_loadFromText(self):
-        tmpf = get_tmpfile('load_dict_test.txt')
+    def test_loadFromText_legacy(self):
+        """
+        `Dictionary` can be loaded from textfile in legacy format.
+        Legacy format does not have num_docs on the first line.
+        """
+        tmpf = get_tmpfile('load_dict_test_legacy.txt')
         no_num_docs_serialization = "1\tprvé\t1\n2\tslovo\t2\n"
         with open(tmpf, "w") as file:
             file.write(no_num_docs_serialization)
@@ -218,6 +224,9 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(d.dfs[2], 2)
         self.assertEqual(d.num_docs, 0)
 
+    def test_loadFromText(self):
+        """`Dictionary` can be loaded from textfile."""
+        tmpf = get_tmpfile('load_dict_test.txt')
         no_num_docs_serialization = "2\n1\tprvé\t1\n2\tslovo\t2\n"
         with open(tmpf, "w") as file:
             file.write(no_num_docs_serialization)
@@ -244,24 +253,25 @@ class TestDictionary(unittest.TestCase):
     def test_from_corpus(self):
         """build `Dictionary` from an existing corpus"""
 
-        documents = ["Human machine interface for lab abc computer applications",
-                     "A survey of user opinion of computer system response time",
-                     "The EPS user interface management system",
-                     "System and human system engineering testing of EPS",
-                     "Relation of user perceived response time to error measurement",
-                     "The generation of random binary unordered trees",
-                     "The intersection graph of paths in trees",
-                     "Graph minors IV Widths of trees and well quasi ordering",
-                     "Graph minors A survey"]
+        documents = [
+            "Human machine interface for lab abc computer applications",
+            "A survey of user opinion of computer system response time",
+            "The EPS user interface management system",
+            "System and human system engineering testing of EPS",
+            "Relation of user perceived response time to error measurement",
+            "The generation of random binary unordered trees",
+            "The intersection graph of paths in trees",
+            "Graph minors IV Widths of trees and well quasi ordering",
+            "Graph minors A survey"]
         stoplist = set('for a of the and to in'.split())
-        texts = [[word for word in document.lower().split() if word not in stoplist]
-                 for document in documents]
+        texts = [
+            [word for word in document.lower().split() if word not in stoplist]
+            for document in documents]
 
         # remove words that appear only once
         all_tokens = sum(texts, [])
         tokens_once = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
-        texts = [[word for word in text if word not in tokens_once]
-                 for text in texts]
+        texts = [[word for word in text if word not in tokens_once] for text in texts]
 
         dictionary = Dictionary(texts)
         corpus = [dictionary.doc2bow(text) for text in texts]
