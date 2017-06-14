@@ -169,7 +169,9 @@ class Phrases(interfaces.TransformationABC):
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
-            sentence = [utils.any2utf8(w) for w in sentence]
+            # sentence = [utils.any2utf8(w) for w in sentence]
+            # Unicode tokens in dictionary (not utf8)
+
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
                 vocab[delimiter.join(bigram)] += 1
@@ -227,7 +229,8 @@ class Phrases(interfaces.TransformationABC):
             then you can debug the threshold with generated tsv
         """
         for sentence in sentences:
-            s = [utils.any2utf8(w) for w in sentence]
+            # s = [utils.any2utf8(w) for w in sentence]
+            s = sentence
             last_bigram = False
             vocab = self.vocab
             threshold = self.threshold
@@ -279,7 +282,8 @@ class Phrases(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        s, new_s = [utils.any2utf8(w) for w in sentence], []
+        # s, new_s = [utils.any2utf8(w) for w in sentence], []
+        s, new_s = list(sentence), []
         last_bigram = False
         vocab = self.vocab
         threshold = self.threshold
@@ -368,7 +372,8 @@ class Phraser(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        s, new_s = [utils.any2utf8(w) for w in sentence], []
+        # s, new_s = [utils.any2utf8(w) for w in sentence], []
+        s, new_s = list(sentence), []
         last_bigram = False
         phrasegrams = self.phrasegrams
         delimiter = self.delimiter
