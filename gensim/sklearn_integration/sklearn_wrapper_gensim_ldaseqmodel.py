@@ -27,7 +27,6 @@ class SklLdaSeqModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, 
         Sklearn wrapper for LdaSeq model. Class derived from gensim.models.LdaSeqModel
         """
         self.__model = None
-        self.corpus = None
         self.time_slice = time_slice
         self.id2word = id2word
         self.alphas = alphas
@@ -48,7 +47,7 @@ class SklLdaSeqModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, 
         """
         Returns all parameters as dictionary.
         """
-        return {"corpus": self.corpus, "time_slice": self.time_slice, "id2word": self.id2word,
+        return {"time_slice": self.time_slice, "id2word": self.id2word,
                 "alphas": self.alphas, "num_topics": self.num_topics, "initialize": self.initialize,
                 "sstats": self.sstats, "lda_model": self.lda_model, "obs_variance": self.obs_variance,
                 "chain_variance": self.chain_variance, "passes": self.passes, "random_state": self.random_state,
@@ -64,13 +63,9 @@ class SklLdaSeqModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, 
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
-        Calls gensim.models.LdaSeqModel:
-        >>> gensim.models.LdaSeqModel(corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
-                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
-                random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100)
+        Calls gensim.models.LdaSeqModel
         """
-        self.corpus = X
-        self.__model = models.LdaSeqModel(corpus=self.corpus, time_slice=self.time_slice, id2word=self.id2word,
+        self.__model = models.LdaSeqModel(corpus=X, time_slice=self.time_slice, id2word=self.id2word,
             alphas=self.alphas, num_topics=self.num_topics, initialize=self.initialize, sstats=self.sstats,
             lda_model=self.lda_model, obs_variance=self.obs_variance, chain_variance=self.chain_variance,
             passes=self.passes, random_state=self.random_state, lda_inference_max_iter=self.lda_inference_max_iter,
