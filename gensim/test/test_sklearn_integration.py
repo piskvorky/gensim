@@ -237,11 +237,12 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
         self.model.fit(corpus_ldaseq)
 
     def testTransform(self):
-        # transform one document
-        doc = list(corpus_ldaseq)[0]
-        vec = self.model.transform(doc)
-        expected_vec = numpy.array([6.65778961e-04, 9.99334221e-01])
-        self.assertTrue(numpy.allclose(vec, expected_vec))  # transformed entries must be equal up to sign
+        docs = []
+        docs.append(list(corpus_ldaseq)[0])
+        docs.append(list(corpus_ldaseq)[1])
+        transformed_vecs = self.model.transform(docs)
+        self.assertEqual(transformed_vecs.shape[0], 2)
+        self.assertEqual(transformed_vecs.shape[0], self.model.num_topics)
 
     def testSetGetParams(self):
         # updating only one param
