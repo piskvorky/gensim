@@ -26,7 +26,7 @@ class SklLdaSeqModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, 
         """
         Sklearn wrapper for LdaSeq model. Class derived from gensim.models.LdaSeqModel
         """
-        self.__model = None
+        self.gensim_model = None
         self.time_slice = time_slice
         self.id2word = id2word
         self.alphas = alphas
@@ -65,7 +65,7 @@ class SklLdaSeqModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, 
         Fit the model according to the given training data.
         Calls gensim.models.LdaSeqModel
         """
-        self.__model = models.LdaSeqModel(corpus=X, time_slice=self.time_slice, id2word=self.id2word,
+        self.gensim_model = models.LdaSeqModel(corpus=X, time_slice=self.time_slice, id2word=self.id2word,
             alphas=self.alphas, num_topics=self.num_topics, initialize=self.initialize, sstats=self.sstats,
             lda_model=self.lda_model, obs_variance=self.obs_variance, chain_variance=self.chain_variance,
             passes=self.passes, random_state=self.random_state, lda_inference_max_iter=self.lda_inference_max_iter,
@@ -75,7 +75,7 @@ class SklLdaSeqModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, 
         """
         Return the topic proportions for the document passed.
         """
-        return self.__model[doc]
+        return self.gensim_model[doc]
 
     def partial_fit(self, X):
         raise NotImplementedError("'partial_fit' has not been implemented for the LDA Seq model")
