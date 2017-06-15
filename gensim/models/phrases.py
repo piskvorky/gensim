@@ -111,13 +111,13 @@ class Phrases(interfaces.TransformationABC):
     """
     #from gensim.models.phrases_inner import learn_vocab
     try:
-        from gensim.models.phrases_inner import learn_vocab
+        from gensim.models.phrases_inner import learn_vocab, export_phrases
         logger.info("Cython file loaded")
     except ImportError:
         logger.info("Cython file not loaded")
         #failed... fall back to plain numpy (20-80x slower training than the above)
 
-    
+        @staticmethod
         def learn_vocab(self,sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
             #Collect unigram/bigram counts from the `sentences` iterable.
             sentence_no = -1
@@ -146,6 +146,45 @@ class Phrases(interfaces.TransformationABC):
             logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
                         (len(vocab), total_words, sentence_no + 1))
             return min_reduce, vocab
+
+        def export_phrases(self, sentences, out_delimiter=b' ', as_tuples=False):
+            """
+            Generate an iterator that contains all phrases in given 'sentences'
+
+            Example::
+
+              >>> sentences = Text8Corpus(path_to_corpus)
+              >>> bigram = Phrases(sentences, min_count=5, threshold=100)
+              >>> for phrase, score in bigram.export_phrases(sentences):
+              ...     print(u'{0}\t{1}'.format(phrase, score))
+
+                then you can debug the threshold with generated tsv
+            """
+            for sentence in sentences:
+                s = [utils.any2utf8(w) for w in sentence]
+                last_bigram = False
+                vocab = self.vocab
+                threshold = self.threshold
+                delimiter = self.delimiter  # delimiter used for lookup
+                min_count = self.min_count
+                for word_a, word_b in zip(s, s[1:]):
+                    if word_a in vocab and word_b in vocab:
+                        bigram_word = delimiter.join((word_a, word_b))
+                        if bigram_word in vocab and not last_bigram:
+                            pa = REAL(vocab[word_a])
+                            pb = REAL(vocab[word_b])
+                            pab = REAL(vocab[bigram_word])
+                            score = (pab - min_count) / pa / pb * len(vocab)
+                            # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
+                            #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
+                            if score > threshold:
+                                if as_tuples:
+                                    yield ((word_a, word_b), score)
+                                else:
+                                    yield (out_delimiter.join((word_a, word_b)), score)
+                                last_bigram = True
+                                continue
+                        last_bigram = False
 
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
                  max_vocab_size=40000000, delimiter=b'_', progress_per=10000):
@@ -227,44 +266,7 @@ class Phrases(interfaces.TransformationABC):
             logger.info("using %i counts as vocab in %s", len(vocab), self)
             self.vocab = vocab
 
-    def export_phrases(self, sentences, out_delimiter=b' ', as_tuples=False):
-        """
-        Generate an iterator that contains all phrases in given 'sentences'
 
-        Example::
-
-          >>> sentences = Text8Corpus(path_to_corpus)
-          >>> bigram = Phrases(sentences, min_count=5, threshold=100)
-          >>> for phrase, score in bigram.export_phrases(sentences):
-          ...     print(u'{0}\t{1}'.format(phrase, score))
-
-            then you can debug the threshold with generated tsv
-        """
-        for sentence in sentences:
-            s = [utils.any2utf8(w) for w in sentence]
-            last_bigram = False
-            vocab = self.vocab
-            threshold = self.threshold
-            delimiter = self.delimiter  # delimiter used for lookup
-            min_count = self.min_count
-            for word_a, word_b in zip(s, s[1:]):
-                if word_a in vocab and word_b in vocab:
-                    bigram_word = delimiter.join((word_a, word_b))
-                    if bigram_word in vocab and not last_bigram:
-                        pa = float(vocab[word_a])
-                        pb = float(vocab[word_b])
-                        pab = float(vocab[bigram_word])
-                        score = (pab - min_count) / pa / pb * len(vocab)
-                        # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
-                        #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
-                        if score > threshold:
-                            if as_tuples:
-                                yield ((word_a, word_b), score)
-                            else:
-                                yield (out_delimiter.join((word_a, word_b)), score)
-                            last_bigram = True
-                            continue
-                    last_bigram = False
 
     def __getitem__(self, sentence):
         """
