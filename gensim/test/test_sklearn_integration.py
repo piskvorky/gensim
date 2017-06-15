@@ -237,12 +237,19 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
         self.model.fit(corpus_ldaseq)
 
     def testTransform(self):
+        # transforming two documents
         docs = []
         docs.append(list(corpus_ldaseq)[0])
         docs.append(list(corpus_ldaseq)[1])
         transformed_vecs = self.model.transform(docs)
         self.assertEqual(transformed_vecs.shape[0], 2)
-        self.assertEqual(transformed_vecs.shape[0], self.model.num_topics)
+        self.assertEqual(transformed_vecs.shape[1], self.model.num_topics)
+
+        # transforming one document
+        doc = list(corpus_ldaseq)[0]
+        transformed_vecs = self.model.transform(doc)
+        self.assertEqual(transformed_vecs.shape[0], 1)
+        self.assertEqual(transformed_vecs.shape[1], self.model.num_topics)
 
     def testSetGetParams(self):
         # updating only one param
