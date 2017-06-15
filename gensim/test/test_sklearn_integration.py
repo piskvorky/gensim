@@ -205,9 +205,10 @@ class TestSklATModelWrapper(unittest.TestCase):
         self.model.fit(corpus)
 
     def testTransform(self):
-        jill_topics = self.model.transform('jill')
-        jill_topics = matutils.sparse2full(jill_topics, self.model.num_topics)
-        self.assertTrue(all(jill_topics > 0))
+        author_list = ['jill', 'jack']
+        author_topics = self.model.transform(author_list)
+        self.assertEqual(author_topics.shape[0], 2)
+        self.assertEqual(author_topics.shape[1], self.model.num_topics)
 
     def testPartialFit(self):
         self.model.partial_fit(corpus_new, author2doc=author2doc_new)
