@@ -480,7 +480,7 @@ class WordVectorsAccumulator(UsesDictionary):
         Args:
         ----
         model: if None, a new Word2Vec model is trained on the given text corpus. If not None,
-               it should be a pre-trained Word2Vec context 
+               it should be a pre-trained Word2Vec context
                vectors (gensim.models.keyedvectors.KeyedVectors instance).
         model_kwargs: if model is None, these keyword arguments will be passed through to the
                       Word2Vec constructor.
@@ -530,4 +530,3 @@ class WordVectorsAccumulator(UsesDictionary):
 
         words = [self.dictionary.id2token[word_id] for word_id in ids]
         return [word for word in words if word in self.model.vocab]
-
