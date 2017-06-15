@@ -211,6 +211,11 @@ class TestSklATModelWrapper(unittest.TestCase):
         self.assertEqual(author_topics.shape[0], 2)
         self.assertEqual(author_topics.shape[1], self.model.num_topics)
 
+        # transforming one author
+        jill_topics = self.model.transform('jill')
+        self.assertEqual(jill_topics.shape[0], 1)
+        self.assertEqual(jill_topics.shape[1], self.model.num_topics)
+
     def testPartialFit(self):
         self.model.partial_fit(corpus_new, author2doc=author2doc_new)
 
