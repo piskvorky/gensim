@@ -64,7 +64,7 @@ class SklRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
             probs_docs = list(map(lambda x: x[1], transformed_doc))
             # Everything should be equal in length
             if len(probs_docs) != self.num_topics:
-                probs_docs.extend([1e-12]*(self.num_topics - len(probs_docs)))
+                probs_docs.extend([1e-12] * (self.num_topics - len(probs_docs)))
             X[k] = probs_docs
 
         return np.reshape(np.array(X), (len(docs), self.num_topics))
