@@ -9,6 +9,7 @@ Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
 
+import numpy as np
 from sklearn.base import TransformerMixin, BaseEstimator
 
 from gensim import models
@@ -46,13 +47,27 @@ class SklRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         Calls gensim.models.RpModel
         """
         self.gensim_model = models.RpModel(corpus=X, id2word=self.id2word, num_topics=self.num_topics)
+        return self
 
-    def transform(self, doc):
+    def transform(self, docs):
         """
-        Take document/corpus as input.
-        Return RP representation of the input document/corpus.
+        Take documents/corpus as input.
+        Return RP representation of the input documents/corpus.
         """
-        return self.gensim_model[doc]
+        # The input as array of array
+        check = lambda x: [x] if isinstance(x[0], tuple) else x
+        docs = check(docs)
+        X = [[] for _ in range(0, len(docs))]
+
+        for k, v in enumerate(docs):
+            transformed_doc = self.gensim_model[v]
+            probs_docs = list(map(lambda x: x[1], transformed_doc))
+            # Everything should be equal in length
+            if len(probs_docs) != self.num_topics:
+                probs_docs.extend([1e-12]*(self.num_topics - len(probs_docs)))
+            X[k] = probs_docs
+
+        return np.reshape(np.array(X), (len(docs), self.num_topics))
 
     def partial_fit(self, X):
         raise NotImplementedError("'partial_fit' has not been implemented for the RandomProjections model")
