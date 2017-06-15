@@ -201,12 +201,13 @@ class TestSklRpModelWrapper(unittest.TestCase):
         self.model.fit(self.corpus)
 
     def testTransform(self):
-        # transform one document
-        doc = list(self.corpus)[0]
-        transformed_doc = self.model.transform(doc)
-        vec = matutils.sparse2full(transformed_doc, 2)  # convert to dense vector, for easier equality tests
-        expected_vec = numpy.array([-0.70710677, 0.70710677])
-        self.assertTrue(numpy.allclose(vec, expected_vec))  # transformed entries must be equal up to sign
+        # tranform two documents
+        docs = []
+        docs.append(list(self.corpus)[0])
+        docs.append(list(self.corpus)[1])
+        matrix = self.model.transform(docs)
+        self.assertEqual(matrix.shape[0], 2)
+        self.assertEqual(matrix.shape[1], self.model.num_topics)
 
     def testSetGetParams(self):
         # updating only one param
