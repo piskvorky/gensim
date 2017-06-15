@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 def word2vec_similarity(segmented_topics, accumulator, with_std=False):
     """For each topic segmentation, compute average cosine similarity using a
     WordVectorsAccumulator.
-    
+
     Args:
     ----
     segmented_topics : Output from the segmentation module of the segmented topics.
@@ -47,7 +47,7 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False):
                   Is an accumulator of word occurrences (see text_analysis module).
     with_std : True to also include standard deviation across topic segment sets in addition
                to the mean coherence for each topic; default is False.
-               
+
     Returns:
     -------
     topic_coherences : list of word2vec cosine similarities per topic.

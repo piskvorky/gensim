@@ -472,7 +472,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         Return the term topic matrix learned during inference.
         This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
-        
+
         NOTE: The number of topics can actually be smaller than `self.num_topics`,
         if there were not enough factors (real rank of input matrix smaller than
         `self.num_topics`).
