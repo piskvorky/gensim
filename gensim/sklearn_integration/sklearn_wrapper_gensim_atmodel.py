@@ -93,7 +93,7 @@ class SklATModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
             probs_author = list(map(lambda x: x[1], transformed_author))
             # Everything should be equal in length
             if len(probs_author) != self.num_topics:
-                probs_author.extend([1e-12]*(self.num_topics - len(probs_author)))
+                probs_author.extend([1e-12] * (self.num_topics - len(probs_author)))
             X[k] = probs_author
 
         return np.reshape(np.array(X), (len(author_names), self.num_topics))
