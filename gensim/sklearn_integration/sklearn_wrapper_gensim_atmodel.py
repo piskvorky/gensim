@@ -28,7 +28,7 @@ class SklATModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         """
         Sklearn wrapper for AuthorTopic model. Class derived from gensim.models.AuthorTopicModel
         """
-        self.__model = None
+        self.gensim_model = None
         self.num_topics = num_topics
         self.id2word = id2word
         self.author2doc = author2doc
@@ -71,7 +71,7 @@ class SklATModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         Fit the model according to the given training data.
         Calls gensim.models.AuthorTopicModel
         """
-        self.__model = models.AuthorTopicModel(corpus=X, num_topics=self.num_topics, id2word=self.id2word,
+        self.gensim_model = models.AuthorTopicModel(corpus=X, num_topics=self.num_topics, id2word=self.id2word,
             author2doc=self.author2doc, doc2author=self.doc2author, chunksize=self.chunksize, passes=self.passes,
             iterations=self.iterations, decay=self.decay, offset=self.offset, alpha=self.alpha, eta=self.eta,
             update_every=self.update_every, eval_every=self.eval_every, gamma_threshold=self.gamma_threshold, serialized=self.serialized,
@@ -82,10 +82,10 @@ class SklATModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         Return topic distribution for input author as a list of
         (topic_id, topic_probabiity) 2-tuples.
         """
-        return self.__model[author_names]
+        return self.gensim_model[author_names]
 
     def partial_fit(self, X, author2doc=None, doc2author=None):
         """
         Train model over X.
         """
-        self.__model.update(corpus=X, author2doc=author2doc, doc2author=doc2author)
+        self.gensim_model.update(corpus=X, author2doc=author2doc, doc2author=doc2author)
