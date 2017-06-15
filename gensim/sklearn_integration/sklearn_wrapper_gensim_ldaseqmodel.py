@@ -9,6 +9,7 @@ Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
 
+import numpy as np
 from sklearn.base import TransformerMixin, BaseEstimator
 
 from gensim import models
@@ -70,12 +71,25 @@ class SklLdaSeqModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, 
             lda_model=self.lda_model, obs_variance=self.obs_variance, chain_variance=self.chain_variance,
             passes=self.passes, random_state=self.random_state, lda_inference_max_iter=self.lda_inference_max_iter,
             em_min_iter=self.em_min_iter, em_max_iter=self.em_max_iter, chunksize=self.chunksize)
+        return self
 
-    def transform(self, doc):
+    def transform(self, docs):
         """
-        Return the topic proportions for the document passed.
+        Return the topic proportions for the documents passed.
         """
-        return self.gensim_model[doc]
+        # The input as array of array
+        check = lambda x: [x] if isinstance(x[0], tuple) else x
+        docs = check(docs)
+        X = [[] for _ in range(0, len(docs))]
+
+        for k, v in enumerate(docs):
+            transformed_author = self.gensim_model[v]
+            # Everything should be equal in length
+            if len(transformed_author) != self.num_topics:
+                transformed_author.extend([1e-12] * (self.num_topics - len(transformed_author)))
+            X[k] = transformed_author
+
+        return np.reshape(np.array(X), (len(docs), self.num_topics))
 
     def partial_fit(self, X):
         raise NotImplementedError("'partial_fit' has not been implemented for the LDA Seq model")
