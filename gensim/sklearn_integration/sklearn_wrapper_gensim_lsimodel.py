@@ -3,18 +3,19 @@
 #
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-#
+
 """
 Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
+
 import numpy as np
+from scipy import sparse
+from sklearn.base import TransformerMixin, BaseEstimator
 
 from gensim import models
 from gensim import matutils
 from gensim.sklearn_integration import base_sklearn_wrapper
-from scipy import sparse
-from sklearn.base import TransformerMixin, BaseEstimator
 
 
 class SklLsiModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
@@ -27,7 +28,7 @@ class SklLsiModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         """
         Sklearn wrapper for LSI model. Class derived from gensim.model.LsiModel.
         """
-        self.__model = None
+        self.gensim_model = None
         self.num_topics = num_topics
         self.id2word = id2word
         self.chunksize = chunksize
@@ -60,7 +61,7 @@ class SklLsiModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         else:
             corpus = X
 
-        self.__model = models.LsiModel(corpus=corpus, num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize,
+        self.gensim_model = models.LsiModel(corpus=corpus, num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize,
             decay=self.decay, onepass=self.onepass, power_iters=self.power_iters, extra_samples=self.extra_samples)
         return self
 
@@ -75,7 +76,7 @@ class SklLsiModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         docs = check(docs)
         X = [[] for i in range(0,len(docs))];
         for k,v in enumerate(docs):
-            doc_topics = self.__model[v]
+            doc_topics = self.gensim_model[v]
             probs_docs = list(map(lambda x: x[1], doc_topics))
             # Everything should be equal in length
             if len(probs_docs) != self.num_topics:
@@ -90,4 +91,4 @@ class SklLsiModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         """
         if sparse.issparse(X):
             X = matutils.Sparse2Corpus(X)
-        self.__model.add_documents(corpus=X)
+        self.gensim_model.add_documents(corpus=X)
