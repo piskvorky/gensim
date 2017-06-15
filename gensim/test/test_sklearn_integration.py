@@ -205,6 +205,7 @@ class TestSklATModelWrapper(unittest.TestCase):
         self.model.fit(corpus)
 
     def testTransform(self):
+        # transforming multiple authors
         author_list = ['jill', 'jack']
         author_topics = self.model.transform(author_list)
         self.assertEqual(author_topics.shape[0], 2)
@@ -214,8 +215,8 @@ class TestSklATModelWrapper(unittest.TestCase):
         self.model.partial_fit(corpus_new, author2doc=author2doc_new)
 
         # Did we learn something about Sally?
-        sally_topics = self.model.transform('sally')
-        sally_topics = matutils.sparse2full(sally_topics, self.model.num_topics)
+        output_topics = self.model.transform('sally')
+        sally_topics = output_topics[0]  # getting the topics corresponding to 'sally' (from the list of lists)
         self.assertTrue(all(sally_topics > 0))
 
     def testSetGetParams(self):
