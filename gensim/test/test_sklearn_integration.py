@@ -17,7 +17,7 @@ except ImportError:
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklearnWrapperLdaModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklearnWrapperLsiModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import SklRpModel
-from gensim.corpora import Dictionary
+from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
@@ -197,14 +197,14 @@ class TestSklRpModelWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(13)
         self.model = SklRpModel(num_topics=2)
-        self.model.fit(corpus)
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.model.fit(self.corpus)
 
     def testTransform(self):
         # transform one document
-        doc = list(corpus)[0]
+        doc = list(self.corpus)[0]
         transformed_doc = self.model.transform(doc)
         vec = matutils.sparse2full(transformed_doc, 2)  # convert to dense vector, for easier equality tests
-
         expected_vec = numpy.array([-0.70710677, 0.70710677])
         self.assertTrue(numpy.allclose(vec, expected_vec))  # transformed entries must be equal up to sign
 
