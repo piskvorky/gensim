@@ -24,7 +24,7 @@ class SklRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         """
         Sklearn wrapper for RP model. Class derived from gensim.models.RpModel.
         """
-        self.__model = None
+        self.gensim_model = None
         self.id2word = id2word
         self.num_topics = num_topics
 
@@ -45,14 +45,14 @@ class SklRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         Fit the model according to the given training data.
         Calls gensim.models.RpModel
         """
-        self.__model = models.RpModel(corpus=X, id2word=self.id2word, num_topics=self.num_topics)
+        self.gensim_model = models.RpModel(corpus=X, id2word=self.id2word, num_topics=self.num_topics)
 
     def transform(self, doc):
         """
         Take document/corpus as input.
         Return RP representation of the input document/corpus.
         """
-        return self.__model[doc]
+        return self.gensim_model[doc]
 
     def partial_fit(self, X):
         raise NotImplementedError("'partial_fit' has not been implemented for the RandomProjections model")
