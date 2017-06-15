@@ -31,7 +31,7 @@ class SklLdaModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         """
         Sklearn wrapper for LDA model. derived class for gensim.model.LdaModel .
         """
-        self.__model = None
+        self.gensim_model = None
         self.num_topics = num_topics
         self.id2word = id2word
         self.chunksize = chunksize
@@ -73,7 +73,7 @@ class SklLdaModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         else:
             corpus = X
 
-        self.__model = models.LdaModel(corpus=corpus, num_topics=self.num_topics, id2word=self.id2word,
+        self.gensim_model = models.LdaModel(corpus=corpus, num_topics=self.num_topics, id2word=self.id2word,
             chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
             alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
             eval_every=self.eval_every, iterations=self.iterations,
@@ -93,7 +93,7 @@ class SklLdaModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         X = [[] for _ in range(0, len(docs))]
 
         for k, v in enumerate(docs):
-            doc_topics = self.__model.get_document_topics(v, minimum_probability=minimum_probability)
+            doc_topics = self.gensim_model.get_document_topics(v, minimum_probability=minimum_probability)
             probs_docs = list(map(lambda x: x[1], doc_topics))
             # Everything should be equal in length
             if len(probs_docs) != self.num_topics:
@@ -113,4 +113,4 @@ class SklLdaModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         if sparse.issparse(X):
             X = matutils.Sparse2Corpus(X)
 
-        self.__model.update(corpus=X)
+        self.gensim_model.update(corpus=X)
