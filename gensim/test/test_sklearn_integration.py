@@ -66,15 +66,16 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         passed = numpy.allclose(sorted(transformed_approx), sorted(expected), atol=1e-1)
         self.assertTrue(passed)
 
-    # def testCSRMatrixConversion(self):
-    #     arr = numpy.array([[1, 2, 0], [0, 0, 3], [1, 0, 0]])
-    #     sarr = sparse.csr_matrix(arr)
-    #     newmodel = SklLdaModel(num_topics=2, passes=100)
-    #     newmodel.fit(sarr)
-    #     topic = newmodel.print_topics()
-    #     for k, v in topic:
-    #         self.assertTrue(isinstance(v, six.string_types))
-    #         self.assertTrue(isinstance(k, int))
+    def testCSRMatrixConversion(self):
+        arr = numpy.array([[1, 2, 0], [0, 0, 3], [1, 0, 0]])
+        sarr = sparse.csr_matrix(arr)
+        newmodel = SklLdaModel(num_topics=2, passes=100)
+        newmodel.fit(sarr)
+        bow = [(0, 1), (1, 2), (2, 0)]
+        transformed_vec = newmodel.transform(bow)
+        expected_vec = [0.35367903, 0.64632097]
+        passed = numpy.allclose(sorted(transformed_vec), sorted(expected_vec), atol=1e-1)
+        self.assertTrue(passed)
 
     def testPipeline(self):
         model = SklLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
