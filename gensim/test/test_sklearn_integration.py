@@ -209,6 +209,12 @@ class TestSklRpModelWrapper(unittest.TestCase):
         self.assertEqual(matrix.shape[0], 2)
         self.assertEqual(matrix.shape[1], self.model.num_topics)
 
+        # tranform one document
+        doc = list(self.corpus)[0]
+        matrix = self.model.transform(doc)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], self.model.num_topics)
+
     def testSetGetParams(self):
         # updating only one param
         self.model.set_params(num_topics=3)
