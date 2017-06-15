@@ -8,7 +8,7 @@
 Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
-
+import numpy as np
 from sklearn.base import TransformerMixin, BaseEstimator
 
 from gensim import models
@@ -76,13 +76,27 @@ class SklATModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
             iterations=self.iterations, decay=self.decay, offset=self.offset, alpha=self.alpha, eta=self.eta,
             update_every=self.update_every, eval_every=self.eval_every, gamma_threshold=self.gamma_threshold, serialized=self.serialized,
             serialization_path=self.serialization_path, minimum_probability=self.minimum_probability, random_state=self.random_state)
+        return self
 
     def transform(self, author_names):
         """
-        Return topic distribution for input author as a list of
+        Return topic distribution for input authors as a list of
         (topic_id, topic_probabiity) 2-tuples.
         """
-        return self.gensim_model[author_names]
+        # The input as array of array
+        check = lambda x: [x] if isinstance(x[0], tuple) else x
+        author_names = check(author_names)
+        X = [[] for _ in range(0, len(author_names))]
+
+        for k, v in enumerate(author_names):
+            transformed_author = self.gensim_model[v]
+            probs_author = list(map(lambda x: x[1], transformed_author))
+            # Everything should be equal in length
+            if len(probs_author) != self.num_topics:
+                probs_author.extend([1e-12]*(self.num_topics - len(probs_author)))
+            X[k] = probs_author
+
+        return np.reshape(np.array(X), (len(author_names), self.num_topics))
 
     def partial_fit(self, X, author2doc=None, doc2author=None):
         """
