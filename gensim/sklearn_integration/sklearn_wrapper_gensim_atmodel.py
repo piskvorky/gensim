@@ -84,7 +84,7 @@ class SklATModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         (topic_id, topic_probabiity) 2-tuples.
         """
         # The input as array of array
-        check = lambda x: [x] if isinstance(x[0], tuple) else x
+        check = lambda x: [x] if not isinstance(x, list) else x
         author_names = check(author_names)
         X = [[] for _ in range(0, len(author_names))]
 
