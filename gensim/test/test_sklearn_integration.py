@@ -46,15 +46,15 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         texts_new = ['graph', 'eulerian']
         bow = self.model.id2word.doc2bow(texts_new)
         matrix = self.model.transform(bow)
-        self.assertTrue(matrix.shape[0], 1)
-        self.assertTrue(matrix.shape[1], self.model.num_topics)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], self.model.num_topics)
         texts_new = [['graph', 'eulerian'], ['server', 'flow'], ['path', 'system']]
         bow = []
         for i in texts_new:
             bow.append(self.model.id2word.doc2bow(i))
         matrix = self.model.transform(bow)
-        self.assertTrue(matrix.shape[0], 3)
-        self.assertTrue(matrix.shape[1], self.model.num_topics)
+        self.assertEqual(matrix.shape[0], 3)
+        self.assertEqual(matrix.shape[1], self.model.num_topics)
 
     def testPartialFit(self):
         for i in range(10):
@@ -116,15 +116,15 @@ class TestSklLsiModelWrapper(unittest.TestCase):
         texts_new = ['graph', 'eulerian']
         bow = self.model.id2word.doc2bow(texts_new)
         matrix = self.model.transform(bow)
-        self.assertTrue(matrix.shape[0], 1)
-        self.assertTrue(matrix.shape[1], self.model.num_topics)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], self.model.num_topics)
         texts_new = [['graph', 'eulerian'], ['server', 'flow'], ['path', 'system']]
         bow = []
         for i in texts_new:
             bow.append(self.model.id2word.doc2bow(i))
         matrix = self.model.transform(bow)
-        self.assertTrue(matrix.shape[0], 3)
-        self.assertTrue(matrix.shape[1], self.model.num_topics)
+        self.assertEqual(matrix.shape[0], 3)
+        self.assertEqual(matrix.shape[1], self.model.num_topics)
 
     def testPartialFit(self):
         for i in range(10):
