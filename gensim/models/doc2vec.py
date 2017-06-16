@@ -580,7 +580,7 @@ class Doc2Vec(Word2Vec):
         need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-                default is 1e-3, useful value is 1e-5.
+                default is 1e-3, values of 1e-5 (or lower) may also be useful, value 0. disable downsampling.
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
