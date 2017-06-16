@@ -343,9 +343,9 @@ class CoherenceModel(interfaces.TransformationABC):
         if self.coherence in BOOLEAN_DOCUMENT_BASED or self.coherence == 'c_w2v':
             kwargs = dict(with_std=with_std)
         elif self.coherence == 'c_v':
-            kwargs = dict(topics=self.topics, measure='nlr', gamma=1)
+            kwargs = dict(topics=self.topics, measure='nlr', gamma=1, with_std=with_std)
         else:
-            kwargs = dict(normalize=(self.coherence == 'c_npmi'))
+            kwargs = dict(normalize=(self.coherence == 'c_npmi'), with_std=with_std)
 
         return measure.conf(segmented_topics, self._accumulator, **kwargs)
 
