@@ -98,27 +98,53 @@ class TextCorpus(interfaces.CorpusABC):
                 else:
                     yield utils.tokenize(line, lowercase=True)
 
-    def sample_texts(self, n):
+    def sample_texts(self, n, seed=None, length=None):
         """
-        Yield n random texts from the corpus without replacement.
+        Yields n random documents from the corpus without replacement.
 
-        Given the the number of remaingin elements in stream is remaining and we need
-        to choose n elements, the probability for current element to be chosen is n/remaining.
+        Given the number of remaining documents in corpus, we need to choose n elements.
+        The probability for current element to be chosen is n/remaining.
         If we choose it, we just decreese the n and move to the next element.
-        """
-        length = len(self)
-        if not n <= length:
-            raise ValueError("sample larger than population")
+        Computing corpus length may be a costly operation so you can use optional paramter
+        length instead.
 
+        Args:
+            n (int): number of documents we want to sample.
+            seed (int|None): if specified, use it as a seed for local random generator.
+            length (int|None): if specified, use it as guess of corpus length.
+
+        Yeilds:
+            list[str]: document represented as list of tokens. See get_texts method.
+
+        Raises:
+            ValueError: then n is invalid or length was set incorrectly.
+        """
+        random_generator = None
+        if seed is None:
+            random_generator = random
+        else:
+            random_generator = random.Random(seed)
+
+        if length is None:
+            length = len(self)
+
+        if not n <= length:
+            raise ValueError("n is larger than length of corpus.")
         if not 0 <= n:
-            raise ValueError("negative sample size")
+            raise ValueError("Negative sample size.")
 
         for i, sample in enumerate(self.get_texts()):
-            remaining_in_stream = length - i
-            chance = random.randint(1, remaining_in_stream)
+            if i == length:
+                break
+            remaining_in_corpus = length - i
+            chance = random_generator.randint(1, remaining_in_corpus)
             if chance <= n:
                 n -= 1
                 yield sample
+
+        if n != 0:
+            # This means that length was set to be smaller than nuber of items in stream.
+            raise ValueError("length smaller than number of documents in stream")
 
     def __len__(self):
         if not hasattr(self, 'length'):
