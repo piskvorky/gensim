@@ -198,8 +198,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf={}, minimum_phi_value=0.01,
-                 per_word_topics=False, viz=False, coherence="u_mass", 
-                 distance="kulback_leibler", texts=None):
+                 per_word_topics=False, viz=False, distance="kulback_leibler",
+                 coherence="u_mass", texts=None, window_size=None, topn=10):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -245,9 +245,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         `viz` set True for visualizing LDA training stats in Visdom
 
-        `coherence` measure to be used for Coherence plot visualization
-
         `distance` measure to be used for Diff plot visualization
+
+        `coherence` measure to be used for Coherence plot visualization
 
         `texts` : Tokenized texts. Needed if sliding_window_based coherence measures (c_v, c_uci, c_npmi) are chosen for visualization. eg::
                 texts = [['system', 'human', 'system', 'eps'],
@@ -256,6 +256,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                              ['graph', 'trees'],
                              ['graph', 'minors', 'trees'],
                              ['graph', 'minors', 'survey']]
+
+        `window_size` : Is the size of the window to be used for coherence measures using boolean sliding window as their
+                      probability estimator. For 'u_mass' this doesn't matter.
+                      If left 'None' the default window sizes are used which are:
+                      'c_v' : 110
+                      'c_uci' : 10
+                      'c_npmi' : 10
+
+        `topn` Integer corresponding to the number of top words to be extracted from each topic for coherence logging.
 
         Example:
 
@@ -300,9 +309,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.per_word_topics = per_word_topics
         self.viz = viz
         if self.viz:
-            self.coherence = coherence
             self.distance = distance
             self.texts = texts
+            self.coherence = coherence
+            self.window_size = window_size
+            self.topn = topn
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
@@ -552,9 +563,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
-    def update(self, corpus, chunksize=None, decay=None, offset=None, passes=None,
-               update_every=None, eval_every=None, iterations=None, gamma_threshold=None,
-               chunks_as_numpy=False, viz=None, coherence=None, distance=None, texts=None):
+    def update(self, corpus, chunksize=None, decay=None, offset=None, passes=None, update_every=None,
+               eval_every=None, iterations=None, gamma_threshold=None, chunks_as_numpy=False,
+               viz=None, distance=None, coherence=None, texts=None, window_size=None, topn=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -619,12 +630,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if viz is None:
             viz = self.viz
         if viz:
+            if distance is None:
+                distance = self.distance
             if coherence is None:
                 coherence = self.coherence
             if texts is None:
                 texts = self.texts
-            if distance is None:
-                distance = self.distance
+            if window_size is None:
+                window_size = self.window_size
+            if topn is None:
+                topn = self.topn
 
         if update_every:
             updatetype = "online"
@@ -718,7 +733,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             if self.viz:
                 # calculate coherence
-                cm = gensim.models.CoherenceModel(model=self, corpus=corpus, texts=texts, coherence=coherence)
+                cm = gensim.models.CoherenceModel(model=self, corpus=corpus, texts=texts, coherence=coherence, window_size=window_size, topn=topn)
                 Coherence = np.array([cm.get_coherence()])
 
                 # calculate perplexity
