@@ -11,6 +11,7 @@ try:
     from sklearn.feature_extraction.text import CountVectorizer
     from sklearn.datasets import load_files
     from sklearn import linear_model
+    from sklearn.exceptions import NotFittedError
 except ImportError:
     raise unittest.SkipTest("Test requires scikit-learn to be installed, which is not available")
 
@@ -220,6 +221,20 @@ class TestSklRpModelWrapper(unittest.TestCase):
         self.model.set_params(num_topics=3)
         model_params = self.model.get_params()
         self.assertEqual(model_params["num_topics"], 3)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = list(self.corpus)[0]
+        transformed_vecs = model_load.transform(doc)
+        self.assertEqual(transformed_vecs.shape[0], 1)
+        self.assertEqual(transformed_vecs.shape[1], model_load.num_topics)
+
+    def testModelNotFitted(self):
+        rpmodel_wrapper = SklRpModel(num_topics=2)
+        doc = list(self.corpus)[0]
+        self.assertRaises(NotFittedError, rpmodel_wrapper.transform, doc)
 
 
 if __name__ == '__main__':
