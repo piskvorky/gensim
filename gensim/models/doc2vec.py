@@ -565,7 +565,7 @@ class Doc2Vec(Word2Vec):
         `window` is the maximum distance between the predicted word and context words used for prediction
         within a document.
 
-        `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
+        `alpha` is the initial learning rate (will linearly drop to `min_alpha` as training progresses).
 
         `seed` = for the random number generator.
         Note that for a fully deterministically-reproducible run, you must also limit the model to
@@ -580,24 +580,26 @@ class Doc2Vec(Word2Vec):
         need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-                default is 1e-3, useful value is 1e-5.
+                default is 1e-3, values of 1e-5 (or lower) may also be useful, value 0. disable downsampling.
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
         `iter` = number of iterations (epochs) over the corpus. The default inherited from Word2Vec is 5,
         but values of 10 or 20 are common in published 'Paragraph Vector' experiments.
 
-        `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0).
+        `hs` = if 1, hierarchical softmax will be used for model training.
+        If set to 0 (default), and `negative` is non-zero, negative sampling will be used.
 
         `negative` = if > 0, negative sampling will be used, the int for negative
         specifies how many "noise words" should be drawn (usually between 5-20).
+        Default is 5. If set to 0, no negative samping is used.
 
         `dm_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
         Only applies when dm is used in non-concatenative mode.
 
         `dm_concat` = if 1, use concatenation of context vectors rather than sum/average;
         default is 0 (off). Note concatenation results in a much-larger model, as the input
-        is no longer the size of one (sampled or arithmatically combined) word vector, but the
+        is no longer the size of one (sampled or arithmetically combined) word vector, but the
         size of the tag(s) and all words in the context strung together.
 
         `dm_tag_count` = expected constant number of document tags per document, when using

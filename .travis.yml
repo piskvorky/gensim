@@ -14,14 +14,9 @@ before_install:
 install:
   - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
   - source activate gensim-test
-  - pip install pyemd
-  - pip install annoy
-  - pip install testfixtures
-  - pip install unittest2
-  - pip install scikit-learn
-  - pip install Morfessor==2.0.2a4
   - python setup.py install
-script: 
+  - pip install .[test]
+script:
   - python setup.py test
   - pip install flake8
   - continuous_integration/travis/flake8_diff.sh
