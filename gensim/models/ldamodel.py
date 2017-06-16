@@ -35,6 +35,7 @@ import numpy as np
 import numbers
 import os
 import gensim
+import copy
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
@@ -194,8 +195,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, ns_conf={},
-                 minimum_phi_value=0.01, per_word_topics=False,
-                 coherence='u_mass', texts=None, window_size=None, topn=10):
+                 minimum_phi_value=0.01, per_word_topics=False, coherence='u_mass',
+                 texts=None, window_size=None, topn=10, log_diff=False, distance="jaccard"):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -263,6 +264,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         `topn` Integer corresponding to the number of top words to be extracted from each topic for coherence logging.
 
+        `log_diff` set to True to log topic diff between consecutive epochs
+
+        `distance` is the distance measure to use for `log_diff`
+
         Example:
 
         >>> lda = LdaModel(corpus, num_topics=100)  # train model
@@ -304,6 +309,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eval_every = eval_every
         self.minimum_phi_value = minimum_phi_value
         self.per_word_topics = per_word_topics
+
+        self.log_diff = log_diff
+        self.distance = distance
 
         self.texts = texts
         self.coherence = coherence
@@ -568,10 +576,19 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         logger.info("%.3f coherence estimate based on a held-out corpus of %i documents with %i words", coherence, len(chunk), corpus_words)
         return coherence
 
+    def log_epoch_diff(self, epoch, other_model):
+        """
+        Log topic diff between consecutive epochs
+        """
+        diff_matrix, annotation = self.diff(other_model)
+        diff_diagonal = np.diagonal(diff_matrix)
+        logger.info("Topic difference between %i and %i epoch %s", epoch - 1, epoch, diff_diagonal)
+        return diff_diagonal
+
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
                gamma_threshold=None, chunks_as_numpy=False, coherence=None, 
-               texts=None, window_size=None, topn=None):
+               texts=None, window_size=None, topn=None, log_diff=None, distance=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -626,6 +643,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             window_size = self.window_size
         if topn is None:
             topn = self.topn
+        if log_diff is None:
+            log_diff = self.log_diff
+        if distance is None:
+            distance = self.distance
 
         try:
             lencorpus = len(corpus)
@@ -727,6 +748,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         other = LdaState(self.eta, self.state.sstats.shape)
                     dirty = False
             # endfor single corpus iteration
+
+            # log diff between consecutive epochs
+            if log_diff:
+                if pass_ == 0:
+                    # save randomly initialized model for diff with first pass
+                    previous = copy.deepcopy(self)
+                self.log_epoch_diff(pass_, previous)
+                previous = copy.deepcopy(self)
+
             if reallen != lencorpus:
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
 
