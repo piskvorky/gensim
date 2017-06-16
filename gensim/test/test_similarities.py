@@ -56,6 +56,10 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_similarities.tst.pkl')
 
+def testfile(test_fname=''):
+    # temporary data will be stored to this file
+    fname = 'gensim_models_' + test_fname + '.tst'
+    return os.path.join(tempfile.gettempdir(), fname)
 
 class _TestSimilarityABC(object):
     """
@@ -515,23 +519,24 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def assertIndexSaved(self, index):
-        index.save('index')
-        self.assertTrue(os.path.exists('index'))
-        self.assertTrue(os.path.exists('index.d'))
+        fname = testfile('index')
+        index.save(fname)
+        self.assertTrue(os.path.exists(fname))
+        self.assertTrue(os.path.exists(fname + '.d'))
 
     def assertLoadedIndexEqual(self, index, model):
         from gensim.similarities.index import AnnoyIndexer
 
-        index.save('index')
+        fname = testfile('index')
+        index.save(fname)
 
         index2 = AnnoyIndexer()
-        index2.load('index')
+        index2.load(fname)
         index2.model = model
 
         self.assertEqual(index.index.f, index2.index.f)
         self.assertEqual(index.labels, index2.labels)
         self.assertEqual(index.num_trees, index2.num_trees)
-
 
 class TestDoc2VecAnnoyIndexer(unittest.TestCase):
 
@@ -566,9 +571,10 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def testSave(self):
-        self.index.save('index')
-        self.assertTrue(os.path.exists('index'))
-        self.assertTrue(os.path.exists('index.d'))
+        fname = testfile('index')
+        self.index.save(fname)
+        self.assertTrue(os.path.exists(fname))
+        self.assertTrue(os.path.exists(fname + '.d'))
 
     def testLoadNotExist(self):
         from gensim.similarities.index import AnnoyIndexer
@@ -579,10 +585,11 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
     def testSaveLoad(self):
         from gensim.similarities.index import AnnoyIndexer
 
-        self.index.save('index')
+        fname = testfile('index')
+        self.index.save(fname)
 
         self.index2 = AnnoyIndexer()
-        self.index2.load('index')
+        self.index2.load(fname)
         self.index2.model = self.model
 
         self.assertEqual(self.index.index.f, self.index2.index.f)
