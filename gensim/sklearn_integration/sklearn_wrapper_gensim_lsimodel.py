@@ -71,6 +71,8 @@ class SklLsiModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         Takes a list of documents as input ('docs').
         Returns a matrix of topic distribution for the given document bow, where a_ij
         indicates (topic_i, topic_probability_j).
+        The input `docs` should be in BOW format and can be a list of documents like : [ [(4, 1), (7, 1)], [(9, 1), (13, 1)], [(2, 1), (6, 1)] ]
+        or a single document like : [(4, 1), (7, 1)]
         """
         if self.gensim_model is None:
             raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
