@@ -1521,6 +1521,54 @@ class LineSentence(object):
                         i += self.max_sentence_length
 
 
+class LineSentencePath(object):
+    """
+    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    Like LineSentence, but will process all files in a directory in alphabetical order by filename
+    """
+
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
+        """
+        `source` should be a path to a directory (as a string) where all files can be opened by the
+        LineSentence class. Each file will be read up to
+        `limit` lines (or no clipped if limit is None, the default).
+
+        Example::
+
+            sentences = LineSentencePath(os.getcwd() + '\\corpus\\')
+
+        The files in the directory should be either text files, .bz2 files, or .gz files.
+
+        """
+        self.source = source
+        self.max_sentence_length = max_sentence_length
+        self.limit = limit
+
+        try:
+            self.source = os.path.join(source, '') # ensures os-specific slash is at end of path
+            logging.debug('reading directory ' + source)
+            self.input_files = os.listdir(source)
+        except OSError:
+            raise ValueError('input is a file, not a path, use word2vec.LineSentence')
+        except NameError:
+            raise ValueError('input source is not a path')
+
+        self.input_files = os.listdir(source)
+        self.input_files.sort()  # makes sure it happens in filename order
+
+    def __iter__(self):
+        '''iterate through the files'''
+        for file_name in self.input_files:
+            logging.info('reading file ' + file_name + '\n')
+            with utils.smart_open(self.source + file_name) as fin:
+                for line in itertools.islice(fin, self.limit):
+                    line = utils.to_unicode(line).split()
+                    i = 0
+                    while i < len(line):
+                        yield line[i : i + self.max_sentence_length]
+                        i += self.max_sentence_length
+
+
 # Example: ./word2vec.py -train data.txt -output vec.txt -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3
 if __name__ == "__main__":
     import argparse
