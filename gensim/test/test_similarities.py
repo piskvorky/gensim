@@ -56,10 +56,12 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_similarities.tst.pkl')
 
+
 def testfile(test_fname=''):
     # temporary data will be stored to this file
     fname = 'gensim_models_' + test_fname + '.tst'
     return os.path.join(tempfile.gettempdir(), fname)
+
 
 class _TestSimilarityABC(object):
     """
