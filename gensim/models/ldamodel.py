@@ -592,7 +592,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None, chunks_as_numpy=False, coherence=None, 
+               gamma_threshold=None, chunks_as_numpy=False, coherence=None,
                texts=None, window_size=None, topn=None, log_diff=None, distance=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
