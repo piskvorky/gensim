@@ -77,6 +77,8 @@ class SklLdaSeqModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, 
     def transform(self, docs):
         """
         Return the topic proportions for the documents passed.
+        The input `docs` should be in BOW format and can be a list of documents like : [ [(4, 1), (7, 1)], [(9, 1), (13, 1)], [(2, 1), (6, 1)] ]
+        or a single document like : [(4, 1), (7, 1)]
         """
         if self.gensim_model is None:
             raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
