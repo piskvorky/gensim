@@ -222,6 +222,22 @@ class TestSklRpModelWrapper(unittest.TestCase):
         model_params = self.model.get_params()
         self.assertEqual(model_params["num_topics"], 3)
 
+    def testPipeline(self):
+        model = SklRpModel(num_topics=2)
+        with open(datapath('mini_newsgroup'), 'rb') as f:
+            compressed_content = f.read()
+            uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
+            cache = pickle.loads(uncompressed_content)
+        data = cache
+        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        corpus = [id2word.doc2bow(i.split()) for i in data.data]
+        numpy.random.mtrand.RandomState(1)  # set seed for getting same result
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        text_lda = Pipeline((('features', model,), ('classifier', clf)))
+        text_lda.fit(corpus, data.target)
+        score = text_lda.score(corpus, data.target)
+        self.assertGreater(score, 0.40)
+
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
         model_load = pickle.loads(model_dump)
