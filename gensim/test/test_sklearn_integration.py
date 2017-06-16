@@ -11,6 +11,7 @@ try:
     from sklearn.feature_extraction.text import CountVectorizer
     from sklearn.datasets import load_files
     from sklearn import linear_model
+    from sklearn.exceptions import NotFittedError
 except ImportError:
     raise unittest.SkipTest("Test requires scikit-learn to be installed, which is not available")
 
@@ -106,6 +107,22 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         for key in param_dict.keys():
             self.assertEqual(model_params[key], param_dict[key])
 
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        texts_new = ['graph', 'eulerian']
+        bow = model_load.id2word.doc2bow(texts_new)
+        matrix = model_load.transform(bow)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], model_load.num_topics)
+
+    def testModelNotFitted(self):
+        lda_wrapper = SklLdaModel(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        texts_new = ['graph', 'eulerian']
+        bow = lda_wrapper.id2word.doc2bow(texts_new)
+        self.assertRaises(NotFittedError, lda_wrapper.transform, bow)
+
 
 class TestSklLsiModelWrapper(unittest.TestCase):
     def setUp(self):
@@ -163,6 +180,22 @@ class TestSklLsiModelWrapper(unittest.TestCase):
         model_params = self.model.get_params()
         for key in param_dict.keys():
             self.assertEqual(model_params[key], param_dict[key])
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        texts_new = ['graph', 'eulerian']
+        bow = model_load.id2word.doc2bow(texts_new)
+        matrix = model_load.transform(bow)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], model_load.num_topics)
+
+    def testModelNotFitted(self):
+        lsi_wrapper = SklLsiModel(id2word=dictionary, num_topics=2)
+        texts_new = ['graph', 'eulerian']
+        bow = lsi_wrapper.id2word.doc2bow(texts_new)
+        self.assertRaises(NotFittedError, lsi_wrapper.transform, bow)
 
 
 if __name__ == '__main__':
