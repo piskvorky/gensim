@@ -763,6 +763,15 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
                 sentences = word2vec.LineSentence(fin)
                 for words in sentences:
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
+
+    def testLineSentencePath(self):
+        """Does LineSentencePath work with a path argument?"""
+        logging.debug(word2vec)
+        with utils.smart_open(datapath('lee_background.cor')) as orig:
+            sentences = word2vec.LineSentencePath(datapath('LineSentencePath'))
+            for words in sentences:
+                self.assertEqual(words, utils.to_unicode(orig.readline()).split())
+
 #endclass TestWord2VecSentenceIterators
 
 # TODO: get correct path to Python binary
