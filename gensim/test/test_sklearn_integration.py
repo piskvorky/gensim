@@ -11,6 +11,7 @@ try:
     from sklearn.feature_extraction.text import CountVectorizer
     from sklearn.datasets import load_files
     from sklearn import linear_model
+    from sklearn.exceptions import NotFittedError
 except ImportError:
     raise unittest.SkipTest("Test requires scikit-learn to be installed, which is not available")
 
@@ -263,6 +264,20 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
         model_params = self.model.get_params()
         for key in param_dict.keys():
             self.assertEqual(model_params[key], param_dict[key])
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = list(corpus_ldaseq)[0]
+        transformed_vecs = model_load.transform(doc)
+        self.assertEqual(transformed_vecs.shape[0], 1)
+        self.assertEqual(transformed_vecs.shape[1], model_load.num_topics)
+
+    def testModelNotFitted(self):
+        ldaseq_wrapper = SklLdaSeqModel(num_topics=2)
+        doc = list(corpus_ldaseq)[0]
+        self.assertRaises(NotFittedError, ldaseq_wrapper.transform, doc)
 
 
 if __name__ == '__main__':
