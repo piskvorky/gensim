@@ -11,6 +11,7 @@ Follows scikit-learn API conventions
 
 import numpy as np
 from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.exceptions import NotFittedError
 
 from gensim import models
 from gensim.sklearn_integration import base_sklearn_wrapper
@@ -54,6 +55,9 @@ class SklRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         Take documents/corpus as input.
         Return RP representation of the input documents/corpus.
         """
+        if self.gensim_model is None:
+            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+
         # The input as array of array
         check = lambda x: [x] if isinstance(x[0], tuple) else x
         docs = check(docs)
@@ -70,4 +74,4 @@ class SklRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Base
         return np.reshape(np.array(X), (len(docs), self.num_topics))
 
     def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for the RandomProjections model")
+        raise NotImplementedError("'partial_fit' has not been implemented for SklRpModel")
