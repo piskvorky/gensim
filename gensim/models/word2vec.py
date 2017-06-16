@@ -1522,15 +1522,15 @@ class LineSentence(object):
 
 
 class LineSentencePath(object):
-	"""
-	Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
-	Like LineSentence, but will process all files in a directory in alphabetical order by filename
-	"""
+    """
+    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    Like LineSentence, but will process all files in a directory in alphabetical order by filename
+    """
 
-	def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
-	    """
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
+        """
         `source` should be a path to a directory (as a string) where all files can be opened by the
-		LineSentence class. Each file will be read up to
+        LineSentence class. Each file will be read up to
         `limit` lines (or no clipped if limit is None, the default).
 
         Example::
@@ -1545,27 +1545,24 @@ class LineSentencePath(object):
         self.limit = limit
 
         try:
+            self.source = os.path.join(source, '') # ensures os-specific slash is at end of path
+            logging.debug('reading directory ' + source)
             self.input_files = os.listdir(source)
         except OSError:
-            logging.WARNING('path input is not a path, attempting to read file with LineSentence')
-            return (LineSentence(source, self.max_sentence_lengeth, self.limit))
+            raise ValueError('input is a file, not a path, use word2vec.LineSentence')
         except NameError:
-            logging.ERROR('incorrect path specified')
-            raise ValueError('cannot parse path')
+            raise ValueError('input source is not a path')
 
         self.input_files = os.listdir(source)
         self.input_files.sort()  # makes sure it happens in filename order
 
     def __iter__(self):
-
         '''iterate through the files'''
-
-
         for file_name in self.input_files:
             logging.info('reading file ' + file_name + '\n')
-            with gensim.utils.smart_open(self.source + file_name) as fin:
+            with utils.smart_open(self.source + file_name) as fin:
                 for line in itertools.islice(fin, self.limit):
-                    line = gensim.utils.to_unicode(line).split()
+                    line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
                         yield line[i : i + self.max_sentence_length]
