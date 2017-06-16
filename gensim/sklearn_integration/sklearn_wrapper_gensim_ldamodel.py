@@ -12,6 +12,7 @@ follows on scikit learn API conventions
 import numpy as np
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.exceptions import NotFittedError
 
 from gensim import models
 from gensim import matutils
@@ -88,6 +89,9 @@ class SklLdaModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         Returns matrix of topic distribution for the given document bow, where a_ij
         indicates (topic_i, topic_probability_j).
         """
+        if self.gensim_model is None:
+            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+
         # The input as array of array
         check = lambda x: [x] if isinstance(x[0], tuple) else x
         docs = check(docs)
@@ -114,4 +118,12 @@ class SklLdaModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         if sparse.issparse(X):
             X = matutils.Sparse2Corpus(X)
 
+        if self.gensim_model is None:
+            self.gensim_model = models.LdaModel(num_topics=self.num_topics, id2word=self.id2word,
+                chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
+                alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
+                eval_every=self.eval_every, iterations=self.iterations, gamma_threshold=self.gamma_threshold,
+                minimum_probability=self.minimum_probability, random_state=self.random_state)
+
         self.gensim_model.update(corpus=X)
+        return self
