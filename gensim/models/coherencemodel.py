@@ -24,8 +24,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from gensim import interfaces
-from gensim.matutils import argsort
+from gensim import interfaces, matutils
 from gensim.topic_coherence import (segmentation, probability_estimation,
                                     direct_confirmation_measure, indirect_confirmation_measure,
                                     aggregation)
@@ -209,7 +208,7 @@ class CoherenceModel(interfaces.TransformationABC):
         else:
             raise ValueError("%s coherence is not currently supported.", coherence)
 
-        self.topn = topn
+        self._topn = topn
         self._model = model
         self._accumulator = None
         self._topics = None
@@ -233,12 +232,33 @@ class CoherenceModel(interfaces.TransformationABC):
             self._topics = new_topics
 
     @property
+    def topn(self):
+        return self._topn
+
+    @topn.setter
+    def topn(self, topn):
+        current_topic_length = len(self._topics[0])
+        requires_expansion = current_topic_length < topn
+
+        if self.model is not None:
+            self._topn = topn
+            if requires_expansion:
+                self.model = self._model  # trigger topic expansion from model
+        else:
+            if requires_expansion:
+                raise ValueError("Model unavailable and topic sizes are less than topn=%d" % topn)
+            self._topn = topn  # topics will be truncated in getter
+
+    @property
     def measure(self):
         return COHERENCE_MEASURES[self.coherence]
 
     @property
     def topics(self):
-        return self._topics
+        if len(self._topics[0]) > self._topn:
+            return [topic[:self._topn] for topic in self._topics]
+        else:
+            return self._topics
 
     @topics.setter
     def topics(self, topics):
@@ -279,7 +299,7 @@ class CoherenceModel(interfaces.TransformationABC):
         """Internal helper function to return topics from a trained topic model."""
         try:
             return [
-                argsort(topic, topn=self.topn, reverse=True) for topic in
+                matutils.argsort(topic, topn=self.topn, reverse=True) for topic in
                 self.model.get_topics()
             ]
         except AttributeError:
