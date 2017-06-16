@@ -276,6 +276,45 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertTrue(np.array_equal(topics, cm1.topics))
         self.assertIsNone(cm1._accumulator)
 
+    def testAccumulatorCachingWithTopnSettingGivenTopics(self):
+        kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, topn=5, coherence='u_mass')
+        cm1 = CoherenceModel(topics=self.topics1, **kwargs)
+        cm1.estimate_probabilities()
+        self.assertIsNotNone(cm1._accumulator)
+
+        accumulator = cm1._accumulator
+        topics_before = cm1._topics
+        cm1.topn = 3
+        self.assertEqual(accumulator, cm1._accumulator)
+        self.assertEqual(3, len(cm1.topics[0]))
+        self.assertEqual(topics_before, cm1._topics)
+
+        # Topics should not have been truncated, so topn settings below 5 should work
+        cm1.topn = 4
+        self.assertEqual(accumulator, cm1._accumulator)
+        self.assertEqual(4, len(cm1.topics[0]))
+        self.assertEqual(topics_before, cm1._topics)
+
+        with self.assertRaises(ValueError):
+            cm1.topn = 6  # can't expand topics any further without model
+
+    def testAccumulatorCachingWithTopnSettingGivenModel(self):
+        kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, topn=5, coherence='u_mass')
+        cm1 = CoherenceModel(model=self.ldamodel, **kwargs)
+        cm1.estimate_probabilities()
+        self.assertIsNotNone(cm1._accumulator)
+
+        accumulator = cm1._accumulator
+        topics_before = cm1._topics
+        cm1.topn = 3
+        self.assertEqual(accumulator, cm1._accumulator)
+        self.assertEqual(3, len(cm1.topics[0]))
+        self.assertEqual(topics_before, cm1._topics)
+
+        cm1.topn = 6  # should be able to expand given the model
+        self.assertIsNone(cm1._accumulator)  # should uncache due to missing terms in accumulator
+        self.assertEqual(6, len(cm1.topics[0]))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
