@@ -57,12 +57,6 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_similarities.tst.pkl')
 
 
-def testfile(test_fname=''):
-    # temporary data will be stored to this file
-    fname = 'gensim_models_' + test_fname + '.tst'
-    return os.path.join(tempfile.gettempdir(), fname)
-
-
 class _TestSimilarityABC(object):
     """
     Base class for SparseMatrixSimilarity and MatrixSimilarity unit tests.
@@ -521,7 +515,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def assertIndexSaved(self, index):
-        fname = testfile('index')
+        fname = testfile()
         index.save(fname)
         self.assertTrue(os.path.exists(fname))
         self.assertTrue(os.path.exists(fname + '.d'))
@@ -529,7 +523,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
     def assertLoadedIndexEqual(self, index, model):
         from gensim.similarities.index import AnnoyIndexer
 
-        fname = testfile('index')
+        fname = testfile()
         index.save(fname)
 
         index2 = AnnoyIndexer()
@@ -573,7 +567,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def testSave(self):
-        fname = testfile('index')
+        fname = testfile()
         self.index.save(fname)
         self.assertTrue(os.path.exists(fname))
         self.assertTrue(os.path.exists(fname + '.d'))
@@ -587,7 +581,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
     def testSaveLoad(self):
         from gensim.similarities.index import AnnoyIndexer
 
-        fname = testfile('index')
+        fname = testfile()
         self.index.save(fname)
 
         self.index2 = AnnoyIndexer()
