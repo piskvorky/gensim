@@ -578,13 +578,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         logger.info("%.3f coherence estimate based on a held-out corpus of %i documents with %i words", coherence, len(chunk), corpus_words)
         return coherence
 
-    def log_epoch_diff(self, epoch, other_model):
+    def log_epoch_diff(self, epoch, other_model, distance):
         """
         Log topic diff between consecutive epochs
         """
-        diff_matrix, annotation = self.diff(other_model)
+        diff_matrix, annotation = self.diff(other_model, distance)
         diff_diagonal = np.diagonal(diff_matrix)
-        logger.info("Topic difference between %i and %i epoch %s", epoch - 1, epoch, diff_diagonal)
+        prev_epoch = epoch - 1
+        if epoch == 0:
+            prev_epoch = "initial random model"
+        logger.info("Topic difference between %s and %s epoch: %s", prev_epoch, epoch, diff_diagonal)
         return diff_diagonal
 
     def update(self, corpus, chunksize=None, decay=None, offset=None,
@@ -760,7 +763,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 if pass_ == 0:
                     # save randomly initialized model for diff with first pass
                     previous = copy.deepcopy(self)
-                self.log_epoch_diff(pass_, previous)
+                self.log_epoch_diff(pass_, previous, distance)
                 previous = copy.deepcopy(self)
 
             if reallen != lencorpus:
