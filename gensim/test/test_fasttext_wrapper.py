@@ -216,21 +216,6 @@ class TestFastText(unittest.TestCase):
         self.assertEquals(new_model.wv.min_n, 3)
         self.model_sanity(new_model)
 
-    def testLoadBinOnly(self):
-        """ Compare the word vectors obtained from .vec file with word vectors obtained using all the
-            ngrams from .bin file """
-        model_bin_only = fasttext.FastText.load_fasttext_format(os.path.abspath(self.test_model_file), bin_only=True)
-        model = fasttext.FastText.load_fasttext_format(os.path.abspath(self.test_model_file))
-
-        self.assertEquals(len(model_bin_only.wv.syn0), len(model.wv.syn0))
-
-        for i in xrange(len(model_bin_only.wv.syn0)):
-
-            a = model_bin_only.wv.syn0[i]
-            b = model.wv.syn0[i]
-
-            self.assertTrue(numpy.allclose(a, b, atol=1e-3))
-
     def testLoadModelWithNonAsciiVocab(self):
         """Test loading model with non-ascii words in vocab"""
         model = fasttext.FastText.load_fasttext_format(datapath('non_ascii_fasttext'))
