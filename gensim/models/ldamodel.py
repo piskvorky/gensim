@@ -42,6 +42,7 @@ from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
 from gensim.matutils import kullback_leibler, hellinger, jaccard_distance
+from visdom import Visdom
 
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
@@ -197,8 +198,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf={}, minimum_phi_value=0.01,
-                 per_word_topics=False, log_diff=False, log_tensorboard=False,
-                 coherence='u_mass', distance="kulback_leibler", log_dir=None):
+                 per_word_topics=False, viz=False, coherence="u_mass", 
+                 distance="kulback_leibler", texts=None):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -242,15 +243,19 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         `random_state` can be a np.random.RandomState object or the seed for one
 
-        `log_diff` set to True to log topic diff between consecutive epochs
+        `viz` set True for visualizing LDA training stats in Visdom
 
-        `log_tensorboard` set to True to log training stats for tensorboard visualization
+        `coherence` measure to be used for Coherence plot visualization
 
-        `coherence` is the coherence measure for model coherence to use in tensorboard visualization
+        `distance` measure to be used for Diff plot visualization
 
-        `distance` is the distance measure for `diff` to use in tensorboard visualization
-
-        `log_dir` is the directory name to which Tensorboard log event files should be saved
+        `texts` : Tokenized texts. Needed if sliding_window_based coherence measures (c_v, c_uci, c_npmi) are chosen for visualization. eg::
+                texts = [['system', 'human', 'system', 'eps'],
+                             ['user', 'response', 'time'],
+                             ['trees'],
+                             ['graph', 'trees'],
+                             ['graph', 'minors', 'trees'],
+                             ['graph', 'minors', 'survey']]
 
         Example:
 
@@ -293,11 +298,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eval_every = eval_every
         self.minimum_phi_value = minimum_phi_value
         self.per_word_topics = per_word_topics
-        self.log_diff = log_diff
-        self.log_tensorboard = log_tensorboard
-        self.coherence = coherence
-        self.distance = distance
-        self.log_dir = log_dir
+        self.viz = viz
+        if self.viz:
+            self.coherence = coherence
+            self.distance = distance
+            self.texts = texts
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
@@ -547,18 +552,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
-    def log_epoch_diff(self, epoch, other_model):
-        """
-        Log topic diff between consecutive epochs
-        """
-        diff_matrix, annotation = self.diff(other_model)
-        diff_diagonal = np.diagonal(diff_matrix)
-        logger.info("Topic difference between %i and %i epoch %s", epoch - 1, epoch, diff_diagonal)
-        return diff_diagonal
-
     def update(self, corpus, chunksize=None, decay=None, offset=None, passes=None,
                update_every=None, eval_every=None, iterations=None, gamma_threshold=None,
-               chunks_as_numpy=False, log_diff=None, log_tensorboard=None, coherence=None, distance=None, log_dir=None):
+               chunks_as_numpy=False, viz=None, coherence=None, distance=None, texts=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -605,16 +601,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             iterations = self.iterations
         if gamma_threshold is None:
             gamma_threshold = self.gamma_threshold
-        if log_diff is None:
-            log_diff = self.log_diff
-        if log_tensorboard is None:
-            log_tensorboard = self.log_tensorboard
-        if coherence is None:
-            coherence = self.coherence
-        if distance is None:
-            distance = self.distance
-        if log_dir is None:
-            log_dir = self.log_dir
 
         try:
             lencorpus = len(corpus)
@@ -629,6 +615,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             chunksize = min(lencorpus, self.chunksize)
 
         self.state.numdocs += lencorpus
+
+        if viz is None:
+            viz = self.viz
+        if viz:
+            if coherence is None:
+                coherence = self.coherence
+            if texts is None:
+                texts = self.texts
+            if distance is None:
+                distance = self.distance
 
         if update_every:
             updatetype = "online"
@@ -663,15 +659,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         def rho():
             return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
 
-        if log_tensorboard is True:
-            # Install with `pip install tensorboard`
-            from tensorboard.summary import scalar
-            from tensorboard import FileWriter
-            from tensorboard import summary
-
-            # run tensorboard --logdir=path/to/log_dir to visualize logs
-            writer = FileWriter(log_dir)
-            # save randomly initialized model for diff with first pass
+        if self.viz:
+            viz_window = Visdom()
+            # save initial random state of model for Diff calculation with first epoch
             previous = copy.deepcopy(self)
 
         for pass_ in xrange(passes):
@@ -722,8 +712,41 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         other = LdaState(self.eta, self.state.sstats.shape)
                     dirty = False
             # endfor single corpus iteration
+
             if reallen != lencorpus:
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
+
+            if self.viz:
+                # calculate coherence
+                cm = gensim.models.CoherenceModel(model=self, corpus=corpus, texts=texts, coherence=coherence)
+                Coherence = np.array([cm.get_coherence()])
+
+                # calculate perplexity
+                corpus_words = sum(cnt for document in corpus for _, cnt in document)
+                perwordbound = self.bound(corpus) / corpus_words
+                Perplexity = np.array([np.exp2(-perwordbound)])
+
+                # calculate diff
+                diff_matrix = self.diff(previous, distance=distance)[0]
+                diff_diagonal = np.diagonal(diff_matrix)
+                previous = copy.deepcopy(self)
+                Convergence = np.array([np.sum(diff_diagonal)])
+
+                if pass_ == 0:
+                    # initial plot windows
+                    Diff_mat = np.array([diff_diagonal])
+                    viz_coherence = viz_window.line(Y=Coherence, X=np.array([pass_]), opts=dict(xlabel='Epochs', ylabel='Coherence', title='Coherence (%s)' % coherence))
+                    viz_perplexity = viz_window.line(Y=Perplexity, X=np.array([pass_]), opts=dict(xlabel='Epochs', ylabel='Perplexity', title='Perplexity'))
+                    viz_convergence = viz_window.line(Y=Convergence, X=np.array([pass_]), opts=dict(xlabel='Epochs', ylabel='Convergence', title='Convergence (%s)' % distance))
+                    viz_diff = viz_window.heatmap(X=np.array(Diff_mat).T, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % distance)) 
+
+                else:
+                    # update the plot with each epoch
+                    Diff_mat = np.concatenate((Diff_mat, np.array([diff_diagonal])))
+                    viz_window.updateTrace(Y=Coherence, X=np.array([pass_]), win=viz_coherence)
+                    viz_window.updateTrace(Y=Perplexity, X=np.array([pass_]), win=viz_perplexity)
+                    viz_window.updateTrace(Y=Convergence, X=np.array([pass_]), win=viz_convergence)
+                    viz_window.heatmap(X=np.array(Diff_mat).T, win=viz_diff, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % distance))
 
             if dirty:
                 # finish any remaining updates
@@ -734,46 +757,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self.do_mstep(rho(), other, pass_ > 0)
                 del other
                 dirty = False
-
-            # log diff between consecutive epochs
-            if log_diff is True:
-                if pass_ == 0:
-                    # save randomly initialized model for diff with first pass
-                    previous = copy.deepcopy(self)
-                self.log_epoch_diff(pass_, previous)
-                previous = copy.deepcopy(self)
-
-            # write current epoch parameters to tensorboard log directory
-            if log_tensorboard is True:
-                # write coherence log
-                cm = gensim.models.CoherenceModel(model=self, corpus=corpus, coherence=coherence)
-                coherence_summ = scalar('Coherence ' + coherence, cm.get_coherence())
-                writer.add_summary(coherence_summ, pass_ + 1)
-
-                # calculate perplexity
-                corpus_words = sum(cnt for document in corpus for _, cnt in document)
-                perwordbound = self.bound(corpus) / corpus_words
-
-                # write perplexity log
-                perplexity = scalar('Perplexity', np.exp2(-perwordbound))
-                writer.add_summary(perplexity, pass_ + 1)
-
-                # calculate diff
-                diff_matrix = self.diff(previous)[0]
-                diff_diagonal = np.diagonal(diff_matrix)
-                previous = copy.deepcopy(self)
-
-                # write diff log
-                hist = summary.histogram('Diff ' + distance, diff_diagonal)
-                writer.add_summary(hist, pass_ + 1)
-
-                # write topic convergence log
-                convergence = scalar('Convergence ' + distance, np.sum(diff_diagonal))
-                writer.add_summary(convergence, pass_ + 1)
-
-        if log_tensorboard is True:
-            writer.flush()
-            writer.close()
 
         # endfor entire corpus update
 
