@@ -100,24 +100,25 @@ class TextCorpus(interfaces.CorpusABC):
 
     def sample_texts(self, n, seed=None, length=None):
         """
-        Yields n random documents from the corpus without replacement.
+        Yield n random documents from the corpus without replacement.
 
-        Given the number of remaining documents in corpus, we need to choose n elements.
-        The probability for current element to be chosen is n/remaining.
+        Given the number of remaining documents in a corpus, we need to choose n elements.
+        The probability for the current element to be chosen is n/remaining.
         If we choose it, we just decreese the n and move to the next element.
-        Computing corpus length may be a costly operation so you can use optional paramter
-        length instead.
+        Computing the corpus length may be a costly operation so you can use the optional
+        parameter `length` instead.
 
         Args:
             n (int): number of documents we want to sample.
             seed (int|None): if specified, use it as a seed for local random generator.
-            length (int|None): if specified, use it as guess of corpus length.
+            length (int|None): if specified, use it as a guess of corpus length.
+                It must be positive and not greater than actual corpus length.
 
         Yeilds:
-            list[str]: document represented as list of tokens. See get_texts method.
+            list[str]: document represented as a list of tokens. See get_texts method.
 
         Raises:
-            ValueError: then n is invalid or length was set incorrectly.
+            ValueError: when n is invalid or length was set incorrectly.
         """
         random_generator = None
         if seed is None:
