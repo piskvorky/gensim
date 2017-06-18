@@ -265,6 +265,23 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
         for key in param_dict.keys():
             self.assertEqual(model_params[key], param_dict[key])
 
+    def testPipeline(self):
+        with open(datapath('mini_newsgroup'), 'rb') as f:
+            compressed_content = f.read()
+            uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
+            cache = pickle.loads(uncompressed_content)
+        data = cache
+        test_data = data.data[0:2]
+        test_target = data.target[0:2]
+        id2word = Dictionary(map(lambda x: x.split(), test_data))
+        corpus = [id2word.doc2bow(i.split()) for i in test_data]
+        model = SklLdaSeqModel(id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim')
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        text_lda = Pipeline((('features', model,), ('classifier', clf)))
+        text_lda.fit(corpus, test_target)
+        score = text_lda.score(corpus, test_target)
+        self.assertGreater(score, 0.50)
+
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
         model_load = pickle.loads(model_dump)
