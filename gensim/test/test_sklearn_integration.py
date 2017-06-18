@@ -163,9 +163,9 @@ class TestSklLsiModelWrapper(unittest.TestCase):
         id2word = Dictionary(map(lambda x: x.split(), data.data))
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_lda = Pipeline((('features', model,), ('classifier', clf)))
-        text_lda.fit(corpus, data.target)
-        score = text_lda.score(corpus, data.target)
+        text_lsi = Pipeline((('features', model,), ('classifier', clf)))
+        text_lsi.fit(corpus, data.target)
+        score = text_lsi.score(corpus, data.target)
         self.assertGreater(score, 0.50)
 
     def testSetGetParams(self):
