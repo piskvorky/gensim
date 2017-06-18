@@ -651,7 +651,7 @@ class HdpTopicFormatter(object):
                 logger.info(topic)
         else:
             topic = (topic_id, topic_terms)
-        
+
         # we only return the topic_terms
         return topic[1]
 
