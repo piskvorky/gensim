@@ -277,9 +277,9 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
         corpus = [id2word.doc2bow(i.split()) for i in test_data]
         model = SklLdaSeqModel(id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim')
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_lda = Pipeline((('features', model,), ('classifier', clf)))
-        text_lda.fit(corpus, test_target)
-        score = text_lda.score(corpus, test_target)
+        text_ldaseq = Pipeline((('features', model,), ('classifier', clf)))
+        text_ldaseq.fit(corpus, test_target)
+        score = text_ldaseq.score(corpus, test_target)
         self.assertGreater(score, 0.50)
 
     def testPersistence(self):
