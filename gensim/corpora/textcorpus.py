@@ -104,7 +104,7 @@ class TextCorpus(interfaces.CorpusABC):
 
         Given the number of remaining documents in a corpus, we need to choose n elements.
         The probability for the current element to be chosen is n/remaining.
-        If we choose it, we just decreese the n and move to the next element.
+        If we choose it, we just decrease the n and move to the next element.
         Computing the corpus length may be a costly operation so you can use the optional
         parameter `length` instead.
 
@@ -114,7 +114,7 @@ class TextCorpus(interfaces.CorpusABC):
             length (int|None): if specified, use it as a guess of corpus length.
                 It must be positive and not greater than actual corpus length.
 
-        Yeilds:
+        Yields:
             list[str]: document represented as a list of tokens. See get_texts method.
 
         Raises:
@@ -144,7 +144,7 @@ class TextCorpus(interfaces.CorpusABC):
                 yield sample
 
         if n != 0:
-            # This means that length was set to be smaller than nuber of items in stream.
+            # This means that length was set to be smaller than number of items in stream.
             raise ValueError("length smaller than number of documents in stream")
 
     def __len__(self):
