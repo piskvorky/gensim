@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class TestTextCorpus(unittest.TestCase):
     # TODO add tests for other methods
 
-    class DumyTextCorpus(TextCorpus):
+    class DummyTextCorpus(TextCorpus):
         def __init__(self):
             self.size = 10
             self.data = [["document%s" % i] for i in range(self.size)]
@@ -31,7 +31,7 @@ class TestTextCorpus(unittest.TestCase):
                 yield document
 
     def test_sample_text(self):
-        corpus = self.DumyTextCorpus()
+        corpus = self.DummyTextCorpus()
 
         sample1 = list(corpus.sample_texts(1))
         self.assertEqual(len(sample1), 1)
@@ -49,7 +49,7 @@ class TestTextCorpus(unittest.TestCase):
             list(corpus.sample_texts(-1))
 
     def test_sample_text_length(self):
-        corpus = self.DumyTextCorpus()
+        corpus = self.DummyTextCorpus()
         sample1 = list(corpus.sample_texts(1, length=1))
         self.assertEqual(sample1[0], ["document0"])
 
@@ -58,7 +58,7 @@ class TestTextCorpus(unittest.TestCase):
         self.assertEqual(sample2[1], ["document1"])
 
     def test_sample_text_seed(self):
-        corpus = self.DumyTextCorpus()
+        corpus = self.DummyTextCorpus()
         sample1 = list(corpus.sample_texts(5, seed=42))
         sample2 = list(corpus.sample_texts(5, seed=42))
         self.assertEqual(sample1, sample2)

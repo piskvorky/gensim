@@ -144,8 +144,9 @@ class TextCorpus(interfaces.CorpusABC):
                 yield sample
 
         if n != 0:
-            # This means that length was set to be smaller than number of items in stream.
-            raise ValueError("length smaller than number of documents in stream")
+            # This means that length was set to be greater than number of items in corpus
+            # and we were not able to sample enough documents before the stream ended.
+            raise ValueError("length greater than number of documents in corpus")
 
     def __len__(self):
         if not hasattr(self, 'length'):
