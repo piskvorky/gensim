@@ -233,9 +233,9 @@ class TestSklRpModelWrapper(unittest.TestCase):
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_lda = Pipeline((('features', model,), ('classifier', clf)))
-        text_lda.fit(corpus, data.target)
-        score = text_lda.score(corpus, data.target)
+        text_rp = Pipeline((('features', model,), ('classifier', clf)))
+        text_rp.fit(corpus, data.target)
+        score = text_rp.score(corpus, data.target)
         self.assertGreater(score, 0.40)
 
     def testPersistence(self):
