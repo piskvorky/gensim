@@ -52,7 +52,6 @@ install:
   # Install the build and runtime dependencies of the project.
     # Install the build and runtime dependencies of the project.
   - "%CMD_IN_ENV% pip install --timeout=60 --trusted-host 28daf2247a33ed269873-7b1aad3fab3cc330e1fd9d109892382a.r6.cf2.rackcdn.com -r continuous_integration/appveyor/requirements.txt"
-  - "%CMD_IN_ENV% pip install --timeout=60 --trusted-host 28daf2247a33ed269873-7b1aad3fab3cc330e1fd9d109892382a.r6.cf2.rackcdn.com ."
   - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
   - ps: "ls dist"
 
@@ -65,7 +64,6 @@ build: false
 test_script:
   # Change to a non-source folder to make sure we run the tests on the
   # installed library.
-  - "%CMD_IN_ENV% pip install --timeout=60 --trusted-host 28daf2247a33ed269873-7b1aad3fab3cc330e1fd9d109892382a.r6.cf2.rackcdn.com .[test]"
   - "mkdir empty_folder"
   - "cd empty_folder"
   - "pip install pyemd testfixtures unittest2 sklearn Morfessor==2.0.2a4"
