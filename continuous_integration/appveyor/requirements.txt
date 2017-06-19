@@ -7,12 +7,6 @@
 # fix the versions of numpy to force the use of numpy and scipy to use the whl
 # of the rackspace folder instead of trying to install from more recent
 # source tarball published on PyPI
-numpy==1.9.3
-scipy==0.16.0
-cython
-six >= 1.5.0
-smart_open >= 1.2.1
 nose
 wheel
 wheelhouse_uploader
-
