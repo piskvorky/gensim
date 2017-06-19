@@ -40,6 +40,7 @@ corpus = [dictionary.doc2bow(text) for text in texts]
 
 class TestSklLdaModelWrapper(unittest.TestCase):
     def setUp(self):
+        numpy.random.seed(0)  # set fixed seed to get similar values everytime
         self.model = SklLdaModel(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
         self.model.fit(corpus)
 
@@ -67,6 +68,7 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testCSRMatrixConversion(self):
+        numpy.random.seed(0)  # set fixed seed to get similar values everytime
         arr = numpy.array([[1, 2, 0], [0, 0, 3], [1, 0, 0]])
         sarr = sparse.csr_matrix(arr)
         newmodel = SklLdaModel(num_topics=2, passes=100)
@@ -133,6 +135,7 @@ class TestSklLdaModelWrapper(unittest.TestCase):
 
 class TestSklLsiModelWrapper(unittest.TestCase):
     def setUp(self):
+        numpy.random.seed(0)  # set fixed seed to get similar values everytime
         self.model = SklLsiModel(id2word=dictionary, num_topics=2)
         self.model.fit(corpus)
 
@@ -168,6 +171,7 @@ class TestSklLsiModelWrapper(unittest.TestCase):
         data = cache
         id2word = Dictionary(map(lambda x: x.split(), data.data))
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
+        numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         text_lsi = Pipeline((('features', model,), ('classifier', clf)))
         text_lsi.fit(corpus, data.target)
