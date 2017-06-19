@@ -62,9 +62,8 @@ class TestSklLdaModelWrapper(unittest.TestCase):
             self.model.partial_fit(X=corpus)  # fit against the model again
             doc = list(corpus)[0]  # transform only the first document
             transformed = self.model.transform(doc)
-            transformed_approx = matutils.sparse2full(transformed, 2)  # better approximation
-        expected = [0.87, 0.0]
-        passed = numpy.allclose(sorted(transformed_approx), sorted(expected), atol=1e-1)
+        expected = numpy.array([0.87, 0.13])
+        passed = numpy.allclose(sorted(transformed), sorted(expected), atol=1e-1)
         self.assertTrue(passed)
 
     def testCSRMatrixConversion(self):
@@ -74,7 +73,7 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         newmodel.fit(sarr)
         bow = [(0, 1), (1, 2), (2, 0)]
         transformed_vec = newmodel.transform(bow)
-        expected_vec = [0.35367903, 0.64632097]
+        expected_vec = numpy.array([0.35367903, 0.64632097])
         passed = numpy.allclose(sorted(transformed_vec), sorted(expected_vec), atol=1e-1)
         self.assertTrue(passed)
 
@@ -156,9 +155,8 @@ class TestSklLsiModelWrapper(unittest.TestCase):
             self.model.partial_fit(X=corpus)  # fit against the model again
             doc = list(corpus)[0]  # transform only the first document
             transformed = self.model.transform(doc)
-            transformed_approx = matutils.sparse2full(transformed, 2)  # better approximation
-        expected = [0, 9.99999996e-13]
-        passed = numpy.allclose(sorted(transformed_approx), sorted(expected), atol=1e-1)
+        expected = numpy.array([[1.39, 1e-12]])
+        passed = numpy.allclose(sorted(transformed), sorted(expected), atol=1)
         self.assertTrue(passed)
 
     def testPipeline(self):

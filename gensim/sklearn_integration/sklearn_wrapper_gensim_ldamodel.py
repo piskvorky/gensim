@@ -83,7 +83,7 @@ class SklLdaModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
             random_state=self.random_state)
         return self
 
-    def transform(self, docs, minimum_probability=None):
+    def transform(self, docs):
         """
         Takes as an list of input a documents (documents).
         Returns matrix of topic distribution for the given document bow, where a_ij
@@ -100,7 +100,7 @@ class SklLdaModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         X = [[] for _ in range(0, len(docs))]
 
         for k, v in enumerate(docs):
-            doc_topics = self.gensim_model.get_document_topics(v, minimum_probability=minimum_probability)
+            doc_topics = self.gensim_model[v]
             probs_docs = list(map(lambda x: x[1], doc_topics))
             # Everything should be equal in length
             if len(probs_docs) != self.num_topics:
