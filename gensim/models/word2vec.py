@@ -1517,7 +1517,7 @@ class LineSentence(object):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
-                        yield line[i : i + self.max_sentence_length]
+                        yield line[i:i + self.max_sentence_length]
                         i += self.max_sentence_length
 
 
@@ -1567,7 +1567,7 @@ class PathLineSentences(object):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
-                        yield line[i : i + self.max_sentence_length]
+                        yield line[i:i + self.max_sentence_length]
                         i += self.max_sentence_length
 
 

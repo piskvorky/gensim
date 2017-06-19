@@ -766,8 +766,8 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
 
     def testPathLineSentences(self):
         """Does PathLineSentences work with a path argument?"""
-        with utils.smart_open(os.path.join(datapath('PathLineSentences'),'1.txt')) as orig1,\
-        utils.smart_open(os.path.join(datapath('PathLineSentences'),'2.txt.bz2')) as orig2:
+        with utils.smart_open(os.path.join(datapath('PathLineSentences'), '1.txt')) as orig1,\
+        utils.smart_open(os.path.join(datapath('PathLineSentences'), '2.txt.bz2')) as orig2:
             sentences = word2vec.PathLineSentences(datapath('PathLineSentences'))
             orig = orig1.readlines() + orig2.readlines()
             orig_counter = 0  # to go through orig while matching PathLineSentences
