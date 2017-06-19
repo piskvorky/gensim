@@ -219,12 +219,6 @@ class FastText(Word2Vec):
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
         super(FastText, self).save(*args, **kwargs)
 
-    """
-    @classmethod
-    def load_word2vec_format(cls, *args, **kwargs):
-        return FastTextKeyedVectors.load_word2vec_format(*args, **kwargs)
-    """
-
     @classmethod
     def load_fasttext_format(cls, model_file, encoding='utf8'):
         """
@@ -301,9 +295,6 @@ class FastText(Word2Vec):
                 char_byte = file_handle.read(1)
             word = word_bytes.decode(encoding)
             count, _ = self.struct_unpack(file_handle, '@qb')
-
-            #if word != "__label__":
-
 
             if i == nwords and i < vocab_size:
                 """
