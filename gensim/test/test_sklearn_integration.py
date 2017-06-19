@@ -223,6 +223,7 @@ class TestSklRpModelWrapper(unittest.TestCase):
         self.assertEqual(model_params["num_topics"], 3)
 
     def testPipeline(self):
+        numpy.random.seed(0)  # set fixed seed to get similar values everytime
         model = SklRpModel(num_topics=2)
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()
