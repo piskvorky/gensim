@@ -764,11 +764,11 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
                 for words in sentences:
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
-    def testLineSentencePath(self):
+    def testPathLineSentences(self):
         """Does LineSentencePath work with a path argument?"""
         logging.debug(word2vec)
         with utils.smart_open(datapath('lee_background.cor')) as orig:
-            sentences = word2vec.LineSentencePath(datapath('LineSentencePath'))
+            sentences = word2vec.PathLineSentences(datapath('LineSentencePath'))
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
