@@ -777,7 +777,7 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
 
     def testPathLineSentencesOneFile(self):
         """Does PathLineSentences work with a single file argument?"""
-        test_file = os.path.join(datapath('PathLineSentences'),'1.txt')
+        test_file = os.path.join(datapath('PathLineSentences'), '1.txt')
         with utils.smart_open(test_file) as orig:
             sentences = word2vec.PathLineSentences(test_file)
             for words in sentences:
