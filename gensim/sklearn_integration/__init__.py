@@ -8,3 +8,10 @@ Contains various gensim based implementations which match with scikit-learn stan
 See [1] for complete set of conventions.
 [1] http://scikit-learn.org/stable/developers/
 """
+
+
+from .base_sklearn_wrapper import BaseSklearnWrapper
+from .sklearn_wrapper_gensim_ldamodel import SklearnWrapperLdaModel
+from .sklearn_wrapper_gensim_lsimodel import SklearnWrapperLsiModel
+from .sklearn_wrapper_gensim_rpmodel import SklRpModel
+from .sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel
