@@ -16,7 +16,7 @@ import tempfile
 import itertools
 import bz2
 import sys
-
+sys.path.insert(0, 'f:\\dev\\gensim-contrib\\line_sentence_path\\gensim\\')
 import numpy as np
 
 from gensim import utils, matutils
@@ -767,10 +767,14 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
     def testPathLineSentences(self):
         """Does LineSentencePath work with a path argument?"""
         logging.debug(word2vec)
-        with utils.smart_open(datapath('lee_background.cor')) as orig:
-            sentences = word2vec.PathLineSentences(datapath('LineSentencePath'))
+        with utils.smart_open(os.path.join(datapath('PathLineSentences'),'1.txt')) as orig1,\
+        utils.smart_open(os.path.join(datapath('PathLineSentences'),'2.txt.bz2')) as orig2:
+            sentences = word2vec.PathLineSentences(datapath('PathLineSentences'))
+            orig = orig1.readlines() + orig2.readlines()
+            orig_counter = 0  # to go through orig while matching PathLineSentences
             for words in sentences:
-                self.assertEqual(words, utils.to_unicode(orig.readline()).split())
+                self.assertEqual(words, utils.to_unicode(orig[orig_counter]).split())
+                orig_counter += 1
 
 #endclass TestWord2VecSentenceIterators
 
