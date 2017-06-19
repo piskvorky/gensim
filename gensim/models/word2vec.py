@@ -1545,7 +1545,7 @@ class PathLineSentences(object):
         self.limit = limit
 
         try:
-            self.source = os.path.join(source, '') # ensures os-specific slash is at end of path
+            self.source = os.path.join(source, '')  # ensures os-specific slash is at end of path
             logging.debug('reading directory ' + source)
             self.input_files = os.listdir(source)
         except OSError:
