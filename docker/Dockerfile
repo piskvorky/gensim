@@ -19,13 +19,15 @@ RUN apt-get update \
     python3=3.5.1-3 \
     python3-pip=8.1.1-2ubuntu0.4 \
     python3-setuptools=20.7.0-1 \
+    python \
+    python-pip \
+    python-setuptools \
     unzip=6.0-20ubuntu1 \
     wget=1.17.1-1ubuntu1.1 \
     subversion \
     locales \
     libopenblas-dev \
     libboost-program-options-dev \
-    libboost-python-dev \
     zlib1g-dev
 
 # Setup python language
@@ -34,34 +36,34 @@ ENV LANG en_US.UTF-8
 ENV LC_CTYPE en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 
-# Make some symlinks
-RUN cd /usr/bin \
-    && ln -s easy_install3 easy_install \
-    && ln -s pip3 pip
-
 # Upgrade pip
-RUN pip install --upgrade pip
+RUN pip2 install --upgrade pip
+RUN pip3 install --upgrade pip
 
 # Install dependencies
-RUN pip install \
-    annoy==1.8.3 \
+RUN pip2 install \
     cython==0.25.2 \
     jupyter==1.0.0 \
     matplotlib==2.0.0 \
-    morfessor==2.0.2a4 \
     nltk==3.2.2 \
     pandas==0.19.2 \
-    pyemd==0.4.3 \
-    scikit-learn==0.18.1 \
-    testfixtures \
-    unittest2 \
+    git+https://github.com/mila-udem/fuel.git@stable \
+    git+https://github.com/mila-udem/blocks.git@stable \
+    -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
+
+RUN pip3 install \
+    cython==0.25.2 \
+    jupyter==1.0.0 \
+    matplotlib==2.0.0 \
+    nltk==3.2.2 \
+    pandas==0.19.2 \
     git+https://github.com/mila-udem/fuel.git@stable \
     git+https://github.com/mila-udem/blocks.git@stable \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
 # Create gensim directory and dependencies directory
 RUN mkdir /gensim \
-    && mkdir /gensim_dependencies
+    && mkdir /gensim/gensim_dependencies
 
 # Download gensim from Github
 RUN mkdir /gensim/download \
@@ -71,60 +73,66 @@ RUN mkdir /gensim/download \
     && mv ./gensim-$GENSIM_BRANCH/* /gensim \
     && rm -rf /gensim/download \
     && cd /gensim \
-    && python setup.py install
+    && pip2 install .[test] \
+    && pip3 install .[test] \
+    && python2 setup.py install \
+    && python3 setup.py install
 
 # Set ENV variables for wrappers
 ENV FT_HOME gensim_dependencies/fastText
 ENV WR_HOME gensim_dependencies/wordrank
 ENV MALLET_HOME gensim_dependencies/mallet
-ENV DTM_PATH gensim_dependencies/dtm/bin/dtm-linux64
+ENV DTM_PATH gensim_dependencies/dtm/dtm/main
 ENV VOWPAL_WABBIT_PATH gensim_dependencies/vowpal_wabbit/vowpalwabbit/vw
 
 # Install custom dependencies
 
 # Install fastText
-RUN cd /gensim_dependencies \
+RUN cd /gensim/gensim_dependencies \
     && git clone https://github.com/facebookresearch/fastText.git \
-    && cd /gensim_dependencies/fastText \
+    && cd /gensim/gensim_dependencies/fastText \
     && make
 
 # Install WordRank
-RUN cd /gensim_dependencies \
+RUN cd /gensim/gensim_dependencies \
     && git clone https://bitbucket.org/shihaoji/wordrank \
-    && cp /gensim/docker/wordrank_install.sh /gensim_dependencies/wordrank/install.sh \
-    && cd /gensim_dependencies/wordrank \
+    && cp /gensim/docker/wordrank_install.sh /gensim/gensim_dependencies/wordrank/install.sh \
+    && cd /gensim/gensim_dependencies/wordrank \
     && sh ./install.sh
 
 # Install MorphologicalPriorsForWordEmbeddings
-RUN cd /gensim_dependencies \
+RUN cd /gensim/gensim_dependencies \
     && git clone https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings.git
 
 # Install DTM
-RUN cd /gensim_dependencies \
-    && git clone https://github.com/magsilva/dtm.git
+RUN cd /gensim/gensim_dependencies \
+    && git clone https://github.com/blei-lab/dtm.git \
+    && cd /gensim/gensim_dependencies/dtm/dtm \
+    && make
 
 # Install Mallet
-RUN mkdir /gensim_dependencies/mallet \
-    && mkdir /gensim_dependencies/download \
-    && cd /gensim_dependencies/download \
+RUN mkdir /gensim/gensim_dependencies/mallet \
+    && mkdir /gensim/gensim_dependencies/download \
+    && cd /gensim/gensim_dependencies/download \
     && wget --quiet http://mallet.cs.umass.edu/dist/mallet-2.0.8.zip \
     && unzip mallet-2.0.8.zip \
-    && mv ./mallet-2.0.8/* /gensim_dependencies/mallet \
-    && rm -rf /gensim_dependencies/download \
-    && cd /gensim_dependencies/mallet \
+    && mv ./mallet-2.0.8/* /gensim/gensim_dependencies/mallet \
+    && rm -rf /gensim/gensim_dependencies/download \
+    && cd /gensim/gensim_dependencies/mallet \
     && ant
 
 # Install Vowpal wabbit
-RUN cd /gensim_dependencies \
+RUN cd /gensim/gensim_dependencies \
     && git clone https://github.com/JohnLangford/vowpal_wabbit.git \
-    && cd /gensim_dependencies/vowpal_wabbit \
+    && cd /gensim/gensim_dependencies/vowpal_wabbit \
     && make \
     && make install
 
 # Start gensim
 
 # Run check script
-RUN python /gensim/docker/check_fast_version.py
+RUN python2 /gensim/docker/check_fast_version.py
+RUN python3 /gensim/docker/check_fast_version.py
 
 # Add running permission to startup script
 RUN chmod +x /gensim/docker/start_jupyter_notebook.sh
