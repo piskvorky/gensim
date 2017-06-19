@@ -1544,23 +1544,25 @@ class PathLineSentences(object):
         self.max_sentence_length = max_sentence_length
         self.limit = limit
 
-        try:
-            self.source = os.path.join(source, '')  # ensures os-specific slash is at end of path
-            logging.debug('reading directory ' + source)
-            self.input_files = os.listdir(source)
-        except OSError:
-            raise ValueError('input is a file, not a path, use word2vec.LineSentence')
-        except NameError:
-            raise ValueError('input source is not a path')
+        if os.path.isfile(self.source):
+            logging.warning('single file read, better to use models.word2vec.LineSentence')
+            self.input_files = [self.source]  # force code compatibility with list of files
+        elif os.path.isdir(self.source):
+            self.source = os.path.join(self.source, '')  # ensures os-specific slash at end of path
+            logging.debug('reading directory ' + self.source)
+            self.input_files = os.listdir(self.source)
+            self.input_files = [self.source + file for file in self.input_files]  # make full paths
+            self.input_files.sort()  # makes sure it happens in filename order
+        else:  # not a file or a directory, then we can't do anything with it
+            raise ValueError('input is neither a file nor a path')
 
-        self.input_files = os.listdir(source)
-        self.input_files.sort()  # makes sure it happens in filename order
+        logging.info('files read into PathLineSentences:' + '\n'.join(self.input_files))
 
     def __iter__(self):
         '''iterate through the files'''
         for file_name in self.input_files:
-            logging.info('reading file ' + file_name + '\n')
-            with utils.smart_open(self.source + file_name) as fin:
+            logging.info('reading file ' + file_name)
+            with utils.smart_open(file_name) as fin:
                 for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0

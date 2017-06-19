@@ -16,7 +16,7 @@ import tempfile
 import itertools
 import bz2
 import sys
-sys.path.insert(0, 'f:\\dev\\gensim-contrib\\line_sentence_path\\gensim\\')
+
 import numpy as np
 
 from gensim import utils, matutils
@@ -765,8 +765,7 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
     def testPathLineSentences(self):
-        """Does LineSentencePath work with a path argument?"""
-        logging.debug(word2vec)
+        """Does PathLineSentences work with a path argument?"""
         with utils.smart_open(os.path.join(datapath('PathLineSentences'),'1.txt')) as orig1,\
         utils.smart_open(os.path.join(datapath('PathLineSentences'),'2.txt.bz2')) as orig2:
             sentences = word2vec.PathLineSentences(datapath('PathLineSentences'))
@@ -775,6 +774,15 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig[orig_counter]).split())
                 orig_counter += 1
+
+    def testPathLineSentencesOneFile(self):
+        """Does PathLineSentences work with a single file argument?"""
+        test_file = os.path.join(datapath('PathLineSentences'),'1.txt')
+        with utils.smart_open(test_file) as orig:
+            sentences = word2vec.PathLineSentences(test_file)
+            for words in sentences:
+                self.assertEqual(words, utils.to_unicode(orig.readline()).split())
+
 
 #endclass TestWord2VecSentenceIterators
 
