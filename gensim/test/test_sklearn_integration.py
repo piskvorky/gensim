@@ -112,10 +112,18 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         model_load = pickle.loads(model_dump)
 
         texts_new = ['graph', 'eulerian']
-        bow = model_load.id2word.doc2bow(texts_new)
-        matrix = model_load.transform(bow)
-        self.assertEqual(matrix.shape[0], 1)
-        self.assertEqual(matrix.shape[1], model_load.num_topics)
+        loaded_bow = model_load.id2word.doc2bow(texts_new)
+        loaded_matrix = model_load.transform(loaded_bow)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_matrix.shape[0], 1)
+        self.assertEqual(loaded_matrix.shape[1], model_load.num_topics)
+
+        # comparing the original and loaded models
+        original_bow = self.model.id2word.doc2bow(texts_new)
+        original_matrix = self.model.transform(original_bow)
+        passed = numpy.allclose(sorted(loaded_matrix), sorted(original_matrix), atol=1e-1)
+        self.assertTrue(passed)
 
     def testModelNotFitted(self):
         lda_wrapper = SklLdaModel(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
@@ -186,10 +194,18 @@ class TestSklLsiModelWrapper(unittest.TestCase):
         model_load = pickle.loads(model_dump)
 
         texts_new = ['graph', 'eulerian']
-        bow = model_load.id2word.doc2bow(texts_new)
-        matrix = model_load.transform(bow)
-        self.assertEqual(matrix.shape[0], 1)
-        self.assertEqual(matrix.shape[1], model_load.num_topics)
+        loaded_bow = model_load.id2word.doc2bow(texts_new)
+        loaded_matrix = model_load.transform(loaded_bow)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_matrix.shape[0], 1)
+        self.assertEqual(loaded_matrix.shape[1], model_load.num_topics)
+
+        # comparing the original and loaded models
+        original_bow = self.model.id2word.doc2bow(texts_new)
+        original_matrix = self.model.transform(original_bow)
+        passed = numpy.allclose(sorted(loaded_matrix), sorted(original_matrix), atol=1e-1)
+        self.assertTrue(passed)
 
     def testModelNotFitted(self):
         lsi_wrapper = SklLsiModel(id2word=dictionary, num_topics=2)
