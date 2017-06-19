@@ -243,9 +243,16 @@ class TestSklRpModelWrapper(unittest.TestCase):
         model_load = pickle.loads(model_dump)
 
         doc = list(self.corpus)[0]
-        transformed_vecs = model_load.transform(doc)
-        self.assertEqual(transformed_vecs.shape[0], 1)
-        self.assertEqual(transformed_vecs.shape[1], model_load.num_topics)
+        loaded_transformed_vecs = model_load.transform(doc)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_transformed_vecs.shape[0], 1)
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.num_topics)
+
+        # comparing the original and loaded models
+        original_transformed_vecs = self.model.transform(doc)
+        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        self.assertTrue(passed)
 
     def testModelNotFitted(self):
         rpmodel_wrapper = SklRpModel(num_topics=2)
