@@ -1521,7 +1521,7 @@ class LineSentence(object):
                         i += self.max_sentence_length
 
 
-class LineSentencePath(object):
+class PathLineSentences(object):
     """
     Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
     Like LineSentence, but will process all files in a directory in alphabetical order by filename
