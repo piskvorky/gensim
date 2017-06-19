@@ -266,6 +266,7 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
             self.assertEqual(model_params[key], param_dict[key])
 
     def testPipeline(self):
+        numpy.random.seed(0)  # set fixed seed to get similar values everytime
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
