@@ -79,7 +79,9 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
 
         word_a = 'graph'
         word_b = 'trees'
-        output = model.predict([np.asarray([keras_w2v_model.wv.vocab[word_a].index]), np.asarray([keras_w2v_model.wv.vocab[word_b].index])])    # output is the cosine distance between the two words (as a similarity measure)
+        output = model.predict([np.asarray([keras_w2v_model.wv.vocab[word_a].index]), np.asarray([keras_w2v_model.wv.vocab[word_b].index])])
+        # output is the cosine distance between the two words (as a similarity measure)
+
         self.assertTrue(type(output[0][0][0]) == np.float32)     # verify that  a float is returned
 
     def testEmbeddingLayer20NewsGroup(self):
