@@ -69,6 +69,8 @@ from six import iteritems, string_types, next
 
 from gensim import utils, interfaces
 
+from joblib import Parallel, delayed
+
 logger = logging.getLogger(__name__)
 
 
@@ -95,6 +97,30 @@ def _is_single(obj):
         # If the first item isn't a string, assume obj is a corpus
         return False, obj_iter
 
+def count_vocab(sentence_no, sentence, max_vocab_size, delimiter=b'_', progress_per=1000):
+    #logger.info(sentence_no)
+    #for sentence_no, sentence in enumerate(sentences):
+    if sentence_no % progress_per == 0:
+        logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
+                    (sentence_no, total_words, len(vocab)))
+    sentence = [utils.any2utf8(w) for w in sentence]
+    for bigram in zip(sentence, sentence[1:]):
+        vocab[bigram[0]] += 1
+        vocab[delimiter.join(bigram)] += 1
+        total_words += 1
+
+    if sentence:  # add last word skipped by previous loop
+        word = sentence[-1]
+        vocab[word] += 1
+
+    if len(vocab) > max_vocab_size:
+        utils.prune_vocab(vocab, min_reduce)
+        min_reduce += 1
+
+    logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
+                (len(vocab), total_words, sentence_no + 1))
+    return min_reduce, vocab
+
 
 class Phrases(interfaces.TransformationABC):
     """
@@ -106,7 +132,7 @@ class Phrases(interfaces.TransformationABC):
 
     """
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
-                 max_vocab_size=40000000, delimiter=b'_', progress_per=10000):
+                 max_vocab_size=40000000, delimiter=b'_', progress_per=1000):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -149,6 +175,7 @@ class Phrases(interfaces.TransformationABC):
         self.progress_per = progress_per
 
         if sentences is not None:
+            # Parallel(n_jobs=1, backend="multiprocessing")(delayed(self.add_vocab(sentences)))
             self.add_vocab(sentences)
 
     def __str__(self):
@@ -157,14 +184,19 @@ class Phrases(interfaces.TransformationABC):
             self.__class__.__name__, len(self.vocab), self.min_count,
             self.threshold, self.max_vocab_size)
 
+    
     @staticmethod
-    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
+    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=1000):
         """Collect unigram/bigram counts from the `sentences` iterable."""
         sentence_no = -1
         total_words = 0
         logger.info("collecting all words and their counts")
         vocab = defaultdict(int)
         min_reduce = 1
+        Parallel(n_jobs= -1, backend="multiprocessing")\
+        (delayed (count_vocab)(sentence_no, sentence, max_vocab_size, delimiter=b'_', progress_per=1000) for sentence_no, sentence in enumerate(sentences))
+        
+        """
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
@@ -185,7 +217,7 @@ class Phrases(interfaces.TransformationABC):
 
         logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
                     (len(vocab), total_words, sentence_no + 1))
-        return min_reduce, vocab
+        return min_reduce, vocab"""
 
     def add_vocab(self, sentences):
         """
