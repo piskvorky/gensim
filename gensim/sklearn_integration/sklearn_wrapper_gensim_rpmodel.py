@@ -14,10 +14,10 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
-from gensim.sklearn_integration import base_sklearn_wrapper
+from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class SklRpModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class SklRpModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base RP module
     """
