@@ -15,10 +15,11 @@ try:
 except ImportError:
     raise unittest.SkipTest("Test requires scikit-learn to be installed, which is not available")
 
+from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import SklRpModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklLdaModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklLsiModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel
-from gensim.corpora import Dictionary
+from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
@@ -326,6 +327,73 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
         ldaseq_wrapper = SklLdaSeqModel(num_topics=2)
         doc = list(corpus_ldaseq)[0]
         self.assertRaises(NotFittedError, ldaseq_wrapper.transform, doc)
+
+
+class TestSklRpModelWrapper(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(13)
+        self.model = SklRpModel(num_topics=2)
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.model.fit(self.corpus)
+
+    def testTransform(self):
+        # tranform two documents
+        docs = []
+        docs.append(list(self.corpus)[0])
+        docs.append(list(self.corpus)[1])
+        matrix = self.model.transform(docs)
+        self.assertEqual(matrix.shape[0], 2)
+        self.assertEqual(matrix.shape[1], self.model.num_topics)
+
+        # tranform one document
+        doc = list(self.corpus)[0]
+        matrix = self.model.transform(doc)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], self.model.num_topics)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
+
+    def testPipeline(self):
+        numpy.random.seed(0)  # set fixed seed to get similar values everytime
+        model = SklRpModel(num_topics=2)
+        with open(datapath('mini_newsgroup'), 'rb') as f:
+            compressed_content = f.read()
+            uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
+            cache = pickle.loads(uncompressed_content)
+        data = cache
+        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        corpus = [id2word.doc2bow(i.split()) for i in data.data]
+        numpy.random.mtrand.RandomState(1)  # set seed for getting same result
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        text_rp = Pipeline((('features', model,), ('classifier', clf)))
+        text_rp.fit(corpus, data.target)
+        score = text_rp.score(corpus, data.target)
+        self.assertGreater(score, 0.40)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = list(self.corpus)[0]
+        loaded_transformed_vecs = model_load.transform(doc)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_transformed_vecs.shape[0], 1)
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.num_topics)
+
+        # comparing the original and loaded models
+        original_transformed_vecs = self.model.transform(doc)
+        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        self.assertTrue(passed)
+
+    def testModelNotFitted(self):
+        rpmodel_wrapper = SklRpModel(num_topics=2)
+        doc = list(self.corpus)[0]
+        self.assertRaises(NotFittedError, rpmodel_wrapper.transform, doc)
 
 
 if __name__ == '__main__':
