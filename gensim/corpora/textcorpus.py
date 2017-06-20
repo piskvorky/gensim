@@ -33,13 +33,14 @@ import logging
 import os
 import re
 import sys
+import random
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
 from gensim.parsing.preprocessing import STOPWORDS, strip_multiple_whitespaces
 from gensim.utils import deaccent, simple_tokenize
 
-logger = logging.getLogger('gensim.corpora.textcorpus')
+logger = logging.getLogger(__name__)
 
 
 def remove_stopwords(tokens, stopwords=STOPWORDS):
@@ -182,6 +183,28 @@ class TextCorpus(interfaces.CorpusABC):
         else:
             for line in lines:
                 yield self.preprocess_text(line)
+
+    def sample_texts(self, n):
+        """
+        Yield n random texts from the corpus without replacement.
+
+        Given the the number of remaingin elements in stream is remaining and we need
+        to choose n elements, the probability for current element to be chosen is n/remaining.
+        If we choose it, we just decreese the n and move to the next element.
+        """
+        length = len(self)
+        if not n <= length:
+            raise ValueError("sample larger than population")
+
+        if not 0 <= n:
+            raise ValueError("negative sample size")
+
+        for i, sample in enumerate(self.get_texts()):
+            remaining_in_stream = length - i
+            chance = random.randint(1, remaining_in_stream)
+            if chance <= n:
+                n -= 1
+                yield sample
 
     def __len__(self):
         if not hasattr(self, 'length'):

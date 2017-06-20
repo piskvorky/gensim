@@ -205,7 +205,7 @@ When `citing gensim in academic papers and theses <https://scholar.google.cz/cit
         month = May,
         day = 22,
         publisher = {ELRA},
-        address = {Valletta, Malta}, 
+        address = {Valletta, Malta},
         language={English}
   }
 
@@ -233,6 +233,8 @@ test_env = [
     'scikit-learn',
     'pyemd',
     'annoy',
+    'tensorflow >= 1.1.0',
+    'keras >= 2.0.4',
 ]
 
 setup(
