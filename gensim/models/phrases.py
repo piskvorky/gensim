@@ -170,7 +170,7 @@ class Phrases(interfaces.TransformationABC):
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
 
-            sentence = [w for w in (utils.any2utf8('_'.join(sentence)).split('_'))]
+            sentence = [w for w in (utils.any2utf8(u'_'.join(sentence)).split('_'))]
 
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
@@ -229,7 +229,7 @@ class Phrases(interfaces.TransformationABC):
             then you can debug the threshold with generated tsv
         """
         for sentence in sentences:
-            s = [w for w in (utils.any2utf8('_'.join(sentence)).split('_'))]
+            s = [w for w in (utils.any2utf8(u'_'.join(sentence)).split('_'))]
             last_bigram = False
             vocab = self.vocab
             threshold = self.threshold
