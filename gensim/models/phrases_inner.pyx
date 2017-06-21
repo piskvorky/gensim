@@ -5,13 +5,6 @@
 
 # Author: Prakhar Pratyush (er.prakhar2b@gmail.com)
 
-import cython
-import numpy as np
-cimport numpy as np
-#ctypedef np.float32_t REAL_t
-
-REAL = np.float32
-
 import sys
 import os
 import logging
@@ -20,7 +13,16 @@ import warnings
 from gensim import utils
 from collections import defaultdict
 
+import cython
+import numpy as np
+cimport numpy as np
+
+# ctypedef np.float32_t REAL_t
+
+REAL = np.float32
+
 logger = logging.getLogger(__name__)
+
 
 def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
 
@@ -31,7 +33,7 @@ def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
 
     logger.info("collecting all words and their counts")
     cdef vocab = defaultdict(int)
-    
+
     cdef int min_reduce = -1
 
     cdef list sentence = []
@@ -48,7 +50,7 @@ def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
             total_words += 1
 
         if sentence:  # add last word skipped by previous loop
-            word = sentence[-1] 
+            word = sentence[-1]
             vocab[word] += 1
 
         len_vocab = len(vocab)
