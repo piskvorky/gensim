@@ -16,10 +16,10 @@ from sklearn.exceptions import NotFittedError
 
 from gensim import models
 from gensim import matutils
-from gensim.sklearn_integration import base_sklearn_wrapper
+from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class SklLdaModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """
@@ -64,6 +64,7 @@ class SklLdaModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         Set all parameters.
         """
         super(SklLdaModel, self).set_params(**parameters)
+        return self
 
     def fit(self, X, y=None):
         """

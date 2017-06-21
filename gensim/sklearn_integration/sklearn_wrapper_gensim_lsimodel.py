@@ -16,10 +16,10 @@ from sklearn.exceptions import NotFittedError
 
 from gensim import models
 from gensim import matutils
-from gensim.sklearn_integration import base_sklearn_wrapper
+from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class SklLsiModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class SklLsiModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LSI module
     """
@@ -51,6 +51,7 @@ class SklLsiModel(base_sklearn_wrapper.BaseSklearnWrapper, TransformerMixin, Bas
         Set all parameters.
         """
         super(SklLsiModel, self).set_params(**parameters)
+        return self
 
     def fit(self, X, y=None):
         """
