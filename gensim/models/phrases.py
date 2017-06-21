@@ -281,7 +281,6 @@ class Phrases(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        #s, new_s = [w for w in (utils.any2utf8('_'.join(w for w in sentence)).split('_'))], []
         s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
         vocab = self.vocab
@@ -371,7 +370,6 @@ class Phraser(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        #s, new_s = [w for w in (utils.any2utf8(u'_'.join(w for w in sentence)).split('_'))], []
         s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
         phrasegrams = self.phrasegrams
