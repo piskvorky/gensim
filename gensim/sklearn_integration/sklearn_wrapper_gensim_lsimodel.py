@@ -51,6 +51,7 @@ class SklLsiModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         Set all parameters.
         """
         super(SklLsiModel, self).set_params(**parameters)
+        return self
 
     def fit(self, X, y=None):
         """

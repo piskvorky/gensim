@@ -64,6 +64,7 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         Set all parameters.
         """
         super(SklLdaModel, self).set_params(**parameters)
+        return self
 
     def fit(self, X, y=None):
         """
