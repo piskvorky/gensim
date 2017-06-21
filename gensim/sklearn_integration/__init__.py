@@ -10,8 +10,8 @@ See [1] for complete set of conventions.
 """
 
 
-from .base_sklearn_wrapper import BaseSklearnWrapper
-from .sklearn_wrapper_gensim_ldamodel import SklLdaModel
-from .sklearn_wrapper_gensim_lsimodel import SklLsiModel
-from .sklearn_wrapper_gensim_rpmodel import SklRpModel
-from .sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel
+from .base_sklearn_wrapper import BaseSklearnWrapper  # noqa: F401
+from .sklearn_wrapper_gensim_ldamodel import SklLdaModel  # noqa: F401
+from .sklearn_wrapper_gensim_lsimodel import SklLsiModel  # noqa: F401
+from .sklearn_wrapper_gensim_rpmodel import SklRpModel  # noqa: F401
+from .sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel  # noqa: F401
