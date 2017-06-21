@@ -169,8 +169,8 @@ class Phrases(interfaces.TransformationABC):
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
-            # sentence = [utils.any2utf8(w) for w in sentence]
-            # Unicode tokens in dictionary (not utf8)
+
+            sentence = [w for w in (utils.any2utf8('_'.join(w for w in sentence)).split('_'))]
 
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
@@ -229,8 +229,7 @@ class Phrases(interfaces.TransformationABC):
             then you can debug the threshold with generated tsv
         """
         for sentence in sentences:
-            # s = [utils.any2utf8(w) for w in sentence]
-            s = sentence
+            s = [w for w in (utils.any2utf8('_'.join(w for w in sentence)).split('_'))]
             last_bigram = False
             vocab = self.vocab
             threshold = self.threshold
@@ -282,8 +281,8 @@ class Phrases(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        # s, new_s = [utils.any2utf8(w) for w in sentence], []
-        s, new_s = list(sentence), []
+        #s, new_s = [w for w in (utils.any2utf8('_'.join(w for w in sentence)).split('_'))], []
+        s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
         vocab = self.vocab
         threshold = self.threshold
@@ -372,8 +371,8 @@ class Phraser(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        # s, new_s = [utils.any2utf8(w) for w in sentence], []
-        s, new_s = list(sentence), []
+        #s, new_s = [w for w in (utils.any2utf8(u'_'.join(w for w in sentence)).split('_'))], []
+        s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
         phrasegrams = self.phrasegrams
         delimiter = self.delimiter

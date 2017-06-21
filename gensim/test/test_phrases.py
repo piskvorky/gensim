@@ -166,21 +166,6 @@ class TestPhrasesModel(unittest.TestCase):
         bigram = Phrases(sentences, max_vocab_size=5)
         self.assertTrue(len(bigram.vocab) <= 5)
 
-    def testSaveLoad(self):
-        bigram = Phrases(sentences, max_vocab_size=5)
-        try:
-            bigram.save('./phrase')
-        except Exception as exc:
-            self.fail('Unable to save bigram. %s' % exc)
-
-
-        try:
-            bigram.load('./phrase')
-        except Exception as exc:
-            self.fail('Unable to load bigram. %s' % exc)
-
-        # TO-DO : - post data cleanup
-
 #endclass TestPhrasesModel
 
 
