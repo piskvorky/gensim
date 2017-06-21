@@ -42,6 +42,8 @@ from six import string_types
 
 logger = logging.getLogger(__name__)
 
+FASTTEXT_FILEFORMAT_MAGIC = 793712314
+
 
 class FastTextKeyedVectors(KeyedVectors):
     """
@@ -79,13 +81,13 @@ class FastTextKeyedVectors(KeyedVectors):
         else:
             word_vec = np.zeros(self.syn0_all.shape[1])
             ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
+            ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:
                 ngram_weights = self.syn0_all_norm
             else:
                 ngram_weights = self.syn0_all
             for ngram in ngrams:
-                if ngram in self.ngrams:
-                    word_vec += ngram_weights[self.ngrams[ngram]]
+                word_vec += ngram_weights[self.ngrams[ngram]]
             if word_vec.any():
                 return word_vec / len(ngrams)
             else: # No ngrams of the word are present in self.ngrams
@@ -257,7 +259,15 @@ class FastText(Word2Vec):
             self.load_vectors(f)
 
     def load_model_params(self, file_handle):
-        (dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t) = self.struct_unpack(file_handle, '@12i1d')
+        magic, version = self.struct_unpack(file_handle, '@2i')
+        if magic == FASTTEXT_FILEFORMAT_MAGIC:  # newer format
+            self.new_format = True
+            dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
+        else:  # older format
+            self.new_format = False
+            dim = magic
+            ws = version
+            epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
         # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
         self.vector_size = dim
         self.window = ws
@@ -272,11 +282,13 @@ class FastText(Word2Vec):
         self.sample = t
 
     def load_dict(self, file_handle, encoding='utf8'):
-        (vocab_size, nwords, _) = self.struct_unpack(file_handle, '@3i')
+        vocab_size, nwords, _ = self.struct_unpack(file_handle, '@3i')
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
         assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
         assert len(self.wv.vocab) == vocab_size, 'mismatch between vocab sizes'
-        ntokens, = self.struct_unpack(file_handle, '@q')
+        self.struct_unpack(file_handle, '@1q')  # number of tokens
+        if self.new_format:
+            pruneidx_size, = self.struct_unpack(file_handle, '@q')
         for i in range(nwords):
             word_bytes = b''
             char_byte = file_handle.read(1)
@@ -285,12 +297,17 @@ class FastText(Word2Vec):
                 word_bytes += char_byte
                 char_byte = file_handle.read(1)
             word = word_bytes.decode(encoding)
-            count, _ = self.struct_unpack(file_handle, '@ib')
-            _ = self.struct_unpack(file_handle, '@i')
+            count, _ = self.struct_unpack(file_handle, '@qb')
             assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
             self.wv.vocab[word].count = count
 
+        if self.new_format:
+            for j in range(pruneidx_size):
+                self.struct_unpack(file_handle, '@2i')
+
     def load_vectors(self, file_handle):
+        if self.new_format:
+            self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.vector_size == dim, 'mismatch between model sizes'
@@ -327,7 +344,7 @@ class FastText(Word2Vec):
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
             ngram_hash = self.ft_hash(ngram)
-            ngram_indices.append((len(self.wv.vocab) + ngram_hash) % self.bucket)
+            ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
             self.wv.ngrams[ngram] = i
         self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
 
@@ -336,10 +353,10 @@ class FastText(Word2Vec):
         ngram_indices = []
         BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
         extended_word = BOW + word + EOW
-        ngrams = set()
-        for i in range(len(extended_word) - min_n + 1):
-            for j in range(min_n, max(len(extended_word) - max_n, max_n + 1)):
-                ngrams.add(extended_word[i:i+j])
+        ngrams = []
+        for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+            for i in range(0, len(extended_word) - ngram_length + 1):
+                ngrams.append(extended_word[i:i + ngram_length])
         return ngrams
 
     @staticmethod

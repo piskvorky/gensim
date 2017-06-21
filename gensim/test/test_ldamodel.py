@@ -25,7 +25,6 @@ from gensim.models import ldamodel, ldamulticore
 from gensim import matutils, utils
 from gensim.test import basetests
 
-
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
@@ -46,7 +45,7 @@ corpus = [dictionary.doc2bow(text) for text in texts]
 
 def testfile(test_fname=''):
     # temporary data will be stored to this file
-    fname = 'gensim_models_' + test_fname + '.tst' 
+    fname = 'gensim_models_' + test_fname + '.tst'
     return os.path.join(tempfile.gettempdir(), fname)
 
 
@@ -247,9 +246,9 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
         #Test case to use the get_document_topic function for the corpus
         all_topics = model.get_document_topics(self.corpus, per_word_topics=True)
-        
+
         self.assertEqual(model.state.numdocs, len(corpus))
-        
+
         for topic in all_topics:
             self.assertTrue(isinstance(topic, tuple))
             for k, v in topic[0]: # list of doc_topics
@@ -269,9 +268,9 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         word_phi_count_na = 0
 
         all_topics = model.get_document_topics(self.corpus, minimum_probability=0.8, minimum_phi_value=1.0, per_word_topics=True)
-        
+
         self.assertEqual(model.state.numdocs, len(corpus))
-        
+
         for topic in all_topics:
             self.assertTrue(isinstance(topic, tuple))
             for k, v in topic[0]: # list of doc_topics
@@ -469,6 +468,30 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, self.class_.load, fname, mmap='r')
+
+    def testRandomStateBackwardCompatibility(self):
+        # load a model saved using a pre-0.13.2 version of Gensim
+        pre_0_13_2_fname = datapath('pre_0_13_2_model')
+        model_pre_0_13_2 = self.class_.load(pre_0_13_2_fname)
+
+        # set `num_topics` less than `model_pre_0_13_2.num_topics` so that `model_pre_0_13_2.random_state` is used
+        model_topics = model_pre_0_13_2.print_topics(num_topics=2, num_words=3)
+
+        for i in model_topics:
+            self.assertTrue(isinstance(i[0], int))
+            self.assertTrue(isinstance(i[1], six.string_types))
+
+        # save back the loaded model using a post-0.13.2 version of Gensim
+        post_0_13_2_fname = testfile('post_0_13_2_model')
+        model_pre_0_13_2.save(post_0_13_2_fname)
+
+        # load a model saved using a post-0.13.2 version of Gensim
+        model_post_0_13_2 = self.class_.load(post_0_13_2_fname)
+        model_topics_new = model_post_0_13_2.print_topics(num_topics=2, num_words=3)
+
+        for i in model_topics_new:
+            self.assertTrue(isinstance(i[0], int))
+            self.assertTrue(isinstance(i[1], six.string_types))
 
 #endclass TestLdaModel
 
