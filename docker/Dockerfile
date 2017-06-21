@@ -47,7 +47,6 @@ RUN pip2 install \
     matplotlib==2.0.0 \
     nltk==3.2.2 \
     pandas==0.19.2 \
-    git+https://github.com/mila-udem/fuel.git@stable \
     git+https://github.com/mila-udem/blocks.git@stable \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
@@ -57,9 +56,12 @@ RUN pip3 install \
     matplotlib==2.0.0 \
     nltk==3.2.2 \
     pandas==0.19.2 \
-    git+https://github.com/mila-udem/fuel.git@stable \
     git+https://github.com/mila-udem/blocks.git@stable \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
+
+# avoid using old numpy version installed by blocks requirements
+RUN pip2 install -U numpy
+RUN pip3 install -U numpy
 
 # Create gensim directory and dependencies directory
 RUN mkdir /gensim \
@@ -74,8 +76,8 @@ RUN mkdir /gensim/download \
     && rm -rf /gensim/download \
     && cd /gensim \
     && pip2 install .[test] \
-    && pip3 install .[test] \
     && python2 setup.py install \
+    && pip3 install .[test] \
     && python3 setup.py install
 
 # Set ENV variables for wrappers
