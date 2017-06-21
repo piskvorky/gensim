@@ -285,10 +285,10 @@ setup(
 
     test_suite="gensim.test",
     setup_requires=[
-        'numpy >= 1.3'
+        'numpy >= 1.11.3'
     ],
     install_requires=[
-        'numpy >= 1.9.3',
+        'numpy >= 1.11.3',
         'scipy >= 0.19.0',
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
