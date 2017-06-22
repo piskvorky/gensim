@@ -236,7 +236,7 @@ class FastText(Word2Vec):
         """
         model = cls()
         file_name, file_ext = os.path.splitext(model_file)
-        model.file_name = file_name + file_ext
+        model.file_name = file_name + file_ext if file_ext else file_name + '.bin'
         model.load_binary_data(model.file_name, encoding=encoding)
         return model
 
