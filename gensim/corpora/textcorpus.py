@@ -130,9 +130,10 @@ class TextCorpus(interfaces.CorpusABC):
             length = len(self)
 
         if not n <= length:
+
             raise ValueError("n {0:d} is larger than length of corpus {1:d}.".format(n, length))
         if not 0 <= n:
-            raise ValueError("Negative n.")
+            raise ValueError("Negative sample size n {0:d}.".format(n))
 
         seen_documents = 0
         for i, sample in enumerate(self.get_texts()):
