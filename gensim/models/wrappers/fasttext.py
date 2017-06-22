@@ -220,10 +220,6 @@ class FastText(Word2Vec):
         super(FastText, self).save(*args, **kwargs)
 
     @classmethod
-    def load_word2vec_format(cls, *args, **kwargs):
-        return FastTextKeyedVectors.load_word2vec_format(*args, **kwargs)
-
-    @classmethod
     def load_fasttext_format(cls, model_file, encoding='utf8'):
         """
         Load the input-hidden weight matrix from the fast text output files.
