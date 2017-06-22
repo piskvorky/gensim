@@ -10,7 +10,12 @@ from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
 from gensim.utils import to_unicode
 from itertools import combinations as _combinations
-from six.moves.queue import Queue as _Queue
+import sys 
+is_py2 = sys.version[0] == '2'
+if is_py2:
+    from six.moves.queue import Queue as _Queue
+else:
+    from six.moves import queue as _Queue
 from six.moves import xrange
 from six import iteritems
 
