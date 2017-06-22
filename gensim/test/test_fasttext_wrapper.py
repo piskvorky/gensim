@@ -215,6 +215,11 @@ class TestFastText(unittest.TestCase):
         self.assertEquals(new_model.wv.min_n, 3)
         self.model_sanity(new_model)
 
+    def testLoadFileName(self):
+        """ Test model accepts input as both `/path/to/model` or `/path/to/model.bin` """
+        self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new')))
+        self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new.bin')))
+
     def testLoadModelWithNonAsciiVocab(self):
         """Test loading model with non-ascii words in vocab"""
         model = fasttext.FastText.load_fasttext_format(datapath('non_ascii_fasttext'))
