@@ -23,14 +23,14 @@ def log_conditional_probability(segmented_topics, accumulator):
     which is used by coherence measures such as U_mass.
     This is defined as: m_lc(S_i) = log[(P(W', W*) + e) / P(W*)]
 
-    Args:
-    ----
+    Args
+    ====
     segmented_topics : Output from the segmentation module of the segmented topics.
                        Is a list of list of tuples.
     accumulator: word occurrence accumulator from probability_estimation.
 
-    Returns:
-    -------
+    Returns
+    =======
     m_lc : List of log conditional probability measure for each topic.
     """
     m_lc = []
@@ -64,14 +64,14 @@ def log_ratio_measure(segmented_topics, accumulator, normalize=False):
         NPMI which is used by coherence measures such as c_v.
         This is defined as: m_nlr(S_i) = m_lr(S_i) / -log[P(W', W*) + e]
 
-    Args:
-    ----
+    Args
+    ====
     segmented topics : Output from the segmentation module of the segmented topics.
                        Is a list of list of tuples.
     accumulator: word occurrence accumulator from probability_estimation.
 
-    Returns:
-    -------
+    Returns
+    =======
     m_lr : List of log ratio measures for each topic.
     """
     m_lr = []

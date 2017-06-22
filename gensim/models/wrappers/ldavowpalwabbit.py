@@ -567,13 +567,13 @@ def vwmodel2ldamodel(vw_model, iterations=50):
     simply copying the training model weights (alpha, beta...) from a trained
     vwmodel into the gensim model.
 
-    Args:
-    ----
+    Args
+    ====
     vw_model : Trained vowpal wabbit model.
     iterations : Number of iterations to be used for inference of the new LdaModel.
 
-    Returns:
-    -------
+    Returns
+    =======
     model_gensim : LdaModel instance; copied gensim LdaModel.
     """
     model_gensim = LdaModel(

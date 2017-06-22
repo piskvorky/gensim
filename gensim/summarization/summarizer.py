@@ -184,10 +184,10 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
 
     The length of the output can be specified using the ratio and
     word_count parameters:
-        ratio should be a number between 0 and 1 that determines the
+    ratio should be a number between 0 and 1 that determines the
     percentage of the number of sentences of the original text to be
     chosen for the summary (defaults at 0.2).
-        word_count determines how many words will the output contain.
+    word_count determines how many words will the output contain.
     If both parameters are provided, the ratio will be ignored.
     """
     # Gets a list of processed sentences.
