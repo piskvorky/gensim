@@ -10,6 +10,7 @@ Follows scikit-learn API conventions
 """
 import numpy as np
 from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.exceptions import NotFittedError
 
 from gensim import models
 from gensim.sklearn_integration import BaseSklearnWrapper
