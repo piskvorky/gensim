@@ -233,12 +233,13 @@ test_env = [
     'scikit-learn',
     'pyemd',
     'annoy',
-    'keras >= 2.0.4'
+    'tensorflow >= 1.1.0',
+    'keras >= 2.0.4',
 ]
 
 setup(
     name='gensim',
-    version='2.1.0',
+    version='2.2.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -284,11 +285,11 @@ setup(
 
     test_suite="gensim.test",
     setup_requires=[
-        'numpy >= 1.3'
+        'numpy >= 1.11.3'
     ],
     install_requires=[
-        'numpy >= 1.3',
-        'scipy >= 0.7.0',
+        'numpy >= 1.11.3',
+        'scipy >= 0.19.0',
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
     ],

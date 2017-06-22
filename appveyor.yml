@@ -68,7 +68,8 @@ test_script:
   - "cd empty_folder"
   - "pip install pyemd testfixtures unittest2 sklearn Morfessor==2.0.2a4"
 
-  - "python -c \"import nose; nose.main()\" -s -v gensim"
+  # Use run instead of main to avoid nnz code when fail (TODO: remove this)
+  - "python -c \"import nose; nose.run()\" -s -v gensim"
   # Move back to the project folder
   - "cd .."
 
