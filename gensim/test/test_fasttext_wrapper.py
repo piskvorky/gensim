@@ -114,7 +114,7 @@ class TestFastText(unittest.TestCase):
         self.assertTrue(loaded_kv.syn0_all_norm is None)
 
     def testLoadFastTextFormat(self):
-        """Test model successfully loaded from fastText .bin files"""
+        """Test model successfully loaded from fastText .bin file"""
         try:
             model = fasttext.FastText.load_fasttext_format(self.test_model_file)
         except Exception as exc:
@@ -165,7 +165,7 @@ class TestFastText(unittest.TestCase):
         self.model_sanity(model)
 
     def testLoadFastTextNewFormat(self):
-        """ Test model successfully loaded from fastText (new format) .bin files """
+        """ Test model successfully loaded from fastText (new format) .bin file """
         try:
             new_model = fasttext.FastText.load_fasttext_format(self.test_new_model_file)
         except Exception as exc:
