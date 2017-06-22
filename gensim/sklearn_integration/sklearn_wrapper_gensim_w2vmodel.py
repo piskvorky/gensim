@@ -98,7 +98,7 @@ class SklW2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
             word_vec = self.gensim_model[v]
             X[k] = word_vec
 
-        return np.reshape(np.array(X), (len(words), self.vector_size))
+        return np.reshape(np.array(X), (len(words), self.size))
 
     def partial_fit(self, X):
         """
@@ -112,6 +112,5 @@ class SklW2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
                 hashfxn=self.hashfxn, iter=self.iter, null_word=self.null_word, trim_rule=self.trim_rule,
                 sorted_vocab=self.sorted_vocab, batch_words=self.batch_words)
 
-        self.gensim_model.build_vocab(X, update=True)
         self.gensim_model.train(X, total_examples=self.gensim_model.corpus_count, epochs=self.gensim_model.iter)
         return self

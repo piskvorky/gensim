@@ -19,6 +19,7 @@ from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import SklRpModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklLdaModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklLsiModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_w2vmodel import SklW2VModel
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils
 
@@ -394,6 +395,54 @@ class TestSklRpModelWrapper(unittest.TestCase):
         rpmodel_wrapper = SklRpModel(num_topics=2)
         doc = list(self.corpus)[0]
         self.assertRaises(NotFittedError, rpmodel_wrapper.transform, doc)
+
+
+class TestSklW2VModelWrapper(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = SklW2VModel(size=10, min_count=0, seed=42)
+        self.model.fit(texts)
+
+    def testTransform(self):
+        # tranform multiple words
+        words = []
+        words = words + texts[0]
+        matrix = self.model.transform(words)
+        self.assertEqual(matrix.shape[0], 3)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+        # tranform one word
+        word = texts[0][0]
+        matrix = self.model.transform(word)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(negative=20)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["negative"], 20)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        word = texts[0][0]
+        loaded_transformed_vecs = model_load.transform(word)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_transformed_vecs.shape[0], 1)
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.size)
+
+        # comparing the original and loaded models
+        original_transformed_vecs = self.model.transform(word)
+        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        self.assertTrue(passed)
+
+    def testModelNotFitted(self):
+        w2vmodel_wrapper = SklW2VModel(size=10, min_count=0, seed=42)
+        word = texts[0][0]
+        self.assertRaises(NotFittedError, w2vmodel_wrapper.transform, word)
 
 
 if __name__ == '__main__':
