@@ -228,14 +228,16 @@ class FastText(Word2Vec):
         with a model loaded this way, though you can query for word similarity etc.
 
         `model_file` is the path to the FastText output files.
-        FastText outputs two training files - `/path/to/train.vec` and `/path/to/train.bin`
-        Expected value for this example: `/path/to/train`. However, you only need .bin
-        file to load the entire model.
+        FastText outputs two model files - `/path/to/model.vec` and `/path/to/model.bin`
+
+        Expected value for this example: `/path/to/model` or `/path/to/model.bin`,
+        as gensim requires only `.bin` file to load entire fastText model.
 
         """
         model = cls()
-        model.file_name = model_file
-        model.load_binary_data('%s.bin' % model_file, encoding=encoding)
+        file_name, file_ext = os.path.splitext(model_file)
+        model.file_name = file_name + file_ext
+        model.load_binary_data(model.file_name, encoding=encoding)
         return model
 
     @classmethod
@@ -281,7 +283,7 @@ class FastText(Word2Vec):
     def load_dict(self, file_handle, encoding='utf8'):
         vocab_size, nwords, _ = self.struct_unpack(file_handle, '@3i')
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-        logger.info("loading %s vocabulary words for fastText model from %s.bin file", vocab_size, self.file_name)
+        logger.info("loading %s vocabulary words for fastText model from %s file", vocab_size, self.file_name)
 
         self.struct_unpack(file_handle, '@1q')  # number of tokens
         if self.new_format:
@@ -364,7 +366,7 @@ class FastText(Word2Vec):
 
         ngram_weights = self.wv.syn0_all
 
-        logger.info("loading weights for %s vocabulary words for fastText model from %s.bin file", len(self.wv.vocab), self.file_name)
+        logger.info("loading weights for %s vocabulary words for fastText model from %s file", len(self.wv.vocab), self.file_name)
 
         for w, vocab in self.wv.vocab.items():
             word_ngrams = self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
@@ -372,7 +374,7 @@ class FastText(Word2Vec):
                 self.wv.syn0[vocab.index] += np.array(ngram_weights[self.wv.ngrams[word_ngram]])
 
             self.wv.syn0[vocab.index] /= (len(word_ngrams) + 1)
-        logger.info("loaded %s weight matrix for fastText model from %s.bin", self.wv.syn0.shape, self.file_name)
+        logger.info("loaded %s weight matrix for fastText model from %s file", self.wv.syn0.shape, self.file_name)
 
     @staticmethod
     def compute_ngrams(word, min_n, max_n):
