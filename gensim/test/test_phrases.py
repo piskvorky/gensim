@@ -165,7 +165,6 @@ class TestPhrasesModel(unittest.TestCase):
         """Test that max_vocab_size parameter is respected."""
         bigram = Phrases(sentences, max_vocab_size=5)
         self.assertTrue(len(bigram.vocab) <= 5)
-
 #endclass TestPhrasesModel
 
 

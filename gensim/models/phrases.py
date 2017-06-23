@@ -170,11 +170,16 @@ class Phrases(interfaces.TransformationABC):
         vocab = defaultdict(int)
         min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
+            s = sentence
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
+            if isinstance(sentence[0], bytes):
+                sentence = [w for w in (utils.any2utf8(b';'.join(sentence)).split(b';'))]
+            else:
+                sentence = [w for w in (utils.any2utf8(u';'.join(sentence)).split(b';'))]
 
-            sentence = [w for w in (utils.any2utf8(u';'.join(sentence)).split(b';'))]
+            assert len(s) == len(sentence)
 
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
@@ -233,7 +238,14 @@ class Phrases(interfaces.TransformationABC):
             then you can debug the threshold with generated tsv
         """
         for sentence in sentences:
-            s = [w for w in (utils.any2utf8(u';'.join(sentence)).split(b';'))]
+            #if type(sentence[0]) 
+            #s = [w for w in (utils.any2utf8(u';'.join(sentence)).split(b';'))]
+            if isinstance(sentence[0], bytes):
+                s = [w for w in (utils.any2utf8(b';'.join(sentence)).split(b';'))]
+            else:
+                s = [w for w in (utils.any2utf8(u';'.join(sentence)).split(b';'))]
+
+            assert len(s) == len(sentence)
             last_bigram = False
             vocab = self.vocab
             threshold = self.threshold
