@@ -13,12 +13,13 @@ Such counts are useful in various other modules, such as Dictionary, TfIdf, Phra
 
 """
 
+import sys
+import os
 from collections import Counter
 import logging
 
-from six import iterkeys, iteritems
-
 from gensim import utils
+from gensim.models.fast_counter_cython import FastCounterCython, FastCounterPreshed
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ def iter_gram12(document):
 
 class FastCounter(object):
     """
-    Fast counting of item frequency and document frequency across large, streamed iterables.
+    Fast counting of item frequency frequency across large, streamed iterables.
     """
 
     def __init__(self, doc2items=iter_gram1, max_size=None):
@@ -101,7 +102,9 @@ class Phrases(object):
         self.threshold = threshold
         self.min_count = min_count
         self.max_vocab_size = max_vocab_size
-        self.counter = FastCounter(iter_gram12, max_size=max_vocab_size)
+        # self.counter = FastCounter(iter_gram12, max_size=max_vocab_size)
+        # self.counter = FastCounterCython()
+        self.counter = FastCounterPreshed()
 
     def add_documents(self, documents):
         self.counter.update(documents)
@@ -120,3 +123,30 @@ class Phrases(object):
                 score = norm / pa / pb * (pab - self.min_count)
                 if score > self.threshold:
                     yield score, bigram
+
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
+    logger.info("running %s", " ".join(sys.argv))
+
+    # check and process cmdline input
+    program = os.path.basename(sys.argv[0])
+    if len(sys.argv) < 2:
+        print(globals()['__doc__'] % locals())
+        sys.exit(1)
+    infile = sys.argv[1]
+
+    from gensim.models.word2vec import Text8Corpus
+    documents = Text8Corpus(infile)
+
+    logger.info("training phrases")
+    bigram = Phrases(min_count=5, threshold=100).add_documents(documents)
+    logger.info("finished training phrases")
+    print(bigram.counter)
+    # for doc in documents:
+    #     s = u' '.join(doc)
+    #     for _, bigram in bigram.export_phrases(doc):
+    #         s = s.replace(u' '.join(bigram), u'_'.join(bigram))
+    #     print(utils.to_utf8(s))
+
+    logger.info("finished running %s", " ".join(sys.argv))
