@@ -235,9 +235,10 @@ class FastText(Word2Vec):
 
         """
         model = cls()
-        file_name, file_ext = os.path.splitext(model_file)
-        model.file_name = file_name + file_ext if file_ext else file_name + '.bin'
-        model.load_binary_data(model.file_name, encoding=encoding)
+        if not model_file.endswith('.bin'):
+            model_file += '.bin'
+        model.file_name = model_file
+        model.load_binary_data(encoding=encoding)
         return model
 
     @classmethod
@@ -250,9 +251,9 @@ class FastText(Word2Vec):
             logger.debug('Training files %s not found when attempting to delete', model_file)
             pass
 
-    def load_binary_data(self, model_binary_file, encoding='utf8'):
+    def load_binary_data(self, encoding='utf8'):
         """Loads data from the output binary file created by FastText training"""
-        with utils.smart_open(model_binary_file, 'rb') as f:
+        with utils.smart_open(self.file_name, 'rb') as f:
             self.load_model_params(f)
             self.load_dict(f, encoding=encoding)
             self.load_vectors(f)
