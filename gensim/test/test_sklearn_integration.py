@@ -10,7 +10,7 @@ try:
     from sklearn.pipeline import Pipeline
     from sklearn.feature_extraction.text import CountVectorizer
     from sklearn.datasets import load_files
-    from sklearn import linear_model
+    from sklearn import linear_model, cluster
     from sklearn.exceptions import NotFittedError
 except ImportError:
     raise unittest.SkipTest("Test requires scikit-learn to be installed, which is not available")
@@ -440,6 +440,22 @@ class TestSklATModelWrapper(unittest.TestCase):
         model_params = self.model.get_params()
         for key in param_dict.keys():
             self.assertEqual(model_params[key], param_dict[key])
+
+    def testPipeline(self):
+        # train the AuthorTopic model first
+        model = SklATModel(id2word=dictionary, author2doc=author2doc, num_topics=10, passes=100)
+        model.fit(corpus)
+
+        # create and train clustering model
+        clstr = cluster.MiniBatchKMeans(n_clusters=2)
+        authors_full = ['john', 'jane', 'jack', 'jill']
+        clstr.fit(model.transform(authors_full))
+
+        # stack together the two models in a pipeline
+        text_atm = Pipeline((('features', model,), ('cluster', clstr)))
+        author_list = ['jane', 'jack', 'jill']
+        ret_val = text_atm.predict(author_list)
+        self.assertEqual(len(ret_val), len(author_list))
 
 
 if __name__ == '__main__':
