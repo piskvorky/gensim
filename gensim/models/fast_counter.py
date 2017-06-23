@@ -18,6 +18,8 @@ import logging
 
 from six import iterkeys, iteritems
 
+from gensim import utils
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,8 +46,10 @@ class FastCounter(object):
     Fast counting of item frequency and document frequency across large, streamed iterables.
     """
 
-    def __init__(self, doc2items=iter_gram1):
+    def __init__(self, doc2items=iter_gram1, max_size=None):
         self.doc2items = doc2items
+        self.max_size = max_size
+        self.min_reduce = 0
         self.hash2cnt = Counter()  # TODO replace by some GIL-free low-level struct
 
     def hash(self, item):
@@ -62,15 +66,16 @@ class FastCounter(object):
             # Or maybe not needed, if we create multiple FastCounters from multiple input streams using
             # multiprocessing, and only .merge() them at the end.
             self.hash2cnt.update(self.hash(ngram) for ngram in self.doc2items(document))
-
-            # self.prune_vocab()
+            self.prune_items()
 
         return self  # for easier chaining
 
-    def prune_vocab(self):
-        # Trim data structures to fit in memory, if too large.
-        # Or use a fixed-size data structure to start with (hyperloglog?)
-        raise NotImplementedError
+    def prune_items(self):
+        """Trim data structures to fit in memory, if too large."""
+        # XXX: Or use a fixed-size data structure to start with (hyperloglog?)
+        while self.max_size and len(self) > self.max_size:
+            self.min_reduce += 1
+            utils.prune_vocab(self.hash2cnt, self.min_reduce)
 
     def get(self, item, default=None):
         """Return the item frequency of `item` (or `default` if item not present)."""
@@ -78,10 +83,11 @@ class FastCounter(object):
 
     def merge(self, other):
         """
-        Merge counts from other into self, in-place.
+        Merge counts from another FastCounter into self, in-place.
         """
-        # rare operation, no need to optimize too much
-        raise NotImplementedError
+        self.hash2cnt.update(other.hash2cnt)
+        self.min_reduce = max(self.min_reduce, other.min_reduce)
+        self.prune_items()
 
     def __len__(self):
         return len(self.hash2cnt)
@@ -95,7 +101,7 @@ class Phrases(object):
         self.threshold = threshold
         self.min_count = min_count
         self.max_vocab_size = max_vocab_size
-        self.counter = FastCounter(iter_gram12)
+        self.counter = FastCounter(iter_gram12, max_size=max_vocab_size)
 
     def add_documents(self, documents):
         self.counter.update(documents)
@@ -107,8 +113,6 @@ class Phrases(object):
         Yield all collocations (pairs of adjacent closely related tokens) from the
         input `document`, as 2-tuples `(score, bigram)`.
         """
-        if not self.counter:
-            return
         norm = 1.0 * len(self.counter)
         for bigram in iter_gram2(document):
             pa, pb, pab = self.counter.get((bigram[0],)), self.counter.get((bigram[1],)), self.counter.get(bigram, 0)
