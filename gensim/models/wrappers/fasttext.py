@@ -284,7 +284,7 @@ class FastText(Word2Vec):
     def load_dict(self, file_handle, encoding='utf8'):
         vocab_size, nwords, _ = self.struct_unpack(file_handle, '@3i')
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-        logger.info("loading %s vocabulary words for fastText model from %s file", vocab_size, self.file_name)
+        logger.info("loading %s words for fastText model from %s", vocab_size, self.file_name)
 
         self.struct_unpack(file_handle, '@1q')  # number of tokens
         if self.new_format:
@@ -303,16 +303,21 @@ class FastText(Word2Vec):
                 # To handle the error in pretrained vector wiki.fr (French).
                 # For more info : https://github.com/facebookresearch/fastText/issues/218
 
-                assert word == "__label__"
+                assert word == "__label__", (
+                    'mismatched vocab_size ({}) and nwords ({}), extra word "{}"'.format(vocab_size, nwords, word))
                 continue   # don't add word to vocab
 
             self.wv.vocab[word] = Vocab(index=i, count=count)
             self.wv.index2word.append(word)
 
-        assert len(self.wv.vocab) == nwords, 'mismatch between final vocab size ({} words), and expected number of words (nwords), ({} words))'.format(len(self.wv.vocab), nwords)
+        assert len(self.wv.vocab) == nwords, (
+            'mismatch between final vocab size ({} words), '
+            'and expected number of words ({} words)'.format(len(self.wv.vocab), nwords))
         if len(self.wv.vocab) != vocab_size:
             # expecting to log this warning only for pretrained french vector, wiki.fr
-            logger.warning("mismatch between final vocab size (%s words), and expected vocab size (vocab_size) (%s words)", len(self.wv.vocab), vocab_size)
+            logger.warning(
+                "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
+                len(self.wv.vocab), vocab_size)
 
         if self.new_format:
             for j in range(pruneidx_size):
@@ -323,7 +328,8 @@ class FastText(Word2Vec):
             self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
-        assert self.vector_size == dim, 'mismatch between model sizes'
+        assert self.vector_size == dim, (
+            'mismatch between vector size in model params ({}) and model vectors ({})'.format(self.vector_size, dim))
         float_size = struct.calcsize('@f')
         if float_size == 4:
             dtype = np.dtype(np.float32)
@@ -334,7 +340,9 @@ class FastText(Word2Vec):
         self.wv.syn0_all = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
         self.wv.syn0_all = self.wv.syn0_all.reshape((num_vectors, dim))
         assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
-            'mismatch between weight matrix shape and vocab/model size'
+            'mismatch between actual weight matrix shape {} and expected shape {}'.format(
+                self.wv.syn0_all.shape, (self.bucket + len(self.wv.vocab), self.vector_size))
+
         self.init_ngrams()
 
     def struct_unpack(self, file_handle, fmt):
@@ -367,7 +375,7 @@ class FastText(Word2Vec):
 
         ngram_weights = self.wv.syn0_all
 
-        logger.info("loading weights for %s vocabulary words for fastText model from %s file", len(self.wv.vocab), self.file_name)
+        logger.info("loading weights for %s words for fastText model from %s", len(self.wv.vocab), self.file_name)
 
         for w, vocab in self.wv.vocab.items():
             word_ngrams = self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
@@ -375,7 +383,7 @@ class FastText(Word2Vec):
                 self.wv.syn0[vocab.index] += np.array(ngram_weights[self.wv.ngrams[word_ngram]])
 
             self.wv.syn0[vocab.index] /= (len(word_ngrams) + 1)
-        logger.info("loaded %s weight matrix for fastText model from %s file", self.wv.syn0.shape, self.file_name)
+        logger.info("loaded %s weight matrix for fastText model from %s", self.wv.syn0.shape, self.file_name)
 
     @staticmethod
     def compute_ngrams(word, min_n, max_n):
