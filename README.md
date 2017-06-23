@@ -136,6 +136,7 @@ Adopters
 | Channel 4     | <img src="http://www.channel4.com/static/info/images/lib/c4logo_2015_info_corporate.jpg" width="100"> | [channel4.com](http://www.channel4.com/)                                  | Recommendation engine |
 | Amazon     |  <img src="http://g-ec2.images-amazon.com/images/G/01/social/api-share/amazon_logo_500500._V323939215_.png" width="100"> | [amazon.com](http://www.amazon.com/)                                  |  Document similarity|
 | SiteGround Hosting     |  <img src="https://www.siteground.com/img/knox/logos/siteground.png" width="100"> | [siteground.com](https://www.siteground.com/)                                  | An ensemble search engine which uses different embeddings models and similarities, including word2vec, WMD, and LDA. |
+| Juju  | <img src="https://d5k1a84rm5hwo.cloudfront.net/img/juju_home_logo.png" width="100">   | [www.juju.com](http://www.juju.com/) | Provide non-obvious related job suggestions. |
 
 -------
 
