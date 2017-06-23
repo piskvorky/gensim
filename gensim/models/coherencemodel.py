@@ -15,7 +15,7 @@ Implementation of this pipeline allows for the user to in essence "make" a
 coherence measure of his/her choice by choosing a method in each of the pipelines.
 
 .. [1] Michael Roeder, Andreas Both and Alexander Hinneburg. Exploring the space of topic coherence measures. 
-            `http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf.`
+`http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf.`
 """
 
 import logging
@@ -119,12 +119,12 @@ class CoherenceModel(interfaces.TransformationABC):
                 Currently supports LdaModel, LdaMallet wrapper and LdaVowpalWabbit wrapper. Use 'topics'
                 parameter to plug in an as yet unsupported model.
         topics : List of tokenized topics. If this is preferred over model, dictionary should be provided. 
-                 eg::
-                 topics = [['human', 'machine', 'computer', 'interface'],
+            eg :
+                        topics = [['human', 'machine', 'computer', 'interface'],
                                ['graph', 'trees', 'binary', 'widths']]
         texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator, 
-                eg::
-                texts = [['system', 'human', 'system', 'eps'],
+            eg :
+                        texts = [['system', 'human', 'system', 'eps'],
                              ['user', 'response', 'time'],
                              ['trees'],
                              ['graph', 'trees'],
