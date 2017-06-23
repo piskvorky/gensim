@@ -48,8 +48,8 @@ class FastCounter(object):
         self.doc2items = doc2items
         self.hash2cnt = Counter()  # TODO replace by some GIL-free low-level struct
 
-    def hash(self, key):
-        return hash(key)
+    def hash(self, item):
+        return hash(item)
 
     def update(self, documents):
         """
@@ -72,9 +72,9 @@ class FastCounter(object):
         # Or use a fixed-size data structure to start with (hyperloglog?)
         raise NotImplementedError
 
-    def get(self, key, default=None):
-        """Return the item frequency of `key` (or `default` if key not present)."""
-        return self.hash2cnt.get(self.hash(key), default)
+    def get(self, item, default=None):
+        """Return the item frequency of `item` (or `default` if item not present)."""
+        return self.hash2cnt.get(self.hash(item), default)
 
     def merge(self, other):
         """
