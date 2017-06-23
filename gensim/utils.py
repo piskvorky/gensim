@@ -1212,7 +1212,6 @@ def strided_windows(ndarray, window_size):
     ====
     ndarray: either a numpy.ndarray or something that can be converted into one.
     window_size: sliding window size.
-    param window_size:
     
     Returns
     =======
