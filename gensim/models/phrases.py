@@ -238,8 +238,6 @@ class Phrases(interfaces.TransformationABC):
             then you can debug the threshold with generated tsv
         """
         for sentence in sentences:
-            #if type(sentence[0]) 
-            #s = [w for w in (utils.any2utf8(u';'.join(sentence)).split(b';'))]
             if isinstance(sentence[0], bytes):
                 s = [w for w in (utils.any2utf8(b';'.join(sentence)).split(b';'))]
             else:
