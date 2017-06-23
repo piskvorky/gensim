@@ -765,12 +765,24 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
     def testPathLineSentences(self):
-        """Does LineSentencePath work with a path argument?"""
-        logging.debug(word2vec)
-        with utils.smart_open(datapath('lee_background.cor')) as orig:
-            sentences = word2vec.PathLineSentences(datapath('LineSentencePath'))
+        """Does PathLineSentences work with a path argument?"""
+        with utils.smart_open(os.path.join(datapath('PathLineSentences'), '1.txt')) as orig1,\
+        utils.smart_open(os.path.join(datapath('PathLineSentences'), '2.txt.bz2')) as orig2:
+            sentences = word2vec.PathLineSentences(datapath('PathLineSentences'))
+            orig = orig1.readlines() + orig2.readlines()
+            orig_counter = 0  # to go through orig while matching PathLineSentences
+            for words in sentences:
+                self.assertEqual(words, utils.to_unicode(orig[orig_counter]).split())
+                orig_counter += 1
+
+    def testPathLineSentencesOneFile(self):
+        """Does PathLineSentences work with a single file argument?"""
+        test_file = os.path.join(datapath('PathLineSentences'), '1.txt')
+        with utils.smart_open(test_file) as orig:
+            sentences = word2vec.PathLineSentences(test_file)
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
+
 
 #endclass TestWord2VecSentenceIterators
 
