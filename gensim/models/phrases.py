@@ -134,12 +134,6 @@ class Phrases(interfaces.TransformationABC):
         should be a byte string (e.g. b'_').
 
         """
-        if min_count <= 0:
-            raise ValueError("min_count should be at least 1")
-
-        if threshold <= 0:
-            raise ValueError("threshold should be positive")
-
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
