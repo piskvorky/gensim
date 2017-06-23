@@ -15,7 +15,7 @@ Such counts are useful in various other modules, such as Dictionary, TfIdf, Phra
 
 import sys
 import os
-from collections import Counter
+from collections import defaultdict
 import logging
 
 from gensim import utils
@@ -51,7 +51,7 @@ class FastCounter(object):
         self.doc2items = doc2items
         self.max_size = max_size
         self.min_reduce = 0
-        self.hash2cnt = Counter()  # TODO replace by some GIL-free low-level struct
+        self.hash2cnt = defaultdict(int)
 
     def hash(self, item):
         return hash(item)
@@ -63,10 +63,8 @@ class FastCounter(object):
         If the memory structures get too large, clip them (then the internal counts may be only approximate).
         """
         for document in documents:
-            # TODO: release GIL, so we can run update() in parallel threads.
-            # Or maybe not needed, if we create multiple FastCounters from multiple input streams using
-            # multiprocessing, and only .merge() them at the end.
-            self.hash2cnt.update(self.hash(ngram) for ngram in self.doc2items(document))
+            for item in self.doc2items(document):
+                self.hash2cnt[self.hash(item)] += 1
             self.prune_items()
 
         return self  # for easier chaining
@@ -103,8 +101,8 @@ class Phrases(object):
         self.min_count = min_count
         self.max_vocab_size = max_vocab_size
         # self.counter = FastCounter(iter_gram12, max_size=max_vocab_size)
-        # self.counter = FastCounterCython()
-        self.counter = FastCounterPreshed()
+        self.counter = FastCounterCython()
+        # self.counter = FastCounterPreshed()
 
     def add_documents(self, documents):
         self.counter.update(documents)

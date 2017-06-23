@@ -7,7 +7,7 @@
 # Copyright (C) 2017 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-from collections import Counter
+from collections import defaultdict
 
 from libc.stdint cimport int64_t, uint64_t
 
@@ -28,7 +28,7 @@ class FastCounterCython(object):
         self.doc2items = doc2items
         self.max_size = max_size
         self.min_reduce = 0
-        self.hash2cnt = Counter()
+        self.hash2cnt = defaultdict(int)
 
     def update(self, documents):
         """
@@ -36,7 +36,7 @@ class FastCounterCython(object):
 
         If the memory structures get too large, clip them (then the internal counts may be only approximate).
         """
-        cdef int idx, l
+        cdef Py_ssize_t idx, l
         cdef uint64_t h1, h2
         hash2cnt = self.hash2cnt
         for document in documents:
@@ -47,7 +47,7 @@ class FastCounterCython(object):
                 for idx in range(1, l):
                     h2 = chash(document[idx])
                     hash2cnt[h2] += 1
-                    hash2cnt[h1 ^ h2] += 1
+                    hash2cnt[h1 + h2] += 1
                     h1 = h2
 
             # FIXME: add optimized prune
@@ -95,7 +95,7 @@ class FastCounterPreshed(object):
 
         If the memory structures get too large, clip them (then the internal counts may be only approximate).
         """
-        cdef int idx, l
+        cdef Py_ssize_t idx, l
         cdef uint64_t h1, h2
         cdef preshed.counter.PreshCounter hash2cnt = self.hash2cnt
         for document in documents:
@@ -106,7 +106,7 @@ class FastCounterPreshed(object):
                 for idx in range(1, l):
                     h2 = chash(document[idx])
                     hash2cnt.inc(h2, 1)
-                    hash2cnt.inc(h1 ^ h2, 1)
+                    hash2cnt.inc(h1 + h2, 1)
                     h1 = h2
 
             # FIXME: add optimized prune
