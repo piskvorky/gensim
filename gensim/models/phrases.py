@@ -69,6 +69,10 @@ from six import iteritems, string_types, next
 
 from gensim import utils, interfaces
 
+import numpy as np
+
+REAL = np.float32
+
 logger = logging.getLogger(__name__)
 
 
@@ -170,7 +174,7 @@ class Phrases(interfaces.TransformationABC):
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
 
-            sentence = [w for w in (utils.any2utf8(u'_'.join(sentence)).split('_'))]
+            sentence = [w for w in (utils.any2utf8(u';'.join(sentence)).split(b';'))]
 
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
@@ -229,7 +233,7 @@ class Phrases(interfaces.TransformationABC):
             then you can debug the threshold with generated tsv
         """
         for sentence in sentences:
-            s = [w for w in (utils.any2utf8(u'_'.join(sentence)).split('_'))]
+            s = [w for w in (utils.any2utf8(u';'.join(sentence)).split(b';'))]
             last_bigram = False
             vocab = self.vocab
             threshold = self.threshold
@@ -239,9 +243,9 @@ class Phrases(interfaces.TransformationABC):
                 if word_a in vocab and word_b in vocab:
                     bigram_word = delimiter.join((word_a, word_b))
                     if bigram_word in vocab and not last_bigram:
-                        pa = float(vocab[word_a])
-                        pb = float(vocab[word_b])
-                        pab = float(vocab[bigram_word])
+                        pa = REAL(vocab[word_a])
+                        pb = REAL(vocab[word_b])
+                        pab = REAL(vocab[bigram_word])
                         score = (pab - min_count) / pa / pb * len(vocab)
                         # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                         #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
@@ -291,9 +295,9 @@ class Phrases(interfaces.TransformationABC):
             if word_a in vocab and word_b in vocab:
                 bigram_word = delimiter.join((word_a, word_b))
                 if bigram_word in vocab and not last_bigram:
-                    pa = float(vocab[word_a])
-                    pb = float(vocab[word_b])
-                    pab = float(vocab[bigram_word])
+                    pa = REAL(vocab[word_a])
+                    pb = REAL(vocab[word_b])
+                    pab = REAL(vocab[bigram_word])
                     score = (pab - min_count) / pa / pb * len(vocab)
                     # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                     #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
