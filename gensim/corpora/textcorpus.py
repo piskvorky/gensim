@@ -31,13 +31,13 @@ from __future__ import with_statement
 
 import logging
 import os
+import random
 import re
 import sys
-import random
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
-from gensim.parsing.preprocessing import STOPWORDS, strip_multiple_whitespaces
+from gensim.parsing.preprocessing import STOPWORDS
 from gensim.utils import deaccent, simple_tokenize
 
 logger = logging.getLogger(__name__)
@@ -53,6 +53,11 @@ def remove_short(tokens, minsize=3):
 
 def lower_to_unicode(text):
     return utils.to_unicode(text.lower(), 'utf8', 'strict')
+
+
+RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
+def strip_multiple_whitespaces(s):
+    return RE_WHITESPACE.sub(" ", s)
 
 
 class TextCorpus(interfaces.CorpusABC):
@@ -105,11 +110,31 @@ class TextCorpus(interfaces.CorpusABC):
     6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
 
     """
-    def __init__(self, input=None, metadata=False, character_filters=None, tokenizer=None,
-                 token_filters=None):
-        super(TextCorpus, self).__init__()
+    def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None,
+                 tokenizer=None, token_filters=None):
+        """
+        Args:
+            input (str): path to top-level directory to traverse for corpus documents.
+            dictionary (Dictionary): if a dictionary is provided, it will not be updated
+                with the given corpus on initialization. If none is provided, a new dictionary
+                will be built for the given corpus. If no corpus is given, the dictionary will
+                remain uninitialized.
+            metadata (bool): True to yield metadata with each document, else False (default).
+            character_filters (iterable of callable): each will be applied to the text of each
+                document in order, and should return a single string with the modified text.
+                For Python 2, the original text will not be unicode, so it may be useful to
+                convert to unicode as the first character filter. The default character filters
+                lowercase, convert to unicode (strict utf8), perform ASCII-folding, then collapse
+                multiple whitespaces.
+            tokenizer (callable): takes as input the document text, preprocessed by all filters
+                in `character_filters`; should return an iterable of tokens (strings).
+            token_filters (iterable of callable): each will be applied to the iterable of tokens
+                in order, and should return another iterable of tokens. These filters can add,
+                remove, or replace tokens, or do nothing at all. The default token filters
+                remove tokens less than 3 characters long and remove stopwords using the list
+                in `gensim.parsing.preprocessing.STOPWORDS`.
+        """
         self.input = input
-        self.dictionary = Dictionary()
         self.metadata = metadata
 
         self.character_filters = character_filters
@@ -124,11 +149,25 @@ class TextCorpus(interfaces.CorpusABC):
         if self.token_filters is None:
             self.token_filters = [remove_short, remove_stopwords]
 
-        if input is not None:
-            self.dictionary.add_documents(self.get_texts())
+        self.length = None
+        self.dictionary = None
+        self.init_dictionary(dictionary)
+
+    def init_dictionary(self, dictionary):
+        self.dictionary = dictionary if dictionary is not None else Dictionary()
+        if self.input is not None:
+            if dictionary is None:
+                logger.info("Initializing dictionary")
+                metadata_setting = self.metadata
+                self.metadata = False
+                self.dictionary.add_documents(self.get_texts())
+                self.metadata = metadata_setting
+            else:
+                logger.info("Input stream provided but dictionary already initialized")
         else:
-            logger.warning("No input document stream provided; assuming "
-                           "dictionary will be initialized some other way.")
+            logger.warning(
+                "No input document stream provided; assuming "
+                "dictionary will be initialized some other way.")
 
     def __iter__(self):
         """The function that defines a corpus.
@@ -147,13 +186,23 @@ class TextCorpus(interfaces.CorpusABC):
         Each item yielded from this method will be considered a document by subsequent
         preprocessing methods.
         """
+        num_texts = 0
         with utils.file_or_filename(self.input) as f:
             for line in f:
                 yield line
+                num_texts += 1
+
+        self.length = num_texts
 
     def preprocess_text(self, text):
         """Apply preprocessing to a single text document. This should perform tokenization
         in addition to any other desired preprocessing steps.
+
+        Args:
+            text (str): document text read from plain-text file.
+
+        Returns:
+            iterable of str: tokens produced from `text` as a result of preprocessing.
         """
         for character_filter in self.character_filters:
             text = character_filter(text)
@@ -165,17 +214,13 @@ class TextCorpus(interfaces.CorpusABC):
         return tokens
 
     def get_texts(self):
-        """
-        Iterate over the collection, yielding one document at a time. A document
+        """Iterate over the collection, yielding one document at a time. A document
         is a sequence of words (strings) that can be fed into `Dictionary.doc2bow`.
-
-        Override this function to match your input (parse input files, do any
-        text preprocessing, lowercasing, tokenizing etc.). There will be no further
-        preprocessing of the words coming out of this function.
+        Each document will be fed through `preprocess_text`. That method should be
+        overridden to provide different preprocessing steps. This method will need
+        to be overridden if the metadata you'd like to yield differs from the line
+        number.
         """
-        # Instead of raising NotImplementedError, let's provide a sample implementation:
-        # assume documents are lines in a single file (one document per line).
-        # Yield each document as a list of lowercase tokens, via `utils.tokenize`.
         lines = self.getstream()
         if self.metadata:
             for lineno, line in enumerate(lines):
@@ -185,12 +230,11 @@ class TextCorpus(interfaces.CorpusABC):
                 yield self.preprocess_text(line)
 
     def sample_texts(self, n):
-        """
-        Yield n random texts from the corpus without replacement.
+        """Yield n random texts from the corpus without replacement.
 
-        Given the the number of remaingin elements in stream is remaining and we need
-        to choose n elements, the probability for current element to be chosen is n/remaining.
-        If we choose it, we just decreese the n and move to the next element.
+        Given the the number of remaining elements in the stream, `r` and the number of
+        elements to be sampled, `n`, the probability of choosing the current element is n/r.
+        If we choose it, we just decrement n and move to the next element.
         """
         length = len(self)
         if not n <= length:
@@ -199,15 +243,18 @@ class TextCorpus(interfaces.CorpusABC):
         if not 0 <= n:
             raise ValueError("negative sample size")
 
-        for i, sample in enumerate(self.get_texts()):
+        for i, sample in enumerate(self.getstream()):
             remaining_in_stream = length - i
             chance = random.randint(1, remaining_in_stream)
             if chance <= n:
                 n -= 1
-                yield sample
+                if self.metadata:
+                    yield self.preprocess_text(sample[0]), sample[1]
+                else:
+                    yield self.preprocess_text(sample)
 
     def __len__(self):
-        if not hasattr(self, 'length'):
+        if self.length is None:
             # cache the corpus length
             self.length = sum(1 for _ in self.get_texts())
         return self.length
@@ -216,16 +263,43 @@ class TextCorpus(interfaces.CorpusABC):
 
 class TextDirectoryCorpus(TextCorpus):
     """Read documents recursively from a directory,
-    where each file is interpreted as a plain text document.
+    where each file (or line of each file) is interpreted as a plain text document.
     """
 
-    def __init__(self, input, metadata=False, min_depth=0, max_depth=None, pattern=None,
-                 exclude_pattern=None, **kwargs):
+    def __init__(self, input, dictionary=None, metadata=False, min_depth=0, max_depth=None,
+                 pattern=None, exclude_pattern=None, lines_are_documents=False, **kwargs):
+        """
+        Args:
+            min_depth (int): minimum depth in directory tree at which to begin searching for
+                files. The default is 0, which means files starting in the top-level directory
+                `input` will be considered.
+            max_depth (int): max depth in directory tree at which files will no longer be
+                considered. The default is None, which means recurse through all subdirectories.
+            pattern (str or Pattern): regex to use for file name inclusion; all those files *not*
+                matching this pattern will be ignored.
+            exclude_pattern (str or Pattern): regex to use for file name exclusion; all files
+                matching this pattern will be ignored.
+            lines_are_documents (bool): if True, each line of each file is considered to be a
+                document. If False (default), each file is considered to be a document.
+            kwargs: keyword arguments passed through to the `TextCorpus` constructor. This is
+                in addition to the non-kwargs `input`, `dictionary`, and `metadata`. See
+                `TextCorpus.__init__` docstring for more details on these.
+        """
         self._min_depth = min_depth
         self._max_depth = sys.maxsize if max_depth is None else max_depth
         self.pattern = pattern
         self.exclude_pattern = exclude_pattern
-        super(TextDirectoryCorpus, self).__init__(input, metadata, **kwargs)
+        self.lines_are_documents = lines_are_documents
+        super(TextDirectoryCorpus, self).__init__(input, dictionary, metadata, **kwargs)
+
+    @property
+    def lines_are_documents(self):
+        return self._lines_are_documents
+
+    @lines_are_documents.setter
+    def lines_are_documents(self, lines_are_documents):
+        self._lines_are_documents = lines_are_documents
+        self.length = None
 
     @property
     def pattern(self):
@@ -279,16 +353,36 @@ class TextDirectoryCorpus(TextCorpus):
                     yield os.path.join(dirpath, name)
 
     def getstream(self):
+        """Yield documents from the underlying plain text collection (of one or more files).
+        Each item yielded from this method will be considered a document by subsequent
+        preprocessing methods.
+
+        If `lines_are_documents` was set to True, items will be lines from files. Otherwise
+        there will be one item per file, containing the entire contents of the file.
+        """
+        num_texts = 0
         for path in self.iter_filepaths():
             with utils.smart_open(path) as f:
-                doc_content = f.read()
-            yield doc_content
+                if self.lines_are_documents:
+                    for line in f:
+                        yield line.strip()
+                        num_texts += 1
+                else:
+                    yield f.read()
+                    num_texts += 1
+
+        self.length = num_texts
 
     def __len__(self):
         if self.length is None:
-            # cache the corpus length
-            self.length = sum(1 for _ in self.iter_filepaths())
+            self._cache_corpus_length()
         return self.length
+
+    def _cache_corpus_length(self):
+        if not self.lines_are_documents:
+            self.length = sum(1 for _ in self.iter_filepaths())
+        else:
+            self.length = sum(1 for _ in self.getstream())
 # endclass TextDirectoryCorpus
 
 

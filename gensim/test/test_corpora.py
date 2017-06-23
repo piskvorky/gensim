@@ -15,7 +15,6 @@ import tempfile
 import unittest
 
 import numpy as np
-
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
 from gensim.interfaces import TransformedCorpus
@@ -339,13 +338,38 @@ class TestTextCorpus(CorpusTestCase):
             ['tooth', 'spaces']
         ]
 
+        corpus = self.corpus_from_lines(lines)
+        texts = list(corpus.get_texts())
+        self.assertEqual(expected, texts)
+
+    def corpus_from_lines(self, lines):
         fpath = tempfile.mktemp()
         with open(fpath, 'w') as f:
             f.write('\n'.join(lines))
 
-        corpus = self.corpus_class(fpath)
-        texts = list(corpus.get_texts())
-        self.assertEqual(expected, texts)
+        return self.corpus_class(fpath)
+
+    def test_sample(self):
+        lines = ["document1", "document2"]
+        corpus = self.corpus_from_lines(lines)
+        corpus.tokenizer = lambda text: text.split()
+
+        sample1 = list(corpus.sample_texts(1))
+        self.assertEqual(len(sample1), 1)
+        document1 = sample1[0] == ["document1"]
+        document2 = sample1[0] == ["document2"]
+        self.assertTrue(document1 or document2)
+
+        sample2 = list(corpus.sample_texts(2))
+        self.assertEqual(len(sample2), 2)
+        self.assertEqual(sample2[0], ["document1"])
+        self.assertEqual(sample2[1], ["document2"])
+
+        with self.assertRaises(ValueError):
+            list(corpus.sample_texts(3))
+
+        with self.assertRaises(ValueError):
+            list(corpus.sample_texts(-1))
 
     def test_save(self):
         pass
@@ -423,6 +447,74 @@ class TestTextDirectoryCorpus(unittest.TestCase):
         corpus.exclude_pattern = ".*.log"
         filenames = list(corpus.iter_filepaths())
         self.assertEqual(expected, filenames)
+
+    def test_lines_are_documents(self):
+        dirpath = tempfile.mkdtemp()
+        lines = ['doc%d text' % i for i in range(5)]
+        fpath = os.path.join(dirpath, 'test_file.txt')
+        with open(fpath, 'w') as f:
+            f.write('\n'.join(lines))
+
+        corpus = textcorpus.TextDirectoryCorpus(dirpath, lines_are_documents=True)
+        docs = [doc for doc in corpus.getstream()]
+        self.assertEqual(len(lines), corpus.length)  # should have cached
+        self.assertEqual(lines, docs)
+
+        corpus.lines_are_documents = False
+        docs = [doc for doc in corpus.getstream()]
+        self.assertEqual(1, corpus.length)
+        self.assertEqual('\n'.join(lines), docs[0])
+
+    def test_non_trivial_structure(self):
+        """Test with non-trivial directory structure, shown below:
+        .
+        ├── 0.txt
+        ├── a_folder
+        │   └── 1.txt
+        └── b_folder
+            ├── 2.txt
+            ├── 3.txt
+            └── c_folder
+                └── 4.txt
+        """
+        dirpath = tempfile.mkdtemp()
+        self.write_docs_to_directory(dirpath, '0.txt')
+
+        a_folder = os.path.join(dirpath, 'a_folder')
+        os.mkdir(a_folder)
+        self.write_docs_to_directory(a_folder, '1.txt')
+
+        b_folder = os.path.join(dirpath, 'b_folder')
+        os.mkdir(b_folder)
+        self.write_docs_to_directory(b_folder, '2.txt', '3.txt')
+
+        c_folder = os.path.join(b_folder, 'c_folder')
+        os.mkdir(c_folder)
+        self.write_docs_to_directory(c_folder, '4.txt')
+
+        corpus = textcorpus.TextDirectoryCorpus(dirpath)
+        filenames = list(corpus.iter_filepaths())
+        base_names = [name[len(dirpath) + 1:] for name in filenames]
+        expected = [
+            '0.txt',
+            'a_folder/1.txt',
+            'b_folder/2.txt',
+            'b_folder/3.txt',
+            'b_folder/c_folder/4.txt'
+        ]
+        self.assertEqual(expected, base_names)
+
+        corpus.max_depth = 1
+        self.assertEqual(expected[:-1], base_names[:-1])
+
+        corpus.min_depth = 1
+        self.assertEqual(expected[2:-1], base_names[2:-1])
+
+        corpus.max_depth = 0
+        self.assertEqual(expected[2:], base_names[2:])
+
+        corpus.pattern = "4.*"
+        self.assertEqual(expected[-1], base_names[-1])
 
 
 if __name__ == '__main__':
