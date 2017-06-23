@@ -25,13 +25,12 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
 
     def __init__(
-            self, num_topics=100, id2word=None,
-            chunksize=2000, passes=1, update_every=1,
-            alpha='symmetric', eta=None, decay=0.5, offset=1.0,
-            eval_every=10, iterations=50, gamma_threshold=0.001,
-            minimum_probability=0.01, random_state=None):
+            self, num_topics=100, id2word=None, chunksize=2000, passes=1,
+            update_every=1, alpha='symmetric', eta=None, decay=0.5,
+            offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
+            minimum_probability=0.01, random_state=None, scorer='c_v'):
         """
-        Sklearn wrapper for LDA model. derived class for gensim.model.LdaModel .
+        Sklearn wrapper for LDA model.
         """
         self.gensim_model = None
         self.num_topics = num_topics
@@ -48,6 +47,7 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         self.gamma_threshold = gamma_threshold
         self.minimum_probability = minimum_probability
         self.random_state = random_state
+        self.scorer = scorer
 
     def get_params(self, deep=True):
         """
@@ -130,3 +130,10 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
 
         self.gensim_model.update(corpus=X)
         return self
+
+    def score(self, X, y=None):
+        """
+        Compute score reflecting how well the model has fit for the input data.
+        """
+        goodcm = models.CoherenceModel(model=self.gensim_model, texts=X, dictionary=self.gensim_model.id2word, coherence=self.scorer)
+        return goodcm.get_coherence()
