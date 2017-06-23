@@ -29,11 +29,11 @@ See the `gensim.test.test_miislita.CorpusMiislita` class for a simple example.
 
 from __future__ import with_statement
 
+import logging
 import os
+import random
 import re
 import sys
-import logging
-import random
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
@@ -265,7 +265,7 @@ class TextCorpus(interfaces.CorpusABC):
         if not 0 <= n:
             raise ValueError("Negative sample size.")
 
-        for i, sample in enumerate(self.get_texts()):
+        for i, sample in enumerate(self.getstream()):
             if i == length:
                 break
             remaining_in_corpus = length - i
