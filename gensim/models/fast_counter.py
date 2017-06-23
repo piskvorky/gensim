@@ -7,7 +7,9 @@
 """
 Fast & memory efficient counting of things (and n-grams of things).
 
-This module is designed to count *item* and *document* frequencies over large, streamed corpora (lazy iteration).
+This module is designed to count item frequencies over large, streamed corpora (lazy iteration).
+
+Such counts are useful in various other modules, such as Dictionary, TfIdf, Phrases etc.
 
 """
 
@@ -42,12 +44,9 @@ class FastCounter(object):
     Fast counting of item frequency and document frequency across large, streamed iterables.
     """
 
-    def __init__(self, doc2items=iter_gram1, collect_df=False):
+    def __init__(self, doc2items=iter_gram1):
         self.doc2items = doc2items
-        self.collect_df = collect_df
-
-        self.item_counts = Counter()  # TODO replace by some GIL-free low-level struct
-        self.doc_counts = Counter()  # TODO replace by some GIL-free low-level struct
+        self.hash2cnt = Counter()  # TODO replace by some GIL-free low-level struct
 
     def hash(self, key):
         return hash(key)
@@ -62,11 +61,7 @@ class FastCounter(object):
             # TODO: release GIL, so we can run update() in parallel threads.
             # Or maybe not needed, if we create multiple FastCounters from multiple input streams using
             # multiprocessing, and only .merge() them at the end.
-            item_cnts = Counter(self.hash(ngram) for ngram in self.doc2items(document))
-            self.item_counts.update(item_cnts)
-            if self.collect_df:
-                # increment by 1 per unique key ("document frequency")
-                self.doc_counts.update(iterkeys(item_cnts))
+            self.hash2cnt.update(self.hash(ngram) for ngram in self.doc2items(document))
 
             # self.prune_vocab()
 
@@ -79,7 +74,7 @@ class FastCounter(object):
 
     def get(self, key, default=None):
         """Return the item frequency of `key` (or `default` if key not present)."""
-        return self.item_counts.get(self.hash(key), default)
+        return self.hash2cnt.get(self.hash(key), default)
 
     def merge(self, other):
         """
@@ -89,7 +84,7 @@ class FastCounter(object):
         raise NotImplementedError
 
     def __len__(self):
-        return len(self.item_counts)
+        return len(self.hash2cnt)
 
     def __str__(self):
         return "%s<%i items>" % (self.__class__.__name__, len(self))
