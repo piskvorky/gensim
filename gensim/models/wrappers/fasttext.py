@@ -81,13 +81,13 @@ class FastTextKeyedVectors(KeyedVectors):
         else:
             word_vec = np.zeros(self.syn0_all.shape[1])
             ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
+            ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:
                 ngram_weights = self.syn0_all_norm
             else:
                 ngram_weights = self.syn0_all
             for ngram in ngrams:
-                if ngram in self.ngrams:
-                    word_vec += ngram_weights[self.ngrams[ngram]]
+                word_vec += ngram_weights[self.ngrams[ngram]]
             if word_vec.any():
                 return word_vec / len(ngrams)
             else: # No ngrams of the word are present in self.ngrams
@@ -146,7 +146,7 @@ class FastText(Word2Vec):
 
     @classmethod
     def train(cls, ft_path, corpus_file, output_file=None, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
-            loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
+            word_ngrams=1, loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
         """
         `ft_path` is the path to the FastText executable, e.g. `/home/kofola/fastText/fasttext`.
 
@@ -163,6 +163,8 @@ class FastText(Word2Vec):
         `alpha` is the initial learning rate.
 
         `min_count` = ignore all words with total occurrences lower than this.
+
+        `word_ngram` = max length of word ngram
 
         `loss` = defines training objective. Allowed values are `hs` (hierarchical softmax),
         `ns` (negative sampling) and `softmax`. Defaults to `ns`
@@ -197,6 +199,7 @@ class FastText(Word2Vec):
             'ws': window,
             'epoch': iter,
             'minCount': min_count,
+            'wordNgrams': word_ngrams,
             'neg': negative,
             'loss': loss,
             'minn': min_n,
@@ -344,7 +347,7 @@ class FastText(Word2Vec):
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
             ngram_hash = self.ft_hash(ngram)
-            ngram_indices.append((len(self.wv.vocab) + ngram_hash) % self.bucket)
+            ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
             self.wv.ngrams[ngram] = i
         self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
 
@@ -353,10 +356,10 @@ class FastText(Word2Vec):
         ngram_indices = []
         BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
         extended_word = BOW + word + EOW
-        ngrams = set()
-        for i in range(len(extended_word) - min_n + 1):
-            for j in range(min_n, max(len(extended_word) - max_n, max_n + 1)):
-                ngrams.add(extended_word[i:i+j])
+        ngrams = []
+        for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+            for i in range(0, len(extended_word) - ngram_length + 1):
+                ngrams.append(extended_word[i:i + ngram_length])
         return ngrams
 
     @staticmethod
