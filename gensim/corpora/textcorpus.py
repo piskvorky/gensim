@@ -37,32 +37,34 @@ import sys
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
-from gensim.parsing.preprocessing import STOPWORDS
+from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
 from gensim.utils import deaccent, simple_tokenize
 
 logger = logging.getLogger(__name__)
 
 
 def remove_stopwords(tokens, stopwords=STOPWORDS):
+    """Remove stopwords using list from `gensim.parsing.preprocessing.STOPWORDS."""
     return [token for token in tokens if token not in stopwords]
 
 
 def remove_short(tokens, minsize=3):
+    """Remove tokens smaller than `minsize` chars, which is 3 by default."""
     return [token for token in tokens if len(token) >= minsize]
 
 
-def lower_to_unicode(text):
-    return utils.to_unicode(text.lower(), 'utf8', 'strict')
+def lower_to_unicode(text, encoding='utf8', errors='strict'):
+    """Lowercase `text` and convert to unicode."""
+    return utils.to_unicode(text.lower(), encoding, errors)
 
 
-RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
 def strip_multiple_whitespaces(s):
+    """Collapse multiple whitespace characters into a single space."""
     return RE_WHITESPACE.sub(" ", s)
 
 
 class TextCorpus(interfaces.CorpusABC):
-    """
-    Helper class to simplify the pipeline of getting bag-of-words vectors (= a
+    """Helper class to simplify the pipeline of getting bag-of-words vectors (= a
     gensim corpus) from plain text.
 
     This is an abstract base class: override the `get_texts()` and `__len__()`
@@ -154,6 +156,10 @@ class TextCorpus(interfaces.CorpusABC):
         self.init_dictionary(dictionary)
 
     def init_dictionary(self, dictionary):
+        """If `dictionary` is None, initialize to an empty Dictionary, and then if there
+        is an `input` for the corpus, add all documents from that `input`. If the
+        `dictionary` is already initialized, simply set it as the corpus's `dictionary`.
+        """
         self.dictionary = dictionary if dictionary is not None else Dictionary()
         if self.input is not None:
             if dictionary is None:
@@ -220,6 +226,10 @@ class TextCorpus(interfaces.CorpusABC):
         overridden to provide different preprocessing steps. This method will need
         to be overridden if the metadata you'd like to yield differs from the line
         number.
+
+        Returns:
+            generator of lists of tokens (strings); each list corresponds to a preprocessed
+            document from the corpus `input`.
         """
         lines = self.getstream()
         if self.metadata:
@@ -230,8 +240,7 @@ class TextCorpus(interfaces.CorpusABC):
                 yield self.preprocess_text(line)
 
     def sample_texts(self, n, seed=None, length=None):
-        """
-        Yield n random documents from the corpus without replacement.
+        """Yield n random documents from the corpus without replacement.
 
         Given the number of remaining documents in a corpus, we need to choose n elements.
         The probability for the current element to be chosen is n/remaining.
@@ -251,12 +260,7 @@ class TextCorpus(interfaces.CorpusABC):
         Raises:
             ValueError: when n is invalid or length was set incorrectly.
         """
-        random_generator = None
-        if seed is None:
-            random_generator = random
-        else:
-            random_generator = random.Random(seed)
-
+        random_generator = random if seed is None else random.Random(seed)
         if length is None:
             length = len(self)
 
@@ -268,6 +272,7 @@ class TextCorpus(interfaces.CorpusABC):
         for i, sample in enumerate(self.getstream()):
             if i == length:
                 break
+
             remaining_in_corpus = length - i
             chance = random_generator.randint(1, remaining_in_corpus)
             if chance <= n:
@@ -285,7 +290,7 @@ class TextCorpus(interfaces.CorpusABC):
     def __len__(self):
         if self.length is None:
             # cache the corpus length
-            self.length = sum(1 for _ in self.get_texts())
+            self.length = sum(1 for _ in self.getstream())
         return self.length
 # endclass TextCorpus
 
