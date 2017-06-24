@@ -396,13 +396,13 @@ class TextDirectoryCorpus(TextCorpus):
         """
         num_texts = 0
         for path in self.iter_filepaths():
-            with utils.smart_open(path) as f:
+            with open(path, 'rt') as f:
                 if self.lines_are_documents:
                     for line in f:
                         yield line.strip()
                         num_texts += 1
                 else:
-                    yield f.read()
+                    yield f.read().strip()
                     num_texts += 1
 
         self.length = num_texts
