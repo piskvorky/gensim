@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# encoding: utf-8
 import numpy as np
 
 
@@ -37,15 +39,15 @@ class Space(object):
 class TranslationMatrix(object):
     def __init__(self, word_pair, source_lang_vec, target_lang_vec):
         self.source_word, self.target_word = zip(*word_pair)
+        self.source_space_vec = source_lang_vec
+        self.target_space_vec = target_lang_vec
+
         self.translation_matrix = None
 
         self.source_space = self.build_space(source_lang_vec, set(self.source_word))
-        self.source_space.normalize()
-
         self.target_space = self.build_space(target_lang_vec, set(self.target_word))
 
         self.translation_matrix = self.train(self.source_space, self.target_space)
-        print self.translation_matrix
 
     def build_space(self, words, lang_vec):
         return Space.build(words, lang_vec)
@@ -58,3 +60,13 @@ class TranslationMatrix(object):
         m2 = target_space.mat[[target_space.row2id[item] for item in self.target_word], :]
 
         return np.linalg.lstsq(m1, m2, -1)[0]
+
+    def translate(self, source_words, topn=5):
+        for idx, word in enumerate(source_words):
+            if word in self.source_space.row2id:
+                source_word_vec = self.source_space.mat[self.source_space.row2id[word], :]
+                predicted_word_vec = np.dot(source_word_vec, self.translation_matrix)
+                candidates = [i[0] for i in self.target_space_vec.most_similar(positive=[predicted_word_vec], topn=topn)]
+                print candidates
+            else:
+                print word, 'is not found in the source model, sorry.'
