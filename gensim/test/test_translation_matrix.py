@@ -62,7 +62,7 @@ class TesttranslationMatrix(unittest.TestCase):
         sizeofword = []
 
         for idx in xrange(1, 5):
-            sub_pair = word_pair[:(idx+1)*step]
+            sub_pair = word_pair[: (idx + 1) * step]
 
             sizeofword.append(len(sub_pair))
             startTime = time.time()
