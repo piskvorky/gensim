@@ -166,6 +166,43 @@ def any2sparse(vec, eps=1e-9):
     return [(int(fid), float(fw)) for fid, fw in vec if np.abs(fw) > eps]
 
 
+def scipy2scipy_clipped(matrix, topn, eps=1e-9):
+    """
+    Return a scipy.sparse vector/matrix consisting of 'topn' elements of the greatest magnitude (absolute value).
+    """
+    if not scipy.sparse.issparse(matrix):
+        raise ValueError("'%s' is not a scipy sparse vector." % matrix)
+    if topn <= 0:
+        return scipy.sparse.csr_matrix([])
+    # Return clipped sparse vector if input is a sparse vector.
+    if matrix.shape[0] == 1:
+        # use np.argpartition/argsort and only form tuples that are actually returned.
+        biggest = argsort(abs(matrix.data), topn, reverse=True)
+        indices, data = matrix.indices.take(biggest), matrix.data.take(biggest)
+        return scipy.sparse.csr_matrix((data, indices, [0, len(indices)]))
+    # Return clipped sparse matrix if input is a matrix, processing row by row.
+    else:
+        matrix_indices = []
+        matrix_data = []
+        matrix_indptr = [0]
+        # calling abs() on entire matrix once is faster than calling abs() iteratively for each row
+        matrix_abs = abs(matrix)
+        for i in range(matrix.shape[0]):
+            v = matrix.getrow(i)
+            v_abs = matrix_abs.getrow(i)
+            # Sort and clip each row vector first.
+            biggest = argsort(v_abs.data, topn, reverse=True)
+            indices, data = v.indices.take(biggest), v.data.take(biggest)
+            # Store the topn indices and values of each row vector.
+            matrix_data.append(data)
+            matrix_indices.append(indices)
+            matrix_indptr.append(matrix_indptr[-1] + min(len(indices), topn))
+        matrix_indices = np.concatenate(matrix_indices).ravel()
+        matrix_data = np.concatenate(matrix_data).ravel()
+        # Instantiate and return a sparse csr_matrix which preserves the order of indices/data.
+        return scipy.sparse.csr.csr_matrix((matrix_data, matrix_indices, matrix_indptr), shape=(matrix.shape[0], np.max(matrix_indices) + 1))
+
+
 def scipy2sparse(vec, eps=1e-9):
     """Convert a scipy.sparse vector into gensim document format (=list of 2-tuples)."""
     vec = vec.tocsr()

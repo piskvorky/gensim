@@ -146,7 +146,7 @@ class FastText(Word2Vec):
 
     @classmethod
     def train(cls, ft_path, corpus_file, output_file=None, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
-            loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
+            word_ngrams=1, loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
         """
         `ft_path` is the path to the FastText executable, e.g. `/home/kofola/fastText/fasttext`.
 
@@ -163,6 +163,8 @@ class FastText(Word2Vec):
         `alpha` is the initial learning rate.
 
         `min_count` = ignore all words with total occurrences lower than this.
+
+        `word_ngram` = max length of word ngram
 
         `loss` = defines training objective. Allowed values are `hs` (hierarchical softmax),
         `ns` (negative sampling) and `softmax`. Defaults to `ns`
@@ -197,6 +199,7 @@ class FastText(Word2Vec):
             'ws': window,
             'epoch': iter,
             'minCount': min_count,
+            'wordNgrams': word_ngrams,
             'neg': negative,
             'loss': loss,
             'minn': min_n,
