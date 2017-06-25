@@ -2,8 +2,8 @@ FROM ubuntu:16.04
 
 MAINTAINER Daniel Baptista Dias <danielbpdias@gmail.com>
 
-ENV GENSIM_REPOSITORY https://github.com/parulsethi/gensim/archive
-ENV GENSIM_BRANCH gensim_docker
+ENV GENSIM_REPOSITORY https://codeload.github.com/RaRe-Technologies/gensim/zip
+ENV GENSIM_VERSION 2.2.0
 
 # Installs python, pip and setup tools (with fixed versions)
 RUN apt-get update \
@@ -47,7 +47,7 @@ RUN pip2 install \
     matplotlib==2.0.0 \
     nltk==3.2.2 \
     pandas==0.19.2 \
-    git+https://github.com/mila-udem/blocks.git@stable \
+    git+https://github.com/mila-udem/blocks.git@7beb788f1fcfc78d56c59a5edf9b4e8d98f8d7d9 \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
 RUN pip3 install \
@@ -56,7 +56,7 @@ RUN pip3 install \
     matplotlib==2.0.0 \
     nltk==3.2.2 \
     pandas==0.19.2 \
-    git+https://github.com/mila-udem/blocks.git@stable \
+    git+https://github.com/mila-udem/blocks.git@7beb788f1fcfc78d56c59a5edf9b4e8d98f8d7d9 \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
 # avoid using old numpy version installed by blocks requirements
@@ -70,9 +70,9 @@ RUN mkdir /gensim \
 # Download gensim from Github
 RUN mkdir /gensim/download \
     && cd /gensim/download \
-    && wget --quiet $GENSIM_REPOSITORY/$GENSIM_BRANCH.zip \
-    && unzip $GENSIM_BRANCH.zip \
-    && mv ./gensim-$GENSIM_BRANCH/* /gensim \
+    && wget --quiet $GENSIM_REPOSITORY/$GENSIM_VERSION \
+    && unzip $GENSIM_VERSION \
+    && mv ./gensim-$GENSIM_VERSION/* /gensim \
     && rm -rf /gensim/download \
     && cd /gensim \
     && pip2 install .[test] \
@@ -81,11 +81,19 @@ RUN mkdir /gensim/download \
     && python3 setup.py install
 
 # Set ENV variables for wrappers
-ENV FT_HOME gensim_dependencies/fastText
-ENV WR_HOME gensim_dependencies/wordrank
-ENV MALLET_HOME gensim_dependencies/mallet
-ENV DTM_PATH gensim_dependencies/dtm/dtm/main
-ENV VOWPAL_WABBIT_PATH gensim_dependencies/vowpal_wabbit/vowpalwabbit/vw
+ENV FT_HOME ~/gensim/gensim_dependencies/fastText
+ENV WR_HOME ~/gensim/gensim_dependencies/wordrank
+ENV MALLET_HOME ~/gensim/gensim_dependencies/mallet
+ENV DTM_PATH ~/gensim/gensim_dependencies/dtm/dtm/main
+ENV VOWPAL_WABBIT_PATH ~/gensim/gensim_dependencies/vowpal_wabbit/vowpalwabbit/vw
+
+# For fixed version downloads of gensim wrappers dependencies 
+ENV FASTTEXT_VERSION f24a781021862f0e475a5fb9c55b7c1cec3b6e2e
+ENV WORDRANK_VERSION 44f3f7786f76c79c083dfad9d64e20bacfb4a0b0
+ENV MORPHOLOGICALPRIORSFORWORDEMBEDDINGS_VERSION ec2e37a3bcb8bd7b56b75b043c47076bc5decf22
+ENV DTM_VERSION 67139e6f526b2bc33aef56dc36176a1b8b210056
+ENV MALLET_VERSION 2.0.8
+ENV VOWPAL_WABBIT_VERSION 9f61108b7ed53311024f884f6b55887c938391f9
 
 # Install custom dependencies
 
@@ -93,6 +101,7 @@ ENV VOWPAL_WABBIT_PATH gensim_dependencies/vowpal_wabbit/vowpalwabbit/vw
 RUN cd /gensim/gensim_dependencies \
     && git clone https://github.com/facebookresearch/fastText.git \
     && cd /gensim/gensim_dependencies/fastText \
+    && git checkout $FASTTEXT_VERSION \
     && make
 
 # Install WordRank
@@ -100,25 +109,29 @@ RUN cd /gensim/gensim_dependencies \
     && git clone https://bitbucket.org/shihaoji/wordrank \
     && cp /gensim/docker/wordrank_install.sh /gensim/gensim_dependencies/wordrank/install.sh \
     && cd /gensim/gensim_dependencies/wordrank \
+    && git checkout $WORDRANK_VERSION \
     && sh ./install.sh
 
 # Install MorphologicalPriorsForWordEmbeddings
 RUN cd /gensim/gensim_dependencies \
-    && git clone https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings.git
+    && git clone https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings.git \
+    && cd /gensim_dependencies/MorphologicalPriorsForWordEmbeddings \
+    && git checkout $MORPHOLOGICALPRIORSFORWORDEMBEDDINGS_VERSION
 
 # Install DTM
 RUN cd /gensim/gensim_dependencies \
     && git clone https://github.com/blei-lab/dtm.git \
     && cd /gensim/gensim_dependencies/dtm/dtm \
+    && git checkout $DTM_VERSION \
     && make
 
 # Install Mallet
 RUN mkdir /gensim/gensim_dependencies/mallet \
     && mkdir /gensim/gensim_dependencies/download \
     && cd /gensim/gensim_dependencies/download \
-    && wget --quiet http://mallet.cs.umass.edu/dist/mallet-2.0.8.zip \
-    && unzip mallet-2.0.8.zip \
-    && mv ./mallet-2.0.8/* /gensim/gensim_dependencies/mallet \
+    && wget --quiet http://mallet.cs.umass.edu/dist/mallet-$MALLET_VERSION.zip \
+    && unzip mallet-$MALLET_VERSION.zip \
+    && mv ./mallet-$MALLET_VERSION/* /gensim/gensim_dependencies/mallet \
     && rm -rf /gensim/gensim_dependencies/download \
     && cd /gensim/gensim_dependencies/mallet \
     && ant
@@ -127,6 +140,7 @@ RUN mkdir /gensim/gensim_dependencies/mallet \
 RUN cd /gensim/gensim_dependencies \
     && git clone https://github.com/JohnLangford/vowpal_wabbit.git \
     && cd /gensim/gensim_dependencies/vowpal_wabbit \
+    && git checkout VOWPAL_WABBIT_VERSION \
     && make \
     && make install
 
