@@ -971,7 +971,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
-    def diff(self, other, distance="kulback_leibler", num_words=100, n_ann_terms=10, normed=True, diagonal=True, matrix=False, annotation=True):
+    def diff(self, other, distance="kulback_leibler", num_words=100, n_ann_terms=10, normed=True, diagonal=False, matrix=True, annotation=True):
         """
         Calculate difference topic2topic between two Lda models
         `other` instances of `LdaMulticore` or `LdaModel`
@@ -1037,12 +1037,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                         pos_tokens = sample(pos_tokens, min(len(pos_tokens), n_ann_terms))
                         neg_tokens = sample(neg_tokens, min(len(neg_tokens), n_ann_terms))
-                        print(pos_tokens)
 
                         annotation[topic1][topic2] = [pos_tokens, neg_tokens]
 
         if diagonal:
-            assert t1_size == t2_size, 'mismatch between number of topics from both model'
+            assert t1_size == t2_size, 'mismatch between number of topics in both model'
             z = np.zeros(t1_size)
 
             for topic in range(t1_size):
