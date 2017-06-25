@@ -971,7 +971,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
-    def diff(self, other, distance="kulback_leibler", num_words=100, n_ann_terms=10, normed=True):
+    def diff(self, other, distance="kulback_leibler", num_words=100, n_ann_terms=10, normed=True, diagonal=True, matrix=False, annotation=True):
         """
         Calculate difference topic2topic between two Lda models
         `other` instances of `LdaMulticore` or `LdaModel`
@@ -1016,26 +1016,53 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if distance == "jaccard":
             d1, d2 = fst_topics, snd_topics
 
-        z = np.zeros((t1_size, t2_size))
-        for topic1 in range(t1_size):
-            for topic2 in range(t2_size):
-                z[topic1][topic2] = distance_func(d1[topic1], d2[topic2])
+        if matrix:
+            z = np.zeros((t1_size, t2_size))
 
-        if normed:
-            if np.abs(np.max(z)) > 1e-8:
-                z /= np.max(z)
+            for topic1 in range(t1_size):
+                for topic2 in range(t2_size):
+                    z[topic1][topic2] = distance_func(d1[topic1], d2[topic2])
 
-        annotation = [[None] * t1_size for _ in range(t2_size)]
+            if normed:
+                if np.abs(np.max(z)) > 1e-8:
+                    z /= np.max(z)
 
-        for topic1 in range(t1_size):
-            for topic2 in range(t2_size):
-                pos_tokens = fst_topics[topic1] & snd_topics[topic2]
-                neg_tokens = fst_topics[topic1].symmetric_difference(snd_topics[topic2])
+            if annotation:
+                annotation = [[None] * t1_size for _ in range(t2_size)]
 
-                pos_tokens = sample(pos_tokens, min(len(pos_tokens), n_ann_terms))
-                neg_tokens = sample(neg_tokens, min(len(neg_tokens), n_ann_terms))
+                for topic1 in range(t1_size):
+                    for topic2 in range(t2_size):
+                        pos_tokens = fst_topics[topic1] & snd_topics[topic2]
+                        neg_tokens = fst_topics[topic1].symmetric_difference(snd_topics[topic2])
 
-                annotation[topic1][topic2] = [pos_tokens, neg_tokens]
+                        pos_tokens = sample(pos_tokens, min(len(pos_tokens), n_ann_terms))
+                        neg_tokens = sample(neg_tokens, min(len(neg_tokens), n_ann_terms))
+                        print(pos_tokens)
+
+                        annotation[topic1][topic2] = [pos_tokens, neg_tokens]
+
+        if diagonal:
+            assert t1_size == t2_size, 'mismatch between number of topics from both model'
+            z = np.zeros(t1_size)
+
+            for topic in range(t1_size):
+                z[topic] = distance_func(d1[topic], d2[topic])
+
+            if normed:
+                if np.abs(np.max(z)) > 1e-8:
+                    z /= np.max(z)
+
+            if annotation:
+                annotation = [None] * t1_size
+
+                for topic in range(t1_size):
+                        pos_tokens = fst_topics[topic] & snd_topics[topic]
+                        neg_tokens = fst_topics[topic].symmetric_difference(snd_topics[topic])
+
+                        pos_tokens = sample(pos_tokens, min(len(pos_tokens), n_ann_terms))
+                        neg_tokens = sample(neg_tokens, min(len(neg_tokens), n_ann_terms))
+
+                        annotation[topic] = [pos_tokens, neg_tokens]
 
         return z, annotation
 
