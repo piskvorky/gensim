@@ -101,7 +101,6 @@ def count_vocab(self,sentence_no, sentence):
     self.sentence_no = sentence_no
 
     if sentence_no % self.progress_per == 0:
-        logger.info(sentence_no)
         logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
             (sentence_no, self.total_words, len(self.vocab)))
 
