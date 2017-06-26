@@ -198,7 +198,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf={}, minimum_phi_value=0.01,
-                 per_word_topics=False, viz=False, distance="kulback_leibler",
+                 per_word_topics=False, viz=False, env=None, distance="kulback_leibler",
                  coherence="u_mass", texts=None, window_size=None, topn=10):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
@@ -244,6 +244,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         `random_state` can be a np.random.RandomState object or the seed for one
 
         `viz` set True for visualizing LDA training stats in Visdom
+
+        `env` defines the environment to use in visdom browser
 
         `distance` measure to be used for Diff plot visualization
 
@@ -309,6 +311,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.per_word_topics = per_word_topics
         self.viz = viz
         if self.viz:
+            self.env = env
             self.distance = distance
             self.texts = texts
             self.coherence = coherence
@@ -565,7 +568,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def update(self, corpus, chunksize=None, decay=None, offset=None, passes=None, update_every=None,
                eval_every=None, iterations=None, gamma_threshold=None, chunks_as_numpy=False,
-               viz=None, distance=None, coherence=None, texts=None, window_size=None, topn=None):
+               viz=None, env=None, distance=None, coherence=None, texts=None, window_size=None, topn=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -630,6 +633,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if viz is None:
             viz = self.viz
         if viz:
+            if env is None:
+                env = self.env
             if distance is None:
                 distance = self.distance
             if coherence is None:
@@ -750,18 +755,18 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 if pass_ == 0:
                     # initial plot windows
                     Diff_mat = np.array([diff_diagonal])
-                    viz_coherence = viz_window.line(Y=Coherence, X=np.array([pass_]), opts=dict(xlabel='Epochs', ylabel='Coherence', title='Coherence (%s)' % coherence))
-                    viz_perplexity = viz_window.line(Y=Perplexity, X=np.array([pass_]), opts=dict(xlabel='Epochs', ylabel='Perplexity', title='Perplexity'))
-                    viz_convergence = viz_window.line(Y=Convergence, X=np.array([pass_]), opts=dict(xlabel='Epochs', ylabel='Convergence', title='Convergence (%s)' % distance))
-                    viz_diff = viz_window.heatmap(X=np.array(Diff_mat).T, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % distance)) 
+                    viz_coherence = viz_window.line(Y=Coherence, X=np.array([pass_]), env=env, opts=dict(xlabel='Epochs', ylabel='Coherence', title='Coherence (%s)' % coherence))
+                    viz_perplexity = viz_window.line(Y=Perplexity, X=np.array([pass_]), env=env, opts=dict(xlabel='Epochs', ylabel='Perplexity', title='Perplexity'))
+                    viz_convergence = viz_window.line(Y=Convergence, X=np.array([pass_]), env=env, opts=dict(xlabel='Epochs', ylabel='Convergence', title='Convergence (%s)' % distance))
+                    viz_diff = viz_window.heatmap(X=np.array(Diff_mat).T, env=env, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % distance)) 
 
                 else:
                     # update the plot with each epoch
                     Diff_mat = np.concatenate((Diff_mat, np.array([diff_diagonal])))
-                    viz_window.updateTrace(Y=Coherence, X=np.array([pass_]), win=viz_coherence)
-                    viz_window.updateTrace(Y=Perplexity, X=np.array([pass_]), win=viz_perplexity)
-                    viz_window.updateTrace(Y=Convergence, X=np.array([pass_]), win=viz_convergence)
-                    viz_window.heatmap(X=np.array(Diff_mat).T, win=viz_diff, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % distance))
+                    viz_window.updateTrace(Y=Coherence, X=np.array([pass_]), env=env, win=viz_coherence)
+                    viz_window.updateTrace(Y=Perplexity, X=np.array([pass_]), env=env, win=viz_perplexity)
+                    viz_window.updateTrace(Y=Convergence, X=np.array([pass_]), env=env, win=viz_convergence)
+                    viz_window.heatmap(X=np.array(Diff_mat).T, env=env, win=viz_diff, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % distance))
 
             if dirty:
                 # finish any remaining updates
