@@ -64,13 +64,11 @@ def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
             word = sentence[-1]
             vocab[word] += 1
 
-        len_vocab = len(vocab)
-
-        if len_vocab > _max_vocab_size:
+        if len(vocab) > _max_vocab_size:
             utils.prune_vocab(vocab, min_reduce)
             min_reduce += 1
 
     logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
-                (len_vocab, total_words, sentence_no + 1))
+                (len(vocab), total_words, sentence_no + 1))
 
     return min_reduce, vocab
