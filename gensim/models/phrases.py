@@ -98,8 +98,6 @@ def _is_single(obj):
         return False, obj_iter
 
 def count_vocab(self,sentence_no, sentence):
-    logger.info("sn2")
-    logger.info(sentence_no)
     self.sentence_no = sentence_no
 
     if sentence_no % self.progress_per == 0:
@@ -202,8 +200,6 @@ class Phrases(interfaces.TransformationABC):
         Parallel(n_jobs= -1, backend="threading")\
         (delayed (count_vocab)(self, sentence_no, sentence)\
             for sentence_no, sentence in enumerate(sentences))
-        logger.info("sn")
-        logger.info(self.sentence_no)
 
         logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
                 (len(self.vocab), self.total_words, self.sentence_no + 1))
