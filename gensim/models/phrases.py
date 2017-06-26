@@ -70,6 +70,8 @@ from six import iteritems, string_types, next
 from gensim import utils, interfaces
 
 from joblib import Parallel, delayed
+import threading
+lock = threading.Lock()
 
 logger = logging.getLogger(__name__)
 
@@ -107,13 +109,22 @@ def count_vocab(self,sentence_no, sentence):
     sentence = [utils.any2utf8(w) for w in sentence]
 
     for bigram in zip(sentence, sentence[1:]):
-        self.vocab[bigram[0]] += 1
-        self.vocab[self.delimiter.join(bigram)] += 1
+        lock.acquire()
+        try:
+            self.vocab[bigram[0]] += 1
+            self.vocab[self.delimiter.join(bigram)] += 1
+        finally:
+            lock.release()
         self.total_words += 1
+        
 
     if sentence:  # add last word skipped by previous loop
         word = sentence[-1]
-        self.vocab[word] += 1
+        lock.acquire()
+        try:
+            self.vocab[word] += 1
+        finally:
+            lock.release()
 
     if len(self.vocab) > self.max_vocab_size:
         utils.prune_vocab(self.vocab, self.min_reduce)
