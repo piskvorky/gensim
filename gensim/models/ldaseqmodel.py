@@ -157,9 +157,9 @@ class LdaSeqModel(utils.SaveLoad):
         """
         fit an lda sequence model:
 
-        for each time period
+        for each time period:
             set up lda model with E[log p(w|z)] and \alpha
-            for each document
+            for each document:
                 perform posterior inference
                 update sufficient statistics/likelihood
 

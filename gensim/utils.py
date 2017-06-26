@@ -1208,16 +1208,14 @@ def strided_windows(ndarray, window_size):
            [4, 5, 6, 7, 8],
            [5, 6, 7, 8, 9]])
 
-    Args
-    ====
-    ndarray: either a numpy.ndarray or something that can be converted into one.
-    window_size: sliding window size.
+    Args:
+        ndarray: either a numpy.ndarray or something that can be converted into one.
+        window_size: sliding window size.
 
-    Returns
-    =======
-    numpy.ndarray of the subsequences produced by sliding a window of the given size over
-    the `ndarray`. Since this uses striding, the individual arrays are views rather than
-    copies of `ndarray`. Changes to one view modifies the others and the original.
+    Returns:
+        numpy.ndarray of the subsequences produced by sliding a window of the given size over
+        the `ndarray`. Since this uses striding, the individual arrays are views rather than
+        copies of `ndarray`. Changes to one view modifies the others and the original.
     """
     ndarray = np.asarray(ndarray)
     if window_size == ndarray.shape[0]:
@@ -1236,13 +1234,12 @@ def iter_windows(texts, window_size, copy=False, ignore_below_size=True, include
     The windows produced are views of some subsequence of a text. To use deep copies
     instead, pass `copy=True`.
 
-    Args
-    ====
-    texts: List of string sentences.
-    window_size: Size of sliding window.
-    copy: False to use views of the texts (default) or True to produce deep copies.
-    ignore_below_size: ignore documents that are not at least `window_size` in length (default behavior).
-    If False, the documents below `window_size` will be yielded as the full document.
+    Args:
+        texts: List of string sentences.
+        window_size: Size of sliding window.
+        copy: False to use views of the texts (default) or True to produce deep copies.
+        ignore_below_size: ignore documents that are not at least `window_size` in length (default behavior).
+            If False, the documents below `window_size` will be yielded as the full document.
 
     """
     for doc_num, document in enumerate(texts):

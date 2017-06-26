@@ -9,13 +9,13 @@ Module for calculating topic coherence in python. This is the implementation of
 the four stage topic coherence pipeline from the paper [1]_.
 The four stage pipeline is basically:
 
-Segmentation -> Probability Estimation -> Confirmation Measure -> Aggregation.
+    Segmentation -> Probability Estimation -> Confirmation Measure -> Aggregation.
 
 Implementation of this pipeline allows for the user to in essence "make" a
 coherence measure of his/her choice by choosing a method in each of the pipelines.
 
-.. [1] Michael Roeder, Andreas Both and Alexander Hinneburg. Exploring the space of topic coherence measures.
-`http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf.`
+.. [1] Michael Roeder, Andreas Both and Alexander Hinneburg. Exploring the space of topic
+  coherence measures. http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf.
 """
 
 import logging
@@ -113,43 +113,46 @@ class CoherenceModel(interfaces.TransformationABC):
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
                  window_size=None, coherence='c_v', topn=10, processes=-1):
         """
-        Args
-        ====
-        model : Pre-trained topic model. Should be provided if topics is not provided.
+        Args:
+            model : Pre-trained topic model. Should be provided if topics is not provided.
                 Currently supports LdaModel, LdaMallet wrapper and LdaVowpalWabbit wrapper. Use 'topics'
                 parameter to plug in an as yet unsupported model.
-        topics : List of tokenized topics. If this is preferred over model, dictionary should be provided.
-            eg :
-                        topics = [['human', 'machine', 'computer', 'interface'],
+            topics : List of tokenized topics. If this is preferred over model, dictionary should be provided.
+                eg::
+
+                    topics = [['human', 'machine', 'computer', 'interface'],
                                ['graph', 'trees', 'binary', 'widths']]
-        texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator,
-            eg :
-                        texts = [['system', 'human', 'system', 'eps'],
+
+            texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator,
+                eg::
+
+                    texts = [['system', 'human', 'system', 'eps'],
                              ['user', 'response', 'time'],
                              ['trees'],
                              ['graph', 'trees'],
                              ['graph', 'minors', 'trees'],
                              ['graph', 'minors', 'survey']]
-        corpus : Gensim document corpus.
-        dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present,
-                     this is not needed. If both are provided, dictionary will be used.
-        window_size : Is the size of the window to be used for coherence measures using boolean sliding window as their
-                      probability estimator. For 'u_mass' this doesn't matter.
-                      If left 'None' the default window sizes are used which are:
-                      'c_v' : 110
-                      'c_uci' : 10
-                      'c_npmi' : 10
-        coherence : Coherence measure to be used. Supported values are:
-                    'u_mass'
-                    'c_v'
-                    'c_uci' also popularly known as c_pmi
-                    'c_npmi'
-                    For 'u_mass' corpus should be provided. If texts is provided, it will be converted
-                    to corpus using the dictionary. For 'c_v', 'c_uci' and 'c_npmi' texts should be provided.
-                    Corpus is not needed.
-        topn : Integer corresponding to the number of top words to be extracted from each topic.
-        processes : number of processes to use for probability estimation phase; any value less than 1 will be
-                    interpreted to mean num_cpus - 1; default is -1.
+
+            corpus : Gensim document corpus.
+            dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present,
+                this is not needed. If both are provided, dictionary will be used.
+            window_size : Is the size of the window to be used for coherence measures using boolean sliding window as their
+                probability estimator. For 'u_mass' this doesn't matter.
+                If left 'None' the default window sizes are used which are:
+                    'c_v' : 110
+                    'c_uci' : 10
+                    'c_npmi' : 10
+            coherence : Coherence measure to be used. Supported values are:
+                'u_mass'
+                'c_v'
+                'c_uci' also popularly known as c_pmi
+                'c_npmi'
+                For 'u_mass' corpus should be provided. If texts is provided, it will be converted
+                to corpus using the dictionary. For 'c_v', 'c_uci' and 'c_npmi' texts should be provided.
+                Corpus is not needed.
+            topn : Integer corresponding to the number of top words to be extracted from each topic.
+            processes : number of processes to use for probability estimation phase; any value less than 1 will be
+                interpreted to mean num_cpus - 1; default is -1.
         """
         if model is None and topics is None:
             raise ValueError("One of model or topics has to be provided.")

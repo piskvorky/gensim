@@ -981,11 +981,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
         Returns a matrix Z with shape (m1.num_topics, m2.num_topics), where Z[i][j] - difference between topic_i and topic_j
         and matrix annotation with shape (m1.num_topics, m2.num_topics, 2, None),
-        where
+        where:
             annotation[i][j] = [[`int_1`, `int_2`, ...], [`diff_1`, `diff_2`, ...]] and
             `int_k` is word from intersection of `topic_i` and `topic_j` and
             `diff_l` is word from symmetric difference of `topic_i` and `topic_j`
-        `normed` is a flag. If `true`, matrix Z will be normalized
+            `normed` is a flag. If `true`, matrix Z will be normalized
         Example:
         >>> m1, m2 = LdaMulticore.load(path_1), LdaMulticore.load(path_2)
         >>> mdiff, annotation = m1.diff(m2)

@@ -29,9 +29,8 @@ def _ids_to_words(ids, dictionary):
     This function abstracts away the differences between the HashDictionary and the standard one.
 
     Args:
-    ----
-    ids: list of list of tuples, where each tuple contains (token_id, iterable of token_ids).
-         This is the format returned by the topic_coherence.segmentation functions.
+        ids: list of list of tuples, where each tuple contains (token_id, iterable of token_ids).
+            This is the format returned by the topic_coherence.segmentation functions.
     """
     if not dictionary.id2token:  # may not be initialized in the standard gensim.corpora.Dictionary
         setattr(dictionary, 'id2token', {v: k for k, v in dictionary.token2id.items()})
@@ -169,9 +168,8 @@ class WindowedTextsAnalyzer(UsesDictionary):
     def __init__(self, relevant_ids, dictionary):
         """
         Args:
-        ----
-        relevant_ids: the set of words that occurrences should be accumulated for.
-        dictionary: Dictionary instance with mappings for the relevant_ids.
+            relevant_ids: the set of words that occurrences should be accumulated for.
+            dictionary: Dictionary instance with mappings for the relevant_ids.
         """
         super(WindowedTextsAnalyzer, self).__init__(relevant_ids, dictionary)
         self._none_token = self._vocab_size  # see _iter_texts for use of none token
@@ -301,11 +299,10 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
     def __init__(self, processes, *args, **kwargs):
         """
         Args:
-        ----
-        processes : number of processes to use; must be at least two.
-        args : should include `relevant_ids` and `dictionary` (see `UsesDictionary.__init__`).
-        kwargs : can include `batch_size`, which is the number of docs to send to a worker at a
-                 time. If not included, it defaults to 64.
+            processes : number of processes to use; must be at least two.
+            args : should include `relevant_ids` and `dictionary` (see `UsesDictionary.__init__`).
+            kwargs : can include `batch_size`, which is the number of docs to send to a worker at a
+                time. If not included, it defaults to 64.
         """
         super(ParallelWordOccurrenceAccumulator, self).__init__(*args)
         if processes < 2:
