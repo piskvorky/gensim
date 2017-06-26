@@ -17,11 +17,14 @@ import cython
 import numpy as np
 cimport numpy as np
 
-# ctypedef np.float32_t REAL_t
-
-REAL = np.float32
-
 logger = logging.getLogger(__name__)
+
+cdef bytes any2utf8(text, errors='strict', encoding='utf8'):
+    """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8."""
+    if isinstance(text, unicode):
+        return text.encode('utf8')
+    # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
+    return unicode(text, encoding, errors=errors).encode('utf8')
 
 
 def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
@@ -34,16 +37,24 @@ def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
     logger.info("collecting all words and their counts")
     cdef vocab = defaultdict(int)
 
-    cdef int min_reduce = -1
+    cdef np.uint32_t min_reduce = -1
 
-    cdef list sentence = []
-    cdef np.uint32_t len_vocab = -1
+    cdef bytes w
+    cdef np.uint32_t len_s = -1
 
     for sentence_no, sentence in enumerate(sentences):
+        len_s = len(sentence)
         if sentence_no % _progress_per == 0:
             logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                         (sentence_no, total_words, len(vocab)))
-        sentence = [utils.any2utf8(w) for w in sentence]
+
+        if sentence and isinstance(sentence[0], bytes):
+            sentence = [w for w in (utils.any2utf8(b'_;_'.join(sentence)).split(b'_;_'))]
+        else:
+            sentence = [w for w in (utils.any2utf8(u'_;_'.join(sentence)).split(b'_;_'))]
+
+        assert len_s == len(sentence), 'mismatch between number of tokens after utf8 conversion'
+
         for bigram in zip(sentence, sentence[1:]):
             vocab[bigram[0]] += 1
             vocab[delimiter.join(bigram)] += 1
