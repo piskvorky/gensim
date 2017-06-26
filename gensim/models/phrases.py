@@ -69,8 +69,6 @@ from six import iteritems, string_types, next
 
 from gensim import utils, interfaces
 
-import numpy as np
-
 logger = logging.getLogger(__name__)
 
 
