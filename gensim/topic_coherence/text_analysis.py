@@ -273,7 +273,8 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         """
         co_occ = self._co_occurrences
         co_occ.setdiag(self._occurrences)  # diagonal should be equal to occurrence counts
-        self._co_occurrences = co_occ + co_occ.T - sps.diags(co_occ.diagonal(), dtype='uint32')
+        self._co_occurrences = \
+            co_occ + co_occ.T - sps.diags(co_occ.diagonal(), offsets=0, dtype='uint32')
 
     def _get_occurrences(self, word_id):
         return self._occurrences[word_id]
