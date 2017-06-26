@@ -71,8 +71,6 @@ from gensim import utils, interfaces
 
 import numpy as np
 
-REAL = np.float32
-
 logger = logging.getLogger(__name__)
 
 
@@ -170,16 +168,16 @@ class Phrases(interfaces.TransformationABC):
         vocab = defaultdict(int)
         min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
-            s = sentence
+            len_s = len(sentence)
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
-            if isinstance(sentence[0], bytes):
-                sentence = [w for w in (utils.any2utf8(b';'.join(sentence)).split(b';'))]
+            if sentence and isinstance(sentence[0], bytes):
+                sentence = [w for w in (utils.any2utf8(b'_;_'.join(sentence)).split(b'_;_'))]
             else:
-                sentence = [w for w in (utils.any2utf8(u';'.join(sentence)).split(b';'))]
+                sentence = [w for w in (utils.any2utf8(u'_;_'.join(sentence)).split(b'_;_'))]
 
-            assert len(s) == len(sentence)
+            assert len_s == len(sentence), 'mismatch between number of tokens after utf8 conversion'
 
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
@@ -238,12 +236,14 @@ class Phrases(interfaces.TransformationABC):
             then you can debug the threshold with generated tsv
         """
         for sentence in sentences:
-            if isinstance(sentence[0], bytes):
-                s = [w for w in (utils.any2utf8(b';'.join(sentence)).split(b';'))]
+            len_s = len(sentence)
+            if sentence and isinstance(sentence[0], bytes):
+                s = [w for w in (utils.any2utf8(b'_;_'.join(sentence)).split(b'_;_'))]
             else:
-                s = [w for w in (utils.any2utf8(u';'.join(sentence)).split(b';'))]
+                s = [w for w in (utils.any2utf8(u'_;_'.join(sentence)).split(b'_;_'))]
 
-            assert len(s) == len(sentence)
+            assert len_s == len(sentence), 'mismatch between number of tokens after utf8 conversion'
+
             last_bigram = False
             vocab = self.vocab
             threshold = self.threshold
@@ -253,9 +253,9 @@ class Phrases(interfaces.TransformationABC):
                 if word_a in vocab and word_b in vocab:
                     bigram_word = delimiter.join((word_a, word_b))
                     if bigram_word in vocab and not last_bigram:
-                        pa = REAL(vocab[word_a])
-                        pb = REAL(vocab[word_b])
-                        pab = REAL(vocab[bigram_word])
+                        pa = float(vocab[word_a])
+                        pb = float(vocab[word_b])
+                        pab = float(vocab[bigram_word])
                         score = (pab - min_count) / pa / pb * len(vocab)
                         # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                         #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
@@ -305,9 +305,9 @@ class Phrases(interfaces.TransformationABC):
             if word_a in vocab and word_b in vocab:
                 bigram_word = delimiter.join((word_a, word_b))
                 if bigram_word in vocab and not last_bigram:
-                    pa = REAL(vocab[word_a])
-                    pb = REAL(vocab[word_b])
-                    pab = REAL(vocab[bigram_word])
+                    pa = float(vocab[word_a])
+                    pb = float(vocab[word_b])
+                    pab = float(vocab[bigram_word])
                     score = (pab - min_count) / pa / pb * len(vocab)
                     # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                     #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
