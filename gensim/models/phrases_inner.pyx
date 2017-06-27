@@ -15,7 +15,6 @@ from collections import defaultdict
 
 import cython
 import numpy as np
-cimport numpy as np
 
 logger = logging.getLogger(__name__)
 
