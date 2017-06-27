@@ -82,7 +82,7 @@ w2v_texts = [
     ['calculus', 'is', 'the', 'mathematical', 'study', 'of', 'continuous', 'change'],
     ['geometry', 'is', 'the', 'study', 'of', 'shape'],
     ['algebra', 'is', 'the', 'study', 'of', 'generalizations', 'of', 'arithmetic', 'operations'],
-    ['differential', 'calculus','is', 'related', 'to', 'rates', 'of', 'change', 'and', 'slopes', 'of', 'curves'],
+    ['differential', 'calculus', 'is', 'related', 'to', 'rates', 'of', 'change', 'and', 'slopes', 'of', 'curves'],
     ['integral', 'calculus', 'is', 'realted', 'to', 'accumulation', 'of', 'quantities', 'and', 'the', 'areas', 'under', 'and', 'between', 'curves'],
     ['physics', 'is', 'the', 'natural', 'science', 'that', 'involves', 'the', 'study', 'of', 'matter', 'and', 'its', 'motion', 'and', 'behavior', 'through', 'space', 'and', 'time'],
     ['the', 'main', 'goal', 'of', 'physics', 'is', 'to', 'understand', 'how', 'the', 'universe', 'behaves'],
