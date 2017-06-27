@@ -444,8 +444,8 @@ class TestSklW2VModelWrapper(unittest.TestCase):
             ('calculus', 'mathematics'), ('mathematical', 'mathematics'), ('geometry', 'mathematics'), ('operations', 'mathematics'), ('curves', 'mathematics'),
             ('natural', 'physics'), ('nuclear', 'physics'), ('science', 'physics'), ('electromagnetism', 'physics'), ('natural', 'physics')
         ]
-        train_input = map(lambda x: x[0], train_data)
-        train_target = map(lambda x: class_dict[x[1]], train_data)
+        train_input = list(map(lambda x: x[0], train_data))
+        train_target = list(map(lambda x: class_dict[x[1]], train_data))
 
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         clf.fit(model.transform(train_input), train_target)
