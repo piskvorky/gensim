@@ -101,16 +101,4 @@ class SklW2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         return np.reshape(np.array(X), (len(words), self.size))
 
     def partial_fit(self, X):
-        """
-        Update model using newly added sentences.
-        """
-        if self.gensim_model is None:
-            self.gensim_model = models.Word2Vec(size=self.size, alpha=self.alpha,
-                window=self.window, min_count=self.min_count, max_vocab_size=self.max_vocab_size,
-                sample=self.sample, seed=self.seed, workers=self.workers, min_alpha=self.min_alpha,
-                sg=self.sg, hs=self.hs, negative=self.negative, cbow_mean=self.cbow_mean,
-                hashfxn=self.hashfxn, iter=self.iter, null_word=self.null_word, trim_rule=self.trim_rule,
-                sorted_vocab=self.sorted_vocab, batch_words=self.batch_words)
-
-        self.gensim_model.train(X, total_examples=self.gensim_model.corpus_count, epochs=self.gensim_model.iter)
-        return self
+        raise NotImplementedError("'partial_fit' has not been implemented for SklW2VModel")
