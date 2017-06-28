@@ -133,6 +133,6 @@ check_files() {
 if [[ "$MODIFIED_FILES" == "no_match" ]]; then
     echo "No file has been modified"
 else
-    check_files "$(echo "$MODIFIED_FILES" )" "--ignore=E501,E731,E12,W503 --exclude=*.sh,*.md,*.yml,*.rst,*.ipynb,*.txt,*.csv,*.vec,Dockerfile*"
+    check_files "$(echo "$MODIFIED_FILES" )" "--ignore=E501,E731,E12,W503 --exclude=*.sh,*.md,*.yml,*.rst,*.ipynb,*.txt,*.csv,*.vec,*.c,*.pxd,*.pyx,Dockerfile*"
 fi
 echo -e "No problem detected by flake8\n"
