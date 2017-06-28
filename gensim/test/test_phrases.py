@@ -155,9 +155,6 @@ class TestPhrasesModel(unittest.TestCase):
 
     def testBadParameters(self):
         """Test the phrases module with bad parameters."""
-        # should fail with something less or equal than 0
-        self.assertRaises(ValueError, Phrases, sentences, min_count=0)
-
         # threshold should be positive
         self.assertRaises(ValueError, Phrases, sentences, threshold=-1)
 
