@@ -74,6 +74,7 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.phrases_inner import learn_vocab
 except ImportError:
+    logger.info("failed to load cython")
 
     def learn_vocab(self, sentences):
         """Collect unigram/bigram counts from the `sentences` iterable."""
