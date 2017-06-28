@@ -158,7 +158,6 @@ class Phrases(interfaces.TransformationABC):
             self.__class__.__name__, len(self.vocab), self.min_count,
             self.threshold, self.max_vocab_size)
 
-
     def learn_vocab(self, sentences):
         """Collect unigram/bigram counts from the `sentences` iterable."""
         sentence_no = -1

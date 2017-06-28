@@ -167,7 +167,7 @@ class TestPhrasesModel(unittest.TestCase):
         """Test that Phrases works as expected when `recode_to_utf8 = False` """
         expected = ['survey', 'user', 'computer', 'system', 'response_time']
 
-        bigram_recode_false = Phrases(sentences,recode_to_utf8=False, min_count=1, threshold=1)
+        bigram_recode_false = Phrases(sentences, recode_to_utf8=False, min_count=1, threshold=1)
         self.assertEqual(bigram_recode_false[sentences[1]], expected)
 #endclass TestPhrasesModel
 
@@ -192,7 +192,7 @@ class TestPhraserModel(TestPhrasesCommon):
         """Test that Phraser works as expected when `recode_to_utf8 = False` """
         expected = ['survey', 'user', 'computer', 'system', 'response_time']
 
-        bigram_recode_false = Phrases(sentences,recode_to_utf8=False, min_count=1, threshold=1)
+        bigram_recode_false = Phrases(sentences, recode_to_utf8=False, min_count=1, threshold=1)
 
         bigram_phraser = Phraser(bigram_recode_false)
         self.assertEqual(bigram_phraser[sentences[1]], expected)
