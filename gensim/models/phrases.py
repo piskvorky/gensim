@@ -146,7 +146,7 @@ class Phrases(interfaces.TransformationABC):
         self.max_vocab_size = max_vocab_size
         self.vocab = defaultdict(int)  # mapping between utf8 token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
-        self.delimiter = delimiter
+        self.delimiter = delimiter if recode_to_utf8 else utils.any2unicode(delimiter)
         self.progress_per = progress_per
 
         if sentences is not None:
@@ -175,8 +175,6 @@ class Phrases(interfaces.TransformationABC):
                     sentence_no, total_words, len(vocab))
             if self.recode_to_utf8:
                 sentence = [utils.any2utf8(w) for w in sentence]
-            else:
-                delimiter = utils.any2unicode(self.delimiter)
 
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
@@ -245,7 +243,6 @@ class Phrases(interfaces.TransformationABC):
                 s = [utils.any2utf8(w) for w in sentence]
             else:
                 s = list(sentence)
-                delimiter = utils.any2unicode(delimiter)
 
             for word_a, word_b in zip(s, s[1:]):
                 if word_a in vocab and word_b in vocab:
@@ -303,7 +300,6 @@ class Phrases(interfaces.TransformationABC):
             s = [utils.any2utf8(w) for w in sentence]
         else:
             s = list(sentence)
-            delimiter = utils.any2unicode(delimiter)
 
         new_s = []
 
@@ -399,7 +395,6 @@ class Phraser(interfaces.TransformationABC):
             s = [utils.any2utf8(w) for w in sentence]
         else:
             s = list(sentence)
-            delimiter = utils.any2unicode(delimiter)
 
         new_s = []
 
