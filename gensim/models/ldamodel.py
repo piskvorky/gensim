@@ -42,7 +42,6 @@ from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
 from gensim.matutils import kullback_leibler, hellinger, jaccard_distance
-from visdom import Visdom
 
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
@@ -58,6 +57,12 @@ except ImportError:
     # maxentropy has been removed in recent releases, logsumexp now in misc
     from scipy.misc import logsumexp
 
+# Visdom is used for training stats visualization
+try:
+    from visdom import Visdom
+    VISDOM_INSTALLED = True
+except ImportError:
+    VISDOM_INSTALLED = False
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
@@ -198,8 +203,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf={}, minimum_phi_value=0.01,
-                 per_word_topics=False, viz=False, env=None, distance="kulback_leibler",
-                 coherence="u_mass", texts=None, window_size=None, topn=10):
+                 per_word_topics=False, viz=False, metrics={}):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -245,28 +249,30 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         `viz` set True for visualizing LDA training stats in Visdom
 
-        `env` defines the environment to use in visdom browser
+        `metrics` : dict containing following parameters for visualization or logging purposes
 
-        `distance` measure to be used for Diff plot visualization
+                `viz_env` defines the environment to use in visdom browser
 
-        `coherence` measure to be used for Coherence plot visualization
+                `coherence` measure to be used for coherence plot visualization. Available values: u_mass, c_v, c_uci, c_npmi
 
-        `texts` : Tokenized texts. Needed if sliding_window_based coherence measures (c_v, c_uci, c_npmi) are chosen for visualization. eg::
-                texts = [['system', 'human', 'system', 'eps'],
-                             ['user', 'response', 'time'],
-                             ['trees'],
-                             ['graph', 'trees'],
-                             ['graph', 'minors', 'trees'],
-                             ['graph', 'minors', 'survey']]
+                `coherence_texts` : Tokenized texts. Needed if sliding_window_based coherence measures (c_v, c_uci, c_npmi) are chosen for visualization. eg::
+                         coherence_texts = [['system', 'human', 'system', 'eps'],
+                                    ['user', 'response', 'time'],
+                                    ['trees'],
+                                    ['graph', 'trees'],
+                                    ['graph', 'minors', 'trees'],
+                                    ['graph', 'minors', 'survey']]
 
-        `window_size` : Is the size of the window to be used for coherence measures using boolean sliding window as their
-                      probability estimator. For 'u_mass' this doesn't matter.
-                      If left 'None' the default window sizes are used which are:
-                      'c_v' : 110
-                      'c_uci' : 10
-                      'c_npmi' : 10
+                `coherence_window_size` : Is the size of the window to be used for coherence measures using boolean sliding window as their
+                              probability estimator. For 'u_mass' this doesn't matter.
+                              If left 'None' the default window sizes are used which are:
+                              'c_v' : 110
+                              'c_uci' : 10
+                              'c_npmi' : 10
 
-        `topn` Integer corresponding to the number of top words to be extracted from each topic for coherence logging.
+                `coherence_topn` Integer corresponding to the number of top words to be extracted from each topic for coherence visualization.
+
+                `diff_distance` measure to be used for Diff plot visualization. Available values: kullback_leibler, hellinger, jaccard
 
         Example:
 
@@ -310,13 +316,19 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.minimum_phi_value = minimum_phi_value
         self.per_word_topics = per_word_topics
         self.viz = viz
+        self.metrics = metrics
+
         if self.viz:
-            self.env = env
-            self.distance = distance
-            self.texts = texts
-            self.coherence = coherence
-            self.window_size = window_size
-            self.topn = topn
+            if not VISDOM_INSTALLED:
+                raise ImportError("Please install Visdom for visualization")
+            # use default values in case viz is True but metrics are not provided
+            if not self.metrics:
+                self.metrics = {"viz_env":None,
+                                "coherence":"u_mass",
+                                "coherence_texts":None,
+                                "coherence_window_size":None,
+                                "coherence_topn":10,
+                                "diff_distance":"kullback_leibler"}
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
@@ -567,8 +579,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return perwordbound
 
     def update(self, corpus, chunksize=None, decay=None, offset=None, passes=None, update_every=None,
-               eval_every=None, iterations=None, gamma_threshold=None, chunks_as_numpy=False,
-               viz=None, env=None, distance=None, coherence=None, texts=None, window_size=None, topn=None):
+               eval_every=None, iterations=None, gamma_threshold=None, chunks_as_numpy=False):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -630,22 +641,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.state.numdocs += lencorpus
 
-        if viz is None:
-            viz = self.viz
-        if viz:
-            if env is None:
-                env = self.env
-            if distance is None:
-                distance = self.distance
-            if coherence is None:
-                coherence = self.coherence
-            if texts is None:
-                texts = self.texts
-            if window_size is None:
-                window_size = self.window_size
-            if topn is None:
-                topn = self.topn
-
         if update_every:
             updatetype = "online"
             if passes == 1:
@@ -680,7 +675,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
 
         if self.viz:
-            viz_window = Visdom()
+            self.viz_window = Visdom()
             # save initial random state of model for Diff calculation with first epoch
             previous = copy.deepcopy(self)
 
@@ -737,36 +732,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
 
             if self.viz:
-                # calculate coherence
-                cm = gensim.models.CoherenceModel(model=self, corpus=corpus, texts=texts, coherence=coherence, window_size=window_size, topn=topn)
-                Coherence = np.array([cm.get_coherence()])
-
-                # calculate perplexity
-                corpus_words = sum(cnt for document in corpus for _, cnt in document)
-                perwordbound = self.bound(corpus) / corpus_words
-                Perplexity = np.array([np.exp2(-perwordbound)])
-
-                # calculate diff
-                diff_matrix = self.diff(previous, distance=distance)[0]
-                diff_diagonal = np.diagonal(diff_matrix)
+                self.visualization(corpus, pass_, previous)
+                # save the model in previous for next epoch visualization
                 previous = copy.deepcopy(self)
-                Convergence = np.array([np.sum(diff_diagonal)])
-
-                if pass_ == 0:
-                    # initial plot windows
-                    Diff_mat = np.array([diff_diagonal])
-                    viz_coherence = viz_window.line(Y=Coherence, X=np.array([pass_]), env=env, opts=dict(xlabel='Epochs', ylabel='Coherence', title='Coherence (%s)' % coherence))
-                    viz_perplexity = viz_window.line(Y=Perplexity, X=np.array([pass_]), env=env, opts=dict(xlabel='Epochs', ylabel='Perplexity', title='Perplexity'))
-                    viz_convergence = viz_window.line(Y=Convergence, X=np.array([pass_]), env=env, opts=dict(xlabel='Epochs', ylabel='Convergence', title='Convergence (%s)' % distance))
-                    viz_diff = viz_window.heatmap(X=np.array(Diff_mat).T, env=env, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % distance)) 
-
-                else:
-                    # update the plot with each epoch
-                    Diff_mat = np.concatenate((Diff_mat, np.array([diff_diagonal])))
-                    viz_window.updateTrace(Y=Coherence, X=np.array([pass_]), env=env, win=viz_coherence)
-                    viz_window.updateTrace(Y=Perplexity, X=np.array([pass_]), env=env, win=viz_perplexity)
-                    viz_window.updateTrace(Y=Convergence, X=np.array([pass_]), env=env, win=viz_convergence)
-                    viz_window.heatmap(X=np.array(Diff_mat).T, env=env, win=viz_diff, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % distance))
 
             if dirty:
                 # finish any remaining updates
@@ -804,6 +772,48 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if not extra_pass:
             # only update if this isn't an additional pass
             self.num_updates += other.numdocs
+
+    def visualization(self, corpus, pass_, previous):
+        """
+        Visualize training stats (Coherence, Perplexity, Diff, Convergence) in Visdom
+
+        """
+        viz_env = self.metrics["viz_env"]
+        coherence = self.metrics["coherence"]
+        coherence_texts = self.metrics["coherence_texts"]
+        coherence_window_size = self.metrics["coherence_window_size"]
+        coherence_topn = self.metrics["coherence_topn"]
+        diff_distance = self.metrics["diff_distance"]
+        viz_window = self.viz_window
+
+        # calculate coherence
+        cm = gensim.models.CoherenceModel(model=self, corpus=corpus, texts=coherence_texts, coherence=coherence, window_size=coherence_window_size, topn=coherence_topn)
+        coherence_value = np.array([cm.get_coherence()])
+
+        # calculate perplexity
+        corpus_words = sum(cnt for document in corpus for _, cnt in document)
+        perwordbound = self.bound(corpus) / corpus_words
+        perplexity = np.array([np.exp2(-perwordbound)])
+
+        # calculate diff
+        diff_matrix = self.diff(previous, distance=diff_distance)[0]
+        diff_diagonal = np.diagonal(diff_matrix)
+        convergence = np.array([np.sum(diff_diagonal)])
+
+        if pass_ == 0:
+            # initial plot windows
+            self.diff_mat = np.array([diff_diagonal])
+            self.viz_coherence = viz_window.line(Y=coherence_value, X=np.array([pass_]), env=viz_env, opts=dict(xlabel='Epochs', ylabel='Coherence', title='Coherence (%s)' % coherence))
+            self.viz_perplexity = viz_window.line(Y=perplexity, X=np.array([pass_]), env=viz_env, opts=dict(xlabel='Epochs', ylabel='Perplexity', title='Perplexity'))
+            self.viz_convergence = viz_window.line(Y=convergence, X=np.array([pass_]), env=viz_env, opts=dict(xlabel='Epochs', ylabel='Convergence', title='Convergence (%s)' % diff_distance))
+            self.viz_diff = viz_window.heatmap(X=np.array(self.diff_mat).T, env=viz_env, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % diff_distance)) 
+        else:
+            # update the plot with each epoch
+            self.diff_mat = np.concatenate((self.diff_mat, np.array([diff_diagonal])))
+            viz_window.updateTrace(Y=coherence_value, X=np.array([pass_]), env=viz_env, win=self.viz_coherence)
+            viz_window.updateTrace(Y=perplexity, X=np.array([pass_]), env=viz_env, win=self.viz_perplexity)
+            viz_window.updateTrace(Y=convergence, X=np.array([pass_]), env=viz_env, win=self.viz_convergence)
+            viz_window.heatmap(X=np.array(self.diff_mat).T, env=viz_env, win=self.viz_diff, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % diff_distance))
 
     def bound(self, corpus, gamma=None, subsample_ratio=1.0):
         """
@@ -1063,12 +1073,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
-    def diff(self, other, distance="kulback_leibler", num_words=100, n_ann_terms=10, normed=True):
+    def diff(self, other, distance="kullback_leibler", num_words=100, n_ann_terms=10, normed=True):
         """
         Calculate difference topic2topic between two Lda models
         `other` instances of `LdaMulticore` or `LdaModel`
         `distance` is function that will be applied to calculate difference between any topic pair.
-        Available values: `kulback_leibler`, `hellinger` and `jaccard`
+        Available values: `kullback_leibler`, `hellinger` and `jaccard`
         `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
         `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
         Returns a matrix Z with shape (m1.num_topics, m2.num_topics), where Z[i][j] - difference between topic_i and topic_j
@@ -1086,7 +1096,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
 
         distances = {
-            "kulback_leibler": kullback_leibler,
+            "kullback_leibler": kullback_leibler,
             "hellinger": hellinger,
             "jaccard": jaccard_distance,
         }
