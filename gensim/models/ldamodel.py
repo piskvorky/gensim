@@ -198,7 +198,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, ns_conf={},
                  minimum_phi_value=0.01, per_word_topics=False, coherence='u_mass',
-                 coherence_texts=None, coherence_window_size=None, coherence_topn=10, 
+                 coherence_texts=None, coherence_window_size=None, coherence_topn=10,
                  log_diff=False, diff_distance="jaccard"):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
