@@ -15,3 +15,4 @@ from .sklearn_wrapper_gensim_ldamodel import SklLdaModel  # noqa: F401
 from .sklearn_wrapper_gensim_lsimodel import SklLsiModel  # noqa: F401
 from .sklearn_wrapper_gensim_rpmodel import SklRpModel  # noqa: F401
 from .sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel  # noqa: F401
+from .sklearn_wrapper_gensim_atmodel import SklATModel  # noqa: F401
