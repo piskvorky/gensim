@@ -33,7 +33,7 @@ sentences = [
     ['graph', 'trees'],
     ['graph', 'minors', 'trees'],
     ['graph', 'minors', 'survey'],
-    ['graph', 'minors', 'survey','human','interface'] #test bigrams within same sentence
+    ['graph', 'minors', 'survey', 'human', 'interface'] #test bigrams within same sentence
 ]
 unicode_sentences = [[utils.to_unicode(w) for w in sentence] for sentence in sentences]
 

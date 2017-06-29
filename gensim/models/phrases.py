@@ -136,9 +136,11 @@ class Phrases(interfaces.TransformationABC):
         """
         if min_count <= 0:
             min_count = 1
+            warnings.warn("min_count should be at least 1. Continuing with min_count=1")
 
         if threshold <= 0:
             raise ValueError("threshold should be positive")
+
 
         self.recode_to_utf8 = recode_to_utf8
         self.min_count = min_count
@@ -146,7 +148,11 @@ class Phrases(interfaces.TransformationABC):
         self.max_vocab_size = max_vocab_size
         self.vocab = defaultdict(int)  # mapping between utf8 token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
-        self.delimiter = delimiter if recode_to_utf8 else utils.any2unicode(delimiter)
+        self.delimiter = delimiter
+
+        if not recode_to_utf8 and not isinstance(sentences[0][0], bytes):
+            self.delimiter = utils.to_unicode(delimiter)
+
         self.progress_per = progress_per
 
         if sentences is not None:
@@ -355,7 +361,7 @@ class Phraser(interfaces.TransformationABC):
         self.threshold = phrases_model.threshold
         self.min_count = phrases_model.min_count
         self.recode_to_utf8 = phrases_model.recode_to_utf8
-        self.delimiter = phrases_model.delimiter if self.recode_to_utf8 else utils.any2unicode(phrases_model.delimiter)
+        self.delimiter = phrases_model.delimiter
         self.phrasegrams = {}
         corpus = pseudocorpus(phrases_model.vocab, self.delimiter)
         logger.info('source_vocab length %i', len(phrases_model.vocab))
