@@ -152,7 +152,7 @@ class Phrases(interfaces.TransformationABC):
         self.delimiter = delimiter
         self.is_bytes = True  # for storing encoding type in vocab for supporting both unicode and bytestring input
 
-        if not recode_to_utf8:
+        if not recode_to_utf8 and sentences is not None:
             sentence = list(next(iter(sentences)))
             if not isinstance(sentence[0], bytes):
                 self.delimiter = utils.to_unicode(self.delimiter)
