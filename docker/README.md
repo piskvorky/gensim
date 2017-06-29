@@ -30,17 +30,7 @@ cd gensim
 python2 setup.py test
 ```
 
-To push the image to docker hub:
-
-```
-# login to docker hub
-docker login
-
-# push image to docker hub
-docker push [my_user]/gensim
-```
-
-# Run gensim image from anywhere
+# Run ipython notebook with installed gensim
 
 Just execute:
 

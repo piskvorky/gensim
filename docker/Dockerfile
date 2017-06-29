@@ -82,20 +82,20 @@ RUN mkdir /gensim/download \
 
 # Set ENV variables for wrappers
 ENV FT_HOME ~/gensim/gensim_dependencies/fastText
-ENV WR_HOME ~/gensim/gensim_dependencies/wordrank
 ENV MALLET_HOME ~/gensim/gensim_dependencies/mallet
 ENV DTM_PATH ~/gensim/gensim_dependencies/dtm/dtm/main
 ENV VOWPAL_WABBIT_PATH ~/gensim/gensim_dependencies/vowpal_wabbit/vowpalwabbit/vw
 
 # For fixed version downloads of gensim wrappers dependencies 
 ENV FASTTEXT_VERSION f24a781021862f0e475a5fb9c55b7c1cec3b6e2e
-ENV WORDRANK_VERSION 44f3f7786f76c79c083dfad9d64e20bacfb4a0b0
 ENV MORPHOLOGICALPRIORSFORWORDEMBEDDINGS_VERSION ec2e37a3bcb8bd7b56b75b043c47076bc5decf22
 ENV DTM_VERSION 67139e6f526b2bc33aef56dc36176a1b8b210056
 ENV MALLET_VERSION 2.0.8
-ENV VOWPAL_WABBIT_VERSION 9f61108b7ed53311024f884f6b55887c938391f9
+ENV VOWPAL_WABBIT_VERSION ba51ab08fa0c3b8d29cbb8cb87472b3ebd24cd55
 
 # Install custom dependencies
+
+# TODO: Install wordrank (need to install mpich/openmpi with multithreading enabled)
 
 # Install fastText
 RUN cd /gensim/gensim_dependencies \
@@ -104,18 +104,10 @@ RUN cd /gensim/gensim_dependencies \
     && git checkout $FASTTEXT_VERSION \
     && make
 
-# Install WordRank
-RUN cd /gensim/gensim_dependencies \
-    && git clone https://bitbucket.org/shihaoji/wordrank \
-    && cp /gensim/docker/wordrank_install.sh /gensim/gensim_dependencies/wordrank/install.sh \
-    && cd /gensim/gensim_dependencies/wordrank \
-    && git checkout $WORDRANK_VERSION \
-    && sh ./install.sh
-
 # Install MorphologicalPriorsForWordEmbeddings
 RUN cd /gensim/gensim_dependencies \
     && git clone https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings.git \
-    && cd /gensim_dependencies/MorphologicalPriorsForWordEmbeddings \
+    && cd /gensim/gensim_dependencies/MorphologicalPriorsForWordEmbeddings \
     && git checkout $MORPHOLOGICALPRIORSFORWORDEMBEDDINGS_VERSION
 
 # Install DTM
@@ -140,7 +132,7 @@ RUN mkdir /gensim/gensim_dependencies/mallet \
 RUN cd /gensim/gensim_dependencies \
     && git clone https://github.com/JohnLangford/vowpal_wabbit.git \
     && cd /gensim/gensim_dependencies/vowpal_wabbit \
-    && git checkout VOWPAL_WABBIT_VERSION \
+    && git checkout $VOWPAL_WABBIT_VERSION \
     && make \
     && make install
 
