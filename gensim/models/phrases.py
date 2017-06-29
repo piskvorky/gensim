@@ -152,6 +152,11 @@ class Phrases(interfaces.TransformationABC):
         self.vocab = defaultdict(int)  # mapping between utf8 token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
+
+        if not recode_to_utf8:
+            if not isinstance(next(iter(next(iter(sentences)))), bytes):
+                self.delimiter = utils.to_unicode(self.delimiter)
+
         self.progress_per = progress_per
 
         if sentences is not None:
@@ -332,7 +337,6 @@ class Phrases(interfaces.TransformationABC):
                 new_s.append(last_token)
 
         return [utils.to_unicode(w) for w in new_s]
-
 
 def pseudocorpus(source_vocab, sep):
     """Feeds source_vocab's compound keys back to it, to discover phrases"""
