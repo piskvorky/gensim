@@ -133,6 +133,10 @@ class Phrases(interfaces.TransformationABC):
         `delimiter` is the glue character used to join collocation tokens, and
         should be a byte string (e.g. b'_').
 
+        `recode_to_utf8` is an optional parameter to tokenize the input words into
+        utf8 encoding. For faster Phrases, you may use `recode_to_utf8=False` if you have
+        larger RAM for this memory-time tradeoff.
+
         """
         if min_count <= 0:
             min_count = 1
@@ -141,7 +145,6 @@ class Phrases(interfaces.TransformationABC):
         if threshold <= 0:
             raise ValueError("threshold should be positive")
 
-
         self.recode_to_utf8 = recode_to_utf8
         self.min_count = min_count
         self.threshold = threshold
@@ -149,10 +152,6 @@ class Phrases(interfaces.TransformationABC):
         self.vocab = defaultdict(int)  # mapping between utf8 token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
-
-        if not recode_to_utf8 and not isinstance(sentences[0][0], bytes):
-            self.delimiter = utils.to_unicode(delimiter)
-
         self.progress_per = progress_per
 
         if sentences is not None:
