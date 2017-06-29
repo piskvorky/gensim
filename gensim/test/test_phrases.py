@@ -185,14 +185,8 @@ class TestPhrasesModel(unittest.TestCase):
         bigram_recode_false = Phrases(sentences, recode_to_utf8=False, min_count=1, threshold=1)
         self.assertEqual(bigram_recode_false[sentences[1]], expected)
 
-        # bigram_phraser = Phraser(bigram_recode_false)
-        # self.assertEqual(bigram_phraser[sentences[1]], expected)
-
         bigram_recode_false = Phrases(bytestring_sentences, recode_to_utf8=False, min_count=1, threshold=1)
-        self.assertEqual(bigram_recode_false[sentences[1]], expected)
-
-        # bigram_phraser = Phraser(bigram_recode_false)
-        # self.assertEqual(bigram_phraser[sentences[1]], expected)      
+        self.assertEqual(bigram_recode_false[sentences[1]], expected)  
 #endclass TestPhrasesModel
 
 
@@ -212,7 +206,18 @@ class TestPhraserModel(TestPhrasesCommon):
         bigram_unicode_phrases = Phrases(unicode_sentences, min_count=1, threshold=1)
         self.bigram_unicode = Phraser(bigram_unicode_phrases)
 
+    def testRecodeToUtf8False(self):
+        """Test that Phraser works as expected when `recode_to_utf8 = False`
+        for both bytestring and unicode input """
+        expected = ['survey', 'user', 'computer', 'system', 'response_time']
 
+        bigram_recode_false = Phrases(sentences, recode_to_utf8=False, min_count=1, threshold=1)
+        bigram_phraser = Phraser(bigram_recode_false)
+        self.assertEqual(bigram_phraser[sentences[1]], expected)
+
+        bigram_recode_false = Phrases(bytestring_sentences, recode_to_utf8=False, min_count=1, threshold=1)
+        bigram_phraser = Phraser(bigram_recode_false)
+        self.assertEqual(bigram_phraser[sentences[1]], expected)   
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
