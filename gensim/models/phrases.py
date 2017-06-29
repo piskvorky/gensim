@@ -133,7 +133,7 @@ class Phrases(interfaces.TransformationABC):
         `delimiter` is the glue character used to join collocation tokens, and
         should be a byte string (e.g. b'_').
 
-        `recode_to_utf8` is an optional parameter (default True) for any2utf8 conversion of input sentences 
+        `recode_to_utf8` is an optional parameter (default True) for any2utf8 conversion of input sentences
         into bytestrings. You may use `recode_to_utf8=False` for ~1.8-2x speed up.
         """
         if min_count <= 0:
@@ -153,9 +153,11 @@ class Phrases(interfaces.TransformationABC):
         self.is_bytes = True  # for storing encoding type in vocab for supporting both unicode and bytestring input
 
         if not recode_to_utf8:
-            if not isinstance(next(iter(next(iter(sentences)))), bytes):
+            sentence = list(next(iter(sentences)))
+            if not isinstance(sentence[0], bytes):
                 self.delimiter = utils.to_unicode(self.delimiter)
                 self.is_bytes = False
+            sentences = it.chain([sentence], sentences)
 
         self.progress_per = progress_per
 
