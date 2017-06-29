@@ -19,6 +19,7 @@ from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import SklRpModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklLdaModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklLsiModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_w2vmodel import SklW2VModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklATModel
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils
@@ -84,6 +85,17 @@ sstats_ldaseq = numpy.loadtxt(datapath_ldaseq('sstats_test.txt'))
 dictionary_ldaseq = Dictionary(texts_ldaseq)
 corpus_ldaseq = [dictionary_ldaseq.doc2bow(text) for text in texts_ldaseq]
 
+w2v_texts = [
+    ['calculus', 'is', 'the', 'mathematical', 'study', 'of', 'continuous', 'change'],
+    ['geometry', 'is', 'the', 'study', 'of', 'shape'],
+    ['algebra', 'is', 'the', 'study', 'of', 'generalizations', 'of', 'arithmetic', 'operations'],
+    ['differential', 'calculus', 'is', 'related', 'to', 'rates', 'of', 'change', 'and', 'slopes', 'of', 'curves'],
+    ['integral', 'calculus', 'is', 'realted', 'to', 'accumulation', 'of', 'quantities', 'and', 'the', 'areas', 'under', 'and', 'between', 'curves'],
+    ['physics', 'is', 'the', 'natural', 'science', 'that', 'involves', 'the', 'study', 'of', 'matter', 'and', 'its', 'motion', 'and', 'behavior', 'through', 'space', 'and', 'time'],
+    ['the', 'main', 'goal', 'of', 'physics', 'is', 'to', 'understand', 'how', 'the', 'universe', 'behaves'],
+    ['physics', 'also', 'makes', 'significant', 'contributions', 'through', 'advances', 'in', 'new', 'technologies', 'that', 'arise', 'from', 'theoretical', 'breakthroughs'],
+    ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics', 'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically', 'transformed', 'modern', 'day', 'society']
+]
 
 class TestSklLdaModelWrapper(unittest.TestCase):
     def setUp(self):
@@ -401,6 +413,73 @@ class TestSklRpModelWrapper(unittest.TestCase):
         rpmodel_wrapper = SklRpModel(num_topics=2)
         doc = list(self.corpus)[0]
         self.assertRaises(NotFittedError, rpmodel_wrapper.transform, doc)
+
+
+class TestSklW2VModelWrapper(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = SklW2VModel(size=10, min_count=0, seed=42)
+        self.model.fit(texts)
+
+    def testTransform(self):
+        # tranform multiple words
+        words = []
+        words = words + texts[0]
+        matrix = self.model.transform(words)
+        self.assertEqual(matrix.shape[0], 3)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+        # tranform one word
+        word = texts[0][0]
+        matrix = self.model.transform(word)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(negative=20)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["negative"], 20)
+
+    def testPipeline(self):
+        numpy.random.seed(0)  # set fixed seed to get similar values everytime
+        model = SklW2VModel(size=10, min_count=1)
+        model.fit(w2v_texts)
+
+        class_dict = {'mathematics': 1, 'physics': 0}
+        train_data = [
+            ('calculus', 'mathematics'), ('mathematical', 'mathematics'), ('geometry', 'mathematics'), ('operations', 'mathematics'), ('curves', 'mathematics'),
+            ('natural', 'physics'), ('nuclear', 'physics'), ('science', 'physics'), ('electromagnetism', 'physics'), ('natural', 'physics')
+        ]
+        train_input = list(map(lambda x: x[0], train_data))
+        train_target = list(map(lambda x: class_dict[x[1]], train_data))
+
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        clf.fit(model.transform(train_input), train_target)
+        text_w2v = Pipeline((('features', model,), ('classifier', clf)))
+        score = text_w2v.score(train_input, train_target)
+        self.assertGreater(score, 0.40)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        word = texts[0][0]
+        loaded_transformed_vecs = model_load.transform(word)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_transformed_vecs.shape[0], 1)
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.size)
+
+        # comparing the original and loaded models
+        original_transformed_vecs = self.model.transform(word)
+        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        self.assertTrue(passed)
+
+    def testModelNotFitted(self):
+        w2vmodel_wrapper = SklW2VModel(size=10, min_count=0, seed=42)
+        word = texts[0][0]
+        self.assertRaises(NotFittedError, w2vmodel_wrapper.transform, word)
 
 
 class TestSklATModelWrapper(unittest.TestCase):
