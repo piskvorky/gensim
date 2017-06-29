@@ -2,8 +2,8 @@ FROM ubuntu:16.04
 
 MAINTAINER Daniel Baptista Dias <danielbpdias@gmail.com>
 
-ENV GENSIM_REPOSITORY https://codeload.github.com/RaRe-Technologies/gensim/zip
-ENV GENSIM_VERSION 2.2.0
+ENV GENSIM_REPOSITORY https://github.com/parulsethi/gensim/archive
+ENV GENSIM_VERSION gensim_docker
 
 # Installs python, pip and setup tools (with fixed versions)
 RUN apt-get update \
@@ -19,16 +19,16 @@ RUN apt-get update \
     python3=3.5.1-3 \
     python3-pip=8.1.1-2ubuntu0.4 \
     python3-setuptools=20.7.0-1 \
-    python \
-    python-pip \
-    python-setuptools \
+    python=2.7.11-1 \
+    python-pip=8.1.1-2ubuntu0.4 \
+    python-setuptools=20.7.0-1 \
     unzip=6.0-20ubuntu1 \
     wget=1.17.1-1ubuntu1.1 \
-    subversion \
-    locales \
-    libopenblas-dev \
-    libboost-program-options-dev \
-    zlib1g-dev
+    subversion=1.9.3-2ubuntu1 \
+    locales=2.23-0ubuntu9 \
+    libopenblas-dev=0.2.18-1ubuntu1 \
+    libboost-program-options-dev=1.58.0.1ubuntu1 \
+    zlib1g-dev=1:1.2.8.dfsg-2ubuntu4.1
 
 # Setup python language
 RUN locale-gen en_US.UTF-8
@@ -70,8 +70,8 @@ RUN mkdir /gensim \
 # Download gensim from Github
 RUN mkdir /gensim/download \
     && cd /gensim/download \
-    && wget --quiet $GENSIM_REPOSITORY/$GENSIM_VERSION \
-    && unzip $GENSIM_VERSION \
+    && wget --quiet $GENSIM_REPOSITORY/$GENSIM_VERSION.zip \
+    && unzip $GENSIM_VERSION.zip \
     && mv ./gensim-$GENSIM_VERSION/* /gensim \
     && rm -rf /gensim/download \
     && cd /gensim \
