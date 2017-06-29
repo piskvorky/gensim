@@ -152,10 +152,12 @@ class Phrases(interfaces.TransformationABC):
         self.vocab = defaultdict(int)  # mapping between utf8 token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
+        self.is_bytes = True  # for storing encoding type in vocab for supporting both unicode and bytestring input
 
         if not recode_to_utf8:
             if not isinstance(next(iter(next(iter(sentences)))), bytes):
                 self.delimiter = utils.to_unicode(self.delimiter)
+                self.is_bytes = False
 
         self.progress_per = progress_per
 
@@ -251,7 +253,7 @@ class Phrases(interfaces.TransformationABC):
             if self.recode_to_utf8:
                 s = [utils.any2utf8(w) for w in sentence]
             else:
-                s = list(sentence)
+                s = [utils.any2utf8(w) for w in sentence] if self.is_bytes else list(sentence)
 
             for word_a, word_b in zip(s, s[1:]):
                 if word_a in vocab and word_b in vocab:
@@ -308,7 +310,7 @@ class Phrases(interfaces.TransformationABC):
         if self.recode_to_utf8:
             s = [utils.any2utf8(w) for w in sentence]
         else:
-            s = list(sentence)
+            s = [utils.any2utf8(w) for w in sentence] if self.is_bytes else list(sentence)
 
         new_s = []
 
@@ -365,6 +367,7 @@ class Phraser(interfaces.TransformationABC):
         self.min_count = phrases_model.min_count
         self.recode_to_utf8 = phrases_model.recode_to_utf8
         self.delimiter = phrases_model.delimiter
+        self.is_bytes = phrases_model.is_bytes
         self.phrasegrams = {}
         corpus = pseudocorpus(phrases_model.vocab, self.delimiter)
         logger.info('source_vocab length %i', len(phrases_model.vocab))
@@ -402,7 +405,7 @@ class Phraser(interfaces.TransformationABC):
         if self.recode_to_utf8:
             s = [utils.any2utf8(w) for w in sentence]
         else:
-            s = list(sentence)
+            s = [utils.any2utf8(w) for w in sentence] if self.is_bytes else list(sentence)
 
         new_s = []
 
