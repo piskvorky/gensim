@@ -109,6 +109,22 @@ class _TestSimilarityABC(object):
         expected = [(0, 0.80000000000000004), (1, 0.20000000000000001), (5, -0.14999999999999999)]
         self.assertTrue(matutils.full2sparse_clipped(vec, topn=3), expected)
 
+    def test_scipy2scipy_clipped(self):
+        # Test for scipy vector/row
+        vec = [0.8, 0.2, 0.0, 0.0, -0.1, -0.15]
+        expected = [(0, 0.80000000000000004), (1, 0.20000000000000001), (5, -0.14999999999999999)]
+        vec_scipy = scipy.sparse.csr_matrix(vec)
+        vec_scipy_clipped = matutils.scipy2scipy_clipped(vec_scipy, topn=3)
+        self.assertTrue(scipy.sparse.issparse(vec_scipy_clipped))
+        self.assertTrue(matutils.scipy2sparse(vec_scipy_clipped), expected)
+
+        # Test for scipy matrix
+        vec = [0.8, 0.2, 0.0, 0.0, -0.1, -0.15]
+        expected = [(0, 0.80000000000000004), (1, 0.20000000000000001), (5, -0.14999999999999999)]
+        matrix_scipy = scipy.sparse.csr_matrix([vec] * 3)
+        matrix_scipy_clipped = matutils.scipy2scipy_clipped(matrix_scipy, topn=3)
+        self.assertTrue(scipy.sparse.issparse(matrix_scipy_clipped))
+        self.assertTrue([matutils.scipy2sparse(x) for x in matrix_scipy_clipped], [expected] * 3)
 
 
     def testChunking(self):
@@ -406,6 +422,21 @@ class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
         self.assertTrue(scipy.sparse.issparse(sparse_sims))
         numpy.testing.assert_array_equal(dense_sims, sparse_sims.todense())
 
+    def testMaintainSparsityWithNumBest(self):
+        """Tests that sparsity is correctly maintained when maintain_sparsity=True and num_best is not None"""
+        num_features = len(dictionary)
+
+        index = self.cls(corpus, num_features=num_features, maintain_sparsity=False, num_best=3)
+        dense_topn_sims = index[corpus]
+
+        index = self.cls(corpus, num_features=num_features, maintain_sparsity=True, num_best=3)
+        scipy_topn_sims = index[corpus]
+
+        self.assertFalse(scipy.sparse.issparse(dense_topn_sims))
+        self.assertTrue(scipy.sparse.issparse(scipy_topn_sims))
+        self.assertEqual(dense_topn_sims, [matutils.scipy2sparse(v) for v in scipy_topn_sims])
+
+
 
 class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
@@ -515,23 +546,24 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def assertIndexSaved(self, index):
-        index.save('index')
-        self.assertTrue(os.path.exists('index'))
-        self.assertTrue(os.path.exists('index.d'))
+        fname = testfile()
+        index.save(fname)
+        self.assertTrue(os.path.exists(fname))
+        self.assertTrue(os.path.exists(fname + '.d'))
 
     def assertLoadedIndexEqual(self, index, model):
         from gensim.similarities.index import AnnoyIndexer
 
-        index.save('index')
+        fname = testfile()
+        index.save(fname)
 
         index2 = AnnoyIndexer()
-        index2.load('index')
+        index2.load(fname)
         index2.model = model
 
         self.assertEqual(index.index.f, index2.index.f)
         self.assertEqual(index.labels, index2.labels)
         self.assertEqual(index.num_trees, index2.num_trees)
-
 
 class TestDoc2VecAnnoyIndexer(unittest.TestCase):
 
@@ -566,9 +598,10 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def testSave(self):
-        self.index.save('index')
-        self.assertTrue(os.path.exists('index'))
-        self.assertTrue(os.path.exists('index.d'))
+        fname = testfile()
+        self.index.save(fname)
+        self.assertTrue(os.path.exists(fname))
+        self.assertTrue(os.path.exists(fname + '.d'))
 
     def testLoadNotExist(self):
         from gensim.similarities.index import AnnoyIndexer
@@ -579,10 +612,11 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
     def testSaveLoad(self):
         from gensim.similarities.index import AnnoyIndexer
 
-        self.index.save('index')
+        fname = testfile()
+        self.index.save(fname)
 
         self.index2 = AnnoyIndexer()
-        self.index2.load('index')
+        self.index2.load(fname)
         self.index2.model = self.model
 
         self.assertEqual(self.index.index.f, self.index2.index.f)
