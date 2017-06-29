@@ -133,10 +133,8 @@ class Phrases(interfaces.TransformationABC):
         `delimiter` is the glue character used to join collocation tokens, and
         should be a byte string (e.g. b'_').
 
-        `recode_to_utf8` is an optional parameter to tokenize the input words into
-        utf8 encoding. For faster Phrases, you may use `recode_to_utf8=False` if you have
-        larger RAM for this memory-time tradeoff.
-
+        `recode_to_utf8` is an optional parameter (default True) for any2utf8 conversion of input sentences 
+        into bytestrings. You may use `recode_to_utf8=False` for ~1.8-2x speed up.
         """
         if min_count <= 0:
             min_count = 1
