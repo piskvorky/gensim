@@ -168,6 +168,7 @@ class CorpusTestCase(unittest.TestCase):
 
         for idx, doc in enumerate(docs):
             self.assertEqual(doc, corpus[idx])
+            self.assertEqual(doc, corpus[np.int64(idx)])
 
         self.assertEqual(docs, list(corpus[:]))
         self.assertEqual(docs[0:], list(corpus[0:]))

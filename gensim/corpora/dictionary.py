@@ -24,12 +24,12 @@ import itertools
 
 from gensim import utils
 
-if sys.version_info[0] >= 3:
-    unicode = str
-
 from six import PY3, iteritems, iterkeys, itervalues, string_types
 from six.moves import xrange
 from six.moves import zip as izip
+
+if sys.version_info[0] >= 3:
+    unicode = str
 
 
 logger = logging.getLogger('gensim.corpora.dictionary')
@@ -172,14 +172,16 @@ class Dictionary(utils.SaveLoad, Mapping):
         else:
             return result
 
-    def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000):
+    def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
         """
         Filter out tokens that appear in
 
         1. less than `no_below` documents (absolute number) or
         2. more than `no_above` documents (fraction of total corpus size, *not*
            absolute number).
-        3. after (1) and (2), keep only the first `keep_n` most frequent tokens (or
+        3. if tokens are given in keep_tokens (list of strings), they will be kept regardless of
+           the `no_below` and `no_above` settings
+        4. after (1), (2) and (3), keep only the first `keep_n` most frequent tokens (or
            keep all if `None`).
 
         After the pruning, shrink resulting gaps in word ids.
@@ -190,9 +192,16 @@ class Dictionary(utils.SaveLoad, Mapping):
         no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
 
         # determine which tokens to keep
-        good_ids = (
-            v for v in itervalues(self.token2id)
-            if no_below <= self.dfs.get(v, 0) <= no_above_abs)
+        if keep_tokens:
+            keep_ids = [self.token2id[v] for v in keep_tokens if v in self.token2id]
+            good_ids = (
+                v for v in itervalues(self.token2id)
+                if no_below <= self.dfs.get(v, 0) <= no_above_abs or v in keep_ids
+            )
+        else:
+            good_ids = (
+                v for v in itervalues(self.token2id)
+                if no_below <= self.dfs.get(v, 0) <= no_above_abs)
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
@@ -222,7 +231,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         most_frequent_words = [(self[id], self.dfs.get(id, 0)) for id in most_frequent_ids]
         logger.info("discarding %i tokens: %s...", len(most_frequent_ids), most_frequent_words[:10])
-        
+
         self.filter_tokens(bad_ids=most_frequent_ids)
         logger.info("resulting dictionary: %s" % self)
 
@@ -272,6 +281,7 @@ class Dictionary(utils.SaveLoad, Mapping):
     def save_as_text(self, fname, sort_by_word=True):
         """
         Save this Dictionary to a text file, in format:
+        `num_docs`
         `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`. Sorted by word,
         or by decreasing word frequency.
 
@@ -280,6 +290,8 @@ class Dictionary(utils.SaveLoad, Mapping):
         """
         logger.info("saving dictionary mapping to %s", fname)
         with utils.smart_open(fname, 'wb') as fout:
+            numdocs_line = "%d\n" % self.num_docs
+            fout.write(utils.to_utf8(numdocs_line))
             if sort_by_word:
                 for token, tokenid in sorted(iteritems(self.token2id)):
                     line = "%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0))
@@ -344,6 +356,13 @@ class Dictionary(utils.SaveLoad, Mapping):
         with utils.smart_open(fname) as f:
             for lineno, line in enumerate(f):
                 line = utils.to_unicode(line)
+                if lineno == 0:
+                    if line.strip().isdigit():
+                        # Older versions of save_as_text may not write num_docs on first line.
+                        result.num_docs = int(line.strip())
+                        continue
+                    else:
+                        logging.warning("Text does not contain num_docs on the first line.")
                 try:
                     wordid, word, docfreq = line[:-1].split('\t')
                 except Exception:
