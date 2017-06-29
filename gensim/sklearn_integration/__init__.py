@@ -17,4 +17,3 @@ from .sklearn_wrapper_gensim_rpmodel import SklRpModel  # noqa: F401
 from .sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel  # noqa: F401
 from .sklearn_wrapper_gensim_w2vmodel import SklW2VModel  # noqa: F401
 from .sklearn_wrapper_gensim_atmodel import SklATModel  # noqa: F401
-
