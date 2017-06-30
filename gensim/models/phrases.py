@@ -133,10 +133,10 @@ class Phrases(interfaces.TransformationABC):
         `delimiter` is the glue character used to join collocation tokens, and
         should be a byte string (e.g. b'_').
 
-        `recode_to_utf8`- By default, the input sentences will be internally encoded to
-        UTF-8 bytestrings, to save memory and ensure valid UTF-8. Set recode_to_utf8=False
+        By default (`recode_to_utf8=True`), the input sentences will be internally encoded to
+        UTF-8 bytestrings, to save memory and ensure valid UTF-8. Set `recode_to_utf8=False`
         to skip this recoding step in case you don't care about memory or if your sentences
-        are already bytestrings. This will result in much faster training (~2x faster)
+        are already bytestrings. This will result in much faster training (~2x faster).
         """
         self.recode_to_utf8 = recode_to_utf8
         self.min_count = min_count
