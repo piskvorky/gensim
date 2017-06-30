@@ -28,9 +28,13 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
             self, num_topics=100, id2word=None, chunksize=2000, passes=1,
             update_every=1, alpha='symmetric', eta=None, decay=0.5,
             offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
-            minimum_probability=0.01, random_state=None, scorer='c_v'):
+            minimum_probability=0.01, random_state=None, scorer='perplexity'):
         """
         Sklearn wrapper for LDA model.
+
+        `scorer` specifies the metric used in the `score` function.
+
+        See `gensim.models.LdaModel` class for description of the other parameters.
         """
         self.gensim_model = None
         self.num_topics = num_topics
@@ -135,5 +139,10 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         """
         Compute score reflecting how well the model has fit for the input data.
         """
-        goodcm = models.CoherenceModel(model=self.gensim_model, texts=X, dictionary=self.gensim_model.id2word, coherence=self.scorer)
-        return goodcm.get_coherence()
+        if self.scorer == 'perplexity':
+            corpus_words = sum(cnt for document in X for _, cnt in document)
+            subsample_ratio = 1.0
+            perwordbound = self.gensim_model.bound(X, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
+            return -1 * np.exp2(-perwordbound)
+        else:
+            raise ValueError("Invalid `scorer` param supplied")
