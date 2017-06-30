@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 MAINTAINER Parul Sethi <parul1sethi@gmail.com>
 
 ENV GENSIM_REPOSITORY https://github.com/RaRe-Technologies/gensim.git
-ENV GENSIM_VERSION 2.2.0
+ENV GENSIM_VERSION bd6db9a41baf219ecc4a1770cc21b01c8ff122e5
 
 # Installs python, pip and setup tools (with fixed versions)
 RUN apt-get update \
@@ -66,7 +66,7 @@ RUN pip3 install -U numpy
 # Download gensim from Github
 RUN git clone $GENSIM_REPOSITORY \
     && cd /gensim \
-    && git checkout tags/$GENSIM_VERSION \
+    && git checkout $GENSIM_VERSION \
     && pip2 install .[test] \
     && python2 setup.py install \
     && pip3 install .[test] \
