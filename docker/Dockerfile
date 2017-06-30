@@ -76,7 +76,7 @@ RUN mkdir /gensim/download \
     && mv ./gensim-$GENSIM_BRANCH/* /gensim \
     && rm -rf /gensim/download \
     && cd /gensim \
-    && git checkout tags/$GENSIM_VERSION
+    && git checkout tags/$GENSIM_VERSION \
     && pip2 install .[test] \
     && python2 setup.py install \
     && pip3 install .[test] \
