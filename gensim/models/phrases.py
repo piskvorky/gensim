@@ -106,7 +106,8 @@ class Phrases(interfaces.TransformationABC):
 
     """
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
-                 max_vocab_size=40000000, delimiter=b'_', progress_per=10000):
+                 max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
+				 scoring = 'default'):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -120,10 +121,9 @@ class Phrases(interfaces.TransformationABC):
         `min_count` ignore all words and bigrams with total collected count lower
         than this.
 
-        `threshold` represents a threshold for forming the phrases (higher means
-        fewer phrases). A phrase of words `a` and `b` is accepted if
-        `(cnt(a, b) - min_count) * N / (cnt(a) * cnt(b)) > threshold`, where `N` is the
-        total vocabulary size.
+        `threshold` represents a score threshold for forming the phrases (higher means
+        fewer phrases). A phrase of words `a` followed by `b` is accepted if the score of the
+        phrase is greater than threshold. see the `scoring' setting
 
         `max_vocab_size` is the maximum size of the vocabulary. Used to control
         pruning of less common words, to keep memory under control. The default
@@ -132,6 +132,20 @@ class Phrases(interfaces.TransformationABC):
 
         `delimiter` is the glue character used to join collocation tokens, and
         should be a byte string (e.g. b'_').
+
+        `scoring` specifies how potential phrases are scored for comparison to the `threshold`
+        setting. two settings are available:
+        'default': from "Efficient Estimaton of Word Representations in Vector Space" by
+            Mikolov, et. al.:
+            (count(worda followed by wordb) - min_count) * N /
+            (count(worda) * count(wordb)) > threshold`, where `N` is the total vocabulary size.
+        'npmi': normalized pointwise mutual information, from "Normalized (Pointwise) Mutual
+            Information in Colocation Extraction" by Gerlof Bouma:
+            ln(prop(worda followed by wordb) / (prop(worda)*prop(wordb))) /
+            - ln(prop(worda followed by wordb)
+            where prop(n) is the count of n / the count of everything in the entire corpus
+        'npmi' is more robust when dealing with common words that form part of common bigrams, and
+            ranges from 0 to 1, but is slower to calculate than the default
 
         """
         if min_count <= 0:
@@ -147,6 +161,8 @@ class Phrases(interfaces.TransformationABC):
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
         self.progress_per = progress_per
+		self.scoring = scoring
+		self.corpus_word_count = 0L
 
         if sentences is not None:
             self.add_vocab(sentences)
@@ -178,6 +194,7 @@ class Phrases(interfaces.TransformationABC):
             if sentence:  # add last word skipped by previous loop
                 word = sentence[-1]
                 vocab[word] += 1
+				total_words += 1
 
             if len(vocab) > max_vocab_size:
                 utils.prune_vocab(vocab, min_reduce)
@@ -185,7 +202,7 @@ class Phrases(interfaces.TransformationABC):
 
         logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
                     (len(vocab), total_words, sentence_no + 1))
-        return min_reduce, vocab
+        return min_reduce, vocab, total_words
 
     def add_vocab(self, sentences):
         """
@@ -199,6 +216,7 @@ class Phrases(interfaces.TransformationABC):
         # counts collected in previous learn_vocab runs.
         min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
 
+        self.corpus_word_count += total_words
         if len(self.vocab) > 0:
             logger.info("merging %i counts into %s", len(vocab), self)
             self.min_reduce = max(self.min_reduce, min_reduce)
@@ -226,31 +244,45 @@ class Phrases(interfaces.TransformationABC):
 
             then you can debug the threshold with generated tsv
         """
+
+        vocab = self.vocab
+        threshold = self.threshold
+        delimiter = self.delimiter  # delimiter used for lookup
+        min_count = self.min_count
+        scoring = self.scoring
+        corpus_word_count = self.corpus_word_count
+
+        if scoring == 'mikolov':
+            scoring_function = partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
+        if scoring == 'npmi':
+            scoring_function = partial(self.npmi_scorer, corpus_word_count = corpus_word_count)
+        #TODO else: make sure this asserts if there is no scoring function
+
         for sentence in sentences:
             s = [utils.any2utf8(w) for w in sentence]
             last_bigram = False
-            vocab = self.vocab
-            threshold = self.threshold
-            delimiter = self.delimiter  # delimiter used for lookup
-            min_count = self.min_count
+
             for word_a, word_b in zip(s, s[1:]):
-                if word_a in vocab and word_b in vocab:
+                # last bigram check was moved here to save a few CPU cycles
+                if word_a in vocab and word_b in vocab and not last_bigram:
                     bigram_word = delimiter.join((word_a, word_b))
-                    if bigram_word in vocab and not last_bigram:
-                        pa = float(vocab[word_a])
-                        pb = float(vocab[word_b])
-                        pab = float(vocab[bigram_word])
-                        score = (pab - min_count) / pa / pb * len(vocab)
+                    if bigram_word in vocab:
+                        count_a = float(vocab[word_a])
+                        count_b = float(vocab[word_b])
+                        count_ab = float(vocab[bigram_word])
+                        score = scoring_function(count_a, count_b, count_ab)
                         # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                         #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
-                        if score > threshold:
+                        # added mincount check because if the scorer doesn't contain min_count
+                        # it would not be enforced otherwise
+                        if score > threshold and count_ab >= min_count:
                             if as_tuples:
                                 yield ((word_a, word_b), score)
                             else:
                                 yield (out_delimiter.join((word_a, word_b)), score)
                             last_bigram = True
                             continue
-                    last_bigram = False
+                last_bigram = False
 
     def __getitem__(self, sentence):
         """
@@ -310,6 +342,20 @@ class Phrases(interfaces.TransformationABC):
                 new_s.append(last_token)
 
         return [utils.to_unicode(w) for w in new_s]
+
+    # calculation of score based on original mikolov word2vec paper
+    # len_vocab and min_count set so functools.partial works
+    @staticmethod
+    def original_scorer(worda_count, wordb_count, bigram_count, len_vocab = 0.0, min_count = 0.0):
+        return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
+
+    # normalized PMI, requires corpus size
+    @staticmethod
+    def npmi_scorer(worda_count, wordb_count, bigram_count, corpus_word_count = 0.0):
+        pa = worda_count / corpus_word_count
+        pb = wordb_count / corpus_word_count
+        pab = bigram_count / corpus_word_count
+        return log(pab / (pa * pb)) / -log(pab)
 
 
 def pseudocorpus(source_vocab, sep):
