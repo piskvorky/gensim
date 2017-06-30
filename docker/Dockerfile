@@ -1,6 +1,6 @@
 FROM ubuntu:16.04
 
-MAINTAINER Daniel Baptista Dias <danielbpdias@gmail.com>
+MAINTAINER Parul Sethi <parul1sethi@gmail.com>
 
 ENV GENSIM_REPOSITORY https://github.com/RaRe-Technologies/gensim/archive
 ENV GENSIM_VERSION 2.2.0
@@ -76,7 +76,7 @@ RUN mkdir /gensim/download \
     && mv ./gensim-$GENSIM_BRANCH/* /gensim \
     && rm -rf /gensim/download \
     && cd /gensim \
-    && git checkout tags/GENSIM_VERSION
+    && git checkout tags/$GENSIM_VERSION
     && pip2 install .[test] \
     && python2 setup.py install \
     && pip3 install .[test] \
