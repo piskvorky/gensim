@@ -63,10 +63,6 @@ RUN pip3 install \
 RUN pip2 install -U numpy
 RUN pip3 install -U numpy
 
-# Create gensim directory and dependencies directory
-RUN mkdir /gensim \
-    && mkdir /gensim/gensim_dependencies
-
 # Download gensim from Github
 RUN git clone $GENSIM_REPOSITORY \
     && cd /gensim \
@@ -75,6 +71,9 @@ RUN git clone $GENSIM_REPOSITORY \
     && python2 setup.py install \
     && pip3 install .[test] \
     && python3 setup.py install
+
+# Create gensim dependencies directory
+RUN mkdir /gensim/gensim_dependencies
 
 # Set ENV variables for wrappers
 ENV FT_HOME /gensim/gensim_dependencies/fastText
