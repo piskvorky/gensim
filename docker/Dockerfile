@@ -2,9 +2,8 @@ FROM ubuntu:16.04
 
 MAINTAINER Parul Sethi <parul1sethi@gmail.com>
 
-ENV GENSIM_REPOSITORY https://github.com/RaRe-Technologies/gensim/archive
+ENV GENSIM_REPOSITORY https://github.com/RaRe-Technologies/gensim.git
 ENV GENSIM_VERSION 2.2.0
-ENV GENSIM_BRANCH master
 
 # Installs python, pip and setup tools (with fixed versions)
 RUN apt-get update \
@@ -69,12 +68,7 @@ RUN mkdir /gensim \
     && mkdir /gensim/gensim_dependencies
 
 # Download gensim from Github
-RUN mkdir /gensim/download \
-    && cd /gensim/download \
-    && wget --quiet $GENSIM_REPOSITORY/$GENSIM_BRANCH.zip \
-    && unzip $GENSIM_BRANCH.zip \
-    && mv ./gensim-$GENSIM_BRANCH/* /gensim \
-    && rm -rf /gensim/download \
+RUN git clone $GENSIM_REPOSITORY \
     && cd /gensim \
     && git checkout tags/$GENSIM_VERSION \
     && pip2 install .[test] \
