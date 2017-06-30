@@ -81,17 +81,17 @@ RUN mkdir /gensim/download \
     && python3 setup.py install
 
 # Set ENV variables for wrappers
-ENV FT_HOME ~/gensim/gensim_dependencies/fastText
-ENV MALLET_HOME ~/gensim/gensim_dependencies/mallet
-ENV DTM_PATH ~/gensim/gensim_dependencies/dtm/dtm/main
-ENV VOWPAL_WABBIT_PATH ~/gensim/gensim_dependencies/vowpal_wabbit/vowpalwabbit/vw
+ENV FT_HOME /gensim/gensim_dependencies/fastText
+ENV MALLET_HOME /gensim/gensim_dependencies/mallet
+ENV DTM_PATH /gensim/gensim_dependencies/dtm/dtm/main
+ENV VOWPAL_WABBIT_PATH /gensim/gensim_dependencies/vowpal_wabbit/vowpalwabbit/vw
 
 # For fixed version downloads of gensim wrappers dependencies 
 ENV FASTTEXT_VERSION f24a781021862f0e475a5fb9c55b7c1cec3b6e2e
 ENV MORPHOLOGICALPRIORSFORWORDEMBEDDINGS_VERSION ec2e37a3bcb8bd7b56b75b043c47076bc5decf22
 ENV DTM_VERSION 67139e6f526b2bc33aef56dc36176a1b8b210056
 ENV MALLET_VERSION 2.0.8
-ENV VOWPAL_WABBIT_VERSION ba51ab08fa0c3b8d29cbb8cb87472b3ebd24cd55
+ENV VOWPAL_WABBIT_VERSION 69ecc2847fa0c876c6e0557af409f386f0ced59a
 
 # Install custom dependencies
 
