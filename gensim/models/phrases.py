@@ -165,7 +165,10 @@ class Phrases(interfaces.TransformationABC):
     def learn_vocab(self, sentences):
         """Collect unigram/bigram counts from the `sentences` iterable."""
         if not self.recode_to_utf8 and sentences is not None:
-            sentence = list(next(iter(sentences)))
+            try:
+                sentence = list(next(iter(sentences)))
+            except:
+                raise ValueError("Input can not be empty list or generator.")
             if not isinstance(sentence[0], bytes):
                 self.delimiter = utils.to_unicode(self.delimiter)
                 self.is_input_bytes = False
