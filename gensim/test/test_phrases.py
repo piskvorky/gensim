@@ -167,11 +167,6 @@ class TestPhrasesModel(unittest.TestCase):
             b'human interface'
         ])
 
-    def testBadParameters(self):
-        """Test the phrases module with bad parameters."""
-        # threshold should be positive
-        self.assertRaises(ValueError, Phrases, sentences, threshold=-1)
-
     def testPruning(self):
         """Test that max_vocab_size parameter is respected."""
         bigram = Phrases(sentences, max_vocab_size=5)
