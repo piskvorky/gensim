@@ -133,16 +133,11 @@ class Phrases(interfaces.TransformationABC):
         `delimiter` is the glue character used to join collocation tokens, and
         should be a byte string (e.g. b'_').
 
-        `recode_to_utf8` is an optional parameter (default True) for any2utf8 conversion of input sentences
-        into bytestrings. You may use `recode_to_utf8=False` for ~1.8-2x speed up.
+        `recode_to_utf8`- By default, the input sentences will be internally encoded to
+        UTF-8 bytestrings, to save memory and ensure valid UTF-8. Set recode_to_utf8=False
+        to skip this recoding step in case you don't care about memory or if your sentences
+        are already bytestrings. This will result in much faster training (~2x faster)
         """
-        if min_count <= 0:
-            min_count = 1
-            warnings.warn("min_count should be at least 1. Continuing with min_count=1")
-
-        if threshold <= 0:
-            raise ValueError("threshold should be positive")
-
         self.recode_to_utf8 = recode_to_utf8
         self.min_count = min_count
         self.threshold = threshold
@@ -150,13 +145,17 @@ class Phrases(interfaces.TransformationABC):
         self.vocab = defaultdict(int)  # mapping between utf8 token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
-        self.is_bytes = True  # for storing encoding type in vocab for supporting both unicode and bytestring input
+        self.is_input_bytes = True  # do the input sentences consist of bytestrings?
+
+        # With default (recode_to_utf8=True) we encode input sentences to utf8 bytestrings, but
+        # with recode_to_utf8=False, we retain encoding, so need to store this encoding
+        # information to later convert token inputs accordingly (in __getitem__ and export_phrases)
 
         if not recode_to_utf8 and sentences is not None:
             sentence = list(next(iter(sentences)))
             if not isinstance(sentence[0], bytes):
                 self.delimiter = utils.to_unicode(self.delimiter)
-                self.is_bytes = False
+                self.is_input_bytes = False
             sentences = it.chain([sentence], sentences)
 
         self.progress_per = progress_per
@@ -253,7 +252,7 @@ class Phrases(interfaces.TransformationABC):
             if self.recode_to_utf8:
                 s = [utils.any2utf8(w) for w in sentence]
             else:
-                s = [utils.any2utf8(w) for w in sentence] if self.is_bytes else list(sentence)
+                s = [utils.any2utf8(w) for w in sentence] if self.is_input_bytes else list(sentence)
 
             for word_a, word_b in zip(s, s[1:]):
                 if word_a in vocab and word_b in vocab:
@@ -310,7 +309,7 @@ class Phrases(interfaces.TransformationABC):
         if self.recode_to_utf8:
             s = [utils.any2utf8(w) for w in sentence]
         else:
-            s = [utils.any2utf8(w) for w in sentence] if self.is_bytes else list(sentence)
+            s = [utils.any2utf8(w) for w in sentence] if self.is_input_bytes else list(sentence)
 
         new_s = []
 
@@ -367,7 +366,7 @@ class Phraser(interfaces.TransformationABC):
         self.min_count = phrases_model.min_count
         self.recode_to_utf8 = phrases_model.recode_to_utf8
         self.delimiter = phrases_model.delimiter
-        self.is_bytes = phrases_model.is_bytes
+        self.is_input_bytes = phrases_model.is_input_bytes
         self.phrasegrams = {}
         corpus = pseudocorpus(phrases_model.vocab, self.delimiter)
         logger.info('source_vocab length %i', len(phrases_model.vocab))
@@ -405,7 +404,7 @@ class Phraser(interfaces.TransformationABC):
         if self.recode_to_utf8:
             s = [utils.any2utf8(w) for w in sentence]
         else:
-            s = [utils.any2utf8(w) for w in sentence] if self.is_bytes else list(sentence)
+            s = [utils.any2utf8(w) for w in sentence] if self.is_input_bytes else list(sentence)
 
         new_s = []
 
