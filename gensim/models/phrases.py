@@ -151,13 +151,6 @@ class Phrases(interfaces.TransformationABC):
         # with recode_to_utf8=False, we retain encoding, so need to store this encoding
         # information to later convert token inputs accordingly (in __getitem__ and export_phrases)
 
-        if not recode_to_utf8 and sentences is not None:
-            sentence = list(next(iter(sentences)))
-            if not isinstance(sentence[0], bytes):
-                self.delimiter = utils.to_unicode(self.delimiter)
-                self.is_input_bytes = False
-            sentences = it.chain([sentence], sentences)
-
         self.progress_per = progress_per
 
         if sentences is not None:
@@ -171,6 +164,13 @@ class Phrases(interfaces.TransformationABC):
 
     def learn_vocab(self, sentences):
         """Collect unigram/bigram counts from the `sentences` iterable."""
+        if not self.recode_to_utf8 and sentences is not None:
+            sentence = list(next(iter(sentences)))
+            if not isinstance(sentence[0], bytes):
+                self.delimiter = utils.to_unicode(self.delimiter)
+                self.is_input_bytes = False
+            sentences = it.chain([sentence], sentences)
+
         sentence_no = -1
         total_words = 0
         logger.info("collecting all words and their counts")
