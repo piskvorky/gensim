@@ -1,3 +1,5 @@
+:orphan:
+
 :mod:`corpora` -- Package for corpora I/O
 ==========================================
 

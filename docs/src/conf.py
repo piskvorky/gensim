@@ -215,3 +215,5 @@ latex_use_parts = False
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+suppress_warnings = ['image.nonlocal_uri']
