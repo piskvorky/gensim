@@ -62,11 +62,14 @@ class TranslationMatrix(object):
         return np.linalg.lstsq(m1, m2, -1)[0]
 
     def translate(self, source_words, topn=5):
+        translated_word = {}
         for idx, word in enumerate(source_words):
             if word in self.source_space.row2id:
                 source_word_vec = self.source_space.mat[self.source_space.row2id[word], :]
                 predicted_word_vec = np.dot(source_word_vec, self.translation_matrix)
                 candidates = [i[0] for i in self.target_space_vec.most_similar(positive=[predicted_word_vec], topn=topn)]
-                print candidates
             else:
-                print word, 'is not found in the source model, sorry.'
+                candidates = []
+            translated_word[word] = candidates
+        return translated_word
+
