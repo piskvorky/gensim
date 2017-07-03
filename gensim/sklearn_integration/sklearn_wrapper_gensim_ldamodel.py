@@ -61,7 +61,7 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
                 "passes": self.passes, "update_every": self.update_every, "alpha": self.alpha, "eta": self.eta,
                 "decay": self.decay, "offset": self.offset, "eval_every": self.eval_every, "iterations": self.iterations,
                 "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
-                "random_state": self.random_state}
+                "random_state": self.random_state, "scorer": self.scorer}
 
     def set_params(self, **parameters):
         """
@@ -143,6 +143,6 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
             corpus_words = sum(cnt for document in X for _, cnt in document)
             subsample_ratio = 1.0
             perwordbound = self.gensim_model.bound(X, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
-            return -1 * np.exp2(-perwordbound)
+            return -1 * np.exp2(-perwordbound)  # returning (-1*perplexity) to select model with minimum perplexity value 
         else:
-            raise ValueError("Invalid `scorer` param supplied")
+            raise ValueError("Invalid value of `scorer` param supplied")
