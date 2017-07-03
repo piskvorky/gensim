@@ -143,6 +143,6 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
             corpus_words = sum(cnt for document in X for _, cnt in document)
             subsample_ratio = 1.0
             perwordbound = self.gensim_model.bound(X, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
-            return -1 * np.exp2(-perwordbound)  # returning (-1*perplexity) to select model with minimum perplexity value 
+            return -1 * np.exp2(-perwordbound)  # returning (-1*perplexity) to select model with minimum perplexity value
         else:
             raise ValueError("Invalid value of `scorer` param supplied")
