@@ -58,8 +58,8 @@ class Wordrank(KeyedVectors):
         Expects file to contain space-separated tokens in a single line
         `out_name` is name of the directory which will be created (in wordrank folder) to save embeddings and training data.
         It will contain following contents:
-            Word Embeddings saved after every dump_period and stored in a file model_word_"current iter".txt
-            Context Embeddings saved after every dump_period and stored in a file model_context_"current iter".txt
+            Word Embeddings saved after every dump_period and stored in a file model_word_current\ iter.txt
+            Context Embeddings saved after every dump_period and stored in a file model_context_current\ iter.txt
             A meta directory which contain: 'vocab.txt' - vocab words, 'wiki.toy' - word-word coccurence values, 'meta' - vocab and coccurence lengths
         `size` is the dimensionality of the feature vectors.
         `window` is the number of context words to the left (and to the right, if symmetric = 1).
