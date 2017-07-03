@@ -47,6 +47,7 @@ RUN pip2 install \
     matplotlib==2.0.0 \
     nltk==3.2.2 \
     pandas==0.19.2 \
+    spacy==1.8.1 \
     git+https://github.com/mila-udem/blocks.git@7beb788f1fcfc78d56c59a5edf9b4e8d98f8d7d9 \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
@@ -56,12 +57,17 @@ RUN pip3 install \
     matplotlib==2.0.0 \
     nltk==3.2.2 \
     pandas==0.19.2 \
+    spacy==1.8.1 \
     git+https://github.com/mila-udem/blocks.git@7beb788f1fcfc78d56c59a5edf9b4e8d98f8d7d9 \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
 # avoid using old numpy version installed by blocks requirements
 RUN pip2 install -U numpy
 RUN pip3 install -U numpy
+
+# Download english model of Spacy
+python2 -m spacy download en
+python3 -m spacy download en
 
 # Download gensim from Github
 RUN git clone $GENSIM_REPOSITORY \
