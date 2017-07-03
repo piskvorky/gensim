@@ -50,7 +50,7 @@ class CorpusMiislita(corpora.TextCorpus):
 
     def __len__(self):
         """Define this so we can use `len(corpus)`"""
-        if 'length' not in self.__dict__:
+        if self.length is None:
             logger.info("caching corpus size (calculating number of documents)")
             self.length = sum(1 for _ in self.get_texts())
         return self.length
