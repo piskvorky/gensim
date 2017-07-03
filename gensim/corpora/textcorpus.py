@@ -30,10 +30,19 @@ See the `gensim.test.test_miislita.CorpusMiislita` class for a simple example.
 from __future__ import with_statement
 
 import logging
+import multiprocessing as mp
 import os
+import pickle
 import random
 import re
+import signal
 import sys
+import types
+
+try:
+    import copy_reg as copyreg
+except ImportError:
+    import copyreg
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
@@ -41,6 +50,31 @@ from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
 from gensim.utils import deaccent, simple_tokenize
 
 logger = logging.getLogger(__name__)
+
+
+def _unpickle_method(func_name, obj, cls):
+    func = None
+    for cls in cls.mro():
+        try:
+            func = cls.__dict__[func_name]
+        except KeyError:
+            pass
+        else:
+            break
+
+    if func is None:
+        raise pickle.PickleError("unable to resolve func ref %s" % func_name)
+
+    return func.__get__(obj, cls)
+
+
+def _pickle_method(method):
+    func_name = method.im_func.__name__
+    obj = method.im_self
+    cls = method.im_class
+    return _unpickle_method, (func_name, obj, cls)
+
+copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 
 
 def remove_stopwords(tokens, stopwords=STOPWORDS):
@@ -61,6 +95,11 @@ def lower_to_unicode(text, encoding='utf8', errors='strict'):
 def strip_multiple_whitespaces(s):
     """Collapse multiple whitespace characters into a single space."""
     return RE_WHITESPACE.sub(" ", s)
+
+
+def init_to_ignore_interrupt():
+    """Should only be used when master is prepared to handle termination of child processes."""
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
 class TextCorpus(interfaces.CorpusABC):
@@ -113,7 +152,7 @@ class TextCorpus(interfaces.CorpusABC):
 
     """
     def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None,
-                 tokenizer=None, token_filters=None):
+                 tokenizer=None, token_filters=None, processes=-1):
         """
         Args:
             input (str): path to top-level directory to traverse for corpus documents.
@@ -150,6 +189,11 @@ class TextCorpus(interfaces.CorpusABC):
         self.token_filters = token_filters
         if self.token_filters is None:
             self.token_filters = [remove_short, remove_stopwords]
+
+        if processes <= 0:
+            self.processes = max(1, mp.cpu_count())
+        else:
+            self.processes = min(processes, mp.cpu_count())
 
         self.length = None
         self.dictionary = None
@@ -234,25 +278,66 @@ class TextCorpus(interfaces.CorpusABC):
             tokens = token_filter(tokens)
             yield (token_filter, tokens)
 
+    def yield_tokens(self):
+        texts = self.getstream()
+        pool = mp.Pool(self.processes, init_to_ignore_interrupt)
+        num_texts_total, num_texts = 0, 0
+        num_positions_total, num_positions = 0, 0
+
+        # TODO: too much stuff is being serialized, resulting in slowdown; need to serialize
+        # preprocessing functions once, so use custom Process class.
+        try:
+            # process the corpus in smaller chunks of docs, because multiprocessing.Pool
+            # is dumb and would load the entire input into RAM at once...
+            for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
+                for output in pool.imap(self.preprocess_text, group):
+                    if isinstance(output, tuple):
+                        tokens = output[0]
+                    else:
+                        tokens = output
+
+                    num_texts_total += 1
+                    num_positions_total += len(tokens)
+                    if self.should_keep_tokens(output):
+                        num_texts += 1
+                        num_positions += len(tokens)
+                        yield tokens
+        except KeyboardInterrupt:
+            logger.warning(
+                "user terminated iteration over %s after %i docs with %i positions"
+                " (total %i docs, %i positions before pruning)", self.__class__.__name__,
+                num_texts, num_positions, num_texts_total, num_positions_total)
+        else:
+            logger.info(
+                "finished iterating over %s of %i docs with %i positions"
+                " (total %i docs, %i positions before pruning)", self.__class__.__name__,
+                num_texts, num_positions, num_texts_total, num_positions_total)
+            self.length = num_texts  # cache corpus length
+        finally:
+            pool.terminate()
+
+    def should_keep_tokens(self, output):
+        """Output is either the list of tokens, or a tuple containing that list and some other
+        elements from the preprocessing. The default implementation assumes it is the former
+        and returns False if the list is empty.
+        """
+        return len(output) > 0
+
     def get_texts(self):
         """Iterate over the collection, yielding one document at a time. A document
         is a sequence of words (strings) that can be fed into `Dictionary.doc2bow`.
-        Each document will be fed through `preprocess_text`. That method should be
-        overridden to provide different preprocessing steps. This method will need
-        to be overridden if the metadata you'd like to yield differs from the line
-        number.
 
-        Returns:
-            generator of lists of tokens (strings); each list corresponds to a preprocessed
-            document from the corpus `input`.
+        Override this function to match your input (parse input files, do any
+        text preprocessing, lowercasing, tokenizing etc.). There will be no further
+        preprocessing of the words coming out of this function.
         """
-        lines = self.getstream()
+        doc_token_stream = self.yield_tokens()
         if self.metadata:
-            for lineno, line in enumerate(lines):
-                yield self.preprocess_text(line), (lineno,)
+            for lineno, tokens in enumerate(doc_token_stream):
+                yield tokens, (lineno,)
         else:
-            for line in lines:
-                yield self.preprocess_text(line)
+            for tokens in doc_token_stream:
+                yield tokens
 
     def sample_texts(self, n, seed=None, length=None):
         """Yield n random documents from the corpus without replacement.
@@ -284,7 +369,8 @@ class TextCorpus(interfaces.CorpusABC):
         if not 0 <= n:
             raise ValueError("Negative sample size.")
 
-        for i, sample in enumerate(self.getstream()):
+        # Use get_texts because some docs from getstream may be removed in preprocessing.
+        for i, sample in enumerate(self.get_texts()):
             if i == length:
                 break
 
@@ -292,10 +378,7 @@ class TextCorpus(interfaces.CorpusABC):
             chance = random_generator.randint(1, remaining_in_corpus)
             if chance <= n:
                 n -= 1
-                if self.metadata:
-                    yield self.preprocess_text(sample[0]), sample[1]
-                else:
-                    yield self.preprocess_text(sample)
+                yield sample
 
         if n != 0:
             # This means that length was set to be greater than number of items in corpus
@@ -304,9 +387,13 @@ class TextCorpus(interfaces.CorpusABC):
 
     def __len__(self):
         if self.length is None:
-            # cache the corpus length
-            self.length = sum(1 for _ in self.getstream())
+            self._cache_corpus_length()
         return self.length
+
+    def _cache_corpus_length(self):
+        # cache the corpus length
+        # Use get_texts because some docs from getstream may be removed in preprocessing.
+        self.length = sum(1 for _ in self.get_texts())
 # endclass TextCorpus
 
 
@@ -409,29 +496,13 @@ class TextDirectoryCorpus(TextCorpus):
         If `lines_are_documents` was set to True, items will be lines from files. Otherwise
         there will be one item per file, containing the entire contents of the file.
         """
-        num_texts = 0
         for path in self.iter_filepaths():
             with open(path, 'rt') as f:
                 if self.lines_are_documents:
                     for line in f:
                         yield line.strip()
-                        num_texts += 1
                 else:
                     yield f.read().strip()
-                    num_texts += 1
-
-        self.length = num_texts
-
-    def __len__(self):
-        if self.length is None:
-            self._cache_corpus_length()
-        return self.length
-
-    def _cache_corpus_length(self):
-        if not self.lines_are_documents:
-            self.length = sum(1 for _ in self.iter_filepaths())
-        else:
-            self.length = sum(1 for _ in self.getstream())
 # endclass TextDirectoryCorpus
 
 

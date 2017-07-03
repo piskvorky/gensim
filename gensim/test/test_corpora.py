@@ -28,6 +28,10 @@ from gensim.utils import to_unicode
 module_path = os.path.dirname(__file__)
 
 
+def split_tokenize(text):
+    return text.split()
+
+
 def datapath(fname):
     return os.path.join(module_path, 'test_data', fname)
 
@@ -356,7 +360,7 @@ class TestTextCorpus(CorpusTestCase):
     def test_sample_text(self):
         lines = ["document%d" % i for i in range(10)]
         corpus = self.corpus_from_lines(lines)
-        corpus.tokenizer = lambda text: text.split()
+        corpus.tokenizer = split_tokenize
         docs = [doc for doc in corpus.get_texts()]
 
         sample1 = list(corpus.sample_texts(1))
@@ -377,7 +381,7 @@ class TestTextCorpus(CorpusTestCase):
     def test_sample_text_length(self):
         lines = ["document%d" % i for i in range(10)]
         corpus = self.corpus_from_lines(lines)
-        corpus.tokenizer = lambda text: text.split()
+        corpus.tokenizer = split_tokenize
 
         sample1 = list(corpus.sample_texts(1, length=1))
         self.assertEqual(sample1[0], ["document0"])
@@ -485,7 +489,6 @@ class TestTextDirectoryCorpus(unittest.TestCase):
 
         corpus.lines_are_documents = False
         docs = [doc for doc in corpus.getstream()]
-        self.assertEqual(1, corpus.length)
         self.assertEqual('\n'.join(lines), docs[0])
 
     def test_non_trivial_structure(self):
