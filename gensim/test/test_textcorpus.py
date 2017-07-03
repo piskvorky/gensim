@@ -259,6 +259,7 @@ class TestTextDirectoryCorpus(unittest.TestCase):
             'b_folder/3.txt',
             'b_folder/c_folder/4.txt'
         ]
+        expected = [os.path.normpath(path) for path in expected]
         self.assertEqual(expected, base_names)
 
         corpus.max_depth = 1
