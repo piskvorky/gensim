@@ -30,7 +30,6 @@ See the `gensim.test.test_miislita.CorpusMiislita` class for a simple example.
 from __future__ import with_statement
 
 import functools
-import itertools
 import logging
 import multiprocessing as mp
 import os
@@ -38,6 +37,11 @@ import random
 import re
 import signal
 import sys
+
+try:
+    from itertools import imap
+except ImportError:  # Python 3...
+    imap = map
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
@@ -74,6 +78,7 @@ def init_to_ignore_interrupt():
 
 
 class TextPreprocessor(TextProcessor):
+    """Mixin for classes that perform text preprocessing."""
 
     def preprocess_text(self, text):
         """Apply preprocessing to a single text document. This should perform tokenization
@@ -94,9 +99,23 @@ class TextPreprocessor(TextProcessor):
 
         return tokens
 
+    def step_through_preprocess(self, text):
+        """Yield tuples of functions and their output for each stage of preprocessing.
+        This is useful for debugging issues with the corpus preprocessing pipeline.
+        """
+        for character_filter in self.character_filters:
+            text = character_filter(text)
+            yield (character_filter, text)
+
+        tokens = self.tokenizer(text)
+        yield (self.tokenizer, tokens)
+
+        for token_filter in self.token_filters:
+            tokens = token_filter(tokens)
+            yield (token_filter, tokens)
 
 
-class TextCorpus(interfaces.CorpusABC):
+class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
     """Helper class to simplify the pipeline of getting bag-of-words vectors (= a
     gensim corpus) from plain text.
 
@@ -239,47 +258,6 @@ class TextCorpus(interfaces.CorpusABC):
 
         self.length = num_texts
 
-    def preprocess_text(self, text):
-        """Apply preprocessing to a single text document. This should perform tokenization
-        in addition to any other desired preprocessing steps.
-
-        Args:
-            text (str): document text read from plain-text file.
-
-        Returns:
-            iterable of str: tokens produced from `text` as a result of preprocessing.
-        """
-        for character_filter in self.character_filters:
-            text = character_filter(text)
-
-        tokens = self.tokenizer(text)
-        for token_filter in self.token_filters:
-            tokens = token_filter(tokens)
-
-        return tokens
-
-    def step_through_preprocess(self, text):
-        """Yield tuples of functions and their output for each stage of preprocessing.
-        This is useful for debugging issues with the corpus preprocessing pipeline.
-        """
-        for character_filter in self.character_filters:
-            text = character_filter(text)
-            yield (character_filter, text)
-
-        tokens = self.tokenizer(text)
-        yield (self.tokenizer, tokens)
-
-        for token_filter in self.token_filters:
-            tokens = token_filter(tokens)
-            yield (token_filter, tokens)
-
-    @staticmethod
-    def default_preprocess_func():
-        func = TextCorpus.preprocess_text
-        if hasattr(func, '__func__'):  # get unbound method in Python 2
-            func = func.__func__
-        return func
-
     def _create_preprocessor_pool(self):
         state_kwargs = dict(
             character_filters=self.character_filters,
@@ -296,14 +274,19 @@ class TextCorpus(interfaces.CorpusABC):
             self.processes, init_to_ignore_interrupt,
             processor_class=_TextPreprocessor, state_kwargs=state_kwargs)
 
-    def yield_tokens(self):
-        texts = self.getstream()
+    def _get_mapper(self):
         if self.processes > 1:
             pool = self._create_preprocessor_pool()
-            imap = pool.imap
+            map_preprocess = pool.imap
         else:
             pool = None
-            imap = functools.partial(itertools.imap, self.preprocess_text)
+            map_preprocess = functools.partial(imap, self.preprocess_text)
+
+        return pool, map_preprocess
+
+    def yield_tokens(self):
+        texts = self.getstream()
+        pool, map_preprocess = self._get_mapper()
 
         num_texts_total, num_texts = 0, 0
         num_positions_total, num_positions = 0, 0
@@ -312,15 +295,11 @@ class TextCorpus(interfaces.CorpusABC):
             # process the corpus in smaller chunks of docs, because multiprocessing.Pool
             # is dumb and would load the entire input into RAM at once...
             for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
-                # for output in pool.imap(self.preprocess_text, group):
-                for output in imap(group):
-                    if isinstance(output, tuple):
-                        tokens = output[0]
-                    else:
-                        tokens = output
-
+                for output in map_preprocess(group):
+                    tokens = output[0] if isinstance(output, tuple) else output
                     num_texts_total += 1
                     num_positions_total += len(tokens)
+
                     if self.should_keep_tokens(output):
                         num_texts += 1
                         num_positions += len(tokens)
