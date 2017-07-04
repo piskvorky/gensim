@@ -971,12 +971,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
-    def diff(self, other, distance="kulback_leibler", num_words=100, n_ann_terms=10, normed=True):
+    def diff(self, other, distance="kullback_leibler", num_words=100, n_ann_terms=10, normed=True):
         """
         Calculate difference topic2topic between two Lda models
         `other` instances of `LdaMulticore` or `LdaModel`
         `distance` is function that will be applied to calculate difference between any topic pair.
-        Available values: `kulback_leibler`, `hellinger` and `jaccard`
+        Available values: `kullback_leibler`, `hellinger` and `jaccard`
         `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
         `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
         Returns a matrix Z with shape (m1.num_topics, m2.num_topics), where Z[i][j] - difference between topic_i and topic_j
@@ -994,7 +994,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
 
         distances = {
-            "kulback_leibler": kullback_leibler,
+            "kullback_leibler": kullback_leibler,
             "hellinger": hellinger,
             "jaccard": jaccard_distance,
         }
