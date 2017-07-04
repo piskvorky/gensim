@@ -29,52 +29,23 @@ See the `gensim.test.test_miislita.CorpusMiislita` class for a simple example.
 
 from __future__ import with_statement
 
+import functools
+import itertools
 import logging
 import multiprocessing as mp
 import os
-import pickle
 import random
 import re
 import signal
 import sys
-import types
-
-try:
-    import copy_reg as copyreg
-except ImportError:
-    import copyreg
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
+from gensim.corpora.text_processing_pool import TextProcessingPool, TextProcessor
 from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
 from gensim.utils import deaccent, simple_tokenize
 
 logger = logging.getLogger(__name__)
-
-
-def _unpickle_method(func_name, obj, cls):
-    func = None
-    for cls in cls.mro():
-        try:
-            func = cls.__dict__[func_name]
-        except KeyError:
-            pass
-        else:
-            break
-
-    if func is None:
-        raise pickle.PickleError("unable to resolve func ref %s" % func_name)
-
-    return func.__get__(obj, cls)
-
-
-def _pickle_method(method):
-    func_name = method.im_func.__name__
-    obj = method.im_self
-    cls = method.im_class
-    return _unpickle_method, (func_name, obj, cls)
-
-copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 
 
 def remove_stopwords(tokens, stopwords=STOPWORDS):
@@ -100,6 +71,29 @@ def strip_multiple_whitespaces(s):
 def init_to_ignore_interrupt():
     """Should only be used when master is prepared to handle termination of child processes."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
+class TextPreprocessor(TextProcessor):
+
+    def preprocess_text(self, text):
+        """Apply preprocessing to a single text document. This should perform tokenization
+        in addition to any other desired preprocessing steps.
+
+        Args:
+            text (str): document text read from plain-text file.
+
+        Returns:
+            iterable of str: tokens produced from `text` as a result of preprocessing.
+        """
+        for character_filter in self.character_filters:
+            text = character_filter(text)
+
+        tokens = self.tokenizer(text)
+        for token_filter in self.token_filters:
+            tokens = token_filter(tokens)
+
+        return tokens
+
 
 
 class TextCorpus(interfaces.CorpusABC):
@@ -190,10 +184,11 @@ class TextCorpus(interfaces.CorpusABC):
         if self.token_filters is None:
             self.token_filters = [remove_short, remove_stopwords]
 
+        max_cpus = mp.cpu_count() - 1
         if processes <= 0:
-            self.processes = max(1, mp.cpu_count())
+            self.processes = max(1, max_cpus)
         else:
-            self.processes = min(processes, mp.cpu_count())
+            self.processes = min(processes, max_cpus)
 
         self.length = None
         self.dictionary = None
@@ -278,19 +273,47 @@ class TextCorpus(interfaces.CorpusABC):
             tokens = token_filter(tokens)
             yield (token_filter, tokens)
 
+    @staticmethod
+    def default_preprocess_func():
+        func = TextCorpus.preprocess_text
+        if hasattr(func, '__func__'):  # get unbound method in Python 2
+            func = func.__func__
+        return func
+
+    def _create_preprocessor_pool(self):
+        state_kwargs = dict(
+            character_filters=self.character_filters,
+            tokenizer=self.tokenizer,
+            token_filters=self.token_filters
+        )
+        _TextPreprocessor = type('_TextPreprocessor', (TextPreprocessor,), {})
+        func = getattr(self.__class__, 'preprocess_text')
+        if hasattr(func, '__func__'):  # get unbound method in Python 2
+            func = func.__func__
+        _TextPreprocessor.process = func
+
+        return TextProcessingPool(
+            self.processes, init_to_ignore_interrupt,
+            processor_class=_TextPreprocessor, state_kwargs=state_kwargs)
+
     def yield_tokens(self):
         texts = self.getstream()
-        pool = mp.Pool(self.processes, init_to_ignore_interrupt)
+        if self.processes > 1:
+            pool = self._create_preprocessor_pool()
+            imap = pool.imap
+        else:
+            pool = None
+            imap = functools.partial(itertools.imap, self.preprocess_text)
+
         num_texts_total, num_texts = 0, 0
         num_positions_total, num_positions = 0, 0
 
-        # TODO: too much stuff is being serialized, resulting in slowdown; need to serialize
-        # preprocessing functions once, so use custom Process class.
         try:
             # process the corpus in smaller chunks of docs, because multiprocessing.Pool
             # is dumb and would load the entire input into RAM at once...
             for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
-                for output in pool.imap(self.preprocess_text, group):
+                # for output in pool.imap(self.preprocess_text, group):
+                for output in imap(group):
                     if isinstance(output, tuple):
                         tokens = output[0]
                     else:
@@ -314,7 +337,8 @@ class TextCorpus(interfaces.CorpusABC):
                 num_texts, num_positions, num_texts_total, num_positions_total)
             self.length = num_texts  # cache corpus length
         finally:
-            pool.terminate()
+            if pool is not None:
+                pool.terminate()
 
     def should_keep_tokens(self, output):
         """Output is either the list of tokens, or a tuple containing that list and some other

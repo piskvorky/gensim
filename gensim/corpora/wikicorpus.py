@@ -278,7 +278,7 @@ class WikiCorpus(textcorpus.TextCorpus):
         """
         title, text, pageid = args
         text = filter_wiki(text)
-        result = super(WikiCorpus, self).preprocess_text(text)
+        result = super(self.__class__, self).preprocess_text(text)
         return result, title, pageid
 
     def should_keep_tokens(self, output):

@@ -9,14 +9,11 @@ Automated tests for checking the WikiCorpus
 """
 
 
-import os
-import sys
-import types
 import logging
+import os
 import unittest
 
 from gensim.corpora.wikicorpus import WikiCorpus
-
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -47,7 +44,7 @@ class TestWikiCorpus(unittest.TestCase):
         1) anarchism
         2) autism
         """
-        wc = WikiCorpus(datapath(FILENAME), processes=1)
+        wc = WikiCorpus(datapath(FILENAME), lemmatize=False, processes=1)
 
         l = wc.get_texts()
         self.assertTrue(u'anarchism' in next(l))
@@ -58,7 +55,7 @@ class TestWikiCorpus(unittest.TestCase):
         First unicode article in this sample is
         1) папа
         """
-        wc = WikiCorpus(datapath(FILENAME_U), processes=1)
+        wc = WikiCorpus(datapath(FILENAME_U), lemmatize=False, processes=1)
 
         l = wc.get_texts()
         self.assertTrue(u'папа' in next(l))

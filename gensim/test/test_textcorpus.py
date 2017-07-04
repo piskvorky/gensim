@@ -8,6 +8,8 @@
 Automated tests for checking textcorpus I/O formats.
 """
 
+from __future__ import unicode_literals
+
 import codecs
 import logging
 import os
