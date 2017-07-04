@@ -66,8 +66,8 @@ RUN pip2 install -U numpy
 RUN pip3 install -U numpy
 
 # Download english model of Spacy
-python2 -m spacy download en
-python3 -m spacy download en
+RUN python2 -m spacy download en
+RUN python3 -m spacy download en
 
 # Download gensim from Github
 RUN git clone $GENSIM_REPOSITORY \
