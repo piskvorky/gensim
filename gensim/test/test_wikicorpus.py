@@ -25,8 +25,6 @@ logger = logging.getLogger(__name__)
 
 class TestWikiCorpus(unittest.TestCase):
 
-    num_processes = 1
-
     # #TODO: sporadic failure to be investigated
     # def test_get_texts_returns_generator_of_lists(self):
     #     logger.debug("Current Python Version is " + str(sys.version_info))
@@ -46,7 +44,7 @@ class TestWikiCorpus(unittest.TestCase):
         1) anarchism
         2) autism
         """
-        wc = WikiCorpus(datapath(FILENAME), lemmatize=False, processes=self.num_processes)
+        wc = WikiCorpus(datapath(FILENAME), lemmatize=False, processes=1)
 
         l = wc.get_texts()
         self.assertTrue(u'anarchism' in next(l))
@@ -57,14 +55,10 @@ class TestWikiCorpus(unittest.TestCase):
         First unicode article in this sample is
         1) папа
         """
-        wc = WikiCorpus(datapath(FILENAME_U), lemmatize=False, processes=self.num_processes)
+        wc = WikiCorpus(datapath(FILENAME_U), lemmatize=False, processes=1)
 
         l = wc.get_texts()
         self.assertTrue(u'папа' in next(l))
-
-
-class TestWikiCorpusMultiprocess(TestWikiCorpus):
-    num_processes = -1
 
 
 if __name__ == '__main__':

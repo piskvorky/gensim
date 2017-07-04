@@ -86,12 +86,12 @@ class TextPreprocessor(object):
     def preprocess_text(self, text):
         """Apply preprocessing to a single text document. This should perform tokenization
         in addition to any other desired preprocessing steps.
-        
+
         Note: The `TextCorpus` class transplants its own version of this method onto a
         dynamically created subclass that is used to spawn a multiprocessing worker.
         So if you want to subclass it in a `TextCorpus` subclass, and you want to call
         the super method using the `super` keyword, do it like this:
-        
+
             # do some preprocessing of text
             tokens = super(self.__class__, self).preprocess_text(text)
             # do some post-processing of tokens
@@ -539,7 +539,7 @@ class TextTokensIterator(object):
 
 class LineSentence(TextTokensIterator, TextCorpus):
     """Simple format: one sentence = one line.
-    
+
     In general, words should already be preprocessed and separated by whitespace.
     If a line exceeds the `max_sentence_length`, it will be split into multiple sentences
     not exceeding this amount. Additional preprocessing can be applied using the `TextCorpus`
