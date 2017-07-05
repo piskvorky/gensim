@@ -590,7 +590,6 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>> # Given a document collection "corpus", train word2vec model.
         >>> model = word2vec(corpus)
         >>> instance = WmdSimilarity(corpus, model, num_best=10)
-
         >>> # Make query.
         >>> query = 'Very good, you should seat outdoor.'
         >>> sims = instance[query]
@@ -600,8 +599,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         corpus:                         List of lists of strings, as in gensim.models.word2vec.
         w2v_model:                      A trained word2vec model.
         num_best:                       Number of results to retrieve.
-        normalize_w2v_and_replace:      Whether or not to normalize the word2vec vectors to
-                                        length 1.
+        normalize_w2v_and_replace:      Whether or not to normalize the word2vec vectors to length 1.
         """
         self.corpus = corpus
         self.w2v_model = w2v_model

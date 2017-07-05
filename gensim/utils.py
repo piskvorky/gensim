@@ -179,7 +179,8 @@ def copytree_hardlink(source, dest):
         shutil.copy2 = copy2
 
 
-def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
+def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict", to_lower=False,
+             lower=False):
     """
     Iteratively yield tokens as unicode strings, removing accent marks
     and optionally lowercasing the unidoce string by assigning True
@@ -195,11 +196,15 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
 
     """
     lowercase = lowercase or to_lower or lower
-    text = to_unicode(text, errors=errors)
+    text = to_unicode(text, encoding, errors=errors)
     if lowercase:
         text = text.lower()
     if deacc:
         text = deaccent(text)
+    return simple_tokenize(text)
+
+
+def simple_tokenize(text):
     for match in PAT_ALPHABETIC.finditer(text):
         yield match.group()
 
@@ -1210,13 +1215,13 @@ def strided_windows(ndarray, window_size):
            [5, 6, 7, 8, 9]])
 
     Args:
-    ----
-    ndarray: either a numpy.ndarray or something that can be converted into one.
-    window_size: sliding window size.
-    :param window_size:
-    :return: numpy.ndarray of the subsequences produced by sliding a window of the given size over
-             the `ndarray`. Since this uses striding, the individual arrays are views rather than
-             copies of `ndarray`. Changes to one view modifies the others and the original.
+        ndarray: either a numpy.ndarray or something that can be converted into one.
+        window_size: sliding window size.
+
+    Returns:
+        numpy.ndarray of the subsequences produced by sliding a window of the given size over
+        the `ndarray`. Since this uses striding, the individual arrays are views rather than
+        copies of `ndarray`. Changes to one view modifies the others and the original.
     """
     ndarray = np.asarray(ndarray)
     if window_size == ndarray.shape[0]:
@@ -1236,12 +1241,11 @@ def iter_windows(texts, window_size, copy=False, ignore_below_size=True, include
     instead, pass `copy=True`.
 
     Args:
-    ----
-    texts: List of string sentences.
-    window_size: Size of sliding window.
-    copy: False to use views of the texts (default) or True to produce deep copies.
-    ignore_below_size: ignore documents that are not at least `window_size` in length (default behavior).
-                       If False, the documents below `window_size` will be yielded as the full document.
+        texts: List of string sentences.
+        window_size: Size of sliding window.
+        copy: False to use views of the texts (default) or True to produce deep copies.
+        ignore_below_size: ignore documents that are not at least `window_size` in length (default behavior).
+            If False, the documents below `window_size` will be yielded as the full document.
 
     """
     for doc_num, document in enumerate(texts):
