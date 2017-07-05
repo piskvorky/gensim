@@ -138,7 +138,7 @@ class TestPhrasesModel(unittest.TestCase):
             b'human interface'
         ])
 
-    def test_multiple_bigrams_single_entry(self):
+    def testMultipleBigramsSingleEntry(self):
         """ a single entry should produce multiple bigrams. """
         bigram = Phrases(sentences, min_count=1, threshold=1)
 
@@ -151,6 +151,40 @@ class TestPhrasesModel(unittest.TestCase):
         assert seen_bigrams == set([
             b'graph minors',
             b'human interface'
+        ])
+
+    def testScoringOriginal(self):
+        """ a single entry should produce multiple bigrams. """
+        bigram = Phrases(sentences, min_count=1, threshold=1)
+
+        seen_scores = set()
+
+        test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
+        for phrase, score in bigram.export_phrases(test_sentences):
+            seen_scores.add(round(score,3))
+
+        assert seen_scores == set([
+            5.167, # score for graph minors
+            3.444 # score for human interface
+        ])
+
+    def testScoringNpmi(self):
+        """ a single entry should produce multiple bigrams. """
+        bigram = Phrases(sentences, min_count=1, threshold=1)
+
+        seen_bigrams = set()
+        seen_scores = set()
+
+        test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
+        logging.debug(str(len(bigram.vocab)))
+        for phrase, score in bigram.export_phrases(test_sentences):
+            logging.debug('test Scoring Phrase ' + phrase)
+            logging.debug('test Scoring score ' + str(score))
+            seen_scores.add(round(score,3))
+
+        assert seen_scores == set([
+            5.167,
+            3.444
         ])
 
     def testBadParameters(self):
