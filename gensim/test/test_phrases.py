@@ -154,7 +154,7 @@ class TestPhrasesModel(unittest.TestCase):
         ])
 
     def testScoringDefault(self):
-        """ a single entry should produce multiple bigrams. """
+        """ test the default scoring, from the mikolov word2vec paper """
         bigram = Phrases(sentences, min_count=1, threshold=1)
 
         seen_scores = set()
@@ -169,22 +169,18 @@ class TestPhrasesModel(unittest.TestCase):
         ])
 
     def testScoringNpmi(self):
-        """ a single entry should produce multiple bigrams. """
-        bigram = Phrases(sentences, min_count=1, threshold=1)
+        """ test normalized pointwise mutual information scoring """
+        bigram = Phrases(sentences, min_count=1, threshold=.5, scoring='npmi')
 
-        seen_bigrams = set()
         seen_scores = set()
 
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
-        logging.debug(str(len(bigram.vocab)))
         for phrase, score in bigram.export_phrases(test_sentences):
-            logging.debug('test Scoring Phrase ' + phrase)
-            logging.debug('test Scoring score ' + str(score))
             seen_scores.add(round(score,3))
 
         assert seen_scores == set([
-            5.167,
-            3.444
+            .882, #score for graph minors
+            .714 # score for human interface
         ])
 
     def testBadParameters(self):
