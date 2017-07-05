@@ -253,21 +253,20 @@ class Phrases(interfaces.TransformationABC):
             then you can debug the threshold with generated tsv
         """
 
-        if scoring == 'default':
-            self.scoring_function = \
-            partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
-        elif scoring == 'npmi':
-            self.scoring_function = \
-            partial(self.npmi_scorer, corpus_word_count = corpus_word_count)
-        # no else here to catch unknown scoring function, check is done in Phrases.__init__
-
         vocab = self.vocab
         threshold = self.threshold
         delimiter = self.delimiter  # delimiter used for lookup
         min_count = self.min_count
         scoring = self.scoring
         corpus_word_count = self.corpus_word_count
-        scoring_function = self.scoring_function
+
+        if self.scoring == 'default':
+            scoring_function = \
+            partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
+        elif self.scoring == 'npmi':
+            scoring_function = \
+            partial(self.npmi_scorer, corpus_word_count = corpus_word_count)
+        # no else here to catch unknown scoring function, check is done in Phrases.__init__
 
         for sentence in sentences:
             s = [utils.any2utf8(w) for w in sentence]
