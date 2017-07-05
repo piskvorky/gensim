@@ -153,7 +153,7 @@ class TestPhrasesModel(unittest.TestCase):
             b'human interface'
         ])
 
-    def testScoringOriginal(self):
+    def testScoringDefault(self):
         """ a single entry should produce multiple bigrams. """
         bigram = Phrases(sentences, min_count=1, threshold=1)
 
