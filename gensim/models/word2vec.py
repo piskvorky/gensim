@@ -248,7 +248,7 @@ except ImportError:
             l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x layer1_size
             if word2_indices and model.cbow_mean:
                 l1 /= len(word2_indices)
-            log_prob_sentence += score_cbow_pair(model, word, word2_indices, l1)
+            log_prob_sentence += score_cbow_pair(model, word, l1)
 
         return log_prob_sentence
 
@@ -365,7 +365,7 @@ def score_sg_pair(model, word, word2):
     return sum(lprob)
 
 
-def score_cbow_pair(model, word, word2_indices, l1):
+def score_cbow_pair(model, word, l1):
     l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
     sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
     lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
