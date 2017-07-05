@@ -139,9 +139,11 @@ class CoherenceModel(interfaces.TransformationABC):
             window_size : Is the size of the window to be used for coherence measures using boolean sliding window as their
                 probability estimator. For 'u_mass' this doesn't matter.
                 If left 'None' the default window sizes are used which are:
+
                     'c_v' : 110
                     'c_uci' : 10
                     'c_npmi' : 10
+
             coherence : Coherence measure to be used. Supported values are:
                 'u_mass'
                 'c_v'

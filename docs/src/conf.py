@@ -16,7 +16,7 @@ import sys, os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.append(os.path.abspath('.'))
+sys.path.append(os.path.abspath('.'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -216,4 +216,4 @@ latex_use_parts = False
 # If false, no module index is generated.
 #latex_use_modindex = True
 
-suppress_warnings = ['image.nonlocal_uri']
+suppress_warnings = ['image.nonlocal_uri', 'ref.citation', 'ref.footnote']

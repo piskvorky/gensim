@@ -487,13 +487,11 @@ class sslm(utils.SaveLoad):
 
         :math::
 
-            Fwd_Variance(t) ≡ E((beta_{t,w} − mean_{t,w})^2 |beta_{t} for 1:t)
-        = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * (fwd_variance[t - 1] + obs_variance)
+            fwd\_variance[t] \equiv E((beta_{t,w}-mean_{t,w})^2 |beta_{t}\ for\ 1:t) = (obs\_variance / fwd\_variance[t - 1] + chain\_variance + obs\_variance ) * (fwd\_variance[t - 1] + obs\_variance)
 
         :math::
 
-            Variance(t) ≡ E((beta_{t,w} − mean_cap{t,w})^2 |beta_cap{t} for 1:t)
-        = fwd_variance[t - 1] + (fwd_variance[t - 1] / fwd_variance[t - 1] + obs_variance)^2 * (variance[t - 1] - (fwd_variance[t-1] + obs_variance))
+            variance[t] \equiv E((beta_{t,w}-mean\_cap_{t,w})^2 |beta\_cap_{t}\ for\ 1:t) = fwd\_variance[t - 1] + (fwd\_variance[t - 1] / fwd\_variance[t - 1] + obs\_variance)^2 * (variance[t - 1] - (fwd\_variance[t-1] + obs\_variance))
 
         """
         INIT_VARIANCE_CONST = 1000
