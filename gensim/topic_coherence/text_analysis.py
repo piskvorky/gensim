@@ -221,7 +221,6 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         self._co_occurrences = sps.lil_matrix((self._vocab_size, self._vocab_size), dtype='uint32')
 
         self._uniq_words = np.zeros((self._vocab_size + 1,), dtype=bool)  # add 1 for none token
-        self._mask = self._uniq_words[:-1]  # to exclude none token
         self._counter = Counter()
 
     def __str__(self):
@@ -251,9 +250,10 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
     def analyze_text(self, window, doc_num=None):
         self._slide_window(window, doc_num)
-        if self._mask.any():
-            self._occurrences[self._mask] += 1
-            self._counter.update(itertools.combinations(np.nonzero(self._mask)[0], 2))
+        mask = self._uniq_words[:-1]  # to exclude none token
+        if mask.any():
+            self._occurrences[mask] += 1
+            self._counter.update(itertools.combinations(np.nonzero(mask)[0], 2))
 
     def _slide_window(self, window, doc_num):
         if doc_num != self._current_doc_num:
@@ -273,7 +273,8 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         """
         co_occ = self._co_occurrences
         co_occ.setdiag(self._occurrences)  # diagonal should be equal to occurrence counts
-        self._co_occurrences = co_occ + co_occ.T - sps.diags(co_occ.diagonal(), dtype='uint32')
+        self._co_occurrences = \
+            co_occ + co_occ.T - sps.diags(co_occ.diagonal(), offsets=0, dtype='uint32')
 
     def _get_occurrences(self, word_id):
         return self._occurrences[word_id]

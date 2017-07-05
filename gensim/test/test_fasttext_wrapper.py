@@ -64,7 +64,6 @@ class TestFastText(unittest.TestCase):
         self.model_sanity(trained_model)
 
         # Tests temporary training files deleted
-        self.assertFalse(os.path.exists('%s.vec' % testfile()))
         self.assertFalse(os.path.exists('%s.bin' % testfile()))
 
     def testMinCount(self):
@@ -115,7 +114,7 @@ class TestFastText(unittest.TestCase):
         self.assertTrue(loaded_kv.syn0_all_norm is None)
 
     def testLoadFastTextFormat(self):
-        """Test model successfully loaded from fastText .vec and .bin files"""
+        """Test model successfully loaded from fastText .bin file"""
         try:
             model = fasttext.FastText.load_fasttext_format(self.test_model_file)
         except Exception as exc:
@@ -166,7 +165,7 @@ class TestFastText(unittest.TestCase):
         self.model_sanity(model)
 
     def testLoadFastTextNewFormat(self):
-        """ Test model successfully loaded from fastText (new format) .vec and .bin files """
+        """ Test model successfully loaded from fastText (new format) .bin file """
         try:
             new_model = fasttext.FastText.load_fasttext_format(self.test_new_model_file)
         except Exception as exc:
@@ -215,6 +214,11 @@ class TestFastText(unittest.TestCase):
         self.assertEquals(new_model.wv.max_n, 6)
         self.assertEquals(new_model.wv.min_n, 3)
         self.model_sanity(new_model)
+
+    def testLoadFileName(self):
+        """ Test model accepts input as both `/path/to/model` or `/path/to/model.bin` """
+        self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new')))
+        self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new.bin')))
 
     def testLoadModelWithNonAsciiVocab(self):
         """Test loading model with non-ascii words in vocab"""
