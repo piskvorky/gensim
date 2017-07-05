@@ -459,23 +459,22 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         self.assertTrue(numpy.allclose(expected, sims))
         index.destroy()
 
-    def testShardDir(self):
-        """test where shard and pickles are moved """
+    def testPickleShard(self):
+        """ test that index object pickle and shard are at same location, and loads after change of location """
 
-        from shutil import move, rmtree
+        prefix = datapath('index')
+        index = similarities.Similarity(prefix, corpus[:5], num_features=len(dictionary), shardsize=9)
+        index.save()
+        self.assertEqual(prefix, index.output_prefix)
+        new_prefix = datapath('new_index')
+        os.rename(prefix, new_prefix)
+        os.rename(datapath('index.0'), datapath('new_index.0'))
 
-        homedir = os.path.join(os.path.expanduser('~'), '')
-        index = similarities.Similarity(homedir, corpus[:5], num_features=len(dictionary), shardsize=9)
-        index.save('test_index')
-        self.assertTrue(os.path.exists(os.path.join(os.path.dirname(homedir), 'shard', '')))
-        self.assertTrue(os.path.exists(os.path.join(os.path.dirname(homedir), 'shard', '.0')))
-        self.assertTrue(os.path.exists(os.path.join(os.path.dirname(homedir), 'shard', 'test_index')))
-        self.assertTrue(index.output_prefix == os.path.join(os.path.dirname(homedir), 'shard', ''))
-        move(os.path.join(os.path.dirname(homedir), 'shard', ''), os.path.join(os.path.dirname(homedir), 'test', 'shard', ''))
-        index2 = similarities.Similarity.load(os.path.join(os.path.dirname(homedir), 'test', 'shard', 'test_index'))
-        self.assertTrue(index2.output_prefix == os.path.join(os.path.dirname(homedir), 'test', 'shard', ''))
-        index2.destroy()
-        rmtree(os.path.join(os.path.dirname(homedir), 'test', ''))
+        new_index = similarities.Similarity.load(datapath('new_index'))
+        self.assertEqual(new_prefix, new_index.output_prefix)
+
+        os.remove(datapath('new_index'))
+        os.remove(datapath('new_index.0'))
 
     def testMmapCompressed(self):
         pass
