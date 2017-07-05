@@ -385,8 +385,8 @@ class Phraser(interfaces.TransformationABC):
     After the one-time initialization, a Phraser will be much smaller and
     somewhat faster than using the full Phrases model.
 
-    Reflects the results of the source model's `min_count` and `threshold`
-    settings. (You can tamper with those & create a new Phraser to try
+    Reflects the results of the source model's `min_count`, `threshold`, and
+    `scoring` settings. (You can tamper with those & create a new Phraser to try
     other values.)
 
     """
@@ -394,6 +394,7 @@ class Phraser(interfaces.TransformationABC):
         self.threshold = phrases_model.threshold
         self.min_count = phrases_model.min_count
         self.delimiter = phrases_model.delimiter
+        self.scoring = phrases_model.scoring
         self.phrasegrams = {}
         corpus = pseudocorpus(phrases_model.vocab, phrases_model.delimiter)
         logger.info('source_vocab length %i', len(phrases_model.vocab))
