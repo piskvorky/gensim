@@ -446,9 +446,7 @@ class Similarity(interfaces.SimilarityABC):
 
         """
         self.close_shard()
-        if isinstance(self, Similarity):
-            fname = self.output_prefix
-        elif fname is None:
+        if fname is None:
             fname = self.output_prefix
 
         super(Similarity, self).save(fname, *args, **kwargs)
