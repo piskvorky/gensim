@@ -105,7 +105,7 @@ class Phrases(interfaces.TransformationABC):
     and `phrases[corpus]` syntax.
 
     """
-    def __init__(self, sentences=None, min_count=5, threshold=10.0,
+    def __init__(self, sentences=None, recode_to_utf8=True, min_count=5, threshold=10.0,
                  max_vocab_size=40000000, delimiter=b'_', progress_per=10000):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
@@ -134,12 +134,7 @@ class Phrases(interfaces.TransformationABC):
         should be a byte string (e.g. b'_').
 
         """
-        if min_count <= 0:
-            raise ValueError("min_count should be at least 1")
-
-        if threshold <= 0:
-            raise ValueError("threshold should be positive")
-
+        self.recode_to_utf8 = recode_to_utf8
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
@@ -157,19 +152,21 @@ class Phrases(interfaces.TransformationABC):
             self.__class__.__name__, len(self.vocab), self.min_count,
             self.threshold, self.max_vocab_size)
 
-    @staticmethod
-    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
+    def learn_vocab(self, sentences):
         """Collect unigram/bigram counts from the `sentences` iterable."""
         sentence_no = -1
         total_words = 0
         logger.info("collecting all words and their counts")
         vocab = defaultdict(int)
         min_reduce = 1
+        delimiter = self.delimiter
         for sentence_no, sentence in enumerate(sentences):
-            if sentence_no % progress_per == 0:
-                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
-                            (sentence_no, total_words, len(vocab)))
-            sentence = [utils.any2utf8(w) for w in sentence]
+            if sentence_no % self.progress_per == 0:
+                logger.info(
+                    "PROGRESS: at sentence #%i, processed %i words and %i word types",
+                    sentence_no, total_words, len(vocab))
+            if self.recode_to_utf8:
+                sentence = [utils.any2utf8(w) for w in sentence]
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
                 vocab[delimiter.join(bigram)] += 1
@@ -179,12 +176,13 @@ class Phrases(interfaces.TransformationABC):
                 word = sentence[-1]
                 vocab[word] += 1
 
-            if len(vocab) > max_vocab_size:
+            if len(vocab) > self.max_vocab_size:
                 utils.prune_vocab(vocab, min_reduce)
                 min_reduce += 1
 
-        logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
-                    (len(vocab), total_words, sentence_no + 1))
+        logger.info(
+            "collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences",
+            len(vocab), total_words, sentence_no + 1)
         return min_reduce, vocab
 
     def add_vocab(self, sentences):
@@ -197,7 +195,7 @@ class Phrases(interfaces.TransformationABC):
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
+        min_reduce, vocab = self.learn_vocab(sentences)
 
         if len(self.vocab) > 0:
             logger.info("merging %i counts into %s", len(vocab), self)
@@ -227,7 +225,7 @@ class Phrases(interfaces.TransformationABC):
             then you can debug the threshold with generated tsv
         """
         for sentence in sentences:
-            s = [utils.any2utf8(w) for w in sentence]
+            s = [utils.any2utf8(w) for w in sentence] if self.recode_to_utf8 else sentence
             last_bigram = False
             vocab = self.vocab
             threshold = self.threshold
@@ -279,7 +277,8 @@ class Phrases(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        s, new_s = [utils.any2utf8(w) for w in sentence], []
+        s = [utils.any2utf8(w) for w in sentence] if self.recode_to_utf8 else sentence
+        new_s = []
         last_bigram = False
         vocab = self.vocab
         threshold = self.threshold
@@ -338,6 +337,7 @@ class Phraser(interfaces.TransformationABC):
         self.threshold = phrases_model.threshold
         self.min_count = phrases_model.min_count
         self.delimiter = phrases_model.delimiter
+        self.recode_to_utf8 = phrases_model.recode_to_utf8
         self.phrasegrams = {}
         corpus = pseudocorpus(phrases_model.vocab, phrases_model.delimiter)
         logger.info('source_vocab length %i', len(phrases_model.vocab))
@@ -368,7 +368,8 @@ class Phraser(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        s, new_s = [utils.any2utf8(w) for w in sentence], []
+        s = [utils.any2utf8(w) for w in sentence] if self.recode_to_utf8 else sentence
+        new_s = []
         last_bigram = False
         phrasegrams = self.phrasegrams
         delimiter = self.delimiter
@@ -394,7 +395,7 @@ class Phraser(interfaces.TransformationABC):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.info("running %s" % " ".join(sys.argv))
+    logging.info("running %s", " ".join(sys.argv))
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
@@ -411,3 +412,5 @@ if __name__ == '__main__':
     bigram = Phrases(sentences, min_count=5, threshold=100)
     for s in bigram[sentences]:
         print(utils.to_utf8(u' '.join(s)))
+
+    logging.info("finished running %s", " ".join(sys.argv))
