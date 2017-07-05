@@ -64,6 +64,7 @@ import logging
 import warnings
 from collections import defaultdict
 import itertools as it
+from functools import partial
 
 from six import iteritems, string_types, next
 
@@ -161,8 +162,8 @@ class Phrases(interfaces.TransformationABC):
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
         self.progress_per = progress_per
-		self.scoring = scoring
-		self.corpus_word_count = 0L
+        self.scoring = scoring
+        self.corpus_word_count = 0L
 
         if sentences is not None:
             self.add_vocab(sentences)
@@ -194,7 +195,7 @@ class Phrases(interfaces.TransformationABC):
             if sentence:  # add last word skipped by previous loop
                 word = sentence[-1]
                 vocab[word] += 1
-				total_words += 1
+                total_words += 1
 
             if len(vocab) > max_vocab_size:
                 utils.prune_vocab(vocab, min_reduce)
@@ -214,7 +215,8 @@ class Phrases(interfaces.TransformationABC):
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
+        min_reduce, vocab, total_words = \
+        self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
 
         self.corpus_word_count += total_words
         if len(self.vocab) > 0:
@@ -252,11 +254,12 @@ class Phrases(interfaces.TransformationABC):
         scoring = self.scoring
         corpus_word_count = self.corpus_word_count
 
-        if scoring == 'mikolov':
+        if scoring == 'default':
             scoring_function = partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
-        if scoring == 'npmi':
+        elif scoring == 'npmi':
             scoring_function = partial(self.npmi_scorer, corpus_word_count = corpus_word_count)
-        #TODO else: make sure this asserts if there is no scoring function
+        else:
+            raise ValueError('unknown scoring function specified')
 
         for sentence in sentences:
             s = [utils.any2utf8(w) for w in sentence]
