@@ -65,6 +65,7 @@ import warnings
 from collections import defaultdict
 import itertools as it
 from functools import partial
+from math import log
 
 from six import iteritems, string_types, next
 
@@ -152,8 +153,13 @@ class Phrases(interfaces.TransformationABC):
         if min_count <= 0:
             raise ValueError("min_count should be at least 1")
 
-        if threshold <= 0:
-            raise ValueError("threshold should be positive")
+        if threshold <= 0 and scoring == 'default':
+            raise ValueError("threshold should be positive for default scoring")
+        if scoring == 'npmi' and (threshold < -1 or threshold > 1):
+            raise ValueError("threshold should be between -1 and 1 for npmi scoring")
+
+        if not (scoring == 'default' or scoring == 'npmi'):
+            raise ValueError('unknown scoring function "' + scoring + '" specified')
 
         self.min_count = min_count
         self.threshold = threshold
@@ -247,19 +253,21 @@ class Phrases(interfaces.TransformationABC):
             then you can debug the threshold with generated tsv
         """
 
+        if scoring == 'default':
+            self.scoring_function = \
+            partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
+        elif scoring == 'npmi':
+            self.scoring_function = \
+            partial(self.npmi_scorer, corpus_word_count = corpus_word_count)
+        # no else here to catch unknown scoring function, check is done in Phrases.__init__
+
         vocab = self.vocab
         threshold = self.threshold
         delimiter = self.delimiter  # delimiter used for lookup
         min_count = self.min_count
         scoring = self.scoring
         corpus_word_count = self.corpus_word_count
-
-        if scoring == 'default':
-            scoring_function = partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
-        elif scoring == 'npmi':
-            scoring_function = partial(self.npmi_scorer, corpus_word_count = corpus_word_count)
-        else:
-            raise ValueError('unknown scoring function specified')
+        scoring_function = self.scoring_function
 
         for sentence in sentences:
             s = [utils.any2utf8(w) for w in sentence]
