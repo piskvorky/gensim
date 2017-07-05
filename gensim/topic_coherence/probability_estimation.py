@@ -23,14 +23,12 @@ def p_boolean_document(corpus, segmented_topics):
     of documents in which the word occurs divided by the total number of documents.
 
     Args:
-    ----
-    corpus : The corpus of documents.
-    segmented_topics : Output from the segmentation of topics. Could be simply topics too.
+        corpus : The corpus of documents.
+        segmented_topics : Output from the segmentation of topics. Could be simply topics too.
 
     Returns:
-    -------
-    accumulator : word occurrence accumulator instance that can be used to lookup token
-                  frequencies and co-occurrence frequencies.
+        accumulator : word occurrence accumulator instance that can be used to lookup token
+            frequencies and co-occurrence frequencies.
     """
     top_ids = unique_ids_from_segments(segmented_topics)
     return CorpusAccumulator(top_ids).accumulate(corpus)
@@ -44,16 +42,14 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
     documents to compute word probabilities.
 
     Args:
-    ----
-    texts : List of string sentences.
-    segmented_topics : Output from the segmentation of topics. Could be simply topics too.
-    dictionary : Gensim dictionary mapping of the tokens and ids.
-    window_size : Size of the sliding window. 110 found out to be the ideal size for large corpora.
+        texts : List of string sentences.
+        segmented_topics : Output from the segmentation of topics. Could be simply topics too.
+        dictionary : Gensim dictionary mapping of the tokens and ids.
+        window_size : Size of the sliding window. 110 found out to be the ideal size for large corpora.
 
     Returns:
-    -------
-    accumulator : word occurrence accumulator instance that can be used to lookup token
-                  frequencies and co-occurrence frequencies.
+        accumulator : word occurrence accumulator instance that can be used to lookup token
+            frequencies and co-occurrence frequencies.
     """
     top_ids = unique_ids_from_segments(segmented_topics)
     if processes <= 1:
@@ -68,11 +64,10 @@ def unique_ids_from_segments(segmented_topics):
     """Return the set of all unique ids in a list of segmented topics.
 
     Args:
-    ----
-    segmented_topics: list of tuples of (word_id_set1, word_id_set2). Each word_id_set
-                      is either a single integer, or a `numpy.ndarray` of integers.
+        segmented_topics: list of tuples of (word_id_set1, word_id_set2). Each word_id_set
+            is either a single integer, or a `numpy.ndarray` of integers.
     Returns:
-    unique_ids : set of unique ids across all topic segments.
+        unique_ids : set of unique ids across all topic segments.
     """
     unique_ids = set()  # is a set of all the unique ids contained in topics.
     for s_i in segmented_topics:
