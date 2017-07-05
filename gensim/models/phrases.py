@@ -147,7 +147,7 @@ class Phrases(interfaces.TransformationABC):
             - ln(prop(worda followed by wordb)
             where prop(n) is the count of n / the count of everything in the entire corpus
         'npmi' is more robust when dealing with common words that form part of common bigrams, and
-            ranges from 0 to 1, but is slower to calculate than the default
+            ranges from -1 to 1, but is slower to calculate than the default
 
         """
         if min_count <= 0:
