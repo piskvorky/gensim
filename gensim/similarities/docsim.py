@@ -437,7 +437,7 @@ class Similarity(interfaces.SimilarityABC):
         for shard in self.shards:
             shard.dirname = dirname
 
-    def save(self, *args, **kwargs):
+    def save(self, fname=None, *args, **kwargs):
         """
         Save the object via pickling (also see load) under filename specified in
         the constructor.
@@ -446,18 +446,21 @@ class Similarity(interfaces.SimilarityABC):
 
         """
         self.close_shard()
-        fname = self.output_prefix
+        if isinstance(self, Similarity):
+            fname = self.output_prefix
+        elif fname is None:
+            fname = self.output_prefix
 
         super(Similarity, self).save(fname, *args, **kwargs)
-
 
     @classmethod
     def load(self, fname, mmap=None):
 
         obj = super(Similarity, self).load(fname, mmap)
-        if obj.output_prefix is not fname:
-            obj.output_prefix = fname
-            obj.check_moved()
+        if isinstance(obj,Similarity):
+            if obj.output_prefix is not fname:
+                obj.output_prefix = fname
+                obj.check_moved()
 
         return obj
 
