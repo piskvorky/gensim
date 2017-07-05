@@ -271,14 +271,7 @@ class SaveLoad(object):
         obj = unpickle(fname)
         obj._load_specials(fname, mmap, compress, subname)
         logger.info("loaded %s", fname)
-        if cls.__name__ == 'Similarity':
-            """ 
-            issubclass should not be called from inside a classmethod function, when we are not calling it from
-            the class we intend to compare it with (because that class may not even exist at the time of calling)
-            """
-            if obj.output_prefix is not fname:
-                obj.output_prefix = os.path.join(os.path.dirname(obj.output_prefix) ,'')   # '' to get trailing slash
-                obj.check_moved()
+
         return obj
 
     def _load_specials(self, fname, mmap, compress, subname):
