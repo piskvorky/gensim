@@ -21,8 +21,8 @@ class SklD2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     Base Doc2Vec module
     """
 
-    def __init__(self, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, 
-                dm_tag_count=1, docvecs=None, docvecs_mapfile=None, 
+    def __init__(self, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
+                dm_tag_count=1, docvecs=None, docvecs_mapfile=None,
                 comment=None, trim_rule=None, **other_params):
         """
         Sklearn wrapper for Doc2Vec model. Class derived from gensim.models.Doc2Vec
@@ -62,9 +62,9 @@ class SklD2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         Fit the model according to the given training data.
         Calls gensim.models.Doc2Vec
         """
-        self.gensim_model = models.Doc2Vec(documents=X, dm_mean=self.dm_mean, dm=self.dm, 
-            dbow_words=self.dbow_words, dm_concat=self.dm_concat, dm_tag_count=self.dm_tag_count, 
-            docvecs=self.docvecs, docvecs_mapfile=self.docvecs_mapfile, comment=self.comment, 
+        self.gensim_model = models.Doc2Vec(documents=X, dm_mean=self.dm_mean, dm=self.dm,
+            dbow_words=self.dbow_words, dm_concat=self.dm_concat, dm_tag_count=self.dm_tag_count,
+            docvecs=self.docvecs, docvecs_mapfile=self.docvecs_mapfile, comment=self.comment,
             trim_rule=self.trim_rule, **self.other_params)
         return self
 
