@@ -186,26 +186,14 @@ class Similarity(interfaces.SimilarityABC):
         `self.num_best = 10` before doing a query.
 
         """
-        self.is_shard = False  # To indicate if shard directory has been created, if not then shard and index files are stored in temp
         if output_prefix is None:
             # undocumented feature: set output_prefix=None to create the server in temp
             self.output_prefix = utils.randfname(prefix='simserver')
         else:
-            try:
-                self.output_prefix = os.path.join(os.path.dirname(output_prefix), 'shard', '')   # '' to get the trailing slash
-                if not os.path.exists(self.output_prefix):
-                    os.makedirs(self.output_prefix)
-                    logger.info("created %s directory . Both shard and index files are stored at this location. Please use \
-                    this entire folder for portability across different systems. ", self.output_prefix)
-                    self.is_shard = True  # helps while saving the index file as we don't want to create directories in temp
-                else:
-                    logger.warning("It seems there is already a file named shard in location %s . Please ensure  \
-                    that there is no other files named shard in the provided location. Starting similarity index under temp folder", os.path.join(os.path.dirname(output_prefix), ''))
-                    self.output_prefix = utils.randfname(prefix='simserver')
-            except:
-                logger.warning("Failed to create shard folder in %s. Please ensure that you have required permission to create  \
-                    directories. Starting similarity index under temp folder.", os.path.join(os.path.dirname(output_prefix), ''))
-                self.output_prefix = utils.randfname(prefix='simserver')
+            self.output_prefix = output_prefix
+            _, file_name = os.path.split(self.output_prefix)
+            if not file_name:
+                raise ValueError("output_prefix should not be a directory")
 
         logger.info("starting similarity index under %s", self.output_prefix)
         self.num_features = num_features
@@ -449,7 +437,7 @@ class Similarity(interfaces.SimilarityABC):
         for shard in self.shards:
             shard.dirname = dirname
 
-    def save(self, fname=None, *args, **kwargs):
+    def save(self, *args, **kwargs):
         """
         Save the object via pickling (also see load) under filename specified in
         the constructor.
@@ -458,16 +446,20 @@ class Similarity(interfaces.SimilarityABC):
 
         """
         self.close_shard()
-        if fname is None:
-            if(issubclass(self.__class__, Similarity)):
-                fname = os.path.join(self.output_prefix, 'index') if self.is_shard else self.output_prefix + '.index'  # default file name - index
-            else:
-                fname = self.output_prefix
-        else:
-            if(issubclass(self.__class__, Similarity)):
-                fname = os.path.join(self.output_prefix, fname) if self.is_shard else self.output_prefix + '.' + fname  # default file name - index
+        fname = self.output_prefix
 
         super(Similarity, self).save(fname, *args, **kwargs)
+
+
+    @classmethod
+    def load(self, fname, mmap=None):
+
+        obj = super(Similarity, self).load(fname, mmap)
+        if obj.output_prefix is not fname:
+            obj.output_prefix = fname
+            obj.check_moved()
+
+        return obj
 
     def destroy(self):
         """
