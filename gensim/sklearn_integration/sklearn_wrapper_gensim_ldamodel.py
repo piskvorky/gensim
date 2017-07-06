@@ -19,7 +19,7 @@ from gensim import matutils
 from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class LdaTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """
@@ -63,7 +63,7 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         """
         Set all parameters.
         """
-        super(SklLdaModel, self).set_params(**parameters)
+        super(LdaTransformer, self).set_params(**parameters)
         return self
 
     def fit(self, X, y=None):

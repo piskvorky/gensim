@@ -15,12 +15,12 @@ try:
 except ImportError:
     raise unittest.SkipTest("Test requires scikit-learn to be installed, which is not available")
 
-from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import SklRpModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklLdaModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklLsiModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_w2vmodel import SklW2VModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklATModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import RpTransformer
+from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import LdaTransformer
+from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import LsiTransformer
+from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import LdaSeqTransformer
+from gensim.sklearn_integration.sklearn_wrapper_gensim_w2vmodel import W2VTransformer
+from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import AuthorTopicTransformer
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils
 
@@ -97,10 +97,10 @@ w2v_texts = [
     ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics', 'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically', 'transformed', 'modern', 'day', 'society']
 ]
 
-class TestSklLdaModelWrapper(unittest.TestCase):
+class TestLdaWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        self.model = SklLdaModel(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        self.model = LdaTransformer(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
         self.model.fit(corpus)
 
     def testTransform(self):
@@ -130,7 +130,7 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
         arr = numpy.array([[1, 2, 0], [0, 0, 3], [1, 0, 0]])
         sarr = sparse.csr_matrix(arr)
-        newmodel = SklLdaModel(num_topics=2, passes=100)
+        newmodel = LdaTransformer(num_topics=2, passes=100)
         newmodel.fit(sarr)
         bow = [(0, 1), (1, 2), (2, 0)]
         transformed_vec = newmodel.transform(bow)
@@ -139,7 +139,7 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testPipeline(self):
-        model = SklLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
+        model = LdaTransformer(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
@@ -186,16 +186,16 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        lda_wrapper = SklLdaModel(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        lda_wrapper = LdaTransformer(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
         texts_new = ['graph', 'eulerian']
         bow = lda_wrapper.id2word.doc2bow(texts_new)
         self.assertRaises(NotFittedError, lda_wrapper.transform, bow)
 
 
-class TestSklLsiModelWrapper(unittest.TestCase):
+class TestLsiWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        self.model = SklLsiModel(id2word=dictionary, num_topics=2)
+        self.model = LsiTransformer(id2word=dictionary, num_topics=2)
         self.model.fit(corpus)
 
     def testTransform(self):
@@ -222,7 +222,7 @@ class TestSklLsiModelWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testPipeline(self):
-        model = SklLsiModel(num_topics=2)
+        model = LsiTransformer(num_topics=2)
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
@@ -269,15 +269,15 @@ class TestSklLsiModelWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        lsi_wrapper = SklLsiModel(id2word=dictionary, num_topics=2)
+        lsi_wrapper = LsiTransformer(id2word=dictionary, num_topics=2)
         texts_new = ['graph', 'eulerian']
         bow = lsi_wrapper.id2word.doc2bow(texts_new)
         self.assertRaises(NotFittedError, lsi_wrapper.transform, bow)
 
 
-class TestSklLdaSeqModelWrapper(unittest.TestCase):
+class TestLdaSeqWrapper(unittest.TestCase):
     def setUp(self):
-        self.model = SklLdaSeqModel(id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='own', sstats=sstats_ldaseq)
+        self.model = LdaSeqTransformer(id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='own', sstats=sstats_ldaseq)
         self.model.fit(corpus_ldaseq)
 
     def testTransform(self):
@@ -319,7 +319,7 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
         test_target = data.target[0:2]
         id2word = Dictionary(map(lambda x: x.split(), test_data))
         corpus = [id2word.doc2bow(i.split()) for i in test_data]
-        model = SklLdaSeqModel(id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim')
+        model = LdaSeqTransformer(id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim')
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         text_ldaseq = Pipeline((('features', model,), ('classifier', clf)))
         text_ldaseq.fit(corpus, test_target)
@@ -343,15 +343,15 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        ldaseq_wrapper = SklLdaSeqModel(num_topics=2)
+        ldaseq_wrapper = LdaSeqTransformer(num_topics=2)
         doc = list(corpus_ldaseq)[0]
         self.assertRaises(NotFittedError, ldaseq_wrapper.transform, doc)
 
 
-class TestSklRpModelWrapper(unittest.TestCase):
+class TestRpWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(13)
-        self.model = SklRpModel(num_topics=2)
+        self.model = RpTransformer(num_topics=2)
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.model.fit(self.corpus)
 
@@ -378,7 +378,7 @@ class TestSklRpModelWrapper(unittest.TestCase):
 
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        model = SklRpModel(num_topics=2)
+        model = RpTransformer(num_topics=2)
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
@@ -410,15 +410,15 @@ class TestSklRpModelWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        rpmodel_wrapper = SklRpModel(num_topics=2)
+        rpmodel_wrapper = RpTransformer(num_topics=2)
         doc = list(self.corpus)[0]
         self.assertRaises(NotFittedError, rpmodel_wrapper.transform, doc)
 
 
-class TestSklW2VModelWrapper(unittest.TestCase):
+class TestWord2VecWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)
-        self.model = SklW2VModel(size=10, min_count=0, seed=42)
+        self.model = W2VTransformer(size=10, min_count=0, seed=42)
         self.model.fit(texts)
 
     def testTransform(self):
@@ -443,7 +443,7 @@ class TestSklW2VModelWrapper(unittest.TestCase):
 
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        model = SklW2VModel(size=10, min_count=1)
+        model = W2VTransformer(size=10, min_count=1)
         model.fit(w2v_texts)
 
         class_dict = {'mathematics': 1, 'physics': 0}
@@ -477,14 +477,14 @@ class TestSklW2VModelWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        w2vmodel_wrapper = SklW2VModel(size=10, min_count=0, seed=42)
+        w2vmodel_wrapper = W2VTransformer(size=10, min_count=0, seed=42)
         word = texts[0][0]
         self.assertRaises(NotFittedError, w2vmodel_wrapper.transform, word)
 
 
-class TestSklATModelWrapper(unittest.TestCase):
+class TestAuthorTopicWrapper(unittest.TestCase):
     def setUp(self):
-        self.model = SklATModel(id2word=dictionary, author2doc=author2doc, num_topics=2, passes=100)
+        self.model = AuthorTopicTransformer(id2word=dictionary, author2doc=author2doc, num_topics=2, passes=100)
         self.model.fit(corpus)
 
     def testTransform(self):
@@ -522,7 +522,7 @@ class TestSklATModelWrapper(unittest.TestCase):
 
     def testPipeline(self):
         # train the AuthorTopic model first
-        model = SklATModel(id2word=dictionary, author2doc=author2doc, num_topics=10, passes=100)
+        model = AuthorTopicTransformer(id2word=dictionary, author2doc=author2doc, num_topics=10, passes=100)
         model.fit(corpus)
 
         # create and train clustering model

@@ -18,7 +18,7 @@ from gensim import models
 from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class SklW2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class W2VTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base Word2Vec module
     """
@@ -66,7 +66,7 @@ class SklW2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         """
         Set all parameters.
         """
-        super(SklW2VModel, self).set_params(**parameters)
+        super(W2VTransformer, self).set_params(**parameters)
         return self
 
     def fit(self, X, y=None):
@@ -101,4 +101,4 @@ class SklW2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         return np.reshape(np.array(X), (len(words), self.size))
 
     def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for SklW2VModel")
+        raise NotImplementedError("'partial_fit' has not been implemented for W2VTransformer")

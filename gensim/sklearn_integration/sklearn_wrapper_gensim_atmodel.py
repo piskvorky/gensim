@@ -16,7 +16,7 @@ from gensim import models
 from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class SklATModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class AuthorTopicTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base AuthorTopic module
     """
@@ -65,7 +65,7 @@ class SklATModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         """
         Set all parameters.
         """
-        super(SklATModel, self).set_params(**parameters)
+        super(AuthorTopicTransformer, self).set_params(**parameters)
         return self
 
     def fit(self, X, y=None):

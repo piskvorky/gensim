@@ -19,7 +19,7 @@ from gensim import matutils
 from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class SklLsiModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class LsiTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base LSI module
     """
@@ -50,7 +50,7 @@ class SklLsiModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         """
         Set all parameters.
         """
-        super(SklLsiModel, self).set_params(**parameters)
+        super(LsiTransformer, self).set_params(**parameters)
         return self
 
     def fit(self, X, y=None):

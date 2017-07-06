@@ -11,9 +11,9 @@ See [1] for complete set of conventions.
 
 
 from .base_sklearn_wrapper import BaseSklearnWrapper  # noqa: F401
-from .sklearn_wrapper_gensim_ldamodel import SklLdaModel  # noqa: F401
-from .sklearn_wrapper_gensim_lsimodel import SklLsiModel  # noqa: F401
-from .sklearn_wrapper_gensim_rpmodel import SklRpModel  # noqa: F401
-from .sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel  # noqa: F401
-from .sklearn_wrapper_gensim_w2vmodel import SklW2VModel  # noqa: F401
-from .sklearn_wrapper_gensim_atmodel import SklATModel  # noqa: F401
+from .sklearn_wrapper_gensim_ldamodel import LdaTransformer  # noqa: F401
+from .sklearn_wrapper_gensim_lsimodel import LsiTransformer  # noqa: F401
+from .sklearn_wrapper_gensim_rpmodel import RpTransformer  # noqa: F401
+from .sklearn_wrapper_gensim_ldaseqmodel import LdaSeqTransformer  # noqa: F401
+from .sklearn_wrapper_gensim_w2vmodel import W2VTransformer  # noqa: F401
+from .sklearn_wrapper_gensim_atmodel import AuthorTopicTransformer  # noqa: F401

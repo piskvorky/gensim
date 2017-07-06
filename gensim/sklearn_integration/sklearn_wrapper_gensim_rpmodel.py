@@ -17,7 +17,7 @@ from gensim import models
 from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class SklRpModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class RpTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base RP module
     """
@@ -40,7 +40,7 @@ class SklRpModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         """
         Set all parameters.
         """
-        super(SklRpModel, self).set_params(**parameters)
+        super(RpTransformer, self).set_params(**parameters)
         return self
 
     def fit(self, X, y=None):
@@ -77,4 +77,4 @@ class SklRpModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         return np.reshape(np.array(X), (len(docs), self.num_topics))
 
     def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for SklRpModel")
+        raise NotImplementedError("'partial_fit' has not been implemented for RpTransformer")
