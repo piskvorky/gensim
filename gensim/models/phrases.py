@@ -171,8 +171,9 @@ class Phrases(interfaces.TransformationABC):
                     self.delimiter = utils.to_unicode(self.delimiter)
                     self.is_input_bytes = False
                 sentences = it.chain([sentence], sentences)
-            except:
+            except StopIteration:
                 #  No need to raise any exception or log any warning, as it's not a special case.
+                logger.debug("Input can not be an empty list or generator.")
                 pass
 
         sentence_no = -1
