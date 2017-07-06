@@ -289,7 +289,7 @@ setup(
     ],
     install_requires=[
         'numpy >= 1.11.3',
-        'scipy >= 0.14.0',
+        'scipy >= 0.16.0',
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
     ],

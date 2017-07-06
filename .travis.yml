@@ -14,7 +14,7 @@ before_install:
 install:
   - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
   - source activate gensim-test
-  - pip install numpy==1.11.3 scipy==0.14.0
+  - pip install numpy==1.11.3 scipy==0.16.0
   - python setup.py install
   - pip install .[test]
 script:
