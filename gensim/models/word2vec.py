@@ -222,7 +222,7 @@ except ImportError:
 
         return log_prob_sentence
 
-    def score_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
+    def score_sentence_cbow(model, sentence, work=None, neu1=None):
         """
         Obtain likelihood score for a single sentence in a fitted CBOW representaion.
 
