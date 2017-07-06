@@ -167,12 +167,13 @@ class Phrases(interfaces.TransformationABC):
         if not self.recode_to_utf8 and sentences is not None:
             try:
                 sentence = list(next(iter(sentences)))
+                if not isinstance(sentence[0], bytes):
+                    self.delimiter = utils.to_unicode(self.delimiter)
+                    self.is_input_bytes = False
+                sentences = it.chain([sentence], sentences)
             except:
-                raise ValueError("Input can not be empty list or generator.")
-            if not isinstance(sentence[0], bytes):
-                self.delimiter = utils.to_unicode(self.delimiter)
-                self.is_input_bytes = False
-            sentences = it.chain([sentence], sentences)
+                #  No need to raise any exception or log any warning, as it's not a special case.
+                pass
 
         sentence_no = -1
         total_words = 0

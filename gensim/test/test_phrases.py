@@ -184,9 +184,9 @@ class TestPhrasesModel(unittest.TestCase):
         self.assertEqual(bigram_recode_false[sentences[1]], expected)
 
     def testEmptyList(self):
-        """Test that error is raised when empty list or generator is provided """
+        """Test that Phrases module works as expected when empty list or generator is provided """
         empty_sentences = []
-        self.assertRaises(ValueError, Phrases, empty_sentences, recode_to_utf8=False)
+        self.assertTrue(Phrases(empty_sentences, recode_to_utf8=False))
 #endclass TestPhrasesModel
 
 
