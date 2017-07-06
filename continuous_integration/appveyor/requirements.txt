@@ -8,7 +8,7 @@
 # of the rackspace folder instead of trying to install from more recent
 # source tarball published on PyPI
 numpy==1.11.3
-scipy==0.16.0
+scipy==0.18.1
 cython
 six >= 1.5.0
 smart_open >= 1.2.1
