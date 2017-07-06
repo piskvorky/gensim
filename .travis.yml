@@ -17,6 +17,7 @@ install:
   - python setup.py install
   - pip install .[test]
 script:
+  - pip freeze
   - python setup.py test
   - pip install flake8
   - continuous_integration/travis/flake8_diff.sh
