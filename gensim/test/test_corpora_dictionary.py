@@ -12,12 +12,14 @@ from collections import Mapping
 import logging
 import tempfile
 import unittest
+import codecs
 import os
 import os.path
 
 import scipy
 import gensim
 from gensim.corpora import Dictionary
+from gensim.utils import to_utf8
 from six import PY3
 from six.moves import zip
 
@@ -189,23 +191,23 @@ class TestDictionary(unittest.TestCase):
         d = Dictionary(small_text)
 
         d.save_as_text(tmpf)
-        with open(tmpf) as file:
+        with codecs.open(tmpf, 'r', encoding='utf-8') as file:
             serialized_lines = file.readlines()
-            self.assertEqual(serialized_lines[0], "3\n")
+            self.assertEqual(serialized_lines[0], u"3\n")
             self.assertEqual(len(serialized_lines), 4)
             # We do not know, which word will have which index
-            self.assertEqual(serialized_lines[1][1:], "\tdruhé\t2\n")
-            self.assertEqual(serialized_lines[2][1:], "\tprvé\t1\n")
-            self.assertEqual(serialized_lines[3][1:], "\tslovo\t3\n")
+            self.assertEqual(serialized_lines[1][1:], u"\tdruhé\t2\n")
+            self.assertEqual(serialized_lines[2][1:], u"\tprvé\t1\n")
+            self.assertEqual(serialized_lines[3][1:], u"\tslovo\t3\n")
 
         d.save_as_text(tmpf, sort_by_word=False)
-        with open(tmpf) as file:
+        with codecs.open(tmpf, 'r', encoding='utf-8') as file:
             serialized_lines = file.readlines()
-            self.assertEqual(serialized_lines[0], "3\n")
+            self.assertEqual(serialized_lines[0], u"3\n")
             self.assertEqual(len(serialized_lines), 4)
-            self.assertEqual(serialized_lines[1][1:], "\tslovo\t3\n")
-            self.assertEqual(serialized_lines[2][1:], "\tdruhé\t2\n")
-            self.assertEqual(serialized_lines[3][1:], "\tprvé\t1\n")
+            self.assertEqual(serialized_lines[1][1:], u"\tslovo\t3\n")
+            self.assertEqual(serialized_lines[2][1:], u"\tdruhé\t2\n")
+            self.assertEqual(serialized_lines[3][1:], u"\tprvé\t1\n")
 
     def test_loadFromText_legacy(self):
         """
@@ -213,8 +215,8 @@ class TestDictionary(unittest.TestCase):
         Legacy format does not have num_docs on the first line.
         """
         tmpf = get_tmpfile('load_dict_test_legacy.txt')
-        no_num_docs_serialization = "1\tprvé\t1\n2\tslovo\t2\n"
-        with open(tmpf, "w") as file:
+        no_num_docs_serialization = to_utf8("1\tprvé\t1\n2\tslovo\t2\n")
+        with open(tmpf, "wb") as file:
             file.write(no_num_docs_serialization)
 
         d = Dictionary.load_from_text(tmpf)
@@ -227,8 +229,8 @@ class TestDictionary(unittest.TestCase):
     def test_loadFromText(self):
         """`Dictionary` can be loaded from textfile."""
         tmpf = get_tmpfile('load_dict_test.txt')
-        no_num_docs_serialization = "2\n1\tprvé\t1\n2\tslovo\t2\n"
-        with open(tmpf, "w") as file:
+        no_num_docs_serialization = to_utf8("2\n1\tprvé\t1\n2\tslovo\t2\n")
+        with open(tmpf, "wb") as file:
             file.write(no_num_docs_serialization)
 
         d = Dictionary.load_from_text(tmpf)
