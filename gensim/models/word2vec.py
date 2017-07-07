@@ -1231,6 +1231,13 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
         logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.wv.syn0.shape, fname))
 
+    def get_words_from_vocab(self):
+        """
+        Returns the words in the currently trained vocabulary as a list.
+        If the model is not trained yet then an empty list is returned.
+        """
+        return self.wv.get_ordered_keys()
+
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
         Deprecated. Use self.wv.most_similar() instead.
