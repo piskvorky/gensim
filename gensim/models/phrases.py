@@ -169,7 +169,7 @@ class Phrases(interfaces.TransformationABC):
         self.delimiter = delimiter
         self.progress_per = progress_per
         self.scoring = scoring
-        self.corpus_word_count = 0L
+        self.corpus_word_count = 0
 
         if sentences is not None:
             self.add_vocab(sentences)
