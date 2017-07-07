@@ -97,6 +97,7 @@ w2v_texts = [
     ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics', 'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically', 'transformed', 'modern', 'day', 'society']
 ]
 
+
 class TestLdaWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
