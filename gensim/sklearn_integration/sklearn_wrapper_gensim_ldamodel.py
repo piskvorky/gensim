@@ -144,5 +144,8 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
             subsample_ratio = 1.0
             perwordbound = self.gensim_model.bound(X, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
             return -1 * np.exp2(-perwordbound)  # returning (-1*perplexity) to select model with minimum perplexity value
+        elif self.scorer == 'u_mass':
+            goodcm = models.CoherenceModel(model=self.gensim_model, corpus=X, coherence=self.scorer)
+            return goodcm.get_coherence()
         else:
             raise ValueError("Invalid value of `scorer` param supplied")
