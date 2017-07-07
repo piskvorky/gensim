@@ -109,7 +109,7 @@ class Phrases(interfaces.TransformationABC):
     """
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
                  max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
-				 scoring = 'default'):
+                 scoring='default'):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -260,12 +260,12 @@ class Phrases(interfaces.TransformationABC):
         scoring = self.scoring
         corpus_word_count = self.corpus_word_count
 
-        if self.scoring == 'default':
+        if scoring == 'default':
             scoring_function = \
             partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
-        elif self.scoring == 'npmi':
+        elif scoring == 'npmi':
             scoring_function = \
-            partial(self.npmi_scorer, corpus_word_count = corpus_word_count)
+            partial(self.npmi_scorer, corpus_word_count=corpus_word_count)
         # no else here to catch unknown scoring function, check is done in Phrases.__init__
 
         for sentence in sentences:
@@ -356,12 +356,12 @@ class Phrases(interfaces.TransformationABC):
     # calculation of score based on original mikolov word2vec paper
     # len_vocab and min_count set so functools.partial works
     @staticmethod
-    def original_scorer(worda_count, wordb_count, bigram_count, len_vocab = 0.0, min_count = 0.0):
+    def original_scorer(worda_count, wordb_count, bigram_count, len_vocab=0.0, min_count=0.0):
         return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
 
     # normalized PMI, requires corpus size
     @staticmethod
-    def npmi_scorer(worda_count, wordb_count, bigram_count, corpus_word_count = 0.0):
+    def npmi_scorer(worda_count, wordb_count, bigram_count, corpus_word_count=0.0):
         pa = worda_count / corpus_word_count
         pb = wordb_count / corpus_word_count
         pab = bigram_count / corpus_word_count

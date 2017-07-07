@@ -161,11 +161,11 @@ class TestPhrasesModel(unittest.TestCase):
 
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
         for phrase, score in bigram.export_phrases(test_sentences):
-            seen_scores.add(round(score,3))
+            seen_scores.add(round(score, 3))
 
         assert seen_scores == set([
-            5.167, # score for graph minors
-            3.444 # score for human interface
+            5.167,  # score for graph minors
+            3.444  # score for human interface
         ])
 
     def testScoringNpmi(self):
@@ -176,11 +176,11 @@ class TestPhrasesModel(unittest.TestCase):
 
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
         for phrase, score in bigram.export_phrases(test_sentences):
-            seen_scores.add(round(score,3))
+            seen_scores.add(round(score, 3))
 
         assert seen_scores == set([
-            .882, #score for graph minors
-            .714 # score for human interface
+            .882,  # score for graph minors
+            .714  # score for human interface
         ])
 
     def testBadParameters(self):
