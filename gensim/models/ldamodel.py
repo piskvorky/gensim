@@ -35,6 +35,8 @@ import numpy as np
 import numbers
 from random import sample
 import os
+import gensim
+import copy
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
@@ -195,7 +197,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, ns_conf={},
-                 minimum_phi_value=0.01, per_word_topics=False):
+                 minimum_phi_value=0.01, per_word_topics=False, coherence='u_mass',
+                 coherence_texts=None, coherence_window_size=None, coherence_topn=10,
+                 log_diff=False, diff_distance="jaccard"):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -228,7 +232,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Turn on `distributed` to force distributed computing (see the `web tutorial <http://radimrehurek.com/gensim/distributed.html>`_
         on how to set up a cluster of machines for gensim).
 
-        Calculate and log perplexity estimate from the latest mini-batch every
+        Calculate and log perplexity and coherence estimate from the latest mini-batch every
         `eval_every` model updates (setting this to 1 slows down training ~2x;
         default is 10 for better performance). Set to None to disable perplexity estimation.
 
@@ -238,6 +242,34 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         `minimum_probability` controls filtering the topics returned for a document (bow).
 
         `random_state` can be a np.random.RandomState object or the seed for one
+
+        `coherence` : Coherence measure to be used for logging coherence. Supported values are:
+                    'u_mass'
+                    'c_v'
+                    'c_uci' also popularly known as c_pmi
+                    'c_npmi'
+                    For 'c_v', 'c_uci' and 'c_npmi' texts should be provided.
+
+        `coherence_texts` : Tokenized texts. Needed when eval_every is not None and coherence is logged for sliding_window_based measures c_v, c_uci, c_npmi. eg::
+                texts = [['system', 'human', 'system', 'eps'],
+                             ['user', 'response', 'time'],
+                             ['trees'],
+                             ['graph', 'trees'],
+                             ['graph', 'minors', 'trees'],
+                             ['graph', 'minors', 'survey']]
+
+        `coherence_window_size` : Is the size of the window to be used for coherence measures using boolean sliding window as their
+                      probability estimator. For 'u_mass' this doesn't matter.
+                      If left 'None' the default window sizes are used which are:
+                      'c_v' : 110
+                      'c_uci' : 10
+                      'c_npmi' : 10
+
+        `coherence_topn` Integer corresponding to the number of top words to be extracted from each topic for coherence logging.
+
+        `log_diff` set to True to log topic diff between consecutive epochs
+
+        `diff_distance` is the distance measure to use for `log_diff`
 
         Example:
 
@@ -280,6 +312,14 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eval_every = eval_every
         self.minimum_phi_value = minimum_phi_value
         self.per_word_topics = per_word_topics
+
+        self.coherence = coherence
+        self.coherence_texts = coherence_texts
+        self.coherence_window_size = coherence_window_size
+        self.coherence_topn = coherence_topn
+
+        self.log_diff = log_diff
+        self.diff_distance = diff_distance
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
@@ -529,9 +569,33 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
+    def log_coherence(self, chunk, texts, coherence, window_size, topn):
+        """
+        Log coherence using the `chunk` of documents as evaluation corpus.
+        """
+        cm = gensim.models.CoherenceModel(model=self, corpus=chunk, texts=texts, dictionary=self.id2word, coherence=coherence, window_size=window_size, topn=topn)
+        coherence = cm.get_coherence()
+        corpus_words = sum(cnt for document in chunk for _, cnt in document)
+        logger.info("%.3f coherence estimate based on a held-out corpus of %i documents with %i words", coherence, len(chunk), corpus_words)
+        return coherence
+
+    def log_epoch_diff(self, epoch, other_model, distance):
+        """
+        Log topic diff between consecutive epochs
+        """
+        diff_matrix, annotation = self.diff(other_model, distance)
+        diff_diagonal = np.diagonal(diff_matrix)
+        prev_epoch = epoch - 1
+        if epoch == 0:
+            prev_epoch = "initial random model"
+        logger.info("Topic difference between %s and %s epoch: %s", prev_epoch, epoch, diff_diagonal)
+        return diff_diagonal
+
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None, chunks_as_numpy=False):
+               gamma_threshold=None, chunks_as_numpy=False, coherence=None,
+               coherence_texts=None, coherence_window_size=None, coherence_topn=None,
+               log_diff=None, diff_distance=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -578,6 +642,18 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             iterations = self.iterations
         if gamma_threshold is None:
             gamma_threshold = self.gamma_threshold
+        if coherence is None:
+            coherence = self.coherence
+        if coherence_texts is None:
+            coherence_texts = self.coherence_texts
+        if coherence_window_size is None:
+            coherence_window_size = self.coherence_window_size
+        if coherence_topn is None:
+            coherence_topn = self.coherence_topn
+        if log_diff is None:
+            log_diff = self.log_diff
+        if diff_distance is None:
+            diff_distance = self.diff_distance
 
         try:
             lencorpus = len(corpus)
@@ -609,8 +685,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         logger.info(
             "running %s LDA training, %s topics, %i passes over "
             "the supplied corpus of %i documents, updating model once "
-            "every %i documents, evaluating perplexity every %i documents, "
-            "iterating %ix with a convergence threshold of %f",
+            "every %i documents, evaluating perplexity and coherence "
+            "every %i documents, iterating %ix with a convergence threshold of %f",
             updatetype, self.num_topics, passes, lencorpus,
             updateafter, evalafter, iterations,
             gamma_threshold)
@@ -640,6 +716,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
                     self.log_perplexity(chunk, total_docs=lencorpus)
+                    # texts input is needed for sliding window based coherence measures (c_v, c_uci, c_npmi)
+                    if coherence_texts is not None:
+                        init = (chunk_no + 1) * chunksize - chunksize
+                        end = init + chunksize
+                        # texts subarray corresponding to current chunk
+                        texts_chunk = coherence_texts[init:end]
+                    else:
+                        texts_chunk = None
+                    self.log_coherence(chunk, texts_chunk, coherence, coherence_window_size, coherence_topn)
 
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
@@ -674,6 +759,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         other = LdaState(self.eta, self.state.sstats.shape)
                     dirty = False
             # endfor single corpus iteration
+
+            # log diff between consecutive epochs
+            if log_diff:
+                if pass_ == 0:
+                    # save randomly initialized model for diff with first pass
+                    previous = copy.deepcopy(self)
+                self.log_epoch_diff(pass_, previous, diff_distance)
+                previous = copy.deepcopy(self)
+
             if reallen != lencorpus:
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
 
