@@ -222,6 +222,11 @@ class SimilarityABC(utils.SaveLoad):
         if self.num_best is None:
             return result
 
+        # if maintain_sparity is True, result is scipy sparse. Sort, clip the
+        # topn and return as a scipy sparse matrix.
+        if getattr(self, 'maintain_sparsity', False):
+                return matutils.scipy2scipy_clipped(result, self.num_best)
+
         # if the input query was a corpus (=more documents), compute the top-n
         # most similar for each document in turn
         if matutils.ismatrix(result):

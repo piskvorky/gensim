@@ -1,3 +1,5 @@
+:orphan:
+
 .. _simserver:
 
 Document Similarity Server

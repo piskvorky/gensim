@@ -29,9 +29,8 @@ def _ids_to_words(ids, dictionary):
     This function abstracts away the differences between the HashDictionary and the standard one.
 
     Args:
-    ----
-    ids: list of list of tuples, where each tuple contains (token_id, iterable of token_ids).
-         This is the format returned by the topic_coherence.segmentation functions.
+        ids: list of list of tuples, where each tuple contains (token_id, iterable of token_ids).
+            This is the format returned by the topic_coherence.segmentation functions.
     """
     if not dictionary.id2token:  # may not be initialized in the standard gensim.corpora.Dictionary
         setattr(dictionary, 'id2token', {v: k for k, v in dictionary.token2id.items()})
@@ -169,9 +168,8 @@ class WindowedTextsAnalyzer(UsesDictionary):
     def __init__(self, relevant_ids, dictionary):
         """
         Args:
-        ----
-        relevant_ids: the set of words that occurrences should be accumulated for.
-        dictionary: Dictionary instance with mappings for the relevant_ids.
+            relevant_ids: the set of words that occurrences should be accumulated for.
+            dictionary: Dictionary instance with mappings for the relevant_ids.
         """
         super(WindowedTextsAnalyzer, self).__init__(relevant_ids, dictionary)
         self._none_token = self._vocab_size  # see _iter_texts for use of none token
@@ -221,7 +219,6 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         self._co_occurrences = sps.lil_matrix((self._vocab_size, self._vocab_size), dtype='uint32')
 
         self._uniq_words = np.zeros((self._vocab_size + 1,), dtype=bool)  # add 1 for none token
-        self._mask = self._uniq_words[:-1]  # to exclude none token
         self._counter = Counter()
 
     def __str__(self):
@@ -251,9 +248,10 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
     def analyze_text(self, window, doc_num=None):
         self._slide_window(window, doc_num)
-        if self._mask.any():
-            self._occurrences[self._mask] += 1
-            self._counter.update(itertools.combinations(np.nonzero(self._mask)[0], 2))
+        mask = self._uniq_words[:-1]  # to exclude none token
+        if mask.any():
+            self._occurrences[mask] += 1
+            self._counter.update(itertools.combinations(np.nonzero(mask)[0], 2))
 
     def _slide_window(self, window, doc_num):
         if doc_num != self._current_doc_num:
@@ -273,7 +271,8 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         """
         co_occ = self._co_occurrences
         co_occ.setdiag(self._occurrences)  # diagonal should be equal to occurrence counts
-        self._co_occurrences = co_occ + co_occ.T - sps.diags(co_occ.diagonal(), dtype='uint32')
+        self._co_occurrences = \
+            co_occ + co_occ.T - sps.diags(co_occ.diagonal(), offsets=0, dtype='uint32')
 
     def _get_occurrences(self, word_id):
         return self._occurrences[word_id]
@@ -301,11 +300,10 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
     def __init__(self, processes, *args, **kwargs):
         """
         Args:
-        ----
-        processes : number of processes to use; must be at least two.
-        args : should include `relevant_ids` and `dictionary` (see `UsesDictionary.__init__`).
-        kwargs : can include `batch_size`, which is the number of docs to send to a worker at a
-                 time. If not included, it defaults to 64.
+            processes : number of processes to use; must be at least two.
+            args : should include `relevant_ids` and `dictionary` (see `UsesDictionary.__init__`).
+            kwargs : can include `batch_size`, which is the number of docs to send to a worker at a
+                time. If not included, it defaults to 64.
         """
         super(ParallelWordOccurrenceAccumulator, self).__init__(*args)
         if processes < 2:

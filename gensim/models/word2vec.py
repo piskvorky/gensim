@@ -21,27 +21,25 @@ For a blog tutorial on gensim word2vec, with an interactive web app trained on G
 
 Initialize a model with e.g.::
 
->>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
+    >>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
 
 Persist a model to disk with::
 
->>> model.save(fname)
->>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
+    >>> model.save(fname)
+    >>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
 
-The word vectors are stored in a KeyedVectors instance in model.wv. This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec.
+The word vectors are stored in a KeyedVectors instance in model.wv. This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec::
 
   >>> model.wv['computer']  # numpy vector of a word
   array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
 
 The word vectors can also be instantiated from an existing file on disk in the word2vec C format as a KeyedVectors instance::
 
+    NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights, vocabulary frequency and the binary tree is missing::
 
-NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights, vocabulary frequency and the binary tree is missing.
-
-
-  >>> from gensim.models.keyedvectors import KeyedVectors
-  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+        >>> from gensim.models.keyedvectors import KeyedVectors
+        >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
+        >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
 
 
 You can perform various NLP word tasks with the model. Some of them
@@ -87,8 +85,8 @@ Note that there is a :mod:`gensim.models.phrases` module which lets you automati
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
 
->>> bigram_transformer = gensim.models.Phrases(sentences)
->>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
+    >>> bigram_transformer = gensim.models.Phrases(sentences)
+    >>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 .. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
@@ -140,7 +138,7 @@ except ImportError:
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
-    def train_batch_sg(model, sentences, alpha, work=None):
+    def train_batch_sg(model, sentences, alpha, work=None, compute_loss=False):
         """
         Update skip-gram model by training on a sequence of sentences.
 
@@ -163,11 +161,12 @@ except ImportError:
                 for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                     # don't train on the `word` itself
                     if pos2 != pos:
-                        train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha)
+                        train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha, compute_loss=compute_loss)
+
             result += len(word_vocabs)
         return result
 
-    def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
+    def train_batch_cbow(model, sentences, alpha, work=None, neu1=None, compute_loss=False):
         """
         Update CBOW model by training on a sequence of sentences.
 
@@ -190,7 +189,7 @@ except ImportError:
                 l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x vector_size
                 if word2_indices and model.cbow_mean:
                     l1 /= len(word2_indices)
-                train_cbow_pair(model, word, word2_indices, l1, alpha)
+                train_cbow_pair(model, word, word2_indices, l1, alpha, compute_loss=compute_loss)
             result += len(word_vocabs)
         return result
 
@@ -223,7 +222,7 @@ except ImportError:
 
         return log_prob_sentence
 
-    def score_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
+    def score_sentence_cbow(model, sentence, work=None, neu1=None):
         """
         Obtain likelihood score for a single sentence in a fitted CBOW representaion.
 
@@ -249,13 +248,13 @@ except ImportError:
             l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x layer1_size
             if word2_indices and model.cbow_mean:
                 l1 /= len(word2_indices)
-            log_prob_sentence += score_cbow_pair(model, word, word2_indices, l1)
+            log_prob_sentence += score_cbow_pair(model, word, l1)
 
         return log_prob_sentence
 
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
-                  context_vectors=None, context_locks=None):
+                  context_vectors=None, context_locks=None, compute_loss=False):
     if context_vectors is None:
         context_vectors = model.wv.syn0
     if context_locks is None:
@@ -273,11 +272,18 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
     if model.hs:
         # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
         l2a = deepcopy(model.syn1[predict_word.point])  # 2d matrix, codelen x layer1_size
-        fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
+        prod_term = dot(l1, l2a.T)
+        fa = expit(prod_term)  # propagate hidden -> output
         ga = (1 - predict_word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1[predict_word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
+
+        # loss component corresponding to hierarchical softmax
+        if compute_loss:
+            sgn = (-1.0)**predict_word.code  # `ch` function, 0 -> 1, 1 -> -1
+            lprob = -log(expit(-sgn * prod_term))
+            model.running_training_loss += sum(lprob)
 
     if model.negative:
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
@@ -287,27 +293,39 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             if w != predict_word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
+        prod_term = dot(l1, l2b.T)
+        fb = expit(prod_term)  # propagate hidden -> output
         gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
+
+        # loss component corresponding to negative sampling
+        if compute_loss:
+            model.running_training_loss -= sum(log(expit(-1 * prod_term[1:])))  # for the sampled words
+            model.running_training_loss -= log(expit(prod_term[0]))  # for the output word
 
     if learn_vectors:
         l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
     return neu1e
 
 
-def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
+def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True, compute_loss=False):
     neu1e = zeros(l1.shape)
 
     if model.hs:
         l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-        fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
+        prod_term = dot(l1, l2a.T)
+        fa = expit(prod_term)  # propagate hidden -> output
         ga = (1. - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
+
+        # loss component corresponding to hierarchical softmax
+        if compute_loss:
+            sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
+            model.running_training_loss += sum(-log(expit(-sgn * prod_term)))
 
     if model.negative:
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
@@ -317,11 +335,17 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
             if w != word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
+        prod_term = dot(l1, l2b.T)
+        fb = expit(prod_term)  # propagate hidden -> output
         gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
+
+        # loss component corresponding to negative sampling
+        if compute_loss:
+            model.running_training_loss -= sum(log(expit(-1 * prod_term[1:])))  # for the sampled words
+            model.running_training_loss -= log(expit(prod_term[0]))  # for the output word
 
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
@@ -341,7 +365,7 @@ def score_sg_pair(model, word, word2):
     return sum(lprob)
 
 
-def score_cbow_pair(model, word, word2_indices, l1):
+def score_cbow_pair(model, word, l1):
     l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
     sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
     lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
@@ -365,7 +389,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
+            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -471,6 +495,8 @@ class Word2Vec(utils.SaveLoad):
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
         self.model_trimmed_post_training = False
+        self.compute_loss = compute_loss
+        self.running_training_loss = 0
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -754,9 +780,9 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work)
+            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss)
         else:
-            tally += train_batch_cbow(self, sentences, alpha, work, neu1)
+            tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
         return tally, self._raw_word_count(sentences)
 
     def _raw_word_count(self, job):
@@ -766,7 +792,7 @@ class Word2Vec(utils.SaveLoad):
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
               word_count=0,
-              queue_factor=2, report_delay=1.0):
+              queue_factor=2, report_delay=1.0, compute_loss=None):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
@@ -791,6 +817,10 @@ class Word2Vec(utils.SaveLoad):
                 # precompute negative labels optimization for pure-python training
                 self.neg_labels = zeros(self.negative + 1)
                 self.neg_labels[0] = 1.
+
+        if compute_loss:
+            self.compute_loss = compute_loss
+        self.running_training_loss = 0
 
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
@@ -1422,6 +1452,9 @@ class Word2Vec(utils.SaveLoad):
     def save_word2vec_format(self, fname, fvocab=None, binary=False):
         """Deprecated. Use model.wv.save_word2vec_format instead."""
         raise DeprecationWarning("Deprecated. Use model.wv.save_word2vec_format instead.")
+
+    def get_latest_training_loss(self):
+        return self.running_training_loss
 
 
 class BrownCorpus(object):

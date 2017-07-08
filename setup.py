@@ -229,7 +229,7 @@ Copyright (c) 2009-now Radim Rehurek
 test_env = [
     'testfixtures',
     'unittest2',
-    'Morfessor==2.0.2a4',
+    'Morfessor == 2.0.2a4',
     'scikit-learn',
     'pyemd',
     'annoy',
@@ -239,7 +239,7 @@ test_env = [
 
 setup(
     name='gensim',
-    version='2.1.0',
+    version='2.2.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -285,11 +285,11 @@ setup(
 
     test_suite="gensim.test",
     setup_requires=[
-        'numpy >= 1.3'
+        'numpy >= 1.11.3'
     ],
     install_requires=[
-        'numpy >= 1.3',
-        'scipy >= 0.7.0',
+        'numpy >= 1.11.3',
+        'scipy >= 0.18.1',
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
     ],
