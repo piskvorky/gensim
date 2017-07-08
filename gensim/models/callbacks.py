@@ -34,6 +34,9 @@ class CoherenceMetric(Metric):
         self.title = title
 
     def get_value(self, **kwargs):
+        # only one of the model or topic would be defined
+        self.model = None
+        self.topics = None
         super(CoherenceMetric, self).get_value(**kwargs)
         cm = gensim.models.CoherenceModel(self.model, self.topics, self.texts, self.corpus, self.dictionary, self.window_size, self.coherence, self.topn)
         return cm.get_coherence()
