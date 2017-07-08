@@ -35,13 +35,12 @@ import numpy as np
 import numbers
 from random import sample
 import os
-import gensim
-import copy
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
 from gensim.matutils import kullback_leibler, hellinger, jaccard_distance
+from gensim.models.callbacks import Callback
 
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
@@ -57,12 +56,6 @@ except ImportError:
     # maxentropy has been removed in recent releases, logsumexp now in misc
     from scipy.misc import logsumexp
 
-# Visdom is used for training stats visualization
-try:
-    from visdom import Visdom
-    VISDOM_INSTALLED = True
-except ImportError:
-    VISDOM_INSTALLED = False
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
@@ -203,7 +196,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf={}, minimum_phi_value=0.01,
-                 per_word_topics=False, viz=False, metrics={}):
+                 per_word_topics=False, callbacks=None):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -247,33 +240,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         `random_state` can be a np.random.RandomState object or the seed for one
 
-        `viz` set True for visualizing LDA training stats in Visdom
-
-        `metrics` : dict containing following parameters for visualization or logging purposes
-
-                `viz_env` defines the environment to use in visdom browser
-
-                `coherence` measure to be used for coherence plot visualization. Available values: u_mass, c_v, c_uci, c_npmi
-
-                `coherence_texts` : Tokenized texts. Needed if sliding_window_based coherence measures (c_v, c_uci, c_npmi) are chosen for visualization. eg::
-                         coherence_texts = [['system', 'human', 'system', 'eps'],
-                                    ['user', 'response', 'time'],
-                                    ['trees'],
-                                    ['graph', 'trees'],
-                                    ['graph', 'minors', 'trees'],
-                                    ['graph', 'minors', 'survey']]
-
-                `coherence_window_size` : Is the size of the window to be used for coherence measures using boolean sliding window as their
-                              probability estimator. For 'u_mass' this doesn't matter.
-                              If left 'None' the default window sizes are used which are:
-                              'c_v' : 110
-                              'c_uci' : 10
-                              'c_npmi' : 10
-
-                `coherence_topn` Integer corresponding to the number of top words to be extracted from each topic for coherence visualization.
-
-                `diff_distance` measure to be used for Diff plot visualization. Available values: kullback_leibler, hellinger, jaccard
-
         Example:
 
         >>> lda = LdaModel(corpus, num_topics=100)  # train model
@@ -315,20 +281,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eval_every = eval_every
         self.minimum_phi_value = minimum_phi_value
         self.per_word_topics = per_word_topics
-        self.viz = viz
-        self.metrics = metrics
-
-        if self.viz:
-            if not VISDOM_INSTALLED:
-                raise ImportError("Please install Visdom for visualization")
-            # use default values in case viz is True but metrics are not provided
-            if not self.metrics:
-                self.metrics = {"viz_env":None,
-                                "coherence":"u_mass",
-                                "coherence_texts":None,
-                                "coherence_window_size":None,
-                                "coherence_topn":10,
-                                "diff_distance":"kullback_leibler"}
+        self.callbacks = callbacks
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
@@ -578,8 +531,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
-    def update(self, corpus, chunksize=None, decay=None, offset=None, passes=None, update_every=None,
-               eval_every=None, iterations=None, gamma_threshold=None, chunks_as_numpy=False):
+    def update(self, corpus, chunksize=None, decay=None, offset=None,
+               passes=None, update_every=None, eval_every=None, iterations=None,
+               gamma_threshold=None, chunks_as_numpy=False):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -674,10 +628,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         def rho():
             return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
 
-        if self.viz:
-            self.viz_window = Visdom()
-            # save initial random state of model for Diff calculation with first epoch
-            previous = copy.deepcopy(self)
+        if self.callbacks:
+            callback = Callback(self.callbacks)
+            callback.set_model(self)
 
         for pass_ in xrange(passes):
             if self.dispatcher:
@@ -731,10 +684,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             if reallen != lencorpus:
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
 
-            if self.viz:
-                self.visualization(corpus, pass_, previous)
-                # save the model in previous for next epoch visualization
-                previous = copy.deepcopy(self)
+            if self.callbacks:
+                callback.on_epoch_end(pass_)
 
             if dirty:
                 # finish any remaining updates
@@ -772,48 +723,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if not extra_pass:
             # only update if this isn't an additional pass
             self.num_updates += other.numdocs
-
-    def visualization(self, corpus, pass_, previous):
-        """
-        Visualize training stats (Coherence, Perplexity, Diff, Convergence) in Visdom
-
-        """
-        viz_env = self.metrics["viz_env"]
-        coherence = self.metrics["coherence"]
-        coherence_texts = self.metrics["coherence_texts"]
-        coherence_window_size = self.metrics["coherence_window_size"]
-        coherence_topn = self.metrics["coherence_topn"]
-        diff_distance = self.metrics["diff_distance"]
-        viz_window = self.viz_window
-
-        # calculate coherence
-        cm = gensim.models.CoherenceModel(model=self, corpus=corpus, texts=coherence_texts, coherence=coherence, window_size=coherence_window_size, topn=coherence_topn)
-        coherence_value = np.array([cm.get_coherence()])
-
-        # calculate perplexity
-        corpus_words = sum(cnt for document in corpus for _, cnt in document)
-        perwordbound = self.bound(corpus) / corpus_words
-        perplexity = np.array([np.exp2(-perwordbound)])
-
-        # calculate diff
-        diff_matrix = self.diff(previous, distance=diff_distance)[0]
-        diff_diagonal = np.diagonal(diff_matrix)
-        convergence = np.array([np.sum(diff_diagonal)])
-
-        if pass_ == 0:
-            # initial plot windows
-            self.diff_mat = np.array([diff_diagonal])
-            self.viz_coherence = viz_window.line(Y=coherence_value, X=np.array([pass_]), env=viz_env, opts=dict(xlabel='Epochs', ylabel='Coherence', title='Coherence (%s)' % coherence))
-            self.viz_perplexity = viz_window.line(Y=perplexity, X=np.array([pass_]), env=viz_env, opts=dict(xlabel='Epochs', ylabel='Perplexity', title='Perplexity'))
-            self.viz_convergence = viz_window.line(Y=convergence, X=np.array([pass_]), env=viz_env, opts=dict(xlabel='Epochs', ylabel='Convergence', title='Convergence (%s)' % diff_distance))
-            self.viz_diff = viz_window.heatmap(X=np.array(self.diff_mat).T, env=viz_env, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % diff_distance)) 
-        else:
-            # update the plot with each epoch
-            self.diff_mat = np.concatenate((self.diff_mat, np.array([diff_diagonal])))
-            viz_window.updateTrace(Y=coherence_value, X=np.array([pass_]), env=viz_env, win=self.viz_coherence)
-            viz_window.updateTrace(Y=perplexity, X=np.array([pass_]), env=viz_env, win=self.viz_perplexity)
-            viz_window.updateTrace(Y=convergence, X=np.array([pass_]), env=viz_env, win=self.viz_convergence)
-            viz_window.heatmap(X=np.array(self.diff_mat).T, env=viz_env, win=self.viz_diff, opts=dict(xlabel='Epochs', ylabel='Topic', title='Diff (%s)' % diff_distance))
 
     def bound(self, corpus, gamma=None, subsample_ratio=1.0):
         """
