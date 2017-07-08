@@ -4,6 +4,10 @@ import numpy as np
 
 
 class Space(object):
+    """
+    An auxiliary class for store the the words space
+
+    """
     def __init__(self, matrix, id2row):
         self.mat = matrix
         self.id2row = id2row
@@ -37,6 +41,22 @@ class Space(object):
 
 
 class TranslationMatrix(object):
+    """
+    Objects of this class realize the translation matrix which map the source language
+    to the target language.
+     The main methods are:
+
+    1. constructor, which build a translation matrix
+    2. the translate method, which given new word and its vector representation,
+    we map it to the other language space by computing z = Wx, then return the
+    word whose representation is close to z.
+
+    the details use seen the notebook (translation_matrix.ipynb)
+
+    >>> transmat = TranslationMatrix(word_pair, source_lang_vec, target_lang_vec)
+    >>> translated_word = transmat.translate(words, source_lang_vec)
+
+    """
     def __init__(self, word_pair, source_lang_vec, target_lang_vec):
         self.source_word, self.target_word = zip(*word_pair)
         self.source_space_vec = source_lang_vec
@@ -53,6 +73,9 @@ class TranslationMatrix(object):
         return Space.build(words, lang_vec)
 
     def train(self, source_space, target_space):
+        """
+        build the translation matrix that mapping from source space to target space
+        """
         source_space.normalize()
         target_space.normalize()
 
@@ -62,6 +85,9 @@ class TranslationMatrix(object):
         return np.linalg.lstsq(m1, m2, -1)[0]
 
     def translate(self, source_words, topn=5):
+        """
+
+        """
         translated_word = {}
         for idx, word in enumerate(source_words):
             if word in self.source_space.row2id:
