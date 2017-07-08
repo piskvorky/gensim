@@ -2,7 +2,7 @@ import gensim
 import logging
 import copy
 import numpy as np
-from queue import Queue 
+from queue import Queue
 
 # Visdom is used for training stats visualization
 try:
@@ -55,7 +55,7 @@ class PerplexityMetric(Metric):
         perwordbound = self.model.bound(self.corpus) / corpus_words
         return np.exp2(-perwordbound)
 
-        
+
 class DiffMetric(Metric):
     def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, normed=True, logger=None, viz_env=None, title=None):
         self.distance = distance
@@ -133,7 +133,7 @@ class Callback(object):
                     else:
                         viz_metric = self.viz.line(Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=metric_label, title=metric.title))
                         # saving initial plot window
-                        self.windows.append(copy.deepcopy(viz_metric))                   
+                        self.windows.append(copy.deepcopy(viz_metric))
                 else:
                     if value.ndim>0:
                         # concatenate with previous epoch's diff diagonals
@@ -142,7 +142,7 @@ class Callback(object):
                         self.diff_mat.put(diff_mat)
                     else:
                         self.viz.updateTrace(Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, win=self.windows[i])
-                        
+
             if metric.logger=="shell":
                 statement = " ".join(("Epoch:", epoch, metric_label, "estimate:", str(value)))
                 self.log_type.info(statement)
