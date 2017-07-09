@@ -10,7 +10,6 @@ Automated tests for checking textcorpus I/O formats.
 
 from __future__ import unicode_literals
 
-import bz2
 import codecs
 import logging
 import os
@@ -275,7 +274,7 @@ class TestTextDirectoryCorpus(unittest.TestCase):
         self.assertEqual(expected[-1], base_names[-1])
 
 
-class TestWord2VecSentenceIterators(unittest.TestCase):
+class TestLineSentence(unittest.TestCase):
     def testLineSentenceWorksWithFilename(self):
         """Does LineSentence work with a filename argument?"""
         with utils.smart_open(datapath('lee_background.cor')) as orig:
@@ -286,7 +285,7 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
     def testLineSentenceWorksWithCompressedFile(self):
         """Does LineSentence work with a compressed file object argument?"""
         with utils.smart_open(datapath('head500.noblanks.cor')) as orig:
-            sentences = textcorpus.LineSentence(bz2.BZ2File(datapath('head500.noblanks.cor.bz2')))
+            sentences = textcorpus.LineSentence(datapath('head500.noblanks.cor.bz2'))
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
@@ -302,7 +301,7 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
         """Does PathLineSentences work with a path argument?"""
         with utils.smart_open(os.path.join(datapath('PathLineSentences'), '1.txt')) as orig1, \
                 utils.smart_open(os.path.join(datapath('PathLineSentences'), '2.txt.bz2')) as orig2:
-            sentences = word2vec.PathLineSentences(datapath('PathLineSentences'))
+            sentences = textcorpus.PathLineSentences(datapath('PathLineSentences'))
             orig = orig1.readlines() + orig2.readlines()
             orig_counter = 0  # to go through orig while matching PathLineSentences
             for words in sentences:
@@ -313,7 +312,7 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
         """Does PathLineSentences work with a single file argument?"""
         test_file = os.path.join(datapath('PathLineSentences'), '1.txt')
         with utils.smart_open(test_file) as orig:
-            sentences = word2vec.PathLineSentences(test_file)
+            sentences = textcorpus.PathLineSentences(test_file)
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 

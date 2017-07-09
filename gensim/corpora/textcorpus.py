@@ -167,11 +167,11 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
     6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
 
     """
-    def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None,
+    def __init__(self, source=None, dictionary=None, metadata=False, character_filters=None,
                  tokenizer=None, token_filters=None, processes=-1):
         """
         Args:
-            input (str): path to top-level directory to traverse for corpus documents.
+            source (str): path to top-level directory to traverse for corpus documents.
             dictionary (Dictionary): if a dictionary is provided, it will not be updated
                 with the given corpus on initialization. If none is provided, a new dictionary
                 will be built for the given corpus. If no corpus is given, the dictionary will
@@ -191,7 +191,7 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
                 remove tokens less than 3 characters long and remove stopwords using the list
                 in `gensim.parsing.preprocessing.STOPWORDS`.
         """
-        self.input = input
+        self.source = source
         self.metadata = metadata
 
         self.character_filters = character_filters
@@ -222,7 +222,7 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
         `dictionary` is already initialized, simply set it as the corpus's `dictionary`.
         """
         self.dictionary = dictionary if dictionary is not None else Dictionary()
-        if self.input is not None:
+        if self.source is not None:
             if dictionary is None:
                 logger.info("Initializing dictionary")
                 metadata_setting = self.metadata
@@ -254,7 +254,7 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
         preprocessing methods.
         """
         num_texts = 0
-        with utils.file_or_filename(self.input) as f:
+        with utils.file_or_filename(self.source) as f:
             for line in f:
                 yield line
                 num_texts += 1
@@ -408,7 +408,7 @@ class TextDirectoryCorpus(TextCorpus):
     where each file (or line of each file) is interpreted as a plain text document.
     """
 
-    def __init__(self, input, dictionary=None, metadata=False, min_depth=0, max_depth=None,
+    def __init__(self, source, dictionary=None, metadata=False, min_depth=0, max_depth=None,
                  pattern=None, exclude_pattern=None, lines_are_documents=False, **kwargs):
         """
         Args:
@@ -432,7 +432,7 @@ class TextDirectoryCorpus(TextCorpus):
         self.pattern = pattern
         self.exclude_pattern = exclude_pattern
         self.lines_are_documents = lines_are_documents
-        super(TextDirectoryCorpus, self).__init__(input, dictionary, metadata, **kwargs)
+        super(TextDirectoryCorpus, self).__init__(source, dictionary, metadata, **kwargs)
 
     @property
     def lines_are_documents(self):
@@ -484,7 +484,7 @@ class TextDirectoryCorpus(TextCorpus):
         range of depths. If a filename pattern to match was given, further filter to only
         those filenames that match.
         """
-        for depth, dirpath, dirnames, filenames in walk_with_depth(self.input):
+        for depth, dirpath, dirnames, filenames in walk_with_depth(self.source):
             if self.min_depth <= depth <= self.max_depth:
                 if self.pattern is not None:
                     filenames = (n for n in filenames if self.pattern.match(n) is not None)
@@ -512,12 +512,23 @@ class TextDirectoryCorpus(TextCorpus):
 # endclass TextDirectoryCorpus
 
 
-class LineSentence(object):
+def unicode_and_tokenize(text):
+    return utils.to_unicode(text).split()
+
+
+class TextTokensIterator(object):
+    """Mixin for TextCorpus that changes its __iter__ to yield results of get_texts."""
+
+    def __iter__(self):
+        return self.get_texts()
+
+
+class LineSentence(TextTokensIterator, TextCorpus):
     """
     Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
     """
 
-    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None, processes=-1):
         """
         `source` can be either a string or a file object. Clip the file to the first
         `limit` lines (or no clipped if limit is None, the default).
@@ -532,31 +543,24 @@ class LineSentence(object):
             sentences = LineSentence('compressed_text.txt.gz')
 
         """
-        self.source = source
         self.max_sentence_length = max_sentence_length
         self.limit = limit
+        TextCorpus.__init__(
+            self, source, character_filters=[], tokenizer=unicode_and_tokenize, token_filters=[],
+            processes=processes)
 
-    def __iter__(self):
-        """Iterate through the lines in the source."""
-        try:
-            # Assume it is a file-like object and try treating it as such
-            # Things that don't have seek will trigger an exception
-            self.source.seek(0)
-            for line in itertools.islice(self.source, self.limit):
-                line = utils.to_unicode(line).split()
-                i = 0
-                while i < len(line):
-                    yield line[i : i + self.max_sentence_length]
-                    i += self.max_sentence_length
-        except AttributeError:
-            # If it didn't work like a file, use it as a string filename
-            with utils.smart_open(self.source) as fin:
-                for line in itertools.islice(fin, self.limit):
-                    line = utils.to_unicode(line).split()
-                    i = 0
-                    while i < len(line):
-                        yield line[i : i + self.max_sentence_length]
-                        i += self.max_sentence_length
+    def getstream(self):
+        with utils.smart_open(self.source) as fin:
+            for line in itertools.islice(fin, self.limit):
+                yield line
+
+    def yield_tokens(self):
+        doc_token_stream = super(self.__class__, self).yield_tokens()
+        for tokens in doc_token_stream:
+            i = 0
+            while i < len(tokens):
+                yield tokens[i: i + self.max_sentence_length]
+                i += self.max_sentence_length
 
 
 class PathLineSentences(object):
@@ -609,31 +613,41 @@ class PathLineSentences(object):
                         i += self.max_sentence_length
 
 
-class Text8Corpus(object):
+class Text8Corpus(TextTokensIterator, TextCorpus):
     """Iterate over sentences from the "text8" corpus,
     unzipped from http://mattmahoney.net/dc/text8.zip.
     """
-    def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
-        self.fname = fname
-        self.max_sentence_length = max_sentence_length
 
-    def __iter__(self):
-        # the entire corpus is one gigantic line -- there are no sentence marks at all
-        # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, chunksize=65536, **kwargs):
+        self.max_sentence_length = max_sentence_length
+        self.chunksize = chunksize
+        kwargs['tokenizer'] = kwargs.get('tokenizer', unicode_and_tokenize)
+        kwargs['character_filters'] = kwargs.get('character_filters', [])
+        TextCorpus.__init__(self, source, **kwargs)
+
+    def _sentence_token_stream(self):
+        # Entire corpus is one gigantic line -- there are no sentence marks at all.
+        # So just split the token sequence arbitrarily into sentences of length
+        # `max_sentence_length`.
         sentence, rest = [], b''
-        with utils.smart_open(self.fname) as fin:
+        with utils.smart_open(self.source) as fin:
             while True:
-                text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
+                text = rest + fin.read(self.chunksize)  # avoid loading the entire file (=1 line) into RAM
                 if text == rest:  # EOF
-                    words = utils.to_unicode(text).split()
+                    words = text.split()
                     sentence.extend(words)  # return the last chunk of words, too (may be shorter/longer)
                     if sentence:
                         yield sentence
                     break
+
                 last_token = text.rfind(b' ')  # last token may have been split in two... keep for next iteration
-                words, rest = (utils.to_unicode(text[:last_token]).split(),
+                words, rest = (text[:last_token].split(),
                                text[last_token:].strip()) if last_token >= 0 else ([], text)
                 sentence.extend(words)
                 while len(sentence) >= self.max_sentence_length:
                     yield sentence[:self.max_sentence_length]
                     sentence = sentence[self.max_sentence_length:]
+
+    def getstream(self):
+        for sentence_tokens in self._sentence_token_stream():
+            yield ' '.join(sentence_tokens)

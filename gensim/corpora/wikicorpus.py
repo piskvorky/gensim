@@ -244,7 +244,7 @@ class WikiCorpus(textcorpus.TextCorpus):
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
-    def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
+    def __init__(self, source, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
                  filter_namespaces=('0',), metadata=False, token_filters=None,
                  character_filters=None):
         """
@@ -262,7 +262,7 @@ class WikiCorpus(textcorpus.TextCorpus):
         if character_filters is None:
             # no need to lowercase and unicode, because the tokenizer already does that.
             character_filters = [textcorpus.deaccent, textcorpus.strip_multiple_whitespaces]
-        super(WikiCorpus, self).__init__(fname, dictionary, metadata, character_filters, tokenizer,
+        super(WikiCorpus, self).__init__(source, dictionary, metadata, character_filters, tokenizer,
                                          token_filters, processes)
 
     def getstream(self):
@@ -270,7 +270,7 @@ class WikiCorpus(textcorpus.TextCorpus):
         Each item yielded from this method will be considered a document by subsequent
         preprocessing methods.
         """
-        return extract_pages(bz2.BZ2File(self.input), self.filter_namespaces)
+        return extract_pages(bz2.BZ2File(self.source), self.filter_namespaces)
 
     def preprocess_text(self, args):
         """Parse a wikipedia article, returning its content as a list of tokens
