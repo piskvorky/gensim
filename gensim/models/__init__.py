@@ -19,6 +19,7 @@ from .phrases import Phrases
 from .normmodel import NormModel
 from .atmodel import AuthorTopicModel
 from .ldaseqmodel import LdaSeqModel
+from .distributed_word2vec import TfWord2Vec
 
 from . import wrappers
 
