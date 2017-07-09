@@ -80,12 +80,21 @@ def init_to_ignore_interrupt():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-class TextPreprocessor(TextProcessor):
+class TextPreprocessor(object):
     """Mixin for classes that perform text preprocessing."""
 
     def preprocess_text(self, text):
         """Apply preprocessing to a single text document. This should perform tokenization
         in addition to any other desired preprocessing steps.
+        
+        Note: The `TextCorpus` class transplants its own version of this method onto a
+        dynamically created subclass that is used to spawn a multiprocessing worker.
+        So if you want to subclass it in a `TextCorpus` subclass, and you want to call
+        the super method using the `super` keyword, do it like this:
+        
+            # do some preprocessing of text
+            tokens = super(self.__class__, self).preprocess_text(text)
+            # do some post-processing of tokens
 
         Args:
             text (str): document text read from plain-text file.
@@ -116,6 +125,11 @@ class TextPreprocessor(TextProcessor):
         for token_filter in self.token_filters:
             tokens = token_filter(tokens)
             yield (token_filter, tokens)
+
+
+class _TextPreprocessorMP(TextProcessor, TextPreprocessor):
+    """TextPreprocessor that can be used for multiprocessing."""
+    pass
 
 
 class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
@@ -267,7 +281,7 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
             tokenizer=self.tokenizer,
             token_filters=self.token_filters
         )
-        _TextPreprocessor = type('_TextPreprocessor', (TextPreprocessor,), {})
+        _TextPreprocessor = type('_TextPreprocessor', (_TextPreprocessorMP,), {})
         func = getattr(self.__class__, 'preprocess_text')
         if hasattr(func, '__func__'):  # get unbound method in Python 2
             func = func.__func__
@@ -524,11 +538,15 @@ class TextTokensIterator(object):
 
 
 class LineSentence(TextTokensIterator, TextCorpus):
-    """
-    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    """Simple format: one sentence = one line.
+    
+    In general, words should already be preprocessed and separated by whitespace.
+    If a line exceeds the `max_sentence_length`, it will be split into multiple sentences
+    not exceeding this amount. Additional preprocessing can be applied using the `TextCorpus`
+    preprocessing keyword arguments if needed.
     """
 
-    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None, processes=-1):
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None, **kwargs):
         """
         `source` can be either a string or a file object. Clip the file to the first
         `limit` lines (or no clipped if limit is None, the default).
@@ -545,9 +563,11 @@ class LineSentence(TextTokensIterator, TextCorpus):
         """
         self.max_sentence_length = max_sentence_length
         self.limit = limit
-        TextCorpus.__init__(
-            self, source, character_filters=[], tokenizer=unicode_and_tokenize, token_filters=[],
-            processes=processes)
+        kwargs['tokenizer'] = kwargs.get('tokenizer', unicode_and_tokenize)
+        kwargs['character_filters'] = kwargs.get('character_filters', [])
+        kwargs['token_filters'] = kwargs.get('token_filters', [])
+        kwargs['processes'] = kwargs.get('processes', 1)
+        TextCorpus.__init__(self, source, **kwargs)
 
     def getstream(self):
         with utils.smart_open(self.source) as fin:
