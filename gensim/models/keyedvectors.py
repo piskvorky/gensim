@@ -730,7 +730,7 @@ class KeyedVectors(utils.SaveLoad):
                             dummy4unknown=False):
         """
         Compute correlation of the model with human similarity judgments. `pairs` is a filename of a dataset where
-        lines are 3-tuples, each consisting of a word pair and a similarity value, separated by `delimiter'.
+        lines are 3-tuples, each consisting of a word pair and a similarity value, separated by `delimiter`.
         An example dataset is included in Gensim (test/test_data/wordsim353.tsv). More datasets can be found at
         http://technion.ac.il/~ira.leviant/MultilingualVSMdata.html or https://www.cl.cam.ac.uk/~fh295/simlex.html.
 
@@ -748,7 +748,7 @@ class KeyedVectors(utils.SaveLoad):
         and words pairs in the dataset. If there are multiple case variants of a single word, the vector for the first
         occurrence (also the most frequent if vocabulary is sorted) is taken.
 
-        Use `dummy4unknown=True' to produce zero-valued similarities for pairs with out-of-vocabulary words.
+        Use `dummy4unknown=True` to produce zero-valued similarities for pairs with out-of-vocabulary words.
         Otherwise (default False), these pairs are skipped entirely.
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
