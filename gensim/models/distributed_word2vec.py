@@ -9,22 +9,15 @@ from __future__ import print_function
 
 import collections
 import math
-import os
 import random
-import zipfile
 
 import numpy as np
-from six.moves import urllib
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
-from gensim.models.word2vec import Vocab
-from gensim import utils
 from six import string_types
-import os
-import tempfile
 import logging
 logger = logging.getLogger(__name__)
 
@@ -82,7 +75,7 @@ class TfWord2Vec(KeyedVectors):
         self.vocab_size = 5000
 
         self.build_dataset(train_data, self.vocab_size)
-        self.data_index = 0                                                     #TODO
+        self.data_index = 0                                              # TODO
         self.train()
         self.vocab = {}
 
@@ -127,8 +120,8 @@ class TfWord2Vec(KeyedVectors):
         span = 2 * skip_window + 1  # [ skip_window target skip_window ]
         buffer = collections.deque(maxlen=span)
         for _ in range(span):
-            buffer.append(data[data_index])
-            data_index = (data_index + 1) % len(data)
+            buffer.append(data[self.data_index])
+            self.data_index = (self.data_index + 1) % len(data)
         for i in range(batch_size // num_skips):
             target = skip_window  # target label at the center of the buffer
             targets_to_avoid = [skip_window]
@@ -138,10 +131,10 @@ class TfWord2Vec(KeyedVectors):
                 targets_to_avoid.append(target)
                 batch[i * num_skips + j] = buffer[skip_window]
                 labels[i * num_skips + j, 0] = buffer[target]
-            buffer.append(data[data_index])
-            data_index = (data_index + 1) % len(data)
+            buffer.append(data[self.data_index])
+            self.data_index = (self.data_index + 1) % len(data)
         # Backtrack a little bit to avoid skipping words in the end of a batch
-        data_index = (data_index + len(data) - span) % len(data)
+        self.data_index = (self.data_index + len(data) - span) % len(data)
         return batch, labels
 
     def train(self):
@@ -203,6 +196,7 @@ class TfWord2Vec(KeyedVectors):
                                      global_step = global_step,
                                      init_op = init)
             average_loss = 0
+            loss_val = 0
             with sv.prepare_or_wait_for_session(server.target) as sess:
                 for step in xrange(self.concurrent_steps):
                     batch_inputs, batch_labels = self.generate_batch(
@@ -221,18 +215,10 @@ class TfWord2Vec(KeyedVectors):
                         print('Average loss at step ', step, ': ', average_loss)
                         average_loss = 0
 
-        self.syn0norm = loss_val
+            self.syn0norm = loss_val
 
     @classmethod
     def load_tf_model(cls, model_file):
         glove2word2vec(model_file, model_file+'.w2vformat')
         model = KeyedVectors.load_word2vec_format('%s.w2vformat' % model_file)
         return model
-
-    def __getitem__(self, words):
-        if isinstance(words, string_types):
-            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
-            return self.syn0norm[self.model._word2id[words]]
-
-        ids = [self.model._word2id[word] for word in words]
-        return [self.syn0norm[id] for id in ids]
