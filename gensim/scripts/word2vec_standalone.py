@@ -49,16 +49,17 @@ Example: python -m gensim.scripts.word2vec_standalone -train data.txt -output ve
 """
 
 
+import argparse
 import logging
 import os.path
 import sys
-import argparse
+
 from numpy import seterr
 
 logger = logging.getLogger(__name__)
 
-from gensim.models.word2vec import Word2Vec, LineSentence  # avoid referencing __main__ in pickle
-
+from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pickle
+from gensim.corpora.textcorpus import LineSentence
 
 if __name__ == "__main__":
     logging.basicConfig(

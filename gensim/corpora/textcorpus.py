@@ -30,6 +30,7 @@ See the `gensim.test.test_miislita.CorpusMiislita` class for a simple example.
 from __future__ import with_statement
 
 import functools
+import itertools
 import logging
 import multiprocessing as mp
 import os
@@ -37,6 +38,8 @@ import random
 import re
 import signal
 import sys
+
+from gensim.models.word2vec import MAX_WORDS_IN_BATCH
 
 try:
     from itertools import imap
@@ -47,7 +50,7 @@ from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.text_processing_pool import TextProcessingPool, TextProcessor
 from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
-from gensim.utils import deaccent, simple_tokenize
+from gensim.utils import deaccent, simple_tokenize, walk_with_depth
 
 logger = logging.getLogger(__name__)
 
@@ -481,7 +484,7 @@ class TextDirectoryCorpus(TextCorpus):
         range of depths. If a filename pattern to match was given, further filter to only
         those filenames that match.
         """
-        for depth, dirpath, dirnames, filenames in walk(self.input):
+        for depth, dirpath, dirnames, filenames in walk_with_depth(self.input):
             if self.min_depth <= depth <= self.max_depth:
                 if self.pattern is not None:
                     filenames = (n for n in filenames if self.pattern.match(n) is not None)
@@ -509,40 +512,128 @@ class TextDirectoryCorpus(TextCorpus):
 # endclass TextDirectoryCorpus
 
 
-def walk(top, topdown=True, onerror=None, followlinks=False, depth=0):
-    """This is a mostly copied version of `os.walk` from the Python 2 source code.
-    The only difference is that it returns the depth in the directory tree structure
-    at which each yield is taking place.
+class LineSentence(object):
     """
-    islink, join, isdir = os.path.islink, os.path.join, os.path.isdir
+    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    """
 
-    try:
-        # Should be O(1) since it's probably just reading your filesystem journal
-        names = os.listdir(top)
-    except OSError as err:
-        if onerror is not None:
-            onerror(err)
-        return
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
+        """
+        `source` can be either a string or a file object. Clip the file to the first
+        `limit` lines (or no clipped if limit is None, the default).
 
-    dirs, nondirs = [], []
+        Example::
 
-    # O(n) where n = number of files in the directory
-    for name in names:
-        if isdir(join(top, name)):
-            dirs.append(name)
-        else:
-            nondirs.append(name)
+            sentences = LineSentence('myfile.txt')
 
-    if topdown:
-        yield depth, top, dirs, nondirs
+        Or for compressed files::
 
-    # Again O(n), where n = number of directories in the directory
-    for name in dirs:
-        new_path = join(top, name)
-        if followlinks or not islink(new_path):
+            sentences = LineSentence('compressed_text.txt.bz2')
+            sentences = LineSentence('compressed_text.txt.gz')
 
-            # Generator so besides the recursive `walk()` call, no additional cost here.
-            for x in walk(new_path, topdown, onerror, followlinks, depth + 1):
-                yield x
-    if not topdown:
-        yield depth, top, dirs, nondirs
+        """
+        self.source = source
+        self.max_sentence_length = max_sentence_length
+        self.limit = limit
+
+    def __iter__(self):
+        """Iterate through the lines in the source."""
+        try:
+            # Assume it is a file-like object and try treating it as such
+            # Things that don't have seek will trigger an exception
+            self.source.seek(0)
+            for line in itertools.islice(self.source, self.limit):
+                line = utils.to_unicode(line).split()
+                i = 0
+                while i < len(line):
+                    yield line[i : i + self.max_sentence_length]
+                    i += self.max_sentence_length
+        except AttributeError:
+            # If it didn't work like a file, use it as a string filename
+            with utils.smart_open(self.source) as fin:
+                for line in itertools.islice(fin, self.limit):
+                    line = utils.to_unicode(line).split()
+                    i = 0
+                    while i < len(line):
+                        yield line[i : i + self.max_sentence_length]
+                        i += self.max_sentence_length
+
+
+class PathLineSentences(object):
+    """
+    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    Like LineSentence, but will process all files in a directory in alphabetical order by filename
+    """
+
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
+        """
+        `source` should be a path to a directory (as a string) where all files can be opened by the
+        LineSentence class. Each file will be read up to
+        `limit` lines (or no clipped if limit is None, the default).
+
+        Example::
+
+            sentences = LineSentencePath(os.getcwd() + '\\corpus\\')
+
+        The files in the directory should be either text files, .bz2 files, or .gz files.
+
+        """
+        self.source = source
+        self.max_sentence_length = max_sentence_length
+        self.limit = limit
+
+        if os.path.isfile(self.source):
+            logging.warning('single file read, better to use models.word2vec.LineSentence')
+            self.input_files = [self.source]  # force code compatibility with list of files
+        elif os.path.isdir(self.source):
+            self.source = os.path.join(self.source, '')  # ensures os-specific slash at end of path
+            logging.debug('reading directory ' + self.source)
+            self.input_files = os.listdir(self.source)
+            self.input_files = [self.source + file for file in self.input_files]  # make full paths
+            self.input_files.sort()  # makes sure it happens in filename order
+        else:  # not a file or a directory, then we can't do anything with it
+            raise ValueError('input is neither a file nor a path')
+
+        logging.info('files read into PathLineSentences:' + '\n'.join(self.input_files))
+
+    def __iter__(self):
+        '''iterate through the files'''
+        for file_name in self.input_files:
+            logging.info('reading file ' + file_name)
+            with utils.smart_open(file_name) as fin:
+                for line in itertools.islice(fin, self.limit):
+                    line = utils.to_unicode(line).split()
+                    i = 0
+                    while i < len(line):
+                        yield line[i:i + self.max_sentence_length]
+                        i += self.max_sentence_length
+
+
+class Text8Corpus(object):
+    """Iterate over sentences from the "text8" corpus,
+    unzipped from http://mattmahoney.net/dc/text8.zip.
+    """
+    def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
+        self.fname = fname
+        self.max_sentence_length = max_sentence_length
+
+    def __iter__(self):
+        # the entire corpus is one gigantic line -- there are no sentence marks at all
+        # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
+        sentence, rest = [], b''
+        with utils.smart_open(self.fname) as fin:
+            while True:
+                text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
+                if text == rest:  # EOF
+                    words = utils.to_unicode(text).split()
+                    sentence.extend(words)  # return the last chunk of words, too (may be shorter/longer)
+                    if sentence:
+                        yield sentence
+                    break
+                last_token = text.rfind(b' ')  # last token may have been split in two... keep for next iteration
+                words, rest = (utils.to_unicode(text[:last_token]).split(),
+                               text[last_token:].strip()) if last_token >= 0 else ([], text)
+                sentence.extend(words)
+                while len(sentence) >= self.max_sentence_length:
+                    yield sentence[:self.max_sentence_length]
+                    sentence = sentence[self.max_sentence_length:]

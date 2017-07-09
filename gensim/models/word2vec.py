@@ -95,37 +95,33 @@ where "words" are actually multiword expressions, such as `new_york_times` or `f
 """
 from __future__ import division  # py3 "true division"
 
-import logging
-import sys
-import os
 import heapq
-from timeit import default_timer
-from copy import deepcopy
-from collections import defaultdict
+import logging
+import os
+import sys
 import threading
-import itertools
 import warnings
+from collections import defaultdict
+from copy import deepcopy
+from timeit import default_timer
 
-from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.models.keyedvectors import KeyedVectors, Vocab
+from gensim.utils import keep_vocab_item, call_on_class_only
 
 try:
     from queue import Queue, Empty
 except ImportError:
     from Queue import Queue, Empty
 
-from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
-    double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, vstack, logaddexp
+from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL, \
+    uint32, seterr, array, uint8, fromstring, sqrt, empty, sum as np_sum, ones, vstack, logaddexp
 
 from scipy.special import expit
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
-from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -370,7 +366,6 @@ def score_cbow_pair(model, word, l1):
     sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
     lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
     return sum(lprob)
-
 
 
 class Word2Vec(utils.SaveLoad):
@@ -1479,131 +1474,6 @@ class BrownCorpus(object):
                 yield words
 
 
-class Text8Corpus(object):
-    """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
-    def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
-        self.fname = fname
-        self.max_sentence_length = max_sentence_length
-
-    def __iter__(self):
-        # the entire corpus is one gigantic line -- there are no sentence marks at all
-        # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
-        sentence, rest = [], b''
-        with utils.smart_open(self.fname) as fin:
-            while True:
-                text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
-                if text == rest:  # EOF
-                    words = utils.to_unicode(text).split()
-                    sentence.extend(words)  # return the last chunk of words, too (may be shorter/longer)
-                    if sentence:
-                        yield sentence
-                    break
-                last_token = text.rfind(b' ')  # last token may have been split in two... keep for next iteration
-                words, rest = (utils.to_unicode(text[:last_token]).split(),
-                               text[last_token:].strip()) if last_token >= 0 else ([], text)
-                sentence.extend(words)
-                while len(sentence) >= self.max_sentence_length:
-                    yield sentence[:self.max_sentence_length]
-                    sentence = sentence[self.max_sentence_length:]
-
-
-class LineSentence(object):
-    """
-    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
-    """
-
-    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
-        """
-        `source` can be either a string or a file object. Clip the file to the first
-        `limit` lines (or no clipped if limit is None, the default).
-
-        Example::
-
-            sentences = LineSentence('myfile.txt')
-
-        Or for compressed files::
-
-            sentences = LineSentence('compressed_text.txt.bz2')
-            sentences = LineSentence('compressed_text.txt.gz')
-
-        """
-        self.source = source
-        self.max_sentence_length = max_sentence_length
-        self.limit = limit
-
-    def __iter__(self):
-        """Iterate through the lines in the source."""
-        try:
-            # Assume it is a file-like object and try treating it as such
-            # Things that don't have seek will trigger an exception
-            self.source.seek(0)
-            for line in itertools.islice(self.source, self.limit):
-                line = utils.to_unicode(line).split()
-                i = 0
-                while i < len(line):
-                    yield line[i : i + self.max_sentence_length]
-                    i += self.max_sentence_length
-        except AttributeError:
-            # If it didn't work like a file, use it as a string filename
-            with utils.smart_open(self.source) as fin:
-                for line in itertools.islice(fin, self.limit):
-                    line = utils.to_unicode(line).split()
-                    i = 0
-                    while i < len(line):
-                        yield line[i:i + self.max_sentence_length]
-                        i += self.max_sentence_length
-
-
-class PathLineSentences(object):
-    """
-    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
-    Like LineSentence, but will process all files in a directory in alphabetical order by filename
-    """
-
-    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
-        """
-        `source` should be a path to a directory (as a string) where all files can be opened by the
-        LineSentence class. Each file will be read up to
-        `limit` lines (or no clipped if limit is None, the default).
-
-        Example::
-
-            sentences = LineSentencePath(os.getcwd() + '\\corpus\\')
-
-        The files in the directory should be either text files, .bz2 files, or .gz files.
-
-        """
-        self.source = source
-        self.max_sentence_length = max_sentence_length
-        self.limit = limit
-
-        if os.path.isfile(self.source):
-            logging.warning('single file read, better to use models.word2vec.LineSentence')
-            self.input_files = [self.source]  # force code compatibility with list of files
-        elif os.path.isdir(self.source):
-            self.source = os.path.join(self.source, '')  # ensures os-specific slash at end of path
-            logging.debug('reading directory ' + self.source)
-            self.input_files = os.listdir(self.source)
-            self.input_files = [self.source + file for file in self.input_files]  # make full paths
-            self.input_files.sort()  # makes sure it happens in filename order
-        else:  # not a file or a directory, then we can't do anything with it
-            raise ValueError('input is neither a file nor a path')
-
-        logging.info('files read into PathLineSentences:' + '\n'.join(self.input_files))
-
-    def __iter__(self):
-        '''iterate through the files'''
-        for file_name in self.input_files:
-            logging.info('reading file ' + file_name)
-            with utils.smart_open(file_name) as fin:
-                for line in itertools.islice(fin, self.limit):
-                    line = utils.to_unicode(line).split()
-                    i = 0
-                    while i < len(line):
-                        yield line[i:i + self.max_sentence_length]
-                        i += self.max_sentence_length
-
-
 # Example: ./word2vec.py -train data.txt -output vec.txt -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3
 if __name__ == "__main__":
     import argparse
@@ -1620,6 +1490,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pickle
+    from gensim.corpora.textcorpus import LineSentence
 
     seterr(all='raise')  # don't ignore numpy errors
 

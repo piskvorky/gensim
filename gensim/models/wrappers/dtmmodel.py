@@ -21,16 +21,16 @@ Example:
 
 
 import logging
-import random
-import warnings
-import tempfile
 import os
+import random
+import tempfile
+import warnings
 from subprocess import PIPE
-import numpy as np
-import six
 
-from gensim import utils, corpora, matutils
-from gensim.utils import check_output
+import numpy as np
+
+from gensim import utils, matutils
+from gensim.corpora.bleicorpus import BleiCorpus
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +174,7 @@ class DtmModel(utils.SaveLoad):
         """
         logger.info("serializing temporary corpus to %s" % self.fcorpustxt())
         # write out the corpus in a file format that DTM understands:
-        corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
+        BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
 
         with utils.smart_open(self.ftimeslices(), 'wb') as fout:
             fout.write(utils.to_utf8(str(len(self.time_slices)) + "\n"))
@@ -199,7 +199,7 @@ class DtmModel(utils.SaveLoad):
 
         cmd = [self.dtm_path] + arguments.split()
         logger.info("Running command %s" % cmd)
-        check_output(args=cmd, stderr=PIPE)
+        utils.check_output(args=cmd, stderr=PIPE)
 
         self.em_steps = np.loadtxt(self.fem_steps())
         self.init_ss = np.loadtxt(self.flda_ss())
