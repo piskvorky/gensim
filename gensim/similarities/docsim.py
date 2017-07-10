@@ -190,7 +190,8 @@ class Similarity(interfaces.SimilarityABC):
             # undocumented feature: set output_prefix=None to create the server in temp
             self.output_prefix = utils.randfname(prefix='simserver')
         else:
-            if os.path.isdir(output_prefix):
+            self.output_prefix = output_prefix
+            if os.path.isdir(self.output_prefix):
                 raise ValueError("output_prefix should not be a directory")
 
         logger.info("starting similarity index under %s", self.output_prefix)
