@@ -16,10 +16,10 @@ from sklearn.exceptions import NotFittedError
 
 from gensim import models
 from gensim import matutils
-from gensim.sklearn_integration import BaseSklearnWrapper
+from gensim.sklearn_api import BaseTransformer
 
 
-class LdaTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class LdaTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """
@@ -86,8 +86,8 @@ class LdaTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
 
     def transform(self, docs):
         """
-        Takes as an list of input a documents (documents).
-        Returns matrix of topic distribution for the given document bow, where a_ij
+        Takes a list of documents as input ('docs').
+        Returns a matrix of topic distribution for the given document bow, where a_ij
         indicates (topic_i, topic_probability_j).
         The input `docs` should be in BOW format and can be a list of documents like : [ [(4, 1), (7, 1)], [(9, 1), (13, 1)], [(2, 1), (6, 1)] ]
         or a single document like : [(4, 1), (7, 1)]

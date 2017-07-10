@@ -13,10 +13,10 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
-from gensim.sklearn_integration import BaseSklearnWrapper
+from gensim.sklearn_api import BaseTransformer
 
 
-class AuthorTopicTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class AuthorTopicTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
     """
     Base AuthorTopic module
     """

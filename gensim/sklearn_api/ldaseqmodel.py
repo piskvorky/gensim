@@ -14,10 +14,10 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
-from gensim.sklearn_integration import BaseSklearnWrapper
+from gensim.sklearn_api import BaseTransformer
 
 
-class LdaSeqTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class LdaSeqTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
     """
     Base LdaSeq module
     """

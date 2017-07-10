@@ -11,7 +11,7 @@ follows on scikit learn API conventions
 from abc import ABCMeta, abstractmethod
 
 
-class BaseSklearnWrapper(object):
+class BaseTransformer(object):
     """
     Base sklearn wrapper module
     """
