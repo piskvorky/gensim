@@ -1,4 +1,3 @@
-import six
 import unittest
 import numpy
 import os
@@ -8,8 +7,6 @@ import pickle
 from scipy import sparse
 try:
     from sklearn.pipeline import Pipeline
-    from sklearn.feature_extraction.text import CountVectorizer
-    from sklearn.datasets import load_files
     from sklearn import linear_model, cluster
     from sklearn.exceptions import NotFittedError
 except ImportError:
@@ -22,7 +19,6 @@ from gensim.sklearn_api.ldaseqmodel import LdaSeqTransformer
 from gensim.sklearn_api.w2vmodel import W2VTransformer
 from gensim.sklearn_api.atmodel import AuthorTopicTransformer
 from gensim.corpora import mmcorpus, Dictionary
-from gensim import matutils
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)

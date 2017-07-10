@@ -81,13 +81,13 @@ class LsiTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
         # The input as array of array
         check = lambda x: [x] if isinstance(x[0], tuple) else x
         docs = check(docs)
-        X = [[] for i in range(0,len(docs))];
-        for k,v in enumerate(docs):
+        X = [[] for i in range(0, len(docs))]
+        for k, v in enumerate(docs):
             doc_topics = self.gensim_model[v]
             probs_docs = list(map(lambda x: x[1], doc_topics))
             # Everything should be equal in length
             if len(probs_docs) != self.num_topics:
-                probs_docs.extend([1e-12]*(self.num_topics - len(probs_docs)))
+                probs_docs.extend([1e-12] * (self.num_topics - len(probs_docs)))
             X[k] = probs_docs
             probs_docs = []
         return np.reshape(np.array(X), (len(docs), self.num_topics))
