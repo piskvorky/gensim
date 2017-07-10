@@ -455,7 +455,7 @@ class Similarity(interfaces.SimilarityABC):
 
         obj = super(Similarity, cls).load(fname, mmap)
         if isinstance(obj, Similarity):
-            if obj.output_prefix is not fname:
+            if obj.output_prefix != fname:
                 obj.output_prefix = fname
                 obj.check_moved()
 
