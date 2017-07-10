@@ -451,9 +451,9 @@ class Similarity(interfaces.SimilarityABC):
         super(Similarity, self).save(fname, *args, **kwargs)
 
     @classmethod
-    def load(self, fname, mmap=None):
+    def load(cls, fname, mmap=None):
 
-        obj = super(Similarity, self).load(fname, mmap)
+        obj = super(Similarity, cls).load(fname, mmap)
         if isinstance(obj,Similarity):
             if obj.output_prefix is not fname:
                 obj.output_prefix = fname
