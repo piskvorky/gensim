@@ -15,12 +15,12 @@ try:
 except ImportError:
     raise unittest.SkipTest("Test requires scikit-learn to be installed, which is not available")
 
-from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import RpTransformer
-from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import LdaTransformer
-from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import LsiTransformer
-from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import LdaSeqTransformer
-from gensim.sklearn_integration.sklearn_wrapper_gensim_w2vmodel import W2VTransformer
-from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import AuthorTopicTransformer
+from gensim.sklearn_api.rpmodel import RpTransformer
+from gensim.sklearn_api.ldamodel import LdaTransformer
+from gensim.sklearn_api.lsimodel import LsiTransformer
+from gensim.sklearn_api.ldaseqmodel import LdaSeqTransformer
+from gensim.sklearn_api.w2vmodel import W2VTransformer
+from gensim.sklearn_api.atmodel import AuthorTopicTransformer
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils
 
