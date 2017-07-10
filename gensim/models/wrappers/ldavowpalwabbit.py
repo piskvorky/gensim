@@ -498,9 +498,9 @@ def corpus_to_vw(corpus):
     character.
 
     E.g.:
-    | 4:7 14:1 22:8 6:3
-    | 14:22 22:4 0:1 1:3
-    | 7:2 8:2
+        | 4:7 14:1 22:8 6:3
+        | 14:22 22:4 0:1 1:3
+        | 7:2 8:2
     """
     for entries in corpus:
         line = ['|']
@@ -568,13 +568,11 @@ def vwmodel2ldamodel(vw_model, iterations=50):
     vwmodel into the gensim model.
 
     Args:
-    ----
-    vw_model : Trained vowpal wabbit model.
-    iterations : Number of iterations to be used for inference of the new LdaModel.
+        vw_model : Trained vowpal wabbit model.
+        iterations : Number of iterations to be used for inference of the new LdaModel.
 
     Returns:
-    -------
-    model_gensim : LdaModel instance; copied gensim LdaModel.
+        model_gensim : LdaModel instance; copied gensim LdaModel.
     """
     model_gensim = LdaModel(
         num_topics=vw_model.num_topics, id2word=vw_model.id2word, chunksize=vw_model.chunksize,
