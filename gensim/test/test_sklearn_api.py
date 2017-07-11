@@ -292,19 +292,6 @@ class TestLdaSeqWrapper(unittest.TestCase):
         self.assertEqual(transformed_vecs.shape[0], 1)
         self.assertEqual(transformed_vecs.shape[1], self.model.num_topics)
 
-    def testSetGetParams(self):
-        # updating only one param
-        self.model.set_params(num_topics=3)
-        model_params = self.model.get_params()
-        self.assertEqual(model_params["num_topics"], 3)
-
-        # updating multiple params
-        param_dict = {"passes": 20, "chunksize": 200}
-        self.model.set_params(**param_dict)
-        model_params = self.model.get_params()
-        for key in param_dict.keys():
-            self.assertEqual(model_params[key], param_dict[key])
-
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
         with open(datapath('mini_newsgroup'), 'rb') as f:
@@ -322,6 +309,19 @@ class TestLdaSeqWrapper(unittest.TestCase):
         text_ldaseq.fit(corpus, test_target)
         score = text_ldaseq.score(corpus, test_target)
         self.assertGreater(score, 0.50)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
+
+        # updating multiple params
+        param_dict = {"passes": 20, "chunksize": 200}
+        self.model.set_params(**param_dict)
+        model_params = self.model.get_params()
+        for key in param_dict.keys():
+            self.assertEqual(model_params[key], param_dict[key])
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -367,12 +367,6 @@ class TestRpWrapper(unittest.TestCase):
         self.assertEqual(matrix.shape[0], 1)
         self.assertEqual(matrix.shape[1], self.model.num_topics)
 
-    def testSetGetParams(self):
-        # updating only one param
-        self.model.set_params(num_topics=3)
-        model_params = self.model.get_params()
-        self.assertEqual(model_params["num_topics"], 3)
-
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
         model = RpTransformer(num_topics=2)
@@ -389,6 +383,12 @@ class TestRpWrapper(unittest.TestCase):
         text_rp.fit(corpus, data.target)
         score = text_rp.score(corpus, data.target)
         self.assertGreater(score, 0.40)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -432,12 +432,6 @@ class TestWord2VecWrapper(unittest.TestCase):
         self.assertEqual(matrix.shape[0], 1)
         self.assertEqual(matrix.shape[1], self.model.size)
 
-    def testSetGetParams(self):
-        # updating only one param
-        self.model.set_params(negative=20)
-        model_params = self.model.get_params()
-        self.assertEqual(model_params["negative"], 20)
-
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
         model = W2VTransformer(size=10, min_count=1)
@@ -456,6 +450,12 @@ class TestWord2VecWrapper(unittest.TestCase):
         text_w2v = Pipeline((('features', model,), ('classifier', clf)))
         score = text_w2v.score(train_input, train_target)
         self.assertGreater(score, 0.40)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(negative=20)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["negative"], 20)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -504,19 +504,6 @@ class TestAuthorTopicWrapper(unittest.TestCase):
         sally_topics = output_topics[0]  # getting the topics corresponding to 'sally' (from the list of lists)
         self.assertTrue(all(sally_topics > 0))
 
-    def testSetGetParams(self):
-        # updating only one param
-        self.model.set_params(num_topics=3)
-        model_params = self.model.get_params()
-        self.assertEqual(model_params["num_topics"], 3)
-
-        # updating multiple params
-        param_dict = {"passes": 5, "iterations": 10}
-        self.model.set_params(**param_dict)
-        model_params = self.model.get_params()
-        for key in param_dict.keys():
-            self.assertEqual(model_params[key], param_dict[key])
-
     def testPipeline(self):
         # train the AuthorTopic model first
         model = AuthorTopicTransformer(id2word=dictionary, author2doc=author2doc, num_topics=10, passes=100)
@@ -532,6 +519,40 @@ class TestAuthorTopicWrapper(unittest.TestCase):
         author_list = ['jane', 'jack', 'jill']
         ret_val = text_atm.predict(author_list)
         self.assertEqual(len(ret_val), len(author_list))
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
+
+        # updating multiple params
+        param_dict = {"passes": 5, "iterations": 10}
+        self.model.set_params(**param_dict)
+        model_params = self.model.get_params()
+        for key in param_dict.keys():
+            self.assertEqual(model_params[key], param_dict[key])
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        author_list = ['jill']
+        loaded_author_topics = model_load.transform(author_list)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_author_topics.shape[0], 1)
+        self.assertEqual(loaded_author_topics.shape[1], self.model.num_topics)
+
+        # comparing the original and loaded models
+        original_author_topics = self.model.transform(author_list)
+        passed = numpy.allclose(sorted(loaded_author_topics), sorted(original_author_topics), atol=1e-1)
+        self.assertTrue(passed)
+
+    def testModelNotFitted(self):
+        atmodel_wrapper = AuthorTopicTransformer(id2word=dictionary, author2doc=author2doc, num_topics=10, passes=100)
+        author_list = ['jill', 'jack']
+        self.assertRaises(NotFittedError, atmodel_wrapper.transform, author_list)
 
 
 if __name__ == '__main__':
