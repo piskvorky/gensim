@@ -28,7 +28,7 @@ class W2VTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=10000):
         """
-        Sklearn wrapper for Word2Vec model. Class derived from gensim.models.Word2Vec
+        Sklearn wrapper for Word2Vec model. See gensim.models.Word2Vec for parameter details.
         """
         self.gensim_model = None
         self.size = size
@@ -53,7 +53,7 @@ class W2VTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def get_params(self, deep=True):
         """
-        Returns all parameters as dictionary.
+        Return all class attributes as dictionary.
         """
         return {"size": self.size, "alpha": self.alpha, "window": self.window, "min_count": self.min_count,
         "max_vocab_size": self.max_vocab_size, "sample": self.sample, "seed": self.seed,
@@ -64,7 +64,7 @@ class W2VTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def set_params(self, **parameters):
         """
-        Set all parameters.
+        Set class attributes.
         """
         super(W2VTransformer, self).set_params(**parameters)
         return self

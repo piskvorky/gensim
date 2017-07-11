@@ -31,7 +31,7 @@ class LdaTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
             eval_every=10, iterations=50, gamma_threshold=0.001,
             minimum_probability=0.01, random_state=None):
         """
-        Sklearn wrapper for LDA model. derived class for gensim.model.LdaModel .
+        Sklearn wrapper for LDA model. See gensim.model.LdaModel for parameter details.
         """
         self.gensim_model = None
         self.num_topics = num_topics
@@ -51,7 +51,7 @@ class LdaTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def get_params(self, deep=True):
         """
-        Returns all parameters as dictionary.
+        Return all class attributes as dictionary.
         """
         return {"num_topics": self.num_topics, "id2word": self.id2word, "chunksize": self.chunksize,
                 "passes": self.passes, "update_every": self.update_every, "alpha": self.alpha, "eta": self.eta,
@@ -61,7 +61,7 @@ class LdaTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def set_params(self, **parameters):
         """
-        Set all parameters.
+        Set class attributes.
         """
         super(LdaTransformer, self).set_params(**parameters)
         return self

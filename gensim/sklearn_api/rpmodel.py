@@ -24,7 +24,7 @@ class RpTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def __init__(self, id2word=None, num_topics=300):
         """
-        Sklearn wrapper for RP model. Class derived from gensim.models.RpModel.
+        Sklearn wrapper for RP model. See gensim.models.RpModel for parameter details.
         """
         self.gensim_model = None
         self.id2word = id2word
@@ -32,13 +32,13 @@ class RpTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def get_params(self, deep=True):
         """
-        Returns all parameters as dictionary.
+        Return all class attributes as dictionary.
         """
         return {"id2word": self.id2word, "num_topics": self.num_topics}
 
     def set_params(self, **parameters):
         """
-        Set all parameters.
+        Set class attributes.
         """
         super(RpTransformer, self).set_params(**parameters)
         return self

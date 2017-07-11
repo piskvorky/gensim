@@ -27,7 +27,7 @@ class AuthorTopicTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
             gamma_threshold=0.001, serialized=False, serialization_path=None,
             minimum_probability=0.01, random_state=None):
         """
-        Sklearn wrapper for AuthorTopic model. Class derived from gensim.models.AuthorTopicModel
+        Sklearn wrapper for AuthorTopic model. See gensim.models.AuthorTopicModel for parameter details.
         """
         self.gensim_model = None
         self.num_topics = num_topics
@@ -51,7 +51,7 @@ class AuthorTopicTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def get_params(self, deep=True):
         """
-        Returns all parameters as dictionary.
+        Return all class attributes as dictionary.
         """
         return {"num_topics": self.num_topics, "id2word": self.id2word,
                 "author2doc": self.author2doc, "doc2author": self.doc2author, "chunksize": self.chunksize,
@@ -63,7 +63,7 @@ class AuthorTopicTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def set_params(self, **parameters):
         """
-        Set all parameters.
+        Set class attributes.
         """
         super(AuthorTopicTransformer, self).set_params(**parameters)
         return self

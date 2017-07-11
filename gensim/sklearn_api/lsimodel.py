@@ -27,7 +27,7 @@ class LsiTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
     def __init__(self, num_topics=200, id2word=None, chunksize=20000,
                  decay=1.0, onepass=True, power_iters=2, extra_samples=100):
         """
-        Sklearn wrapper for LSI model. Class derived from gensim.model.LsiModel.
+        Sklearn wrapper for LSI model. See gensim.model.LsiModel for parameter details.
         """
         self.gensim_model = None
         self.num_topics = num_topics
@@ -40,7 +40,7 @@ class LsiTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def get_params(self, deep=True):
         """
-        Returns all parameters as dictionary.
+        Return all class attributes as dictionary.
         """
         return {"num_topics": self.num_topics, "id2word": self.id2word,
                 "chunksize": self.chunksize, "decay": self.decay, "onepass": self.onepass,
@@ -48,7 +48,7 @@ class LsiTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def set_params(self, **parameters):
         """
-        Set all parameters.
+        Set class attributes.
         """
         super(LsiTransformer, self).set_params(**parameters)
         return self

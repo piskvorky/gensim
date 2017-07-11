@@ -26,7 +26,7 @@ class LdaSeqTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
                 initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
                 random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
         """
-        Sklearn wrapper for LdaSeq model. Class derived from gensim.models.LdaSeqModel
+        Sklearn wrapper for LdaSeq model. See gensim.models.LdaSeqModel for parameter details.
         """
         self.gensim_model = None
         self.time_slice = time_slice
@@ -47,7 +47,7 @@ class LdaSeqTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def get_params(self, deep=True):
         """
-        Returns all parameters as dictionary.
+        Return all class attributes as dictionary.
         """
         return {"time_slice": self.time_slice, "id2word": self.id2word,
                 "alphas": self.alphas, "num_topics": self.num_topics, "initialize": self.initialize,
@@ -58,7 +58,7 @@ class LdaSeqTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
 
     def set_params(self, **parameters):
         """
-        Set all parameters.
+        Set class attributes.
         """
         super(LdaSeqTransformer, self).set_params(**parameters)
         return self
