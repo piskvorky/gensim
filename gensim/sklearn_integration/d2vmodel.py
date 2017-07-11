@@ -10,13 +10,13 @@ Follows scikit-learn API conventions
 """
 
 import numpy as np
-from numpy import integer
-from six import string_types, integer_types
+from six import string_types
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
 from gensim.sklearn_integration import BaseSklearnWrapper
+
 
 class D2VTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
