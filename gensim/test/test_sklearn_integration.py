@@ -21,7 +21,9 @@ from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklLsiMod
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_w2vmodel import SklW2VModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklATModel
+from gensim.sklearn_integration.d2vmodel import D2VTransformer
 from gensim.corpora import mmcorpus, Dictionary
+from gensim.models import doc2vec
 from gensim import matutils
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
@@ -96,6 +98,9 @@ w2v_texts = [
     ['physics', 'also', 'makes', 'significant', 'contributions', 'through', 'advances', 'in', 'new', 'technologies', 'that', 'arise', 'from', 'theoretical', 'breakthroughs'],
     ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics', 'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically', 'transformed', 'modern', 'day', 'society']
 ]
+
+d2v_sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(w2v_texts)]
+
 
 class TestSklLdaModelWrapper(unittest.TestCase):
     def setUp(self):
@@ -535,6 +540,74 @@ class TestSklATModelWrapper(unittest.TestCase):
         author_list = ['jane', 'jack', 'jill']
         ret_val = text_atm.predict(author_list)
         self.assertEqual(len(ret_val), len(author_list))
+
+
+class TestD2VTransformerWrapper(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = D2VTransformer(min_count=1)
+        self.model.fit(d2v_sentences)
+
+    def testTransform(self):
+        # tranform multiple documents
+        docs = []
+        docs.append(w2v_texts[0])
+        docs.append(w2v_texts[1])
+        docs.append(w2v_texts[2])
+        matrix = self.model.transform(docs)
+        self.assertEqual(matrix.shape[0], 3)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+        # tranform one document
+        doc = w2v_texts[0]
+        matrix = self.model.transform(doc)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(negative=20)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["negative"], 20)
+
+    def testPipeline(self):
+        numpy.random.seed(0)  # set fixed seed to get similar values everytime
+        model = D2VTransformer(min_count=1)
+        model.fit(d2v_sentences)
+
+        class_dict = {'mathematics': 1, 'physics': 0}
+        train_data = [
+            (['calculus', 'mathematical'], 'mathematics'), (['geometry', 'operations', 'curves'], 'mathematics'),
+            (['natural', 'nuclear'], 'physics'), (['science', 'electromagnetism', 'natural'], 'physics')
+        ]
+        train_input = list(map(lambda x: x[0], train_data))
+        train_target = list(map(lambda x: class_dict[x[1]], train_data))
+
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        clf.fit(model.transform(train_input), train_target)
+        text_w2v = Pipeline((('features', model,), ('classifier', clf)))
+        score = text_w2v.score(train_input, train_target)
+        self.assertGreater(score, 0.40)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = w2v_texts[0]
+        loaded_transformed_vecs = model_load.transform(doc)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_transformed_vecs.shape[0], 1)
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.size)
+
+        # comparing the original and loaded models
+        original_transformed_vecs = self.model.transform(doc)
+        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        self.assertTrue(passed)
+
+    def testModelNotFitted(self):
+        d2vmodel_wrapper = D2VTransformer(min_count=1)
+        self.assertRaises(NotFittedError, d2vmodel_wrapper.transform, 1)
 
 
 if __name__ == '__main__':
