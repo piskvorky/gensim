@@ -31,7 +31,7 @@ class D2VTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
                 cbow_mean=1, hashfxn=hash, iter=5, sorted_vocab=1,
                 batch_words=10000):
         """
-        Sklearn api for Doc2Vec model. See gensim.models.Doc2Vec for parameter details.
+        Sklearn api for Doc2Vec model. See gensim.models.Doc2Vec and gensim.models.Word2Vec for parameter details.
         """
         self.gensim_model = None
         self.dm_mean = dm_mean
@@ -44,7 +44,7 @@ class D2VTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         self.comment = comment
         self.trim_rule = trim_rule
 
-        # attributes of gensim.models.Word2Vec
+        # attributes associated with gensim.models.Word2Vec
         self.size = size
         self.alpha = alpha
         self.window = window
