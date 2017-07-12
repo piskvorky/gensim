@@ -971,7 +971,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
-    def diff(self, other, distance="kullback_leibler", num_words=100, n_ann_terms=10, normed=True, diagonal=False, annotation=True):
+    def diff(self, other, distance="kullback_leibler", num_words=100, n_ann_terms=10, diagonal=False, annotation=True, normed=True):
         """
         Calculate difference topic2topic between two Lda models
         `other` instances of `LdaMulticore` or `LdaModel`
@@ -979,8 +979,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Available values: `kullback_leibler`, `hellinger` and `jaccard`
         `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
         `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
+        `diagonal` set to True if the difference is required only between the identical topic no.s (returns diagonal of diff matrix)
+        `annotation` whether the intersection or difference of words between two topics should be returned 
         Returns a matrix Z with shape (m1.num_topics, m2.num_topics), where Z[i][j] - difference between topic_i and topic_j
-        and matrix annotation with shape (m1.num_topics, m2.num_topics, 2, None),
+        and matrix annotation (if True) with shape (m1.num_topics, m2.num_topics, 2, None),
         where:
 
             annotation[i][j] = [[`int_1`, `int_2`, ...], [`diff_1`, `diff_2`, ...]] and
@@ -1022,14 +1024,17 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if diagonal:
             assert t1_size == t2_size, "Both input models should have same no. of topics, as the diagonal will only be valid in a square matrix"
+            # initialize z and annotation array
             z = np.zeros(t1_size)
             if annotation:
                 diff_terms = np.zeros(t1_size, dtype=list)
         else:
+            # initialize z and annotation matrix
             z = np.zeros((t1_size, t2_size))
             if annotation:
                 diff_terms = np.zeros((t1_size, t2_size), dtype=list)
 
+        # iterate over each cell in the initialized z and annotation
         for topic in np.ndindex(z.shape):
             topic1 = topic[0]
             if diagonal:
