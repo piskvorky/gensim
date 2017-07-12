@@ -21,8 +21,8 @@ The wrapped model can NOT be updated with new documents for online training -- u
 
 Example:
 
->>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
->>> print model[my_vector]  # print LDA topics of a document
+    >>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
+    >>> print model[my_vector]  # print LDA topics of a document
 
 .. [1] http://mallet.cs.umass.edu/
 
@@ -359,14 +359,12 @@ def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
     gensim model.
 
     Args:
-    ----
-    mallet_model : Trained mallet model
-    gamma_threshold : To be used for inference in the new LdaModel.
-    iterations : number of iterations to be used for inference in the new LdaModel.
+        mallet_model : Trained mallet model
+        gamma_threshold : To be used for inference in the new LdaModel.
+        iterations : number of iterations to be used for inference in the new LdaModel.
 
     Returns:
-    -------
-    model_gensim : LdaModel instance; copied gensim LdaModel
+        model_gensim : LdaModel instance; copied gensim LdaModel
     """
     model_gensim = LdaModel(
         id2word=mallet_model.id2word, num_topics=mallet_model.num_topics,

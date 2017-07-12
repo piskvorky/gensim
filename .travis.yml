@@ -12,11 +12,12 @@ before_install:
   - export PATH=/home/travis/miniconda2/bin:$PATH
   - conda update --yes conda
 install:
-  - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
+  - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy==1.11.3 scipy==0.18.1
   - source activate gensim-test
   - python setup.py install
   - pip install .[test]
 script:
+  - pip freeze
   - python setup.py test
   - pip install flake8
   - continuous_integration/travis/flake8_diff.sh
