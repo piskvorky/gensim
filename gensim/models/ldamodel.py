@@ -1021,10 +1021,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             d1, d2 = fst_topics, snd_topics
 
         if diagonal:
-            t_size = min(t1_size, t2_size)
-            z = np.zeros(t_size)
+            assert t1_size == t2_size, "Both input models should have same no. of topics, as the diagonal will only be valid in a square matrix"
+            z = np.zeros(t1_size)
             if annotation:
-                diff_terms = np.zeros(t_size, dtype=list)
+                diff_terms = np.zeros(t1_size, dtype=list)
         else:
             z = np.zeros((t1_size, t2_size))
             if annotation:
