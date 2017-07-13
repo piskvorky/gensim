@@ -9,6 +9,7 @@ Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
 
+from six import string_types
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
@@ -16,7 +17,7 @@ from gensim.corpora import Dictionary
 from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class SklText2BowModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class Text2BowTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base Text2Bow module
     """
@@ -38,14 +39,14 @@ class SklText2BowModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         """
         Set all parameters.
         """
-        super(SklText2BowModel, self).set_params(**parameters)
+        super(Text2BowTransformer, self).set_params(**parameters)
         return self
 
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
         """
-        self.gensim_model = gensim.corpora.Dictionary(documents=X, prune_at=self.prune_at)
+        self.gensim_model = Dictionary(documents=X, prune_at=self.prune_at)
         return self
 
     def transform(self, docs):
@@ -55,8 +56,8 @@ class SklText2BowModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         if self.gensim_model is None:
             raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
 
-        # The input as array of array
-        check = lambda x: [x] if isinstance(x[0], six.string_types) else x
+        # input as python lists
+        check = lambda x: [x] if isinstance(x[0], string_types) else x
         docs = check(docs)
         X = [[] for _ in range(0, len(docs))]
 
@@ -68,7 +69,7 @@ class SklText2BowModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
 
     def partial_fit(self, X):
         if self.gensim_model is None:
-            self.gensim_model = gensim.corpora.Dictionary(prune_at=self.prune_at)
+            self.gensim_model = Dictionary(prune_at=self.prune_at)
 
         self.gensim_model.add_documents(X)
         return self
