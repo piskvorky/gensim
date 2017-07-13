@@ -22,6 +22,7 @@ from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import SklLda
 from gensim.sklearn_integration.sklearn_wrapper_gensim_w2vmodel import SklW2VModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklATModel
 from gensim.sklearn_integration.d2vmodel import D2VTransformer
+from gensim.sklearn_integration.text2bow import Text2BowTransformer
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import doc2vec
 from gensim import matutils
@@ -100,6 +101,18 @@ w2v_texts = [
 ]
 
 d2v_sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(w2v_texts)]
+
+dict_texts = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey']
+]
 
 
 class TestSklLdaModelWrapper(unittest.TestCase):
@@ -608,6 +621,66 @@ class TestD2VTransformerWrapper(unittest.TestCase):
     def testModelNotFitted(self):
         d2vmodel_wrapper = D2VTransformer(min_count=1)
         self.assertRaises(NotFittedError, d2vmodel_wrapper.transform, 1)
+
+
+class TestText2BowTransformerWrapper(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = Text2BowTransformer()
+        self.model.fit(dict_texts)
+
+    def testTransform(self):
+        # tranform multiple documents
+        docs = []
+        docs.append(dict_texts[0])
+        docs.append(dict_texts[1])
+        docs.append(dict_texts[2])
+        matrix = self.model.transform(docs)
+        expected_matrix = [[(0, 1), (1, 1), (2, 1)], [(1, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)], [(0, 1), (6, 1), (7, 1), (8, 1)]]
+        self.assertEqual(matrix, expected_matrix)
+
+        # tranform one document
+        doc = dict_texts[0]
+        matrix = self.model.transform(doc)
+        expected_matrix = [[(0, 1), (1, 1), (2, 1)]]
+        self.assertEqual(matrix, expected_matrix)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(prune_at=1000000)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["prune_at"], 1000000)
+
+    def testPipeline(self):
+        with open(datapath('mini_newsgroup'), 'rb') as f:
+            compressed_content = f.read()
+            uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
+            cache = pickle.loads(uncompressed_content)
+        data = cache
+        input_data = [(i.split()) for i in data.data]
+        text2bow_model = Text2BowTransformer(map(lambda x: x.split(), data.data))
+        lda_model = SklLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
+        numpy.random.mtrand.RandomState(1)  # set seed for getting same result
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        text_lda = Pipeline((('bow_model', text2bow_model), ('ldamodel', lda_model), ('classifier', clf)))
+        text_lda.fit(input_data, data.target)
+        score = text_lda.score(input_data, data.target)
+        self.assertGreater(score, 0.40)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = dict_texts[0]
+        loaded_transformed_vecs = model_load.transform(doc)
+
+        # comparing the original and loaded models
+        original_transformed_vecs = self.model.transform(doc)
+        self.assertEqual(original_transformed_vecs, loaded_transformed_vecs)
+
+    def testModelNotFitted(self):
+        text2bow_wrapper = Text2BowTransformer()
+        self.assertRaises(NotFittedError, text2bow_wrapper.transform, dict_texts[0])
 
 
 if __name__ == '__main__':
