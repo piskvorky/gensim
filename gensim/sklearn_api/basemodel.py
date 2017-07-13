@@ -22,15 +22,6 @@ class BaseTransformer(object):
         pass
 
     @abstractmethod
-    def set_params(self, **parameters):
-        """
-        Set all parameters.
-        """
-        for parameter, value in parameters.items():
-            setattr(self, parameter, value)
-        return self
-
-    @abstractmethod
     def fit(self, X, y=None):
         pass
 

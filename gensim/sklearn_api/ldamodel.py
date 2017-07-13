@@ -59,13 +59,6 @@ class LdaTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
                 "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
                 "random_state": self.random_state}
 
-    def set_params(self, **parameters):
-        """
-        Set class attributes.
-        """
-        super(LdaTransformer, self).set_params(**parameters)
-        return self
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.

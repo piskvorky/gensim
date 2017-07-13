@@ -56,13 +56,6 @@ class LdaSeqTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
                 "lda_inference_max_iter": self.lda_inference_max_iter, "em_min_iter": self.em_min_iter,
                 "em_max_iter": self.em_max_iter, "chunksize": self.chunksize}
 
-    def set_params(self, **parameters):
-        """
-        Set class attributes.
-        """
-        super(LdaSeqTransformer, self).set_params(**parameters)
-        return self
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.

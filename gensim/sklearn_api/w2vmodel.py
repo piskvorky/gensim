@@ -62,13 +62,6 @@ class W2VTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
         "iter": self.iter, "null_word": self.null_word, "trim_rule": self.trim_rule,
         "sorted_vocab": self.sorted_vocab, "batch_words": self.batch_words}
 
-    def set_params(self, **parameters):
-        """
-        Set class attributes.
-        """
-        super(W2VTransformer, self).set_params(**parameters)
-        return self
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.

@@ -36,13 +36,6 @@ class RpTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
         """
         return {"id2word": self.id2word, "num_topics": self.num_topics}
 
-    def set_params(self, **parameters):
-        """
-        Set class attributes.
-        """
-        super(RpTransformer, self).set_params(**parameters)
-        return self
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.

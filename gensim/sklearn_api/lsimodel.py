@@ -46,13 +46,6 @@ class LsiTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
                 "chunksize": self.chunksize, "decay": self.decay, "onepass": self.onepass,
                 "extra_samples": self.extra_samples, "power_iters": self.power_iters}
 
-    def set_params(self, **parameters):
-        """
-        Set class attributes.
-        """
-        super(LsiTransformer, self).set_params(**parameters)
-        return self
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
