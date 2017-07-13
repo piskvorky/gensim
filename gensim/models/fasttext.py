@@ -35,20 +35,53 @@ def train_cbow():
 def train_skipgram():
 
 @staticmethod
-    def ft_hash(string):
-        """
-        Reproduces [hashing trick](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-        used in fastText.
+def ft_hash(string):
+    """
+    Reproduces [hashing trick](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+    used in fastText.
 
-        """
-        # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
-        old_settings = np.seterr(all='ignore')
-        h = np.uint32(2166136261)
-        for c in string:
-            h = h ^ np.uint32(ord(c))
-            h = h * np.uint32(16777619)
-        np.seterr(**old_settings)
-        return h
+    """
+    # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
+    old_settings = np.seterr(all='ignore')
+    h = np.uint32(2166136261)
+    for c in string:
+        h = h ^ np.uint32(ord(c))
+        h = h * np.uint32(16777619)
+    np.seterr(**old_settings)
+    return h
+def init_ngrams(self):
+    """
+    Computes ngrams of all words present in vocabulary and stores vectors for only those ngrams.
+    Vectors for other ngrams are initialized with a random uniform distribution in FastText. These
+    vectors are discarded here to save space.
+
+    """
+    self.wv.ngrams = {}
+    all_ngrams = []
+    for w, v in self.wv.vocab.items():
+        all_ngrams += self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
+    all_ngrams = set(all_ngrams)
+    self.num_ngram_vectors = len(all_ngrams)
+    ngram_indices = []
+    for i, ngram in enumerate(all_ngrams):
+        ngram_hash = self.ft_hash(ngram)
+        ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
+        self.wv.ngrams[ngram] = i
+    self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
+        
+@staticmethod
+def compute_ngrams(word, min_n, max_n):
+    ngram_indices = []
+    BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
+    extended_word = BOW + word + EOW
+    ngrams = []
+    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+        for i in range(0, len(extended_word) - ngram_length + 1):
+            ngrams.append(extended_word[i:i + ngram_length])
+    return ngrams
+
+
+def get_ngrams():
 
 
 
@@ -127,7 +160,7 @@ class FastText(Word2Vec):
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
 
-            # TO-DO : do we need 
+            # TO-DO : do we need build vocab
 
             self.train()
 
@@ -145,7 +178,7 @@ class FastText(Word2Vec):
         # input_ = std::make_shared<Matrix>(dict_->nwords()+args_->bucket, args_->dim);
         # input_->uniform(1.0 / args_->dim);
 
-        # create a matrix for n-grams here
+        # create a matrix for n-grams here or in init ??????
 
         # output_ = std::make_shared<Matrix>(dict_->nwords(), args_->dim);
         # This is probably for generating .vec file

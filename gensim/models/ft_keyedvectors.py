@@ -4,6 +4,8 @@
 # Copyright (C) 2017 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+from gensim.models.word2vec import KeyedVectors
+
 import logging
 logger = logging.getLogger(__name__)
 
