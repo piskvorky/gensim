@@ -630,20 +630,12 @@ class TestText2BowTransformerWrapper(unittest.TestCase):
         self.model.fit(dict_texts)
 
     def testTransform(self):
-        # tranform multiple documents
-        docs = []
-        docs.append(dict_texts[0])
-        docs.append(dict_texts[1])
-        docs.append(dict_texts[2])
-        matrix = self.model.transform(docs)
-        expected_matrix = [[(0, 1), (1, 1), (2, 1)], [(1, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)], [(0, 1), (6, 1), (7, 1), (8, 1)]]
-        self.assertEqual(matrix, expected_matrix)
-
         # tranform one document
-        doc = dict_texts[0]
-        matrix = self.model.transform(doc)
-        expected_matrix = [[(0, 1), (1, 1), (2, 1)]]
-        self.assertEqual(matrix, expected_matrix)
+        doc = ['computer', 'system', 'interface', 'time', 'computer', 'system']
+        bow_vec = self.model.transform(doc)[0]
+        expected_values = [1, 1, 2, 2]  # comparing only the word-counts
+        values = list(map(lambda x: x[1], bow_vec))
+        self.assertEqual(sorted(expected_values), sorted(values))
 
     def testSetGetParams(self):
         # updating only one param
@@ -658,7 +650,8 @@ class TestText2BowTransformerWrapper(unittest.TestCase):
             cache = pickle.loads(uncompressed_content)
         data = cache
         input_data = [(i.split()) for i in data.data]
-        text2bow_model = Text2BowTransformer(map(lambda x: x.split(), data.data))
+        text2bow_model = Text2BowTransformer()
+        text2bow_model.fit(list(map(lambda x: x.split(), data.data)))
         lda_model = SklLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
