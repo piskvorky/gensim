@@ -184,7 +184,7 @@ class WikiSectionsCorpus(WikiCorpus):
                     else:
                         num_total_tokens += len(tokenize(section_content))
                 if num_total_tokens < ARTICLE_MIN_WORDS or any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
-                   continue
+                    continue
                 articles += 1
                 yield (article_title, sections)
         pool.terminate()
