@@ -39,7 +39,7 @@ import os
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
-from gensim.matutils import kullback_leibler, hellinger, jaccard_distance
+from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jenson_shannon
 
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
@@ -976,7 +976,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Calculate difference topic2topic between two Lda models
         `other` instances of `LdaMulticore` or `LdaModel`
         `distance` is function that will be applied to calculate difference between any topic pair.
-        Available values: `kullback_leibler`, `hellinger` and `jaccard`
+        Available values: `kullback_leibler`, `hellinger`, `jaccard` and `jenson_shannon`
         `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
         `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
         Returns a matrix Z with shape (m1.num_topics, m2.num_topics), where Z[i][j] - difference between topic_i and topic_j
@@ -1001,6 +1001,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             "kullback_leibler": kullback_leibler,
             "hellinger": hellinger,
             "jaccard": jaccard_distance,
+            "jenson_shannon": jenson_shannon
         }
 
         if distance not in distances:

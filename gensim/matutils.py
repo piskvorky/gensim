@@ -508,7 +508,37 @@ def kullback_leibler(vec1, vec2, num_features=None):
             vec1 = vec1[0]
         if len(vec2) == 1:
             vec2 = vec2[0]
-        return scipy.stats.entropy(vec1, vec2)
+        return entropy(vec1, vec2)
+
+
+def jenson_shannon(vec1, vec2, num_features=None):
+    """
+    A method of measuring the similarity between two probability distributions.
+    It is a symmetrized and finite version of the Kullback–Leibler divergence.
+    """
+    if scipy.sparse.issparse(vec1):
+        vec1 = vec1.toarray()
+    if scipy.sparse.issparse(vec2):
+        vec2 = vec2.toarray()
+    if isbow(vec1) and isbow(vec2):  # if they are in bag of words format we make it dense
+        if num_features is not None:  # if not None, make as large as the documents drawing from
+            dense1 = sparse2full(vec1, num_features)
+            dense2 = sparse2full(vec2, num_features)
+            avg_vec = 0.5 * (dense1 + dense2)
+            return 0.5 * (entropy(dense1, avg_vec) + entropy(dense2, avg_vec))
+        else:
+            max_len = max(len(vec1), len(vec2))
+            dense1 = sparse2full(vec1, max_len)
+            dense2 = sparse2full(vec2, max_len)
+            avg_vec = 0.5 * (dense1 + dense2)
+            return 0.5 * (entropy(dense1, avg_vec) + entropy(dense2, avg_vec))
+    else:
+        if len(vec1) == 1:
+            vec1 = vec1[0]
+        if len(vec2) == 1:
+            vec2 = vec2[0]
+        avg_vec = 0.5 * (vec1 + vec2)
+        return 0.5 * (entropy(vec1, avg_vec) + entropy(vec2, avg_vec))
 
 
 def hellinger(vec1, vec2):
