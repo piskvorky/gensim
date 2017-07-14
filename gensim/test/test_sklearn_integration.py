@@ -103,15 +103,15 @@ w2v_texts = [
 d2v_sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(w2v_texts)]
 
 dict_texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
+    'human interface computer',
+    'survey user computer system response time',
+    'eps user interface system',
+    'system human system eps',
+    'user response time',
+    'trees',
+    'graph trees',
+    'graph minors trees',
+    'graph minors survey'
 ]
 
 
@@ -631,7 +631,7 @@ class TestText2BowTransformerWrapper(unittest.TestCase):
 
     def testTransform(self):
         # tranform one document
-        doc = ['computer', 'system', 'interface', 'time', 'computer', 'system']
+        doc = ['computer system interface time computer system']
         bow_vec = self.model.transform(doc)[0]
         expected_values = [1, 1, 2, 2]  # comparing only the word-counts
         values = list(map(lambda x: x[1], bow_vec))
@@ -649,15 +649,14 @@ class TestText2BowTransformerWrapper(unittest.TestCase):
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
             cache = pickle.loads(uncompressed_content)
         data = cache
-        input_data = [(i.split()) for i in data.data]
         text2bow_model = Text2BowTransformer()
-        text2bow_model.fit(list(map(lambda x: x.split(), data.data)))
+        text2bow_model.fit(data.data)
         lda_model = SklLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         text_lda = Pipeline((('bow_model', text2bow_model), ('ldamodel', lda_model), ('classifier', clf)))
-        text_lda.fit(input_data, data.target)
-        score = text_lda.score(input_data, data.target)
+        text_lda.fit(data.data, data.target)
+        score = text_lda.score(data.data, data.target)
         self.assertGreater(score, 0.40)
 
     def testPersistence(self):
