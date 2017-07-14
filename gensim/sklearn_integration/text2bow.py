@@ -15,6 +15,7 @@ from sklearn.exceptions import NotFittedError
 
 from gensim.corpora import Dictionary
 from gensim.sklearn_integration import BaseSklearnWrapper
+from gensim.utils import tokenize
 
 
 class Text2BowTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
@@ -22,12 +23,13 @@ class Text2BowTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     Base Text2Bow module
     """
 
-    def __init__(self, prune_at=2000000):
+    def __init__(self, prune_at=2000000, tokenizer=tokenize):
         """
         Sklearn wrapper for Text2Bow model.
         """
         self.gensim_model = None
         self.prune_at = prune_at
+        self.tokenizer = tokenizer
 
     def get_params(self, deep=True):
         """
@@ -46,7 +48,8 @@ class Text2BowTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         """
         Fit the model according to the given training data.
         """
-        self.gensim_model = Dictionary(documents=X, prune_at=self.prune_at)
+        tokenized_docs = list(map(lambda x: list(self.tokenizer(x)), X))
+        self.gensim_model = Dictionary(documents=tokenized_docs, prune_at=self.prune_at)
         return self
 
     def transform(self, docs):
@@ -57,11 +60,12 @@ class Text2BowTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
             raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
 
         # input as python lists
-        check = lambda x: [x] if isinstance(x[0], string_types) else x
+        check = lambda x: [x] if isinstance(x, string_types) else x
         docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
+        tokenized_docs = list(map(lambda x: list(self.tokenizer(x)), docs))
+        X = [[] for _ in range(0, len(tokenized_docs))]
 
-        for k, v in enumerate(docs):
+        for k, v in enumerate(tokenized_docs):
             bow_val = self.gensim_model.doc2bow(v)
             X[k] = bow_val
 
@@ -71,5 +75,6 @@ class Text2BowTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         if self.gensim_model is None:
             self.gensim_model = Dictionary(prune_at=self.prune_at)
 
-        self.gensim_model.add_documents(X)
+        tokenized_docs = list(map(lambda x: list(self.tokenizer(x)), X))
+        self.gensim_model.add_documents(tokenized_docs)
         return self
