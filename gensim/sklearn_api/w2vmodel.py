@@ -51,17 +51,6 @@ class W2VTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
 
-    def get_params(self, deep=True):
-        """
-        Return all class attributes as dictionary.
-        """
-        return {"size": self.size, "alpha": self.alpha, "window": self.window, "min_count": self.min_count,
-        "max_vocab_size": self.max_vocab_size, "sample": self.sample, "seed": self.seed,
-        "workers": self.workers, "min_alpha": self.min_alpha, "sg": self.sg, "hs": self.hs,
-        "negative": self.negative, "cbow_mean": self.cbow_mean, "hashfxn": self.hashfxn,
-        "iter": self.iter, "null_word": self.null_word, "trim_rule": self.trim_rule,
-        "sorted_vocab": self.sorted_vocab, "batch_words": self.batch_words}
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.

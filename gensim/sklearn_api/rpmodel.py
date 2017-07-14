@@ -30,12 +30,6 @@ class RpTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
         self.id2word = id2word
         self.num_topics = num_topics
 
-    def get_params(self, deep=True):
-        """
-        Return all class attributes as dictionary.
-        """
-        return {"id2word": self.id2word, "num_topics": self.num_topics}
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.

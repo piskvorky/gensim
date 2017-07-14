@@ -38,14 +38,6 @@ class LsiTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
         self.extra_samples = extra_samples
         self.power_iters = power_iters
 
-    def get_params(self, deep=True):
-        """
-        Return all class attributes as dictionary.
-        """
-        return {"num_topics": self.num_topics, "id2word": self.id2word,
-                "chunksize": self.chunksize, "decay": self.decay, "onepass": self.onepass,
-                "extra_samples": self.extra_samples, "power_iters": self.power_iters}
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.

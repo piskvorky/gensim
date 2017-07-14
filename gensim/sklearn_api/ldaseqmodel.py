@@ -45,17 +45,6 @@ class LdaSeqTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
         self.em_max_iter = em_max_iter
         self.chunksize = chunksize
 
-    def get_params(self, deep=True):
-        """
-        Return all class attributes as dictionary.
-        """
-        return {"time_slice": self.time_slice, "id2word": self.id2word,
-                "alphas": self.alphas, "num_topics": self.num_topics, "initialize": self.initialize,
-                "sstats": self.sstats, "lda_model": self.lda_model, "obs_variance": self.obs_variance,
-                "chain_variance": self.chain_variance, "passes": self.passes, "random_state": self.random_state,
-                "lda_inference_max_iter": self.lda_inference_max_iter, "em_min_iter": self.em_min_iter,
-                "em_max_iter": self.em_max_iter, "chunksize": self.chunksize}
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.

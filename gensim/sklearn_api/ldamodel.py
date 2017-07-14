@@ -49,16 +49,6 @@ class LdaTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
         self.minimum_probability = minimum_probability
         self.random_state = random_state
 
-    def get_params(self, deep=True):
-        """
-        Return all class attributes as dictionary.
-        """
-        return {"num_topics": self.num_topics, "id2word": self.id2word, "chunksize": self.chunksize,
-                "passes": self.passes, "update_every": self.update_every, "alpha": self.alpha, "eta": self.eta,
-                "decay": self.decay, "offset": self.offset, "eval_every": self.eval_every, "iterations": self.iterations,
-                "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
-                "random_state": self.random_state}
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
