@@ -18,10 +18,6 @@ class BaseTransformer(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_params(self, deep=True):
-        pass
-
-    @abstractmethod
     def fit(self, X, y=None):
         pass
 
