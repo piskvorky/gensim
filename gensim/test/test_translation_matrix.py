@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 import os
-import time
-import pickle
 import unittest
 import numpy as np
-import matplotlib.pyplot as plt
 
 from gensim import utils
 from gensim.models import translation_matrix
@@ -65,3 +62,38 @@ class TestTranslationMatrix(unittest.TestCase):
 
         self.assertTrue(np.allclose(transmat.translation_matrix, loaded_transmat.translation_matrix))
 
+    def test_translate_NN(self):
+        train_file = datapath("OPUS_en_it_europarl_train_5K.txt")
+        with utils.smart_open(train_file, "r") as f:
+            word_pair = [tuple(utils.to_unicode(line).strip().split()) for line in f]
+
+        source_word_vec_file = datapath("EN.200K.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
+        source_word_vec = KeyedVectors.load_word2vec_format(source_word_vec_file, binary=False)
+
+        target_word_vec_file = datapath("IT.200K.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
+        target_word_vec = KeyedVectors.load_word2vec_format(target_word_vec_file, binary=False)
+
+        transmat = translation_matrix.TranslationMatrix(word_pair, source_word_vec, target_word_vec)
+
+        test_word_pair = [("one", "uno"), ("two", "due"), ("three", "tre"), ("four", "quattro"),
+                          ("for", "per"), ("that", "che"), ("with", "con")]
+        test_source_word, test_target_word = zip(*test_word_pair)
+        translated_word = transmat.translate(test_source_word, 3)
+
+    def test_translate_GC(self):
+        train_file = datapath("OPUS_en_it_europarl_train_5K.txt")
+        with utils.smart_open(train_file, "r") as f:
+            word_pair = [tuple(utils.to_unicode(line).strip().split()) for line in f]
+
+        source_word_vec_file = datapath("EN.200K.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
+        source_word_vec = KeyedVectors.load_word2vec_format(source_word_vec_file, binary=False)
+
+        target_word_vec_file = datapath("IT.200K.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
+        target_word_vec = KeyedVectors.load_word2vec_format(target_word_vec_file, binary=False)
+
+        transmat = translation_matrix.TranslationMatrix(word_pair, source_word_vec, target_word_vec)
+
+        test_word_pair = [("one", "uno"), ("two", "due"), ("three", "tre"), ("four", "quattro"),
+                          ("for", "per"), ("that", "che"), ("with", "con")]
+        test_source_word, test_target_word = zip(*test_word_pair)
+        translated_word = transmat.translate(test_source_word, 3, additional=10)

@@ -1,32 +1,39 @@
 #!/usr/bin/env python
 # encoding: utf-8
+import warnings
 import numpy as np
+import random
 
+from collections import OrderedDict
 from gensim import utils
+from gensim.models import KeyedVectors
+from types import StringType
+
+random.seed(2333)
 
 
 class Space(object):
     """
     An auxiliary class for store the the words space
     """
-    def __init__(self, matrix, id2row):
+    def __init__(self, matrix, index2word):
         """
         matrix: N * length_of_word_vec, which store the word's word vector
-        id2row: a list of words
+        index2word: a list of words int the Space
         """
         self.mat = matrix
-        self.id2row = id2row
-        self.build_row2id()
+        self.index2word = index2word
+        self.build_word2index()
 
-    def build_row2id(self):
+    def build_word2index(self):
         """
         build a dict to map word to index
         """
-        self.row2id = {}
-        for idx, word in enumerate(self.id2row):
-            if word in self.row2id:
+        self.word2index = {}
+        for idx, word in enumerate(self.index2word):
+            if word in self.word2index:
                 raise ValueError("duplicate word: %s" % word)
-            self.row2id[word] = idx
+            self.word2index[word] = idx
 
     @classmethod
     def build(cls, lang_vec, lexicon=None):
@@ -77,19 +84,23 @@ class TranslationMatrix(utils.SaveLoad):
     >>> translated_word = transmat.translate(words, topn=3)
 
     """
-    def __init__(self, word_pair, source_lang_vec, target_lang_vec):
+    def __init__(self, word_pair, source_lang_vec=None, target_lang_vec=None):
         self.source_word, self.target_word = zip(*word_pair)
-        self.source_space_vec = source_lang_vec
-        self.target_space_vec = target_lang_vec
+        if source_lang_vec is None or target_lang_vec is None:
+            raise RuntimeError("you must provide the source language vectors and target language vectors")
+        if not (isinstance(source_lang_vec, KeyedVectors) or isinstance(target_lang_vec, KeyedVectors)):
+            raise TypeError("the source_lang_vec and target_lang_vec must be KeyedVectors instance")
+        self.source_lang_vec = source_lang_vec
+        self.target_lang_vec = target_lang_vec
 
         self.translation_matrix = None
 
-        self.source_space = self.build_space(source_lang_vec, set(self.source_word))
-        self.target_space = self.build_space(target_lang_vec, set(self.target_word))
+        self.source_space = self.build_space(self.source_lang_vec, set(self.source_word))
+        self.target_space = self.build_space(self.target_lang_vec, set(self.target_word))
 
         self.translation_matrix = self.train(self.source_space, self.target_space)
 
-    def build_space(self, lang_vec, words):
+    def build_space(self, lang_vec, words=None):
         return Space.build(lang_vec, words)
 
     def train(self, source_space, target_space):
@@ -99,13 +110,13 @@ class TranslationMatrix(utils.SaveLoad):
         source_space.normalize()
         target_space.normalize()
 
-        m1 = source_space.mat[[source_space.row2id[item] for item in self.source_word], :]
-        m2 = target_space.mat[[target_space.row2id[item] for item in self.target_word], :]
+        m1 = source_space.mat[[source_space.word2index[item] for item in self.source_word], :]
+        m2 = target_space.mat[[target_space.word2index[item] for item in self.target_word], :]
 
         return np.linalg.lstsq(m1, m2, -1)[0]
 
     def save(self, *args, **kwargs):
-        kwargs['ignore'] = kwargs.get('ignore', ['source_space_vec', 'source_space_vec'])
+        kwargs['ignore'] = kwargs.get('ignore', ['source_space', 'target_space'])
 
         super(TranslationMatrix, self).save(*args, **kwargs)
 
@@ -114,18 +125,66 @@ class TranslationMatrix(utils.SaveLoad):
         model = super(TranslationMatrix, cls).load(*args, **kwargs)
         return model
 
+    def apply_transmat(self, words_space):
+        return Space(np.dot(words_space.mat, self.translation_matrix), words_space.index2word)
+
     def translate(self, source_words=None, topn=5, additional=None, source_lang_vec=None, target_lang_vec=None):
         """
         translate the word from the source language to the target language, and return the topn
         most similar words.
+
+        `topn` return the top N similar words. By default (`topn=5`).
+
+        `additional` defines the training algorithm. By default (`additional=None`), use standard NN retrieval.
+        Otherwise use corrected retrieval(as described in[1]), additional is an int that specify the number of
+        word to sample from the source lexicon.
+
+        [1] Dinu, Georgiana, Angeliki Lazaridou, and Marco Baroni. "Improving zero-shot learning by mitigating the
+        hubness problem." arXiv preprint arXiv:1412.6568 (2014).
         """
-        translated_word = {}
+
+        if isinstance(source_words, StringType):
+            # pass only one word to translate
+            source_words = [source_words]
+
+        # if the language word vector not provided by user, use the model's
+        # language word vector as default
+        if source_lang_vec is None:
+            warnings.warn("the parameter source_lang_vec didn't be specified,"
+                          " use the model's source language word vector as default")
+            source_lang_vec = self.source_lang_vec
+        if target_lang_vec is None:
+            warnings.warn("the parameter target_lang_vec didn't be specified,"
+                          " use the model's target language word vector as default")
+            target_lang_vec = self.target_lang_vec
+
+        if additional is not None:
+            lexicon = set(source_lang_vec.index2word)
+            addition = min(additional, len(lexicon) - len(source_words))
+            lexicon = random.sample(list(lexicon.difference(source_words)), addition)
+            source_space = Space.build(source_lang_vec, set(source_words).union(set(lexicon)))
+        else:
+            source_space = self.build_space(source_lang_vec, source_words)
+        target_space = self.build_space(target_lang_vec, )
+
+        source_space.normalize()
+        target_space.normalize()
+
+        mapped_source_space = self.apply_transmat(source_space)
+
+        sim_matrix = -np.dot(target_space.mat, mapped_source_space.mat.T)
+
+        if additional is not None:
+            srtd_idx = np.argsort(np.argsort(sim_matrix, axis=1), axis=1)
+            sim_matrix_idx = np.argsort(srtd_idx + sim_matrix, axis=0)
+        else:
+            sim_matrix_idx = np.argsort(sim_matrix, axis=0)
+
+        translated_word = OrderedDict()
         for idx, word in enumerate(source_words):
-            if word in self.source_space.row2id:
-                source_word_vec = self.source_space.mat[self.source_space.row2id[word], :]
-                predicted_word_vec = np.dot(source_word_vec, self.translation_matrix)
-                candidates = [i[0] for i in self.target_space_vec.most_similar(positive=[predicted_word_vec], topn=topn)]
-            else:
-                candidates = []
-            translated_word[word] = candidates
+            translated_target_word = []
+            for j in range(topn):
+                map_space_id = sim_matrix_idx[j, source_space.word2index[word]]
+                translated_target_word.append(target_space.index2word[map_space_id])
+            translated_word[word] = translated_target_word
         return translated_word
