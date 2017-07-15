@@ -19,7 +19,6 @@ import unittest
 from gensim import utils
 from gensim.corpora import textcorpus
 from gensim.test.test_corpora import CorpusTestCase, datapath
-from gensim.test.test_word2vec import datapath
 
 
 def split_tokenize(text):

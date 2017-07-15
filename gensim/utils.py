@@ -893,18 +893,24 @@ else:
         assert chunksize > 0
 
         if maxsize > 0:
-            q = multiprocessing.Queue(maxsize=maxsize)
-            worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
-            worker.daemon = True
-            worker.start()
+            return _buffer_and_yield(corpus, chunksize, maxsize, as_numpy)
+        else:
+            return chunkize_serial(corpus, chunksize, as_numpy=as_numpy)
+
+    def _buffer_and_yield(corpus, chunksize, maxsize, as_numpy):
+        q = multiprocessing.Queue(maxsize=maxsize)
+        worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
+        worker.daemon = True
+        worker.start()
+        try:
             while True:
                 chunk = [q.get(block=True)]
                 if chunk[0] is None:
                     break
                 yield chunk.pop()
-        else:
-            for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
-                yield chunk
+        finally:
+            q.close()
+            worker.terminate()
 
 
 def smart_extension(fname, ext):
@@ -1269,7 +1275,7 @@ def walk_with_depth(top, topdown=True, onerror=None, followlinks=False, depth=0)
     """This is a mostly copied version of `os.walk` from the Python 2 source code.
     The only difference is that it returns the depth in the directory tree structure
     at which each yield is taking place.
-    
+
     Returns:
         generator of tuples of (depth, dirpath, dirnames, filenames).
     """

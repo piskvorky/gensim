@@ -28,8 +28,12 @@ try:
 except ImportError:
     PYEMD_EXT = False
 
-MODULE_PATH = os.path.dirname(__file__) # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(MODULE_PATH, 'test_data', fname)
+MODULE_PATH = os.path.dirname(__file__)
+"""needed because sample data files are located in the same folder"""
+
+
+def datapath(fname):
+    return os.path.join(MODULE_PATH, 'test_data', fname)
 
 
 class LeeCorpus(object):
@@ -37,6 +41,7 @@ class LeeCorpus(object):
         with open(datapath('lee_background.cor')) as f:
             for line in f:
                 yield utils.simple_preprocess(line)
+
 
 LIST_CORPUS = list(LeeCorpus())
 
