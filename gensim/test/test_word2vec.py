@@ -29,7 +29,7 @@ except ImportError:
     PYEMD_EXT = False
 
 MODULE_PATH = os.path.dirname(__file__)
-"""needed because sample data files are located in the same folder"""
+"""Needed because sample data files are located in the same folder."""
 
 
 def datapath(fname):

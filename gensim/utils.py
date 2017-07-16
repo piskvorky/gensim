@@ -909,8 +909,8 @@ else:
                     break
                 yield chunk.pop()
         finally:
-            q.close()
             worker.terminate()
+            q.close()
 
 
 def smart_extension(fname, ext):
