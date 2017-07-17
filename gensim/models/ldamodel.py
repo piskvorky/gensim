@@ -240,6 +240,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         `random_state` can be a np.random.RandomState object or the seed for one
 
+        `callbacks` a list of metric callbacks to log/visualize evaluation metrics of topic model during training
+
         Example:
 
         >>> lda = LdaModel(corpus, num_topics=100)  # train model
