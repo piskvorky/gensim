@@ -18,17 +18,18 @@ import unittest
 
 import numpy as np
 
-from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
-                            ucicorpus, malletcorpus, indexedcorpus)
+from gensim.corpora import (
+    bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
+    ucicorpus, malletcorpus, indexedcorpus)
 from gensim.interfaces import TransformedCorpus
 from gensim.utils import to_unicode
 
-# needed because sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
+MODULE_PATH = os.path.dirname(__file__)
+"""Needed because sample data files are located in the same folder."""
 
 
 def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
+    return os.path.join(MODULE_PATH, 'test_data', fname)
 
 
 def testfile():

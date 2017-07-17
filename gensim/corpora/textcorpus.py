@@ -48,7 +48,7 @@ except ImportError:  # Python 3...
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
-from gensim.corpora.text_processing_pool import TextProcessingPool, TextProcessor
+from gensim.corpora.stateful_pool import StatefulProcessingPool, StatefulProcessor
 from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
 from gensim.utils import deaccent, simple_tokenize, walk_with_depth
 
@@ -127,7 +127,7 @@ class TextPreprocessor(object):
             yield (token_filter, tokens)
 
 
-class _TextPreprocessorMP(TextProcessor, TextPreprocessor):
+class _TextPreprocessorMP(StatefulProcessor, TextPreprocessor):
     """TextPreprocessor that can be used for multiprocessing."""
     pass
 
@@ -287,7 +287,7 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
             func = func.__func__
         _TextPreprocessor.process = func
 
-        return TextProcessingPool(
+        return StatefulProcessingPool(
             self.processes, init_to_ignore_interrupt,
             processor_class=_TextPreprocessor, state_kwargs=state_kwargs)
 
@@ -650,7 +650,7 @@ class Text8Corpus(TextTokensIterator, TextCorpus):
         # So just split the token sequence arbitrarily into sentences of length
         # `max_sentence_length`.
         sentence, rest = [], b''
-        with utils.smart_open(self.source) as fin:
+        with utils.smart_open(self.source, 'rb') as fin:
             while True:
                 text = rest + fin.read(self.chunksize)  # avoid loading the entire file (=1 line) into RAM
                 if text == rest:  # EOF
@@ -660,9 +660,15 @@ class Text8Corpus(TextTokensIterator, TextCorpus):
                         yield sentence
                     break
 
-                last_token = text.rfind(b' ')  # last token may have been split in two... keep for next iteration
-                words, rest = (text[:last_token].split(),
-                               text[last_token:].strip()) if last_token >= 0 else ([], text)
+                # last token may have been split in two... keep for next iteration
+                last_token = text.rfind(b' ')
+                if last_token >= 0:
+                    words = text[:last_token].split()
+                    rest = text[last_token:].strip()
+                else:
+                    words = []
+                    rest = text
+
                 sentence.extend(words)
                 while len(sentence) >= self.max_sentence_length:
                     yield sentence[:self.max_sentence_length]

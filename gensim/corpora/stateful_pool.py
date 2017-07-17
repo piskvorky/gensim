@@ -1,20 +1,32 @@
+"""
+Python's builtin `multiprocessing.Pool` is designed to use stateless processes
+for applying a function defined at the module scope. This means that `Process`
+subclasses with run methods that differ from the default cannot be used with
+the `Pool`. So when such a `Processes` subclass would be useful (often the
+case for complicated run logic), a custom Pool implementation must be used.
+
+This module provides a `StatefulProcessingPool` with an accompanying
+`StatefulProcessor` class that can be overridden to provide stateful `run`
+implementations.
+"""
 import multiprocessing as mp
-from multiprocessing import util
 from multiprocessing.pool import MaybeEncodingError, mapstar
 
 
-class TextProcessor(mp.Process):
-    """Generic process whose target function processes batches of texts."""
+class StatefulProcessor(mp.Process):
+    """Process designed for use in `StatefulProcessingPool`.
+
+    The `target` function is ignored in favor of a `run` method that reads
+    from an input queue and writes to an output queue. The actual processing
+    of the input is delegated to the `process` method, which should be overridden
+    by subclasses.
+    """
 
     def __init__(self, group=None, target=None, name=None, args=(), kwargs={},
                  state_kwargs=None):
-        super(TextProcessor, self).__init__(group, target, name, args, kwargs)
+        super(StatefulProcessor, self).__init__(group, target, name, args, kwargs)
         state_kwargs = {} if state_kwargs is None else dict(state_kwargs)
-        self.init_state(state_kwargs)
-
-    def init_state(self, state_kwargs):
-        for name, value in state_kwargs.items():
-            setattr(self, name, value)
+        self.__dict__.update(state_kwargs)
 
     def process(self, text):
         """Process a document text; subclasses should override."""
@@ -38,11 +50,11 @@ class TextProcessor(mp.Process):
             try:
                 task = get()
             except (EOFError, OSError):
-                util.debug('worker got EOFError or OSError -- exiting')
+                mp.util.debug('worker got EOFError or OSError -- exiting')
                 break
 
             if task is None:
-                util.debug('worker got sentinel -- exiting')
+                mp.util.debug('worker got sentinel -- exiting')
                 break
 
             job, i, func, args, kwds = task
@@ -54,55 +66,75 @@ class TextProcessor(mp.Process):
                 result = (True, func(*args, **kwds))
             except Exception as e:
                 result = (False, e)
+
             try:
                 put((job, i, result))
             except Exception as e:
                 wrapped = MaybeEncodingError(e, result[1])
-                util.debug("Possible encoding error while sending result: %s" % (
+                mp.util.debug("Possible encoding error while sending result: %s" % (
                     wrapped))
                 put((job, i, (False, wrapped)))
 
             task = job = result = func = args = kwds = None
             completed += 1
-        util.debug('worker exiting after %d tasks' % completed)
+        mp.util.debug('worker exiting after %d tasks' % completed)
 
 
 class _PatchedPool(mp.pool.Pool):
+    """Patch the builtin `Pool` to take a `processor_class` and `state_kwargs`;
+
+    This allows users to use custom subclasses of `StatefulProcessor` to implement
+    custom stateful `run` logic. Instances of `processor_class` are used to populate
+    the worker pool; each is initialized using the standard `Process` init procedure,
+    followed by setting custom attributes from `state_kwargs`.
+    """
 
     def Process(self, *args, **kwds):
         kwds['state_kwargs'] = self._state_kwargs
         return self._processor_class(*args, **kwds)
 
     def __init__(self, processes=None, initializer=None, initargs=(), maxtasksperchild=None,
-                 state_kwargs=None, processor_class=TextProcessor):
+                 state_kwargs=None, processor_class=StatefulProcessor):
         self._state_kwargs = state_kwargs
         self._processor_class = processor_class
         super(_PatchedPool, self).__init__(processes, initializer, initargs, maxtasksperchild)
 
     def _repopulate_pool(self):
         """Bring the number of pool processes up to the specified number,
-        for use after reaping workers which have exited.
+        for use after reaping workers which have exited. This is also used
+        to initially populate the pool on init.
         """
         for i in range(self._processes - len(self._pool)):
-            w = self.Process(args=(self._inqueue, self._outqueue,
-                                   self._initializer,
-                                   self._initargs, self._maxtasksperchild))
+            w = self.Process(args=(
+                self._inqueue, self._outqueue,
+                self._initializer, self._initargs, self._maxtasksperchild))
+
             self._pool.append(w)
             w.name = w.name.replace('Process', 'PoolWorker')
             w.daemon = True
             w.start()
-            util.debug('added worker')
+            mp.util.debug('added worker')
 
 
-class TextProcessingPool(object):
-    """Pool for processing batches of texts using TextProcessor workers."""
+class StatefulProcessingPool(object):
+    """Pool that uses stateful worker processes; designed to worked with subclasses of
+    `StatefulProcessor`. Implements the same interface as `multiprocessing.Pool`.
+    """
 
     def __init__(self, processes=None, initializer=None, initargs=(),
-                 maxtasksperchild=None, state_kwargs=None, processor_class=TextProcessor):
+                 maxtasksperchild=None, state_kwargs=None, processor_class=StatefulProcessor):
+        """
+        See `multiprocessing.Pool` for arguments not discussed here.
+
+        Args:
+            state_kwargs (dict): dictionary of attributes to initialize worker processes
+                with. These will be set as attributes of the process object.
+            processor_class (class): subclass of `StatefulProcessor` to use for worker
+                processes.
+        """
         self._pool = _PatchedPool(
             processes, initializer, initargs, maxtasksperchild, state_kwargs,
-            processor_class
-        )
+            processor_class)
 
     def apply(self, args=(), kwds={}):
         """Apply TextProcessor.process(*args, **kwds)."""
@@ -146,14 +178,12 @@ class TextProcessingPool(object):
         self._pool.terminate()
 
 
-class TextTokenizer(TextProcessor):
-
-    def process(self, text):
-        return text.split()
-
-
 if __name__ == "__main__":
-    pool = TextProcessingPool(4, processor_class=TextTokenizer)
+    class _TextTokenizer(StatefulProcessor):
+        def process(self, text):
+            return text.split()
+
+    pool = StatefulProcessingPool(4, processor_class=_TextTokenizer)
     texts = ['this is some test text for multiprocessing'] * 10
 
     results = pool.imap(texts)

@@ -38,13 +38,6 @@ TEXTS = [
 ]
 
 
-def test_texts_file():
-    fpath = os.path.join(tempfile.gettempdir(), 'gensim_corpus.tst')
-    with open(fpath, 'w') as f:
-        f.write('\n'.join([' '.join(tokens) for tokens in TEXTS]))
-    return fpath
-
-
 class TestTextCorpus(CorpusTestCase):
 
     def setUp(self):
@@ -82,7 +75,8 @@ class TestTextCorpus(CorpusTestCase):
 
     def corpus_from_lines(self, lines):
         fpath = tempfile.mktemp()
-        with codecs.open(fpath, 'w', encoding='utf8') as f:
+        # Use codecs for non-ascii character encodings across Py2 and Py3
+        with codecs.open(fpath, 'wb', encoding='utf8') as f:
             f.write('\n'.join(lines))
 
         return self.corpus_class(fpath)
@@ -258,7 +252,7 @@ class TestTextDirectoryCorpus(unittest.TestCase):
             'b_folder/3.txt',
             'b_folder/c_folder/4.txt'
         ]
-        expected = [os.path.normpath(path) for path in expected]
+        expected = [os.path.normpath(path) for path in expected]  # Windows compatibility
         self.assertEqual(expected, base_names)
 
         corpus.max_depth = 1

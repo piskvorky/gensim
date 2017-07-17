@@ -262,8 +262,10 @@ class WikiCorpus(textcorpus.TextCorpus):
         if character_filters is None:
             # no need to lowercase and unicode, because the tokenizer already does that.
             character_filters = [textcorpus.deaccent, textcorpus.strip_multiple_whitespaces]
-        super(WikiCorpus, self).__init__(source, dictionary, metadata, character_filters, tokenizer,
-                                         token_filters, processes)
+
+        super(WikiCorpus, self).__init__(
+            source, dictionary, metadata, character_filters, tokenizer,
+            token_filters, processes)
 
     def getstream(self):
         """Yield documents from the underlying plain text collection (of one or more files).

@@ -1271,43 +1271,16 @@ def _iter_windows(document, window_size, copy=False, ignore_below_size=True):
             yield doc_window.copy() if copy else doc_window
 
 
-def walk_with_depth(top, topdown=True, onerror=None, followlinks=False, depth=0):
-    """This is a mostly copied version of `os.walk` from the Python 2 source code.
-    The only difference is that it returns the depth in the directory tree structure
-    at which each yield is taking place.
+def walk_with_depth(top, topdown=True, onerror=None, followlinks=False):
+    """Wrap `os.walk` in code that analyzes the directory path of each yield to
+    determine the depth relative to `top`. Yields in the `top` directory are at
+    depth 0.
 
     Returns:
         generator of tuples of (depth, dirpath, dirnames, filenames).
     """
-    islink, join, isdir = os.path.islink, os.path.join, os.path.isdir
-
-    try:
-        # Should be O(1) since it's probably just reading your filesystem journal
-        names = os.listdir(top)
-    except OSError as err:
-        if onerror is not None:
-            onerror(err)
-        return
-
-    dirs, nondirs = [], []
-
-    # O(n) where n = number of files in the directory
-    for name in names:
-        if isdir(join(top, name)):
-            dirs.append(name)
-        else:
-            nondirs.append(name)
-
-    if topdown:
-        yield depth, top, dirs, nondirs
-
-    # Again O(n), where n = number of directories in the directory
-    for name in dirs:
-        new_path = join(top, name)
-        if followlinks or not islink(new_path):
-
-            # Generator so besides the recursive `walk()` call, no additional cost here.
-            for x in walk_with_depth(new_path, topdown, onerror, followlinks, depth + 1):
-                yield x
-    if not topdown:
-        yield depth, top, dirs, nondirs
+    path = os.path.abspath(top)
+    for dirpath, dirnames, filenames in os.walk(path, topdown, onerror, followlinks):
+        sub_path = dirpath.replace(path, '')
+        depth = sub_path.count(os.sep)
+        yield depth, dirpath, dirnames, filenames
