@@ -105,9 +105,9 @@ RUN apt-get install -y mpich
 # Install wordrank
 RUN cd /gensim/gensim_dependencies \
     && git clone https://bitbucket.org/shihaoji/wordrank \
-    && cp /gensim/docker/wordrank_install.sh /gensim/gensim_dependencies/wordrank/install.sh \
     && cd /gensim/gensim_dependencies/wordrank \
     && git checkout $WORDRANK_VERSION \
+    && sed -i -e 's/#export CC=gcc CXX=g++/export CC=gcc CXX=g++/g' install.sh \
     && sh ./install.sh
 
 # Install fastText
