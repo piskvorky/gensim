@@ -23,6 +23,7 @@ from gensim.sklearn_integration.sklearn_wrapper_gensim_w2vmodel import SklW2VMod
 from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklATModel
 from gensim.sklearn_integration.d2vmodel import D2VTransformer
 from gensim.sklearn_integration.text2bow import Text2BowTransformer
+from gensim.sklearn_integration.tfidf import TfIdfTransformer
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import doc2vec
 from gensim import matutils
@@ -674,6 +675,67 @@ class TestText2BowTransformerWrapper(unittest.TestCase):
         text2bow_wrapper = Text2BowTransformer()
         self.assertRaises(NotFittedError, text2bow_wrapper.transform, dict_texts[0])
 
+
+class TestTfIdfTransformer(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = TfIdfTransformer(normalize=True)
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.model.fit(self.corpus)
+
+    def testTransform(self):
+        # tranform one document
+        doc = corpus[0]
+        transformed_doc = self.model.transform(doc)
+        expected_doc = [[(0, 0.5773502691896257), (1, 0.5773502691896257), (2, 0.5773502691896257)]]
+        self.assertTrue(numpy.allclose(transformed_doc, expected_doc))
+
+        # tranform multiple documents
+        docs = [corpus[0], corpus[1]]
+        transformed_docs = self.model.transform(docs)
+        expected_docs = [[(0, 0.5773502691896257), (1, 0.5773502691896257), (2, 0.5773502691896257)], 
+            [(3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.3244870206138555), (6, 0.44424552527467476), (7, 0.3244870206138555), (8, 0.44424552527467476)]]
+        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(normalize=False)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["normalize"], False)
+
+    def testPipeline(self):
+        with open(datapath('mini_newsgroup'), 'rb') as f:
+            compressed_content = f.read()
+            uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
+            cache = pickle.loads(uncompressed_content)
+        data = cache
+        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        corpus = [id2word.doc2bow(i.split()) for i in data.data]
+        tfidf_model = TfIdfTransformer()
+        tfidf_model.fit(corpus)
+        lda_model = SklLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
+        numpy.random.mtrand.RandomState(1)  # set seed for getting same result
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        text_tfidf = Pipeline((('tfidf_model', tfidf_model), ('ldamodel', lda_model), ('classifier', clf)))
+        text_tfidf.fit(corpus, data.target)
+        score = text_tfidf.score(corpus, data.target)
+        self.assertGreater(score, 0.40)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = corpus[0]
+        loaded_transformed_doc = model_load.transform(doc)
+
+        # comparing the original and loaded models
+        original_transformed_doc = self.model.transform(doc)
+        self.assertEqual(original_transformed_doc, loaded_transformed_doc)
+
+    def testModelNotFitted(self):
+        tfidf_wrapper = TfIdfTransformer()
+        self.assertRaises(NotFittedError, tfidf_wrapper.transform, corpus[0])
 
 if __name__ == '__main__':
     unittest.main()
