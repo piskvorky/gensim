@@ -31,19 +31,6 @@ class Text2BowTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         self.prune_at = prune_at
         self.tokenizer = tokenizer
 
-    def get_params(self, deep=True):
-        """
-        Returns all parameters as dictionary.
-        """
-        return {"prune_at": self.prune_at}
-
-    def set_params(self, **parameters):
-        """
-        Set all parameters.
-        """
-        super(Text2BowTransformer, self).set_params(**parameters)
-        return self
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.

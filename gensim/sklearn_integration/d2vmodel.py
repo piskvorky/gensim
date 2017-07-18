@@ -62,26 +62,6 @@ class D2VTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
 
-    def get_params(self, deep=True):
-        """
-        Return all parameters as dictionary.
-        """
-        return {"dm_mean": self.dm_mean, "dm": self.dm, "dbow_words": self.dbow_words,
-        "dm_concat": self.dm_concat, "dm_tag_count": self.dm_tag_count, "docvecs": self.docvecs,
-        "docvecs_mapfile": self.docvecs_mapfile, "comment": self.comment, "trim_rule": self.trim_rule,
-        "size": self.size, "alpha": self.alpha, "window": self.window, "min_count": self.min_count,
-        "max_vocab_size": self.max_vocab_size, "sample": self.sample, "seed": self.seed,
-        "workers": self.workers, "min_alpha": self.min_alpha, "hs": self.hs,
-        "negative": self.negative, "cbow_mean": self.cbow_mean, "hashfxn": self.hashfxn,
-        "iter": self.iter, "sorted_vocab": self.sorted_vocab, "batch_words": self.batch_words}
-
-    def set_params(self, **parameters):
-        """
-        Set parameters
-        """
-        super(D2VTransformer, self).set_params(**parameters)
-        return self
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.

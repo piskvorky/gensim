@@ -18,19 +18,6 @@ class BaseSklearnWrapper(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_params(self, deep=True):
-        pass
-
-    @abstractmethod
-    def set_params(self, **parameters):
-        """
-        Set all parameters.
-        """
-        for parameter, value in parameters.items():
-            setattr(self, parameter, value)
-        return self
-
-    @abstractmethod
     def fit(self, X, y=None):
         pass
 
