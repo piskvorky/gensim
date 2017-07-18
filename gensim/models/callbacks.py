@@ -283,5 +283,5 @@ class Callback(object):
                         self.viz.updateTrace(Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, win=self.windows[i])
 
             if metric.logger == "shell":
-                statement = " ".join(("Epoch:", str(epoch), metric_label, "estimate:", str(value)))
+                statement = "".join(("Epoch ", str(epoch), ": ", metric_label, " estimate: ", str(value)))
                 self.log_type.info(statement)
