@@ -7,7 +7,7 @@ import random
 from collections import OrderedDict
 from gensim import utils
 from gensim.models import KeyedVectors
-from types import StringType
+from six import string_types
 
 random.seed(2333)
 
@@ -143,7 +143,7 @@ class TranslationMatrix(utils.SaveLoad):
         hubness problem." arXiv preprint arXiv:1412.6568 (2014).
         """
 
-        if isinstance(source_words, StringType):
+        if isinstance(source_words, string_types):
             # pass only one word to translate
             source_words = [source_words]
 
