@@ -19,3 +19,4 @@ from .sklearn_wrapper_gensim_w2vmodel import SklW2VModel  # noqa: F401
 from .d2vmodel import D2VTransformer  # noqa: F401
 from .sklearn_wrapper_gensim_atmodel import SklATModel  # noqa: F401
 from .text2bow import Text2BowTransformer  # noqa: F401
+from .tfidf import TfIdfTransformer  # noqa: F401
