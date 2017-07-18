@@ -13,6 +13,8 @@ Example:
 
 .. [1] https://bitbucket.org/shihaoji/wordrank/
 .. [2] https://arxiv.org/pdf/1506.02761v3.pdf
+
+Note that the wrapper might not work in a docker container for large datasets due to memory limits (caused by MPI).
 """
 
 from __future__ import division
@@ -53,7 +55,7 @@ class Wordrank(KeyedVectors):
         which is created inside wordrank directory. The vocab and cooccurence files are generated using glove code
         available inside the wordrank directory. These files are used by the wordrank binary for training.
 
-        `wr_path` is the path to the Wordrank directory.
+        `wr_path` is the absolute path to the Wordrank directory.
         `corpus_file` is the filename of the text file to be used for training the Wordrank model.
         Expects file to contain space-separated tokens in a single line
         `out_name` is name of the directory which will be created (in wordrank folder) to save embeddings and training data.
