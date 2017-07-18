@@ -693,7 +693,7 @@ class TestTfIdfTransformer(unittest.TestCase):
         # tranform multiple documents
         docs = [corpus[0], corpus[1]]
         transformed_docs = self.model.transform(docs)
-        expected_docs = [[(0, 0.5773502691896257), (1, 0.5773502691896257), (2, 0.5773502691896257)], 
+        expected_docs = [[(0, 0.5773502691896257), (1, 0.5773502691896257), (2, 0.5773502691896257)],
             [(3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.3244870206138555), (6, 0.44424552527467476), (7, 0.3244870206138555), (8, 0.44424552527467476)]]
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))

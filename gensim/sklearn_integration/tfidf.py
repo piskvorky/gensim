@@ -16,6 +16,7 @@ import gensim
 from gensim.models import TfidfModel
 from gensim.sklearn_integration import BaseSklearnWrapper
 
+
 class TfIdfTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
     """
     Base Tf-Idf module
@@ -37,7 +38,7 @@ class TfIdfTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         """
         Fit the model according to the given training data.
         """
-        self.gensim_model = TfidfModel(corpus=X, id2word=self.id2word, dictionary=self.dictionary, 
+        self.gensim_model = TfidfModel(corpus=X, id2word=self.id2word, dictionary=self.dictionary,
             wlocal=self.wlocal, wglobal=self.wglobal, normalize=self.normalize)
         return self
 
