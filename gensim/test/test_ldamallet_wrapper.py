@@ -10,7 +10,6 @@ Automated tests for checking transformation algorithms (the models package).
 
 
 import logging
-import sys
 import unittest
 import os
 import os.path
