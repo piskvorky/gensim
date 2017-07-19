@@ -16,10 +16,7 @@ import sys
 
 import numpy as np
 
-if sys.version_info < (2, 7):
-    import unittest2 as unittest
-else:
-    import unittest
+ import unittest
 
 from gensim.models.wrappers import varembed
 
