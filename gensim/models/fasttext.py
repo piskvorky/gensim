@@ -17,6 +17,39 @@ TO-DO : description of FastText and the API
 
 MAX_WORDS_IN_BATCH = 10000
 
+def train_batch_sg(model, sentences, alpha, work=None):
+    """
+    Update skip-gram model by training on a sequence of sentences.
+
+    Each sentence is a list of string tokens, which are looked up in the model's
+    vocab dictionary. Called internally from `Word2Vec.train()`.
+
+    This is the non-optimized, Python version. If you have cython installed, gensim
+    will use the optimized version from word2vec_inner instead.
+
+    """
+    result = 0
+    for sentence in sentences:
+        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
+                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+        for pos, word in enumerate(word_vocabs):
+            reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
+
+            subword_indices = []
+            subword_indices += get_subwords(word)
+
+            # now go over all words from the (reduced) window, predicting each one in turn
+            start = max(0, pos - model.window + reduced_window)
+            for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+                # don't train on the `word` itself
+                if pos2 != pos:
+                	train_sg_pair(model, subword_indices, word2.index, alpha)
+                    # train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha)
+
+                    # isn't model.wv.index2word[word.index] same as word ??
+        result += len(word_vocabs)
+    return result
+
 def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
 	"""
 	Update CBOW model by training on a sequence of sentences.
@@ -76,11 +109,6 @@ def compute_subwords(word, min_n, max_n):
 				subwords.append(extended_word[i:i + ngram_length])  # append or += ? discuss
 				# As of now, we have string subwords, we want to do hashing now
 		return subwords
-
-
-def train_batch_sg():
-	pass
-
 
 @staticmethod
 def ft_hash(string):
