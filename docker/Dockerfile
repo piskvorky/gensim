@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 MAINTAINER Parul Sethi <parul1sethi@gmail.com>
 
 ENV GENSIM_REPOSITORY https://github.com/RaRe-Technologies/gensim.git
-ENV GENSIM_VERSION b818c91c698b4a149c55455b88953714d1701031
+ENV GENSIM_VERSION 59c3834e0aa233ef9010fe1a22d32c43c0378bab
 
 # Installs python, pip and setup tools (with fixed versions)
 RUN apt-get update \
