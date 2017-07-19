@@ -50,9 +50,9 @@ class HdpTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         Fit the model according to the given training data.
         Calls gensim.models.HdpModel
         """
-        self.gensim_model = models.HdpModel(corpus=X, id2word=self.id2word, max_chunks=self.max_chunks, 
-            max_time=self.max_time, chunksize=self.chunksize, kappa=self.kappa, tau=self.tau, 
-            K=self.K, T=self.T, alpha=self.alpha, gamma=self.gamma, eta=self.eta, scale=self.scale, 
+        self.gensim_model = models.HdpModel(corpus=X, id2word=self.id2word, max_chunks=self.max_chunks,
+            max_time=self.max_time, chunksize=self.chunksize, kappa=self.kappa, tau=self.tau,
+            K=self.K, T=self.T, alpha=self.alpha, gamma=self.gamma, eta=self.eta, scale=self.scale,
             var_converge=self.var_converge, outputdir=self.outputdir, random_state=self.random_state)
         return self
 
