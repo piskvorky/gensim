@@ -1,3 +1,5 @@
+:orphan:
+
 :mod:`simserver` -- Document similarity server
 ==============================================
 

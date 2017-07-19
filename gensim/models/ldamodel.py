@@ -971,30 +971,34 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
-    def diff(self, other, distance="kulback_leibler", num_words=100, n_ann_terms=10, normed=True):
+    def diff(self, other, distance="kullback_leibler", num_words=100, n_ann_terms=10, normed=True):
         """
         Calculate difference topic2topic between two Lda models
         `other` instances of `LdaMulticore` or `LdaModel`
         `distance` is function that will be applied to calculate difference between any topic pair.
-        Available values: `kulback_leibler`, `hellinger` and `jaccard`
+        Available values: `kullback_leibler`, `hellinger` and `jaccard`
         `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
         `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
         Returns a matrix Z with shape (m1.num_topics, m2.num_topics), where Z[i][j] - difference between topic_i and topic_j
         and matrix annotation with shape (m1.num_topics, m2.num_topics, 2, None),
-        where
+        where:
+
             annotation[i][j] = [[`int_1`, `int_2`, ...], [`diff_1`, `diff_2`, ...]] and
             `int_k` is word from intersection of `topic_i` and `topic_j` and
             `diff_l` is word from symmetric difference of `topic_i` and `topic_j`
-        `normed` is a flag. If `true`, matrix Z will be normalized
+            `normed` is a flag. If `true`, matrix Z will be normalized
+
         Example:
+
         >>> m1, m2 = LdaMulticore.load(path_1), LdaMulticore.load(path_2)
         >>> mdiff, annotation = m1.diff(m2)
         >>> print(mdiff) # get matrix with difference for each topic pair from `m1` and `m2`
         >>> print(annotation) # get array with positive/negative words for each topic pair from `m1` and `m2`
+
         """
 
         distances = {
-            "kulback_leibler": kullback_leibler,
+            "kullback_leibler": kullback_leibler,
             "hellinger": hellinger,
             "jaccard": jaccard_distance,
         }

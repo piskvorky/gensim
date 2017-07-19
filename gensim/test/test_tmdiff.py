@@ -38,7 +38,7 @@ class TestLdaDiff(unittest.TestCase):
         self.assertEquals(len(annotation[0]), self.num_topics)
 
     def testIdentity(self):
-        for dist_name in ["hellinger", "kulback_leibler", "jaccard"]:
+        for dist_name in ["hellinger", "kullback_leibler", "jaccard"]:
             mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms, distance=dist_name)
 
             for row in annotation:

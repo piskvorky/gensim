@@ -10,7 +10,7 @@ try:
     from sklearn.pipeline import Pipeline
     from sklearn.feature_extraction.text import CountVectorizer
     from sklearn.datasets import load_files
-    from sklearn import linear_model
+    from sklearn import linear_model, cluster
     from sklearn.exceptions import NotFittedError
 except ImportError:
     raise unittest.SkipTest("Test requires scikit-learn to be installed, which is not available")
@@ -19,6 +19,8 @@ from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import SklRpModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklLdaModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklLsiModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_w2vmodel import SklW2VModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklATModel
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils
 
@@ -39,6 +41,12 @@ texts = [
 ]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
+author2doc = {'john': [0, 1, 2, 3, 4, 5, 6], 'jane': [2, 3, 4, 5, 6, 7, 8], 'jack': [0, 2, 4, 6, 8], 'jill': [1, 3, 5, 7]}
+
+texts_new = texts[0:3]
+author2doc_new = {'jill': [0], 'bob': [0, 1], 'sally': [1, 2]}
+dictionary_new = Dictionary(texts_new)
+corpus_new = [dictionary_new.doc2bow(text) for text in texts_new]
 
 texts_ldaseq = [
     [u'senior', u'studios', u'studios', u'studios', u'creators', u'award', u'mobile', u'currently', u'challenges', u'senior', u'summary', u'senior', u'motivated', u'creative', u'senior'],
@@ -77,6 +85,17 @@ sstats_ldaseq = numpy.loadtxt(datapath_ldaseq('sstats_test.txt'))
 dictionary_ldaseq = Dictionary(texts_ldaseq)
 corpus_ldaseq = [dictionary_ldaseq.doc2bow(text) for text in texts_ldaseq]
 
+w2v_texts = [
+    ['calculus', 'is', 'the', 'mathematical', 'study', 'of', 'continuous', 'change'],
+    ['geometry', 'is', 'the', 'study', 'of', 'shape'],
+    ['algebra', 'is', 'the', 'study', 'of', 'generalizations', 'of', 'arithmetic', 'operations'],
+    ['differential', 'calculus', 'is', 'related', 'to', 'rates', 'of', 'change', 'and', 'slopes', 'of', 'curves'],
+    ['integral', 'calculus', 'is', 'realted', 'to', 'accumulation', 'of', 'quantities', 'and', 'the', 'areas', 'under', 'and', 'between', 'curves'],
+    ['physics', 'is', 'the', 'natural', 'science', 'that', 'involves', 'the', 'study', 'of', 'matter', 'and', 'its', 'motion', 'and', 'behavior', 'through', 'space', 'and', 'time'],
+    ['the', 'main', 'goal', 'of', 'physics', 'is', 'to', 'understand', 'how', 'the', 'universe', 'behaves'],
+    ['physics', 'also', 'makes', 'significant', 'contributions', 'through', 'advances', 'in', 'new', 'technologies', 'that', 'arise', 'from', 'theoretical', 'breakthroughs'],
+    ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics', 'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically', 'transformed', 'modern', 'day', 'society']
+]
 
 class TestSklLdaModelWrapper(unittest.TestCase):
     def setUp(self):
@@ -394,6 +413,128 @@ class TestSklRpModelWrapper(unittest.TestCase):
         rpmodel_wrapper = SklRpModel(num_topics=2)
         doc = list(self.corpus)[0]
         self.assertRaises(NotFittedError, rpmodel_wrapper.transform, doc)
+
+
+class TestSklW2VModelWrapper(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = SklW2VModel(size=10, min_count=0, seed=42)
+        self.model.fit(texts)
+
+    def testTransform(self):
+        # tranform multiple words
+        words = []
+        words = words + texts[0]
+        matrix = self.model.transform(words)
+        self.assertEqual(matrix.shape[0], 3)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+        # tranform one word
+        word = texts[0][0]
+        matrix = self.model.transform(word)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(negative=20)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["negative"], 20)
+
+    def testPipeline(self):
+        numpy.random.seed(0)  # set fixed seed to get similar values everytime
+        model = SklW2VModel(size=10, min_count=1)
+        model.fit(w2v_texts)
+
+        class_dict = {'mathematics': 1, 'physics': 0}
+        train_data = [
+            ('calculus', 'mathematics'), ('mathematical', 'mathematics'), ('geometry', 'mathematics'), ('operations', 'mathematics'), ('curves', 'mathematics'),
+            ('natural', 'physics'), ('nuclear', 'physics'), ('science', 'physics'), ('electromagnetism', 'physics'), ('natural', 'physics')
+        ]
+        train_input = list(map(lambda x: x[0], train_data))
+        train_target = list(map(lambda x: class_dict[x[1]], train_data))
+
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        clf.fit(model.transform(train_input), train_target)
+        text_w2v = Pipeline((('features', model,), ('classifier', clf)))
+        score = text_w2v.score(train_input, train_target)
+        self.assertGreater(score, 0.40)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        word = texts[0][0]
+        loaded_transformed_vecs = model_load.transform(word)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_transformed_vecs.shape[0], 1)
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.size)
+
+        # comparing the original and loaded models
+        original_transformed_vecs = self.model.transform(word)
+        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        self.assertTrue(passed)
+
+    def testModelNotFitted(self):
+        w2vmodel_wrapper = SklW2VModel(size=10, min_count=0, seed=42)
+        word = texts[0][0]
+        self.assertRaises(NotFittedError, w2vmodel_wrapper.transform, word)
+
+
+class TestSklATModelWrapper(unittest.TestCase):
+    def setUp(self):
+        self.model = SklATModel(id2word=dictionary, author2doc=author2doc, num_topics=2, passes=100)
+        self.model.fit(corpus)
+
+    def testTransform(self):
+        # transforming multiple authors
+        author_list = ['jill', 'jack']
+        author_topics = self.model.transform(author_list)
+        self.assertEqual(author_topics.shape[0], 2)
+        self.assertEqual(author_topics.shape[1], self.model.num_topics)
+
+        # transforming one author
+        jill_topics = self.model.transform('jill')
+        self.assertEqual(jill_topics.shape[0], 1)
+        self.assertEqual(jill_topics.shape[1], self.model.num_topics)
+
+    def testPartialFit(self):
+        self.model.partial_fit(corpus_new, author2doc=author2doc_new)
+
+        # Did we learn something about Sally?
+        output_topics = self.model.transform('sally')
+        sally_topics = output_topics[0]  # getting the topics corresponding to 'sally' (from the list of lists)
+        self.assertTrue(all(sally_topics > 0))
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
+
+        # updating multiple params
+        param_dict = {"passes": 5, "iterations": 10}
+        self.model.set_params(**param_dict)
+        model_params = self.model.get_params()
+        for key in param_dict.keys():
+            self.assertEqual(model_params[key], param_dict[key])
+
+    def testPipeline(self):
+        # train the AuthorTopic model first
+        model = SklATModel(id2word=dictionary, author2doc=author2doc, num_topics=10, passes=100)
+        model.fit(corpus)
+
+        # create and train clustering model
+        clstr = cluster.MiniBatchKMeans(n_clusters=2)
+        authors_full = ['john', 'jane', 'jack', 'jill']
+        clstr.fit(model.transform(authors_full))
+
+        # stack together the two models in a pipeline
+        text_atm = Pipeline((('features', model,), ('cluster', clstr)))
+        author_list = ['jane', 'jack', 'jill']
+        ret_val = text_atm.predict(author_list)
+        self.assertEqual(len(ret_val), len(author_list))
 
 
 if __name__ == '__main__':
