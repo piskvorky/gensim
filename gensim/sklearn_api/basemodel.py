@@ -24,7 +24,3 @@ class BaseTransformer(object):
     @abstractmethod
     def transform(self, docs, minimum_probability=None):
         pass
-
-    @abstractmethod
-    def partial_fit(self, X):
-        pass

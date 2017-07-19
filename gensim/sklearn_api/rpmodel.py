@@ -62,6 +62,3 @@ class RpTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
             X[k] = probs_docs
 
         return np.reshape(np.array(X), (len(docs), self.num_topics))
-
-    def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for RpTransformer")
