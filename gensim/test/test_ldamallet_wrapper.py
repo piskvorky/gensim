@@ -10,7 +10,12 @@ Automated tests for checking transformation algorithms (the models package).
 
 
 import logging
-import unittest2 as unittest
+
+if sys.version_info < (2, 7):
+    import unittest2 as unittest
+else:
+    import unittest
+
 import os
 import os.path
 import tempfile
