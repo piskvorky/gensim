@@ -16,7 +16,7 @@ import sys
 
 import numpy as np
 
- import unittest
+import unittest
 
 from gensim.models.wrappers import varembed
 
