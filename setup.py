@@ -249,7 +249,10 @@ setup(
             include_dirs=[model_dir]),
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
-            include_dirs=[model_dir])
+            include_dirs=[model_dir]),
+        Extension('gensim.models.fast_counter_cython',
+            sources=['./gensim/models/fast_counter_cython.c'],
+            include_dirs=[model_dir]),
     ],
     cmdclass=cmdclass,
     packages=find_packages(),

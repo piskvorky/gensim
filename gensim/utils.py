@@ -1126,8 +1126,9 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
         if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
-    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
-                old_len - len(vocab), min_reduce, old_len, len(vocab))
+    logger.info(
+        "pruned out %i tokens with count <=%i (before %i, after %i)",
+        old_len - len(vocab), min_reduce, old_len, len(vocab))
     return result
 
 

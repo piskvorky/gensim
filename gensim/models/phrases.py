@@ -134,12 +134,6 @@ class Phrases(interfaces.TransformationABC):
         should be a byte string (e.g. b'_').
 
         """
-        if min_count <= 0:
-            raise ValueError("min_count should be at least 1")
-
-        if threshold <= 0:
-            raise ValueError("threshold should be positive")
-
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
@@ -169,7 +163,7 @@ class Phrases(interfaces.TransformationABC):
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
-            sentence = [utils.any2utf8(w) for w in sentence]
+            # sentence = [utils.any2utf8(w) for w in sentence]
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
                 vocab[delimiter.join(bigram)] += 1
@@ -394,7 +388,7 @@ class Phraser(interfaces.TransformationABC):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.info("running %s" % " ".join(sys.argv))
+    logger.info("running %s", " ".join(sys.argv))
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
@@ -408,6 +402,12 @@ if __name__ == '__main__':
     sentences = Text8Corpus(infile)
 
     # test_doc = LineSentence('test/test_data/testcorpus.txt')
+    logger.info("training phrases")
     bigram = Phrases(sentences, min_count=5, threshold=100)
-    for s in bigram[sentences]:
-        print(utils.to_utf8(u' '.join(s)))
+    print bigram
+    logger.info("finished training phrases")
+
+    # for s in bigram[sentences]:
+    #     print(utils.to_utf8(u' '.join(s)))
+
+    logger.info("finished running %s", " ".join(sys.argv))
