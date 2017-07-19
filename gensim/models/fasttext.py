@@ -3,190 +3,250 @@
 #
 # Author - Prakhar Pratyush (er.prakhar2b@gmail.com)
 
+import logging
+
+from gensim.models.word2vec import Word2Vec
+from gensim.models.ft_keyedvectors import FastTextKeyedVectors
+
+logger = logging.getLogger(__name__)
+
+
 """
 TO-DO : description of FastText and the API
 """
 
-"""
-void FastText::cbow(Model& model, real lr,
-                    const std::vector<int32_t>& line) {
-  std::vector<int32_t> bow;
-  std::uniform_int_distribution<> uniform(1, args_->ws);
-  for (int32_t w = 0; w < line.size(); w++) {
-    int32_t boundary = uniform(model.rng);
-    bow.clear();
-    for (int32_t c = -boundary; c <= boundary; c++) {
-      if (c != 0 && w + c >= 0 && w + c < line.size()) {
-        const std::vector<int32_t>& ngrams = dict_->getNgrams(line[w + c]);  // n-grams here
-        bow.insert(bow.end(), ngrams.cbegin(), ngrams.cend());
-      }
-    }
-    model.update(bow, line[w], lr);
-  }
-}
-"""
+MAX_WORDS_IN_BATCH = 10000
 
-def train_cbow():
-    # borrowed from word2vec, see how much is overlapping and refactor later
+def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
+	"""
+	Update CBOW model by training on a sequence of sentences.
 
-    #TO-DO : get n-grams ahd continue rest same as word2vec
+	"""
+	result = 0
+	for sentence in sentences:
+		# word_vocabs bow in fasttext.cc
+		word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
+					   model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+		for pos, word in enumerate(word_vocabs):
+			reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code  ## why random
+			start = max(0, pos - model.window + reduced_window)
+			window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
+			word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
+			l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x vector_size
+			if word2_indices and model.cbow_mean:
+				l1 /= len(word2_indices)
+			# for loop for ngrams for words in this window here
+			word2_subwords_indices = []
+
+			for indices in word2_indices:
+				word2_subwords_indices += get_subwords(model.wv.syn0[indices])  # subwords for each word in window except target word
+
+			train_cbow_pair(model, word, word2_subwords_indices, l1, alpha)  # train on the sliding window for target word
+		result += len(word_vocabs)
+	return result
+
+def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
+	pass
+	
+
+def get_subwords(word):
+	"""
+	int32_t i = getId(word);
+  	if (i >= 0) {
+    	return getNgrams(i);
+  	}
+  	"""
+
+	subwords_indices = []
+	subwords = compute_subwords(word, self.wv.min_n, self.wv.max_n)
+	for subword in all_subwords
+		# int32_t h = hash(ngram) % args_->bucket;
+        # ngrams.push_back(nwords_ + h);
+		subword_hash = ft_hash(ngram)
+        subwords_indices.append(len(self.wv.vocab) + subword_hash % self.bucket)  # self ?? classmethod or pass model ... discuss ??
+	return subwords_indices
+
+def compute_subwords(word, min_n, max_n):
+		BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
+		extended_word = BOW + word + EOW
+		subwords = []
+
+		for subword_length in range(min_n, min(len(extended_word), max_n) + 1):
+			for i in range(0, len(extended_word) - ngram_length + 1):
+				subwords.append(extended_word[i:i + ngram_length])
+				# As of now, we have string subwords, we want to do hashing now
+		return subwords
 
 
-def train_skipgram():
+def train_batch_sg():
+	pass
+
 
 @staticmethod
 def ft_hash(string):
-    """
-    Reproduces [hashing trick](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-    used in fastText.
+	"""
+	Reproduces [hashing trick](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+	used in fastText.
 
-    """
-    # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
-    old_settings = np.seterr(all='ignore')
-    h = np.uint32(2166136261)
-    for c in string:
-        h = h ^ np.uint32(ord(c))
-        h = h * np.uint32(16777619)
-    np.seterr(**old_settings)
-    return h
-def init_ngrams(self):
-    """
-    Computes ngrams of all words present in vocabulary and stores vectors for only those ngrams.
-    Vectors for other ngrams are initialized with a random uniform distribution in FastText. These
-    vectors are discarded here to save space.
-
-    """
-    self.wv.ngrams = {}
-    all_ngrams = []
-    for w, v in self.wv.vocab.items():
-        all_ngrams += self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
-    all_ngrams = set(all_ngrams)
-    self.num_ngram_vectors = len(all_ngrams)
-    ngram_indices = []
-    for i, ngram in enumerate(all_ngrams):
-        ngram_hash = self.ft_hash(ngram)
-        ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
-        self.wv.ngrams[ngram] = i
-    self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
-        
+	"""
+	# Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
+	old_settings = np.seterr(all='ignore')
+	h = np.uint32(2166136261)
+	for c in string:
+		h = h ^ np.uint32(ord(c))
+		h = h * np.uint32(16777619)
+	np.seterr(**old_settings)
+	return h
+		
 @staticmethod
 def compute_ngrams(word, min_n, max_n):
-    ngram_indices = []
-    BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
-    extended_word = BOW + word + EOW
-    ngrams = []
-    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
-        for i in range(0, len(extended_word) - ngram_length + 1):
-            ngrams.append(extended_word[i:i + ngram_length])
-    return ngrams
+	ngram_indices = []
+	BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
+	extended_word = BOW + word + EOW
+	ngrams = []
+	for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+		for i in range(0, len(extended_word) - ngram_length + 1):
+			ngrams.append(extended_word[i:i + ngram_length])
+	return ngrams
 
-
-def get_ngrams():
 
 
 
 class FastText(Word2Vec):
-	# TO-DO : check if sentences can be None here like word2vec ?
-	def __init__(self, model='cbow', sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-            word_ngrams=1, loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, bucket=2000000):
-
-        # TO-Discuss : these param names vs fb fastText param names ?
+	def __init__(self, model='cbow', hs=0, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
+			max_vocab_size=None, word_ngrams=1, loss='ns', sample=1e-3,seed=1, workers=3, min_alpha=0.0001,
+			negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, bucket=2000000,
+			trim_rule=None, batch_words=MAX_WORDS_IN_BATCH):
 
 		"""
 		Initialize the model from an iterable of `sentences`. Each sentence is a
-        list of words (utf-8 encoded strings) that will be used for training.
+		list of words (utf-8 encoded strings) that will be used for training.
 
-        `model` defines the training algorithm. By default, cbow is used. Accepted values are
-        'cbow', 'skipgram', (later 'supervised').  ------- decide if sg=0 default cbow is better approach
+		`model` defines the training algorithm. By default, cbow is used. Accepted values are
+		'cbow', 'skipgram', (later 'supervised').
 
-        `size` is the dimensionality of the feature vectors.
+		`size` is the dimensionality of the feature vectors.
 
-        `window` is the maximum distance between the current and predicted word within a sentence.
+		`window` is the maximum distance between the current and predicted word within a sentence.
 
-        `alpha` is the initial learning rate.
+		`alpha` is the initial learning rate.
 
-        `min_count` = ignore all words with total occurrences lower than this.
+		`min_count` = ignore all words with total occurrences lower than this.
 
-        `word_ngram` = max length of word ngram
+		`word_ngram` = max length of word ngram
 
-        `loss` = defines training objective. Allowed values are `hs` (hierarchical softmax),
-        `ns` (negative sampling) and `softmax`. Defaults to `ns`
+		`loss` = defines training objective. Allowed values are `hs` (hierarchical softmax),
+		`ns` (negative sampling) and `softmax`. Defaults to `ns`
 
-        `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-            default is 1e-3, useful range is (0, 1e-5).
+		`sample` = threshold for configuring which higher-frequency words are randomly downsampled;
+			default is 1e-3, useful range is (0, 1e-5).
 
-        `negative` = the value for negative specifies how many "noise words" should be drawn
-        (usually between 5-20). Default is 5. If set to 0, no negative samping is used.
-        Only relevant when `loss` is set to `ns`
+		`negative` = the value for negative specifies how many "noise words" should be drawn
+		(usually between 5-20). Default is 5. If set to 0, no negative samping is used.
+		Only relevant when `loss` is set to `ns`
 
-        `iter` = number of iterations (epochs) over the corpus. Default is 5.
+		`iter` = number of iterations (epochs) over the corpus. Default is 5.
 
-        `min_n` = min length of char ngrams to be used for training word representations. Default is 3.
+		`min_n` = min length of char ngrams to be used for training word representations. Default is 3.
 
-        `max_n` = max length of char ngrams to be used for training word representations. Set `max_n` to be
-        lesser than `min_n` to avoid char ngrams being used. Default is 6.
+		`max_n` = max length of char ngrams to be used for training word representations. Set `max_n` to be
+		lesser than `min_n` to avoid char ngrams being used. Default is 6.
 
-        `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
-        assigning word indexes.
-
-
-
+		`sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
+		assigning word indexes.
 		"""
+
+		# self.load = call_on_class_only
 		self.initialize_word_vectors()
 
 		self.model = model
 		self.vector_size = size
-        self.alpha = float(alpha)
-        self.window = int(window)
-        self.min_count = min_count
-        self.word_ngrams = word_ngrams
-        self.loss = loss
-        self.sample = sample
-        self.negative = negative
-        self.iter = iter
-        self.bucket = bucket
+		self.layer1_size = int(size)
+		self.cum_table = None  # for negative sampling
+		if size % 4 != 0:
+			logger.warning("consider setting layer size to a multiple of 4 for greater performance")
 
-        self.min_n = min_n
-        self.max_n = max_n
+		self.alpha = float(alpha)
+		self.min_alpha_yet_reached = float(alpha)  # To warn user if alpha increases
+		self.window = int(window)
+		self.max_vocab_size = max_vocab_size
+		self.seed = seed
+		self.random = random.RandomState(seed)
 
-        # if (wordNgrams <= 1 && maxn == 0) {
-        #    bucket = 0;
-        # }
+		self.min_count = min_count
+		self.min_alpha = float(min_alpha)
+		self.workers = int(workers)
+		self.word_ngrams = word_ngrams
+		self.loss = loss
+		self.sample = sample
+		self.hs = hs
+		self.negative = negative
+		self.iter = iter
+		self.bucket = bucket
 
-        if self.word_ngrams <= 1 and self.max_n == 0:
-            self.bucket = 0
+		# what is null_word in word2vec ?
 
-        if sentences is not None:
-            if isinstance(sentences, GeneratorType):
-                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+		self.min_n = min_n
+		self.max_n = max_n
 
-            # TO-DO : do we need build vocab
+		# if (wordNgrams <= 1 && maxn == 0) {
+		#    bucket = 0;
+		# }
 
-            self.train()
+		if self.word_ngrams <= 1 and self.max_n == 0:
+			self.bucket = 0
 
+		self.train_count = 0
+		self.total_train_time = 0
+		self.sorted_vocab = sorted_vocab
+		self.batch_words = batch_words
+		self.model_trimmed_post_training = False
+
+		if sentences is not None:
+			if isinstance(sentences, GeneratorType):
+				raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+			self.build_vocab(sentences, trim_rule=trim_rule)
+			# let word2vec code run here
+
+			self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
+					   start_alpha=self.alpha, end_alpha=self.min_alpha)
+		else :
+			if trim_rule is not None :
+				logger.warning("The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model. ")
+				logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored." )
 
 	def initialize_word_vectors():
 		# approach from wrapper
 
-        self.word_vectors = FastTextKeyedVectors
-        # TO-DO : backward-compatibility with self.wv (under discussion)
+		self.word_vectors = FastTextKeyedVectors
+		# TO-DO : backward-compatibility with self.wv (under discussion)
 
-    def train(self, sentences):
+	def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
 
-        # epochs in word2vec ??
+		super(build_vocab, self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False)
 
-        # input_ = std::make_shared<Matrix>(dict_->nwords()+args_->bucket, args_->dim);
-        # input_->uniform(1.0 / args_->dim);
+		# TO-DO : build matrix for n-grams here numpy
 
-        # create a matrix for n-grams here or in init ??????
 
-        # output_ = std::make_shared<Matrix>(dict_->nwords(), args_->dim);
-        # This is probably for generating .vec file
 
-        # Start with thread = 0 i.e, trainThread(0) in fasttext.cc
+	def _do_train_job(self, sentences, alpha, inits):
+		"""
+		Train a single batch of sentences. Return 2-tuple `(effective word count after
+		ignoring unknown words and sentence length trimming, total word count)`.
+		"""
 
-        if self.model == 'cbow':
-            train_cbow(self, sentences, self.alpha)
-        elif self.model == 'skipgram':
-            train_skipgram(self, sentences, self.alpha)
+		# input_ = std::make_shared<Matrix>(dict_->nwords()+args_->bucket, args_->dim);
+		# input_->uniform(1.0 / args_->dim);
 
+		# create a matrix for n-grams here or in init ?????? Numpy matrix ?
+
+		# output_ = std::make_shared<Matrix>(dict_->nwords(), args_->dim);
+		# This is probably for generating .vec file
+
+		work, neu1 = inits
+		tally = 0
+		if self.model == 'cbow':
+			tally += train_batch_cbow(self, sentences, alpha, work, neu1)
+		elif self.model == 'skipgram':
+			tally += train_batch_sg(self, sentences, alpha, work)
+		return tally, self._raw_word_count(sentences)
