@@ -1,8 +1,13 @@
 import gensim
 import logging
 import copy
+import sys
 import numpy as np
-from queue import Queue
+
+if sys.version_info[0] >= 3:
+    from queue import Queue
+else:
+    from Queue import Queue
 
 # Visdom is used for training stats visualization
 try:
