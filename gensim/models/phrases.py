@@ -105,7 +105,7 @@ class Phrases(interfaces.TransformationABC):
     and `phrases[corpus]` syntax.
 
     """
-    def __init__(self, sentences=None, min_count=5, threshold=10.0,
+    def __init__(self, sentences=None, recode_to_utf8=True, min_count=5, threshold=10.0,
                  max_vocab_size=40000000, delimiter=b'_', progress_per=10000):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
@@ -133,13 +133,14 @@ class Phrases(interfaces.TransformationABC):
         `delimiter` is the glue character used to join collocation tokens, and
         should be a byte string (e.g. b'_').
 
+        By default (`recode_to_utf8=True`), the input sentences will be internally encoded to
+        UTF-8 bytestrings, to save memory and ensure valid UTF-8. Set `recode_to_utf8=False`
+        to skip this recoding step in case you don't care about memory or if your sentences
+        are already bytestrings. This will result in much faster training (~2x faster).
+        For `recode_to_utf8=False`, input sentences and infer sentences (for __getitem__ and
+        export_phrases) are expected to be encoded in the same format.
         """
-        if min_count <= 0:
-            raise ValueError("min_count should be at least 1")
-
-        if threshold <= 0:
-            raise ValueError("threshold should be positive")
-
+        self.recode_to_utf8 = recode_to_utf8
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
@@ -157,19 +158,32 @@ class Phrases(interfaces.TransformationABC):
             self.__class__.__name__, len(self.vocab), self.min_count,
             self.threshold, self.max_vocab_size)
 
-    @staticmethod
-    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
+    def learn_vocab(self, sentences):
         """Collect unigram/bigram counts from the `sentences` iterable."""
+        if not self.recode_to_utf8 and sentences is not None:
+            try:
+                sentence = list(next(iter(sentences)))
+                if not isinstance(sentence[0], bytes):
+                    self.delimiter = utils.to_unicode(self.delimiter)
+                sentences = it.chain([sentence], sentences)
+            except StopIteration:
+                logger.debug("Input is an empty list or generator.")
+
         sentence_no = -1
         total_words = 0
         logger.info("collecting all words and their counts")
         vocab = defaultdict(int)
         min_reduce = 1
+        delimiter = self.delimiter
+
         for sentence_no, sentence in enumerate(sentences):
-            if sentence_no % progress_per == 0:
-                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
-                            (sentence_no, total_words, len(vocab)))
-            sentence = [utils.any2utf8(w) for w in sentence]
+            if sentence_no % self.progress_per == 0:
+                logger.info(
+                    "PROGRESS: at sentence #%i, processed %i words and %i word types",
+                    sentence_no, total_words, len(vocab))
+            if self.recode_to_utf8:
+                sentence = [utils.any2utf8(w) for w in sentence]
+
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
                 vocab[delimiter.join(bigram)] += 1
@@ -179,7 +193,7 @@ class Phrases(interfaces.TransformationABC):
                 word = sentence[-1]
                 vocab[word] += 1
 
-            if len(vocab) > max_vocab_size:
+            if len(vocab) > self.max_vocab_size:
                 utils.prune_vocab(vocab, min_reduce)
                 min_reduce += 1
 
@@ -197,7 +211,7 @@ class Phrases(interfaces.TransformationABC):
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
+        min_reduce, vocab = self.learn_vocab(sentences)
 
         if len(self.vocab) > 0:
             logger.info("merging %i counts into %s", len(vocab), self)
@@ -227,12 +241,14 @@ class Phrases(interfaces.TransformationABC):
             then you can debug the threshold with generated tsv
         """
         for sentence in sentences:
-            s = [utils.any2utf8(w) for w in sentence]
             last_bigram = False
             vocab = self.vocab
             threshold = self.threshold
             delimiter = self.delimiter  # delimiter used for lookup
             min_count = self.min_count
+
+            s = [utils.any2utf8(w) for w in sentence] if self.recode_to_utf8 else list(sentence)
+
             for word_a, word_b in zip(s, s[1:]):
                 if word_a in vocab and word_b in vocab:
                     bigram_word = delimiter.join((word_a, word_b))
@@ -279,12 +295,15 @@ class Phrases(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
         vocab = self.vocab
         threshold = self.threshold
         delimiter = self.delimiter
         min_count = self.min_count
+
+        s = [utils.any2utf8(w) for w in sentence] if self.recode_to_utf8 else list(sentence)
+        new_s = []
+
         for word_a, word_b in zip(s, s[1:]):
             if word_a in vocab and word_b in vocab:
                 bigram_word = delimiter.join((word_a, word_b))
@@ -311,7 +330,6 @@ class Phrases(interfaces.TransformationABC):
 
         return [utils.to_unicode(w) for w in new_s]
 
-
 def pseudocorpus(source_vocab, sep):
     """Feeds source_vocab's compound keys back to it, to discover phrases"""
     for k in source_vocab:
@@ -337,9 +355,10 @@ class Phraser(interfaces.TransformationABC):
     def __init__(self, phrases_model):
         self.threshold = phrases_model.threshold
         self.min_count = phrases_model.min_count
+        self.recode_to_utf8 = phrases_model.recode_to_utf8
         self.delimiter = phrases_model.delimiter
         self.phrasegrams = {}
-        corpus = pseudocorpus(phrases_model.vocab, phrases_model.delimiter)
+        corpus = pseudocorpus(phrases_model.vocab, self.delimiter)
         logger.info('source_vocab length %i', len(phrases_model.vocab))
         count = 0
         for bigram, score in phrases_model.export_phrases(corpus, self.delimiter, as_tuples=True):
@@ -368,10 +387,13 @@ class Phraser(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
         phrasegrams = self.phrasegrams
         delimiter = self.delimiter
+
+        s = [utils.any2utf8(w) for w in sentence] if self.recode_to_utf8 else list(sentence)
+        new_s = []
+
         for word_a, word_b in zip(s, s[1:]):
             bigram_tuple = (word_a, word_b)
             if phrasegrams.get(bigram_tuple, (-1, -1))[1] > self.threshold and not last_bigram:

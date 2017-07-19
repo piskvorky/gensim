@@ -33,9 +33,24 @@ sentences = [
     ['graph', 'trees'],
     ['graph', 'minors', 'trees'],
     ['graph', 'minors', 'survey'],
-    ['graph', 'minors', 'survey','human','interface'] #test bigrams within same sentence
+    ['graph', 'minors', 'survey', 'human', 'interface']  # test bigrams within same sentence
 ]
 unicode_sentences = [[utils.to_unicode(w) for w in sentence] for sentence in sentences]
+
+bytestring_sentences = [
+    [b'human', b'interface', b'computer'],
+    [b'survey', b'user', b'computer', b'system', b'response', b'time'],
+    [b'eps', b'user', b'interface', b'system'],
+    [b'system', b'human', b'system', b'eps'],
+    [b'user', b'response', b'time'],
+    [b'trees'],
+    [b'graph', b'trees'],
+    [b'graph', b'minors', b'trees'],
+    [b'graph', b'minors', b'survey'],
+    [b'graph', b'minors', b'survey', b'human', b'interface'],
+    [b'graph', b'minors', b'survey', b'human', b'interface']
+]
+
 
 
 def gen_sentences():
@@ -43,7 +58,7 @@ def gen_sentences():
 
 
 class TestPhrasesCommon(unittest.TestCase):
-    """ Tests that need to be run for both Prases and Phraser classes."""
+    """ Tests that need to be run for both Phrases and Phraser classes."""
     def setUp(self):
         self.bigram = Phrases(sentences, min_count=1, threshold=1)
         self.bigram_default = Phrases(sentences)
@@ -121,7 +136,6 @@ class TestPhrasesCommon(unittest.TestCase):
         transformed = ' '.join(self.bigram_utf8[sentences[1]])
         self.assertTrue(isinstance(transformed, unicode))
 
-
 class TestPhrasesModel(unittest.TestCase):
     def testExportPhrases(self):
         """Test Phrases bigram export_phrases functionality."""
@@ -153,18 +167,26 @@ class TestPhrasesModel(unittest.TestCase):
             b'human interface'
         ])
 
-    def testBadParameters(self):
-        """Test the phrases module with bad parameters."""
-        # should fail with something less or equal than 0
-        self.assertRaises(ValueError, Phrases, sentences, min_count=0)
-
-        # threshold should be positive
-        self.assertRaises(ValueError, Phrases, sentences, threshold=-1)
-
     def testPruning(self):
         """Test that max_vocab_size parameter is respected."""
         bigram = Phrases(sentences, max_vocab_size=5)
         self.assertTrue(len(bigram.vocab) <= 5)
+
+    def testRecodeToUtf8False(self):
+        """Test that Phrases works as expected when `recode_to_utf8 = False`
+        for both bytestring and unicode input """
+        expected = ['survey', 'user', 'computer', 'system', 'response_time']
+
+        bigram_recode_false = Phrases(sentences, recode_to_utf8=False, min_count=1, threshold=1)
+        self.assertEqual(bigram_recode_false[sentences[1]], expected)
+
+        bigram_recode_false = Phrases(bytestring_sentences, recode_to_utf8=False, min_count=1, threshold=1)
+        self.assertEqual(bigram_recode_false[bytestring_sentences[1]], expected)
+
+    def testEmptyList(self):
+        """Test that Phrases module works as expected when empty list or generator is provided """
+        empty_sentences = []
+        self.assertTrue(Phrases(empty_sentences, recode_to_utf8=False))
 #endclass TestPhrasesModel
 
 
@@ -184,6 +206,18 @@ class TestPhraserModel(TestPhrasesCommon):
         bigram_unicode_phrases = Phrases(unicode_sentences, min_count=1, threshold=1)
         self.bigram_unicode = Phraser(bigram_unicode_phrases)
 
+    def testRecodeToUtf8False(self):
+        """Test that Phraser works as expected when `recode_to_utf8 = False`
+        for both bytestring and unicode input """
+        expected = ['survey', 'user', 'computer', 'system', 'response_time']
+
+        bigram_recode_false = Phrases(sentences, recode_to_utf8=False, min_count=1, threshold=1)
+        bigram_phraser = Phraser(bigram_recode_false)
+        self.assertEqual(bigram_phraser[sentences[1]], expected)
+
+        bigram_recode_false = Phrases(bytestring_sentences, recode_to_utf8=False, min_count=1, threshold=1)
+        bigram_phraser = Phraser(bigram_recode_false)
+        self.assertEqual(bigram_phraser[bytestring_sentences[1]], expected)
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
