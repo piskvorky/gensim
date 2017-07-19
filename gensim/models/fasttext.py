@@ -52,18 +52,18 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
 def get_subwords(word):
 	"""
 	int32_t i = getId(word);
-  	if (i >= 0) {
-    	return getNgrams(i);
-  	}
-  	"""
+	if (i >= 0) {
+		return getNgrams(i);
+	}
+	"""
 
 	subwords_indices = []
 	subwords = compute_subwords(word, self.wv.min_n, self.wv.max_n)
 	for subword in all_subwords
 		# int32_t h = hash(ngram) % args_->bucket;
-        # ngrams.push_back(nwords_ + h);
+		# ngrams.push_back(nwords_ + h);
 		subword_hash = ft_hash(ngram)
-        subwords_indices.append(len(self.wv.vocab) + subword_hash % self.bucket)  # self ?? classmethod or pass model ... discuss ??
+		subwords_indices.append(len(self.wv.vocab) + subword_hash % self.bucket)  # self ?? classmethod or pass model ... discuss ??
 	return subwords_indices
 
 def compute_subwords(word, min_n, max_n):
@@ -73,7 +73,7 @@ def compute_subwords(word, min_n, max_n):
 
 		for subword_length in range(min_n, min(len(extended_word), max_n) + 1):
 			for i in range(0, len(extended_word) - ngram_length + 1):
-				subwords.append(extended_word[i:i + ngram_length])
+				subwords.append(extended_word[i:i + ngram_length])  # append or += ? discuss
 				# As of now, we have string subwords, we want to do hashing now
 		return subwords
 
@@ -227,21 +227,22 @@ class FastText(Word2Vec):
 
 		# TO-DO : build matrix for n-grams here numpy
 
+		# input_ = std::make_shared<Matrix>(dict_->nwords()+args_->bucket, args_->dim);
+		# input_->uniform(1.0 / args_->dim);
 
+		input_ = np.matrix(len(self.wv.vocab) + self.bucket, self.vector_size)
+
+		# output_ = std::make_shared<Matrix>(dict_->nwords(), args_->dim);
+
+		output_ = np.matrix(len(self.wv.vocab), self.vector_size)
+
+		# how to use this input_ and output_ in final model ??
 
 	def _do_train_job(self, sentences, alpha, inits):
 		"""
 		Train a single batch of sentences. Return 2-tuple `(effective word count after
 		ignoring unknown words and sentence length trimming, total word count)`.
 		"""
-
-		# input_ = std::make_shared<Matrix>(dict_->nwords()+args_->bucket, args_->dim);
-		# input_->uniform(1.0 / args_->dim);
-
-		# create a matrix for n-grams here or in init ?????? Numpy matrix ?
-
-		# output_ = std::make_shared<Matrix>(dict_->nwords(), args_->dim);
-		# This is probably for generating .vec file
 
 		work, neu1 = inits
 		tally = 0
