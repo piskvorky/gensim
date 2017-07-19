@@ -24,6 +24,7 @@ from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklATModel
 from gensim.sklearn_integration.d2vmodel import D2VTransformer
 from gensim.sklearn_integration.text2bow import Text2BowTransformer
 from gensim.sklearn_integration.tfidf import TfIdfTransformer
+from gensim.sklearn_integration.hdp import HdpTransformer
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import doc2vec
 from gensim import matutils
@@ -736,6 +737,50 @@ class TestTfIdfTransformer(unittest.TestCase):
     def testModelNotFitted(self):
         tfidf_wrapper = TfIdfTransformer()
         self.assertRaises(NotFittedError, tfidf_wrapper.transform, corpus[0])
+
+
+class TestHdpTransformer(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = HdpTransformer(id2word=dictionary)
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.model.fit(self.corpus)
+
+    def testTransform(self):
+        # tranform one document
+        doc = corpus[0]
+        transformed_doc = self.model.transform(doc)
+        expected_doc = [[(0, 0.81043386270128193), (1, 0.049357139518070477), (2, 0.035840906753517532), (3, 0.026542006926698079), (4, 0.019925705902962578), (5, 0.014776690981729117), (6, 0.011068909979528148)]]
+        self.assertTrue(numpy.allclose(transformed_doc, expected_doc))
+
+        # tranform multiple documents
+        docs = [corpus[0], corpus[1]]
+        transformed_docs = self.model.transform(docs)
+        expected_docs = [[(0, 0.81043386270128193), (1, 0.049357139518070477), (2, 0.035840906753517532), (3, 0.026542006926698079), (4, 0.019925705902962578), (5, 0.014776690981729117), (6, 0.011068909979528148)],
+            [(0, 0.037756672994608199), (1, 0.64897189582154546), (2, 0.25362737170407318), (3, 0.015171827968228756), (4, 0.011386305552649889)]]
+        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(var_converge=0.05)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["var_converge"], 0.05)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = corpus[0]
+        loaded_transformed_doc = model_load.transform(doc)
+
+        # comparing the original and loaded models
+        original_transformed_doc = self.model.transform(doc)
+        self.assertEqual(original_transformed_doc, loaded_transformed_doc)
+
+    def testModelNotFitted(self):
+        hdp_wrapper = HdpTransformer(id2word=dictionary)
+        self.assertRaises(NotFittedError, hdp_wrapper.transform, corpus[0])
 
 if __name__ == '__main__':
     unittest.main()
