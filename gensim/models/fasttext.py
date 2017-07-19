@@ -59,7 +59,7 @@ def get_subwords(word):
 
 	subwords_indices = []
 	subwords = compute_subwords(word, self.wv.min_n, self.wv.max_n)
-	for subword in all_subwords
+	for subword in all_subwords:
 		# int32_t h = hash(ngram) % args_->bucket;
 		# ngrams.push_back(nwords_ + h);
 		subword_hash = ft_hash(ngram)
