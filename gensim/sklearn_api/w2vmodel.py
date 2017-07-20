@@ -83,5 +83,4 @@ class W2VTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
         return np.reshape(np.array(X), (len(words), self.size))
 
     def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for W2VTransformer since incremental training for Word2Vec model is experimental. "
-            "You can see examples for incremental learning in the IPython tutorial for Word2Vec model.")
+        raise NotImplementedError("'partial_fit' has not been implemented for W2VTransformer since updating vocabulary incrementally for Word2Vec model is experimental.")
