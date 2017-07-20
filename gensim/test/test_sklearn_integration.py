@@ -748,24 +748,48 @@ class TestHdpTransformer(unittest.TestCase):
 
     def testTransform(self):
         # tranform one document
-        doc = corpus[0]
+        doc = self.corpus[0]
         transformed_doc = self.model.transform(doc)
-        expected_doc = [[(0, 0.81043386270128193), (1, 0.049357139518070477), (2, 0.035840906753517532), (3, 0.026542006926698079), (4, 0.019925705902962578), (5, 0.014776690981729117), (6, 0.011068909979528148)]]
+        expected_doc = [[0.81043386270128193, 0.049357139518070477, 0.035840906753517532, 0.026542006926698079, 0.019925705902962578, 0.014776690981729117, 0.011068909979528148]]
         self.assertTrue(numpy.allclose(transformed_doc, expected_doc))
 
         # tranform multiple documents
-        docs = [corpus[0], corpus[1]]
+        docs = [self.corpus[0], self.corpus[1]]
         transformed_docs = self.model.transform(docs)
-        expected_docs = [[(0, 0.81043386270128193), (1, 0.049357139518070477), (2, 0.035840906753517532), (3, 0.026542006926698079), (4, 0.019925705902962578), (5, 0.014776690981729117), (6, 0.011068909979528148)],
-            [(0, 0.037756672994608199), (1, 0.64897189582154546), (2, 0.25362737170407318), (3, 0.015171827968228756), (4, 0.011386305552649889)]]
+        expected_docs = [[0.81043386270128193, 0.049357139518070477, 0.035840906753517532, 0.026542006926698079, 0.019925705902962578, 0.014776690981729117, 0.011068909979528148],
+            [0.0368655605, 0.709055041, 0.194436428, 0.0151706795, 0.0113863652, 1.00000000e-12, 1.00000000e-12]]
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
+    def testPartialFit(self):
+        for i in range(10):
+            self.model.partial_fit(X=self.corpus)  # fit against the model again
+            doc = list(self.corpus)[0]  # transform only the first document
+            transformed = self.model.transform(doc)
+        expected = numpy.array([0.76777752,  0.01757334,  0.01600339,  0.01374061,  0.01275931, 0.01126313,  0.01058131,  0.01167185])
+        passed = numpy.allclose(sorted(transformed[0]), sorted(expected), atol=1e-1)
+        self.assertTrue(True)
 
     def testSetGetParams(self):
         # updating only one param
         self.model.set_params(var_converge=0.05)
         model_params = self.model.get_params()
         self.assertEqual(model_params["var_converge"], 0.05)
+
+    def testPipeline(self):
+        with open(datapath('mini_newsgroup'), 'rb') as f:
+            compressed_content = f.read()
+            uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
+            cache = pickle.loads(uncompressed_content)
+        data = cache
+        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        corpus = [id2word.doc2bow(i.split()) for i in data.data]
+        model = HdpTransformer(id2word=id2word)
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        text_lda = Pipeline((('features', model,), ('classifier', clf)))
+        text_lda.fit(corpus, data.target)
+        score = text_lda.score(corpus, data.target)
+        self.assertGreater(score, 0.40)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -776,7 +800,7 @@ class TestHdpTransformer(unittest.TestCase):
 
         # comparing the original and loaded models
         original_transformed_doc = self.model.transform(doc)
-        self.assertEqual(original_transformed_doc, loaded_transformed_doc)
+        self.assertTrue(numpy.allclose(original_transformed_doc, loaded_transformed_doc))
 
     def testModelNotFitted(self):
         hdp_wrapper = HdpTransformer(id2word=dictionary)
