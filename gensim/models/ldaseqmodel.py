@@ -156,14 +156,14 @@ class LdaSeqModel(utils.SaveLoad):
     def fit_lda_seq(self, corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize):
         """
         fit an lda sequence model:
+            for each time period:
+                set up lda model with E[log p(w|z)] and \alpha
 
-        for each time period
-            set up lda model with E[log p(w|z)] and \alpha
-            for each document
-                perform posterior inference
-                update sufficient statistics/likelihood
+                for each document:
+                    perform posterior inference
+                    update sufficient statistics/likelihood
 
-        maximize topics
+            maximize topics
 
        """
         LDASQE_EM_THRESHOLD = 1e-4
@@ -485,11 +485,13 @@ class sslm(utils.SaveLoad):
         This function accepts the word to compute variance for, along with the associated sslm class object, and returns variance and fwd_variance
         Computes Var[\beta_{t,w}] for t = 1:T
 
-        Fwd_Variance(t) ≡ E((beta_{t,w} − mean_{t,w})^2 |beta_{t} for 1:t)
-        = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * (fwd_variance[t - 1] + obs_variance)
+        :math::
 
-        Variance(t) ≡ E((beta_{t,w} − mean_cap{t,w})^2 |beta_cap{t} for 1:t)
-        = fwd_variance[t - 1] + (fwd_variance[t - 1] / fwd_variance[t - 1] + obs_variance)^2 * (variance[t - 1] - (fwd_variance[t-1] + obs_variance))
+            fwd\_variance[t] \equiv E((beta_{t,w}-mean_{t,w})^2 |beta_{t}\ for\ 1:t) = (obs\_variance / fwd\_variance[t - 1] + chain\_variance + obs\_variance ) * (fwd\_variance[t - 1] + obs\_variance)
+
+        :math::
+
+            variance[t] \equiv E((beta_{t,w}-mean\_cap_{t,w})^2 |beta\_cap_{t}\ for\ 1:t) = fwd\_variance[t - 1] + (fwd\_variance[t - 1] / fwd\_variance[t - 1] + obs\_variance)^2 * (variance[t - 1] - (fwd\_variance[t-1] + obs\_variance))
 
         """
         INIT_VARIANCE_CONST = 1000

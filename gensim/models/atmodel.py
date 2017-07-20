@@ -533,10 +533,10 @@ class AuthorTopicModel(LdaModel):
             corpus (gensim corpus): The corpus with which the author-topic model should be updated.
 
             author2doc (dictionary): author to document mapping corresponding to indexes in input
-            corpus.
+                corpus.
 
             doc2author (dictionary): document to author mapping corresponding to indexes in input
-            corpus.
+                corpus.
 
             chunks_as_numpy (bool): Whether each chunk passed to `.inference` should be a np
                 array of not. np can in some settings turn the term IDs

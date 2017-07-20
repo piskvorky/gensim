@@ -16,8 +16,7 @@ logger = logging.getLogger(__name__)
 def s_one_pre(topics):
     """
     This function performs s_one_pre segmentation on a list of topics.
-    s_one_pre segmentation is defined as: s_one_pre = {(W', W*) | W' = {w_i};
-                                                                  W* = {w_j}; w_i, w_j belongs to W; i > j}
+    s_one_pre segmentation is defined as: s_one_pre = {(W', W*) | W' = {w_i}; W* = {w_j}; w_i, w_j belongs to W; i > j}
     Example:
 
         >>> topics = [np.array([1, 2, 3]), np.array([4, 5, 6])]
@@ -25,12 +24,10 @@ def s_one_pre(topics):
         [[(2, 1), (3, 1), (3, 2)], [(5, 4), (6, 4), (6, 5)]]
 
     Args:
-    ----
-    topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
+        topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
 
     Returns:
-    -------
-    s_one_pre : list of list of (W', W*) tuples for all unique topic ids
+        s_one_pre : list of list of (W', W*) tuples for all unique topic ids
     """
     s_one_pre = []
 
@@ -46,8 +43,7 @@ def s_one_pre(topics):
 def s_one_one(topics):
     """
     This function performs s_one_one segmentation on a list of topics.
-    s_one_one segmentation is defined as: s_one_one = {(W', W*) | W' = {w_i};
-                                                                  W* = {w_j}; w_i, w_j belongs to W; i != j}
+    s_one_one segmentation is defined as: s_one_one = {(W', W*) | W' = {w_i}; W* = {w_j}; w_i, w_j belongs to W; i != j}
     Example:
 
         >>> topics = [np.array([1, 2, 3]), np.array([4, 5, 6])]
@@ -55,12 +51,10 @@ def s_one_one(topics):
         [[(1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2)], [(4, 5), (4, 6), (5, 4), (5, 6), (6, 4), (6, 5)]]
 
     Args:
-    ----
-    topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
+        topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
 
     Returns:
-    -------
-    s_one_one : list of list of (W', W*) tuples for all unique topic ids
+        s_one_one : list of list of (W', W*) tuples for all unique topic ids
     """
     s_one_one = []
 
@@ -79,8 +73,7 @@ def s_one_one(topics):
 def s_one_set(topics):
     """
     This function performs s_one_set segmentation on a list of topics.
-    s_one_set segmentation is defined as: s_one_set = {(W', W*) | W' = {w_i}; w_i belongs to W;
-                                                                  W* = W}
+    s_one_set segmentation is defined as: s_one_set = {(W', W*) | W' = {w_i}; w_i belongs to W; W* = W}
     Example:
         >>> topics = [np.array([9, 10, 7])
         >>> s_one_set(topics)
@@ -89,12 +82,10 @@ def s_one_set(topics):
           (7, array([ 9, 10,  7]))]]
 
     Args:
-    ----
-    topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
+        topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
 
     Returns:
-    -------
-    s_one_set : list of list of (W', W*) tuples for all unique topic ids.
+        s_one_set : list of list of (W', W*) tuples for all unique topic ids.
     """
     s_one_set = []
 

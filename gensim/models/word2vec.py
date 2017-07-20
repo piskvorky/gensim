@@ -21,27 +21,25 @@ For a blog tutorial on gensim word2vec, with an interactive web app trained on G
 
 Initialize a model with e.g.::
 
->>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
+    >>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
 
 Persist a model to disk with::
 
->>> model.save(fname)
->>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
+    >>> model.save(fname)
+    >>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
 
-The word vectors are stored in a KeyedVectors instance in model.wv. This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec.
+The word vectors are stored in a KeyedVectors instance in model.wv. This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec::
 
   >>> model.wv['computer']  # numpy vector of a word
   array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
 
 The word vectors can also be instantiated from an existing file on disk in the word2vec C format as a KeyedVectors instance::
 
+    NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights, vocabulary frequency and the binary tree is missing::
 
-NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights, vocabulary frequency and the binary tree is missing.
-
-
-  >>> from gensim.models.keyedvectors import KeyedVectors
-  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+        >>> from gensim.models.keyedvectors import KeyedVectors
+        >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
+        >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
 
 
 You can perform various NLP word tasks with the model. Some of them
@@ -87,8 +85,8 @@ Note that there is a :mod:`gensim.models.phrases` module which lets you automati
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
 
->>> bigram_transformer = gensim.models.Phrases(sentences)
->>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
+    >>> bigram_transformer = gensim.models.Phrases(sentences)
+    >>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 .. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
@@ -224,7 +222,7 @@ except ImportError:
 
         return log_prob_sentence
 
-    def score_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
+    def score_sentence_cbow(model, sentence, work=None, neu1=None):
         """
         Obtain likelihood score for a single sentence in a fitted CBOW representaion.
 
@@ -250,7 +248,7 @@ except ImportError:
             l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x layer1_size
             if word2_indices and model.cbow_mean:
                 l1 /= len(word2_indices)
-            log_prob_sentence += score_cbow_pair(model, word, word2_indices, l1)
+            log_prob_sentence += score_cbow_pair(model, word, l1)
 
         return log_prob_sentence
 
@@ -367,7 +365,7 @@ def score_sg_pair(model, word, word2):
     return sum(lprob)
 
 
-def score_cbow_pair(model, word, word2_indices, l1):
+def score_cbow_pair(model, word, l1):
     l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
     sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
     lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
@@ -1552,7 +1550,57 @@ class LineSentence(object):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
-                        yield line[i : i + self.max_sentence_length]
+                        yield line[i:i + self.max_sentence_length]
+                        i += self.max_sentence_length
+
+
+class PathLineSentences(object):
+    """
+    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    Like LineSentence, but will process all files in a directory in alphabetical order by filename
+    """
+
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
+        """
+        `source` should be a path to a directory (as a string) where all files can be opened by the
+        LineSentence class. Each file will be read up to
+        `limit` lines (or no clipped if limit is None, the default).
+
+        Example::
+
+            sentences = LineSentencePath(os.getcwd() + '\\corpus\\')
+
+        The files in the directory should be either text files, .bz2 files, or .gz files.
+
+        """
+        self.source = source
+        self.max_sentence_length = max_sentence_length
+        self.limit = limit
+
+        if os.path.isfile(self.source):
+            logging.warning('single file read, better to use models.word2vec.LineSentence')
+            self.input_files = [self.source]  # force code compatibility with list of files
+        elif os.path.isdir(self.source):
+            self.source = os.path.join(self.source, '')  # ensures os-specific slash at end of path
+            logging.debug('reading directory ' + self.source)
+            self.input_files = os.listdir(self.source)
+            self.input_files = [self.source + file for file in self.input_files]  # make full paths
+            self.input_files.sort()  # makes sure it happens in filename order
+        else:  # not a file or a directory, then we can't do anything with it
+            raise ValueError('input is neither a file nor a path')
+
+        logging.info('files read into PathLineSentences:' + '\n'.join(self.input_files))
+
+    def __iter__(self):
+        '''iterate through the files'''
+        for file_name in self.input_files:
+            logging.info('reading file ' + file_name)
+            with utils.smart_open(file_name) as fin:
+                for line in itertools.islice(fin, self.limit):
+                    line = utils.to_unicode(line).split()
+                    i = 0
+                    while i < len(line):
+                        yield line[i:i + self.max_sentence_length]
                         i += self.max_sentence_length
 
 

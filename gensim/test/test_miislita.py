@@ -16,10 +16,9 @@ from __future__ import division  # always use floats
 from __future__ import with_statement
 
 import logging
+import os
 import tempfile
 import unittest
-import bz2
-import os
 
 from gensim import utils, corpora, models, similarities
 
@@ -45,16 +44,15 @@ class CorpusMiislita(corpora.TextCorpus):
         .cor format: one document per line, words separated by whitespace.
 
         """
-        with self.getstream() as stream:
-            for doc in stream:
-                yield [word for word in utils.to_unicode(doc).lower().split()
-                        if word not in CorpusMiislita.stoplist]
+        for doc in self.getstream():
+            yield [word for word in utils.to_unicode(doc).lower().split()
+                    if word not in CorpusMiislita.stoplist]
 
     def __len__(self):
         """Define this so we can use `len(corpus)`"""
         if 'length' not in self.__dict__:
             logger.info("caching corpus size (calculating number of documents)")
-            self.length = sum(1 for doc in self.get_texts())
+            self.length = sum(1 for _ in self.get_texts())
         return self.length
 
 
