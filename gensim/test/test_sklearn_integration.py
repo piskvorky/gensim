@@ -766,9 +766,9 @@ class TestHdpTransformer(unittest.TestCase):
             self.model.partial_fit(X=self.corpus)  # fit against the model again
             doc = list(self.corpus)[0]  # transform only the first document
             transformed = self.model.transform(doc)
-        expected = numpy.array([0.76777752,  0.01757334,  0.01600339,  0.01374061,  0.01275931, 0.01126313,  0.01058131,  0.01167185])
+        expected = numpy.array([0.76777752, 0.01757334, 0.01600339, 0.01374061, 0.01275931, 0.01126313, 0.01058131, 0.01167185])
         passed = numpy.allclose(sorted(transformed[0]), sorted(expected), atol=1e-1)
-        self.assertTrue(True)
+        self.assertTrue(passed)
 
     def testSetGetParams(self):
         # updating only one param

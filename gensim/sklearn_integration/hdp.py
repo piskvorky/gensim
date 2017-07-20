@@ -58,7 +58,7 @@ class HdpTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         else:
             corpus = X
 
-        self.gensim_model = models.HdpModel(corpus=X, id2word=self.id2word, max_chunks=self.max_chunks,
+        self.gensim_model = models.HdpModel(corpus=corpus, id2word=self.id2word, max_chunks=self.max_chunks,
             max_time=self.max_time, chunksize=self.chunksize, kappa=self.kappa, tau=self.tau,
             K=self.K, T=self.T, alpha=self.alpha, gamma=self.gamma, eta=self.eta, scale=self.scale,
             var_converge=self.var_converge, outputdir=self.outputdir, random_state=self.random_state)
@@ -89,7 +89,7 @@ class HdpTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
 
         for k, v in enumerate(X):
             if len(v) != max_num_topics:
-                v.extend([1e-12]*(max_num_topics - len(v)))
+                v.extend([1e-12] * (max_num_topics - len(v)))
             X[k] = v
 
         return np.reshape(np.array(X), (len(docs), max_num_topics))
