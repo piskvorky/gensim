@@ -9,10 +9,13 @@ Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
 
+import numpy as np
+from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
+from gensim import matutils
 from gensim.sklearn_integration import BaseSklearnWrapper
 
 
@@ -50,6 +53,11 @@ class HdpTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         Fit the model according to the given training data.
         Calls gensim.models.HdpModel
         """
+        if sparse.issparse(X):
+            corpus = matutils.Sparse2Corpus(X)
+        else:
+            corpus = X
+
         self.gensim_model = models.HdpModel(corpus=X, id2word=self.id2word, max_chunks=self.max_chunks,
             max_time=self.max_time, chunksize=self.chunksize, kappa=self.kappa, tau=self.tau,
             K=self.K, T=self.T, alpha=self.alpha, gamma=self.gamma, eta=self.eta, scale=self.scale,
@@ -58,6 +66,11 @@ class HdpTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
 
     def transform(self, docs):
         """
+        Takes a list of documents as input ('docs').
+        Returns a matrix of topic distribution for the given document bow, where a_ij
+        indicates (topic_i, topic_probability_j).
+        The input `docs` should be in BOW format and can be a list of documents like : [ [(4, 1), (7, 1)], [(9, 1), (13, 1)], [(2, 1), (6, 1)] ]
+        or a single document like : [(4, 1), (7, 1)]
         """
         if self.gensim_model is None:
             raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
@@ -67,10 +80,32 @@ class HdpTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         docs = check(docs)
         X = [[] for _ in range(0, len(docs))]
 
+        max_num_topics = 0
         for k, v in enumerate(docs):
             doc_topics = self.gensim_model[v]
-            X[k] = doc_topics
-        return X
+            probs_docs = list(map(lambda x: x[1], doc_topics))
+            X[k] = probs_docs
+            max_num_topics = max(max_num_topics, len(probs_docs))
+
+        for k, v in enumerate(X):
+            if len(v) != max_num_topics:
+                v.extend([1e-12]*(max_num_topics - len(v)))
+            X[k] = v
+
+        return np.reshape(np.array(X), (len(docs), max_num_topics))
 
     def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for HdpTransformer")
+        """
+        Train model over X.
+        """
+        if sparse.issparse(X):
+            X = matutils.Sparse2Corpus(X)
+
+        if self.gensim_model is None:
+            self.gensim_model = models.HdpModel(id2word=self.id2word, max_chunks=self.max_chunks,
+                max_time=self.max_time, chunksize=self.chunksize, kappa=self.kappa, tau=self.tau,
+                K=self.K, T=self.T, alpha=self.alpha, gamma=self.gamma, eta=self.eta, scale=self.scale,
+                var_converge=self.var_converge, outputdir=self.outputdir, random_state=self.random_state)
+
+        self.gensim_model.update(corpus=X)
+        return self
