@@ -8,6 +8,8 @@ import logging
 from gensim.models.word2vec import Word2Vec
 from gensim.models.ft_keyedvectors import FastTextKeyedVectors
 
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 
@@ -65,21 +67,57 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
 			start = max(0, pos - model.window + reduced_window)
 			window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
 			word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-			l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x vector_size
-			if word2_indices and model.cbow_mean:
-				l1 /= len(word2_indices)
+			# l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x vector_size
+			# if word2_indices and model.cbow_mean:
+			#	l1 /= len(word2_indices)
+
 			# for loop for ngrams for words in this window here
 			word2_subwords_indices = []
 
 			for indices in word2_indices:
 				word2_subwords_indices += get_subwords(model.wv.syn0[indices])  # subwords for each word in window except target word
 
+			l1 = np_sum(model.wv.syn0[word2_subwords_indices], axis=0)  # 1 x vector_size
+			if word2_subwords_indices and model.cbow_mean:
+				l1 /= len(word2_subwords_indices)
+
 			train_cbow_pair(model, word, word2_subwords_indices, l1, alpha)  # train on the sliding window for target word
 		result += len(word_vocabs)
 	return result
 
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
-	pass
+    neu1e = zeros(l1.shape)
+
+    if model.hs:
+        l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
+        fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
+        ga = (1. - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+        if learn_hidden:
+            model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+        neu1e += dot(ga, l2a)  # save error
+
+    if model.negative:
+        # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
+        word_indices = [word.index]
+        while len(word_indices) < model.negative + 1:
+            w = model.cum_table.searchsorted(model.random.randint(model.cum_table[-1]))
+            if w != word.index:
+                word_indices.append(w)
+        l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
+        fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
+        gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
+        if learn_hidden:
+            model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
+        neu1e += dot(gb, l2b)  # save error
+
+    if learn_vectors:
+        # learn input -> hidden, here for all words in the window separately
+        if not model.cbow_mean and input_word_indices:
+            neu1e /= len(input_word_indices)
+        for i in input_word_indices:
+            model.wv.syn0[i] += neu1e * model.syn0_lockf[i]
+
+    return neu1e
 	
 
 def get_subwords(word):
