@@ -123,11 +123,8 @@ class FastTextKeyedVectors(KeyedVectors):
         if word in self.vocab:
             return True
         else:
-            word_ngrams = set(FastText.compute_ngrams(word, self.min_n, self.max_n))
-            if len(word_ngrams & set(self.ngrams.keys())):
-                return True
-            else:
-                return False
+            word_ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
+            return bool(any(ng in self.ngrams for ng in word_ngrams))
 
 
 class FastText(Word2Vec):
