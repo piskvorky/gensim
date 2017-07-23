@@ -10,7 +10,8 @@ Automated tests for checking various utils functions.
 
 import logging
 import unittest
-
+import tempfile
+import os
 from gensim import utils
 from six import iteritems
 import numpy as np
@@ -84,8 +85,11 @@ class TestUtils(unittest.TestCase):
         self.assertEquals(utils.decode_htmlentities(body), expected)
 
     def test_check_output(self):
-        self.assertTrue(utils.check_output(args=['/bin/sh', '-c', 'echo', '1']))
-        self.assertRaises(FileNotFoundError, utils.check_output, args=['nonexistentFile'])
+        if os.name == 'posix':
+            self.assertTrue(utils.check_output(args=['/bin/sh', '-c', 'echo', '0']))
+            self.assertRaises(FileNotFoundError, utils.check_output, args=['nonexistentFile'])
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                self. assertRaises(FileNotFoundError, utils.check_output, args=[tmp_dir])
 
 class TestSampleDict(unittest.TestCase):
     def test_sample_dict(self):
@@ -186,4 +190,6 @@ class TestWindowing(unittest.TestCase):
 
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)
+    t  = TestUtils()
+    t.test_check_output()
     unittest.main()
