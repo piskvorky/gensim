@@ -83,6 +83,10 @@ class TestUtils(unittest.TestCase):
         expected = u'It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af'
         self.assertEquals(utils.decode_htmlentities(body), expected)
 
+    def test_check_output(self):
+        self.assertTrue(utils.check_output(args=['/bin/sh', '-c', 'echo', '1']))
+        self.assertRaises(FileNotFoundError, utils.check_output, args=['nonexistentFile'])
+
 class TestSampleDict(unittest.TestCase):
     def test_sample_dict(self):
         d = {1:2,2:3,3:4,4:5}
@@ -182,4 +186,6 @@ class TestWindowing(unittest.TestCase):
 
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)
-    unittest.main()
+    t = TestUtils()
+    t.test_check_output()
+    #unittest.main()
