@@ -1168,22 +1168,23 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     Python 2.6.2
     Added extra KeyboardInterrupt handling
     """
-    try:
-        logger.debug("COMMAND: %s %s", popenargs, kwargs)
-        process = subprocess.Popen(stdout=stdout, *popenargs, **kwargs)
-        output, unused_err = process.communicate()
-        retcode = process.poll()
-        if retcode:
-            cmd = kwargs.get("args")
-            if cmd is None:
-                cmd = popenargs[0]
-            error = subprocess.CalledProcessError(retcode, cmd)
-            error.output = output
-            raise error
-        return output
-    except KeyboardInterrupt:
-        process.terminate()
-        raise
+    logger.debug("COMMAND: %s %s", popenargs, kwargs)
+    command = kwargs.get('args')[0]
+    if not os.path.isfile(command):
+        raise FileNotFoundError('Path [%s] is path to folder, please specify path to executable ' % command)
+    if not os.access(command, os.X_OK):
+        raise PermissionError('Executable [%s] does not have sufficient permission. ' % command)
+    process = subprocess.Popen(stdout=stdout, **kwargs)
+    output, unused_err = process.communicate()
+    retcode = process.poll()
+    if retcode:
+        cmd = kwargs.get("args")
+        if cmd is None:
+            cmd = popenargs[0]
+        error = subprocess.CalledProcessError(retcode, cmd)
+        error.output = output
+        raise error
+    return output
 
 
 def sample_dict(d, n=10, use_random=True):
