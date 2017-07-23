@@ -1170,8 +1170,10 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     """
     logger.debug("COMMAND: %s %s", popenargs, kwargs)
     command = kwargs.get('args')[0]
-    if not os.path.isfile(command):
-        raise FileNotFoundError('Path [%s] is path to folder, please specify path to executable ' % command)
+    if not os.path.exists(command):
+        raise FileNotFoundError('Path [%s] does not exists ' % command)
+    if os.path.isdir(command):
+        raise FileNotFoundError('Path [%s] is path to a folder not to a file. Please specify path to executable ' % command)
     if not os.access(command, os.X_OK):
         raise PermissionError('Executable [%s] does not have sufficient permission. ' % command)
     process = subprocess.Popen(stdout=stdout, **kwargs)
