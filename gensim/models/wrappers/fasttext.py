@@ -124,7 +124,7 @@ class FastTextKeyedVectors(KeyedVectors):
             return True
         else:
             word_ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
-            return bool(any(ng in self.ngrams for ng in word_ngrams))
+            return any(ng in self.ngrams for ng in word_ngrams)
 
 
 class FastText(Word2Vec):
