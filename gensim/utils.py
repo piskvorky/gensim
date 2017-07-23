@@ -1170,7 +1170,8 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     """
     logger.debug("COMMAND: %s %s", popenargs, kwargs)
     command = kwargs.get('args')[0]
-    if not os.path.exists(command):
+    usr_bin_alias = '/usr/bin/' + command
+    if not os.path.exists(command) and not os.path.exists(usr_bin_alias):
         raise FileNotFoundError('Path [%s] does not exists ' % command)
     if os.path.isdir(command):
         raise FileNotFoundError('Path [%s] is path to a folder not to a file. Please specify path to executable ' % command)
