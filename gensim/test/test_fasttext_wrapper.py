@@ -30,8 +30,7 @@ def testfile():
 
 class TestFastText(unittest.TestCase):
     def setUp(self):
-        ft_home = os.environ.get('FT_HOME', None)
-        self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
+        self.ft_path = os.environ.get('FT_HOME', None)
         self.corpus_file = datapath('lee_background.cor')
         self.test_model_file = datapath('lee_fasttext')
         self.test_new_model_file = datapath('lee_fasttext_new')
