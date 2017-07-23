@@ -186,6 +186,4 @@ class TestWindowing(unittest.TestCase):
 
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)
-    t = TestUtils()
-    t.test_check_output()
-    #unittest.main()
+    unittest.main()
