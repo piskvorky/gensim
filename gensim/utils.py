@@ -26,8 +26,10 @@ except ImportError:
 
 try:
     FileNotFoundError
+    PermissionError
 except NameError:
     FileNotFoundError = IOError
+    PermissionError = OSError
 
 import re
 import unicodedata
