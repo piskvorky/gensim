@@ -95,8 +95,6 @@ class TestUtils(unittest.TestCase):
         if os.name == 'posix':
             self.assertTrue(utils.check_output(args=['/bin/sh', '-c', 'echo', '0']))
             self.assertRaises(FileNotFoundError, utils.check_output, args=['nonexistentFile'])
-            with tempfile.TemporaryDirectory() as tmp_dir:
-                self. assertRaises(FileNotFoundError, utils.check_output, args=[tmp_dir])
 
 class TestSampleDict(unittest.TestCase):
     def test_sample_dict(self):
