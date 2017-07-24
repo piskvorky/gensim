@@ -24,6 +24,11 @@ try:
 except ImportError:
     import pickle as _pickle
 
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
+
 import re
 import unicodedata
 import os
