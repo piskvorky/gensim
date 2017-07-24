@@ -16,6 +16,13 @@ from gensim import utils
 from six import iteritems
 import numpy as np
 
+try:
+    FileNotFoundError
+    PermissionError
+except NameError:
+    FileNotFoundError = IOError
+    PermissionError = OSError
+
 
 class TestIsCorpus(unittest.TestCase):
     def test_None(self):
