@@ -10,7 +10,6 @@ Automated tests for checking various utils functions.
 
 import logging
 import unittest
-import tempfile
 import os
 from gensim import utils
 from six import iteritems
