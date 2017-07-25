@@ -127,20 +127,61 @@ class TestPhrasesModel(unittest.TestCase):
         """Test Phrases bigram export_phrases functionality."""
         bigram = Phrases(sentences, min_count=1, threshold=1)
 
-        # with this setting we should get response_time and graph_minors
-        bigram1_seen = False
-        bigram2_seen = False
+        seen_bigrams = set()
 
         for phrase, score in bigram.export_phrases(sentences):
-            if not bigram1_seen and b'response time' == phrase:
-                bigram1_seen = True
-            elif not bigram2_seen and b'graph minors' == phrase:
-                bigram2_seen = True
-            if bigram1_seen and bigram2_seen:
-                break
+            seen_bigrams.add(phrase)
 
-        self.assertTrue(bigram1_seen)
-        self.assertTrue(bigram2_seen)
+        assert seen_bigrams == set([
+            b'response time',
+            b'graph minors',
+            b'human interface'
+        ])
+
+    def testMultipleBigramsSingleEntry(self):
+        """ a single entry should produce multiple bigrams. """
+        bigram = Phrases(sentences, min_count=1, threshold=1)
+
+        seen_bigrams = set()
+
+        test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
+        for phrase, score in bigram.export_phrases(test_sentences):
+            seen_bigrams.add(phrase)
+
+        assert seen_bigrams == set([
+            b'graph minors',
+            b'human interface'
+        ])
+
+    def testScoringDefault(self):
+        """ test the default scoring, from the mikolov word2vec paper """
+        bigram = Phrases(sentences, min_count=1, threshold=1)
+
+        seen_scores = set()
+
+        test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
+        for phrase, score in bigram.export_phrases(test_sentences):
+            seen_scores.add(round(score, 3))
+
+        assert seen_scores == set([
+            5.167,  # score for graph minors
+            3.444  # score for human interface
+        ])
+
+    def testScoringNpmi(self):
+        """ test normalized pointwise mutual information scoring """
+        bigram = Phrases(sentences, min_count=1, threshold=.5, scoring='npmi')
+
+        seen_scores = set()
+
+        test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
+        for phrase, score in bigram.export_phrases(test_sentences):
+            seen_scores.add(round(score, 3))
+
+        assert seen_scores == set([
+            .882,  # score for graph minors
+            .714  # score for human interface
+        ])
 
     def testBadParameters(self):
         """Test the phrases module with bad parameters."""

@@ -33,11 +33,13 @@ The algorithm:
 import logging
 import numpy as np
 import numbers
+from random import sample
 import os
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel
+from gensim.matutils import kullback_leibler, hellinger, jaccard_distance
 
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
@@ -593,6 +595,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if update_every:
             updatetype = "online"
+            if passes == 1:
+                updatetype += " (single-pass)"
+            else:
+                updatetype += " (multi-pass)"
             updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
         else:
             updatetype = "batch"
@@ -965,6 +971,78 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
+    def diff(self, other, distance="kullback_leibler", num_words=100, n_ann_terms=10, normed=True):
+        """
+        Calculate difference topic2topic between two Lda models
+        `other` instances of `LdaMulticore` or `LdaModel`
+        `distance` is function that will be applied to calculate difference between any topic pair.
+        Available values: `kullback_leibler`, `hellinger` and `jaccard`
+        `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
+        `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
+        Returns a matrix Z with shape (m1.num_topics, m2.num_topics), where Z[i][j] - difference between topic_i and topic_j
+        and matrix annotation with shape (m1.num_topics, m2.num_topics, 2, None),
+        where:
+
+            annotation[i][j] = [[`int_1`, `int_2`, ...], [`diff_1`, `diff_2`, ...]] and
+            `int_k` is word from intersection of `topic_i` and `topic_j` and
+            `diff_l` is word from symmetric difference of `topic_i` and `topic_j`
+            `normed` is a flag. If `true`, matrix Z will be normalized
+
+        Example:
+
+        >>> m1, m2 = LdaMulticore.load(path_1), LdaMulticore.load(path_2)
+        >>> mdiff, annotation = m1.diff(m2)
+        >>> print(mdiff) # get matrix with difference for each topic pair from `m1` and `m2`
+        >>> print(annotation) # get array with positive/negative words for each topic pair from `m1` and `m2`
+
+        """
+
+        distances = {
+            "kullback_leibler": kullback_leibler,
+            "hellinger": hellinger,
+            "jaccard": jaccard_distance,
+        }
+
+        if distance not in distances:
+            valid_keys = ", ".join("`{}`".format(x) for x in distances.keys())
+            raise ValueError("Incorrect distance, valid only {}".format(valid_keys))
+
+        if not isinstance(other, self.__class__):
+            raise ValueError("The parameter `other` must be of type `{}`".format(self.__name__))
+
+        distance_func = distances[distance]
+        d1, d2 = self.state.get_lambda(), other.state.get_lambda()
+        t1_size, t2_size = d1.shape[0], d2.shape[0]
+
+        fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in xrange(t1_size)]
+        snd_topics = [{w for (w, _) in other.show_topic(topic, topn=num_words)} for topic in xrange(t2_size)]
+
+        if distance == "jaccard":
+            d1, d2 = fst_topics, snd_topics
+
+        z = np.zeros((t1_size, t2_size))
+        for topic1 in range(t1_size):
+            for topic2 in range(t2_size):
+                z[topic1][topic2] = distance_func(d1[topic1], d2[topic2])
+
+        if normed:
+            if np.abs(np.max(z)) > 1e-8:
+                z /= np.max(z)
+
+        annotation = [[None] * t1_size for _ in range(t2_size)]
+
+        for topic1 in range(t1_size):
+            for topic2 in range(t2_size):
+                pos_tokens = fst_topics[topic1] & snd_topics[topic2]
+                neg_tokens = fst_topics[topic1].symmetric_difference(snd_topics[topic2])
+
+                pos_tokens = sample(pos_tokens, min(len(pos_tokens), n_ann_terms))
+                neg_tokens = sample(neg_tokens, min(len(neg_tokens), n_ann_terms))
+
+                annotation[topic1][topic2] = [pos_tokens, neg_tokens]
+
+        return z, annotation
+
     def __getitem__(self, bow, eps=None):
         """
         Return topic distribution for the given document `bow`, as a list of
@@ -1023,9 +1101,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         separately_explicit = ['expElogbeta', 'sstats']
         # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some
         # array manually.
-        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or len(self.alpha.shape) != 1:
+        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
             separately_explicit.append('alpha')
-        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or len(self.eta.shape) != 1:
+        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
             separately_explicit.append('eta')
         # Merge separately_explicit with separately.
         if separately:
@@ -1049,18 +1127,28 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
+
+        # check if `random_state` attribute has been set after main pickle load
+        # if set -> the model to be loaded was saved using a >= 0.13.2 version of Gensim
+        # if not set -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so set `random_state` as the default value
+        if not hasattr(result, 'random_state'):
+            result.random_state = utils.get_random_state(None)  # using default value `get_random_state(None)`
+            logging.warning("random_state not set so using default value")
+
         state_fname = utils.smart_extension(fname, '.state')
         try:
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
         except Exception as e:
             logging.warning("failed to load state from %s: %s", state_fname, e)
+
         id2word_fname = utils.smart_extension(fname, '.id2word')
+        # check if `id2word_fname` file is present on disk
+        # if present -> the model to be loaded was saved using a >= 0.13.2 version of Gensim, so set `result.id2word` using the `id2word_fname` file
+        # if not present -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so `result.id2word` already set after the main pickle load
         if (os.path.isfile(id2word_fname)):
             try:
                 result.id2word = utils.unpickle(id2word_fname)
             except Exception as e:
                 logging.warning("failed to load id2word dictionary from %s: %s", id2word_fname, e)
-        else:
-            result.id2word = None
         return result
 # endclass LdaModel

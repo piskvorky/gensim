@@ -179,7 +179,8 @@ def copytree_hardlink(source, dest):
         shutil.copy2 = copy2
 
 
-def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
+def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict", to_lower=False,
+             lower=False):
     """
     Iteratively yield tokens as unicode strings, removing accent marks
     and optionally lowercasing the unidoce string by assigning True
@@ -195,11 +196,15 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
 
     """
     lowercase = lowercase or to_lower or lower
-    text = to_unicode(text, errors=errors)
+    text = to_unicode(text, encoding, errors=errors)
     if lowercase:
         text = text.lower()
     if deacc:
         text = deaccent(text)
+    return simple_tokenize(text)
+
+
+def simple_tokenize(text):
     for match in PAT_ALPHABETIC.finditer(text):
         yield match.group()
 
@@ -943,7 +948,7 @@ def revdict(d):
     result (which one is kept is arbitrary).
 
     """
-    return dict((v, k) for (k, v) in iteritems(d))
+    return dict((v, k) for (k, v) in iteritems(dict(d)))
 
 
 def toptexts(query, texts, index, n=10):
@@ -1164,6 +1169,7 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     Added extra KeyboardInterrupt handling
     """
     try:
+        logger.debug("COMMAND: %s %s", popenargs, kwargs)
         process = subprocess.Popen(stdout=stdout, *popenargs, **kwargs)
         output, unused_err = process.communicate()
         retcode = process.poll()
@@ -1188,3 +1194,72 @@ def sample_dict(d, n=10, use_random=True):
     """
     selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
     return [(key, d[key]) for key in selected_keys]
+
+
+def strided_windows(ndarray, window_size):
+    """
+    Produce a numpy.ndarray of windows, as from a sliding window.
+
+    >>> strided_windows(np.arange(5), 2)
+    array([[0, 1],
+           [1, 2],
+           [2, 3],
+           [3, 4]])
+    >>> strided_windows(np.arange(10), 5)
+    array([[0, 1, 2, 3, 4],
+           [1, 2, 3, 4, 5],
+           [2, 3, 4, 5, 6],
+           [3, 4, 5, 6, 7],
+           [4, 5, 6, 7, 8],
+           [5, 6, 7, 8, 9]])
+
+    Args:
+        ndarray: either a numpy.ndarray or something that can be converted into one.
+        window_size: sliding window size.
+
+    Returns:
+        numpy.ndarray of the subsequences produced by sliding a window of the given size over
+        the `ndarray`. Since this uses striding, the individual arrays are views rather than
+        copies of `ndarray`. Changes to one view modifies the others and the original.
+    """
+    ndarray = np.asarray(ndarray)
+    if window_size == ndarray.shape[0]:
+        return np.array([ndarray])
+    elif window_size > ndarray.shape[0]:
+        return np.ndarray((0, 0))
+
+    stride = ndarray.strides[0]
+    return np.lib.stride_tricks.as_strided(
+        ndarray, shape=(ndarray.shape[0] - window_size + 1, window_size),
+        strides=(stride, stride))
+
+
+def iter_windows(texts, window_size, copy=False, ignore_below_size=True, include_doc_num=False):
+    """Produce a generator over the given texts using a sliding window of `window_size`.
+    The windows produced are views of some subsequence of a text. To use deep copies
+    instead, pass `copy=True`.
+
+    Args:
+        texts: List of string sentences.
+        window_size: Size of sliding window.
+        copy: False to use views of the texts (default) or True to produce deep copies.
+        ignore_below_size: ignore documents that are not at least `window_size` in length (default behavior).
+            If False, the documents below `window_size` will be yielded as the full document.
+
+    """
+    for doc_num, document in enumerate(texts):
+        for window in _iter_windows(document, window_size, copy, ignore_below_size):
+            if include_doc_num:
+                yield (doc_num, window)
+            else:
+                yield window
+
+
+def _iter_windows(document, window_size, copy=False, ignore_below_size=True):
+    doc_windows = strided_windows(document, window_size)
+    if doc_windows.shape[0] == 0:
+        if not ignore_below_size:
+            yield document.copy() if copy else document
+    else:
+        for doc_window in doc_windows:
+            yield doc_window.copy() if copy else doc_window

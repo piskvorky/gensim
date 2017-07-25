@@ -698,6 +698,13 @@ class TestWord2VecModel(unittest.TestCase):
         model.reset_from(other_model)
         self.assertEqual(model.wv.vocab, other_vocab)
 
+    def test_compute_training_loss(self):
+        model = word2vec.Word2Vec(min_count=1, sg=1, negative=5, hs=1)
+        model.build_vocab(sentences)
+        model.train(sentences, compute_loss=True, total_examples=model.corpus_count, epochs=model.iter)
+        training_loss_val = model.get_latest_training_loss()
+        self.assertTrue(training_loss_val > 0.0)
+
 
 #endclass TestWord2VecModel
 
@@ -763,6 +770,27 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
                 sentences = word2vec.LineSentence(fin)
                 for words in sentences:
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
+
+    def testPathLineSentences(self):
+        """Does PathLineSentences work with a path argument?"""
+        with utils.smart_open(os.path.join(datapath('PathLineSentences'), '1.txt')) as orig1,\
+        utils.smart_open(os.path.join(datapath('PathLineSentences'), '2.txt.bz2')) as orig2:
+            sentences = word2vec.PathLineSentences(datapath('PathLineSentences'))
+            orig = orig1.readlines() + orig2.readlines()
+            orig_counter = 0  # to go through orig while matching PathLineSentences
+            for words in sentences:
+                self.assertEqual(words, utils.to_unicode(orig[orig_counter]).split())
+                orig_counter += 1
+
+    def testPathLineSentencesOneFile(self):
+        """Does PathLineSentences work with a single file argument?"""
+        test_file = os.path.join(datapath('PathLineSentences'), '1.txt')
+        with utils.smart_open(test_file) as orig:
+            sentences = word2vec.PathLineSentences(test_file)
+            for words in sentences:
+                self.assertEqual(words, utils.to_unicode(orig.readline()).split())
+
+
 #endclass TestWord2VecSentenceIterators
 
 # TODO: get correct path to Python binary

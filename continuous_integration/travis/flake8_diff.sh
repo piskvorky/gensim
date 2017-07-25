@@ -115,9 +115,10 @@ echo -e '\nRunning flake8 on the diff in the range' "$COMMIT_RANGE" \
 echo '--------------------------------------------------------------------------------'
 
 # We ignore files from sklearn/externals.
+# Excluding vec files since they contain non-utf8 content and flake8 raises exception for non-utf8 input
 # We need the following command to exit with 0 hence the echo in case
 # there is no match
-MODIFIED_FILES="$(git diff --name-only $COMMIT_RANGE  || echo "no_match")"
+MODIFIED_FILES="$(git diff --name-only $COMMIT_RANGE -- . ':(exclude)*.vec' || echo "no_match")"
 
 check_files() {
     files="$1"
@@ -133,6 +134,6 @@ check_files() {
 if [[ "$MODIFIED_FILES" == "no_match" ]]; then
     echo "No file has been modified"
 else
-    check_files "$(echo "$MODIFIED_FILES" )" "--ignore=E501,E731,E12,W503 --exclude=*.sh,*.md,*.yml,*.rst,*.ipynb"
+    check_files "$(echo "$MODIFIED_FILES" )" "--ignore=E501,E731,E12,W503 --exclude=*.sh,*.md,*.yml,*.rst,*.ipynb,*.txt,*.csv,*.vec,Dockerfile*,*.c,*.pyx,*.inc"
 fi
 echo -e "No problem detected by flake8\n"

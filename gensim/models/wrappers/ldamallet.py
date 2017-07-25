@@ -21,8 +21,8 @@ The wrapped model can NOT be updated with new documents for online training -- u
 
 Example:
 
->>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
->>> print model[my_vector]  # print LDA topics of a document
+    >>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
+    >>> print model[my_vector]  # print LDA topics of a document
 
 .. [1] http://mallet.cs.umass.edu/
 
@@ -43,7 +43,7 @@ from six import iteritems
 from smart_open import smart_open
 
 from gensim import utils, matutils
-from gensim.utils import check_output
+from gensim.utils import check_output, revdict
 from gensim.models.ldamodel import LdaModel
 from gensim.models import basemodel
 
@@ -190,7 +190,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         if hasattr(self.id2word, 'token2id'):
             word2id = self.id2word.token2id
         else:
-            word2id = dict((v, k) for k, v in iteritems(self.id2word))
+            word2id = revdict(self.id2word)
 
         with utils.smart_open(self.fstate()) as fin:
             _ = next(fin)  # header
@@ -240,14 +240,19 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
         return shown
 
-    def show_topic(self, topicid, num_words=10):
+    def show_topic(self, topicid, topn=10, num_words=None):
+        if num_words is not None:  # deprecated num_words is used
+            logger.warning("The parameter num_words for show_topic() would be deprecated in the updated version.")
+            logger.warning("Please use topn instead.")
+            topn = num_words
+
         if self.word_topics is None:
             logger.warning(
                 "Run train or load_word_topics before showing topics."
             )
         topic = self.word_topics[topicid]
         topic = topic / topic.sum()  # normalize to probability dist
-        bestn = matutils.argsort(topic, num_words, reverse=True)
+        bestn = matutils.argsort(topic, topn, reverse=True)
         beststr = [(self.id2word[id], topic[id]) for id in bestn]
         return beststr
 
@@ -354,14 +359,12 @@ def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
     gensim model.
 
     Args:
-    ----
-    mallet_model : Trained mallet model
-    gamma_threshold : To be used for inference in the new LdaModel.
-    iterations : number of iterations to be used for inference in the new LdaModel.
+        mallet_model : Trained mallet model
+        gamma_threshold : To be used for inference in the new LdaModel.
+        iterations : number of iterations to be used for inference in the new LdaModel.
 
     Returns:
-    -------
-    model_gensim : LdaModel instance; copied gensim LdaModel
+        model_gensim : LdaModel instance; copied gensim LdaModel
     """
     model_gensim = LdaModel(
         id2word=mallet_model.id2word, num_topics=mallet_model.num_topics,
