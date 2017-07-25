@@ -517,14 +517,14 @@ class TestTextDirectoryCorpus(unittest.TestCase):
 
         corpus = textcorpus.TextDirectoryCorpus(dirpath)
         filenames = list(corpus.iter_filepaths())
-        base_names = [name[len(dirpath) + 1:] for name in filenames]
-        expected = [
+        base_names = sorted([name[len(dirpath) + 1:] for name in filenames])
+        expected = sorted([
             '0.txt',
             'a_folder/1.txt',
             'b_folder/2.txt',
             'b_folder/3.txt',
             'b_folder/c_folder/4.txt'
-        ]
+        ])
         expected = [os.path.normpath(path) for path in expected]
         self.assertEqual(expected, base_names)
 
