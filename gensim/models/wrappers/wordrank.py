@@ -34,7 +34,6 @@ from gensim.scripts.glove2word2vec import glove2word2vec
 from six import string_types
 from smart_open import smart_open
 from shutil import copyfile, rmtree
-from os.path import join
 
 
 logger = logging.getLogger(__name__)
@@ -89,25 +88,25 @@ class Wordrank(KeyedVectors):
         """
 
         # prepare training data (cooccurrence matrix and vocab)
-        model_dir = join(wr_path, out_name)
-        meta_dir = join(model_dir, 'meta')
+        model_dir = os.path.join(wr_path, out_name)
+        meta_dir = os.path.join(model_dir, 'meta')
         os.makedirs(meta_dir)
         logger.info("Dumped data will be stored in '%s'", model_dir)
-        copyfile(corpus_file, join(meta_dir, corpus_file.split('/')[-1]))
+        copyfile(corpus_file, os.path.join(meta_dir, corpus_file.split('/')[-1]))
 
-        vocab_file = join(meta_dir, 'vocab.txt')
-        temp_vocab_file = join(meta_dir, 'tempvocab.txt')
-        cooccurrence_file = join(meta_dir, 'cooccurrence')
-        cooccurrence_shuf_file = join(meta_dir, 'wiki.toy')
-        meta_file = join(meta_dir, 'meta')
+        vocab_file = os.path.join(meta_dir, 'vocab.txt')
+        temp_vocab_file = os.path.join(meta_dir, 'tempvocab.txt')
+        cooccurrence_file = os.path.join(meta_dir, 'cooccurrence')
+        cooccurrence_shuf_file = os.path.join(meta_dir, 'wiki.toy')
+        meta_file = os.path.join(meta_dir, 'meta')
 
-        cmd_vocab_count = [join(wr_path, 'glove', 'vocab_count'), '-min-count', str(min_count), '-max-vocab', str(max_vocab_size)]
-        cmd_cooccurence_count = [join(wr_path, 'glove', 'cooccur'), '-memory', str(memory), '-vocab-file', temp_vocab_file, '-window-size', str(window), '-symmetric', str(symmetric)]
-        cmd_shuffle_cooccurences = [join(wr_path, 'glove', 'shuffle'), '-memory', str(memory)]
+        cmd_vocab_count = [os.path.join(wr_path, 'glove', 'vocab_count'), '-min-count', str(min_count), '-max-vocab', str(max_vocab_size)]
+        cmd_cooccurence_count = [os.path.join(wr_path, 'glove', 'cooccur'), '-memory', str(memory), '-vocab-file', temp_vocab_file, '-window-size', str(window), '-symmetric', str(symmetric)]
+        cmd_shuffle_cooccurences = [os.path.join(wr_path, 'glove', 'shuffle'), '-memory', str(memory)]
         cmd_del_vocab_freq = ['cut', '-d', " ", '-f', '1', temp_vocab_file]
 
         commands = [cmd_vocab_count, cmd_cooccurence_count, cmd_shuffle_cooccurences]
-        input_fnames = [join(meta_dir, corpus_file.split('/')[-1]), join(meta_dir, corpus_file.split('/')[-1]), cooccurrence_file]
+        input_fnames = [os.path.join(meta_dir, os.path.split(corpus_file)[-1]), os.path.join(meta_dir, os.path.split(corpus_file)[-1]), cooccurrence_file]
         output_fnames = [temp_vocab_file, cooccurrence_file, cooccurrence_shuf_file]
 
         logger.info("Prepare training data (%s) using glove code", ", ".join(input_fnames))
@@ -158,7 +157,7 @@ class Wordrank(KeyedVectors):
         # run wordrank executable with wr_args
         cmd = ['mpirun', '-np']
         cmd.append(str(np))
-        cmd.append(join(wr_path, 'wordrank'))
+        cmd.append(os.path.join(wr_path, 'wordrank'))
         for option, value in wr_args.items():
             cmd.append('--%s' % option)
             cmd.append(str(value))
@@ -167,9 +166,9 @@ class Wordrank(KeyedVectors):
 
         # use embeddings from max. iteration's dump
         max_iter_dump = iter - (iter % dump_period)
-        os.rename('model_word_%d.txt' % max_iter_dump, join(model_dir, 'wordrank.words'))
-        os.rename('model_context_%d.txt' % max_iter_dump, join(model_dir, 'wordrank.contexts'))
-        model = cls.load_wordrank_model(join(model_dir, 'wordrank.words'), vocab_file, join(model_dir, 'wordrank.contexts'), sorted_vocab, ensemble)
+        os.rename('model_word_%d.txt' % max_iter_dump, os.path.join(model_dir, 'wordrank.words'))
+        os.rename('model_context_%d.txt' % max_iter_dump, os.path.join(model_dir, 'wordrank.contexts'))
+        model = cls.load_wordrank_model(os.path.join(model_dir, 'wordrank.words'), vocab_file, os.path.join(model_dir, 'wordrank.contexts'), sorted_vocab, ensemble)
 
         if cleanup_files:
             rmtree(model_dir)
