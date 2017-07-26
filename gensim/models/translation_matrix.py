@@ -15,6 +15,11 @@ random.seed(2333)
 class Space(object):
     """
     An auxiliary class for store the the words space
+
+    Attributes:
+        mat (ndarray): each row is the word vector of lexicon
+        index2word (list): a list of lexicon
+        word2index (dict): map word to index
     """
     def __init__(self, matrix, index2word):
         """
@@ -26,9 +31,7 @@ class Space(object):
         self.build_word2index()
 
     def build_word2index(self):
-        """
-        build a dict to map word to index
-        """
+        """ build a dict to map word to index """
         self.word2index = {}
         for idx, word in enumerate(self.index2word):
             if word in self.word2index:
@@ -61,9 +64,7 @@ class Space(object):
         return Space(mat, id2row)
 
     def normalize(self):
-        """
-        normalized the word vector's matrix
-        """
+        """ normalized the word vector's matrix """
         self.mat = self.mat / np.sqrt(np.sum(np.multiply(self.mat, self.mat), axis=1, keepdims=True))
 
 
@@ -85,6 +86,18 @@ class TranslationMatrix(utils.SaveLoad):
 
     """
     def __init__(self, word_pair, source_lang_vec=None, target_lang_vec=None):
+        """
+        Initialize the model from a list pair of `word_pair`. Each word_pair is tupe
+         with source language word and target language word.
+
+        Examples: [("one", "uno"), ("two", "due")]
+
+        Args:
+            word_pair (list): a list pair of `word_pair`
+            source_lang_vec (KeyedVectors): a set of word vector of source language
+            target_lang_vec (KeyedVectors): a set of word vector of target language
+        """
+
         self.source_word, self.target_word = zip(*word_pair)
         if source_lang_vec is None or target_lang_vec is None:
             raise RuntimeError("you must provide the source language vectors and target language vectors")
@@ -101,12 +114,28 @@ class TranslationMatrix(utils.SaveLoad):
         self.translation_matrix = self.train(self.source_space, self.target_space)
 
     def build_space(self, lang_vec, words=None):
+        """
+        Args:
+            lang_vec(KeyedVectors): a set of word vector
+            words: a set of word
+
+        Returns:
+            a Space object for those words
+        """
         return Space.build(lang_vec, words)
 
     def train(self, source_space, target_space):
         """
         build the translation matrix that mapping from source space to target space.
+
+        Args:
+            source_space (Space object): source language space
+            target_space (Space object): target language space
+
+        Returns:
+            translation matrix that mapping from the source language to target language
         """
+
         source_space.normalize()
         target_space.normalize()
 
