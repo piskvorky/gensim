@@ -6,7 +6,8 @@
 import logging
 
 from gensim.models.word2vec import Word2Vec
-from gensim.models.ft_keyedvectors import FastTextKeyedVectors
+from gensim.models.wrapper.fasttext import FastTextKeyedVectors as ft_keyedvectors
+from gensim.models.wrapper.fasttext import FastText as ft_wrapper
 
 import numpy as np
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
@@ -164,7 +165,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
         if not model.cbow_mean and input_word_indices:
             neu1e /= len(input_word_indices)
         for i in input_word_indices:
-            model.wv.syn0[i] += neu1e * model.syn0_lockf[i]  # do we have subwords in model.wv.syn0, this probably needs some changes
+            model.wv.syn0_all[i] += neu1e * model.syn0_lockf[i]  # maybe need to create syn0_all_lockf
 
     return neu1e
 
@@ -181,11 +182,12 @@ def get_subwords(self, word):
     for subword in all_subwords:
         # int32_t h = hash(ngram) % args_->bucket;
         # ngrams.push_back(nwords_ + h);
-        subword_hash = ft_hash(ngram)
+        subword_hash = ft_hash(subword)
         subword_indices.append(len(self.wv.vocab) + subword_hash % self.bucket)
 
-    self.wv.syn0_all = self.wv.syn0_all.take(subword_indices, axis=0)
-    return subwords_indices
+    # self.wv.syn0_all = self.wv.syn0_all.take(subword_indices, axis=0)  # self.wv.syn0_all[subword_indices]
+    return subword_indices
+
 
 def compute_subwords(word, min_n, max_n):
         BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
@@ -193,8 +195,8 @@ def compute_subwords(word, min_n, max_n):
         subwords = []
 
         for subword_length in range(min_n, min(len(extended_word), max_n) + 1):
-            for i in range(0, len(extended_word) - ngram_length + 1):
-                subwords.append(extended_word[i:i + ngram_length])  # append or += ? discuss
+            for i in range(0, len(extended_word) - subword_length + 1):
+                subwords.append(extended_word[i:i + subword_length])  # append or += ? discuss
                 # As of now, we have string subwords, we want to do hashing now
         return subwords
 
@@ -272,7 +274,7 @@ class FastText(Word2Vec):
         assigning word indexes.
         """
 
-        # self.load = call_on_class_only
+        self.load = call_on_class_only
         self.initialize_word_vectors()
 
         self.model = model
@@ -305,10 +307,6 @@ class FastText(Word2Vec):
         self.min_n = min_n
         self.max_n = max_n
 
-        # if (wordNgrams <= 1 && maxn == 0) {
-        #    bucket = 0;
-        # }
-
         if self.word_ngrams <= 1 and self.max_n == 0:
             self.bucket = 0
 
@@ -332,29 +330,21 @@ class FastText(Word2Vec):
                 logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored." )
 
     def initialize_word_vectors():
-        # approach from wrapper
 
-        self.wv = FastTextKeyedVectors
-        # TO-DO : backward-compatibility with self.wv (under discussion) / word_vec
+        self.wv = ft_keyedvectors.FastTextKeyedVectors()
+        # TO-DO : wv or word_vec
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
 
         super(build_vocab, self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False)
 
-        # TO-DO : build matrix for n-grams here numpy
-
-        # input_ = std::make_shared<Matrix>(dict_->nwords()+args_->bucket, args_->dim);
-        # input_->uniform(1.0 / args_->dim);
-
+        # syn0_all for all the ngrams
         self.wv.syn0_all = np.zeros(shape=((self.bucket + len(self.wv.vocab)), self.vector_size))
 
-        # output_ = std::make_shared<Matrix>(dict_->nwords(), args_->dim);
+        ft_wrapper.init_ngrams()
+        # while training, use word index to get all the ngrams already computed
 
-        # output_ = np.matrix(len(self.wv.vocab), self.vector_size)
-        # output is perhaps self.wv.syn0
-
-        # how to use this input_ and output_ in final model ??
-
+    
     def _do_train_job(self, sentences, alpha, inits):
         """
         Train a single batch of sentences. Return 2-tuple `(effective word count after
@@ -368,4 +358,5 @@ class FastText(Word2Vec):
         elif self.model == 'skipgram':
             tally += train_batch_sg(self, sentences, alpha, work)
         return tally, self._raw_word_count(sentences)
+
 
