@@ -10,9 +10,10 @@ from gensim.models.wrapper.fasttext import FastTextKeyedVectors as ft_keyedvecto
 from gensim.models.wrapper.fasttext import FastText as ft_wrapper
 
 import numpy as np
-from numpy import dot, zeros, outer, uint32, seterr, sum as np_sum, logaddexp
+from numpy import dot, zeros, outer, random, sum as np_sum
 
 from scipy.special import expit
+from types import GeneratorType
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ TO-DO : description of FastText and the API
 """
 
 MAX_WORDS_IN_BATCH = 10000
+
 
 def train_batch_sg(model, sentences, alpha, work=None):
     """
@@ -56,6 +58,7 @@ def train_batch_sg(model, sentences, alpha, work=None):
         result += len(word_vocabs)
     return result
 
+
 def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
     """
     Update CBOW model by training on a sequence of sentences.
@@ -88,6 +91,7 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
             train_cbow_pair(model, word, word2_subwords_indices, l1, alpha)  # train on the sliding window for target word
         result += len(word_vocabs)
     return result
+
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
                   context_vectors=None, context_locks=None):
@@ -136,6 +140,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         # why not model.wv.syn0[context_index] = neu1e * lock_factor
     return neu1e
 
+
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
     neu1e = zeros(l1.shape)
 
@@ -170,6 +175,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
 
     return neu1e
 
+
 def get_subwords(self, word):
     pass
 
@@ -199,9 +205,6 @@ def compute_ngrams(word, min_n, max_n):
         for i in range(0, len(extended_word) - ngram_length + 1):
             ngrams.append(extended_word[i:i + ngram_length])
     return ngrams
-
-
-
 
 class FastText(Word2Vec):
     def __init__(self, model='cbow', hs=0, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
@@ -247,7 +250,7 @@ class FastText(Word2Vec):
         assigning word indexes.
         """
 
-        self.load = call_on_class_only
+        # self.load = call_on_class_only
         self.initialize_word_vectors()
 
         self.model = model
@@ -297,19 +300,20 @@ class FastText(Word2Vec):
 
             self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
                        start_alpha=self.alpha, end_alpha=self.min_alpha)
-        else :
-            if trim_rule is not None :
+        else:
+            if trim_rule is not None:
                 logger.warning("The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model. ")
-                logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored." )
+                logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored.")
 
-    def initialize_word_vectors():
+    def initialize_word_vectors(self):
 
         self.wv = ft_keyedvectors.FastTextKeyedVectors()
         # TO-DO : wv or word_vec
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
 
-        super(build_vocab, self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False)
+        # super(build_vocab, self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False)
+        # throwing error that build_vocab not defined
 
         # syn0_all for all the ngrams
         self.wv.syn0_all = np.zeros(shape=((self.bucket + len(self.wv.vocab)), self.vector_size))
@@ -317,7 +321,7 @@ class FastText(Word2Vec):
         # while training, use word index to get all the ngrams already computed
         ft_wrapper.init_ngrams()
         # self.wv.ngrams = {}
-    
+
     def _do_train_job(self, sentences, alpha, inits):
         """
         Train a single batch of sentences. Return 2-tuple `(effective word count after
@@ -331,5 +335,3 @@ class FastText(Word2Vec):
         elif self.model == 'skipgram':
             tally += train_batch_sg(self, sentences, alpha, work)
         return tally, self._raw_word_count(sentences)
-
-
