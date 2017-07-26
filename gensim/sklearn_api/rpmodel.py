@@ -14,10 +14,9 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
-from gensim.sklearn_api import BaseTransformer
 
 
-class RpTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
+class RpTransformer(TransformerMixin, BaseEstimator):
     """
     Base RP module
     """

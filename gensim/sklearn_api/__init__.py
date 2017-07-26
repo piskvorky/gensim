@@ -10,7 +10,6 @@ See [1] for complete set of conventions.
 """
 
 
-from .basemodel import BaseTransformer  # noqa: F401
 from .ldamodel import LdaTransformer  # noqa: F401
 from .lsimodel import LsiTransformer  # noqa: F401
 from .rpmodel import RpTransformer  # noqa: F401

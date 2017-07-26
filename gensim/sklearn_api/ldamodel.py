@@ -16,10 +16,9 @@ from sklearn.exceptions import NotFittedError
 
 from gensim import models
 from gensim import matutils
-from gensim.sklearn_api import BaseTransformer
 
 
-class LdaTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
+class LdaTransformer(TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """

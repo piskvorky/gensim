@@ -15,10 +15,9 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
-from gensim.sklearn_api import BaseTransformer
 
 
-class W2VTransformer(BaseTransformer, TransformerMixin, BaseEstimator):
+class W2VTransformer(TransformerMixin, BaseEstimator):
     """
     Base Word2Vec module
     """
