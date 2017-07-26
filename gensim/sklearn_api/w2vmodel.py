@@ -82,4 +82,4 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
         return np.reshape(np.array(X), (len(words), self.size))
 
     def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for W2VTransformer since updating vocabulary incrementally for Word2Vec model is experimental.")
+        raise NotImplementedError("'partial_fit' has not been implemented for W2VTransformer. However, the model can be updated with a fixed vocabulary using Gensim API call.")
