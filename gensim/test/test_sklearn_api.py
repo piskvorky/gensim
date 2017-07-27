@@ -19,6 +19,8 @@ from gensim.sklearn_api.ldaseqmodel import LdaSeqTransformer
 from gensim.sklearn_api.w2vmodel import W2VTransformer
 from gensim.sklearn_api.atmodel import AuthorTopicTransformer
 from gensim.corpora import mmcorpus, Dictionary
+from gensim import models
+from gensim import matutils
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -118,8 +120,24 @@ class TestLdaWrapper(unittest.TestCase):
             self.model.partial_fit(X=corpus)  # fit against the model again
             doc = list(corpus)[0]  # transform only the first document
             transformed = self.model.transform(doc)
-        expected = numpy.array([0.87, 0.13])
-        passed = numpy.allclose(sorted(transformed[0]), sorted(expected), atol=1e-1)
+        expected = numpy.array([0.13, 0.87])
+        passed = numpy.allclose(transformed[0], expected, atol=1e-1)
+        self.assertTrue(passed)
+
+    def testConsistencyWithGensimModel(self):
+        # training an LdaTransformer with `num_topics`=10
+        self.model = LdaTransformer(id2word=dictionary, num_topics=10, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        self.model.fit(corpus)
+
+        # training a Gensim LdaModel with the same params
+        gensim_ldamodel = models.LdaModel(corpus=corpus, id2word=dictionary, num_topics=10, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+
+        texts_new = ['graph', 'eulerian']
+        bow = self.model.id2word.doc2bow(texts_new)
+        matrix_transformer_api = self.model.transform(bow)
+        matrix_gensim_model = gensim_ldamodel[bow]
+        matrix_gensim_model_dense = matutils.sparse2full(matrix_gensim_model, 10)  # convert into dense representation to be able to compare with transformer output
+        passed = numpy.allclose(matrix_transformer_api, matrix_gensim_model_dense, atol=1e-1)
         self.assertTrue(passed)
 
     def testCSRMatrixConversion(self):
@@ -131,7 +149,7 @@ class TestLdaWrapper(unittest.TestCase):
         bow = [(0, 1), (1, 2), (2, 0)]
         transformed_vec = newmodel.transform(bow)
         expected_vec = numpy.array([0.35367903, 0.64632097])
-        passed = numpy.allclose(sorted(transformed_vec), sorted(expected_vec), atol=1e-1)
+        passed = numpy.allclose(transformed_vec, expected_vec, atol=1e-1)
         self.assertTrue(passed)
 
     def testPipeline(self):
@@ -185,7 +203,7 @@ class TestLdaWrapper(unittest.TestCase):
         # comparing the original and loaded models
         original_bow = self.model.id2word.doc2bow(texts_new)
         original_matrix = self.model.transform(original_bow)
-        passed = numpy.allclose(sorted(loaded_matrix), sorted(original_matrix), atol=1e-1)
+        passed = numpy.allclose(loaded_matrix, original_matrix, atol=1e-1)
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
@@ -220,8 +238,8 @@ class TestLsiWrapper(unittest.TestCase):
             self.model.partial_fit(X=corpus)  # fit against the model again
             doc = list(corpus)[0]  # transform only the first document
             transformed = self.model.transform(doc)
-        expected = numpy.array([1.39, 1e-12])
-        passed = numpy.allclose(sorted(transformed[0]), sorted(expected), atol=1)
+        expected = numpy.array([1.39, 0.0])
+        passed = numpy.allclose(transformed[0], expected, atol=1)
         self.assertTrue(passed)
 
     def testPipeline(self):
@@ -275,7 +293,7 @@ class TestLsiWrapper(unittest.TestCase):
         # comparing the original and loaded models
         original_bow = self.model.id2word.doc2bow(texts_new)
         original_matrix = self.model.transform(original_bow)
-        passed = numpy.allclose(sorted(loaded_matrix), sorted(original_matrix), atol=1e-1)
+        passed = numpy.allclose(loaded_matrix, original_matrix, atol=1e-1)
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
@@ -345,7 +363,7 @@ class TestLdaSeqWrapper(unittest.TestCase):
 
         # comparing the original and loaded models
         original_transformed_vecs = self.model.transform(doc)
-        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        passed = numpy.allclose(loaded_transformed_vecs, original_transformed_vecs, atol=1e-1)
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
@@ -415,7 +433,7 @@ class TestRpWrapper(unittest.TestCase):
 
         # comparing the original and loaded models
         original_transformed_vecs = self.model.transform(doc)
-        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        passed = numpy.allclose(loaded_transformed_vecs, original_transformed_vecs, atol=1e-1)
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
@@ -485,7 +503,7 @@ class TestWord2VecWrapper(unittest.TestCase):
 
         # comparing the original and loaded models
         original_transformed_vecs = self.model.transform(word)
-        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        passed = numpy.allclose(loaded_transformed_vecs, original_transformed_vecs, atol=1e-1)
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
@@ -568,7 +586,7 @@ class TestAuthorTopicWrapper(unittest.TestCase):
 
         # comparing the original and loaded models
         original_author_topics = self.model.transform(author_list)
-        passed = numpy.allclose(sorted(loaded_author_topics), sorted(original_author_topics), atol=1e-1)
+        passed = numpy.allclose(loaded_author_topics, original_author_topics, atol=1e-1)
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
