@@ -84,6 +84,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
 
         for k, v in enumerate(docs):
             doc_topics = self.gensim_model[v]
+            # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
             probs_docs = matutils.sparse2full(doc_topics, self.num_topics)
             X[k] = probs_docs
         return np.reshape(np.array(X), (len(docs), self.num_topics))

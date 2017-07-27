@@ -55,6 +55,7 @@ class RpTransformer(TransformerMixin, BaseEstimator):
 
         for k, v in enumerate(docs):
             transformed_doc = self.gensim_model[v]
+            # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
             probs_docs = matutils.sparse2full(transformed_doc, self.num_topics)
             X[k] = probs_docs
 

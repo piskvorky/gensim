@@ -72,9 +72,6 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
 
         for k, v in enumerate(docs):
             transformed_author = self.gensim_model[v]
-            # Everything should be equal in length
-            if len(transformed_author) != self.num_topics:
-                transformed_author.extend([1e-12] * (self.num_topics - len(transformed_author)))
             X[k] = transformed_author
 
         return np.reshape(np.array(X), (len(docs), self.num_topics))

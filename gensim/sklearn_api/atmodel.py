@@ -76,6 +76,7 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
 
         for k, v in enumerate(author_names):
             transformed_author = self.gensim_model[v]
+            # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
             probs_author = matutils.sparse2full(transformed_author, self.num_topics)
             X[k] = probs_author
 
