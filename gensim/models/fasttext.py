@@ -9,11 +9,13 @@ from gensim.models.word2vec import Word2Vec
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as Ft_Wrapper
 
+import numpy as np
 from numpy import dot, zeros, ones, outer, random, sum as np_sum, empty, float32 as REAL
 
 from scipy.special import expit
 from types import GeneratorType
 from copy import deepcopy
+from six import string_types
 
 from gensim.utils import call_on_class_only
 
@@ -291,6 +293,28 @@ class FastText(Word2Vec):
 
     def initialize_word_vectors(self):
         self.wv = FastTextKeyedVectors()
+
+    def __getitem__(self, words):
+        if isinstance(words, string_types):
+            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
+            return self.word_vec(words)
+
+        return vstack([self.word_vec(word) for word in words])
+
+    def word_vec(self, word, use_norm=False):
+        word_vec = np.zeros(self.wv.syn0_all.shape[1])
+        ngrams = Ft_Wrapper.compute_ngrams(word, self.min_n, self.max_n)
+        ngrams = [ng for ng in ngrams if ng in self.wv.ngrams]
+        if use_norm:
+            ngram_weights = self.syn0_all_norm
+        else:
+            ngram_weights = self.wv.syn0_all
+        for ngram in ngrams:
+            word_vec += ngram_weights[self.wv.ngrams[ngram]]
+        if word_vec.any():
+            return word_vec / len(ngrams)
+        else: # No ngrams of the word are present in self.ngrams
+            raise KeyError('all ngrams for word %s absent from model' % word)
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
         """ In word2vec, we built unigram dictionary, here we will make n-grams dictionary """
