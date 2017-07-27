@@ -8,7 +8,7 @@ import unittest
 import os
 from gensim import utils
 
-from gensim.models import FastText
+from gensim.models.fasttext import FastText
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
