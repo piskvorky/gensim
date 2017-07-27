@@ -8,11 +8,12 @@ import logging
 from gensim.models.word2vec import Word2Vec
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as Ft_Wrapper
-import numpy as np
+
 from numpy import dot, zeros, ones, outer, random, sum as np_sum, empty, float32 as REAL
 
 from scipy.special import expit
 from types import GeneratorType
+from copy import deepcopy
 
 from gensim.utils import call_on_class_only
 
@@ -65,6 +66,7 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
     Update CBOW model by training on a sequence of sentences.
 
     """
+    logger.info("Am I here ?")
     result = 0
     for sentence in sentences:
         # word_vocabs bow in fasttext.cc
@@ -105,8 +107,8 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         return
     predict_word = model.wv.vocab[word]  # target word (NN output)
 
-    #l1 = context_vectors.take(context_index, axis=0)  # input word (NN input/projection layer) ngrams
-    #lock_factor = context_locks.take(context_index, axis=0)
+    # l1 = context_vectors.take(context_index, axis=0)  # input word (NN input/projection layer) ngrams
+    # lock_factor = context_locks.take(context_index, axis=0)
 
     l1 = context_vectors[context_index]
     lock_factor = context_locks[context_index]
@@ -182,7 +184,7 @@ def get_subwords(self, word):
 
 
 class FastText(Word2Vec):
-    def __init__(self, sentences=None,sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
+    def __init__(self, sentences=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, word_ngrams=1, loss='ns', sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1, bucket=2000000,
             trim_rule=None, batch_words=MAX_WORDS_IN_BATCH):
@@ -275,6 +277,7 @@ class FastText(Word2Vec):
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
+            logger.info("build done")
             self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
                        start_alpha=self.alpha, end_alpha=self.min_alpha)
         else:
@@ -296,16 +299,15 @@ class FastText(Word2Vec):
 
         self.init_ngrams()
 
-
     def reset_ngram_weights(self):
         for ngram in self.wv.ngrams:
             # construct deterministic seed from word AND seed argument
             self.wv.syn0_all[self.wv.ngrams[ngram]] = self.seeded_vector(ngram + str(self.seed))
-            self.syn0_all_lockf = ones((self.bucket + len(self.wv.vocab), self.vector_size), dtype=REAL)  # zeros suppress learning
 
     def init_ngrams(self):
         self.wv.ngrams = {}
         self.wv.syn0_all = empty((self.bucket + len(self.wv.vocab), self.vector_size), dtype=REAL)
+        self.syn0_all_lockf = ones((self.bucket + len(self.wv.vocab), self.vector_size), dtype=REAL)  # zeros suppress learning
 
         all_ngrams = []
         for w, v in self.wv.vocab.items():
@@ -325,5 +327,18 @@ class FastText(Word2Vec):
 
         self.reset_ngram_weights()
 
+    def _do_train_job(self, sentences, alpha, inits):
+        """
+        Train a single batch of sentences. Return 2-tuple `(effective word count after
+        ignoring unknown words and sentence length trimming, total word count)`.
+        """
 
+        logger.info("here")
+        work, neu1 = inits
+        tally = 0
+        if self.sg:
+            tally += train_batch_sg(self, sentences, alpha, work)
+        else:
+            tally += train_batch_cbow(self, sentences, alpha, work, neu1)
 
+        return tally, self._raw_word_count(sentences)
