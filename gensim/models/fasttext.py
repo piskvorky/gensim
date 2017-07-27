@@ -66,10 +66,8 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
     Update CBOW model by training on a sequence of sentences.
 
     """
-    logger.info("Am I here ?")
     result = 0
     for sentence in sentences:
-        # word_vocabs bow in fasttext.cc
         word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
                        model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
@@ -77,21 +75,22 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
             start = max(0, pos - model.window + reduced_window)
             window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
             word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-            # l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x vector_size
-            # if word2_indices and model.cbow_mean:
-            #   l1 /= len(word2_indices)
 
-            # for loop for ngrams for words in this window here
-            word2_subwords_indices = []
+            word2_subwords = []
 
             for indices in word2_indices:
-                word2_subwords_indices += get_subwords(model, model.wv.syn0[indices])  # subwords for each word in window except target word
+                word2_subwords += Ft_Wrapper.compute_ngrams(model.wv.index2word[indices], model.min_n, model.max_n)
+            word2_subwords = set(word2_subwords)
 
-            l1 = np_sum(model.wv.syn0_all[word2_subwords_indices], axis=0)  # 1 x vector_size
-            if word2_subwords_indices and model.cbow_mean:
-                l1 /= len(word2_subwords_indices)
+            subwords_indices = []
+            for subword in word2_subwords:
+                subwords_indices.append(model.wv.ngrams[subword])
 
-            train_cbow_pair(model, word, word2_subwords_indices, l1, alpha)  # train on the sliding window for target word
+            l1 = np_sum(model.wv.syn0_all[subwords_indices], axis=0)  # 1 x vector_size
+            if subwords_indices and model.cbow_mean:
+                l1 /= len(subwords_indices)
+
+            train_cbow_pair(model, word, subwords_indices, l1, alpha)  # train on the sliding window for target word
         result += len(word_vocabs)
     return result
 
@@ -148,11 +147,11 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
     neu1e = zeros(l1.shape)
 
     if model.hs:
-        l2a = model.syn1_all[word.point]  # 2d matrix, codelen x layer1_size
+        l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
         fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
         ga = (1. - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
-            model.syn1_all[word.point] += outer(ga, l1)  # learn hidden -> output
+            model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
 
     if model.negative:
@@ -162,11 +161,11 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
             w = model.cum_table.searchsorted(model.random.randint(model.cum_table[-1]))
             if w != word.index:
                 word_indices.append(w)
-        l2b = model.syn1neg_all[word_indices]  # 2d matrix, k+1 x layer1_size
+        l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
         fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
         gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
-            model.syn1neg_all[word_indices] += outer(gb, l1)  # learn hidden -> output
+            model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
 
     if learn_vectors:
@@ -174,7 +173,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
         if not model.cbow_mean and input_word_indices:
             neu1e /= len(input_word_indices)
         for i in input_word_indices:
-            model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]  # maybe need to create syn0_all_lockf
+            model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
 
     return neu1e
 
@@ -273,6 +272,12 @@ class FastText(Word2Vec):
         self.batch_words = batch_words
         self.model_trimmed_post_training = False
 
+        self.neg_labels = []
+        if self.negative > 0:
+                # precompute negative labels optimization for pure-python training
+                self.neg_labels = zeros(self.negative + 1)
+                self.neg_labels[0] = 1.
+
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -314,7 +319,7 @@ class FastText(Word2Vec):
             all_ngrams += Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
         all_ngrams = set(all_ngrams)
         self.num_ngram_vectors = len(all_ngrams)
-        logger.info("TOtal number of ngrams in the vocab is %d", self.num_ngram_vectors)
+        logger.info("Total number of ngrams in the vocab is %d", self.num_ngram_vectors)
 
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
@@ -332,8 +337,6 @@ class FastText(Word2Vec):
         Train a single batch of sentences. Return 2-tuple `(effective word count after
         ignoring unknown words and sentence length trimming, total word count)`.
         """
-
-        logger.info("here")
         work, neu1 = inits
         tally = 0
         if self.sg:
