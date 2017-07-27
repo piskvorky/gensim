@@ -54,10 +54,7 @@ class RpTransformer(TransformerMixin, BaseEstimator):
 
         for k, v in enumerate(docs):
             transformed_doc = self.gensim_model[v]
-            probs_docs = list(map(lambda x: x[1], transformed_doc))
-            # Everything should be equal in length
-            if len(probs_docs) != self.num_topics:
-                probs_docs.extend([1e-12] * (self.num_topics - len(probs_docs)))
+            probs_docs = matutils.sparse2full(transformed_doc, self.num_topics)
             X[k] = probs_docs
 
         return np.reshape(np.array(X), (len(docs), self.num_topics))
