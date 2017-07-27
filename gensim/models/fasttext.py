@@ -294,6 +294,7 @@ class FastText(Word2Vec):
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
                        start_alpha=self.alpha, end_alpha=self.min_alpha)
+            self.word_vec_invocab()
         else:
             if trim_rule is not None:
                 logger.warning("The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model. ")
@@ -309,20 +310,37 @@ class FastText(Word2Vec):
 
         return vstack([self.word_vec(word) for word in words])
 
+    def word_vec_invocab(self):
+        """ Store word vectors for invocab words in syn0"""
+
+        # print(model['trees'])
+        # print(model.wv.syn0[model.wv.vocab['trees'].index])
+        # These two gives same result
+        for w, v in self.wv.vocab.items():
+            self.wv.syn0[v.index] = self.word_vec(w)
+
+
     def word_vec(self, word, use_norm=False):
-        word_vec = np.zeros(self.wv.syn0_all.shape[1])
-        ngrams = Ft_Wrapper.compute_ngrams(word, self.min_n, self.max_n)
-        ngrams = [ng for ng in ngrams if ng in self.wv.ngrams]
-        if use_norm:
-            ngram_weights = self.syn0_all_norm
+        if word in self.wv.vocab:
+            if use_norm:
+                return self.wv.syn0norm[self.wv.vocab[word].index]
+            else:
+                print("ok")
+                return self.wv.syn0[self.wv.vocab[word].index]
         else:
-            ngram_weights = self.wv.syn0_all
-        for ngram in ngrams:
-            word_vec += ngram_weights[self.wv.ngrams[ngram]]
-        if word_vec.any():
-            return word_vec / len(ngrams)
-        else:  # No ngrams of the word are present in self.ngrams
-            raise KeyError('all ngrams for word %s absent from model' % word)
+            word_vec = np.zeros(self.wv.syn0_all.shape[1])
+            ngrams = Ft_Wrapper.compute_ngrams(word, self.min_n, self.max_n)
+            ngrams = [ng for ng in ngrams if ng in self.wv.ngrams]
+            if use_norm:
+                ngram_weights = self.wv.syn0_all_norm
+            else:
+                ngram_weights = self.wv.syn0_all
+            for ngram in ngrams:
+                word_vec += ngram_weights[self.wv.ngrams[ngram]]
+            if word_vec.any():
+                return word_vec / len(ngrams)
+            else:  # No ngrams of the word are present in self.ngrams
+                raise KeyError('all ngrams for word %s absent from model' % word)
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
         """ In word2vec, we built unigram dictionary, here we will make n-grams dictionary """
