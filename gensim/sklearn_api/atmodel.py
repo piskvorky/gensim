@@ -13,6 +13,7 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
+from gensim import matutils
 
 
 class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
@@ -75,7 +76,7 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
 
         for k, v in enumerate(author_names):
             transformed_author = self.gensim_model[v]
-            probs_docs = matutils.sparse2full(transformed_author, self.num_topics)
+            probs_author = matutils.sparse2full(transformed_author, self.num_topics)
             X[k] = probs_author
 
         return np.reshape(np.array(X), (len(author_names), self.num_topics))

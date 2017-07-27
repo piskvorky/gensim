@@ -14,6 +14,7 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
+from gensim import matutils
 
 
 class RpTransformer(TransformerMixin, BaseEstimator):
