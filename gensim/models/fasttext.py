@@ -319,13 +319,11 @@ class FastText(Word2Vec):
         for w, v in self.wv.vocab.items():
             self.wv.syn0[v.index] = self.word_vec(w)
 
-
     def word_vec(self, word, use_norm=False):
         if word in self.wv.vocab:
             if use_norm:
                 return self.wv.syn0norm[self.wv.vocab[word].index]
             else:
-                print("ok")
                 return self.wv.syn0[self.wv.vocab[word].index]
         else:
             word_vec = np.zeros(self.wv.syn0_all.shape[1])
