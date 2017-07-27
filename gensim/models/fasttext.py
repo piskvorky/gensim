@@ -6,14 +6,15 @@
 import logging
 
 from gensim.models.word2vec import Word2Vec
-from gensim.models.wrapper.fasttext import FastTextKeyedVectors as ft_keyedvectors
-from gensim.models.wrapper.fasttext import FastText as ft_wrapper
-
+from gensim.models.wrappers.fasttext import FastTextKeyedVectors
+from gensim.models.wrappers.fasttext import FastText as Ft_Wrapper
 import numpy as np
-from numpy import dot, zeros, outer, random, sum as np_sum
+from numpy import dot, zeros, ones, outer, random, sum as np_sum, empty, float32 as REAL
 
 from scipy.special import expit
 from types import GeneratorType
+
+from gensim.utils import call_on_class_only
 
 logger = logging.getLogger(__name__)
 
@@ -179,38 +180,14 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
 def get_subwords(self, word):
     pass
 
-@staticmethod
-def ft_hash(string):
-    """
-    Reproduces [hashing trick](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-    used in fastText.
-
-    """
-    # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
-    old_settings = np.seterr(all='ignore')
-    h = np.uint32(2166136261)
-    for c in string:
-        h = h ^ np.uint32(ord(c))
-        h = h * np.uint32(16777619)
-    np.seterr(**old_settings)
-    return h
-
-@staticmethod
-def compute_ngrams(word, min_n, max_n):
-    ngram_indices = []
-    BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
-    extended_word = BOW + word + EOW
-    ngrams = []
-    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
-        for i in range(0, len(extended_word) - ngram_length + 1):
-            ngrams.append(extended_word[i:i + ngram_length])
-    return ngrams
 
 class FastText(Word2Vec):
-    def __init__(self, model='cbow', hs=0, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-            max_vocab_size=None, word_ngrams=1, loss='ns', sample=1e-3,seed=1, workers=3, min_alpha=0.0001,
-            negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, bucket=2000000,
+    def __init__(self, sentences=None,sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
+            max_vocab_size=None, word_ngrams=1, loss='ns', sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
+            negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1, bucket=2000000,
             trim_rule=None, batch_words=MAX_WORDS_IN_BATCH):
+
+        # TO-D0: later with supervised, take care of model - sg, hs
 
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
@@ -250,12 +227,13 @@ class FastText(Word2Vec):
         assigning word indexes.
         """
 
-        # self.load = call_on_class_only
+        self.load = call_on_class_only
         self.initialize_word_vectors()
 
-        self.model = model
         self.vector_size = size
         self.layer1_size = int(size)
+
+        self.sg = int(sg)
         self.cum_table = None  # for negative sampling
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
@@ -275,10 +253,11 @@ class FastText(Word2Vec):
         self.sample = sample
         self.hs = hs
         self.negative = negative
+        self.cbow_mean = int(cbow_mean)
+        self.hashfxn = hashfxn
         self.iter = iter
         self.bucket = bucket
-
-        # what is null_word in word2vec ?
+        self.null_word = null_word
 
         self.min_n = min_n
         self.max_n = max_n
@@ -296,8 +275,6 @@ class FastText(Word2Vec):
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
-            # let word2vec code run here
-
             self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
                        start_alpha=self.alpha, end_alpha=self.min_alpha)
         else:
@@ -306,32 +283,47 @@ class FastText(Word2Vec):
                 logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored.")
 
     def initialize_word_vectors(self):
-
-        self.wv = ft_keyedvectors.FastTextKeyedVectors()
-        # TO-DO : wv or word_vec
+        self.wv = FastTextKeyedVectors()
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
+        """ In word2vec, we built unigram dictionary, here we will make n-grams dictionary """
+
+        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
+        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
+        self.finalize_vocab(update=update)  # build tables & arrays
 
         # super(build_vocab, self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False)
-        # throwing error that build_vocab not defined
 
-        # syn0_all for all the ngrams
-        self.wv.syn0_all = np.zeros(shape=((self.bucket + len(self.wv.vocab)), self.vector_size))
+        self.init_ngrams()
 
-        # while training, use word index to get all the ngrams already computed
-        ft_wrapper.init_ngrams()
-        # self.wv.ngrams = {}
 
-    def _do_train_job(self, sentences, alpha, inits):
-        """
-        Train a single batch of sentences. Return 2-tuple `(effective word count after
-        ignoring unknown words and sentence length trimming, total word count)`.
-        """
+    def reset_ngram_weights(self):
+        for ngram in self.wv.ngrams:
+            # construct deterministic seed from word AND seed argument
+            self.wv.syn0_all[self.wv.ngrams[ngram]] = self.seeded_vector(ngram + str(self.seed))
+            self.syn0_all_lockf = ones((self.bucket + len(self.wv.vocab), self.vector_size), dtype=REAL)  # zeros suppress learning
 
-        work, neu1 = inits
-        tally = 0
-        if self.model == 'cbow':
-            tally += train_batch_cbow(self, sentences, alpha, work, neu1)
-        elif self.model == 'skipgram':
-            tally += train_batch_sg(self, sentences, alpha, work)
-        return tally, self._raw_word_count(sentences)
+    def init_ngrams(self):
+        self.wv.ngrams = {}
+        self.wv.syn0_all = empty((self.bucket + len(self.wv.vocab), self.vector_size), dtype=REAL)
+
+        all_ngrams = []
+        for w, v in self.wv.vocab.items():
+            all_ngrams += Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
+        all_ngrams = set(all_ngrams)
+        self.num_ngram_vectors = len(all_ngrams)
+        logger.info("TOtal number of ngrams in the vocab is %d", self.num_ngram_vectors)
+
+        ngram_indices = []
+        for i, ngram in enumerate(all_ngrams):
+            ngram_hash = Ft_Wrapper.ft_hash(ngram)
+            ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
+            self.wv.ngrams[ngram] = i
+
+        self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
+        # indices in syn0_all now re-arranged according to hashed indices
+
+        self.reset_ngram_weights()
+
+
+
