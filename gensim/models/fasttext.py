@@ -116,7 +116,7 @@ def train_sg_pair(model, word, context_subwords_index, alpha, learn_vectors=True
     if context_subwords_index:
         l1 /= len(context_subwords_index)
 
-    lock_factor = context_locks[context_subwords_index]
+    # lock_factor = context_locks[context_subwords_index]
 
     neu1e = zeros(l1.shape)
 
@@ -149,7 +149,6 @@ def train_sg_pair(model, word, context_subwords_index, alpha, learn_vectors=True
             neu1e /= len(context_subwords_index)
         for i in context_subwords_index:
             model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
-
 
     return neu1e
 
