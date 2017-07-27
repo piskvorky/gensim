@@ -24,8 +24,10 @@ class LeeCorpus(object):
 class TestNativeFastText(unittest.TestCase):
 
     def testTraining(self):
+        """ Test training with subwords for both skipgram and cbow model"""
         sentences = LeeCorpus()
         self.assertTrue(FastText(sentences, min_count=100, size=100, workers=3))
+        self.assertTrue(FastText(sentences, sg=1, min_count=100, size=100, workers=3))
 
 
 if __name__ == '__main__':

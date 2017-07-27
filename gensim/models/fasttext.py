@@ -10,7 +10,7 @@ from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as Ft_Wrapper
 
 import numpy as np
-from numpy import dot, zeros, ones, outer, random, sum as np_sum, empty, float32 as REAL
+from numpy import dot, zeros, ones, vstack, outer, random, sum as np_sum, empty, float32 as REAL
 
 from scipy.special import expit
 from types import GeneratorType
@@ -52,11 +52,15 @@ def train_batch_sg(model, sentences, alpha, work=None):
             for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                 # don't train on the `word` itself
 
-                subword2_indices = get_subwords(model, word2)
+                word2_subwords = Ft_Wrapper.compute_ngrams(model.wv.index2word[word2.index], model.min_n, model.max_n)
+                word2_subwords = set(word2_subwords)
+
+                subwords_indices = []
+                for subword in word2_subwords:
+                    subwords_indices.append(model.wv.ngrams[subword])
 
                 if pos2 != pos:
-                    # word - target, word2 - input (context)
-                    train_sg_pair(model, model.wv.index2word[word.index], subword2_indices, alpha)
+                    train_sg_pair(model, model.wv.index2word[word.index], subwords_indices, alpha)
                     # train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha)
 
         result += len(word_vocabs)
@@ -97,7 +101,7 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
     return result
 
 
-def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
+def train_sg_pair(model, word, context_subwords_index, alpha, learn_vectors=True, learn_hidden=True,
                   context_vectors=None, context_locks=None):
     if context_vectors is None:
         context_vectors = model.wv.syn0_all
@@ -108,21 +112,21 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         return
     predict_word = model.wv.vocab[word]  # target word (NN output)
 
-    # l1 = context_vectors.take(context_index, axis=0)  # input word (NN input/projection layer) ngrams
-    # lock_factor = context_locks.take(context_index, axis=0)
+    l1 = np_sum(context_vectors[context_subwords_index], axis=0)
+    if context_subwords_index:
+        l1 /= len(context_subwords_index)
 
-    l1 = context_vectors[context_index]
-    lock_factor = context_locks[context_index]
+    lock_factor = context_locks[context_subwords_index]
 
     neu1e = zeros(l1.shape)
 
     if model.hs:
         # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
-        l2a = deepcopy(model.syn1_all[predict_word.point])  # 2d matrix, codelen x layer1_size
+        l2a = deepcopy(model.syn1[predict_word.point])  # 2d matrix, codelen x layer1_size
         fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
         ga = (1 - predict_word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
-            model.syn1_all[predict_word.point] += outer(ga, l1)  # learn hidden -> output
+            model.syn1[predict_word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
 
     if model.negative:
@@ -132,16 +136,21 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             w = model.cum_table.searchsorted(model.random.randint(model.cum_table[-1]))
             if w != predict_word.index:
                 word_indices.append(w)
-        l2b = model.syn1neg_all[word_indices]  # 2d matrix, k+1 x layer1_size
+        l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
         fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
         gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
-            model.syn1neg_all[word_indices] += outer(gb, l1)  # learn hidden -> output
+            model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
 
     if learn_vectors:
-        l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
-        # why not model.wv.syn0[context_index] = neu1e * lock_factor
+        # l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
+        if context_subwords_index:
+            neu1e /= len(context_subwords_index)
+        for i in context_subwords_index:
+            model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
+
+
     return neu1e
 
 
@@ -313,7 +322,7 @@ class FastText(Word2Vec):
             word_vec += ngram_weights[self.wv.ngrams[ngram]]
         if word_vec.any():
             return word_vec / len(ngrams)
-        else: # No ngrams of the word are present in self.ngrams
+        else:  # No ngrams of the word are present in self.ngrams
             raise KeyError('all ngrams for word %s absent from model' % word)
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
