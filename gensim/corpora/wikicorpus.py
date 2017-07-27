@@ -245,7 +245,7 @@ class WikiCorpus(textcorpus.TextCorpus):
 
     """
     def __init__(self, source, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
-                 filter_namespaces=('0',), metadata=False, token_filters=None,
+                 filter_namespaces=('0',), metadata=False, token_filters=None, tokenizer=None,
                  character_filters=None):
         """
         Initialize the corpus. Unless a dictionary is provided, this scans the
@@ -258,14 +258,36 @@ class WikiCorpus(textcorpus.TextCorpus):
 
         """
         self.filter_namespaces = filter_namespaces
-        tokenizer = utils.lemmatize if lemmatize else tokenize
+        tokenizer = self._choose_tokenizer(lemmatize, tokenizer)
+
+        # The original `WikiCorpus` did not use deaccenting, stopword removal, etc.
+        # Passing None to the `TextCorpus` constructor would default to using these preprocessing
+        # steps, so we pass empty lists to maintain the same default historical behavior.
         if character_filters is None:
-            # no need to lowercase and unicode, because the tokenizer already does that.
-            character_filters = [textcorpus.deaccent, textcorpus.strip_multiple_whitespaces]
+            character_filters = []
+        if token_filters is None:
+            token_filters = []
 
         super(WikiCorpus, self).__init__(
             source, dictionary, metadata, character_filters, tokenizer,
             token_filters, processes)
+
+    @staticmethod
+    def _choose_tokenizer(lemmatize, tokenizer):
+        if tokenizer is not None:
+            if lemmatize:
+                logger.warning(
+                    "`lemmatize` set to true but custom tokenizer also passed;"
+                    " will use custom tokenizer instead of default lemmatizing tokenizer")
+        else:
+            if lemmatize:
+                logger.info("using lemmatizing tokenizer")
+                tokenizer = utils.lemmatize
+            else:
+                logger.info("using standard tokenizer (no lemmatization)")
+                tokenizer = tokenize
+
+        return tokenizer
 
     def getstream(self):
         """Yield documents from the underlying plain text collection (of one or more files).
