@@ -157,7 +157,7 @@ class TestLdaWrapper(unittest.TestCase):
         self.assertEqual(model_params["num_topics"], 3)
         # verify that the attributes values are also changed for `gensim_model` after fitting
         self.model.fit(corpus)
-        self.assertEqual(getattr(self.model.gensim_model,'num_topics'), 3)
+        self.assertEqual(getattr(self.model.gensim_model, 'num_topics'), 3)
 
         # updating multiple params
         param_dict = {"eval_every": 20, "decay": 0.7}
@@ -167,8 +167,8 @@ class TestLdaWrapper(unittest.TestCase):
             self.assertEqual(model_params[key], param_dict[key])
         # verify that the attributes values are also changed for `gensim_model` after fitting
         self.model.fit(corpus)
-        self.assertEqual(getattr(self.model.gensim_model,'eval_every'), 20)
-        self.assertEqual(getattr(self.model.gensim_model,'decay'), 0.7)
+        self.assertEqual(getattr(self.model.gensim_model, 'eval_every'), 20)
+        self.assertEqual(getattr(self.model.gensim_model, 'decay'), 0.7)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -247,7 +247,7 @@ class TestLsiWrapper(unittest.TestCase):
         self.assertEqual(model_params["num_topics"], 3)
         # verify that the attributes values are also changed for `gensim_model` after fitting
         self.model.fit(corpus)
-        self.assertEqual(getattr(self.model.gensim_model,'num_topics'), 3)
+        self.assertEqual(getattr(self.model.gensim_model, 'num_topics'), 3)
 
         # updating multiple params
         param_dict = {"chunksize": 10000, "decay": 0.9}
@@ -257,8 +257,8 @@ class TestLsiWrapper(unittest.TestCase):
             self.assertEqual(model_params[key], param_dict[key])
         # verify that the attributes values are also changed for `gensim_model` after fitting
         self.model.fit(corpus)
-        self.assertEqual(getattr(self.model.gensim_model,'chunksize'), 10000)
-        self.assertEqual(getattr(self.model.gensim_model,'decay'), 0.9)
+        self.assertEqual(getattr(self.model.gensim_model, 'chunksize'), 10000)
+        self.assertEqual(getattr(self.model.gensim_model, 'decay'), 0.9)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -330,7 +330,7 @@ class TestLdaSeqWrapper(unittest.TestCase):
         self.assertEqual(model_params["num_topics"], 3)
         # verify that the attributes values are also changed for `gensim_model` after fitting
         self.model.fit(corpus_ldaseq)
-        self.assertEqual(getattr(self.model.gensim_model,'num_topics'), 3)
+        self.assertEqual(getattr(self.model.gensim_model, 'num_topics'), 3)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -400,7 +400,7 @@ class TestRpWrapper(unittest.TestCase):
         self.assertEqual(model_params["num_topics"], 3)
         # verify that the attributes values are also changed for `gensim_model` after fitting
         self.model.fit(self.corpus)
-        self.assertEqual(getattr(self.model.gensim_model,'num_topics'), 3)
+        self.assertEqual(getattr(self.model.gensim_model, 'num_topics'), 3)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -470,7 +470,7 @@ class TestWord2VecWrapper(unittest.TestCase):
         self.assertEqual(model_params["negative"], 20)
         # verify that the attributes values are also changed for `gensim_model` after fitting
         self.model.fit(texts)
-        self.assertEqual(getattr(self.model.gensim_model,'negative'), 20)
+        self.assertEqual(getattr(self.model.gensim_model, 'negative'), 20)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -542,7 +542,7 @@ class TestAuthorTopicWrapper(unittest.TestCase):
         self.assertEqual(model_params["num_topics"], 3)
         # verify that the attributes values are also changed for `gensim_model` after fitting
         self.model.fit(corpus)
-        self.assertEqual(getattr(self.model.gensim_model,'num_topics'), 3)
+        self.assertEqual(getattr(self.model.gensim_model, 'num_topics'), 3)
 
         # updating multiple params
         param_dict = {"passes": 5, "iterations": 10}
@@ -552,8 +552,8 @@ class TestAuthorTopicWrapper(unittest.TestCase):
             self.assertEqual(model_params[key], param_dict[key])
         # verify that the attributes values are also changed for `gensim_model` after fitting
         self.model.fit(corpus)
-        self.assertEqual(getattr(self.model.gensim_model,'passes'), 5)
-        self.assertEqual(getattr(self.model.gensim_model,'iterations'), 10)
+        self.assertEqual(getattr(self.model.gensim_model, 'passes'), 5)
+        self.assertEqual(getattr(self.model.gensim_model, 'iterations'), 10)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
