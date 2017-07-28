@@ -276,6 +276,7 @@ class SaveLoad(object):
         obj = unpickle(fname)
         obj._load_specials(fname, mmap, compress, subname)
         logger.info("loaded %s", fname)
+
         return obj
 
     def _load_specials(self, fname, mmap, compress, subname):

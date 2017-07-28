@@ -191,6 +191,9 @@ class Similarity(interfaces.SimilarityABC):
             self.output_prefix = utils.randfname(prefix='simserver')
         else:
             self.output_prefix = output_prefix
+            if os.path.isdir(self.output_prefix):
+                raise ValueError("output_prefix should not be a directory")
+
         logger.info("starting similarity index under %s", self.output_prefix)
         self.num_features = num_features
         self.num_best = num_best
@@ -444,7 +447,19 @@ class Similarity(interfaces.SimilarityABC):
         self.close_shard()
         if fname is None:
             fname = self.output_prefix
+
         super(Similarity, self).save(fname, *args, **kwargs)
+
+    @classmethod
+    def load(cls, fname, mmap=None):
+
+        obj = super(Similarity, cls).load(fname, mmap)
+        if isinstance(obj, Similarity):
+            if obj.output_prefix != fname:
+                obj.output_prefix = fname
+                obj.check_moved()
+
+        return obj
 
     def destroy(self):
         """

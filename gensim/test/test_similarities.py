@@ -459,6 +459,23 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         self.assertTrue(numpy.allclose(expected, sims))
         index.destroy()
 
+    def testPickleShard(self):
+        """ test that index object pickle and shard are at same location, and loads after change of location """
+
+        prefix = datapath('index')
+        index = similarities.Similarity(prefix, corpus[:5], num_features=len(dictionary), shardsize=9)
+        index.save()
+        self.assertEqual(prefix, index.output_prefix)
+        new_prefix = datapath('new_index')
+        os.rename(prefix, new_prefix)
+        os.rename(datapath('index.0'), datapath('new_index.0'))
+
+        new_index = similarities.Similarity.load(datapath('new_index'))
+        self.assertEqual(new_prefix, new_index.output_prefix)
+
+        os.remove(datapath('new_index'))
+        os.remove(datapath('new_index.0'))
+
     def testMmapCompressed(self):
         pass
         # turns out this test doesn't exercise this because there are no arrays
