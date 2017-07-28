@@ -194,7 +194,7 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
 
     """
     def __init__(self, source=None, dictionary=None, metadata=False, character_filters=None,
-                 tokenizer=None, token_filters=None, processes=-1, no_below=5, no_above=0.5):
+                 tokenizer=None, token_filters=None, processes=-1, no_below=1, no_above=1.0):
         """
         Args:
             source (str): path to top-level directory to traverse for corpus documents.
@@ -227,10 +227,12 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
                 CPUs available, the value will be reduced to (number of virtual CPUs - 1).
             no_below (int): minimum number of documents a term needs to appear in, in order
                 to keep it in the dictionary. This applies when building a new dictionary,
-                and does nothing when passing in your own pre-initialized dictionary.
+                and does nothing when passing in your own pre-initialized dictionary. Set to
+                1 by default (discard no tokens).
             no_above (float): if a term occurs in greater than this proportion of documents
                 from the source corpus, it will be discarded. This applies when building a new
                 dictionary, and does nothing when passing in your own pre-initialized dictionary.
+                Set to 1.0 by default (discard no tokens).
         """
         self.source = source
         self.metadata = metadata
@@ -552,7 +554,7 @@ class TextDirectoryCorpus(TextCorpus):
         """
         for path in self.iter_filepaths():
             logging.debug("reading file: %s", path)
-            with utils.smart_open(path) as f:
+            with utils.smart_open(path, 'rt') as f:
                 if self.lines_are_documents:
                     for line in f:
                         yield line.strip()
