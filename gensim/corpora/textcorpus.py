@@ -132,6 +132,18 @@ class _TextPreprocessorMP(StatefulProcessor, TextPreprocessor):
     pass
 
 
+def without_metadata(method):
+    """Avoid yielding metadata for some particular corpus method."""
+    def wrapper(corpus, *args):
+        metadata_setting = corpus.metadata
+        corpus.metadata = False
+        try:
+            return method(corpus, *args)
+        finally:
+            corpus.metadata = metadata_setting
+    return wrapper
+
+
 class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
     """Helper class to simplify the pipeline of getting bag-of-words vectors (= a
     gensim corpus) from plain text.
@@ -182,7 +194,7 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
 
     """
     def __init__(self, source=None, dictionary=None, metadata=False, character_filters=None,
-                 tokenizer=None, token_filters=None, processes=-1):
+                 tokenizer=None, token_filters=None, processes=-1, no_below=5, no_above=0.5):
         """
         Args:
             source (str): path to top-level directory to traverse for corpus documents.
@@ -191,19 +203,34 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
                 will be built for the given corpus. If no corpus is given, the dictionary will
                 remain uninitialized.
             metadata (bool): True to yield metadata with each document, else False (default).
+                By default, metadata consists only of the line number for each document. This
+                is yielded from `get_texts` as a tuple of (tokens, (line_num,)) and from __iter__
+                as a tuple of (bag_of_words, (line_num,)).
             character_filters (iterable of callable): each will be applied to the text of each
                 document in order, and should return a single string with the modified text.
-                For Python 2, the original text will not be unicode, so it may be useful to
-                convert to unicode as the first character filter. The default character filters
-                lowercase, convert to unicode (strict utf8), perform ASCII-folding, then collapse
+                For Python 2, the original text will not be unicode (unless you modify your
+                `getstream` method to convert it to unicode), so it may be useful to convert to 
+                unicode as the first character filter. The default character filters lowercase, 
+                convert to unicode (strict utf8), perform ASCII-folding, then collapse
                 multiple whitespaces.
             tokenizer (callable): takes as input the document text, preprocessed by all filters
-                in `character_filters`; should return an iterable of tokens (strings).
+                in `character_filters`; should return an iterable of tokens. The tokens should
+                be in a format that can be parsed by the first callable in `token_filters`.
             token_filters (iterable of callable): each will be applied to the iterable of tokens
                 in order, and should return another iterable of tokens. These filters can add,
                 remove, or replace tokens, or do nothing at all. The default token filters
                 remove tokens less than 3 characters long and remove stopwords using the list
                 in `gensim.parsing.preprocessing.STOPWORDS`.
+            processes (int): number of processes to use for text preprocessing. The default is
+                -1, which will use (number of virtual CPUs - 1) worker processes, in addition
+                to the master process. If set to a number greater than the number of virtual
+                CPUs available, the value will be reduced to (number of virtual CPUs - 1).
+            no_below (int): minimum number of documents a term needs to appear in, in order
+                to keep it in the dictionary. This applies when building a new dictionary,
+                and does nothing when passing in your own pre-initialized dictionary.
+            no_above (float): if a term occurs in greater than this proportion of documents
+                from the source corpus, it will be discarded. This applies when building a new
+                dictionary, and does nothing when passing in your own pre-initialized dictionary.
         """
         self.source = source
         self.metadata = metadata
@@ -226,6 +253,8 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
         else:
             self.processes = min(processes, max_cpus)
 
+        self.no_below = no_below
+        self.no_above = no_above
         self.length = None
         self.dictionary = None
         self.init_dictionary(dictionary)
@@ -235,20 +264,25 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
         is an `input` for the corpus, add all documents from that `input`. If the
         `dictionary` is already initialized, simply set it as the corpus's `dictionary`.
         """
-        self.dictionary = dictionary if dictionary is not None else Dictionary()
         if self.source is not None:
             if dictionary is None:
-                logger.info("Initializing dictionary")
-                metadata_setting = self.metadata
-                self.metadata = False
-                self.dictionary.add_documents(self.get_texts())
-                self.metadata = metadata_setting
+                self.dictionary = self._build_dictionary()
             else:
+                self.dictionary = dictionary
                 logger.info("Input stream provided but dictionary already initialized")
         else:
+            self.dictionary = Dictionary()
             logger.warning(
                 "No input document stream provided; assuming "
                 "dictionary will be initialized some other way.")
+
+    @without_metadata
+    def _build_dictionary(self):
+        logger.info("Initializing dictionary")
+        dictionary = Dictionary()
+        dictionary.add_documents(self.get_texts())
+        dictionary.filter_extremes(no_below=self.no_below, no_above=self.no_above, keep_n=None)
+        return dictionary
 
     def __iter__(self):
         """The function that defines a corpus.
@@ -517,7 +551,8 @@ class TextDirectoryCorpus(TextCorpus):
         there will be one item per file, containing the entire contents of the file.
         """
         for path in self.iter_filepaths():
-            with open(path, 'rt') as f:
+            logging.debug("reading file: %s", path)
+            with utils.smart_open(path) as f:
                 if self.lines_are_documents:
                     for line in f:
                         yield line.strip()
@@ -541,9 +576,9 @@ class LineSentence(TextTokensIterator, TextCorpus):
     """Simple format: one sentence = one line.
 
     In general, words should already be preprocessed and separated by whitespace.
-    If a line exceeds the `max_sentence_length`, it will be split into multiple sentences
-    not exceeding this amount. Additional preprocessing can be applied using the `TextCorpus`
-    preprocessing keyword arguments if needed.
+    If a line exceeds the `max_sentence_length`, it will be split into multiple
+    sentences not exceeding this amount. Additional preprocessing can be applied
+    using the `TextCorpus` preprocessing keyword arguments if needed.
     """
 
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None, **kwargs):
@@ -575,7 +610,7 @@ class LineSentence(TextTokensIterator, TextCorpus):
                 yield line
 
     def yield_tokens(self):
-        doc_token_stream = super(self.__class__, self).yield_tokens()
+        doc_token_stream = super(LineSentence, self).yield_tokens()
         for tokens in doc_token_stream:
             i = 0
             while i < len(tokens):
@@ -583,54 +618,81 @@ class LineSentence(TextTokensIterator, TextCorpus):
                 i += self.max_sentence_length
 
 
-class PathLineSentences(object):
-    """
-    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
-    Like LineSentence, but will process all files in a directory in alphabetical order by filename
+class PathLineSentences(TextTokensIterator, TextDirectoryCorpus):
+    """Simple format: one sentence = one line.
+    
+    Like LineSentence, but will process all files in a directory,
+    optionally in alphabetical order by filename.
+
+    In general, words should already be preprocessed and separated by whitespace.
+    If a line exceeds the `max_sentence_length`, it will be split into multiple
+    sentences not exceeding this amount. Additional preprocessing can be applied
+    using the `TextCorpus` preprocessing keyword arguments if needed.
+    
     """
 
-    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None,
+                 sort_filenames=True, **kwargs):
         """
-        `source` should be a path to a directory (as a string) where all files can be opened by the
-        LineSentence class. Each file will be read up to
-        `limit` lines (or no clipped if limit is None, the default).
+        Args:
+            source (str): path to a directory where all files can be opened by the
+                `LineSentence` class. Each file will be read up to `limit` lines
+                (or all lines if `limit` is None, the default). The files in the
+                directory should be either text files, .bz2 files, or .gz files.
+            sort_filenames (bool): whether or not to sort the filenames read from
+                the directory. If True (default), all filenames will be read into
+                memory on each call to `iter_filepaths` (called by `getstream`).
+                If False, the files are read in the order they are encountered during
+                the top-down directory walk.
 
         Example::
 
             sentences = LineSentencePath(os.getcwd() + '\\corpus\\')
 
-        The files in the directory should be either text files, .bz2 files, or .gz files.
-
         """
-        self.source = source
+        if os.path.isfile(source):
+            raise ValueError(
+                "source '%s' is file; use `corpora.textcorpus.LineSentence` instead" % source)
+
         self.max_sentence_length = max_sentence_length
         self.limit = limit
+        self.sort_filenames = sort_filenames
+        kwargs['lines_are_documents'] = True
+        kwargs['tokenizer'] = kwargs.get('tokenizer', unicode_and_tokenize)
+        kwargs['character_filters'] = kwargs.get('character_filters', [])
+        kwargs['token_filters'] = kwargs.get('token_filters', [])
+        kwargs['processes'] = kwargs.get('processes', 1)
+        super(PathLineSentences, self).__init__(source, **kwargs)
 
-        if os.path.isfile(self.source):
-            logging.warning('single file read, better to use models.word2vec.LineSentence')
-            self.input_files = [self.source]  # force code compatibility with list of files
-        elif os.path.isdir(self.source):
-            self.source = os.path.join(self.source, '')  # ensures os-specific slash at end of path
-            logging.debug('reading directory ' + self.source)
-            self.input_files = os.listdir(self.source)
-            self.input_files = [self.source + file for file in self.input_files]  # make full paths
-            self.input_files.sort()  # makes sure it happens in filename order
-        else:  # not a file or a directory, then we can't do anything with it
-            raise ValueError('input is neither a file nor a path')
+    def getstream(self):
+        """Yield documents from the underlying plain text collection (of one or more files).
+        Each item yielded from this method will be considered a document by subsequent
+        preprocessing methods.
+        """
+        paths = self.iter_filepaths()
+        if self.sort_filenames:
+            logger.debug("sorting filepaths")
+            paths = list(paths)
+            paths.sort(key=lambda path: os.path.basename(path))
+            logger.debug("found {} files: {}".format(len(paths), paths))
 
-        logging.info('files read into PathLineSentences:' + '\n'.join(self.input_files))
-
-    def __iter__(self):
-        '''iterate through the files'''
-        for file_name in self.input_files:
-            logging.info('reading file ' + file_name)
-            with utils.smart_open(file_name) as fin:
+        num_files = 0
+        for path in paths:
+            logger.debug("reading file: %s", path)
+            num_files += 1
+            with utils.smart_open(path) as fin:
                 for line in itertools.islice(fin, self.limit):
-                    line = utils.to_unicode(line).split()
-                    i = 0
-                    while i < len(line):
-                        yield line[i:i + self.max_sentence_length]
-                        i += self.max_sentence_length
+                    yield line.strip()
+
+        logger.debug("finished reading %d files", num_files)
+
+    def yield_tokens(self):
+        doc_token_stream = super(PathLineSentences, self).yield_tokens()
+        for tokens in doc_token_stream:
+            i = 0
+            while i < len(tokens):
+                yield tokens[i: i + self.max_sentence_length]
+                i += self.max_sentence_length
 
 
 class Text8Corpus(TextTokensIterator, TextCorpus):

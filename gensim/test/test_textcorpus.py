@@ -291,24 +291,37 @@ class TestLineSentence(unittest.TestCase):
                 for words in sentences:
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
+
+class TestPathLineSentences(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.data_path = datapath('PathLineSentences')
+
+    def get_test_file_path(self, *names):
+        return os.path.join(self.data_path, *names)
+
+    def open_test_file(self, *names):
+        return utils.smart_open(self.get_test_file_path(*names))
+
     def testPathLineSentences(self):
         """Does PathLineSentences work with a path argument?"""
-        with utils.smart_open(os.path.join(datapath('PathLineSentences'), '1.txt')) as orig1, \
-                utils.smart_open(os.path.join(datapath('PathLineSentences'), '2.txt.bz2')) as orig2:
-            sentences = textcorpus.PathLineSentences(datapath('PathLineSentences'))
+        with self.open_test_file('subdir', '1.txt') as orig1, \
+                self.open_test_file('2.txt.bz2') as orig2:
+            sentences = textcorpus.PathLineSentences(self.data_path)
             orig = orig1.readlines() + orig2.readlines()
-            orig_counter = 0  # to go through orig while matching PathLineSentences
-            for words in sentences:
-                self.assertEqual(words, utils.to_unicode(orig[orig_counter]).split())
-                orig_counter += 1
+
+            corpus_sentences = iter(sentences)
+            for orig_text in orig:
+                expected = textcorpus.unicode_and_tokenize(orig_text)
+                if expected:
+                    self.assertEqual(next(corpus_sentences), expected)
 
     def testPathLineSentencesOneFile(self):
         """Does PathLineSentences work with a single file argument?"""
-        test_file = os.path.join(datapath('PathLineSentences'), '1.txt')
-        with utils.smart_open(test_file) as orig:
-            sentences = textcorpus.PathLineSentences(test_file)
-            for words in sentences:
-                self.assertEqual(words, utils.to_unicode(orig.readline()).split())
+        test_file = self.get_test_file_path('subdir', '1.txt')
+        with self.assertRaises(ValueError):
+            textcorpus.PathLineSentences(test_file)
 
 
 if __name__ == '__main__':
