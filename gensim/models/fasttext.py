@@ -334,7 +334,7 @@ class FastText(Word2Vec):
             ngram_weights = self.wv.syn0_all
             for ngram in ngrams:
                 word_vec += ngram_weights[self.wv.ngrams[ngram]]
-            word_vec / len(ngrams)
+            word_vec /= len(ngrams)
 
             self.wv.syn0[v.index] = word_vec
 
