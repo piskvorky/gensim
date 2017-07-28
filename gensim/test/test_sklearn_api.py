@@ -462,6 +462,20 @@ class TestWord2VecWrapper(unittest.TestCase):
         self.assertEqual(matrix.shape[0], 1)
         self.assertEqual(matrix.shape[1], self.model.size)
 
+    def testConsistencyWithGensimModel(self):
+        # training a W2VTransformer
+        self.model = W2VTransformer(size=10, min_count=0, seed=42)
+        self.model.fit(texts)
+
+        # training a Gensim Word2Vec model with the same params
+        gensim_w2vmodel = models.Word2Vec(texts, size=10, min_count=0, seed=42)
+
+        word = texts[0][0]
+        vec_transformer_api = self.model.transform(word)  # vector returned by W2VTransformer
+        vec_gensim_model = gensim_w2vmodel[word]  # vector returned by Word2Vec
+        passed = numpy.allclose(vec_transformer_api, vec_gensim_model, atol=1e-1)
+        self.assertTrue(passed)
+
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
         model = W2VTransformer(size=10, min_count=1)
