@@ -18,7 +18,6 @@ from copy import deepcopy
 from six import string_types
 
 from gensim.utils import call_on_class_only
-from gensim import matutils
 
 logger = logging.getLogger(__name__)
 
@@ -384,7 +383,7 @@ class FastText(Word2Vec):
 
         all_ngrams = []
         for w, v in self.wv.vocab.items():
-            all_ngrams += ['<' + w + '>']  # for special sequence for <where> for word where -- from research paper
+            all_ngrams += ['<' + w + '>']  # for special sequence, for ex- <where> for word 'where' -- from research paper
             all_ngrams += Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
         all_ngrams = set(all_ngrams)
         self.num_ngram_vectors = len(all_ngrams)
