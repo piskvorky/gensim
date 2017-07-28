@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
+# Author: Chinmaya Pancholi <chinmayapancholi13@gmail.com>
+# Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 """Scikit learn wrapper for gensim.
 Contains various gensim based implementations which match with scikit-learn standards.
