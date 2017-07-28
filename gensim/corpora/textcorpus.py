@@ -209,8 +209,8 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
             character_filters (iterable of callable): each will be applied to the text of each
                 document in order, and should return a single string with the modified text.
                 For Python 2, the original text will not be unicode (unless you modify your
-                `getstream` method to convert it to unicode), so it may be useful to convert to 
-                unicode as the first character filter. The default character filters lowercase, 
+                `getstream` method to convert it to unicode), so it may be useful to convert to
+                unicode as the first character filter. The default character filters lowercase,
                 convert to unicode (strict utf8), perform ASCII-folding, then collapse
                 multiple whitespaces.
             tokenizer (callable): takes as input the document text, preprocessed by all filters
@@ -620,7 +620,7 @@ class LineSentence(TextTokensIterator, TextCorpus):
 
 class PathLineSentences(TextTokensIterator, TextDirectoryCorpus):
     """Simple format: one sentence = one line.
-    
+
     Like LineSentence, but will process all files in a directory,
     optionally in alphabetical order by filename.
 
@@ -628,7 +628,7 @@ class PathLineSentences(TextTokensIterator, TextDirectoryCorpus):
     If a line exceeds the `max_sentence_length`, it will be split into multiple
     sentences not exceeding this amount. Additional preprocessing can be applied
     using the `TextCorpus` preprocessing keyword arguments if needed.
-    
+
     """
 
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None,
