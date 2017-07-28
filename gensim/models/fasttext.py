@@ -18,6 +18,7 @@ from copy import deepcopy
 from six import string_types
 
 from gensim.utils import call_on_class_only
+from gensim import matutils
 
 logger = logging.getLogger(__name__)
 
@@ -50,15 +51,16 @@ def train_batch_sg(model, sentences, alpha, work=None):
             # now go over all words from the (reduced) window, predicting each one in turn
             start = max(0, pos - model.window + reduced_window)
             for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
-                # don't train on the `word` itself
 
-                word2_subwords = Ft_Wrapper.compute_ngrams(model.wv.index2word[word2.index], model.min_n, model.max_n)
+                word2_subwords = ['<' + model.wv.index2word[word2.index] + '>']
+                word2_subwords += Ft_Wrapper.compute_ngrams(model.wv.index2word[word2.index], model.min_n, model.max_n)
                 word2_subwords = set(word2_subwords)
 
                 subwords_indices = []
                 for subword in word2_subwords:
                     subwords_indices.append(model.wv.ngrams[subword])
 
+                # don't train on the `word` itself
                 if pos2 != pos:
                     train_sg_pair(model, model.wv.index2word[word.index], subwords_indices, alpha)
                     # train_sg_pair(model, model.wv.index2word[word.index], word2.index, alpha)
@@ -85,6 +87,7 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
             word2_subwords = []
 
             for indices in word2_indices:
+                word2_subwords += ['<' + model.wv.index2word[indices] + '>']
                 word2_subwords += Ft_Wrapper.compute_ngrams(model.wv.index2word[indices], model.min_n, model.max_n)
             word2_subwords = set(word2_subwords)
 
@@ -153,7 +156,7 @@ def train_sg_pair(model, word, context_subwords_index, alpha, learn_vectors=True
     return neu1e
 
 
-def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
+def train_cbow_pair(model, word, input_subword_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
     neu1e = zeros(l1.shape)
 
     if model.hs:
@@ -180,16 +183,12 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
 
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
-        if not model.cbow_mean and input_word_indices:
-            neu1e /= len(input_word_indices)
-        for i in input_word_indices:
+        if not model.cbow_mean and input_subword_indices:
+            neu1e /= len(input_subword_indices)
+        for i in input_subword_indices:
             model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
 
     return neu1e
-
-
-def get_subwords(self, word):
-    pass
 
 
 class FastText(Word2Vec):
@@ -273,6 +272,9 @@ class FastText(Word2Vec):
         self.min_n = min_n
         self.max_n = max_n
 
+        self.wv.min_n = min_n
+        self.wv.max_n = max_n
+
         if self.word_ngrams <= 1 and self.max_n == 0:
             self.bucket = 0
 
@@ -294,11 +296,18 @@ class FastText(Word2Vec):
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
                        start_alpha=self.alpha, end_alpha=self.min_alpha)
-            self.word_vec_invocab()
         else:
             if trim_rule is not None:
                 logger.warning("The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model. ")
                 logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored.")
+
+    def train(self, sentences, total_examples=None, total_words=None,
+              epochs=None, start_alpha=None, end_alpha=None,
+              word_count=0,
+              queue_factor=2, report_delay=1.0):
+        Word2Vec.train(self, sentences, total_examples=self.corpus_count, epochs=self.iter,
+                       start_alpha=self.alpha, end_alpha=self.min_alpha)
+        self.word_vec_invocab()
 
     def initialize_word_vectors(self):
         self.wv = FastTextKeyedVectors()
@@ -317,7 +326,18 @@ class FastText(Word2Vec):
         # print(model.wv.syn0[model.wv.vocab['trees'].index])
         # These two gives same result
         for w, v in self.wv.vocab.items():
-            self.wv.syn0[v.index] = self.word_vec(w)
+            word_vec = np.zeros(self.wv.syn0_all.shape[1])
+            ngrams = ['<' + w + '>']
+            # We also include the word w itself in the set of its n -grams -- from research paper
+
+            ngrams = Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
+            ngrams = set(ngrams)
+            ngram_weights = self.wv.syn0_all
+            for ngram in ngrams:
+                word_vec += ngram_weights[self.wv.ngrams[ngram]]
+            word_vec / len(ngrams)
+
+            self.wv.syn0[v.index] = word_vec
 
     def word_vec(self, word, use_norm=False):
         if word in self.wv.vocab:
@@ -326,6 +346,7 @@ class FastText(Word2Vec):
             else:
                 return self.wv.syn0[self.wv.vocab[word].index]
         else:
+            logger.info("out of vocab")
             word_vec = np.zeros(self.wv.syn0_all.shape[1])
             ngrams = Ft_Wrapper.compute_ngrams(word, self.min_n, self.max_n)
             ngrams = [ng for ng in ngrams if ng in self.wv.ngrams]
@@ -363,6 +384,7 @@ class FastText(Word2Vec):
 
         all_ngrams = []
         for w, v in self.wv.vocab.items():
+            all_ngrams += ['<' + w + '>']  # for special sequence for <where> for word where -- from research paper
             all_ngrams += Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
         all_ngrams = set(all_ngrams)
         self.num_ngram_vectors = len(all_ngrams)
