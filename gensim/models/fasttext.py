@@ -53,7 +53,7 @@ def train_batch_sg(model, sentences, alpha, work=None):
 
                 word2_subwords = ['<' + model.wv.index2word[word2.index] + '>']
                 word2_subwords += Ft_Wrapper.compute_ngrams(model.wv.index2word[word2.index], model.min_n, model.max_n)
-                word2_subwords = set(word2_subwords)
+                word2_subwords = list(set(word2_subwords))
 
                 subwords_indices = []
                 for subword in word2_subwords:
@@ -88,7 +88,7 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
             for indices in word2_indices:
                 word2_subwords += ['<' + model.wv.index2word[indices] + '>']
                 word2_subwords += Ft_Wrapper.compute_ngrams(model.wv.index2word[indices], model.min_n, model.max_n)
-            word2_subwords = set(word2_subwords)
+            word2_subwords = list(set(word2_subwords))
 
             subwords_indices = []
             for subword in word2_subwords:
@@ -330,7 +330,7 @@ class FastText(Word2Vec):
             # We also include the word w itself in the set of its n -grams -- from research paper
 
             ngrams = Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
-            ngrams = set(ngrams)
+            ngrams = list(set(ngrams))
             ngram_weights = self.wv.syn0_all
             for ngram in ngrams:
                 word_vec += ngram_weights[self.wv.ngrams[ngram]]
@@ -385,7 +385,7 @@ class FastText(Word2Vec):
         for w, v in self.wv.vocab.items():
             all_ngrams += ['<' + w + '>']  # for special sequence, for ex- <where> for word 'where' -- from research paper
             all_ngrams += Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
-        all_ngrams = set(all_ngrams)
+        all_ngrams = list(set(all_ngrams))
         self.num_ngram_vectors = len(all_ngrams)
         logger.info("Total number of ngrams in the vocab is %d", self.num_ngram_vectors)
 

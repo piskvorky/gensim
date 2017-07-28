@@ -19,11 +19,13 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 # self.assertTrue(FastText(sentences, min_count=100, size=100, workers=3))
 # self.assertTrue(FastText(sentences, sg=1, min_count=100, size=100, workers=3))
 
+
 class LeeCorpus(object):
     def __iter__(self):
         with open(datapath('lee_background.cor')) as f:
             for line in f:
                 yield utils.simple_preprocess(line)
+
 
 list_corpus = list(LeeCorpus())
 
@@ -99,7 +101,8 @@ class TestUnsupervisedFastText(unittest.TestCase):
         war_vec = model['war']
         sims2 = model.most_similar([war_vec], topn=151)
         self.assertTrue('war' in [word for word, score in sims2])
-        self.assertTrue('terrorism' in [word for word, score in sims2])"""
+        self.assertTrue('terrorism' in [word for word, score in sims2])
+        """
         pass
 
     def test_sg_neg(self):
@@ -111,7 +114,6 @@ class TestUnsupervisedFastText(unittest.TestCase):
         """Test skipgram w/ hierarchical softmax"""
         model = FastText(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10)
         self.model_sanity(model)
-
 
     def test_cbow_hs(self):
         """Test CBOW w/ hierarchical softmax"""
