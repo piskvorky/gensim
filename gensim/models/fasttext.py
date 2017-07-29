@@ -376,6 +376,27 @@ class FastText(Word2Vec):
             # construct deterministic seed from word AND seed argument
             self.wv.syn0_all[self.wv.ngrams[ngram]] = self.seeded_vector(ngram + str(self.seed))
 
+        # Changes needed (reference) - the way we have initialized is not same as fb fasttext
+
+        """
+        Matrix::Matrix(int64_t m, int64_t n) {
+            m_ = m;
+            n_ = n;
+            data_ = new real[m * n];
+        }
+
+        void Matrix::uniform(real a) {
+            std::minstd_rand rng(1);
+            std::uniform_real_distribution<> uniform(-a, a);
+            for (int64_t i = 0; i < (m_ * n_); i++) {
+                data_[i] = uniform(rng);
+            }
+        }
+
+        input_->uniform(1.0 / args_->dim);  # input is syn0_all
+        """
+
+
     def init_ngrams(self):
         self.wv.ngrams = {}
         self.wv.syn0_all = empty((self.bucket + len(self.wv.vocab), self.vector_size), dtype=REAL)
