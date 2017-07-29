@@ -254,7 +254,8 @@ class ShardedCorpus(IndexedCorpus):
     def init_shards(self, output_prefix, corpus, shardsize=4096, dtype=_default_dtype):
         """Initialize shards from the corpus."""
 
-        if not gensim.utils.is_corpus(corpus):
+        is_corpus, corpus = gensim.utils.is_corpus(corpus)
+        if not is_corpus:
             raise ValueError('Cannot initialize shards without a corpus to read'
                              ' from! (Got corpus type: {0})'.format(type(corpus)))
 
