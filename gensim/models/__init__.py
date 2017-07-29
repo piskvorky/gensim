@@ -19,7 +19,7 @@ from .phrases import Phrases
 from .normmodel import NormModel
 from .atmodel import AuthorTopicModel
 from .ldaseqmodel import LdaSeqModel
-from .distributed_word2vec import TfWord2Vec
+from .distributed_word2vec import TfWord2Vec  # noqa: F401
 
 from . import wrappers
 
