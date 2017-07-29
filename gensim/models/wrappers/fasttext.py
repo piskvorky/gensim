@@ -116,15 +116,14 @@ class FastTextKeyedVectors(KeyedVectors):
 
     def __contains__(self, word):
         """
-        Check if word is present in the vocabulary, or if any word ngrams are present. A vector for the word is
-        guaranteed to exist if `__contains__` returns True.
-
+        Check if `word` or any character ngrams in `word` are present in the vocabulary.
+        A vector for the word is guaranteed to exist if `__contains__` returns True.
         """
         if word in self.vocab:
             return True
         else:
-            word_ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
-            return any(ng in self.ngrams for ng in word_ngrams)
+            char_ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
+            return any(ng in self.ngrams for ng in char_ngrams)
 
 
 class FastText(Word2Vec):
