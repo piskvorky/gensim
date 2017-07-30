@@ -396,7 +396,6 @@ class FastText(Word2Vec):
         input_->uniform(1.0 / args_->dim);  # input is syn0_all
         """
 
-
     def init_ngrams(self):
         self.wv.ngrams = {}
         self.wv.syn0_all = empty((self.bucket + len(self.wv.vocab), self.vector_size), dtype=REAL)
