@@ -64,7 +64,7 @@ class TestTextCorpus(CorpusTestCase):
             "zf tooth   spaces   "
         ]
         expected = [
-            ['Sef', 'chomutovskych', 'komunistu', 'dostal', 'postou', 'bily', 'prasek'],
+            ['sef', 'chomutovskych', 'komunistu', 'dostal', 'postou', 'bily', 'prasek'],
             ['test', 'stopwords'],
             ['tooth', 'spaces']
         ]

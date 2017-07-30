@@ -65,9 +65,8 @@ def remove_short(tokens, minsize=3):
     return [token for token in tokens if len(token) >= minsize]
 
 
-def lower_to_unicode(text, encoding='utf8', errors='strict'):
-    """Lowercase `text` and convert to unicode."""
-    return utils.to_unicode(text.lower(), encoding, errors)
+def lowercase(text):
+    return text.lower()
 
 
 def strip_multiple_whitespaces(s):
@@ -194,10 +193,11 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
 
     """
     def __init__(self, source=None, dictionary=None, metadata=False, character_filters=None,
-                 tokenizer=None, token_filters=None, processes=-1, no_below=1, no_above=1.0):
+                 tokenizer=None, token_filters=None, processes=-1, no_below=1, no_above=1.0,
+                 encoding='utf8', decoding_error_handling='strict'):
         """
         Args:
-            source (str): path to top-level directory to traverse for corpus documents.
+            source (str): path to corpus source file to read documents from.
             dictionary (Dictionary): if a dictionary is provided, it will not be updated
                 with the given corpus on initialization. If none is provided, a new dictionary
                 will be built for the given corpus. If no corpus is given, the dictionary will
@@ -208,11 +208,10 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
                 as a tuple of (bag_of_words, (line_num,)).
             character_filters (iterable of callable): each will be applied to the text of each
                 document in order, and should return a single string with the modified text.
-                For Python 2, the original text will not be unicode (unless you modify your
-                `getstream` method to convert it to unicode), so it may be useful to convert to
-                unicode as the first character filter. The default character filters lowercase,
-                convert to unicode (strict utf8), perform ASCII-folding, then collapse
-                multiple whitespaces.
+                The first filter will receive the text directly from the `getstream` method,
+                which reads documents from the `source` file and yields them as unicode.
+                The default character filters perform ASCII-folding, lowercase, then collapse
+                all whitespace character sequences into single spaces.
             tokenizer (callable): takes as input the document text, preprocessed by all filters
                 in `character_filters`; should return an iterable of tokens. The tokens should
                 be in a format that can be parsed by the first callable in `token_filters`.
@@ -223,8 +222,8 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
                 in `gensim.parsing.preprocessing.STOPWORDS`.
             processes (int): number of processes to use for text preprocessing. The default is
                 -1, which will use (number of virtual CPUs - 1) worker processes, in addition
-                to the master process. If set to a number greater than the number of virtual
-                CPUs available, the value will be reduced to (number of virtual CPUs - 1).
+                to the master process. If set to 1, no worker pool will be used; instead, all
+                preprocessing will occur in the main process.
             no_below (int): minimum number of documents a term needs to appear in, in order
                 to keep it in the dictionary. This applies when building a new dictionary,
                 and does nothing when passing in your own pre-initialized dictionary. Set to
@@ -233,13 +232,17 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
                 from the source corpus, it will be discarded. This applies when building a new
                 dictionary, and does nothing when passing in your own pre-initialized dictionary.
                 Set to 1.0 by default (discard no tokens).
+            encoding (str): encoding of `source` file; used to decode bytes to unicode
+                (default is 'utf8').
+            decoding_error_handling (str): error-handling strategy for conversion from file bytes to unicode.
+                See `gensim.utils.unicode` for more info.
         """
         self.source = source
         self.metadata = metadata
 
         self.character_filters = character_filters
         if self.character_filters is None:
-            self.character_filters = [lower_to_unicode, deaccent, strip_multiple_whitespaces]
+            self.character_filters = [deaccent, lowercase, strip_multiple_whitespaces]
 
         self.tokenizer = tokenizer
         if self.tokenizer is None:
@@ -249,11 +252,12 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
         if self.token_filters is None:
             self.token_filters = [remove_short, remove_stopwords]
 
-        max_cpus = mp.cpu_count() - 1
+        self.processes = processes
         if processes <= 0:
-            self.processes = max(1, max_cpus)
-        else:
-            self.processes = min(processes, max_cpus)
+            self.processes = max(1, mp.cpu_count() - 1)
+
+        self.encoding = encoding
+        self.decoding_error_handling = decoding_error_handling
 
         self.no_below = no_below
         self.no_above = no_above
@@ -301,15 +305,28 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
     def getstream(self):
         """Yield documents from the underlying plain text collection (of one or more files).
         Each item yielded from this method will be considered a document by subsequent
-        preprocessing methods.
+        preprocessing methods. Documents will be read as bytes and converted to unicode using
+        the instance attributes `encoding` and `decoding_error_handling`.
+        
+        Subclasses should override `_getstream` instead of this method. If you really want
+        to override this method, be sure to call `_decode_bytes` to convert the bytes read
+        from the source file to unicode.
         """
+        return (self._decode_bytes(line) for line in self._getstream())
+
+    def _getstream(self):
+        """Yield documents as bytes read from `source` file."""
         num_texts = 0
-        with utils.file_or_filename(self.source) as f:
+        with utils.smart_open(self.source, 'rb') as f:
             for line in f:
                 yield line
                 num_texts += 1
 
         self.length = num_texts
+
+    def _decode_bytes(self, text_bytes):
+        return utils.to_unicode(
+            text_bytes, encoding=self.encoding, errors=self.decoding_error_handling)
 
     def _create_preprocessor_pool(self):
         state_kwargs = dict(
@@ -544,7 +561,7 @@ class TextDirectoryCorpus(TextCorpus):
                 for name in filenames:
                     yield os.path.join(dirpath, name)
 
-    def getstream(self):
+    def _getstream(self):
         """Yield documents from the underlying plain text collection (of one or more files).
         Each item yielded from this method will be considered a document by subsequent
         preprocessing methods.
@@ -554,7 +571,7 @@ class TextDirectoryCorpus(TextCorpus):
         """
         for path in self.iter_filepaths():
             logging.debug("reading file: %s", path)
-            with utils.smart_open(path, 'rt') as f:
+            with utils.smart_open(path, 'rb') as f:
                 if self.lines_are_documents:
                     for line in f:
                         yield line.strip()
@@ -606,8 +623,8 @@ class LineSentence(TextTokensIterator, TextCorpus):
         kwargs['processes'] = kwargs.get('processes', 1)
         TextCorpus.__init__(self, source, **kwargs)
 
-    def getstream(self):
-        with utils.smart_open(self.source) as fin:
+    def _getstream(self):
+        with utils.smart_open(self.source, 'rb') as fin:
             for line in itertools.islice(fin, self.limit):
                 yield line
 
@@ -666,7 +683,7 @@ class PathLineSentences(TextTokensIterator, TextDirectoryCorpus):
         kwargs['processes'] = kwargs.get('processes', 1)
         super(PathLineSentences, self).__init__(source, **kwargs)
 
-    def getstream(self):
+    def _getstream(self):
         """Yield documents from the underlying plain text collection (of one or more files).
         Each item yielded from this method will be considered a document by subsequent
         preprocessing methods.
@@ -676,7 +693,7 @@ class PathLineSentences(TextTokensIterator, TextDirectoryCorpus):
             logger.debug("sorting filepaths")
             paths = list(paths)
             paths.sort(key=lambda path: os.path.basename(path))
-            logger.debug("found {} files: {}".format(len(paths), paths))
+            logger.debug("found %d files: %r", len(paths), paths)
 
         num_files = 0
         for path in paths:
@@ -738,9 +755,10 @@ class Text8Corpus(TextTokensIterator, TextCorpus):
                     yield sentence[:self.max_sentence_length]
                     sentence = sentence[self.max_sentence_length:]
 
-    def getstream(self):
+    def _getstream(self):
         for sentence_tokens in self._sentence_token_stream():
-            yield ' '.join(sentence_tokens)
+            sentence = ' '.join(sentence_tokens)
+            yield sentence
 
 
 def brown_corpus_tokenizer(text):
