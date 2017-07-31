@@ -4,6 +4,8 @@ import sys
 import argparse
 from .api import download
 from .api import catalogue
+from .api import link
+from .api import info
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description = "Gensim console API")
 	group = parser.add_mutually_exclusive_group()
