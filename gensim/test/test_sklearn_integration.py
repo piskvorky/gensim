@@ -127,7 +127,7 @@ phrases_sentences = [
     ['graph', 'trees'],
     ['graph', 'minors', 'trees'],
     ['graph', 'minors', 'survey'],
-    ['graph', 'minors', 'survey','human','interface'] #test bigrams within same sentence
+    ['graph', 'minors', 'survey', 'human', 'interface']  # test bigrams within same sentence
 ]
 
 
@@ -819,6 +819,7 @@ class TestHdpTransformer(unittest.TestCase):
     def testModelNotFitted(self):
         hdp_wrapper = HdpTransformer(id2word=dictionary)
         self.assertRaises(NotFittedError, hdp_wrapper.transform, corpus[0])
+
 
 class TestPhrasesTransformer(unittest.TestCase):
     def setUp(self):
