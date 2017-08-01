@@ -127,7 +127,7 @@ phrases_sentences = [
     ['graph', 'trees'],
     ['graph', 'minors', 'trees'],
     ['graph', 'minors', 'survey'],
-    ['graph', 'minors', 'survey', 'human', 'interface']  # test bigrams within same sentence
+    ['graph', 'minors', 'survey', 'human', 'interface']
 ]
 
 
@@ -832,6 +832,19 @@ class TestPhrasesTransformer(unittest.TestCase):
         doc = phrases_sentences[-1]
         phrase_tokens = self.model.transform(doc)[0]
         expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface']
+        self.assertEqual(phrase_tokens, expected_phrase_tokens)
+
+    def testPartialFit(self):
+        new_sentences = [
+            ['world', 'peace', 'humans', 'world', 'peace', 'world', 'peace', 'people'],
+            ['world', 'peace', 'people'],
+            ['world', 'peace', 'humans']
+        ]
+        self.model.partial_fit(X=new_sentences)  # train model with new sentences
+
+        doc = ['graph', 'minors', 'survey', 'human', 'interface', 'world', 'peace']
+        phrase_tokens = self.model.transform(doc)[0]
+        expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface', u'world_peace']
         self.assertEqual(phrase_tokens, expected_phrase_tokens)
 
     def testSetGetParams(self):
