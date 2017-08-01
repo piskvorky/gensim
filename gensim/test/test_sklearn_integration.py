@@ -666,7 +666,6 @@ class TestText2BowTransformer(unittest.TestCase):
             cache = pickle.loads(uncompressed_content)
         data = cache
         text2bow_model = Text2BowTransformer()
-        text2bow_model.fit(data.data)
         lda_model = SklLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
