@@ -262,6 +262,10 @@ class WikiCorpus(TextCorpus):
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
 
+    **Note:** "multistream" archives are *not* supported in Python 2 due to
+    `limitations in the core bz2 library
+    <https://docs.python.org/2/library/bz2.html#de-compression-of-files>`_.
+
     >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
