@@ -25,6 +25,7 @@ from gensim.sklearn_integration.d2vmodel import D2VTransformer
 from gensim.sklearn_integration.text2bow import Text2BowTransformer
 from gensim.sklearn_integration.tfidf import TfIdfTransformer
 from gensim.sklearn_integration.hdp import HdpTransformer
+from gensim.sklearn_integration.phrases import PhrasesTransformer
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import doc2vec
 from gensim import matutils
@@ -114,6 +115,19 @@ dict_texts = [
     'graph trees',
     'graph minors trees',
     'graph minors survey'
+]
+
+phrases_sentences = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey'],
+    ['graph', 'minors', 'survey','human','interface'] #test bigrams within same sentence
 ]
 
 
@@ -557,7 +571,7 @@ class TestSklATModelWrapper(unittest.TestCase):
         self.assertEqual(len(ret_val), len(author_list))
 
 
-class TestD2VTransformerWrapper(unittest.TestCase):
+class TestD2VTransformer(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)
         self.model = D2VTransformer(min_count=1)
@@ -625,7 +639,7 @@ class TestD2VTransformerWrapper(unittest.TestCase):
         self.assertRaises(NotFittedError, d2vmodel_wrapper.transform, 1)
 
 
-class TestText2BowTransformerWrapper(unittest.TestCase):
+class TestText2BowTransformer(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)
         self.model = Text2BowTransformer()
@@ -805,6 +819,40 @@ class TestHdpTransformer(unittest.TestCase):
     def testModelNotFitted(self):
         hdp_wrapper = HdpTransformer(id2word=dictionary)
         self.assertRaises(NotFittedError, hdp_wrapper.transform, corpus[0])
+
+class TestPhrasesTransformer(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = PhrasesTransformer(min_count=1, threshold=1)
+        self.model.fit(phrases_sentences)
+
+    def testTransform(self):
+        # tranform one document
+        doc = phrases_sentences[-1]
+        phrase_tokens = self.model.transform(doc)[0]
+        expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface']
+        self.assertEqual(phrase_tokens, expected_phrase_tokens)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(progress_per=5000)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["progress_per"], 5000)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = phrases_sentences[-1]
+        loaded_phrase_tokens = model_load.transform(doc)
+
+        # comparing the original and loaded models
+        original_phrase_tokens = self.model.transform(doc)
+        self.assertEqual(original_phrase_tokens, loaded_phrase_tokens)
+
+    def testModelNotFitted(self):
+        phrases_transformer = PhrasesTransformer()
+        self.assertRaises(NotFittedError, phrases_transformer.transform, phrases_sentences[0])
 
 if __name__ == '__main__':
     unittest.main()
