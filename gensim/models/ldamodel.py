@@ -980,7 +980,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
         `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
         `diagonal` set to True if the difference is required only between the identical topic no.s (returns diagonal of diff matrix)
-        `annotation` whether the intersection or difference of words between two topics should be returned 
+        `annotation` whether the intersection or difference of words between two topics should be returned
         Returns a matrix Z with shape (m1.num_topics, m2.num_topics), where Z[i][j] - difference between topic_i and topic_j
         and matrix annotation (if True) with shape (m1.num_topics, m2.num_topics, 2, None),
         where:
