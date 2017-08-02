@@ -1015,6 +1015,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         distance_func = distances[distance]
         d1, d2 = self.state.get_lambda(), other.state.get_lambda()
         t1_size, t2_size = d1.shape[0], d2.shape[0]
+        annotation_terms = None
 
         fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in xrange(t1_size)]
         snd_topics = [{w for (w, _) in other.show_topic(topic, topn=num_words)} for topic in xrange(t2_size)]
