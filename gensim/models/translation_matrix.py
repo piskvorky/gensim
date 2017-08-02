@@ -145,6 +145,9 @@ class TranslationMatrix(utils.SaveLoad):
         return np.linalg.lstsq(m1, m2, -1)[0]
 
     def save(self, *args, **kwargs):
+        """
+        Save the model to file
+        """
         kwargs['ignore'] = kwargs.get('ignore', ['source_space', 'target_space'])
 
         super(TranslationMatrix, self).save(*args, **kwargs)
@@ -161,12 +164,18 @@ class TranslationMatrix(utils.SaveLoad):
         """
         translate the word from the source language to the target language, and return the topn
         most similar words.
-
-        `topn` return the top N similar words. By default (`topn=5`).
-
-        `additional` defines the training algorithm. By default (`additional=None`), use standard NN retrieval.
-        Otherwise use corrected retrieval(as described in[1]), additional is an int that specify the number of
-        word to sample from the source lexicon.
+         Args:
+            source_words(str/list): single word or a list of words to be translated
+            topn: return the top N similar words. By default (`topn=5`).
+            additional: defines the training algorithm. By default (`additional=None`), use standard NN retrieval.
+            Otherwise use corrected retrieval(as described in[1]), additional is an int that specify the number of
+            word to sample from the source lexicon.
+            source_lang_vec: you can specify the source language vector for translation, the default is to use
+            the model's source language vector.
+            target_lang_vec: you can specify the target language vector for retrieving the most similar word,
+            the default is to use the model's target language vector.
+        Returns:
+            A OrderedDict object, each item is (word : topn translated words)
 
         [1] Dinu, Georgiana, Angeliki Lazaridou, and Marco Baroni. "Improving zero-shot learning by mitigating the
         hubness problem." arXiv preprint arXiv:1412.6568 (2014).
@@ -196,9 +205,11 @@ class TranslationMatrix(utils.SaveLoad):
             source_space = self.build_space(source_lang_vec, source_words)
         target_space = self.build_space(target_lang_vec, )
 
+        # normalize the source vector and target vector
         source_space.normalize()
         target_space.normalize()
 
+        # map the source language to the target language
         mapped_source_space = self.apply_transmat(source_space)
 
         sim_matrix = -np.dot(target_space.mat, mapped_source_space.mat.T)
@@ -209,6 +220,7 @@ class TranslationMatrix(utils.SaveLoad):
         else:
             sim_matrix_idx = np.argsort(sim_matrix, axis=0)
 
+        # translate the words and for each word return the topn similar words
         translated_word = OrderedDict()
         for idx, word in enumerate(source_words):
             translated_target_word = []
