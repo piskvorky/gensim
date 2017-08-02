@@ -1027,12 +1027,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # initialize z and annotation array
             z = np.zeros(t1_size)
             if annotation:
-                diff_terms = np.zeros(t1_size, dtype=list)
+                annotation_terms = np.zeros(t1_size, dtype=list)
         else:
             # initialize z and annotation matrix
             z = np.zeros((t1_size, t2_size))
             if annotation:
-                diff_terms = np.zeros((t1_size, t2_size), dtype=list)
+                annotation_terms = np.zeros((t1_size, t2_size), dtype=list)
 
         # iterate over each cell in the initialized z and annotation
         for topic in np.ndindex(z.shape):
@@ -1050,13 +1050,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 pos_tokens = sample(pos_tokens, min(len(pos_tokens), n_ann_terms))
                 neg_tokens = sample(neg_tokens, min(len(neg_tokens), n_ann_terms))
 
-                diff_terms[topic] = [pos_tokens, neg_tokens]
+                annotation_terms[topic] = [pos_tokens, neg_tokens]
                 
         if normed:
                 if np.abs(np.max(z)) > 1e-8:
                     z /= np.max(z)
 
-        return z, diff_terms
+        return z, annotation_terms
 
     def __getitem__(self, bow, eps=None):
         """
