@@ -1052,10 +1052,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 neg_tokens = sample(neg_tokens, min(len(neg_tokens), n_ann_terms))
 
                 annotation_terms[topic] = [pos_tokens, neg_tokens]
-                
+
         if normed:
-                if np.abs(np.max(z)) > 1e-8:
-                    z /= np.max(z)
+            if np.abs(np.max(z)) > 1e-8:
+                z /= np.max(z)
 
         return z, annotation_terms
 
