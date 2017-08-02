@@ -1037,8 +1037,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 pos_tokens = fst_topics[topic1] & snd_topics[topic2]
                 neg_tokens = fst_topics[topic1].symmetric_difference(snd_topics[topic2])
 
-                pos_tokens = sample(pos_tokens, min(len(pos_tokens), n_ann_terms))
-                neg_tokens = sample(neg_tokens, min(len(neg_tokens), n_ann_terms))
+                pos_tokens = list(pos_tokens)[:min(len(pos_tokens), n_ann_terms)]
+                neg_tokens = list(neg_tokens)[:min(len(neg_tokens), n_ann_terms)]
 
                 annotation[topic1][topic2] = [pos_tokens, neg_tokens]
 
