@@ -24,19 +24,22 @@ class Metric(object):
     def __init__(self):
         pass
 
-    def get_value(self, **parameters):
+    def set_parameters(self, **parameters):
         """
         Set the parameters
         """
         for parameter, value in parameters.items():
             setattr(self, parameter, value)
 
+    def get_value(self):
+        pass
+
 
 class CoherenceMetric(Metric):
     """
     Metric class for coherence evaluation
     """
-    def __init__(self, corpus=None, texts=None, dictionary=None, coherence=None, window_size=None, topn=None, logger="shell", viz_env=None, title=None):
+    def __init__(self, corpus=None, texts=None, dictionary=None, coherence=None, window_size=None, topn=10, logger=None, viz_env=None, title=None):
         """
         Args:
             corpus : Gensim document corpus.
@@ -98,7 +101,7 @@ class CoherenceMetric(Metric):
         # only one of the model or topic would be defined
         self.model = None
         self.topics = None
-        super(CoherenceMetric, self).get_value(**kwargs)
+        super(CoherenceMetric, self).set_parameters(**kwargs)
         cm = gensim.models.CoherenceModel(self.model, self.topics, self.texts, self.corpus, self.dictionary, self.window_size, self.coherence, self.topn)
         return cm.get_coherence()
 
@@ -107,7 +110,7 @@ class PerplexityMetric(Metric):
     """
     Metric class for perplexity evaluation
     """
-    def __init__(self, corpus=None, logger="shell", viz_env=None, title=None):
+    def __init__(self, corpus=None, logger=None, viz_env=None, title=None):
         """
         Args:
             corpus : Gensim document corpus
@@ -127,7 +130,7 @@ class PerplexityMetric(Metric):
         Args:
             model : Trained topic model
         """
-        super(PerplexityMetric, self).get_value(**kwargs)
+        super(PerplexityMetric, self).set_parameters(**kwargs)
         corpus_words = sum(cnt for document in self.corpus for _, cnt in document)
         perwordbound = self.model.bound(self.corpus) / corpus_words
         return np.exp2(-perwordbound)
@@ -137,7 +140,7 @@ class DiffMetric(Metric):
     """
     Metric class for topic difference evaluation
     """
-    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, normed=True, logger="shell", viz_env=None, title=None):
+    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, normed=True, logger=None, viz_env=None, title=None):
         """
         Args:
             distance : measure used to calculate difference between any topic pair. Available values:
@@ -167,7 +170,7 @@ class DiffMetric(Metric):
             model : Trained topic model
             other_model : second topic model instance to calculate the difference from
         """
-        super(DiffMetric, self).get_value(**kwargs)
+        super(DiffMetric, self).set_parameters(**kwargs)
         diff_matrix, _ = self.model.diff(self.other_model, self.distance, self.num_words, self.n_ann_terms, self.normed)
         return np.diagonal(diff_matrix)
 
@@ -176,7 +179,7 @@ class ConvergenceMetric(Metric):
     """
     Metric class for convergence evaluation
     """
-    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, normed=True, logger="shell", viz_env=None, title=None):
+    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, normed=True, logger=None, viz_env=None, title=None):
         """
         Args:
             distance : measure used to calculate difference between any topic pair. Available values:
@@ -206,7 +209,7 @@ class ConvergenceMetric(Metric):
             model : Trained topic model
             other_model : second topic model instance to calculate the difference from
         """
-        super(ConvergenceMetric, self).get_value(**kwargs)
+        super(ConvergenceMetric, self).set_parameters(**kwargs)
         diff_matrix, _ = self.model.diff(self.other_model, self.distance, self.num_words, self.n_ann_terms, self.normed)
         return np.sum(np.diagonal(diff_matrix))
 
@@ -257,10 +260,16 @@ class Callback(object):
             epoch : current epoch no.
             topics : topic distribution from current epoch (required for coherence of unsupported topic models)
         """
+        # stores current epoch's metric values
+        current_metrics = {}
+
         # plot all metrics in current epoch
         for i, metric in enumerate(self.metrics):
             value = metric.get_value(topics=topics, model=self.model, other_model=self.previous)
-            metric_label = type(metric).__name__[:-6]
+            metric_label = type(metric).__name__
+
+            current_metrics[metric_label] = value
+
             # check for any metric which need model state from previous epoch
             if isinstance(metric, (DiffMetric, ConvergenceMetric)):
                 self.previous = copy.deepcopy(self.model)
@@ -269,24 +278,27 @@ class Callback(object):
                 if epoch == 0:
                     if value.ndim > 0:
                         diff_mat = np.array([value])
-                        viz_metric = self.viz.heatmap(X=diff_mat.T, env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=metric_label, title=metric.title))
+                        viz_metric = self.viz.heatmap(X=diff_mat.T, env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=metric_label[:-6], title=metric.title))
                         # store current epoch's diff diagonal
                         self.diff_mat.put(diff_mat)
                         # saving initial plot window
                         self.windows.append(copy.deepcopy(viz_metric))
                     else:
-                        viz_metric = self.viz.line(Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=metric_label, title=metric.title))
+                        viz_metric = self.viz.line(Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=metric_label[:-6], title=metric.title))
                         # saving initial plot window
                         self.windows.append(copy.deepcopy(viz_metric))
                 else:
                     if value.ndim > 0:
                         # concatenate with previous epoch's diff diagonals
                         diff_mat = np.concatenate((self.diff_mat.get(), np.array([value])))
-                        self.viz.heatmap(X=diff_mat.T, env=metric.viz_env, win=self.windows[i], opts=dict(xlabel='Epochs', ylabel=metric_label, title=metric.title))
+                        self.viz.heatmap(X=diff_mat.T, env=metric.viz_env, win=self.windows[i], opts=dict(xlabel='Epochs', ylabel=metric_label[:-6], title=metric.title))
                         self.diff_mat.put(diff_mat)
                     else:
                         self.viz.updateTrace(Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, win=self.windows[i])
 
             if metric.logger == "shell":
-                statement = "".join(("Epoch ", str(epoch), ": ", metric_label, " estimate: ", str(value)))
+                statement = "".join(("Epoch ", str(epoch), ": ", metric_label[:-6], " estimate: ", str(value)))
                 self.log_type.info(statement)
+
+        return current_metrics
+

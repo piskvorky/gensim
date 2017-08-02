@@ -631,8 +631,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
 
         if self.callbacks:
+            # pass the list of input callbacks to Callback class
             callback = Callback(self.callbacks)
             callback.set_model(self)
+            # initialize metrics dict to store metric values after every epoch
+            self.metrics = {}
+            for metric in self.callbacks:
+                self.metrics[type(metric).__name__] = []
 
         for pass_ in xrange(passes):
             if self.dispatcher:
@@ -686,8 +691,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             if reallen != lencorpus:
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
 
+            # append current epoch's metric values
             if self.callbacks:
-                callback.on_epoch_end(pass_)
+                current_metrics = callback.on_epoch_end(pass_)
+                for metric, value in current_metrics.items():
+                    self.metrics[metric].append(value)
 
             if dirty:
                 # finish any remaining updates
