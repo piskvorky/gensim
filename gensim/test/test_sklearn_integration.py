@@ -20,6 +20,7 @@ from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklLdaMod
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklLsiModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_w2vmodel import SklW2VModel
+from gensim.sklearn_integration.sklearn_wrapper_gensim_d2vmodel import SklD2VModel, TaggedDocumentTransformer
 from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklATModel
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils
@@ -480,6 +481,74 @@ class TestSklW2VModelWrapper(unittest.TestCase):
         w2vmodel_wrapper = SklW2VModel(size=10, min_count=0, seed=42)
         word = texts[0][0]
         self.assertRaises(NotFittedError, w2vmodel_wrapper.transform, word)
+
+
+class TestSklD2VModelWrapper(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = SklD2VModel(size=10, min_count=0, seed=42)
+        self.tagged_texts = TaggedDocumentTransformer().transform(texts)
+        self.model.fit(self.tagged_texts)
+
+    def testTransform(self):
+        # transform one sentence
+        sentence = self.tagged_texts[0]
+        matrix = self.model.transform([sentence])
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], self.model.size)
+        # transform multiple sentences
+        matrix = self.model.transform(self.tagged_texts)
+        self.assertEqual(matrix.shape[0], len(texts))
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+    def testPipeline(self):
+        # create the pipeline
+        tagger = TaggedDocumentTransformer()
+        model = SklD2VModel(size=10, min_count=1)
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        text_d2v = Pipeline([('tags', tagger), ('features', model), ('classifier', clf)])
+
+        # give the test w2v_texts target labels and train
+        # 0 = physics, 1 = mathematics
+        w2v_targets = [1, 1, 1, 1, 1, 0, 0, 0, 0]
+        text_d2v.fit(w2v_texts, w2v_targets)
+
+        # make sure the pipeline learned something useful
+        test_texts = [
+            'natural', 'nuclear', 'science', 'electromagnetism',
+            'calculus', 'mathematical', 'geometry', 'operations', 'curves'
+        ]
+        test_targets = [
+            0, 0, 0, 0,
+            1, 1, 1, 1, 1
+        ]
+        score = text_d2v.score(test_texts, test_targets)
+        self.assertGreater(score, 0.5)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        sentence = self.tagged_texts[0]
+        loaded_transformed_vecs = model_load.transform([sentence])
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_transformed_vecs.shape[0], 1)
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.size)
+
+        # comparing the original and loaded models
+        original_transformed_vecs = self.model.transform([sentence])
+        passed = numpy.allclose(
+            sorted(loaded_transformed_vecs),
+            sorted(original_transformed_vecs),
+            atol=1e-1)
+        self.assertTrue(passed)
+
+    def testModelNotFitted(self):
+        d2vmodel_wrapper = SklD2VModel(size=10, min_count=0, seed=42)
+        sentence = self.tagged_texts[0]
+        with self.assertRaises(NotFittedError):
+            d2vmodel_wrapper.transform([sentence])
 
 
 class TestSklATModelWrapper(unittest.TestCase):
