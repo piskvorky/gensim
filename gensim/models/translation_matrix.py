@@ -23,8 +23,9 @@ class Space(object):
     """
     def __init__(self, matrix, index2word):
         """
-        matrix: N * length_of_word_vec, which store the word's word vector
+        matrix: N * length_of_word_vec, which store the word's vector
         index2word: a list of words int the Space
+        word2index: a dict which for word indexing
         """
         self.mat = matrix
         self.index2word = index2word
@@ -154,10 +155,19 @@ class TranslationMatrix(utils.SaveLoad):
 
     @classmethod
     def load(cls, *args, **kwargs):
+        """ load the pre-trained translation matrix model"""
         model = super(TranslationMatrix, cls).load(*args, **kwargs)
         return model
 
     def apply_transmat(self, words_space):
+        """
+        mapping the source word vector to the target word vector using translation matrix
+        Args:
+            words_space: the Space object that constructed for those words to be translate
+
+        Returns:
+            A Space object that constructed for those mapped words
+        """
         return Space(np.dot(words_space.mat, self.translation_matrix), words_space.index2word)
 
     def translate(self, source_words=None, topn=5, additional=None, source_lang_vec=None, target_lang_vec=None):
