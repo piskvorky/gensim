@@ -118,8 +118,8 @@ echo '--------------------------------------------------------------------------
 # Excluding vec files since they contain non-utf8 content and flake8 raises exception for non-utf8 input
 # We need the following command to exit with 0 hence the echo in case
 # there is no match
-MODIFIED_PY_FILES="$(git diff --name-only $COMMIT_RANGE | grep '*.py' || echo "no_match")"
-MODIFIED_IPYNB_FILES="$(git diff --name-only $COMMIT_RANGE | grep '*.ipynb' || echo "no_match")"
+MODIFIED_PY_FILES="$(git diff --name-only $COMMIT_RANGE | grep '[a-zA-Z0-9]*.py$' || echo "no_match")"
+MODIFIED_IPYNB_FILES="$(git diff --name-only $COMMIT_RANGE | grep '[a-zA-Z0-9]*.ipynb$' || echo "no_match")"
 
 check_files() {
     files="$1"
