@@ -47,7 +47,7 @@ blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 logger = logging.getLogger(__name__)
 
 
-def argsort(x, topn=None, reverse=False):
+def argsort(x, topn=None,reverse=False):
     """
     Return indices of the `topn` smallest elements in array `x`, in ascending order.
 
@@ -206,7 +206,7 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
 def scipy2sparse(vec, eps=1e-9):
     """Convert a scipy.sparse vector into gensim document format (=list of 2-tuples)."""
     vec = vec.tocsr()
-    assert vec.shape[0] == 1
+    assert vec.shape[0]==1
     return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if np.abs(val) > eps]
 
 
