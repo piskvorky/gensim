@@ -121,6 +121,11 @@ echo '--------------------------------------------------------------------------
 MODIFIED_PY_FILES="$(git diff --name-only $COMMIT_RANGE | grep '[a-zA-Z0-9]*.py$' || echo "no_match")"
 MODIFIED_IPYNB_FILES="$(git diff --name-only $COMMIT_RANGE | grep '[a-zA-Z0-9]*.ipynb$' || echo "no_match")"
 
+
+echo "*.py files: " $MODIFIED_PY_FILES
+echo "*.ipynb files: " $MODIFIED_IPYNB_FILES
+
+
 check_files() {
     files="$1"
     shift
