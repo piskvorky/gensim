@@ -10,4 +10,4 @@ conda update --yes conda
 
 
 conda create --yes -n gensim-test python=$PYTHON_VERSION pip atlas flake8 pytest numpy==$NUMPY_VERSION scipy==$SCIPY_VERSION && source activate gensim-test
-pip install . && pip install .[test] && python setup.py install
+pip install . && pip install .[test]

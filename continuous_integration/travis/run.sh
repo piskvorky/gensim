@@ -8,5 +8,5 @@ python -c "import platform, sys, numpy, scipy, gensim; from gensim.models import
 if [[ "$ONLY_CODESTYLE" == "yes" ]]; then
 	continuous_integration/travis/flake8_diff.sh
 else
-	pytest -v gensim/test/
+	python setup.py test
 fi
