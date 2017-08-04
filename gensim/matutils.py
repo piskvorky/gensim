@@ -520,7 +520,7 @@ def kullback_leibler(vec1, vec2, num_features=None):
     return entropy(vec1, vec2)
 
 
-def jenson_shannon(vec1, vec2, num_features=None):
+def jensen_shannon(vec1, vec2, num_features=None):
     """
     A method of measuring the similarity between two probability distributions.
     It is a symmetrized and finite version of the Kullback–Leibler divergence.
