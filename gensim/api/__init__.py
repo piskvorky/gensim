@@ -1,9 +1,11 @@
 from __future__ import print_function
+
+import logging
 import json
-import sys
 import os
-import six
 import tarfile
+import shutil
+from ..utils import SaveLoad
 try:
     import urllib.request as urllib
 except ImportError:
@@ -14,23 +16,52 @@ try:
 except ImportError:
     from urllib2 import urlopen
 
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', filename="api.log", level=logging.INFO)
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+logging.getLogger('').addHandler(console)
 
-def download(file):
+
+def download(file_name):
     url = "https://github.com/chaitaliSaini/Corpus_and_models/releases/"
-    url = url+"download/"+file+"/"+file+".tar.gz"
+    url = url + "download/" + file_name + "/" + file_name + ".tar.gz"
     user_dir = os.path.expanduser('~')
     base_dir = os.path.join(user_dir, 'gensim-data')
-    extracted_folder_dir = os.path.join(base_dir, file)
+    extracted_folder_dir = os.path.join(base_dir, file_name)
     if not os.path.exists(base_dir):
+        logging.info("Creating {}".format(base_dir))
         os.makedirs(base_dir)
-    compressed_folder_name = file+".tar.gz"
+        if os.path.exists(base_dir):
+            logging.info("Creation successful. Models/corpus can be accessed"
+                         "via {}".format(base_dir))
+        else:
+            logging.error("Not able to create {d}. Make sure you have the "
+                          "correct read/write permissions of the {d} or you "
+                          "can try creating it manually".format(d=base_dir))
+    compressed_folder_name = file_name + ".tar.gz"
     compressed_folder_dir = os.path.join(base_dir, compressed_folder_name)
-    urllib.urlretrieve(url, compressed_folder_dir)
     if not os.path.exists(extracted_folder_dir):
+        logging.info("Downloading {}".format(file_name))
+        urllib.urlretrieve(url, compressed_folder_dir)
+        logging.info("{} downloaded".format(file_name))
+        logging.info("Creating {}".format(extracted_folder_dir))
         os.makedirs(extracted_folder_dir)
-    tar = tarfile.open(compressed_folder_dir)
-    tar.extractall(extracted_folder_dir)
-    tar.close()
+        if os.path.exists(extracted_folder_dir):
+            logging.info("Creation of {} successful"
+                         ".".format(extracted_folder_dir))
+            tar = tarfile.open(compressed_folder_dir)
+            logging.info("Extracting files from"
+                         "{}".format(extracted_folder_dir))
+            tar.extractall(extracted_folder_dir)
+            tar.close()
+            logging.info("{} installed".format(file_name))
+        else:
+            logging.error("Not able to create {d}. Make sure you have the "
+                          "correct read/write permissions of the {d} or you "
+                          "can try creating it "
+                          "manually".format(d=extracted_folder_dir))
+    else:
+        print("{} has already been installed".format(file_name))
 
 
 def catalogue(print_list=True):
