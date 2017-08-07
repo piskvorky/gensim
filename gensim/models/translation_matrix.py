@@ -208,8 +208,8 @@ class TranslationMatrix(utils.SaveLoad):
         if source_words is None:
             raise RuntimeError("The words to be translated must be provided.")
 
-        if not isinstance(source_words, [string_types, list]):
-            raise ValueError("The word to be translated must be string type or a list of string.")
+        if not isinstance(source_words, (string_types, list, tuple)):
+            raise ValueError("The word to be translated must be string type or a list/tuple of string.")
 
         if isinstance(source_words, string_types):
             # pass only one word to translate
@@ -218,11 +218,11 @@ class TranslationMatrix(utils.SaveLoad):
         # if the language word vector not provided by user, use the model's
         # language word vector as default
         if source_lang_vec is None:
-            warnings.warn("the parameter source_lang_vec didn't be specified,"
+            warnings.warn("the parameter source_lang_vec didn't specified,"
                           " use the model's source language word vector as default")
             source_lang_vec = self.source_lang_vec
         if target_lang_vec is None:
-            warnings.warn("the parameter target_lang_vec didn't be specified,"
+            warnings.warn("the parameter target_lang_vec isn't specified,"
                           " use the model's target language word vector as default")
             target_lang_vec = self.target_lang_vec
 
