@@ -107,11 +107,8 @@ class TranslationMatrix(utils.SaveLoad):
             raise RuntimeError("The training data must be provided, the data is a list of word pair with"
                                " format (source language word, target language word).")
 
-        if word_pair is isinstance(word_pair, list):
-            raise TypeError("The training data must be a list of word pair.")
-
-        if len(word_pair[0]) != 2 or not isinstance(word_pair[0], tuple):
-            raise ValueError("Each training data item must be a tuple with two different language word.")
+        if len(word_pair[0]) != 2:
+            raise ValueError("Each training data item must contain two different language words.")
 
         self.source_word, self.target_word = zip(*word_pair)
         if source_lang_vec is None or target_lang_vec is None:
@@ -208,9 +205,6 @@ class TranslationMatrix(utils.SaveLoad):
         if source_words is None:
             raise RuntimeError("The words to be translated must be provided.")
 
-        if not isinstance(source_words, (string_types, list, tuple)):
-            raise ValueError("The word to be translated must be string type or a list/tuple of string.")
-
         if isinstance(source_words, string_types):
             # pass only one word to translate
             source_words = [source_words]
@@ -221,6 +215,7 @@ class TranslationMatrix(utils.SaveLoad):
             warnings.warn("the parameter source_lang_vec didn't specified,"
                           " use the model's source language word vector as default")
             source_lang_vec = self.source_lang_vec
+
         if target_lang_vec is None:
             warnings.warn("the parameter target_lang_vec isn't specified,"
                           " use the model's target language word vector as default")
