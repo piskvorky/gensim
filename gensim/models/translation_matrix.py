@@ -14,7 +14,7 @@ random.seed(2333)
 
 class Space(object):
     """
-    An auxiliary class for store the the words space
+    An auxiliary class for storing the the words space
 
     Attributes:
         mat (ndarray): each row is the word vector of lexicon
@@ -36,33 +36,38 @@ class Space(object):
         self.word2index = {}
         for idx, word in enumerate(self.index2word):
             if word in self.word2index:
-                raise ValueError("duplicate word: %s" % word)
+                raise ValueError("found duplicate word: %s, please check the training data you provide" % word)
             self.word2index[word] = idx
 
     @classmethod
-    def build(cls, lang_vec, lexicon=None):
+    def build(cls, lang_vec=None, lexicon=None):
         """
         construct a space class for the lexicon, if it's provided.
         Args:
             lang_vec: word2vec model that extract word vector for lexicon
             lexicon: the default is None, if it is not provided, the lexicon
-                    is the word that lang_vec's word
+                    is all the lang_vec's word, i.e. lang_vec.vocab.keys()
         Returns:
             space object for the lexicon
         """
-        id2row = []
+        if lang_vec is None:
+            raise RuntimeError("the word vector must be provided!")
+        # words to store all the word that
+        # mat to store all the word vector for the word in 'words' list
+        words = []
         mat = []
         if lexicon is not None:
+            # if the lexicon is not provided, use the all the Keyedvectors's words as default
             for item in lexicon:
-                id2row.append(item)
+                words.append(item)
                 mat.append(lang_vec.syn0[lang_vec.vocab[item].index])
 
         else:
             for item in lang_vec.vocab.keys():
-                id2row.append(item)
+                words.append(item)
                 mat.append(lang_vec.syn0[lang_vec.vocab[item].index])
 
-        return Space(mat, id2row)
+        return Space(mat, words)
 
     def normalize(self):
         """ normalized the word vector's matrix """
@@ -86,7 +91,7 @@ class TranslationMatrix(utils.SaveLoad):
     >>> translated_word = transmat.translate(words, topn=3)
 
     """
-    def __init__(self, word_pair, source_lang_vec=None, target_lang_vec=None):
+    def __init__(self, word_pair=None, source_lang_vec=None, target_lang_vec=None):
         """
         Initialize the model from a list pair of `word_pair`. Each word_pair is tupe
          with source language word and target language word.
@@ -98,6 +103,15 @@ class TranslationMatrix(utils.SaveLoad):
             source_lang_vec (KeyedVectors): a set of word vector of source language
             target_lang_vec (KeyedVectors): a set of word vector of target language
         """
+        if word_pair is None:
+            raise RuntimeError("The training data must be provided, the data is a list of word pair with"
+                               " format (source language word, target language word).")
+
+        if word_pair is isinstance(word_pair, list):
+            raise TypeError("The training data must be a list of word pair.")
+
+        if len(word_pair[0]) != 2 or not isinstance(word_pair[0], tuple):
+            raise ValueError("Each training data item must be a tuple with two different language word.")
 
         self.source_word, self.target_word = zip(*word_pair)
         if source_lang_vec is None or target_lang_vec is None:
@@ -147,7 +161,7 @@ class TranslationMatrix(utils.SaveLoad):
 
     def save(self, *args, **kwargs):
         """
-        Save the model to file
+        Save the model to file but ignoring the souce_space and target_space
         """
         kwargs['ignore'] = kwargs.get('ignore', ['source_space', 'target_space'])
 
@@ -176,7 +190,7 @@ class TranslationMatrix(utils.SaveLoad):
         most similar words.
          Args:
             source_words(str/list): single word or a list of words to be translated
-            topn: return the top N similar words. By default (`topn=5`).
+            topn: return the top N similar words. By default (`topn=5`)
             additional: defines the training algorithm. By default (`additional=None`), use standard NN retrieval.
             Otherwise use corrected retrieval(as described in[1]), additional is an int that specify the number of
             word to sample from the source lexicon.
@@ -190,6 +204,12 @@ class TranslationMatrix(utils.SaveLoad):
         [1] Dinu, Georgiana, Angeliki Lazaridou, and Marco Baroni. "Improving zero-shot learning by mitigating the
         hubness problem." arXiv preprint arXiv:1412.6568 (2014).
         """
+
+        if source_words is None:
+            raise RuntimeError("The words to be translated must be provided.")
+
+        if not isinstance(source_words, [string_types, list]):
+            raise ValueError("The word to be translated must be string type or a list of string.")
 
         if isinstance(source_words, string_types):
             # pass only one word to translate
@@ -206,6 +226,7 @@ class TranslationMatrix(utils.SaveLoad):
                           " use the model's target language word vector as default")
             target_lang_vec = self.target_lang_vec
 
+        # if additional is provided, bootstrapping vocabulary from the source language word vector model.
         if additional is not None:
             lexicon = set(source_lang_vec.index2word)
             addition = min(additional, len(lexicon) - len(source_words))
@@ -222,8 +243,10 @@ class TranslationMatrix(utils.SaveLoad):
         # map the source language to the target language
         mapped_source_space = self.apply_transmat(source_space)
 
+        # using the cosine similarity metric
         sim_matrix = -np.dot(target_space.mat, mapped_source_space.mat.T)
 
+        # if additional is provided, using corrected retrieval method
         if additional is not None:
             srtd_idx = np.argsort(np.argsort(sim_matrix, axis=1), axis=1)
             sim_matrix_idx = np.argsort(srtd_idx + sim_matrix, axis=0)
@@ -234,6 +257,7 @@ class TranslationMatrix(utils.SaveLoad):
         translated_word = OrderedDict()
         for idx, word in enumerate(source_words):
             translated_target_word = []
+            # searching the most topn similar words
             for j in range(topn):
                 map_space_id = sim_matrix_idx[j, source_space.word2index[word]]
                 translated_target_word.append(target_space.index2word[map_space_id])
