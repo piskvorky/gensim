@@ -113,8 +113,7 @@ class TranslationMatrix(utils.SaveLoad):
         self.source_word, self.target_word = zip(*word_pair)
         if source_lang_vec is None or target_lang_vec is None:
             raise RuntimeError("you must provide the source language vectors and target language vectors")
-        if not (isinstance(source_lang_vec, KeyedVectors) or isinstance(target_lang_vec, KeyedVectors)):
-            raise TypeError("the source_lang_vec and target_lang_vec must be KeyedVectors instance")
+        
         self.source_lang_vec = source_lang_vec
         self.target_lang_vec = target_lang_vec
 
