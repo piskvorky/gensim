@@ -1,0 +1,16 @@
+version: '2'
+services:
+  ps:
+    image: gensim_test:latest
+    ports:
+     - "8000:8000"
+    command: /bin/bash # python3 test_distributed_tf.py --ps_hosts=8000 --worker_hosts=5432 --job_name=ps--task_index=0
+    tty: true
+
+  worker:
+    image: gensim_test:latest
+    ports:
+     - "800:5432"
+    command: /bin/bash
+    tty: true
+
