@@ -992,7 +992,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
-    def diff(self, other, distance="kullback_leibler", num_words=100, n_ann_terms=10, normed=True):
+    def diff(self, other, distance="kullback_leibler", num_words=100, n_ann_terms=10, diagonal=False, annotation=True, normed=True):
         """
         Calculate difference topic2topic between two Lda models
         `other` instances of `LdaMulticore` or `LdaModel`
@@ -1000,8 +1000,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Available values: `kullback_leibler`, `hellinger` and `jaccard`
         `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
         `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
+        `diagonal` set to True if the difference is required only between the identical topic no.s (returns diagonal of diff matrix)
+        `annotation` whether the intersection or difference of words between two topics should be returned
         Returns a matrix Z with shape (m1.num_topics, m2.num_topics), where Z[i][j] - difference between topic_i and topic_j
-        and matrix annotation with shape (m1.num_topics, m2.num_topics, 2, None),
+        and matrix annotation (if True) with shape (m1.num_topics, m2.num_topics, 2, None),
         where:
 
             annotation[i][j] = [[`int_1`, `int_2`, ...], [`diff_1`, `diff_2`, ...]] and
@@ -1034,6 +1036,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         distance_func = distances[distance]
         d1, d2 = self.state.get_lambda(), other.state.get_lambda()
         t1_size, t2_size = d1.shape[0], d2.shape[0]
+        annotation_terms = None
 
         fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in xrange(t1_size)]
         snd_topics = [{w for (w, _) in other.show_topic(topic, topn=num_words)} for topic in xrange(t2_size)]
@@ -1041,28 +1044,41 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if distance == "jaccard":
             d1, d2 = fst_topics, snd_topics
 
-        z = np.zeros((t1_size, t2_size))
-        for topic1 in range(t1_size):
-            for topic2 in range(t2_size):
-                z[topic1][topic2] = distance_func(d1[topic1], d2[topic2])
+        if diagonal:
+            assert t1_size == t2_size, "Both input models should have same no. of topics, as the diagonal will only be valid in a square matrix"
+            # initialize z and annotation array
+            z = np.zeros(t1_size)
+            if annotation:
+                annotation_terms = np.zeros(t1_size, dtype=list)
+        else:
+            # initialize z and annotation matrix
+            z = np.zeros((t1_size, t2_size))
+            if annotation:
+                annotation_terms = np.zeros((t1_size, t2_size), dtype=list)
 
-        if normed:
-            if np.abs(np.max(z)) > 1e-8:
-                z /= np.max(z)
+        # iterate over each cell in the initialized z and annotation
+        for topic in np.ndindex(z.shape):
+            topic1 = topic[0]
+            if diagonal:
+                topic2 = topic1
+            else:
+                topic2 = topic[1]
 
-        annotation = [[None] * t1_size for _ in range(t2_size)]
-
-        for topic1 in range(t1_size):
-            for topic2 in range(t2_size):
+            z[topic] = distance_func(d1[topic1], d2[topic2])
+            if annotation:
                 pos_tokens = fst_topics[topic1] & snd_topics[topic2]
                 neg_tokens = fst_topics[topic1].symmetric_difference(snd_topics[topic2])
 
                 pos_tokens = sample(pos_tokens, min(len(pos_tokens), n_ann_terms))
                 neg_tokens = sample(neg_tokens, min(len(neg_tokens), n_ann_terms))
 
-                annotation[topic1][topic2] = [pos_tokens, neg_tokens]
+                annotation_terms[topic] = [pos_tokens, neg_tokens]
 
-        return z, annotation
+        if normed:
+            if np.abs(np.max(z)) > 1e-8:
+                z /= np.max(z)
+
+        return z, annotation_terms
 
     def __getitem__(self, bow, eps=None):
         """
