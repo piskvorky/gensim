@@ -46,6 +46,7 @@ from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
 from six.moves import xrange
+from collections import defaultdict
 import six
 
 # log(sum(exp(x))) that tries to avoid overflow
@@ -634,10 +635,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # pass the list of input callbacks to Callback class
             callback = Callback(self.callbacks)
             callback.set_model(self)
-            # initialize metrics dict to store metric values after every epoch
-            self.metrics = {}
-            for metric in self.callbacks:
-                self.metrics[type(metric).__name__] = []
+            # initialize metrics list to store metric values after every epoch
+            self.metrics = [(type(metric).__name__, []) for metric in self.callbacks]
 
         for pass_ in xrange(passes):
             if self.dispatcher:
@@ -694,8 +693,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # append current epoch's metric values
             if self.callbacks:
                 current_metrics = callback.on_epoch_end(pass_)
-                for metric, value in current_metrics.items():
-                    self.metrics[metric].append(value)
+                for i, metric in enumerate(current_metrics):
+                    self.metrics[i][1].append(metric)
 
             if dirty:
                 # finish any remaining updates

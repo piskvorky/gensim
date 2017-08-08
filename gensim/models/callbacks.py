@@ -140,7 +140,7 @@ class DiffMetric(Metric):
     """
     Metric class for topic difference evaluation
     """
-    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, normed=True, logger=None, viz_env=None, title=None):
+    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True, annotation=False, normed=True, logger=None, viz_env=None, title=None):
         """
         Args:
             distance : measure used to calculate difference between any topic pair. Available values:
@@ -149,6 +149,8 @@ class DiffMetric(Metric):
                 `jaccard`
             num_words : is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
             n_ann_terms : max quantity of words in intersection/symmetric difference between topics (used for annotation)
+            diagonal : difference between  identical topic no.s
+            annotation : intersection or difference of words between topics
             normed (bool) : If `true`, matrix/array Z will be normalized
             logger : Monitor training process using:
                         "shell" : print coherence value in shell
@@ -159,6 +161,8 @@ class DiffMetric(Metric):
         self.distance = distance
         self.num_words = num_words
         self.n_ann_terms = n_ann_terms
+        self.diagonal = diagonal
+        self.annotation = annotation
         self.normed = normed
         self.logger = logger
         self.viz_env = viz_env
@@ -171,15 +175,15 @@ class DiffMetric(Metric):
             other_model : second topic model instance to calculate the difference from
         """
         super(DiffMetric, self).set_parameters(**kwargs)
-        diff_matrix, _ = self.model.diff(self.other_model, self.distance, self.num_words, self.n_ann_terms, self.normed)
-        return np.diagonal(diff_matrix)
+        diff_diagonal, _ = self.model.diff(self.other_model, self.distance, self.num_words, self.n_ann_terms, self.diagonal, self.annotation, self.normed)
+        return diff_diagonal
 
 
 class ConvergenceMetric(Metric):
     """
     Metric class for convergence evaluation
     """
-    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, normed=True, logger=None, viz_env=None, title=None):
+    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True, annotation=False, normed=True, logger=None, viz_env=None, title=None):
         """
         Args:
             distance : measure used to calculate difference between any topic pair. Available values:
@@ -188,6 +192,8 @@ class ConvergenceMetric(Metric):
                 `jaccard`
             num_words : is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
             n_ann_terms : max quantity of words in intersection/symmetric difference between topics (used for annotation)
+            diagonal : difference between  identical topic no.s
+            annotation : intersection or difference of words between topics
             normed (bool) : If `true`, matrix/array Z will be normalized
             logger : Monitor training process using:
                         "shell" : print coherence value in shell
@@ -198,6 +204,8 @@ class ConvergenceMetric(Metric):
         self.distance = distance
         self.num_words = num_words
         self.n_ann_terms = n_ann_terms
+        self.diagonal = diagonal
+        self.annotation = annotation
         self.normed = normed
         self.logger = logger
         self.viz_env = viz_env
@@ -210,8 +218,8 @@ class ConvergenceMetric(Metric):
             other_model : second topic model instance to calculate the difference from
         """
         super(ConvergenceMetric, self).set_parameters(**kwargs)
-        diff_matrix, _ = self.model.diff(self.other_model, self.distance, self.num_words, self.n_ann_terms, self.normed)
-        return np.sum(np.diagonal(diff_matrix))
+        diff_diagonal, _ = self.model.diff(self.other_model, self.distance, self.num_words, self.n_ann_terms, self.diagonal, self.annotation, self.normed)
+        return np.sum(diff_diagonal)
 
 
 class Callback(object):
@@ -239,7 +247,7 @@ class Callback(object):
         # check for any metric which need model state from previous epoch
         if any(isinstance(metric, (DiffMetric, ConvergenceMetric)) for metric in self.metrics):
             self.previous = copy.deepcopy(model)
-            # store diff diagnols of previous epochs
+            # store diff diagonals of previous epochs
             self.diff_mat = Queue()
         if any(metric.logger == "visdom" for metric in self.metrics):
             if not VISDOM_INSTALLED:
@@ -249,8 +257,7 @@ class Callback(object):
             self.windows = []
         if any(metric.logger == "shell" for metric in self.metrics):
             # set logger for current topic model
-            model_type = type(self.model).__name__
-            self.log_type = logging.getLogger(model_type)
+            self.log_type = logging.getLogger('gensim.models.ldamodel')
 
     def on_epoch_end(self, epoch, topics=None):
         """
@@ -261,14 +268,14 @@ class Callback(object):
             topics : topic distribution from current epoch (required for coherence of unsupported topic models)
         """
         # stores current epoch's metric values
-        current_metrics = {}
+        current_metrics = []
 
         # plot all metrics in current epoch
         for i, metric in enumerate(self.metrics):
             value = metric.get_value(topics=topics, model=self.model, other_model=self.previous)
             metric_label = type(metric).__name__
 
-            current_metrics[metric_label] = value
+            current_metrics.append(value)
 
             # check for any metric which need model state from previous epoch
             if isinstance(metric, (DiffMetric, ConvergenceMetric)):
