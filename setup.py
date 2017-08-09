@@ -228,7 +228,6 @@ Copyright (c) 2009-now Radim Rehurek
 
 test_env = [
     'testfixtures',
-    'unittest2',
     'Morfessor == 2.0.2a4',
     'scikit-learn',
     'pyemd',
@@ -239,7 +238,7 @@ test_env = [
 
 setup(
     name='gensim',
-    version='2.2.0',
+    version='2.3.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
