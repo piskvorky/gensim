@@ -636,7 +636,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             callback = Callback(self.callbacks)
             callback.set_model(self)
             # initialize metrics list to store metric values after every epoch
-            self.metrics = [(type(metric).__name__, []) for metric in self.callbacks]
+            self.metrics = defaultdict(list)
 
         for pass_ in xrange(passes):
             if self.dispatcher:
@@ -693,8 +693,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # append current epoch's metric values
             if self.callbacks:
                 current_metrics = callback.on_epoch_end(pass_)
-                for i, metric in enumerate(current_metrics):
-                    self.metrics[i][1].append(metric)
+                for metric, value in current_metrics.items():
+                    self.metrics[metric].append(value)
 
             if dirty:
                 # finish any remaining updates

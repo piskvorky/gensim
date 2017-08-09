@@ -268,44 +268,47 @@ class Callback(object):
             topics : topic distribution from current epoch (required for coherence of unsupported topic models)
         """
         # stores current epoch's metric values
-        current_metrics = []
+        current_metrics = {}
 
         # plot all metrics in current epoch
         for i, metric in enumerate(self.metrics):
             value = metric.get_value(topics=topics, model=self.model, other_model=self.previous)
-            metric_label = type(metric).__name__
+            if metric.title is not None:
+                label = metric.title
+            else:
+                label = type(metric).__name__[:-6]
 
-            current_metrics.append(value)
-
-            # check for any metric which need model state from previous epoch
-            if isinstance(metric, (DiffMetric, ConvergenceMetric)):
-                self.previous = copy.deepcopy(self.model)
+            current_metrics[label] = value
 
             if metric.logger == "visdom":
                 if epoch == 0:
                     if value.ndim > 0:
                         diff_mat = np.array([value])
-                        viz_metric = self.viz.heatmap(X=diff_mat.T, env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=metric_label[:-6], title=metric.title))
+                        viz_metric = self.viz.heatmap(X=diff_mat.T, env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=label, title=label))
                         # store current epoch's diff diagonal
                         self.diff_mat.put(diff_mat)
                         # saving initial plot window
                         self.windows.append(copy.deepcopy(viz_metric))
                     else:
-                        viz_metric = self.viz.line(Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=metric_label[:-6], title=metric.title))
+                        viz_metric = self.viz.line(Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=label, title=label))
                         # saving initial plot window
                         self.windows.append(copy.deepcopy(viz_metric))
                 else:
                     if value.ndim > 0:
                         # concatenate with previous epoch's diff diagonals
                         diff_mat = np.concatenate((self.diff_mat.get(), np.array([value])))
-                        self.viz.heatmap(X=diff_mat.T, env=metric.viz_env, win=self.windows[i], opts=dict(xlabel='Epochs', ylabel=metric_label[:-6], title=metric.title))
+                        self.viz.heatmap(X=diff_mat.T, env=metric.viz_env, win=self.windows[i], opts=dict(xlabel='Epochs', ylabel=label, title=label))
                         self.diff_mat.put(diff_mat)
                     else:
                         self.viz.updateTrace(Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, win=self.windows[i])
 
             if metric.logger == "shell":
-                statement = "".join(("Epoch ", str(epoch), ": ", metric_label[:-6], " estimate: ", str(value)))
+                statement = "".join(("Epoch ", str(epoch), ": ", label, " estimate: ", str(value)))
                 self.log_type.info(statement)
+
+        # check for any metric which need model state from previous epoch
+        if isinstance(metric, (DiffMetric, ConvergenceMetric)):
+            self.previous = copy.deepcopy(self.model)
 
         return current_metrics
 
