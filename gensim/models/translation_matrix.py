@@ -6,7 +6,6 @@ import random
 
 from collections import OrderedDict
 from gensim import utils
-from gensim.models import KeyedVectors
 from six import string_types
 
 random.seed(2333)
@@ -113,7 +112,7 @@ class TranslationMatrix(utils.SaveLoad):
         self.source_word, self.target_word = zip(*word_pair)
         if source_lang_vec is None or target_lang_vec is None:
             raise RuntimeError("you must provide the source language vectors and target language vectors")
-        
+
         self.source_lang_vec = source_lang_vec
         self.target_lang_vec = target_lang_vec
 
