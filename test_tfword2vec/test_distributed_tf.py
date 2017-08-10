@@ -38,9 +38,9 @@ def read_data(filename):
 def main(_):
     filename = maybe_download('text8.zip', 31344016)
     vocabulary = read_data(filename)
-    tfw2v = gensim.models.TfWord2Vec(train_data=vocabulary, concurrent_steps=1000,
-                                    eval_data='questions-words.txt', FLAGS=FLAGS)
-    tfw2v.eval()
+    gensim.models.TfWord2Vec(train_data=vocabulary, concurrent_steps=1000,
+                                    FLAGS=FLAGS)
+    # tfw2v.eval()
 
 
 if __name__ == '__main__':
