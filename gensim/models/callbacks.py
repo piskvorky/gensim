@@ -93,9 +93,6 @@ class CoherenceMetric(Metric):
         self.viz_env = viz_env
         self.title = title
 
-    def __str__(self):
-        return super(CoherenceMetric, self).__str__()
-
     def get_value(self, **kwargs):
         """
         Args:
@@ -133,9 +130,6 @@ class PerplexityMetric(Metric):
         self.logger = logger
         self.viz_env = viz_env
         self.title = title
-
-    def __str__(self):
-        return super(PerplexityMetric, self).__str__()
 
     def get_value(self, **kwargs):
         """
@@ -180,9 +174,6 @@ class DiffMetric(Metric):
         self.viz_env = viz_env
         self.title = title
 
-    def __str__(self):
-        return super(DiffMetric, self).__str__()
-
     def get_value(self, **kwargs):
         """
         Args:
@@ -225,9 +216,6 @@ class ConvergenceMetric(Metric):
         self.logger = logger
         self.viz_env = viz_env
         self.title = title
-
-    def __str__(self):
-        return super(ConvergenceMetric, self).__str__()
 
     def get_value(self, **kwargs):
         """
