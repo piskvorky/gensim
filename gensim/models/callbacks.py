@@ -21,8 +21,14 @@ class Metric(object):
     """
     Base Metric class for topic model evaluation metrics
     """
-    def __init__(self):
-        pass
+    def __str__(self):
+        """
+        Return a string representation of Metric class
+        """
+        if self.title is not None:
+            return self.title
+        else:
+            return type(self).__name__[:-6]
 
     def set_parameters(self, **parameters):
         """
@@ -87,6 +93,9 @@ class CoherenceMetric(Metric):
         self.viz_env = viz_env
         self.title = title
 
+    def __str__(self):
+        return super(CoherenceMetric, self).__str__()
+
     def get_value(self, **kwargs):
         """
         Args:
@@ -124,6 +133,9 @@ class PerplexityMetric(Metric):
         self.logger = logger
         self.viz_env = viz_env
         self.title = title
+
+    def __str__(self):
+        return super(PerplexityMetric, self).__str__()
 
     def get_value(self, **kwargs):
         """
@@ -168,6 +180,9 @@ class DiffMetric(Metric):
         self.viz_env = viz_env
         self.title = title
 
+    def __str__(self):
+        return super(DiffMetric, self).__str__()
+
     def get_value(self, **kwargs):
         """
         Args:
@@ -210,6 +225,9 @@ class ConvergenceMetric(Metric):
         self.logger = logger
         self.viz_env = viz_env
         self.title = title
+
+    def __str__(self):
+        return super(ConvergenceMetric, self).__str__()
 
     def get_value(self, **kwargs):
         """
@@ -272,11 +290,8 @@ class Callback(object):
 
         # plot all metrics in current epoch
         for i, metric in enumerate(self.metrics):
+            label = str(metric)
             value = metric.get_value(topics=topics, model=self.model, other_model=self.previous)
-            if metric.title is not None:
-                label = metric.title
-            else:
-                label = type(metric).__name__[:-6]
 
             current_metrics[label] = value
 
@@ -311,4 +326,3 @@ class Callback(object):
             self.previous = copy.deepcopy(self.model)
 
         return current_metrics
-
