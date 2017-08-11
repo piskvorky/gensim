@@ -3,10 +3,9 @@ from __future__ import absolute_import
 import json
 import os
 import tarfile
-import shutil
 import logging
 import sys
-import importlib
+
 try:
     import urllib.request as urllib
 except ImportError:
@@ -108,7 +107,7 @@ def load(file_name, return_path=False):
             "Incorrect model/corpus name. Use catalogue() to get a list of "
             "avalible models/corpus. If the model/corpus name you entered is"
             " in the catalogue, then please download the model/corpus by "
-            "calling download({f}) function".format(f=file_name))
+            "calling download('{f}') function".format(f=file_name))
     elif return_path:
         return folder_dir
     else:
