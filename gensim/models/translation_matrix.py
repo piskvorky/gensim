@@ -28,18 +28,14 @@ class Space(object):
         """
         self.mat = matrix
         self.index2word = index2word
-        self.build_word2index()
 
-    def build_word2index(self):
-        """ build a dict to map word to index """
+        # build a dict to map word to index
         self.word2index = {}
         for idx, word in enumerate(self.index2word):
-            if word in self.word2index:
-                raise ValueError("found duplicate word: %s, please check the training data you provide" % word)
             self.word2index[word] = idx
 
     @classmethod
-    def build(cls, lang_vec=None, lexicon=None):
+    def build(cls, lang_vec, lexicon=None):
         """
         construct a space class for the lexicon, if it's provided.
         Args:
@@ -49,8 +45,6 @@ class Space(object):
         Returns:
             space object for the lexicon
         """
-        if lang_vec is None:
-            raise RuntimeError("the word vector must be provided!")
         # words to store all the word that
         # mat to store all the word vector for the word in 'words' list
         words = []
@@ -90,7 +84,7 @@ class TranslationMatrix(utils.SaveLoad):
     >>> translated_word = transmat.translate(words, topn=3)
 
     """
-    def __init__(self, word_pair=None, source_lang_vec=None, target_lang_vec=None):
+    def __init__(self, word_pair, source_lang_vec, target_lang_vec):
         """
         Initialize the model from a list pair of `word_pair`. Each word_pair is tupe
          with source language word and target language word.
@@ -102,37 +96,19 @@ class TranslationMatrix(utils.SaveLoad):
             source_lang_vec (KeyedVectors): a set of word vector of source language
             target_lang_vec (KeyedVectors): a set of word vector of target language
         """
-        if word_pair is None:
-            raise RuntimeError("The training data must be provided, the data is a list of word pair with"
-                               " format (source language word, target language word).")
 
         if len(word_pair[0]) != 2:
             raise ValueError("Each training data item must contain two different language words.")
 
         self.source_word, self.target_word = zip(*word_pair)
-        if source_lang_vec is None or target_lang_vec is None:
-            raise RuntimeError("you must provide the source language vectors and target language vectors")
-
         self.source_lang_vec = source_lang_vec
         self.target_lang_vec = target_lang_vec
 
         self.translation_matrix = None
-
-        self.source_space = self.build_space(self.source_lang_vec, set(self.source_word))
-        self.target_space = self.build_space(self.target_lang_vec, set(self.target_word))
+        self.source_space = Space.build(self.source_lang_vec, set(self.source_word))
+        self.target_space = Space.build(self.target_lang_vec, set(self.target_word))
 
         self.translation_matrix = self.train(self.source_space, self.target_space)
-
-    def build_space(self, lang_vec, words=None):
-        """
-        Args:
-            lang_vec(KeyedVectors): a set of word vector
-            words: a set of word
-
-        Returns:
-            a Space object for those words
-        """
-        return Space.build(lang_vec, words)
 
     def train(self, source_space, target_space):
         """
@@ -179,7 +155,7 @@ class TranslationMatrix(utils.SaveLoad):
         """
         return Space(np.dot(words_space.mat, self.translation_matrix), words_space.index2word)
 
-    def translate(self, source_words=None, topn=5, additional=None, source_lang_vec=None, target_lang_vec=None):
+    def translate(self, source_words, topn=5, additional=None, source_lang_vec=None, target_lang_vec=None):
         """
         translate the word from the source language to the target language, and return the topn
         most similar words.
@@ -199,9 +175,6 @@ class TranslationMatrix(utils.SaveLoad):
         [1] Dinu, Georgiana, Angeliki Lazaridou, and Marco Baroni. "Improving zero-shot learning by mitigating the
         hubness problem." arXiv preprint arXiv:1412.6568 (2014).
         """
-
-        if source_words is None:
-            raise RuntimeError("The words to be translated must be provided.")
 
         if isinstance(source_words, string_types):
             # pass only one word to translate
@@ -226,8 +199,8 @@ class TranslationMatrix(utils.SaveLoad):
             lexicon = random.sample(list(lexicon.difference(source_words)), addition)
             source_space = Space.build(source_lang_vec, set(source_words).union(set(lexicon)))
         else:
-            source_space = self.build_space(source_lang_vec, source_words)
-        target_space = self.build_space(target_lang_vec, )
+            source_space = Space.build(source_lang_vec, source_words)
+        target_space = Space.build(target_lang_vec, )
 
         # normalize the source vector and target vector
         source_space.normalize()

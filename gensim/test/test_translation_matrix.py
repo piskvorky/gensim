@@ -30,7 +30,8 @@ class TestTranslationMatrix(unittest.TestCase):
         target_word_vec_file = datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
         target_word_vec = KeyedVectors.load_word2vec_format(target_word_vec_file, binary=False)
 
-        translation_matrix.TranslationMatrix(word_pair, source_word_vec, target_word_vec)
+        transmat = translation_matrix.TranslationMatrix(word_pair, source_word_vec, target_word_vec)
+        self.assertEqual(transmat.translation_matrix.shape, (300, 300))
 
     def testPersistence(self):
         """Test storing/loading the entire model."""
@@ -66,7 +67,10 @@ class TestTranslationMatrix(unittest.TestCase):
 
         test_word_pair = [("one", "uno"), ("two", "due")]
         test_source_word, test_target_word = zip(*test_word_pair)
-        transmat.translate(test_source_word, topn=3)
+        translated_words = transmat.translate(test_source_word, topn=3)
+
+        self.assertTrue("uno" in translated_words["one"])
+        self.assertTrue("due" in translated_words["two"])
 
     def test_translate_GC(self):
         train_file = datapath("OPUS_en_it_europarl_train_one2ten.txt")
@@ -83,4 +87,10 @@ class TestTranslationMatrix(unittest.TestCase):
 
         test_word_pair = [("one", "uno"), ("two", "due")]
         test_source_word, test_target_word = zip(*test_word_pair)
-        transmat.translate(test_source_word, topn=3, additional=10)
+        translated_words = transmat.translate(test_source_word, topn=3, additional=10)
+
+        self.assertTrue("uno" in translated_words["one"])
+        self.assertTrue("due" in translated_words["two"])
+
+if __name__ == '__main__':
+    unittest.main()
