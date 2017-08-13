@@ -10,20 +10,18 @@ Automated tests for checking transformation algorithms (the models package).
 
 
 import logging
-import unittest
 import os
 import os.path
 import tempfile
+import unittest
 
-import six
 import numpy as np
 import scipy.linalg
 
+from gensim import matutils
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import lsimodel
-from gensim import matutils
 from gensim.test import basetests
-
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 
@@ -179,6 +177,16 @@ class TestLsiModel(unittest.TestCase, basetests.TestBaseTopicModel):
     def testDocsProcessed(self):
         self.assertEqual(self.model.docs_processed, 9)
         self.assertEqual(self.model.docs_processed, self.corpus.num_docs)
+
+    def testGetTopics(self):
+        topics = self.model.get_topics()
+        vocab_size = len(self.model.id2word)
+        for topic in topics:
+            self.assertTrue(isinstance(topic, np.ndarray))
+            self.assertEqual(topic.dtype, np.float64)
+            self.assertEqual(vocab_size, topic.shape[0])
+            # LSI topics are not probability distributions
+            # self.assertAlmostEqual(np.sum(topic), 1.0, 5)
 
 # endclass TestLsiModel
 

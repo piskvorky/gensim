@@ -30,22 +30,19 @@ Example:
 
 
 import logging
+import os
 import random
 import tempfile
-import os
-
-import numpy
-
 import xml.etree.ElementTree as et
 import zipfile
 
-from six import iteritems
+import numpy
 from smart_open import smart_open
 
 from gensim import utils, matutils
-from gensim.utils import check_output, revdict
-from gensim.models.ldamodel import LdaModel
 from gensim.models import basemodel
+from gensim.models.ldamodel import LdaModel
+from gensim.utils import check_output, revdict
 
 logger = logging.getLogger(__name__)
 
@@ -212,6 +209,14 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         the doctopics.txt generated during training.
         """
         return self.read_doctopics(self.fdoctopics())
+
+    def get_topics(self):
+        """
+        Return the term topic matrix learned during inference.
+        This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
+        """
+        topics = self.word_topics
+        return topics / topics.sum(axis=1)[:, None]
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """

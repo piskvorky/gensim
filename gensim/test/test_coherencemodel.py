@@ -12,12 +12,13 @@ import logging
 import os
 import tempfile
 import unittest
+from unittest import SkipTest
 
 import numpy as np
 
 from gensim.corpora.dictionary import Dictionary
 from gensim.matutils import argsort
-from gensim.models.coherencemodel import CoherenceModel, boolean_document_based
+from gensim.models.coherencemodel import CoherenceModel, BOOLEAN_DOCUMENT_BASED
 from gensim.models.ldamodel import LdaModel
 from gensim.models.wrappers import LdaMallet
 from gensim.models.wrappers import LdaVowpalWabbit
@@ -82,7 +83,7 @@ class TestCoherenceModel(unittest.TestCase):
 
     def check_coherence_measure(self, coherence):
         """Check provided topic coherence algorithm on given topics"""
-        if coherence in boolean_document_based:
+        if coherence in BOOLEAN_DOCUMENT_BASED:
             kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, coherence=coherence)
         else:
             kwargs = dict(texts=self.texts, dictionary=self.dictionary, coherence=coherence)
@@ -118,6 +119,10 @@ class TestCoherenceModel(unittest.TestCase):
         """Perform sanity check to see if c_v coherence works with LDA Model"""
         CoherenceModel(model=self.ldamodel, texts=self.texts, coherence='c_v')
 
+    def testCw2vLdaModel(self):
+        """Perform sanity check to see if c_w2v coherence works with LDAModel."""
+        CoherenceModel(model=self.ldamodel, texts=self.texts, coherence='c_w2v')
+
     def testCuciLdaModel(self):
         """Perform sanity check to see if c_uci coherence works with LDA Model"""
         CoherenceModel(model=self.ldamodel, texts=self.texts, coherence='c_uci')
@@ -128,50 +133,60 @@ class TestCoherenceModel(unittest.TestCase):
 
     def testUMassMalletModel(self):
         """Perform sanity check to see if u_mass coherence works with LDA Mallet gensim wrapper"""
-        if not self.mallet_path:
-            return
+        self._check_for_mallet()
         CoherenceModel(model=self.malletmodel, corpus=self.corpus, coherence='u_mass')
+
+    def _check_for_mallet(self):
+        if not self.mallet_path:
+            raise SkipTest("Mallet not installed")
 
     def testCvMalletModel(self):
         """Perform sanity check to see if c_v coherence works with LDA Mallet gensim wrapper"""
-        if not self.mallet_path:
-            return
+        self._check_for_mallet()
         CoherenceModel(model=self.malletmodel, texts=self.texts, coherence='c_v')
+
+    def testCw2vMalletModel(self):
+        """Perform sanity check to see if c_w2v coherence works with LDA Mallet gensim wrapper"""
+        self._check_for_mallet()
+        CoherenceModel(model=self.malletmodel, texts=self.texts, coherence='c_w2v')
 
     def testCuciMalletModel(self):
         """Perform sanity check to see if c_uci coherence works with LDA Mallet gensim wrapper"""
-        if not self.mallet_path:
-            return
+        self._check_for_mallet()
         CoherenceModel(model=self.malletmodel, texts=self.texts, coherence='c_uci')
 
     def testCnpmiMalletModel(self):
         """Perform sanity check to see if c_npmi coherence works with LDA Mallet gensim wrapper"""
-        if not self.mallet_path:
-            return
+        self._check_for_mallet()
         CoherenceModel(model=self.malletmodel, texts=self.texts, coherence='c_npmi')
 
     def testUMassVWModel(self):
         """Perform sanity check to see if u_mass coherence works with LDA VW gensim wrapper"""
-        if not self.vw_path:
-            return
+        self._check_for_vw()
         CoherenceModel(model=self.vwmodel, corpus=self.corpus, coherence='u_mass')
+
+    def _check_for_vw(self):
+        if not self.vw_path:
+            raise SkipTest("Vowpal Wabbit not installed")
 
     def testCvVWModel(self):
         """Perform sanity check to see if c_v coherence works with LDA VW gensim wrapper"""
-        if not self.vw_path:
-            return
+        self._check_for_vw()
         CoherenceModel(model=self.vwmodel, texts=self.texts, coherence='c_v')
+
+    def testCw2vVWModel(self):
+        """Perform sanity check to see if c_w2v coherence works with LDA VW gensim wrapper"""
+        self._check_for_vw()
+        CoherenceModel(model=self.vwmodel, texts=self.texts, coherence='c_w2v')
 
     def testCuciVWModel(self):
         """Perform sanity check to see if c_uci coherence works with LDA VW gensim wrapper"""
-        if not self.vw_path:
-            return
+        self._check_for_vw()
         CoherenceModel(model=self.vwmodel, texts=self.texts, coherence='c_uci')
 
     def testCnpmiVWModel(self):
         """Perform sanity check to see if c_npmi coherence works with LDA VW gensim wrapper"""
-        if not self.vw_path:
-            return
+        self._check_for_vw()
         CoherenceModel(model=self.vwmodel, texts=self.texts, coherence='c_npmi')
 
     def testErrors(self):
@@ -259,6 +274,45 @@ class TestCoherenceModel(unittest.TestCase):
             topics.append(bestn)
         self.assertTrue(np.array_equal(topics, cm1.topics))
         self.assertIsNone(cm1._accumulator)
+
+    def testAccumulatorCachingWithTopnSettingGivenTopics(self):
+        kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, topn=5, coherence='u_mass')
+        cm1 = CoherenceModel(topics=self.topics1, **kwargs)
+        cm1.estimate_probabilities()
+        self.assertIsNotNone(cm1._accumulator)
+
+        accumulator = cm1._accumulator
+        topics_before = cm1._topics
+        cm1.topn = 3
+        self.assertEqual(accumulator, cm1._accumulator)
+        self.assertEqual(3, len(cm1.topics[0]))
+        self.assertEqual(topics_before, cm1._topics)
+
+        # Topics should not have been truncated, so topn settings below 5 should work
+        cm1.topn = 4
+        self.assertEqual(accumulator, cm1._accumulator)
+        self.assertEqual(4, len(cm1.topics[0]))
+        self.assertEqual(topics_before, cm1._topics)
+
+        with self.assertRaises(ValueError):
+            cm1.topn = 6  # can't expand topics any further without model
+
+    def testAccumulatorCachingWithTopnSettingGivenModel(self):
+        kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, topn=5, coherence='u_mass')
+        cm1 = CoherenceModel(model=self.ldamodel, **kwargs)
+        cm1.estimate_probabilities()
+        self.assertIsNotNone(cm1._accumulator)
+
+        accumulator = cm1._accumulator
+        topics_before = cm1._topics
+        cm1.topn = 3
+        self.assertEqual(accumulator, cm1._accumulator)
+        self.assertEqual(3, len(cm1.topics[0]))
+        self.assertEqual(topics_before, cm1._topics)
+
+        cm1.topn = 6  # should be able to expand given the model
+        self.assertIsNone(cm1._accumulator)  # should uncache due to missing terms in accumulator
+        self.assertEqual(6, len(cm1.topics[0]))
 
 
 if __name__ == '__main__':

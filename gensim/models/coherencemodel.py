@@ -24,10 +24,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from gensim import interfaces
-from gensim.matutils import argsort
-from gensim.models.ldamodel import LdaModel
-from gensim.models.wrappers import LdaVowpalWabbit, LdaMallet
+from gensim import interfaces, matutils
 from gensim.topic_coherence import (segmentation, probability_estimation,
                                     direct_confirmation_measure, indirect_confirmation_measure,
                                     aggregation)
@@ -36,10 +33,10 @@ from gensim.utils import is_corpus, FakeDict
 
 logger = logging.getLogger(__name__)
 
-boolean_document_based = {'u_mass'}
-sliding_window_based = {'c_v', 'c_uci', 'c_npmi'}
-_make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
+BOOLEAN_DOCUMENT_BASED = {'u_mass'}
+SLIDING_WINDOW_BASED = {'c_v', 'c_uci', 'c_npmi', 'c_w2v'}
 
+_make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
 COHERENCE_MEASURES = {
     'u_mass': _make_pipeline(
         segmentation.s_one_pre,
@@ -51,6 +48,12 @@ COHERENCE_MEASURES = {
         segmentation.s_one_set,
         probability_estimation.p_boolean_sliding_window,
         indirect_confirmation_measure.cosine_similarity,
+        aggregation.arithmetic_mean
+    ),
+    'c_w2v': _make_pipeline(
+        segmentation.s_one_set,
+        probability_estimation.p_word2vec,
+        indirect_confirmation_measure.word2vec_similarity,
         aggregation.arithmetic_mean
     ),
     'c_uci': _make_pipeline(
@@ -69,8 +72,10 @@ COHERENCE_MEASURES = {
 
 SLIDING_WINDOW_SIZES = {
     'c_v': 110,
+    'c_w2v': 5,
     'c_uci': 10,
-    'c_npmi': 10
+    'c_npmi': 10,
+    'u_mass': None
 }
 
 
@@ -111,7 +116,7 @@ class CoherenceModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     """
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
-                 window_size=None, coherence='c_v', topn=10, processes=-1):
+                 window_size=None, keyed_vectors=None, coherence='c_v', topn=10, processes=-1):
         """
         Args:
             model : Pre-trained topic model. Should be provided if topics is not provided.
@@ -161,7 +166,8 @@ class CoherenceModel(interfaces.TransformationABC):
         elif topics is not None and dictionary is None:
             raise ValueError("dictionary has to be provided if topics are to be used.")
 
-        if texts is None and corpus is None:
+        self.keyed_vectors = keyed_vectors
+        if keyed_vectors is None and texts is None and corpus is None:
             raise ValueError("One of texts or corpus has to be provided.")
 
         # Check if associated dictionary is provided.
@@ -177,30 +183,32 @@ class CoherenceModel(interfaces.TransformationABC):
 
         # Check for correct inputs for u_mass coherence measure.
         self.coherence = coherence
-        if coherence in boolean_document_based:
+        self.window_size = window_size
+        if self.window_size is None:
+            self.window_size = SLIDING_WINDOW_SIZES[self.coherence]
+        self.texts = texts
+        self.corpus = corpus
+
+        if coherence in BOOLEAN_DOCUMENT_BASED:
             if is_corpus(corpus)[0]:
                 self.corpus = corpus
-            elif texts is not None:
-                self.texts = texts
+            elif self.texts is not None:
                 self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
             else:
                 raise ValueError(
                     "Either 'corpus' with 'dictionary' or 'texts' should "
                     "be provided for %s coherence.", coherence)
 
-        # Check for correct inputs for c_v coherence measure.
-        elif coherence in sliding_window_based:
-            self.window_size = window_size
-            if self.window_size is None:
-                self.window_size = SLIDING_WINDOW_SIZES[self.coherence]
-            if texts is None:
+        # Check for correct inputs for sliding window coherence measure.
+        elif coherence == 'c_w2v' and keyed_vectors is not None:
+            pass
+        elif coherence in SLIDING_WINDOW_BASED:
+            if self.texts is None:
                 raise ValueError("'texts' should be provided for %s coherence.", coherence)
-            else:
-                self.texts = texts
         else:
             raise ValueError("%s coherence is not currently supported.", coherence)
 
-        self.topn = topn
+        self._topn = topn
         self._model = model
         self._accumulator = None
         self._topics = None
@@ -224,12 +232,33 @@ class CoherenceModel(interfaces.TransformationABC):
             self._topics = new_topics
 
     @property
+    def topn(self):
+        return self._topn
+
+    @topn.setter
+    def topn(self, topn):
+        current_topic_length = len(self._topics[0])
+        requires_expansion = current_topic_length < topn
+
+        if self.model is not None:
+            self._topn = topn
+            if requires_expansion:
+                self.model = self._model  # trigger topic expansion from model
+        else:
+            if requires_expansion:
+                raise ValueError("Model unavailable and topic sizes are less than topn=%d" % topn)
+            self._topn = topn  # topics will be truncated in getter
+
+    @property
     def measure(self):
         return COHERENCE_MEASURES[self.coherence]
 
     @property
     def topics(self):
-        return self._topics
+        if len(self._topics[0]) > self._topn:
+            return [topic[:self._topn] for topic in self._topics]
+        else:
+            return self._topics
 
     @topics.setter
     def topics(self, topics):
@@ -268,23 +297,15 @@ class CoherenceModel(interfaces.TransformationABC):
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""
-        topics = []
-        if isinstance(self.model, LdaModel):
-            for topic in self.model.state.get_lambda():
-                bestn = argsort(topic, topn=self.topn, reverse=True)
-                topics.append(bestn)
-        elif isinstance(self.model, LdaVowpalWabbit):
-            for topic in self.model._get_topics():
-                bestn = argsort(topic, topn=self.topn, reverse=True)
-                topics.append(bestn)
-        elif isinstance(self.model, LdaMallet):
-            for topic in self.model.word_topics:
-                bestn = argsort(topic, topn=self.topn, reverse=True)
-                topics.append(bestn)
-        else:
-            raise ValueError("This topic model is not currently supported. Supported topic models "
-                             " are LdaModel, LdaVowpalWabbit and LdaMallet.")
-        return topics
+        try:
+            return [
+                matutils.argsort(topic, topn=self.topn, reverse=True) for topic in
+                self.model.get_topics()
+            ]
+        except AttributeError:
+            raise ValueError(
+                "This topic model is not currently supported. Supported topic models"
+                " should implement the `get_topics` method.")
 
     def segment_topics(self):
         return self.measure.seg(self.topics)
@@ -297,17 +318,21 @@ class CoherenceModel(interfaces.TransformationABC):
         if segmented_topics is None:
             segmented_topics = self.segment_topics()
 
-        if self.coherence in boolean_document_based:
+        if self.coherence in BOOLEAN_DOCUMENT_BASED:
             self._accumulator = self.measure.prob(self.corpus, segmented_topics)
         else:
-            self._accumulator = self.measure.prob(
+            kwargs = dict(
                 texts=self.texts, segmented_topics=segmented_topics,
                 dictionary=self.dictionary, window_size=self.window_size,
                 processes=self.processes)
+            if self.coherence == 'c_w2v':
+                kwargs['model'] = self.keyed_vectors
+
+            self._accumulator = self.measure.prob(**kwargs)
 
         return self._accumulator
 
-    def get_coherence_per_topic(self, segmented_topics=None):
+    def get_coherence_per_topic(self, segmented_topics=None, with_std=False):
         """Return list of coherence values for each topic based on pipeline parameters."""
         measure = self.measure
         if segmented_topics is None:
@@ -315,12 +340,12 @@ class CoherenceModel(interfaces.TransformationABC):
         if self._accumulator is None:
             self.estimate_probabilities(segmented_topics)
 
-        if self.coherence in boolean_document_based:
-            kwargs = {}
+        if self.coherence in BOOLEAN_DOCUMENT_BASED or self.coherence == 'c_w2v':
+            kwargs = dict(with_std=with_std)
         elif self.coherence == 'c_v':
-            kwargs = dict(topics=self.topics, measure='nlr', gamma=1)
+            kwargs = dict(topics=self.topics, measure='nlr', gamma=1, with_std=with_std)
         else:
-            kwargs = dict(normalize=(self.coherence == 'c_npmi'))
+            kwargs = dict(normalize=(self.coherence == 'c_npmi'), with_std=with_std)
 
         return measure.conf(segmented_topics, self._accumulator, **kwargs)
 
