@@ -26,19 +26,20 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
         word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
                        model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
-            reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
-            start = max(0, pos - model.window + reduced_window)
-            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
+            # reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
+            # start = max(0, pos - model.window + reduced_window)
+            start = max(0, pos - model.window)
+            # window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
+            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1)], start)
             word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
 
             word2_subwords = []
-
-            for indices in word2_indices:
-                word2_subwords += ['<' + model.wv.index2word[indices] + '>']
-                word2_subwords += Ft_Wrapper.compute_ngrams(model.wv.index2word[indices], model.min_n, model.max_n)
-            word2_subwords = list(set(word2_subwords))
-
             subwords_indices = []
+
+            for index in word2_indices:
+                subwords_indices += [index]
+                word2_subwords += model.wv.ngrams_word[model.wv.index2word[index]]
+
             for subword in word2_subwords:
                 subwords_indices.append(model.wv.ngrams[subword])
 
@@ -134,6 +135,7 @@ class FastText(Word2Vec):
 
         self.wv.min_n = min_n
         self.wv.max_n = max_n
+        self.wv.ngrams_word = {}
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -167,15 +169,12 @@ class FastText(Word2Vec):
 
     def get_vocab_word_vecs(self):
         for w, v in self.wv.vocab.items():
-            word_vec = np.zeros(self.wv.syn0_all.shape[1])
-            ngrams = ['<' + w + '>']
-            ngrams += Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
-            ngrams = list(set(ngrams))
+            word_vec = self.wv.syn0_all[v.index]
+            ngrams = self.wv.ngrams_word[w]
             ngram_weights = self.wv.syn0_all
             for ngram in ngrams:
                 word_vec += ngram_weights[self.wv.ngrams[ngram]]
-            word_vec /= len(ngrams)
-
+            word_vec /= (len(ngrams) + 1)
             self.wv.syn0[v.index] = word_vec
 
     def word_vec(self, word, use_norm=False):
@@ -204,27 +203,28 @@ class FastText(Word2Vec):
         self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
         self.finalize_vocab(update=update)  # build tables & arrays
-        # super(build_vocab, self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False)
         self.init_ngrams()
 
     def reset_ngram_weights(self):
-        for ngram in self.wv.ngrams:
-            self.wv.syn0_all[self.wv.ngrams[ngram]] = self.seeded_vector(ngram + str(self.seed))
+        for index in range(len(self.wv.vocab) + len(self.wv.ngrams)):
+            self.wv.syn0_all[index] = np.random.uniform(-1.0/self.vector_size, 1.0/self.vector_size, self.vector_size)
 
     def init_ngrams(self):
         self.wv.ngrams = {}
-        self.wv.syn0_all = empty((self.bucket + len(self.wv.vocab), self.vector_size), dtype=REAL)
-        self.syn0_all_lockf = ones((self.bucket + len(self.wv.vocab), self.vector_size), dtype=REAL)
+        self.wv.syn0_all = empty((len(self.wv.vocab) + self.bucket, self.vector_size), dtype=REAL)
+        self.syn0_all_lockf = ones((len(self.wv.vocab) + self.bucket, self.vector_size), dtype=REAL)
 
         all_ngrams = []
         for w, v in self.wv.vocab.items():
-            all_ngrams += ['<' + w + '>']
-            all_ngrams += Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
+            self.wv.ngrams_word[w] = Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
+            all_ngrams += self.wv.ngrams_word[w]
+
         all_ngrams = list(set(all_ngrams))
         self.num_ngram_vectors = len(all_ngrams)
         logger.info("Total number of ngrams in the vocab is %d", self.num_ngram_vectors)
 
-        ngram_indices = []
+        ngram_indices = range(len(self.wv.vocab))  # keeping the first `len(self.wv.vocab)` rows intact
+
         for i, ngram in enumerate(all_ngrams):
             ngram_hash = Ft_Wrapper.ft_hash(ngram)
             ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
