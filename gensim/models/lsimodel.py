@@ -470,12 +470,14 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def get_topics(self):
         """
-        Return the term topic matrix learned during inference.
-        This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
+        Returns:
+            np.ndarray: `num_topics` x `vocabulary_size` array of floats which represents
+            the term topic matrix learned during inference.
 
-        NOTE: The number of topics can actually be smaller than `self.num_topics`,
-        if there were not enough factors (real rank of input matrix smaller than
-        `self.num_topics`).
+        Note:
+            The number of topics can actually be smaller than `self.num_topics`,
+            if there were not enough factors (real rank of input matrix smaller than
+            `self.num_topics`).
         """
         projections = self.projection.u.T
         num_topics = len(projections)
