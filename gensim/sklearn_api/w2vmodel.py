@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
+# Author: Chinmaya Pancholi <chinmayapancholi13@gmail.com>
+# Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
@@ -15,10 +16,9 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
-from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class SklW2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class W2VTransformer(TransformerMixin, BaseEstimator):
     """
     Base Word2Vec module
     """
@@ -28,7 +28,7 @@ class SklW2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=10000):
         """
-        Sklearn wrapper for Word2Vec model. Class derived from gensim.models.Word2Vec
+        Sklearn wrapper for Word2Vec model. See gensim.models.Word2Vec for parameter details.
         """
         self.gensim_model = None
         self.size = size
@@ -50,24 +50,6 @@ class SklW2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         self.trim_rule = trim_rule
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
-
-    def get_params(self, deep=True):
-        """
-        Returns all parameters as dictionary.
-        """
-        return {"size": self.size, "alpha": self.alpha, "window": self.window, "min_count": self.min_count,
-        "max_vocab_size": self.max_vocab_size, "sample": self.sample, "seed": self.seed,
-        "workers": self.workers, "min_alpha": self.min_alpha, "sg": self.sg, "hs": self.hs,
-        "negative": self.negative, "cbow_mean": self.cbow_mean, "hashfxn": self.hashfxn,
-        "iter": self.iter, "null_word": self.null_word, "trim_rule": self.trim_rule,
-        "sorted_vocab": self.sorted_vocab, "batch_words": self.batch_words}
-
-    def set_params(self, **parameters):
-        """
-        Set all parameters.
-        """
-        super(SklW2VModel, self).set_params(**parameters)
-        return self
 
     def fit(self, X, y=None):
         """
@@ -101,4 +83,4 @@ class SklW2VModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         return np.reshape(np.array(X), (len(words), self.size))
 
     def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for SklW2VModel")
+        raise NotImplementedError("'partial_fit' has not been implemented for W2VTransformer. However, the model can be updated with a fixed vocabulary using Gensim API call.")

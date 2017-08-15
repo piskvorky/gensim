@@ -14,11 +14,10 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim.corpora import Dictionary
-from gensim.sklearn_integration import BaseSklearnWrapper
 from gensim.utils import tokenize
 
 
-class Text2BowTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class Text2BowTransformer(TransformerMixin, BaseEstimator):
     """
     Base Text2Bow module
     """

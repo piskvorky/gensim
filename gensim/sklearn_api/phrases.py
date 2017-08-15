@@ -14,10 +14,9 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
-from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class PhrasesTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class PhrasesTransformer(TransformerMixin, BaseEstimator):
     """
     Base Phrases module
     """

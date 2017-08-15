@@ -14,10 +14,9 @@ from sklearn.exceptions import NotFittedError
 
 import gensim
 from gensim.models import TfidfModel
-from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class TfIdfTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class TfIdfTransformer(TransformerMixin, BaseEstimator):
     """
     Base Tf-Idf module
     """
@@ -59,6 +58,3 @@ class TfIdfTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
             X[k] = transformed_doc
 
         return X
-
-    def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for TfIdfTransformer")

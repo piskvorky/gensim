@@ -15,10 +15,9 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
-from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class D2VTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class D2VTransformer(TransformerMixin, BaseEstimator):
     """
     Base Doc2Vec module
     """
@@ -96,6 +95,3 @@ class D2VTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
             X[k] = doc_vec
 
         return np.reshape(np.array(X), (len(docs), self.gensim_model.vector_size))
-
-    def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for D2VTransformer")

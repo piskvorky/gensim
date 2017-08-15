@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
+# Author: Chinmaya Pancholi <chinmayapancholi13@gmail.com>
+# Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 """Scikit learn wrapper for gensim.
 Contains various gensim based implementations which match with scikit-learn standards.
@@ -10,14 +11,13 @@ See [1] for complete set of conventions.
 """
 
 
-from .base_sklearn_wrapper import BaseSklearnWrapper  # noqa: F401
-from .sklearn_wrapper_gensim_ldamodel import SklLdaModel  # noqa: F401
-from .sklearn_wrapper_gensim_lsimodel import SklLsiModel  # noqa: F401
-from .sklearn_wrapper_gensim_rpmodel import SklRpModel  # noqa: F401
-from .sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel  # noqa: F401
-from .sklearn_wrapper_gensim_w2vmodel import SklW2VModel  # noqa: F401
+from .ldamodel import LdaTransformer  # noqa: F401
+from .lsimodel import LsiTransformer  # noqa: F401
+from .rpmodel import RpTransformer  # noqa: F401
+from .ldaseqmodel import LdaSeqTransformer  # noqa: F401
+from .w2vmodel import W2VTransformer  # noqa: F401
+from .atmodel import AuthorTopicTransformer  # noqa: F401
 from .d2vmodel import D2VTransformer  # noqa: F401
-from .sklearn_wrapper_gensim_atmodel import SklATModel  # noqa: F401
 from .text2bow import Text2BowTransformer  # noqa: F401
 from .tfidf import TfIdfTransformer  # noqa: F401
 from .hdp import HdpTransformer  # noqa: F401

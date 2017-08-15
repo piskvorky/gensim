@@ -222,7 +222,7 @@ except ImportError:
 
         return log_prob_sentence
 
-    def score_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
+    def score_sentence_cbow(model, sentence, work=None, neu1=None):
         """
         Obtain likelihood score for a single sentence in a fitted CBOW representaion.
 
@@ -248,7 +248,7 @@ except ImportError:
             l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x layer1_size
             if word2_indices and model.cbow_mean:
                 l1 /= len(word2_indices)
-            log_prob_sentence += score_cbow_pair(model, word, word2_indices, l1)
+            log_prob_sentence += score_cbow_pair(model, word, l1)
 
         return log_prob_sentence
 
@@ -365,7 +365,7 @@ def score_sg_pair(model, word, word2):
     return sum(lprob)
 
 
-def score_cbow_pair(model, word, word2_indices, l1):
+def score_cbow_pair(model, word, l1):
     l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
     sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
     lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
@@ -1550,7 +1550,57 @@ class LineSentence(object):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
-                        yield line[i : i + self.max_sentence_length]
+                        yield line[i:i + self.max_sentence_length]
+                        i += self.max_sentence_length
+
+
+class PathLineSentences(object):
+    """
+    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    Like LineSentence, but will process all files in a directory in alphabetical order by filename
+    """
+
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
+        """
+        `source` should be a path to a directory (as a string) where all files can be opened by the
+        LineSentence class. Each file will be read up to
+        `limit` lines (or no clipped if limit is None, the default).
+
+        Example::
+
+            sentences = LineSentencePath(os.getcwd() + '\\corpus\\')
+
+        The files in the directory should be either text files, .bz2 files, or .gz files.
+
+        """
+        self.source = source
+        self.max_sentence_length = max_sentence_length
+        self.limit = limit
+
+        if os.path.isfile(self.source):
+            logging.warning('single file read, better to use models.word2vec.LineSentence')
+            self.input_files = [self.source]  # force code compatibility with list of files
+        elif os.path.isdir(self.source):
+            self.source = os.path.join(self.source, '')  # ensures os-specific slash at end of path
+            logging.debug('reading directory ' + self.source)
+            self.input_files = os.listdir(self.source)
+            self.input_files = [self.source + file for file in self.input_files]  # make full paths
+            self.input_files.sort()  # makes sure it happens in filename order
+        else:  # not a file or a directory, then we can't do anything with it
+            raise ValueError('input is neither a file nor a path')
+
+        logging.info('files read into PathLineSentences:' + '\n'.join(self.input_files))
+
+    def __iter__(self):
+        '''iterate through the files'''
+        for file_name in self.input_files:
+            logging.info('reading file ' + file_name)
+            with utils.smart_open(file_name) as fin:
+                for line in itertools.islice(fin, self.limit):
+                    line = utils.to_unicode(line).split()
+                    i = 0
+                    while i < len(line):
+                        yield line[i:i + self.max_sentence_length]
                         i += self.max_sentence_length
 
 

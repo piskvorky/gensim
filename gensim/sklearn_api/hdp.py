@@ -16,10 +16,9 @@ from sklearn.exceptions import NotFittedError
 
 from gensim import models
 from gensim import matutils
-from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class HdpTransformer(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class HdpTransformer(TransformerMixin, BaseEstimator):
     """
     Base HDP module
     """

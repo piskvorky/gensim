@@ -1,4 +1,3 @@
-import six
 import unittest
 import numpy
 import os
@@ -8,13 +7,12 @@ import pickle
 from scipy import sparse
 try:
     from sklearn.pipeline import Pipeline
-    from sklearn.feature_extraction.text import CountVectorizer
-    from sklearn.datasets import load_files
     from sklearn import linear_model, cluster
     from sklearn.exceptions import NotFittedError
 except ImportError:
     raise unittest.SkipTest("Test requires scikit-learn to be installed, which is not available")
 
+<<<<<<< HEAD:gensim/test/test_sklearn_integration.py
 from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import SklRpModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklLdaModel
 from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklLsiModel
@@ -28,6 +26,16 @@ from gensim.sklearn_integration.hdp import HdpTransformer
 from gensim.sklearn_integration.phrases import PhrasesTransformer
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import doc2vec
+=======
+from gensim.sklearn_api.rpmodel import RpTransformer
+from gensim.sklearn_api.ldamodel import LdaTransformer
+from gensim.sklearn_api.lsimodel import LsiTransformer
+from gensim.sklearn_api.ldaseqmodel import LdaSeqTransformer
+from gensim.sklearn_api.w2vmodel import W2VTransformer
+from gensim.sklearn_api.atmodel import AuthorTopicTransformer
+from gensim.corpora import mmcorpus, Dictionary
+from gensim import models
+>>>>>>> 718b1c6bd1a8a98625993d73b83d98baf385752d:gensim/test/test_sklearn_api.py
 from gensim import matutils
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
@@ -87,7 +95,6 @@ texts_ldaseq = [
     ['borrow', 'sell'],
     ['bank', 'loan', 'sell']
 ]
-sstats_ldaseq = numpy.loadtxt(datapath_ldaseq('sstats_test.txt'))
 dictionary_ldaseq = Dictionary(texts_ldaseq)
 corpus_ldaseq = [dictionary_ldaseq.doc2bow(text) for text in texts_ldaseq]
 
@@ -103,6 +110,7 @@ w2v_texts = [
     ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics', 'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically', 'transformed', 'modern', 'day', 'society']
 ]
 
+<<<<<<< HEAD:gensim/test/test_sklearn_integration.py
 d2v_sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(w2v_texts)]
 
 dict_texts = [
@@ -132,9 +140,13 @@ phrases_sentences = [
 
 
 class TestSklLdaModelWrapper(unittest.TestCase):
+=======
+
+class TestLdaWrapper(unittest.TestCase):
+>>>>>>> 718b1c6bd1a8a98625993d73b83d98baf385752d:gensim/test/test_sklearn_api.py
     def setUp(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        self.model = SklLdaModel(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        self.model = LdaTransformer(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
         self.model.fit(corpus)
 
     def testTransform(self):
@@ -154,26 +166,42 @@ class TestSklLdaModelWrapper(unittest.TestCase):
     def testPartialFit(self):
         for i in range(10):
             self.model.partial_fit(X=corpus)  # fit against the model again
-            doc = list(corpus)[0]  # transform only the first document
-            transformed = self.model.transform(doc)
-        expected = numpy.array([0.87, 0.13])
+        doc = list(corpus)[0]  # transform only the first document
+        transformed = self.model.transform(doc)
+        expected = numpy.array([0.13, 0.87])
         passed = numpy.allclose(sorted(transformed[0]), sorted(expected), atol=1e-1)
+        self.assertTrue(passed)
+
+    def testConsistencyWithGensimModel(self):
+        # training an LdaTransformer with `num_topics`=10
+        self.model = LdaTransformer(id2word=dictionary, num_topics=10, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        self.model.fit(corpus)
+
+        # training a Gensim LdaModel with the same params
+        gensim_ldamodel = models.LdaModel(corpus=corpus, id2word=dictionary, num_topics=10, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+
+        texts_new = ['graph', 'eulerian']
+        bow = self.model.id2word.doc2bow(texts_new)
+        matrix_transformer_api = self.model.transform(bow)
+        matrix_gensim_model = gensim_ldamodel[bow]
+        matrix_gensim_model_dense = matutils.sparse2full(matrix_gensim_model, 10)  # convert into dense representation to be able to compare with transformer output
+        passed = numpy.allclose(matrix_transformer_api, matrix_gensim_model_dense, atol=1e-1)
         self.assertTrue(passed)
 
     def testCSRMatrixConversion(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
         arr = numpy.array([[1, 2, 0], [0, 0, 3], [1, 0, 0]])
         sarr = sparse.csr_matrix(arr)
-        newmodel = SklLdaModel(num_topics=2, passes=100)
+        newmodel = LdaTransformer(num_topics=2, passes=100)
         newmodel.fit(sarr)
         bow = [(0, 1), (1, 2), (2, 0)]
         transformed_vec = newmodel.transform(bow)
         expected_vec = numpy.array([0.35367903, 0.64632097])
-        passed = numpy.allclose(sorted(transformed_vec), sorted(expected_vec), atol=1e-1)
+        passed = numpy.allclose(transformed_vec, expected_vec, atol=1e-1)
         self.assertTrue(passed)
 
     def testPipeline(self):
-        model = SklLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
+        model = LdaTransformer(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
@@ -193,6 +221,9 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         self.model.set_params(num_topics=3)
         model_params = self.model.get_params()
         self.assertEqual(model_params["num_topics"], 3)
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(corpus)
+        self.assertEqual(getattr(self.model.gensim_model, 'num_topics'), 3)
 
         # updating multiple params
         param_dict = {"eval_every": 20, "decay": 0.7}
@@ -200,6 +231,10 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         model_params = self.model.get_params()
         for key in param_dict.keys():
             self.assertEqual(model_params[key], param_dict[key])
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(corpus)
+        self.assertEqual(getattr(self.model.gensim_model, 'eval_every'), 20)
+        self.assertEqual(getattr(self.model.gensim_model, 'decay'), 0.7)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -216,20 +251,20 @@ class TestSklLdaModelWrapper(unittest.TestCase):
         # comparing the original and loaded models
         original_bow = self.model.id2word.doc2bow(texts_new)
         original_matrix = self.model.transform(original_bow)
-        passed = numpy.allclose(sorted(loaded_matrix), sorted(original_matrix), atol=1e-1)
+        passed = numpy.allclose(loaded_matrix, original_matrix, atol=1e-1)
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        lda_wrapper = SklLdaModel(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        lda_wrapper = LdaTransformer(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
         texts_new = ['graph', 'eulerian']
         bow = lda_wrapper.id2word.doc2bow(texts_new)
         self.assertRaises(NotFittedError, lda_wrapper.transform, bow)
 
 
-class TestSklLsiModelWrapper(unittest.TestCase):
+class TestLsiWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        self.model = SklLsiModel(id2word=dictionary, num_topics=2)
+        self.model = LsiTransformer(id2word=dictionary, num_topics=2)
         self.model.fit(corpus)
 
     def testTransform(self):
@@ -249,14 +284,14 @@ class TestSklLsiModelWrapper(unittest.TestCase):
     def testPartialFit(self):
         for i in range(10):
             self.model.partial_fit(X=corpus)  # fit against the model again
-            doc = list(corpus)[0]  # transform only the first document
-            transformed = self.model.transform(doc)
-        expected = numpy.array([1.39, 1e-12])
-        passed = numpy.allclose(sorted(transformed[0]), sorted(expected), atol=1)
+        doc = list(corpus)[0]  # transform only the first document
+        transformed = self.model.transform(doc)
+        expected = numpy.array([1.39, 0.0])
+        passed = numpy.allclose(transformed[0], expected, atol=1)
         self.assertTrue(passed)
 
     def testPipeline(self):
-        model = SklLsiModel(num_topics=2)
+        model = LsiTransformer(num_topics=2)
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
@@ -276,6 +311,9 @@ class TestSklLsiModelWrapper(unittest.TestCase):
         self.model.set_params(num_topics=3)
         model_params = self.model.get_params()
         self.assertEqual(model_params["num_topics"], 3)
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(corpus)
+        self.assertEqual(getattr(self.model.gensim_model, 'num_topics'), 3)
 
         # updating multiple params
         param_dict = {"chunksize": 10000, "decay": 0.9}
@@ -283,6 +321,10 @@ class TestSklLsiModelWrapper(unittest.TestCase):
         model_params = self.model.get_params()
         for key in param_dict.keys():
             self.assertEqual(model_params[key], param_dict[key])
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(corpus)
+        self.assertEqual(getattr(self.model.gensim_model, 'chunksize'), 10000)
+        self.assertEqual(getattr(self.model.gensim_model, 'decay'), 0.9)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -299,19 +341,19 @@ class TestSklLsiModelWrapper(unittest.TestCase):
         # comparing the original and loaded models
         original_bow = self.model.id2word.doc2bow(texts_new)
         original_matrix = self.model.transform(original_bow)
-        passed = numpy.allclose(sorted(loaded_matrix), sorted(original_matrix), atol=1e-1)
+        passed = numpy.allclose(loaded_matrix, original_matrix, atol=1e-1)
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        lsi_wrapper = SklLsiModel(id2word=dictionary, num_topics=2)
+        lsi_wrapper = LsiTransformer(id2word=dictionary, num_topics=2)
         texts_new = ['graph', 'eulerian']
         bow = lsi_wrapper.id2word.doc2bow(texts_new)
         self.assertRaises(NotFittedError, lsi_wrapper.transform, bow)
 
 
-class TestSklLdaSeqModelWrapper(unittest.TestCase):
+class TestLdaSeqWrapper(unittest.TestCase):
     def setUp(self):
-        self.model = SklLdaSeqModel(id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='own', sstats=sstats_ldaseq)
+        self.model = LdaSeqTransformer(id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='gensim')
         self.model.fit(corpus_ldaseq)
 
     def testTransform(self):
@@ -329,19 +371,6 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
         self.assertEqual(transformed_vecs.shape[0], 1)
         self.assertEqual(transformed_vecs.shape[1], self.model.num_topics)
 
-    def testSetGetParams(self):
-        # updating only one param
-        self.model.set_params(num_topics=3)
-        model_params = self.model.get_params()
-        self.assertEqual(model_params["num_topics"], 3)
-
-        # updating multiple params
-        param_dict = {"passes": 20, "chunksize": 200}
-        self.model.set_params(**param_dict)
-        model_params = self.model.get_params()
-        for key in param_dict.keys():
-            self.assertEqual(model_params[key], param_dict[key])
-
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
         with open(datapath('mini_newsgroup'), 'rb') as f:
@@ -353,12 +382,21 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
         test_target = data.target[0:2]
         id2word = Dictionary(map(lambda x: x.split(), test_data))
         corpus = [id2word.doc2bow(i.split()) for i in test_data]
-        model = SklLdaSeqModel(id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim')
+        model = LdaSeqTransformer(id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim')
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         text_ldaseq = Pipeline((('features', model,), ('classifier', clf)))
         text_ldaseq.fit(corpus, test_target)
         score = text_ldaseq.score(corpus, test_target)
         self.assertGreater(score, 0.50)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(corpus_ldaseq)
+        self.assertEqual(getattr(self.model.gensim_model, 'num_topics'), 3)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
@@ -373,19 +411,19 @@ class TestSklLdaSeqModelWrapper(unittest.TestCase):
 
         # comparing the original and loaded models
         original_transformed_vecs = self.model.transform(doc)
-        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        passed = numpy.allclose(loaded_transformed_vecs, original_transformed_vecs, atol=1e-1)
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        ldaseq_wrapper = SklLdaSeqModel(num_topics=2)
+        ldaseq_wrapper = LdaSeqTransformer(num_topics=2)
         doc = list(corpus_ldaseq)[0]
         self.assertRaises(NotFittedError, ldaseq_wrapper.transform, doc)
 
 
-class TestSklRpModelWrapper(unittest.TestCase):
+class TestRpWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(13)
-        self.model = SklRpModel(num_topics=2)
+        self.model = RpTransformer(num_topics=2)
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.model.fit(self.corpus)
 
@@ -404,15 +442,9 @@ class TestSklRpModelWrapper(unittest.TestCase):
         self.assertEqual(matrix.shape[0], 1)
         self.assertEqual(matrix.shape[1], self.model.num_topics)
 
-    def testSetGetParams(self):
-        # updating only one param
-        self.model.set_params(num_topics=3)
-        model_params = self.model.get_params()
-        self.assertEqual(model_params["num_topics"], 3)
-
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        model = SklRpModel(num_topics=2)
+        model = RpTransformer(num_topics=2)
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
@@ -427,6 +459,15 @@ class TestSklRpModelWrapper(unittest.TestCase):
         score = text_rp.score(corpus, data.target)
         self.assertGreater(score, 0.40)
 
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(self.corpus)
+        self.assertEqual(getattr(self.model.gensim_model, 'num_topics'), 3)
+
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
         model_load = pickle.loads(model_dump)
@@ -440,19 +481,19 @@ class TestSklRpModelWrapper(unittest.TestCase):
 
         # comparing the original and loaded models
         original_transformed_vecs = self.model.transform(doc)
-        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        passed = numpy.allclose(loaded_transformed_vecs, original_transformed_vecs, atol=1e-1)
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        rpmodel_wrapper = SklRpModel(num_topics=2)
+        rpmodel_wrapper = RpTransformer(num_topics=2)
         doc = list(self.corpus)[0]
         self.assertRaises(NotFittedError, rpmodel_wrapper.transform, doc)
 
 
-class TestSklW2VModelWrapper(unittest.TestCase):
+class TestWord2VecWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)
-        self.model = SklW2VModel(size=10, min_count=0, seed=42)
+        self.model = W2VTransformer(size=10, min_count=0, seed=42)
         self.model.fit(texts)
 
     def testTransform(self):
@@ -469,15 +510,23 @@ class TestSklW2VModelWrapper(unittest.TestCase):
         self.assertEqual(matrix.shape[0], 1)
         self.assertEqual(matrix.shape[1], self.model.size)
 
-    def testSetGetParams(self):
-        # updating only one param
-        self.model.set_params(negative=20)
-        model_params = self.model.get_params()
-        self.assertEqual(model_params["negative"], 20)
+    def testConsistencyWithGensimModel(self):
+        # training a W2VTransformer
+        self.model = W2VTransformer(size=10, min_count=0, seed=42)
+        self.model.fit(texts)
+
+        # training a Gensim Word2Vec model with the same params
+        gensim_w2vmodel = models.Word2Vec(texts, size=10, min_count=0, seed=42)
+
+        word = texts[0][0]
+        vec_transformer_api = self.model.transform(word)  # vector returned by W2VTransformer
+        vec_gensim_model = gensim_w2vmodel[word]  # vector returned by Word2Vec
+        passed = numpy.allclose(vec_transformer_api, vec_gensim_model, atol=1e-1)
+        self.assertTrue(passed)
 
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        model = SklW2VModel(size=10, min_count=1)
+        model = W2VTransformer(size=10, min_count=1)
         model.fit(w2v_texts)
 
         class_dict = {'mathematics': 1, 'physics': 0}
@@ -494,6 +543,15 @@ class TestSklW2VModelWrapper(unittest.TestCase):
         score = text_w2v.score(train_input, train_target)
         self.assertGreater(score, 0.40)
 
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(negative=20)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["negative"], 20)
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(texts)
+        self.assertEqual(getattr(self.model.gensim_model, 'negative'), 20)
+
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
         model_load = pickle.loads(model_dump)
@@ -507,18 +565,18 @@ class TestSklW2VModelWrapper(unittest.TestCase):
 
         # comparing the original and loaded models
         original_transformed_vecs = self.model.transform(word)
-        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        passed = numpy.allclose(loaded_transformed_vecs, original_transformed_vecs, atol=1e-1)
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        w2vmodel_wrapper = SklW2VModel(size=10, min_count=0, seed=42)
+        w2vmodel_wrapper = W2VTransformer(size=10, min_count=0, seed=42)
         word = texts[0][0]
         self.assertRaises(NotFittedError, w2vmodel_wrapper.transform, word)
 
 
-class TestSklATModelWrapper(unittest.TestCase):
+class TestAuthorTopicWrapper(unittest.TestCase):
     def setUp(self):
-        self.model = SklATModel(id2word=dictionary, author2doc=author2doc, num_topics=2, passes=100)
+        self.model = AuthorTopicTransformer(id2word=dictionary, author2doc=author2doc, num_topics=2, passes=100)
         self.model.fit(corpus)
 
     def testTransform(self):
@@ -541,22 +599,9 @@ class TestSklATModelWrapper(unittest.TestCase):
         sally_topics = output_topics[0]  # getting the topics corresponding to 'sally' (from the list of lists)
         self.assertTrue(all(sally_topics > 0))
 
-    def testSetGetParams(self):
-        # updating only one param
-        self.model.set_params(num_topics=3)
-        model_params = self.model.get_params()
-        self.assertEqual(model_params["num_topics"], 3)
-
-        # updating multiple params
-        param_dict = {"passes": 5, "iterations": 10}
-        self.model.set_params(**param_dict)
-        model_params = self.model.get_params()
-        for key in param_dict.keys():
-            self.assertEqual(model_params[key], param_dict[key])
-
     def testPipeline(self):
         # train the AuthorTopic model first
-        model = SklATModel(id2word=dictionary, author2doc=author2doc, num_topics=10, passes=100)
+        model = AuthorTopicTransformer(id2word=dictionary, author2doc=author2doc, num_topics=10, passes=100)
         model.fit(corpus)
 
         # create and train clustering model
@@ -569,6 +614,47 @@ class TestSklATModelWrapper(unittest.TestCase):
         author_list = ['jane', 'jack', 'jill']
         ret_val = text_atm.predict(author_list)
         self.assertEqual(len(ret_val), len(author_list))
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(num_topics=3)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["num_topics"], 3)
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(corpus)
+        self.assertEqual(getattr(self.model.gensim_model, 'num_topics'), 3)
+
+        # updating multiple params
+        param_dict = {"passes": 5, "iterations": 10}
+        self.model.set_params(**param_dict)
+        model_params = self.model.get_params()
+        for key in param_dict.keys():
+            self.assertEqual(model_params[key], param_dict[key])
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(corpus)
+        self.assertEqual(getattr(self.model.gensim_model, 'passes'), 5)
+        self.assertEqual(getattr(self.model.gensim_model, 'iterations'), 10)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        author_list = ['jill']
+        loaded_author_topics = model_load.transform(author_list)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_author_topics.shape[0], 1)
+        self.assertEqual(loaded_author_topics.shape[1], self.model.num_topics)
+
+        # comparing the original and loaded models
+        original_author_topics = self.model.transform(author_list)
+        passed = numpy.allclose(loaded_author_topics, original_author_topics, atol=1e-1)
+        self.assertTrue(passed)
+
+    def testModelNotFitted(self):
+        atmodel_wrapper = AuthorTopicTransformer(id2word=dictionary, author2doc=author2doc, num_topics=10, passes=100)
+        author_list = ['jill', 'jack']
+        self.assertRaises(NotFittedError, atmodel_wrapper.transform, author_list)
 
 
 class TestD2VTransformer(unittest.TestCase):
