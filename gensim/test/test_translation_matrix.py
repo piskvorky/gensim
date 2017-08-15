@@ -91,4 +91,3 @@ class TestTranslationMatrix(unittest.TestCase):
 
         self.assertTrue("uno" in translated_words["one"])
         self.assertTrue("due" in translated_words["two"])
-
