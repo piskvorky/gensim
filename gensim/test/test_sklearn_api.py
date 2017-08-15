@@ -12,31 +12,19 @@ try:
 except ImportError:
     raise unittest.SkipTest("Test requires scikit-learn to be installed, which is not available")
 
-<<<<<<< HEAD:gensim/test/test_sklearn_integration.py
-from gensim.sklearn_integration.sklearn_wrapper_gensim_rpmodel import SklRpModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_ldamodel import SklLdaModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_lsimodel import SklLsiModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_ldaseqmodel import SklLdaSeqModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_w2vmodel import SklW2VModel
-from gensim.sklearn_integration.sklearn_wrapper_gensim_atmodel import SklATModel
-from gensim.sklearn_integration.d2vmodel import D2VTransformer
-from gensim.sklearn_integration.text2bow import Text2BowTransformer
-from gensim.sklearn_integration.tfidf import TfIdfTransformer
-from gensim.sklearn_integration.hdp import HdpTransformer
-from gensim.sklearn_integration.phrases import PhrasesTransformer
-from gensim.corpora import mmcorpus, Dictionary
-from gensim.models import doc2vec
-=======
 from gensim.sklearn_api.rpmodel import RpTransformer
 from gensim.sklearn_api.ldamodel import LdaTransformer
 from gensim.sklearn_api.lsimodel import LsiTransformer
 from gensim.sklearn_api.ldaseqmodel import LdaSeqTransformer
 from gensim.sklearn_api.w2vmodel import W2VTransformer
 from gensim.sklearn_api.atmodel import AuthorTopicTransformer
+from gensim.sklearn_api.d2vmodel import D2VTransformer
+from gensim.sklearn_api.text2bow import Text2BowTransformer
+from gensim.sklearn_api.tfidf import TfIdfTransformer
+from gensim.sklearn_api.hdp import HdpTransformer
+from gensim.sklearn_api.phrases import PhrasesTransformer
 from gensim.corpora import mmcorpus, Dictionary
-from gensim import models
->>>>>>> 718b1c6bd1a8a98625993d73b83d98baf385752d:gensim/test/test_sklearn_api.py
-from gensim import matutils
+from gensim import matutils, models
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -110,8 +98,7 @@ w2v_texts = [
     ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics', 'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically', 'transformed', 'modern', 'day', 'society']
 ]
 
-<<<<<<< HEAD:gensim/test/test_sklearn_integration.py
-d2v_sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(w2v_texts)]
+d2v_sentences = [models.doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(w2v_texts)]
 
 dict_texts = [
     'human interface computer',
@@ -139,11 +126,7 @@ phrases_sentences = [
 ]
 
 
-class TestSklLdaModelWrapper(unittest.TestCase):
-=======
-
 class TestLdaWrapper(unittest.TestCase):
->>>>>>> 718b1c6bd1a8a98625993d73b83d98baf385752d:gensim/test/test_sklearn_api.py
     def setUp(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
         self.model = LdaTransformer(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
@@ -685,6 +668,10 @@ class TestD2VTransformer(unittest.TestCase):
         model_params = self.model.get_params()
         self.assertEqual(model_params["negative"], 20)
 
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(d2v_sentences)
+        self.assertEqual(getattr(self.model.gensim_model, 'negative'), 20)
+
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
         model = D2VTransformer(min_count=1)
@@ -720,6 +707,20 @@ class TestD2VTransformer(unittest.TestCase):
         passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
         self.assertTrue(passed)
 
+    def testConsistencyWithGensimModel(self):
+        # training a D2VTransformer
+        self.model = D2VTransformer(min_count=1)
+        self.model.fit(d2v_sentences)
+
+        # training a Gensim Doc2Vec model with the same params
+        gensim_d2vmodel = models.Doc2Vec(d2v_sentences, min_count=1)
+
+        doc = w2v_texts[0]
+        vec_transformer_api = self.model.transform(doc)  # vector returned by D2VTransformer
+        vec_gensim_model = gensim_d2vmodel[doc]  # vector returned by Doc2Vec
+        passed = numpy.allclose(vec_transformer_api, vec_gensim_model, atol=1e-1)
+        self.assertTrue(passed)
+
     def testModelNotFitted(self):
         d2vmodel_wrapper = D2VTransformer(min_count=1)
         self.assertRaises(NotFittedError, d2vmodel_wrapper.transform, 1)
@@ -752,7 +753,7 @@ class TestText2BowTransformer(unittest.TestCase):
             cache = pickle.loads(uncompressed_content)
         data = cache
         text2bow_model = Text2BowTransformer()
-        lda_model = SklLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
+        lda_model = LdaTransformer(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         text_lda = Pipeline((('bow_model', text2bow_model), ('ldamodel', lda_model), ('classifier', clf)))
@@ -804,6 +805,10 @@ class TestTfIdfTransformer(unittest.TestCase):
         model_params = self.model.get_params()
         self.assertEqual(model_params["normalize"], False)
 
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(self.corpus)
+        self.assertEqual(getattr(self.model.gensim_model, 'normalize'), False)
+
     def testPipeline(self):
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()
@@ -814,7 +819,7 @@ class TestTfIdfTransformer(unittest.TestCase):
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         tfidf_model = TfIdfTransformer()
         tfidf_model.fit(corpus)
-        lda_model = SklLdaModel(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
+        lda_model = LdaTransformer(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         text_tfidf = Pipeline((('tfidf_model', tfidf_model), ('ldamodel', lda_model), ('classifier', clf)))
@@ -874,6 +879,10 @@ class TestHdpTransformer(unittest.TestCase):
         self.model.set_params(var_converge=0.05)
         model_params = self.model.get_params()
         self.assertEqual(model_params["var_converge"], 0.05)
+
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(self.corpus)
+        self.assertEqual(getattr(self.model.gensim_model, 'm_var_converge'), 0.05)
 
     def testPipeline(self):
         with open(datapath('mini_newsgroup'), 'rb') as f:
@@ -937,6 +946,10 @@ class TestPhrasesTransformer(unittest.TestCase):
         self.model.set_params(progress_per=5000)
         model_params = self.model.get_params()
         self.assertEqual(model_params["progress_per"], 5000)
+
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(phrases_sentences)
+        self.assertEqual(getattr(self.model.gensim_model, 'progress_per'), 5000)
 
     def testPersistence(self):
         model_dump = pickle.dumps(self.model)
