@@ -1539,6 +1539,7 @@ class LineSentence(object):
             self.source.seek(0)
             for line in itertools.islice(self.source, self.limit):
                 line = utils.to_unicode(line).split()
+                line.append('/s')
                 i = 0
                 while i < len(line):
                     yield line[i : i + self.max_sentence_length]
@@ -1548,6 +1549,7 @@ class LineSentence(object):
             with utils.smart_open(self.source) as fin:
                 for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
+                    line.append('/s')
                     i = 0
                     while i < len(line):
                         yield line[i:i + self.max_sentence_length]
