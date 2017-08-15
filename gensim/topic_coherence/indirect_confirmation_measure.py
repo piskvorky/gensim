@@ -15,11 +15,13 @@ Thus, indirect confirmation measures may capture semantic support that direct me
 
 The formula used to compute indirect confirmation measure is:
 
-m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
+m_{sim}_{(m, \gamma)}(W', W*) =
+    s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
 
 where s_sim can be cosine, dice or jaccard similarity and
 
-\vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
+\vec{V}^{\,}_{m,\gamma}(W') =
+    \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
 Here 'm' is the direct confirmation measure used.
 """
@@ -83,11 +85,13 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
 
     The formula used is:
 
-        m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
+        m_{sim}_{(m, \gamma)}(W', W*) =
+            s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
 
     where each vector:
 
-        \vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
+        \vec{V}^{\,}_{m,\gamma}(W') =
+            \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
     Args:
         segmented_topics : Output from the segmentation module of the segmented topics.
@@ -95,7 +99,7 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
         accumulator : Output from the probability_estimation module. Is an accumulator
             of word occurrences (see text_analysis module).
         topics : Topics obtained from the trained topic model.
-        measure (str): Direct confirmation measure to be used. Supported values are 
+        measure (str): Direct confirmation measure to be used. Supported values are
             "nlr" (normalized log ratio).
         gamma : Gamma value for computing W', W* vectors; default is 1.
         with_std (bool): True to also include standard deviation across topic segment
