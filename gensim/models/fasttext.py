@@ -26,11 +26,11 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
         word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
                        model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
-            # reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
-            # start = max(0, pos - model.window + reduced_window)
-            start = max(0, pos - model.window)
-            # window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
-            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1)], start)
+            reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
+            start = max(0, pos - model.window + reduced_window)
+            # start = max(0, pos - model.window)
+            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
+            # window_pos = enumerate(word_vocabs[start:(pos + model.window + 1)], start)
             word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
 
             word2_subwords = []
@@ -79,6 +79,76 @@ def train_cbow_pair(model, word, input_subword_indices, l1, alpha, learn_vectors
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
         if not model.cbow_mean and input_subword_indices:
+            neu1e /= len(input_subword_indices)
+        for i in input_subword_indices:
+            model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
+
+    return neu1e
+
+def train_batch_sg(model, sentences, alpha, work=None):
+    result = 0
+    for sentence in sentences:
+        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
+                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+        for pos, word in enumerate(word_vocabs):
+            reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
+            # now go over all words from the (reduced) window, predicting each one in turn
+            start = max(0, pos - model.window + reduced_window)
+            for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+                if pos2 != pos:  # don't train on the `word` itself
+                    subwords_indices = [word2.index]
+                    word2_subwords = model.wv.ngrams_word[model.wv.index2word[word2.index]]
+
+                    for subword in word2_subwords:
+                        subwords_indices.append(model.wv.ngrams[subword])
+
+                    train_sg_pair(model, model.wv.index2word[word.index], subwords_indices, alpha)
+
+        result += len(word_vocabs)
+    return result
+
+def train_sg_pair(model, word, input_subword_indices, alpha, learn_vectors=True, learn_hidden=True, context_vectors=None, context_locks=None):
+    if context_vectors is None:
+        context_vectors = model.wv.syn0_all
+    if context_locks is None:
+        context_locks = model.syn0_all_lockf
+
+    if word not in model.wv.vocab:
+        return
+    predict_word = model.wv.vocab[word]  # target word (NN output)
+
+    l1 = np_sum(context_vectors[input_subword_indices], axis=0)
+    if input_subword_indices:
+        l1 /= len(input_subword_indices)
+
+    neu1e = zeros(l1.shape)
+
+    if model.hs:
+        # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
+        l2a = deepcopy(model.syn1[predict_word.point])  # 2d matrix, codelen x layer1_size
+        fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
+        ga = (1 - predict_word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+        if learn_hidden:
+            model.syn1[predict_word.point] += outer(ga, l1)  # learn hidden -> output
+        neu1e += dot(ga, l2a)  # save error
+
+    if model.negative:
+        # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
+        word_indices = [predict_word.index]
+        while len(word_indices) < model.negative + 1:
+            w = model.cum_table.searchsorted(model.random.randint(model.cum_table[-1]))
+            if w != predict_word.index:
+                word_indices.append(w)
+        l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
+        fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
+        gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
+        if learn_hidden:
+            model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
+        neu1e += dot(gb, l2b)  # save error
+
+    if learn_vectors:
+        # l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
+        if input_subword_indices:
             neu1e /= len(input_subword_indices)
         for i in input_subword_indices:
             model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
@@ -236,9 +306,9 @@ class FastText(Word2Vec):
     def _do_train_job(self, sentences, alpha, inits):
         work, neu1 = inits
         tally = 0
-        # if self.sg:
-        #     tally += train_batch_sg(self, sentences, alpha, work)
-        # else:
-        tally += train_batch_cbow(self, sentences, alpha, work, neu1)
+        if self.sg:
+            tally += train_batch_sg(self, sentences, alpha, work)
+        else:
+            tally += train_batch_cbow(self, sentences, alpha, work, neu1)
 
         return tally, self._raw_word_count(sentences)
