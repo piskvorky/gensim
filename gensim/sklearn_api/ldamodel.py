@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
+# Author: Chinmaya Pancholi <chinmayapancholi13@gmail.com>
+# Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
@@ -16,10 +17,9 @@ from sklearn.exceptions import NotFittedError
 
 from gensim import models
 from gensim import matutils
-from gensim.sklearn_integration import BaseSklearnWrapper
 
 
-class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class LdaTransformer(TransformerMixin, BaseEstimator):
     """
     Base LDA module
     """
@@ -30,7 +30,7 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
             offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
             minimum_probability=0.01, random_state=None, scorer='perplexity'):
         """
-        Sklearn wrapper for LDA model.
+        Sklearn wrapper for LDA model. See gensim.model.LdaModel for parameter details.
 
         `scorer` specifies the metric used in the `score` function.
 
@@ -53,23 +53,6 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
         self.random_state = random_state
         self.scorer = scorer
 
-    def get_params(self, deep=True):
-        """
-        Returns all parameters as dictionary.
-        """
-        return {"num_topics": self.num_topics, "id2word": self.id2word, "chunksize": self.chunksize,
-                "passes": self.passes, "update_every": self.update_every, "alpha": self.alpha, "eta": self.eta,
-                "decay": self.decay, "offset": self.offset, "eval_every": self.eval_every, "iterations": self.iterations,
-                "gamma_threshold": self.gamma_threshold, "minimum_probability": self.minimum_probability,
-                "random_state": self.random_state, "scorer": self.scorer}
-
-    def set_params(self, **parameters):
-        """
-        Set all parameters.
-        """
-        super(SklLdaModel, self).set_params(**parameters)
-        return self
-
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
@@ -90,8 +73,8 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
 
     def transform(self, docs):
         """
-        Takes as an list of input a documents (documents).
-        Returns matrix of topic distribution for the given document bow, where a_ij
+        Takes a list of documents as input ('docs').
+        Returns a matrix of topic distribution for the given document bow, where a_ij
         indicates (topic_i, topic_probability_j).
         The input `docs` should be in BOW format and can be a list of documents like : [ [(4, 1), (7, 1)], [(9, 1), (13, 1)], [(2, 1), (6, 1)] ]
         or a single document like : [(4, 1), (7, 1)]
@@ -106,10 +89,8 @@ class SklLdaModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
 
         for k, v in enumerate(docs):
             doc_topics = self.gensim_model[v]
-            probs_docs = list(map(lambda x: x[1], doc_topics))
-            # Everything should be equal in length
-            if len(probs_docs) != self.num_topics:
-                probs_docs.extend([1e-12]*(self.num_topics - len(probs_docs)))
+            # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
+            probs_docs = matutils.sparse2full(doc_topics, self.num_topics)
             X[k] = probs_docs
         return np.reshape(np.array(X), (len(docs), self.num_topics))
 

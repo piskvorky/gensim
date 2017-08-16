@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
+# Author: Chinmaya Pancholi <chinmayapancholi13@gmail.com>
+# Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
@@ -14,34 +15,21 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
-from gensim.sklearn_integration import BaseSklearnWrapper
+from gensim import matutils
 
 
-class SklRpModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
+class RpTransformer(TransformerMixin, BaseEstimator):
     """
     Base RP module
     """
 
     def __init__(self, id2word=None, num_topics=300):
         """
-        Sklearn wrapper for RP model. Class derived from gensim.models.RpModel.
+        Sklearn wrapper for RP model. See gensim.models.RpModel for parameter details.
         """
         self.gensim_model = None
         self.id2word = id2word
         self.num_topics = num_topics
-
-    def get_params(self, deep=True):
-        """
-        Returns all parameters as dictionary.
-        """
-        return {"id2word": self.id2word, "num_topics": self.num_topics}
-
-    def set_params(self, **parameters):
-        """
-        Set all parameters.
-        """
-        super(SklRpModel, self).set_params(**parameters)
-        return self
 
     def fit(self, X, y=None):
         """
@@ -68,13 +56,8 @@ class SklRpModel(BaseSklearnWrapper, TransformerMixin, BaseEstimator):
 
         for k, v in enumerate(docs):
             transformed_doc = self.gensim_model[v]
-            probs_docs = list(map(lambda x: x[1], transformed_doc))
-            # Everything should be equal in length
-            if len(probs_docs) != self.num_topics:
-                probs_docs.extend([1e-12] * (self.num_topics - len(probs_docs)))
+            # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
+            probs_docs = matutils.sparse2full(transformed_doc, self.num_topics)
             X[k] = probs_docs
 
         return np.reshape(np.array(X), (len(docs), self.num_topics))
-
-    def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for SklRpModel")
