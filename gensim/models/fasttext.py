@@ -276,6 +276,7 @@ class FastText(Word2Vec):
         self.init_ngrams()
 
     def reset_ngram_weights(self):
+        np.random.seed(self.seed)
         for index in range(len(self.wv.vocab) + len(self.wv.ngrams)):
             self.wv.syn0_all[index] = np.random.uniform(-1.0/self.vector_size, 1.0/self.vector_size, self.vector_size)
 
