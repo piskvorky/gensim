@@ -3,6 +3,7 @@
 
 import logging
 import unittest
+import tempfile
 import os
 
 import numpy as np
@@ -47,7 +48,7 @@ class TestFastTextModel(unittest.TestCase):
         ft_home = os.environ.get('FT_HOME', None)
         self.ft_exec_path = os.path.join(ft_home, 'fasttext') if ft_home else None
 
-    def models_equal(self, model, model2):
+    def modelsEqual(self, model, model2):
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
         self.assertTrue(np.allclose(model.wv.syn0, model2.wv.syn0))
         self.assertTrue(np.allclose(model.wv.syn0_all, model2.wv.syn0_all))
@@ -58,12 +59,14 @@ class TestFastTextModel(unittest.TestCase):
         most_common_word = max(model.wv.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(np.allclose(model[most_common_word], model2[most_common_word]))
 
+    def modelSanity(self, model):
+        self.assertTrue(model.syn1.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.wv.syn0_all.shape == (len(model.wv.vocab) + len(model.wv.ngrams), model.vector_size))
+
     def testTraining(self):
         model = FT_gensim(size=2, min_count=1, hs=1, negative=0)
         model.build_vocab(sentences)
-
-        self.assertTrue(model.wv.syn0_all.shape == (len(model.wv.vocab) + len(model.wv.ngrams), 2))
-        self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 2))
+        self.modelSanity(model)
 
         model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
@@ -76,9 +79,9 @@ class TestFastTextModel(unittest.TestCase):
 
         # build vocab and train in one step; must be the same as above
         model2 = FT_gensim(sentences, size=2, min_count=1, hs=1, negative=0)
-        self.models_equal(model, model2)
+        self.modelsEqual(model, model2)
 
-    def test_against_fasttext_wrapper(model_gensim, model_wrapper):
+    def test_against_fasttext_wrapper(self, model_gensim, model_wrapper):
         sims_gensim = model_gensim.most_similar('night', topn=10)
         sims_gensim_words = (list(map(lambda x:x[0], sims_gensim)))
 
@@ -170,6 +173,20 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse((orig0 == model_gensim.wv.syn0[0]).all())  # vector should vary after training
 
         self.test_against_fasttext_wrapper(model_gensim, model_wrapper)
+
+    def testModelPersistence(self):
+        model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=0,
+            min_count=5, iter=1, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+            sorted_vocab=1, workers=1, min_alpha=0.0)
+
+        lee_data = LineSentence(datapath('lee_background.cor'))
+        model_gensim.build_vocab(lee_data)
+        model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.iter)
+
+        model_gensim.save(testfile())
+        model_gensim_load = FT_gensim.load(testfile())
+        most_similar_words = model_gensim_load.most_similar('night', topn=10)
+        self.assertTrue(len(most_similar_words) == 10)
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
