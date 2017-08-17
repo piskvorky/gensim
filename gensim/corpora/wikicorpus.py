@@ -295,10 +295,10 @@ class WikiCorpus(TextCorpus):
         this automatic logic by forcing the `lemmatize` parameter explicitly.
         self.metadata if set to true will ensure that serialize will write out article titles to a pickle file.
 
-        set tokenizer_func(defaults to tokenize) with a custom function reference to control tokenization else use the default regexp
-        tokenization. set this parameter for languages like japanese or thai to perform better tokenization. the
-        tokenizer_func needs to take 4 parameters: (text, token_min_len, token_max_len, lower). The parameter values are
-        as configured on the class instance by default
+        set tokenizer_func(defaults to tokenize) with a custom function reference to control tokenization else use the
+        default regexp tokenization. set this parameter for languages like japanese or thai to perform better
+        tokenization. the tokenizer_func needs to take 4 parameters: (text, token_min_len, token_max_len, lower). The
+        parameter values are as configured on the class instance by default
 
         set lower to True/False to control if everything should be converted to lowercase or not (default True)
 
@@ -356,7 +356,8 @@ class WikiCorpus(TextCorpus):
                     articles_all += 1
                     positions_all += len(tokens)
                     # article redirects and short stubs are pruned here
-                    if len(tokens) < self.article_min_tokens or any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
+                    if len(tokens) < self.article_min_tokens or \
+                            any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
                         continue
                     articles += 1
                     positions += len(tokens)
