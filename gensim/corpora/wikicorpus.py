@@ -173,10 +173,9 @@ def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, 
     Tokenize a piece of text from wikipedia. The input string `content` is assumed
     to be mark-up free (see `filter_wiki()`).
 
-    set token_min_len, token_max_len as length thresholds for individual tokens
+    Set `token_min_len`, `token_max_len` as character length (not bytes!) thresholds for individual tokens.
 
-    Return list of tokens as utf8 bytestrings. Ignore words shorted than 2 or longer
-    that 15 characters (not bytes!).
+    Return list of tokens as utf8 bytestrings.
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
     return [
@@ -247,8 +246,9 @@ def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN, 
     """
     Parse a wikipedia article, returning its content as a list of tokens
     (utf8-encoded strings).
-    set tokenizer_func parameter for languages like japanese or thai to perform better tokenization. the tokenizer_func
-    needs to take 4 parameters: (text, token_min_len, token_max_len, lower). (defaults to tokenize)
+
+    Set `tokenizer_func` (defaults to `tokenize`) parameter for languages like japanese or thai to perform better
+    tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower).
     """
     text, lemmatize, title, pageid = args
     text = filter_wiki(text)
@@ -265,7 +265,7 @@ def init_to_ignore_interrupt():
 
 
 def _process_article(args):
-    """Should not be called explicitly. use process_article instead"""
+    """Should not be called explicitly. use process_article instead."""
     tokenizer_func, token_min_len, token_max_len, lower = args[-1]
     args = args[:-1]
     return process_article(args, tokenizer_func=tokenizer_func, token_min_len=token_min_len,
@@ -295,14 +295,17 @@ class WikiCorpus(TextCorpus):
         this automatic logic by forcing the `lemmatize` parameter explicitly.
         self.metadata if set to true will ensure that serialize will write out article titles to a pickle file.
 
-        set tokenizer_func(defaults to tokenize) with a custom function reference to control tokenization else use the
-        default regexp tokenization. set this parameter for languages like japanese or thai to perform better
-        tokenization. the tokenizer_func needs to take 4 parameters: (text, token_min_len, token_max_len, lower). The
-        parameter values are as configured on the class instance by default
+        Set `article_min_tokens` as a min threshold for article token count (defaults to 50). Any article below this is
+        ignored.
 
-        set lower to True/False to control if everything should be converted to lowercase or not (default True)
+        Set `tokenizer_func` (defaults to `tokenize`) with a custom function reference to control tokenization else use
+        the default regexp tokenization. Set this parameter for languages like japanese or thai to perform better
+        tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower). The
+        parameter values are as configured on the class instance by default.
 
-        token_min_len, token_max_len help set thresholds for tokens lengths that are returned(default to 2 and 15)
+        Set `lower` to control if everything should be converted to lowercase or not (default True).
+
+        Set `token_min_len`, `token_max_len` as thresholds for token lengths that are returned (default to 2 and 15).
 
         """
         self.fname = fname
@@ -329,7 +332,7 @@ class WikiCorpus(TextCorpus):
         of tokens.
 
         Only articles of sufficient length are returned (short articles & redirects
-        etc are ignored). article_min_tokens can be set as a min threshold(defaults to 50)
+        etc are ignored). This is control by `article_min_tokens` on the class instance.
 
         Note that this iterates over the **texts**; if you want vectors, just use
         the standard corpus interface instead of this function::
