@@ -229,7 +229,7 @@ Copyright (c) 2009-now Radim Rehurek
 test_env = [
     'testfixtures',
     'Morfessor == 2.0.2a4',
-    'scikit-learn',
+    'scikit-learn == 0.18.2',
     'pyemd',
     'annoy',
     'tensorflow >= 1.1.0',
