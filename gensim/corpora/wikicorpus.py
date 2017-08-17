@@ -265,7 +265,7 @@ def init_to_ignore_interrupt():
 
 
 def _process_article(args):
-    """Should not be called explicitly. Use process_article instead."""
+    """Should not be called explicitly. Use `process_article` instead."""
 
     tokenizer_func, token_min_len, token_max_len, lower = args[-1]
     args = args[:-1]
