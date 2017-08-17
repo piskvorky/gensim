@@ -129,9 +129,10 @@ class TestWikiCorpus(unittest.TestCase):
         define a custom tokenizer function and use it
         """
         wc = WikiCorpus(datapath(FILENAME), processes=1, lemmatize=False, tokenizer_func=custom_tokeiner,
-                        token_max_len=16, token_min_len=1)
+                        token_max_len=16, token_min_len=1, lower=False)
         l = wc.get_texts()
         list_tokens = next(l)
+        self.assertTrue(u'Anarchism' in list_tokens)
         self.assertTrue(u'collectivization' in list_tokens)
         self.assertTrue(u'a' in list_tokens)
         self.assertTrue(u'i.e.' in list_tokens)
