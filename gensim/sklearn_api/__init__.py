@@ -17,3 +17,8 @@ from .rpmodel import RpTransformer  # noqa: F401
 from .ldaseqmodel import LdaSeqTransformer  # noqa: F401
 from .w2vmodel import W2VTransformer  # noqa: F401
 from .atmodel import AuthorTopicTransformer  # noqa: F401
+from .d2vmodel import D2VTransformer  # noqa: F401
+from .text2bow import Text2BowTransformer  # noqa: F401
+from .tfidf import TfIdfTransformer  # noqa: F401
+from .hdp import HdpTransformer  # noqa: F401
+from .phrases import PhrasesTransformer  # noqa: F401
