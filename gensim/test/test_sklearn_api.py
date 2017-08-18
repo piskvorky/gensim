@@ -194,7 +194,7 @@ class TestLdaWrapper(unittest.TestCase):
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_lda = Pipeline((('features', model,), ('classifier', clf)))
+        text_lda = Pipeline([('features', model,), ('classifier', clf)])
         text_lda.fit(corpus, data.target)
         score = text_lda.score(corpus, data.target)
         self.assertGreater(score, 0.40)
@@ -284,7 +284,7 @@ class TestLsiWrapper(unittest.TestCase):
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_lsi = Pipeline((('features', model,), ('classifier', clf)))
+        text_lsi = Pipeline([('features', model,), ('classifier', clf)])
         text_lsi.fit(corpus, data.target)
         score = text_lsi.score(corpus, data.target)
         self.assertGreater(score, 0.50)
@@ -367,7 +367,7 @@ class TestLdaSeqWrapper(unittest.TestCase):
         corpus = [id2word.doc2bow(i.split()) for i in test_data]
         model = LdaSeqTransformer(id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim')
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_ldaseq = Pipeline((('features', model,), ('classifier', clf)))
+        text_ldaseq = Pipeline([('features', model,), ('classifier', clf)])
         text_ldaseq.fit(corpus, test_target)
         score = text_ldaseq.score(corpus, test_target)
         self.assertGreater(score, 0.50)
@@ -437,7 +437,7 @@ class TestRpWrapper(unittest.TestCase):
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_rp = Pipeline((('features', model,), ('classifier', clf)))
+        text_rp = Pipeline([('features', model,), ('classifier', clf)])
         text_rp.fit(corpus, data.target)
         score = text_rp.score(corpus, data.target)
         self.assertGreater(score, 0.40)
@@ -522,7 +522,7 @@ class TestWord2VecWrapper(unittest.TestCase):
 
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         clf.fit(model.transform(train_input), train_target)
-        text_w2v = Pipeline((('features', model,), ('classifier', clf)))
+        text_w2v = Pipeline([('features', model,), ('classifier', clf)])
         score = text_w2v.score(train_input, train_target)
         self.assertGreater(score, 0.40)
 
@@ -593,7 +593,7 @@ class TestAuthorTopicWrapper(unittest.TestCase):
         clstr.fit(model.transform(authors_full))
 
         # stack together the two models in a pipeline
-        text_atm = Pipeline((('features', model,), ('cluster', clstr)))
+        text_atm = Pipeline([('features', model,), ('cluster', clstr)])
         author_list = ['jane', 'jack', 'jill']
         ret_val = text_atm.predict(author_list)
         self.assertEqual(len(ret_val), len(author_list))
@@ -687,7 +687,7 @@ class TestD2VTransformer(unittest.TestCase):
 
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         clf.fit(model.transform(train_input), train_target)
-        text_w2v = Pipeline((('features', model,), ('classifier', clf)))
+        text_w2v = Pipeline([('features', model,), ('classifier', clf)])
         score = text_w2v.score(train_input, train_target)
         self.assertGreater(score, 0.40)
 
@@ -756,7 +756,7 @@ class TestText2BowTransformer(unittest.TestCase):
         lda_model = LdaTransformer(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_lda = Pipeline((('bow_model', text2bow_model), ('ldamodel', lda_model), ('classifier', clf)))
+        text_lda = Pipeline([('bow_model', text2bow_model), ('ldamodel', lda_model), ('classifier', clf)])
         text_lda.fit(data.data, data.target)
         score = text_lda.score(data.data, data.target)
         self.assertGreater(score, 0.40)
@@ -822,7 +822,7 @@ class TestTfIdfTransformer(unittest.TestCase):
         lda_model = LdaTransformer(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_tfidf = Pipeline((('tfidf_model', tfidf_model), ('ldamodel', lda_model), ('classifier', clf)))
+        text_tfidf = Pipeline([('tfidf_model', tfidf_model), ('ldamodel', lda_model), ('classifier', clf)])
         text_tfidf.fit(corpus, data.target)
         score = text_tfidf.score(corpus, data.target)
         self.assertGreater(score, 0.40)
@@ -894,7 +894,7 @@ class TestHdpTransformer(unittest.TestCase):
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         model = HdpTransformer(id2word=id2word)
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_lda = Pipeline((('features', model,), ('classifier', clf)))
+        text_lda = Pipeline([('features', model,), ('classifier', clf)])
         text_lda.fit(corpus, data.target)
         score = text_lda.score(corpus, data.target)
         self.assertGreater(score, 0.40)
