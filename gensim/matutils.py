@@ -493,6 +493,8 @@ def arun_metric(self, min_num_topics=10, max_num_topics=50, iterations=10):
     :param max_num_topics: Maximum number of topics to test
     :param iterations: Number of iterations per value of k
     :return: A list of len (max_num_topics - min_num_topics) with the average symmetric KL divergence for each k
+    
+    Thanks to Adrien Guille for the implementation of the metric.
     """
     kl_matrix = []
     for j in range(iterations):
