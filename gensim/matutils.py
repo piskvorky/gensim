@@ -479,6 +479,36 @@ def isbow(vec):
         return False
     return True
 
+def symmetric_kl(distrib_p, distrib_q):
+    return numpy.sum([stats.entropy(distrib_p, distrib_q), stats.entropy(distrib_p, distrib_q)])
+
+def arun_metric(self, min_num_topics=10, max_num_topics=50, iterations=10):
+    """
+    Implements Arun metric to estimate the optimal number of topics:
+    Arun, R., V. Suresh, C. V. Madhavan, and M. N. Murthy
+    On finding the natural number of topics with latent dirichlet allocation: Some observations.
+    In PAKDD (2010), pp. 391–402.
+    
+    :param min_num_topics: Minimum number of topics to test
+    :param max_num_topics: Maximum number of topics to test
+    :param iterations: Number of iterations per value of k
+    :return: A list of len (max_num_topics - min_num_topics) with the average symmetric KL divergence for each k
+    """
+    kl_matrix = []
+    for j in range(iterations):
+        kl_list = []
+        l = np.array([sum(self.corpus.vector_for_document(doc_id)) for doc_id in range(self.corpus.size)])  # document length
+        norm = np.linalg.norm(l)
+        for i in range(min_num_topics, max_num_topics + 1):
+            self.infer_topics(i)
+            c_m1 = np.linalg.svd(self.topic_word_matrix.todense(), compute_uv=False)
+            c_m2 = l.dot(self.document_topic_matrix.todense())
+            c_m2 += 0.0001  
+            c_m2 /= norm
+            kl_list.append(symmetric_kl(c_m1.tolist(), c_m2.tolist()[0]))
+        kl_matrix.append(kl_list)
+    output = np.array(kl_matrix)
+
 
 def kullback_leibler(vec1, vec2, num_features=None):
     """
