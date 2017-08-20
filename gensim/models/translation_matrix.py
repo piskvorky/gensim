@@ -10,6 +10,32 @@ from six import string_types
 
 random.seed(2333)
 
+"""
+Produce translation matrix to translate the word from one language to another language, using either
+standard nearest neighbour method or globally corrected neighbour retrieval method [1].
+
+This method can be used to augment the existing phrase tables with more candidate translations, or
+filter out errors from the translation tables and known dictionaries [2].
+
+Initialize a model with e.g.::
+
+    >>> transmat = TranslationMatrix(word_pair, source_word_vec, target_word_vec)
+
+Persist a model to disk with::
+
+    >>> transmat.save(fname)
+    >>> transmat  = Word2Vec.load(fname)
+
+Translate the source words to target words, for example
+
+    >>> transmat.translate(["one", "two", "three"], topn=3)
+
+.. [1] Dinu, Georgiana, Angeliki Lazaridou, and Marco Baroni. "Improving zero-shot learning by mitigating the
+        hubness problem." arXiv preprint arXiv:1412.6568 (2014).
+.. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
+       In Proceedings of NIPS, 2013.
+"""
+
 
 class Space(object):
     """
