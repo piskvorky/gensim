@@ -6,6 +6,7 @@ import gensim
 import tensorflow as tf
 import os
 import sys
+import time
 import argparse
 import zipfile
 import urllib
@@ -38,9 +39,11 @@ def read_data(filename):
 def main(_):
     filename = maybe_download('text8.zip', 31344016)
     vocabulary = read_data(filename)
-    gensim.models.TfWord2Vec(train_data=vocabulary, concurrent_steps=1000,
-                                    FLAGS=FLAGS)
-    # tfw2v.eval()
+    start = time.time()
+    tfw2v = gensim.models.TfWord2Vec(train_data=vocabulary, concurrent_steps=40000,
+                                    eval_data='questions-words.txt', FLAGS=FLAGS)
+    print("Time:", time.time() - start)
+    tfw2v.eval()
 
 
 if __name__ == '__main__':

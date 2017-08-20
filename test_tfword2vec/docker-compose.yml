@@ -1,18 +1,34 @@
 version: '2'
 services:
-  ps:
+  ps1:
     build: .
     image: gensim_test:latest
     ports:
      - "8000:2222"
-    command: python3 /test_tfw2v/test_distributed_tf.py --ps_hosts=ps:2222 --worker_hosts=worker:2223 --job_name=ps --task_index=0
+    command: python3 /test_tfw2v/test_distributed_tf.py --ps_hosts=ps1:2222,ps2:2223 --worker_hosts=worker1:2224,worker2:2225 --job_name=ps --task_index=0
     tty: true
 
-  worker:
+  ps2:
     build: .
     image: gensim_test:latest
     ports:
-     - "800:2223"
-    command: python3 /test_tfw2v/test_distributed_tf.py --ps_hosts=ps:2222 --worker_hosts=worker:2223 --job_name=worker --task_index=0
+     - "8001:2223"
+    command: python3 /test_tfw2v/test_distributed_tf.py --ps_hosts=ps1:2222,ps2:2223 --worker_hosts=worker1:2224,worker2:2225 --job_name=ps --task_index=1
+    tty: true
+
+  worker1:
+    build: .
+    image: gensim_test:latest
+    ports:
+     - "8002:2224"
+    command: python3 /test_tfw2v/test_distributed_tf.py --ps_hosts=ps1:2222,ps2:2223 --worker_hosts=worker1:2224,worker2:2225 --job_name=worker --task_index=0
+    tty: true
+
+  worker2:
+    build: .
+    image: gensim_test:latest
+    ports:
+     - "8003:2225"
+    command: python3 /test_tfw2v/test_distributed_tf.py --ps_hosts=ps1:2222,ps2:2223 --worker_hosts=worker1:2224,worker2:2225 --job_name=worker --task_index=1
     tty: true
 

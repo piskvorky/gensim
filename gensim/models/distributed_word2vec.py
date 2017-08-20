@@ -64,7 +64,7 @@ class TfWord2Vec(KeyedVectors):
         self.save_path = save_path
         self.FLAGS = FLAGS
 
-        self.vocab_size = 5000
+        self.vocab_size = 70000
 
         self.build_dataset(train_data, self.vocab_size)
         self.data_index = 0
