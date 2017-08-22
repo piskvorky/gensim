@@ -30,11 +30,16 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 class DocsLeeCorpus(object):
-    def __init__(self, string_tags=False):
+    def __init__(self, string_tags=False, unicode_tags=False):
         self.string_tags = string_tags
+        self.unicode_tags = unicode_tags
 
     def _tag(self, i):
-        return i if not self.string_tags else '_*%d' % i
+        if self.unicode_tags:
+            return u'_\xa1_%d' % i
+        elif self.string_tags:
+            return '_*%d' % i
+        return i
 
     def __iter__(self):
         with open(datapath('lee_background.cor')) as f:
@@ -94,6 +99,13 @@ class TestDoc2VecModel(unittest.TestCase):
         model.save_word2vec_format(test_word, doctag_vec=False, word_vec=True, binary=True)
         binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_word, binary=True)
         self.assertEqual(len(model.wv.vocab), len(binary_model_dv.vocab))
+
+    def test_unicode_in_doctag(self):
+        """Test storing document vectors of a model with unicode titles."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(unicode_tags=True), min_count=1)
+        model.save_word2vec_format(testfile(), doctag_vec=True, word_vec=True, binary=True)
+        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        self.assertEqual(len(model.wv.vocab) + len(model.docvecs), len(binary_model_dv.vocab))
 
     def test_load_mmap(self):
         """Test storing/loading the entire model."""
