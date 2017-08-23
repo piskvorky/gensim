@@ -43,7 +43,7 @@ from six.moves import xrange
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
-from gensim.matutils import kullback_leibler, hellinger, jaccard_distance
+from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jensen_shannon
 from gensim.models import basemodel, CoherenceModel
 
 # log(sum(exp(x))) that tries to avoid overflow
@@ -976,7 +976,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Calculate difference topic2topic between two Lda models
         `other` instances of `LdaMulticore` or `LdaModel`
         `distance` is function that will be applied to calculate difference between any topic pair.
-        Available values: `kullback_leibler`, `hellinger` and `jaccard`
+        Available values: `kullback_leibler`, `hellinger`, `jaccard` and `jensen_shannon`
         `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
         `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
         `diagonal` set to True if the difference is required only between the identical topic no.s (returns diagonal of diff matrix)
@@ -1003,6 +1003,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             "kullback_leibler": kullback_leibler,
             "hellinger": hellinger,
             "jaccard": jaccard_distance,
+            "jensen_shannon": jensen_shannon
         }
 
         if distance not in distances:
@@ -1048,8 +1049,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 pos_tokens = fst_topics[topic1] & snd_topics[topic2]
                 neg_tokens = fst_topics[topic1].symmetric_difference(snd_topics[topic2])
 
-                pos_tokens = sample(pos_tokens, min(len(pos_tokens), n_ann_terms))
-                neg_tokens = sample(neg_tokens, min(len(neg_tokens), n_ann_terms))
+                pos_tokens = list(pos_tokens)[:min(len(pos_tokens), n_ann_terms)]
+                neg_tokens = list(neg_tokens)[:min(len(neg_tokens), n_ann_terms)]
 
                 annotation_terms[topic] = [pos_tokens, neg_tokens]
 
