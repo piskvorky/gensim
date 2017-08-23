@@ -36,12 +36,12 @@ def log_conditional_probability(segmented_topics, accumulator):
     for s_i in segmented_topics:
         segment_sims = []
         for w_prime, w_star in s_i:
-            try:
-                w_star_count = accumulator[w_star]
-                co_occur_count = accumulator[w_prime, w_star]
-                m_lc_i = np.log(((co_occur_count / num_docs) + EPSILON) / (w_star_count / num_docs))
-            except KeyError:
-                m_lc_i = 0.0
+            w_star_count = accumulator[w_star]
+            if w_star_count == 0:
+                raise ValueError("Topic with id %d not found in corpus used to compute coherence. "
+                    "Try using a larger corpus with a smaller vocobulary and/or setting a smaller value of `topn` for `CoherenceModel`." % (w_star))
+            co_occur_count = accumulator[w_prime, w_star]
+            m_lc_i = np.log(((co_occur_count / num_docs) + EPSILON) / (w_star_count / num_docs))
 
             segment_sims.append(m_lc_i)
         m_lc.append(np.mean(segment_sims))
