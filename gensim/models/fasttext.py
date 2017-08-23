@@ -23,14 +23,14 @@ MAX_WORDS_IN_BATCH = 10000
 def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
     result = 0
     for sentence in sentences:
-        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab ]#and
+                       # model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
-            reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
-            start = max(0, pos - model.window + reduced_window)
-            # start = max(0, pos - model.window)
-            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
-            # window_pos = enumerate(word_vocabs[start:(pos + model.window + 1)], start)
+            # reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
+            # start = max(0, pos - model.window + reduced_window)
+            start = max(0, pos - model.window)
+            # window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
+            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1)], start)
             word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
 
             word2_subwords = []
@@ -88,21 +88,28 @@ def train_cbow_pair(model, word, input_subword_indices, l1, alpha, learn_vectors
 def train_batch_sg(model, sentences, alpha, work=None):
     result = 0
     for sentence in sentences:
-        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab] #and
+                       # model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
-            reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
+            # reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
             # now go over all words from the (reduced) window, predicting each one in turn
-            start = max(0, pos - model.window + reduced_window)
-            for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+            # start = max(0, pos - model.window + reduced_window)
+            start = max(0, pos - model.window)
+            # for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+
+            subwords_indices = [word.index]
+            word2_subwords = model.wv.ngrams_word[model.wv.index2word[word.index]]
+            for subword in word2_subwords:
+                subwords_indices.append(model.wv.ngrams[subword])
+
+            for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1)], start):
                 if pos2 != pos:  # don't train on the `word` itself
-                    subwords_indices = [word2.index]
-                    word2_subwords = model.wv.ngrams_word[model.wv.index2word[word2.index]]
+                    # subwords_indices = [word2.index]
+                    # word2_subwords = model.wv.ngrams_word[model.wv.index2word[word2.index]]
 
-                    for subword in word2_subwords:
-                        subwords_indices.append(model.wv.ngrams[subword])
 
-                    train_sg_pair(model, model.wv.index2word[word.index], subwords_indices, alpha)
+                    # train_sg_pair(model, model.wv.index2word[word.index], subwords_indices, alpha)
+                    train_sg_pair(model, model.wv.index2word[word2.index], subwords_indices, alpha)
 
         result += len(word_vocabs)
     return result
@@ -300,8 +307,8 @@ class FastText(Word2Vec):
         for i, ngram in enumerate(all_ngrams):
             ngram_hash = Ft_Wrapper.ft_hash(ngram)
             ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
-            self.wv.ngrams[ngram] = i
-
+            self.wv.ngrams[ngram] = i + len(self.wv.vocab)
+            
         self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
         self.reset_ngram_weights()
 
