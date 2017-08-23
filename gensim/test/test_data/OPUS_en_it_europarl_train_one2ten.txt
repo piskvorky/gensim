@@ -8,3 +8,13 @@ seven sette
 eight otto
 nine nove
 ten dieci
+dog cane
+pig maiale
+cat gatto
+fish cavallo
+birds uccelli
+apple mela
+orange arancione
+grape acino
+banana banana
+mango mango
