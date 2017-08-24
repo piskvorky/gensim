@@ -284,6 +284,7 @@ class TextCorpus(interfaces.CorpusABC):
         if not 0 <= n:
             raise ValueError("Negative sample size n {0:d}.".format(n))
 
+        i = 0
         for i, sample in enumerate(self.getstream()):
             if i == length:
                 break
