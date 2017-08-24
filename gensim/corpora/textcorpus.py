@@ -280,9 +280,9 @@ class TextCorpus(interfaces.CorpusABC):
             length = len(self)
 
         if not n <= length:
-            raise ValueError("n is larger than length of corpus.")
+            raise ValueError("n {0:d} is larger/equal than length of corpus {1:d}.".format(n, length))
         if not 0 <= n:
-            raise ValueError("Negative sample size.")
+            raise ValueError("Negative sample size n {0:d}.".format(n))
 
         for i, sample in enumerate(self.getstream()):
             if i == length:
@@ -300,7 +300,7 @@ class TextCorpus(interfaces.CorpusABC):
         if n != 0:
             # This means that length was set to be greater than number of items in corpus
             # and we were not able to sample enough documents before the stream ended.
-            raise ValueError("length greater than number of documents in corpus")
+            raise ValueError("length {0:d} greater than number of documents in corpus {1:d}".format(length, i + 1))
 
     def __len__(self):
         if self.length is None:
