@@ -489,10 +489,13 @@ def arun_metric(min_num_topics=10, max_num_topics=50, iterations=10):
     On finding the natural number of topics with latent dirichlet allocation: Some observations.
     In PAKDD (2010), pp. 391–402.
     
-    :param min_num_topics: Minimum number of topics to test
-    :param max_num_topics: Maximum number of topics to test
-    :param iterations: Number of iterations per value of k
-    :return: A list of len (max_num_topics - min_num_topics) with the average symmetric KL divergence for each k
+    Args:
+        min_num_topics: Minimum number of topics to test
+        max_num_topics: Maximum number of topics to test
+        iterations: Number of iterations per value of k
+    
+    Returns: 
+        A list of len (max_num_topics - min_num_topics) with the average symmetric KL divergence for each k
     
     Thanks to Adrien Guille for the implementation of the metric.
     
