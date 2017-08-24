@@ -8,7 +8,6 @@ from collections import OrderedDict
 from gensim import utils
 from six import string_types
 
-random.seed(2333)
 
 """
 Produce translation matrix to translate the word from one language to another language, using either
@@ -110,7 +109,7 @@ class TranslationMatrix(utils.SaveLoad):
     >>> translated_word = transmat.translate(words, topn=3)
 
     """
-    def __init__(self, word_pair, source_lang_vec, target_lang_vec):
+    def __init__(self, word_pair, source_lang_vec, target_lang_vec, random_state=None):
         """
         Initialize the model from a list pair of `word_pair`. Each word_pair is tupe
          with source language word and target language word.
@@ -130,13 +129,12 @@ class TranslationMatrix(utils.SaveLoad):
         self.source_lang_vec = source_lang_vec
         self.target_lang_vec = target_lang_vec
 
+        self.random_state = utils.get_random_state(random_state)
         self.translation_matrix = None
-        self.source_space = Space.build(self.source_lang_vec, set(self.source_word))
-        self.target_space = Space.build(self.target_lang_vec, set(self.target_word))
+        self.source_space = None
+        self.target_space = None
 
-        self.translation_matrix = self.train(self.source_space, self.target_space)
-
-    def train(self, source_space, target_space):
+    def train(self, word_pair):
         """
         build the translation matrix that mapping from source space to target space.
 
@@ -147,14 +145,17 @@ class TranslationMatrix(utils.SaveLoad):
         Returns:
             translation matrix that mapping from the source language to target language
         """
+        self.source_space = Space.build(self.source_lang_vec, set(self.source_word))
+        self.target_space = Space.build(self.target_lang_vec, set(self.target_word))
 
-        source_space.normalize()
-        target_space.normalize()
+        self.source_space.normalize()
+        self.target_space.normalize()
 
-        m1 = source_space.mat[[source_space.word2index[item] for item in self.source_word], :]
-        m2 = target_space.mat[[target_space.word2index[item] for item in self.target_word], :]
+        m1 = self.source_space.mat[[self.source_space.word2index[item] for item in self.source_word], :]
+        m2 = self.target_space.mat[[self.target_space.word2index[item] for item in self.target_word], :]
 
-        return np.linalg.lstsq(m1, m2, -1)[0]
+        self.translation_matrix = np.linalg.lstsq(m1, m2, -1)[0]
+        return self.translation_matrix
 
     def save(self, *args, **kwargs):
         """
@@ -181,16 +182,17 @@ class TranslationMatrix(utils.SaveLoad):
         """
         return Space(np.dot(words_space.mat, self.translation_matrix), words_space.index2word)
 
-    def translate(self, source_words, topn=5, additional=None, source_lang_vec=None, target_lang_vec=None):
+    def translate(self, source_words, topn=5, gc=0, additional=None, source_lang_vec=None, target_lang_vec=None):
         """
         translate the word from the source language to the target language, and return the topn
         most similar words.
          Args:
             source_words(str/list): single word or a list of words to be translated
             topn: return the top N similar words. By default (`topn=5`)
-            additional: defines the training algorithm. By default (`additional=None`), use standard NN retrieval.
-            Otherwise use corrected retrieval(as described in[1]), additional is an int that specify the number of
-            word to sample from the source lexicon.
+            gc: defines the training algorithm. By default (`gc=0`), use standard NN retrieval.
+            Otherwise use globally corrected neighbour retrieval method(as described in[1]).
+            additional: additional is an int that specify the number of word to sample from the source lexicon.
+            if gc=1, then additional must be provided.
             source_lang_vec: you can specify the source language vector for translation, the default is to use
             the model's source language vector.
             target_lang_vec: you can specify the target language vector for retrieving the most similar word,
@@ -209,20 +211,20 @@ class TranslationMatrix(utils.SaveLoad):
         # if the language word vector not provided by user, use the model's
         # language word vector as default
         if source_lang_vec is None:
-            warnings.warn("the parameter source_lang_vec didn't specified,"
-                          " use the model's source language word vector as default")
+            warnings.warn("The parameter source_lang_vec didn't specified, use the model's source language word vector as default")
             source_lang_vec = self.source_lang_vec
 
         if target_lang_vec is None:
-            warnings.warn("the parameter target_lang_vec isn't specified,"
-                          " use the model's target language word vector as default")
+            warnings.warn("The parameter target_lang_vec isn't specified, use the model's target language word vector as default")
             target_lang_vec = self.target_lang_vec
 
         # if additional is provided, bootstrapping vocabulary from the source language word vector model.
-        if additional is not None:
+        if gc:
+            if additional is None:
+                raise RuntimeError("When using the globally corrected neighbour retrieval method, the additional parameter which the number of words sampled from source space must be provided.")
             lexicon = set(source_lang_vec.index2word)
             addition = min(additional, len(lexicon) - len(source_words))
-            lexicon = random.sample(list(lexicon.difference(source_words)), addition)
+            lexicon = self.random_state.choice(list(lexicon.difference(source_words)), addition)
             source_space = Space.build(source_lang_vec, set(source_words).union(set(lexicon)))
         else:
             source_space = Space.build(source_lang_vec, source_words)
