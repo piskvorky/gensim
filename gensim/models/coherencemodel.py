@@ -26,8 +26,6 @@ import numpy as np
 
 from gensim import interfaces
 from gensim.matutils import argsort
-from gensim.models.ldamodel import LdaModel
-from gensim.models.wrappers import LdaVowpalWabbit, LdaMallet
 from gensim.topic_coherence import (segmentation, probability_estimation,
                                     direct_confirmation_measure, indirect_confirmation_measure,
                                     aggregation)
@@ -268,23 +266,15 @@ class CoherenceModel(interfaces.TransformationABC):
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""
-        topics = []
-        if isinstance(self.model, LdaModel):
-            for topic in self.model.state.get_lambda():
-                bestn = argsort(topic, topn=self.topn, reverse=True)
-                topics.append(bestn)
-        elif isinstance(self.model, LdaVowpalWabbit):
-            for topic in self.model._get_topics():
-                bestn = argsort(topic, topn=self.topn, reverse=True)
-                topics.append(bestn)
-        elif isinstance(self.model, LdaMallet):
-            for topic in self.model.word_topics:
-                bestn = argsort(topic, topn=self.topn, reverse=True)
-                topics.append(bestn)
-        else:
-            raise ValueError("This topic model is not currently supported. Supported topic models "
-                             " are LdaModel, LdaVowpalWabbit and LdaMallet.")
-        return topics
+        try:
+            return [
+                argsort(topic, topn=self.topn, reverse=True) for topic in
+                self.model.get_topics()
+            ]
+        except AttributeError:
+            raise ValueError(
+                "This topic model is not currently supported. Supported topic models"
+                " should implement the `get_topics` method.")
 
     def segment_topics(self):
         return self.measure.seg(self.topics)

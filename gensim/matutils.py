@@ -480,12 +480,10 @@ def isbow(vec):
     return True
 
 
-def kullback_leibler(vec1, vec2, num_features=None):
+def convert_vec(vec1, vec2, num_features=None):
     """
-    A distance metric between two probability distributions.
-    Returns a distance value in range <0, +∞> where values closer to 0 mean less distance (and a higher similarity)
-    Uses the scipy.stats.entropy method to identify kullback_leibler convergence value.
-    If the distribution draws from a certain number of docs, that value must be passed.
+    Convert vectors to appropriate forms required by entropy input.
+    Checks for sparsity and bag of word format.
     """
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
@@ -495,12 +493,12 @@ def kullback_leibler(vec1, vec2, num_features=None):
         if num_features is not None:  # if not None, make as large as the documents drawing from
             dense1 = sparse2full(vec1, num_features)
             dense2 = sparse2full(vec2, num_features)
-            return entropy(dense1, dense2)
+            return dense1, dense2
         else:
             max_len = max(len(vec1), len(vec2))
             dense1 = sparse2full(vec1, max_len)
             dense2 = sparse2full(vec2, max_len)
-            return entropy(dense1, dense2)
+            return dense1, dense2
     else:
         # this conversion is made because if it is not in bow format, it might be a list within a list after conversion
         # the scipy implementation of Kullback fails in such a case so we pick up only the nested list.
@@ -508,7 +506,28 @@ def kullback_leibler(vec1, vec2, num_features=None):
             vec1 = vec1[0]
         if len(vec2) == 1:
             vec2 = vec2[0]
-        return scipy.stats.entropy(vec1, vec2)
+        return vec1, vec2
+
+
+def kullback_leibler(vec1, vec2, num_features=None):
+    """
+    A distance metric between two probability distributions.
+    Returns a distance value in range <0, +∞> where values closer to 0 mean less distance (and a higher similarity)
+    Uses the scipy.stats.entropy method to identify kullback_leibler convergence value.
+    If the distribution draws from a certain number of docs, that value must be passed.
+    """
+    vec1, vec2 = convert_vec(vec1, vec2, num_features=num_features)
+    return entropy(vec1, vec2)
+
+
+def jensen_shannon(vec1, vec2, num_features=None):
+    """
+    A method of measuring the similarity between two probability distributions.
+    It is a symmetrized and finite version of the Kullback–Leibler divergence.
+    """
+    vec1, vec2 = convert_vec(vec1, vec2, num_features=num_features)
+    avg_vec = 0.5 * (vec1 + vec2)
+    return 0.5 * (entropy(vec1, avg_vec) + entropy(vec2, avg_vec))
 
 
 def hellinger(vec1, vec2):
