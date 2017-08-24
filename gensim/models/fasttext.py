@@ -99,11 +99,13 @@ def train_batch_sg(model, sentences, alpha, work=None):
 
             subwords_indices = [word.index]
             word2_subwords = model.wv.ngrams_word[model.wv.index2word[word.index]]
+            # print("word2_subwords: ", word2_subwords)
             for subword in word2_subwords:
                 subwords_indices.append(model.wv.ngrams[subword])
 
             for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1)], start):
                 if pos2 != pos:  # don't train on the `word` itself
+                    # print("sending pair : ", model.wv.index2word[word2.index], " , ", model.wv.index2word[word.index])
                     # subwords_indices = [word2.index]
                     # word2_subwords = model.wv.ngrams_word[model.wv.index2word[word2.index]]
 
@@ -299,7 +301,7 @@ class FastText(Word2Vec):
             all_ngrams += self.wv.ngrams_word[w]
 
         all_ngrams = list(set(all_ngrams))
-        self.num_ngram_vectors = len(all_ngrams)
+        self.num_ngram_vectors = len(self.wv.vocab) + len(all_ngrams)
         logger.info("Total number of ngrams in the vocab is %d", self.num_ngram_vectors)
 
         ngram_indices = range(len(self.wv.vocab))  # keeping the first `len(self.wv.vocab)` rows intact
@@ -321,3 +323,13 @@ class FastText(Word2Vec):
             tally += train_batch_cbow(self, sentences, alpha, work, neu1)
 
         return tally, self._raw_word_count(sentences)
+
+    @classmethod
+    def load_fasttext_format(cls, *args, **kwargs):
+        return Ft_Wrapper.load_fasttext_format(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors, recalculable table
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
+
+        super(FastText, self).save(*args, **kwargs)
