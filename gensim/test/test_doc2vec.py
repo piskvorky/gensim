@@ -103,9 +103,10 @@ class TestDoc2VecModel(unittest.TestCase):
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(unicode_tags=True), min_count=1)
-        model.save_word2vec_format(testfile(), doctag_vec=True, word_vec=True, binary=True)
-        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
-        self.assertEqual(len(model.wv.vocab) + len(model.docvecs), len(binary_model_dv.vocab))
+        try:
+            model.save_word2vec_format(testfile(), doctag_vec=True, word_vec=True, binary=True)
+        except UnicodeEncodeError:
+            self.fail('Failed storing unicode title.')
 
     def test_load_mmap(self):
         """Test storing/loading the entire model."""
