@@ -325,12 +325,12 @@ class TestFastTextModel(unittest.TestCase):
             self.fail('model.doesnt_match raises exception for oov words')
 
     def compare_with_wrapper(self, model_gensim, model_wrapper):
-        # make sure we get >=3 overlapping words for top-10 similar words suggested for `night`
+        # make sure we get >=2 overlapping words for top-10 similar words suggested for `night`
         sims_gensim = model_gensim.most_similar('night', topn=10)
-        sims_gensim_words = (list(map(lambda x : x[0], sims_gensim)))  # get similar words
+        sims_gensim_words = (list(map(lambda x: x[0], sims_gensim)))  # get similar words
 
         sims_wrapper = model_wrapper.most_similar('night', topn=10)
-        sims_wrapper_words = (list(map(lambda x : x[0], sims_wrapper)))  # get similar words
+        sims_wrapper_words = (list(map(lambda x: x[0], sims_wrapper)))  # get similar words
 
         overlap_count = len(set(sims_gensim_words).intersection(sims_wrapper_words))
 
@@ -378,61 +378,66 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse((orig0 == model_gensim.wv.syn0[0]).all())  # vector should vary after training
         self.compare_with_wrapper(model_gensim, model_wrapper)
 
-    # def test_online_learning(self):
-    #     model_hs = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=1, negative=0)
-    #     model_neg = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=0, negative=5)
-    #     self.assertTrue(len(model_hs.wv.vocab), 12)
-    #     self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
-    #     model_hs.build_vocab(new_sentences, update=True)
-    #     model_neg.build_vocab(new_sentences, update=True)
-    #     self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
-    #     self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
-    #     self.assertEqual(len(model_hs.wv.vocab), 14)
-    #     self.assertEqual(len(model_neg.wv.vocab), 14)
+    def test_online_learning(self):
+        model_hs = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=1, negative=0)
+        self.assertTrue(len(model_hs.wv.vocab), 12)
+        self.assertTrue(len(model_hs.wv.ngrams), 202)
+        self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
+        self.assertFalse('tif' in model_hs.wv.ngrams)
+        model_hs.build_vocab(new_sentences, update=True)  # update vocab
+        self.assertEqual(len(model_hs.wv.vocab), 14)
+        self.assertTrue(len(model_hs.wv.ngrams), 271)
+        self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
+        self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
+        self.assertTrue('tif' in model_hs.wv.ngrams)  # ngram added because of the word `artificial`
 
-    # def test_online_learning_after_save(self):
-    #     model_neg = FT_gensim(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
-    #     model_neg.save(testfile())
-    #     model_neg = FT_gensim.load(testfile())
-    #     self.assertTrue(len(model_neg.wv.vocab), 12)
-    #     model_neg.build_vocab(new_sentences, update=True)
-    #     model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
-    #     self.assertEqual(len(model_neg.wv.vocab), 14)
+    def test_online_learning_after_save(self):
+        model_neg = FT_gensim(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
+        model_neg.save(testfile())
+        model_neg = FT_gensim.load(testfile())
+        self.assertTrue(len(model_neg.wv.vocab), 12)
+        self.assertTrue(len(model_hs.wv.ngrams), 202)
+        model_neg.build_vocab(new_sentences, update=True)  # update vocab
+        model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
+        self.assertEqual(len(model_neg.wv.vocab), 14)
+        self.assertTrue(len(model_hs.wv.ngrams), 271)
 
-    # def online_sanity(self, model):
-    #     terro, others = [], []
-    #     for l in list_corpus:
-    #         if 'terrorism' in l:
-    #             terro.append(l)
-    #         else:
-    #             others.append(l)
-    #     self.assertTrue(all(['terrorism' not in l for l in others]))
-    #     model.build_vocab(others)
-    #     model.train(others, total_examples=model.corpus_count, epochs=model.iter)
-    #     self.assertFalse('terrorism' in model.wv.vocab)
-    #     model.build_vocab(terro, update=True)
-    #     self.assertTrue('terrorism' in model.wv.vocab)
-    #     orig0_all = np.copy(model.wv.syn0_all)
-    #     model.train(terro, total_examples=len(terro), epochs=model.iter)
-    #     self.assertFalse(np.allclose(model.wv.syn0_all, orig0_all))
-    #     sim = model.n_similarity(['war'], ['terrorism'])
-    #     self.assertLess(0., sim)
+    def online_sanity(self, model):
+        terro, others = [], []
+        for l in list_corpus:
+            if 'terrorism' in l:
+                terro.append(l)
+            else:
+                others.append(l)
+        self.assertTrue(all(['terrorism' not in l for l in others]))
+        model.build_vocab(others)
+        model.train(others, total_examples=model.corpus_count, epochs=model.iter)
+        self.assertFalse('terrorism' in model.wv.vocab)
+        self.assertFalse('orism>' in model.wv.ngrams)
+        model.build_vocab(terro, update=True)  # update vocab
+        self.assertTrue('terrorism' in model.wv.vocab)
+        self.assertTrue('orism>' in model.wv.ngrams)
+        orig0_all = np.copy(model.wv.syn0_all)
+        model.train(terro, total_examples=len(terro), epochs=model.iter)
+        self.assertFalse(np.allclose(model.wv.syn0_all, orig0_all))
+        sim = model.n_similarity(['war'], ['terrorism'])
+        self.assertLess(0., sim)
 
-    # def test_sg_hs_online(self):
-    #     model = FT_gensim(sg=1, window=5, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
-    #     self.online_sanity(model)
+    def test_sg_hs_online(self):
+        model = FT_gensim(sg=1, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
+        self.online_sanity(model)
 
-    # def test_sg_neg_online(self):
-    #     model = FT_gensim(sg=1, window=4, hs=0, negative=5, min_count=3, iter=1, seed=42, workers=12)
-    #     self.online_sanity(model)
+    def test_sg_neg_online(self):
+        model = FT_gensim(sg=1, window=2, hs=0, negative=5, min_count=3, iter=1, seed=42, workers=12)
+        self.online_sanity(model)
 
-    # def test_cbow_hs_online(self):
-    #     model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
-    #     self.online_sanity(model)
+    def test_cbow_hs_online(self):
+        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
+        self.online_sanity(model)
 
-    # def test_cbow_neg_online(self):
-    #     model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5, min_count=5, iter=1, seed=42, workers=12, sample=0)
-    #     self.online_sanity(model)
+    def test_cbow_neg_online(self):
+        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=5, min_count=5, iter=1, seed=42, workers=12, sample=0)
+        self.online_sanity(model)
 
 
 if __name__ == '__main__':

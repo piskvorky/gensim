@@ -6,7 +6,7 @@ import logging
 from types import GeneratorType
 from copy import deepcopy
 import numpy as np
-from numpy import dot, zeros, ones, outer, random, sum as np_sum, empty, float32 as REAL
+from numpy import dot, zeros, ones, vstack, outer, random, sum as np_sum, empty, float32 as REAL
 from scipy.special import expit
 
 from gensim.utils import call_on_class_only
@@ -244,7 +244,7 @@ class FastText(Word2Vec):
 
             all_ngrams = list(set(all_ngrams))
             self.num_ngram_vectors = len(self.wv.vocab) + len(all_ngrams)
-            logger.info("Total number of ngrams is %d", self.num_ngram_vectors)
+            logger.info("Total number of ngrams is %d", len(all_ngrams))
 
             self.wv.hash2index = {}
             ngram_indices = range(len(self.wv.vocab))  # keeping the first `len(self.wv.vocab)` rows intact
@@ -259,7 +259,6 @@ class FastText(Word2Vec):
 
             self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
             self.reset_ngram_weights()
-
         else:
             new_vocab_len = len(self.wv.vocab)
             for ngram, idx in self.wv.hash2index.items():
@@ -271,6 +270,7 @@ class FastText(Word2Vec):
                 new_ngrams += [ng for ng in self.wv.ngrams_word[w] if ng not in self.wv.ngrams]
 
             new_ngrams = list(set(new_ngrams))
+            logger.info("Number of new ngrams is %d", len(new_ngrams))
             new_count = 0
             for i, ngram in enumerate(new_ngrams):
                 ngram_hash = Ft_Wrapper.ft_hash(ngram)
@@ -281,7 +281,7 @@ class FastText(Word2Vec):
                     self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
 
             old_vocab_rows = self.wv.syn0_all[0:self.old_vocab_len, ]
-            old_ngram_rows = self.syn0_all[self.old_vocab_len:, ]
+            old_ngram_rows = self.wv.syn0_all[self.old_vocab_len:, ]
 
             rand_obj = np.random
             rand_obj.seed(self.seed)
