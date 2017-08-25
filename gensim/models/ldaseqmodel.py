@@ -358,7 +358,7 @@ class LdaSeqModel(utils.SaveLoad):
         topic = np.exp(topic[time])
         topic = topic / topic.sum()
         bestn = matutils.argsort(topic, top_terms, reverse=True)
-        beststr = [(self.id2word[id_], round(topic[id_], 3)) for id_ in bestn]
+        beststr = [(self.id2word[id_], topic[id_]) for id_ in bestn]
         return beststr
 
 
