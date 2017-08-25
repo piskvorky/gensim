@@ -2,14 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import logging
- 
+
 from types import GeneratorType
 from copy import deepcopy
-from six import string_types
 import numpy as np
-from numpy import dot, zeros, ones, vstack, outer, random, sum as np_sum, empty, float32 as REAL
+from numpy import dot, zeros, ones, outer, random, sum as np_sum, empty, float32 as REAL
 from scipy.special import expit
- 
+
 from gensim.utils import call_on_class_only
 from gensim.models.word2vec import Word2Vec
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
@@ -18,6 +17,7 @@ from gensim.models.wrappers.fasttext import FastText as Ft_Wrapper
 logger = logging.getLogger(__name__)
 
 MAX_WORDS_IN_BATCH = 10000
+
 
 def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
     result = 0
@@ -47,6 +47,7 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
             train_cbow_pair(model, word, subwords_indices, l1, alpha)  # train on the sliding window for target word
         result += len(word_vocabs)
     return result
+
 
 def train_cbow_pair(model, word, input_subword_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
     neu1e = zeros(l1.shape)
@@ -80,11 +81,12 @@ def train_cbow_pair(model, word, input_subword_indices, l1, alpha, learn_vectors
 
     return neu1e
 
+
 def train_batch_sg(model, sentences, alpha, work=None):
     result = 0
     for sentence in sentences:
-        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab] #and
-                       # model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
+                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
             # now go over all words from the (reduced) window, predicting each one in turn
@@ -102,6 +104,7 @@ def train_batch_sg(model, sentences, alpha, work=None):
 
         result += len(word_vocabs)
     return result
+
 
 def train_sg_pair(model, word, input_subword_indices, alpha, learn_vectors=True, learn_hidden=True, context_vectors=None, context_locks=None):
     if context_vectors is None:
@@ -240,7 +243,7 @@ class FastText(Word2Vec):
             ngram_hash = Ft_Wrapper.ft_hash(ngram)
             ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
             self.wv.ngrams[ngram] = i + len(self.wv.vocab)
-            
+
         self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
         self.reset_ngram_weights()
 
@@ -248,7 +251,7 @@ class FastText(Word2Vec):
         rand_obj = np.random
         rand_obj.seed(self.seed)
         for index in range(len(self.wv.vocab) + len(self.wv.ngrams)):
-            self.wv.syn0_all[index] = rand_obj.uniform(-1.0/self.vector_size, 1.0/self.vector_size, self.vector_size)
+            self.wv.syn0_all[index] = rand_obj.uniform(-1.0 / self.vector_size, 1.0 / self.vector_size, self.vector_size)
 
     def _do_train_job(self, sentences, alpha, inits):
         work, neu1 = inits

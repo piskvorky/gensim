@@ -18,11 +18,13 @@ module_path = os.path.dirname(__file__)  # needed because sample data files are 
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 logger = logging.getLogger(__name__)
 
+
 class LeeCorpus(object):
     def __iter__(self):
         with open(datapath('lee_background.cor')) as f:
             for line in f:
                 yield utils.simple_preprocess(line)
+
 
 list_corpus = list(LeeCorpus())
 
@@ -46,6 +48,7 @@ new_sentences = [
     ['intelligence'],
     ['artificial', 'intelligence', 'system']
 ]
+
 
 def testfile():
     # temporary data will be stored to this file
@@ -232,7 +235,7 @@ class TestFastTextModel(unittest.TestCase):
         model = FT_gensim.load_fasttext_format(datapath('non_ascii_fasttext'))
         self.assertTrue(u'který' in model)
         try:
-            vector = model[u'který']
+            model[u'který']
         except UnicodeDecodeError:
             self.fail('Unable to access vector for utf8 encoded non-ascii word')
 
@@ -240,7 +243,7 @@ class TestFastTextModel(unittest.TestCase):
         model = FT_gensim.load_fasttext_format(datapath('cp852_fasttext'), encoding='cp852')
         self.assertTrue(u'který' in model)
         try:
-            vector = model[u'který']
+            model[u'který']
         except KeyError:
             self.fail('Unable to access vector for cp-852 word')
 
@@ -267,7 +270,6 @@ class TestFastTextModel(unittest.TestCase):
         # Out of vocab check
         self.assertEqual(len(self.test_model.most_similar(['night', 'nights'], topn=5)), 5)
         self.assertEqual(self.test_model.most_similar('nights'), self.test_model.most_similar(positive=['nights']))
-
 
     def test_most_similar_cosmul(self):
         # In vocab, sanity check
@@ -325,10 +327,10 @@ class TestFastTextModel(unittest.TestCase):
     def compare_with_wrapper(self, model_gensim, model_wrapper):
         # make sure we get >=3 overlapping words for top-10 similar words suggested for `night`
         sims_gensim = model_gensim.most_similar('night', topn=10)
-        sims_gensim_words = (list(map(lambda x:x[0], sims_gensim)))  # get similar words
+        sims_gensim_words = (list(map(lambda x : x[0], sims_gensim)))  # get similar words
 
         sims_wrapper = model_wrapper.most_similar('night', topn=10)
-        sims_wrapper_words = (list(map(lambda x:x[0], sims_wrapper)))  # get similar words
+        sims_wrapper_words = (list(map(lambda x : x[0], sims_wrapper)))  # get similar words
 
         overlap_count = len(set(sims_gensim_words).intersection(sims_wrapper_words))
 
@@ -387,7 +389,6 @@ class TestFastTextModel(unittest.TestCase):
     #     self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
     #     self.assertEqual(len(model_hs.wv.vocab), 14)
     #     self.assertEqual(len(model_neg.wv.vocab), 14)
-
 
     # def test_online_learning_after_save(self):
     #     model_neg = FT_gensim(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
