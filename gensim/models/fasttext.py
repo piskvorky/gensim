@@ -19,18 +19,15 @@ logger = logging.getLogger(__name__)
 
 MAX_WORDS_IN_BATCH = 10000
 
-
 def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
     result = 0
     for sentence in sentences:
-        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab ]#and
-                       # model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
+                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
-            # reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
-            # start = max(0, pos - model.window + reduced_window)
-            start = max(0, pos - model.window)
-            # window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
-            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1)], start)
+            reduced_window = model.random.randint(model.window)
+            start = max(0, pos - model.window + reduced_window)
+            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
             word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
 
             word2_subwords = []
@@ -78,8 +75,6 @@ def train_cbow_pair(model, word, input_subword_indices, l1, alpha, learn_vectors
 
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
-        if not model.cbow_mean and input_subword_indices:
-            neu1e /= len(input_subword_indices)
         for i in input_subword_indices:
             model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
 
@@ -91,26 +86,18 @@ def train_batch_sg(model, sentences, alpha, work=None):
         word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab] #and
                        # model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
-            # reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
+            reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
             # now go over all words from the (reduced) window, predicting each one in turn
-            # start = max(0, pos - model.window + reduced_window)
-            start = max(0, pos - model.window)
-            # for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+            start = max(0, pos - model.window + reduced_window)
 
             subwords_indices = [word.index]
             word2_subwords = model.wv.ngrams_word[model.wv.index2word[word.index]]
-            # print("word2_subwords: ", word2_subwords)
+
             for subword in word2_subwords:
                 subwords_indices.append(model.wv.ngrams[subword])
 
-            for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1)], start):
+            for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                 if pos2 != pos:  # don't train on the `word` itself
-                    # print("sending pair : ", model.wv.index2word[word2.index], " , ", model.wv.index2word[word.index])
-                    # subwords_indices = [word2.index]
-                    # word2_subwords = model.wv.ngrams_word[model.wv.index2word[word2.index]]
-
-
-                    # train_sg_pair(model, model.wv.index2word[word.index], subwords_indices, alpha)
                     train_sg_pair(model, model.wv.index2word[word2.index], subwords_indices, alpha)
 
         result += len(word_vocabs)
@@ -156,9 +143,6 @@ def train_sg_pair(model, word, input_subword_indices, alpha, learn_vectors=True,
         neu1e += dot(gb, l2b)  # save error
 
     if learn_vectors:
-        # l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
-        if input_subword_indices:
-            neu1e /= len(input_subword_indices)
         for i in input_subword_indices:
             model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
 
@@ -176,6 +160,7 @@ class FastText(Word2Vec):
 
         self.initialize_ngram_vectors()
 
+        # params common between Word2Vec and fastText
         self.sg = int(sg)
         self.cum_table = None  # for negative sampling
         self.vector_size = int(size)
@@ -204,16 +189,16 @@ class FastText(Word2Vec):
         self.batch_words = batch_words
         self.model_trimmed_post_training = False
 
+        # fastText specific params
         self.bucket = bucket
-        self.loss = loss  # should we keep this? -> we already have `hs`, `negative` -> although we don't have a mode for only `softmax`
         self.word_ngrams = word_ngrams
         self.min_n = min_n
         self.max_n = max_n
         if self.word_ngrams <= 1 and self.max_n == 0:
             self.bucket = 0
-
         self.wv.min_n = min_n
         self.wv.max_n = max_n
+
         self.wv.ngrams_word = {}
 
         if sentences is not None:
@@ -221,11 +206,59 @@ class FastText(Word2Vec):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
-                       start_alpha=self.alpha, end_alpha=self.min_alpha)
+                start_alpha=self.alpha, end_alpha=self.min_alpha)
         else:
             if trim_rule is not None:
                 logger.warning("The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model. ")
                 logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored.")
+
+    def initialize_ngram_vectors(self):
+        self.wv = FastTextKeyedVectors()
+
+    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
+        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
+        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
+        self.finalize_vocab(update=update)  # build tables & arrays
+        self.init_ngrams()
+
+    def init_ngrams(self):
+        self.wv.ngrams = {}
+        self.wv.syn0_all = empty((len(self.wv.vocab) + self.bucket, self.vector_size), dtype=REAL)
+        self.syn0_all_lockf = ones((len(self.wv.vocab) + self.bucket, self.vector_size), dtype=REAL)
+
+        all_ngrams = []
+        for w, v in self.wv.vocab.items():
+            self.wv.ngrams_word[w] = Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
+            all_ngrams += self.wv.ngrams_word[w]
+
+        all_ngrams = list(set(all_ngrams))
+        self.num_ngram_vectors = len(self.wv.vocab) + len(all_ngrams)
+        logger.info("Total number of ngrams is %d", self.num_ngram_vectors)
+
+        ngram_indices = range(len(self.wv.vocab))  # keeping the first `len(self.wv.vocab)` rows intact
+        for i, ngram in enumerate(all_ngrams):
+            ngram_hash = Ft_Wrapper.ft_hash(ngram)
+            ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
+            self.wv.ngrams[ngram] = i + len(self.wv.vocab)
+            
+        self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
+        self.reset_ngram_weights()
+
+    def reset_ngram_weights(self):
+        rand_obj = np.random
+        rand_obj.seed(self.seed)
+        for index in range(len(self.wv.vocab) + len(self.wv.ngrams)):
+            self.wv.syn0_all[index] = rand_obj.uniform(-1.0/self.vector_size, 1.0/self.vector_size, self.vector_size)
+
+    def _do_train_job(self, sentences, alpha, inits):
+        work, neu1 = inits
+        tally = 0
+        if self.sg:
+            tally += train_batch_sg(self, sentences, alpha, work)
+        else:
+            tally += train_batch_cbow(self, sentences, alpha, work, neu1)
+
+        return tally, self._raw_word_count(sentences)
 
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
@@ -237,11 +270,8 @@ class FastText(Word2Vec):
                 self.neg_labels[0] = 1.
 
         Word2Vec.train(self, sentences, total_examples=self.corpus_count, epochs=self.iter,
-                       start_alpha=self.alpha, end_alpha=self.min_alpha)
+            start_alpha=self.alpha, end_alpha=self.min_alpha)
         self.get_vocab_word_vecs()
-
-    def initialize_ngram_vectors(self):
-        self.wv = FastTextKeyedVectors()
 
     def __getitem__(self, word):
         return self.word_vec(word)
@@ -263,7 +293,7 @@ class FastText(Word2Vec):
             else:
                 return self.wv.syn0[self.wv.vocab[word].index]
         else:
-            logger.info("out of vocab")
+            logger.info("Word is out of vocabulary")
             word_vec = np.zeros(self.wv.syn0_all.shape[1])
             ngrams = Ft_Wrapper.compute_ngrams(word, self.min_n, self.max_n)
             ngrams = [ng for ng in ngrams if ng in self.wv.ngrams]
@@ -278,58 +308,10 @@ class FastText(Word2Vec):
             else:  # No ngrams of the word are present in self.ngrams
                 raise KeyError('all ngrams for word %s absent from model' % word)
 
-    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
-        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
-        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
-        self.finalize_vocab(update=update)  # build tables & arrays
-        self.init_ngrams()
-
-    def reset_ngram_weights(self):
-        rand_obj = np.random
-        rand_obj.seed(self.seed)
-        for index in range(len(self.wv.vocab) + len(self.wv.ngrams)):
-            self.wv.syn0_all[index] = rand_obj.uniform(-1.0/self.vector_size, 1.0/self.vector_size, self.vector_size)
-
-    def init_ngrams(self):
-        self.wv.ngrams = {}
-        self.wv.syn0_all = empty((len(self.wv.vocab) + self.bucket, self.vector_size), dtype=REAL)
-        self.syn0_all_lockf = ones((len(self.wv.vocab) + self.bucket, self.vector_size), dtype=REAL)
-
-        all_ngrams = []
-        for w, v in self.wv.vocab.items():
-            self.wv.ngrams_word[w] = Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
-            all_ngrams += self.wv.ngrams_word[w]
-
-        all_ngrams = list(set(all_ngrams))
-        self.num_ngram_vectors = len(self.wv.vocab) + len(all_ngrams)
-        logger.info("Total number of ngrams in the vocab is %d", self.num_ngram_vectors)
-
-        ngram_indices = range(len(self.wv.vocab))  # keeping the first `len(self.wv.vocab)` rows intact
-
-        for i, ngram in enumerate(all_ngrams):
-            ngram_hash = Ft_Wrapper.ft_hash(ngram)
-            ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
-            self.wv.ngrams[ngram] = i + len(self.wv.vocab)
-            
-        self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
-        self.reset_ngram_weights()
-
-    def _do_train_job(self, sentences, alpha, inits):
-        work, neu1 = inits
-        tally = 0
-        if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work)
-        else:
-            tally += train_batch_cbow(self, sentences, alpha, work, neu1)
-
-        return tally, self._raw_word_count(sentences)
-
     @classmethod
     def load_fasttext_format(cls, *args, **kwargs):
         return Ft_Wrapper.load_fasttext_format(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        # don't bother storing the cached normalized vectors, recalculable table
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
-
         super(FastText, self).save(*args, **kwargs)
