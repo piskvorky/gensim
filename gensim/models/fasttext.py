@@ -222,8 +222,8 @@ class FastText(Word2Vec):
         self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
         if update:
             if not len(self.wv.vocab):
-                raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. " \
-                    "First build the vocabulary of your model with a corpus " \
+                raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
+                    "First build the vocabulary of your model with a corpus "
                     "before doing an online update.")
             self.old_vocab_len = len(self.wv.vocab)
             self.old_hash2index_len = len(self.wv.hash2index)

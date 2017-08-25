@@ -396,11 +396,11 @@ class TestFastTextModel(unittest.TestCase):
         model_neg.save(testfile())
         model_neg = FT_gensim.load(testfile())
         self.assertTrue(len(model_neg.wv.vocab), 12)
-        self.assertTrue(len(model_hs.wv.ngrams), 202)
+        self.assertTrue(len(model_neg.wv.ngrams), 202)
         model_neg.build_vocab(new_sentences, update=True)  # update vocab
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
         self.assertEqual(len(model_neg.wv.vocab), 14)
-        self.assertTrue(len(model_hs.wv.ngrams), 271)
+        self.assertTrue(len(model_neg.wv.ngrams), 271)
 
     def online_sanity(self, model):
         terro, others = [], []
