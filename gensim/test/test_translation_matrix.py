@@ -48,7 +48,7 @@ class TestTranslationMatrix(unittest.TestCase):
     def test_translate_nn(self):
         # test the nearest neighbor retrieval method
         model = translation_matrix.TranslationMatrix(self.word_pair, self.source_word_vec, self.target_word_vec)
-        transmat = model.train(self.word_pair)
+        model.train(self.word_pair)
 
         test_word_pair = [("one", "uno"), ("two", "due"), ("apple", "mela"), ("orange", "aranicione"), ("dog", "cane"), ("pig", "maiale"), ("cat", "gatto")]
         test_source_word, test_target_word = zip(*test_word_pair)
@@ -65,7 +65,7 @@ class TestTranslationMatrix(unittest.TestCase):
     def test_translate_gc(self):
         # test globally corrected neighbour retrieval method
         model = translation_matrix.TranslationMatrix(self.word_pair, self.source_word_vec, self.target_word_vec)
-        transmat = model.train(self.word_pair)
+        model.train(self.word_pair)
 
         test_word_pair = [("one", "uno"), ("two", "due"), ("apple", "mela"), ("orange", "aranicione"), ("dog", "cane"), ("pig", "maiale"), ("cat", "gatto")]
         test_source_word, test_target_word = zip(*test_word_pair)

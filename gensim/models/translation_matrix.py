@@ -2,7 +2,6 @@
 # encoding: utf-8
 import warnings
 import numpy as np
-import random
 
 from collections import OrderedDict
 from gensim import utils
