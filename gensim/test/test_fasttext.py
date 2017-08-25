@@ -12,7 +12,7 @@ from gensim import utils
 from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
-# from gensim.models.wrappers.fasttext import FastText as FT_wrapper
+from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -55,17 +55,16 @@ def testfile():
 class TestFastTextModel(unittest.TestCase):
 
     def setUp(self):
+        ft_home = os.environ.get('FT_HOME', None)
+        self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
         self.test_model_file = datapath('lee_fasttext')
         self.test_model = FT_gensim.load(self.test_model_file)
         self.test_new_model_file = datapath('lee_fasttext_new')
-        # ft_home = os.environ.get('FT_HOME', None)
-        # self.ft_exec_path = os.path.join(ft_home, 'fasttext') if ft_home else None
-        # self.ft_exec_path = '/home/chinmaya/GSOC/Gensim/fastText/fasttext'
 
-    def testTraining(self):
+    def test_training(self):
         model = FT_gensim(size=10, min_count=1, hs=1, negative=0)
         model.build_vocab(sentences)
-        self.modelSanity(model)
+        self.model_sanity(model)
 
         model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
@@ -73,7 +72,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.wv.syn0.shape, (12, 10))
         self.assertEqual(len(model.wv.vocab), 12)
         self.assertEqual(model.wv.syn0_all.shape[1], 10)
-        self.modelSanity(model)
+        self.model_sanity(model)
 
         # test querying for "most similar" by vector
         graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
@@ -83,66 +82,9 @@ class TestFastTextModel(unittest.TestCase):
 
         # build vocab and train in one step; must be the same as above
         model2 = FT_gensim(sentences, size=10, min_count=1, hs=1, negative=0)
-        self.modelsEqual(model, model2)
+        self.models_equal(model, model2)
 
-    def testOnlineLearning(self):
-        model_hs = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=1, negative=0)
-        model_neg = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=0, negative=5)
-        self.assertTrue(len(model_hs.wv.vocab), 12)
-        self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
-        model_hs.build_vocab(new_sentences, update=True)
-        model_neg.build_vocab(new_sentences, update=True)
-        self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
-        self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
-        self.assertEqual(len(model_hs.wv.vocab), 14)
-        self.assertEqual(len(model_neg.wv.vocab), 14)
-
-
-    def testOnlineLearningAfterSave(self):
-        model_neg = FT_gensim(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
-        model_neg.save(testfile())
-        model_neg = FT_gensim.load(testfile())
-        self.assertTrue(len(model_neg.wv.vocab), 12)
-        model_neg.build_vocab(new_sentences, update=True)
-        model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
-        self.assertEqual(len(model_neg.wv.vocab), 14)
-
-    def onlineSanity(self, model):
-        terro, others = [], []
-        for l in list_corpus:
-            if 'terrorism' in l:
-                terro.append(l)
-            else:
-                others.append(l)
-        self.assertTrue(all(['terrorism' not in l for l in others]))
-        model.build_vocab(others)
-        model.train(others, total_examples=model.corpus_count, epochs=model.iter)
-        self.assertFalse('terrorism' in model.wv.vocab)
-        model.build_vocab(terro, update=True)
-        self.assertTrue('terrorism' in model.wv.vocab)
-        orig0_all = np.copy(model.wv.syn0_all)
-        model.train(terro, total_examples=len(terro), epochs=model.iter)
-        self.assertFalse(np.allclose(model.wv.syn0_all, orig0_all))
-        sim = model.n_similarity(['war'], ['terrorism'])
-        self.assertLess(0., sim)
-
-    def test_sg_hs_online(self):
-        model = FT_gensim(sg=1, window=5, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
-        self.onlineSanity(model)
-
-    def test_sg_neg_online(self):
-        model = FT_gensim(sg=1, window=4, hs=0, negative=5, min_count=3, iter=1, seed=42, workers=12)
-        self.onlineSanity(model)
-
-    def test_cbow_hs_online(self):
-        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
-        self.onlineSanity(model)
-
-    def test_cbow_neg_online(self):
-        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5, min_count=5, iter=1, seed=42, workers=12, sample=0)
-        self.onlineSanity(model)
-
-    def modelsEqual(self, model, model2):
+    def models_equal(self, model, model2):
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
         self.assertEqual(model.num_ngram_vectors, model2.num_ngram_vectors)
         self.assertTrue(np.allclose(model.wv.syn0_all, model2.wv.syn0_all))
@@ -154,10 +96,10 @@ class TestFastTextModel(unittest.TestCase):
         most_common_word = max(model.wv.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(np.allclose(model[most_common_word], model2[most_common_word]))
 
-    def testPersistence(self):
+    def test_persistence(self):
         model = FT_gensim(sentences, min_count=1)
         model.save(testfile())
-        self.modelsEqual(model, FT_gensim.load(testfile()))
+        self.models_equal(model, FT_gensim.load(testfile()))
         #  test persistence of the KeyedVectors of a model
         wv = model.wv
         wv.save(testfile())
@@ -166,7 +108,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
         self.assertEqual(len(wv.ngrams), len(loaded_wv.ngrams))
 
-    def testNormVectorsNotSaved(self):
+    def test_norm_vectors_not_saved(self):
         model = FT_gensim(sentences, min_count=1)
         model.init_sims()
         model.save(testfile())
@@ -180,11 +122,11 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(loaded_kv.syn0norm is None)
         self.assertTrue(loaded_kv.syn0_all_norm is None)
 
-    def modelSanity(self, model):
+    def model_sanity(self, model):
         self.assertEqual(model.wv.syn0.shape, (len(model.wv.vocab), model.vector_size))
         self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model.vector_size))
 
-    def testLoadFastTextFormat(self):
+    def test_load_fasttext_format(self):
         try:
             model = FT_gensim.load_fasttext_format(self.test_model_file)
         except Exception as exc:
@@ -232,9 +174,9 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEquals(model.bucket, 1000)
         self.assertEquals(model.wv.max_n, 6)
         self.assertEquals(model.wv.min_n, 3)
-        self.modelSanity(model)
+        self.model_sanity(model)
 
-    def testLoadFastTextNewFormat(self):
+    def test_load_fasttext_new_format(self):
         try:
             new_model = FT_gensim.load_fasttext_format(self.test_new_model_file)
         except Exception as exc:
@@ -286,7 +228,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(new_model.wv.syn0_all.shape, (new_model.num_ngram_vectors, new_model.vector_size))
         # self.modelSanity(new_model)
 
-    def testLoadModelWithNonAsciiVocab(self):
+    def test_load_model_with_non_ascii_vocab(self):
         model = FT_gensim.load_fasttext_format(datapath('non_ascii_fasttext'))
         self.assertTrue(u'který' in model)
         try:
@@ -294,7 +236,7 @@ class TestFastTextModel(unittest.TestCase):
         except UnicodeDecodeError:
             self.fail('Unable to access vector for utf8 encoded non-ascii word')
 
-    def testLoadModelNonUtf8Encoding(self):
+    def test_load_model_non_utf8_encoding(self):
         model = FT_gensim.load_fasttext_format(datapath('cp852_fasttext'), encoding='cp852')
         self.assertTrue(u'který' in model)
         try:
@@ -302,7 +244,7 @@ class TestFastTextModel(unittest.TestCase):
         except KeyError:
             self.fail('Unable to access vector for cp-852 word')
 
-    def testNSimilarity(self):
+    def test_n_similarity(self):
         # In vocab, sanity check
         self.assertTrue(np.allclose(self.test_model.n_similarity(['the', 'and'], ['and', 'the']), 1.0))
         self.assertEqual(self.test_model.n_similarity(['the'], ['and']), self.test_model.n_similarity(['and'], ['the']))
@@ -310,7 +252,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(np.allclose(self.test_model.n_similarity(['night', 'nights'], ['nights', 'night']), 1.0))
         self.assertEqual(self.test_model.n_similarity(['night'], ['nights']), self.test_model.n_similarity(['nights'], ['night']))
 
-    def testSimilarity(self):
+    def test_similarity(self):
         # In vocab, sanity check
         self.assertTrue(np.allclose(self.test_model.similarity('the', 'the'), 1.0))
         self.assertEqual(self.test_model.similarity('the', 'and'), self.test_model.similarity('and', 'the'))
@@ -318,7 +260,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(np.allclose(self.test_model.similarity('nights', 'nights'), 1.0))
         self.assertEqual(self.test_model.similarity('night', 'nights'), self.test_model.similarity('nights', 'night'))
 
-    def testMostSimilar(self):
+    def test_most_similar(self):
         # In vocab, sanity check
         self.assertEqual(len(self.test_model.most_similar(positive=['the', 'and'], topn=5)), 5)
         self.assertEqual(self.test_model.most_similar('the'), self.test_model.most_similar(positive=['the']))
@@ -327,7 +269,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(self.test_model.most_similar('nights'), self.test_model.most_similar(positive=['nights']))
 
 
-    def testMostSimilarCosmul(self):
+    def test_most_similar_cosmul(self):
         # In vocab, sanity check
         self.assertEqual(len(self.test_model.most_similar_cosmul(positive=['the', 'and'], topn=5)), 5)
         self.assertEqual(
@@ -339,7 +281,7 @@ class TestFastTextModel(unittest.TestCase):
             self.test_model.most_similar_cosmul('nights'),
             self.test_model.most_similar_cosmul(positive=['nights']))
 
-    def testLookup(self):
+    def test_lookup(self):
         # In vocab, sanity check
         self.assertTrue('night' in self.test_model.wv.vocab)
         self.assertTrue(np.allclose(self.test_model['night'], self.test_model[['night']]))
@@ -349,7 +291,7 @@ class TestFastTextModel(unittest.TestCase):
         # Word with no ngrams in model
         self.assertRaises(KeyError, lambda: self.test_model['a!@'])
 
-    def testContains(self):
+    def test_contains(self):
         # In vocab, sanity check
         self.assertTrue('night' in self.test_model.wv.vocab)
         self.assertTrue('night' in self.test_model)
@@ -360,7 +302,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse('a!@' in self.test_model.wv.vocab)
         self.assertFalse('a!@' in self.test_model)
 
-    def testWmdistance(self):
+    def test_wm_distance(self):
         doc = ['night', 'payment']
         oov_doc = ['nights', 'forests', 'payments']
         ngrams_absent_doc = ['a!@', 'b#$']
@@ -370,7 +312,7 @@ class TestFastTextModel(unittest.TestCase):
         dist = self.test_model.wmdistance(doc, ngrams_absent_doc)
         self.assertEqual(float('inf'), dist)
 
-    def testDoesntMatch(self):
+    def test_doesnt_match(self):
         oov_words = ['nights', 'forests', 'payments']
         # Out of vocab check
         for word in oov_words:
@@ -380,214 +322,117 @@ class TestFastTextModel(unittest.TestCase):
         except Exception:
             self.fail('model.doesnt_match raises exception for oov words')
 
-    # def test_against_fasttext_wrapper(self, model_gensim, model_wrapper):
-    #     sims_gensim = model_gensim.most_similar('night', topn=10)
-    #     sims_gensim_words = (list(map(lambda x:x[0], sims_gensim)))
+    def compare_with_wrapper(self, model_gensim, model_wrapper):
+        # make sure we get >=3 overlapping words for top-10 similar words suggested for `night`
+        sims_gensim = model_gensim.most_similar('night', topn=10)
+        sims_gensim_words = (list(map(lambda x:x[0], sims_gensim)))  # get similar words
 
-    #     sims_wrapper = model_wrapper.most_similar('night', topn=10)
-    #     sims_wrapper_words = (list(map(lambda x:x[0], sims_wrapper)))
+        sims_wrapper = model_wrapper.most_similar('night', topn=10)
+        sims_wrapper_words = (list(map(lambda x:x[0], sims_wrapper)))  # get similar words
 
-    #     print(sims_gensim)
-    #     print
-    #     print(sims_wrapper)
-    #     print
-    #     print(sims_gensim_words)
-    #     print
-    #     print(sims_wrapper_words)
-    #     print
-    #     print(set(sims_gensim_words).intersection(sims_wrapper_words))
-    #     print
+        overlap_count = len(set(sims_gensim_words).intersection(sims_wrapper_words))
 
-    #     self.assertEqual(sims_gensim, sims_wrapper)
+        # overlap increases as we increase `iter` value, min overlap set to 2 to avoid unit-tests taking too long
+        # this limit can be increased when using Cython code
+        self.assertGreaterEqual(overlap_count, 2)
 
-    # def test_cbow_hs(self):
-    #     if self.ft_exec_path is None:
-    #         logger.info("FT_HOME env variable not set, skipping test")
-    #         return
+    def test_cbow_hs_against_wrapper(self):
+        if self.ft_path is None:
+            logger.info("FT_HOME env variable not set, skipping test")
+            return
 
-    #     model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=datapath('lee_background.cor'),
-    #         output_file=testfile(), model='cbow', size=50, alpha=0.05, window=2, min_count=5, word_ngrams=1,
-    #         loss='hs', sample=1e-3, negative=0, iter=3, min_n=3, max_n=6, sorted_vocab=1, threads=1)
+        model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=datapath('lee_background.cor'),
+            output_file=testfile(), model='cbow', size=50, alpha=0.05, window=5, min_count=5, word_ngrams=1,
+            loss='hs', sample=1e-3, negative=0, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12)
 
-    #     model_gensim = FT_gensim(size=50, sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0,
-    #         min_count=5, iter=3, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-    #         sorted_vocab=1, workers=12, min_alpha=0.0)
-            
-    #     lee_data = LineSentence(datapath('lee_background.cor'))
-    #     model_gensim.build_vocab(lee_data)
-    #     orig0 = np.copy(model_gensim.wv.syn0[0])
-    #     model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.iter)
-    #     self.assertFalse((orig0 == model_gensim.wv.syn0[0]).all())  # vector should vary after training
-        
-    #     self.test_against_fasttext_wrapper(model_gensim, model_wrapper)
+        model_gensim = FT_gensim(size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
+            min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+            sorted_vocab=1, workers=12, min_alpha=0.0)
 
-    # def test_cbow_neg(self):
-    #     # if self.ft_exec_path is None:
-    #     #     logger.info("FT_HOME env variable not set, skipping test")
-    #     #     return
-    #     self.ft_path = "/home/chinmaya/GSOC/Gensim/fastText/fasttext"
+        lee_data = LineSentence(datapath('lee_background.cor'))
+        model_gensim.build_vocab(lee_data)
+        orig0 = np.copy(model_gensim.wv.syn0[0])
+        model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.iter)
+        self.assertFalse((orig0 == model_gensim.wv.syn0[0]).all())  # vector should vary after training
+        self.compare_with_wrapper(model_gensim, model_wrapper)
 
-    #     model_wrapper = FT_wrapper.train(ft_path=self.ft_exec_path, corpus_file=datapath('lee_background.cor'),
-    #         output_file=testfile(), model='cbow', size=50, alpha=0.05, window=2, min_count=5, word_ngrams=1, loss='ns',
-    #         sample=1e-3, negative=15, iter=3, min_n=3, max_n=6, sorted_vocab=1, threads=1)
+    def test_sg_hs_against_wrapper(self):
+        if self.ft_path is None:
+            logger.info("FT_HOME env variable not set, skipping test")
+            return
 
-    #     model_gensim = FT_gensim(size=50, sg=0, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=15,
-    #         min_count=5, iter=3, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-    #         sorted_vocab=1, workers=1, min_alpha=0.0)
-            
-    #     lee_data = LineSentence(datapath('lee_background.cor'))
-    #     model_gensim.build_vocab(lee_data)
-    #     orig0 = np.copy(model_gensim.wv.syn0[0])
-    #     model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.iter)
-    #     self.assertFalse((orig0 == model_gensim.wv.syn0[0]).all())  # vector should vary after training
-        
-    #     self.test_against_fasttext_wrapper(model_gensim, model_wrapper)
+        model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=datapath('lee_background.cor'),
+            output_file=testfile(), model='skipgram', size=50, alpha=0.025, window=5, min_count=5, word_ngrams=1,
+            loss='hs', sample=1e-3, negative=0, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12)
 
-    # def test_sg_hs(self):
-    #     if self.ft_exec_path is None:
-    #         logger.info("FT_HOME env variable not set, skipping test")
-    #         return
+        model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
+            min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+            sorted_vocab=1, workers=12, min_alpha=0.0)
 
-    #     model_wrapper = FT_wrapper.train(ft_path=self.ft_exec_path, corpus_file=datapath('lee_background.cor'),
-    #         output_file=testfile(), model='skipgram', size=50, alpha=0.05, window=2, min_count=5, word_ngrams=1,
-    #         loss='hs', sample=1e-3, negative=0, iter=3, min_n=3, max_n=6, sorted_vocab=1, threads=1)
+        lee_data = LineSentence(datapath('lee_background.cor'))
+        model_gensim.build_vocab(lee_data)
+        orig0 = np.copy(model_gensim.wv.syn0[0])
+        model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.iter)
+        self.assertFalse((orig0 == model_gensim.wv.syn0[0]).all())  # vector should vary after training
+        self.compare_with_wrapper(model_gensim, model_wrapper)
 
-    #     model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0,
-    #         min_count=5, iter=3, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-    #         sorted_vocab=1, workers=12, min_alpha=0.0)
-
-    #     lee_data = LineSentence(datapath('lee_background.cor'))
-    #     model_gensim.build_vocab(lee_data)
-    #     orig0 = np.copy(model_gensim.wv.syn0[0])
-    #     model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.iter)
-    #     self.assertFalse((orig0 == model_gensim.wv.syn0[0]).all())  # vector should vary after training
-
-    #     self.test_against_fasttext_wrapper(model_gensim, model_wrapper)
-
-    # def test_sg_neg(self):
-    #     # if self.ft_exec_path is None:
-    #     #     logger.info("FT_HOME env variable not set, skipping test")
-    #     #     return
-    #     self.ft_path = "/home/chinmaya/GSOC/Gensim/fastText/fasttext"
-
-    #     model_wrapper = FT_wrapper.train(ft_path=self.ft_exec_path, corpus_file=datapath('lee_background.cor'),
-    #         output_file=testfile(), model='skipgram', size=50, alpha=0.05, window=2, min_count=5, word_ngrams=1,
-    #         loss='ns', sample=1e-3, negative=15, iter=10, min_n=3, max_n=6, sorted_vocab=1, threads=1)
-
-    #     model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=0,
-    #         min_count=5, iter=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-    #         sorted_vocab=1, workers=1, min_alpha=0.0)
-
-    #     lee_data = LineSentence(datapath('lee_background.cor'))
-    #     model_gensim.build_vocab(lee_data)
-    #     orig0 = np.copy(model_gensim.wv.syn0[0])
-    #     model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.iter)
-    #     self.assertFalse((orig0 == model_gensim.wv.syn0[0]).all())  # vector should vary after training
-
-    #     self.test_against_fasttext_wrapper(model_gensim, model_wrapper)
-
-    # def testModelPersistence(self):
-    #     model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=0,
-    #         min_count=5, iter=1, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-    #         sorted_vocab=1, workers=1, min_alpha=0.0)
-
-    #     lee_data = LineSentence(datapath('lee_background.cor'))
-    #     model_gensim.build_vocab(lee_data)
-    #     model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.iter)
-
-    #     model_gensim.save(testfile())
-    #     model_gensim_load = FT_gensim.load(testfile())
-    #     most_similar_words = model_gensim_load.most_similar('night', topn=10)
-    #     self.assertTrue(len(most_similar_words) == 10)
-
-    # def test_sample(self):
-    #     self.ft_path = "/home/chinmaya/GSOC/Gensim/fastText/fasttext"
-    #     # train_file_path = "/home/chinmaya/GSOC/Gensim/text8_100000"
-    #     train_file_path = "/home/chinmaya/GSOC/Gensim/gensim/gensim/test/test_data/lee_background.cor"
-    #     # model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=train_file_path,
-    #     #     output_file=testfile(), model='cbow', size=50, alpha=0.05, window=5, min_count=1, word_ngrams=1,
-    #     #     loss='ns', sample=1e-3, negative=15, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12)
-
-    #     # model_gensim = FT_gensim(size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
-    #     #     min_count=1, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-    #     #     sorted_vocab=1, workers=12, min_alpha=0.0)
-            
-    #     model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=train_file_path,
-    #         output_file=testfile(), model='skipgram', size=100, alpha=0.025, window=1, min_count=1, word_ngrams=1,
-    #         loss='hs', sample=0, negative=0, iter=10, min_n=3, max_n=6, sorted_vocab=1, threads=1)
-
-    #     model_gensim = FT_gensim(size=100, sg=1, cbow_mean=1, alpha=0.025, window=1, hs=1, negative=0,
-    #         min_count=1, iter=10, batch_words=1000, word_ngrams=1, sample=0, min_n=3, max_n=6,
-    #         sorted_vocab=1, workers=1, min_alpha=0.0)
-
-    #     train_data = LineSentence(train_file_path)
-    #     model_gensim.build_vocab(train_data)
-    #     model_gensim.train(train_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.iter)
-
-    #     self.test_against_fasttext_wrapper(model_gensim, model_wrapper)
-
-    #     # model_wrapper.accuracy("/home/chinmaya/GSOC/Gensim/gensim/gensim/test/test_data/test_analogy_questions-words.txt")
-    #     # print
-    #     # model_gensim.accuracy("/home/chinmaya/GSOC/Gensim/gensim/gensim/test/test_data/test_analogy_questions-words.txt")
-
-    # def test_questions_task(self):
-    #     self.ft_path = "/home/chinmaya/GSOC/Gensim/fastText/fasttext"
-    #     train_file_path = "/home/chinmaya/GSOC/Gensim/gensim/gensim/test/test_data/lee_background.cor"
-
-    #     questions_file = '/home/chinmaya/GSOC/Gensim/gensim/gensim/test/test_data/questions-words.txt'
-
-    #     model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=train_file_path,
-    #         output_file=testfile(), model='skipgram', size=100, alpha=0.025, window=1, min_count=5, word_ngrams=1,
-    #         loss='hs', sample=0, negative=0, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=1)
-
-    #     model_gensim = FT_gensim(size=100, sg=1, cbow_mean=1, alpha=0.025, window=1, hs=1, negative=0,
-    #         min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=0, min_n=3, max_n=6,
-    #         sorted_vocab=1, workers=1, min_alpha=0.0)
-
-    #     train_data = LineSentence(train_file_path)
-    #     model_gensim.build_vocab(train_data)
-    #     model_gensim.train(train_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.iter)
-
-    #     acc_w = model_wrapper.accuracy(questions_file)
-
-    #     sem_correct_w = sum((len(acc_w[i]['correct']) for i in range(5)))
-    #     sem_total_w = sum((len(acc_w[i]['correct']) + len(acc_w[i]['incorrect'])) for i in range(5))
-    #     sem_acc_w = 100*float(sem_correct_w)/sem_total_w
-    #     print('\nSemantic: {:d}/{:d}, Accuracy: {:.2f}%'.format(sem_correct_w, sem_total_w, sem_acc_w))
-        
-    #     syn_correct_w = sum((len(acc_w[i]['correct']) for i in range(5, len(acc_w)-1)))
-    #     syn_total_w = sum((len(acc_w[i]['correct']) + len(acc_w[i]['incorrect'])) for i in range(5,len(acc_w)-1))
-    #     syn_acc_w = 100*float(syn_correct_w)/syn_total_w
-    #     print('Syntactic: {:d}/{:d}, Accuracy: {:.2f}%\n'.format(syn_correct_w, syn_total_w, syn_acc_w))
+    # def test_online_learning(self):
+    #     model_hs = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=1, negative=0)
+    #     model_neg = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=0, negative=5)
+    #     self.assertTrue(len(model_hs.wv.vocab), 12)
+    #     self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
+    #     model_hs.build_vocab(new_sentences, update=True)
+    #     model_neg.build_vocab(new_sentences, update=True)
+    #     self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
+    #     self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
+    #     self.assertEqual(len(model_hs.wv.vocab), 14)
+    #     self.assertEqual(len(model_neg.wv.vocab), 14)
 
 
-    #     acc_g = model_gensim.accuracy(questions_file)
+    # def test_online_learning_after_save(self):
+    #     model_neg = FT_gensim(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
+    #     model_neg.save(testfile())
+    #     model_neg = FT_gensim.load(testfile())
+    #     self.assertTrue(len(model_neg.wv.vocab), 12)
+    #     model_neg.build_vocab(new_sentences, update=True)
+    #     model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
+    #     self.assertEqual(len(model_neg.wv.vocab), 14)
 
-    #     sem_correct_g = sum((len(acc_g[i]['correct']) for i in range(5)))
-    #     sem_total_g = sum((len(acc_g[i]['correct']) + len(acc_g[i]['incorrect'])) for i in range(5))
-    #     sem_acc_g = 100*float(sem_correct_g)/sem_total_g
-    #     print('\nSemantic: {:d}/{:d}, Accuracy: {:.2f}%'.format(sem_correct_g, sem_total_g, sem_acc_g))
-        
-    #     syn_correct_g = sum((len(acc_g[i]['correct']) for i in range(5, len(acc_g)-1)))
-    #     syn_total_g = sum((len(acc_g[i]['correct']) + len(acc_g[i]['incorrect'])) for i in range(5,len(acc_g)-1))
-    #     syn_acc_g = 100*float(syn_correct_g)/syn_total_g
-    #     print('Syntactic: {:d}/{:d}, Accuracy: {:.2f}%\n'.format(syn_correct_g, syn_total_g, syn_acc_g))
-    #     # return (sem_acc_g, syn_acc_g)
+    # def online_sanity(self, model):
+    #     terro, others = [], []
+    #     for l in list_corpus:
+    #         if 'terrorism' in l:
+    #             terro.append(l)
+    #         else:
+    #             others.append(l)
+    #     self.assertTrue(all(['terrorism' not in l for l in others]))
+    #     model.build_vocab(others)
+    #     model.train(others, total_examples=model.corpus_count, epochs=model.iter)
+    #     self.assertFalse('terrorism' in model.wv.vocab)
+    #     model.build_vocab(terro, update=True)
+    #     self.assertTrue('terrorism' in model.wv.vocab)
+    #     orig0_all = np.copy(model.wv.syn0_all)
+    #     model.train(terro, total_examples=len(terro), epochs=model.iter)
+    #     self.assertFalse(np.allclose(model.wv.syn0_all, orig0_all))
+    #     sim = model.n_similarity(['war'], ['terrorism'])
+    #     self.assertLess(0., sim)
 
-    # def test_debug(self):
-    #     train_data_file = datapath('lee_background_small.cor')
-    #     model_wrapper = FT_wrapper.train(ft_path=self.ft_exec_path, corpus_file=train_data_file,
-    #         output_file=testfile(), model='skipgram', size=50, alpha=0.025, window=1, min_count=1, word_ngrams=1,
-    #         loss='hs', sample=0, negative=0, iter=1, min_n=3, max_n=6, sorted_vocab=1, threads=1)
+    # def test_sg_hs_online(self):
+    #     model = FT_gensim(sg=1, window=5, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
+    #     self.online_sanity(model)
 
-    #     model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.025, window=1, hs=1, negative=0,
-    #         min_count=1, iter=1, batch_words=1000, word_ngrams=1, sample=0, min_n=3, max_n=6,
-    #         sorted_vocab=1, workers=1, min_alpha=0.0)
-    #     lee_data = LineSentence(train_data_file)
-    #     model_gensim.build_vocab(lee_data)
-    #     model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.iter)
+    # def test_sg_neg_online(self):
+    #     model = FT_gensim(sg=1, window=4, hs=0, negative=5, min_count=3, iter=1, seed=42, workers=12)
+    #     self.online_sanity(model)
 
-    #     self.test_against_fasttext_wrapper(model_gensim, model_wrapper)
+    # def test_cbow_hs_online(self):
+    #     model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
+    #     self.online_sanity(model)
+
+    # def test_cbow_neg_online(self):
+    #     model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5, min_count=5, iter=1, seed=42, workers=12, sample=0)
+    #     self.online_sanity(model)
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
