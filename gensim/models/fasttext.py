@@ -220,32 +220,75 @@ class FastText(Word2Vec):
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
         self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
+        if update:
+            if not len(self.wv.vocab):
+                raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. " \
+                    "First build the vocabulary of your model with a corpus " \
+                    "before doing an online update.")
+            self.old_vocab_len = len(self.wv.vocab)
+            self.old_hash2index_len = len(self.wv.hash2index)
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
         self.finalize_vocab(update=update)  # build tables & arrays
-        self.init_ngrams()
+        self.init_ngrams(update=update)
 
-    def init_ngrams(self):
-        self.wv.ngrams = {}
-        self.wv.syn0_all = empty((len(self.wv.vocab) + self.bucket, self.vector_size), dtype=REAL)
-        self.syn0_all_lockf = ones((len(self.wv.vocab) + self.bucket, self.vector_size), dtype=REAL)
+    def init_ngrams(self, update=False):
+        if not update:
+            self.wv.ngrams = {}
+            self.wv.syn0_all = empty((len(self.wv.vocab) + self.bucket, self.vector_size), dtype=REAL)
+            self.syn0_all_lockf = ones((len(self.wv.vocab) + self.bucket, self.vector_size), dtype=REAL)
 
-        all_ngrams = []
-        for w, v in self.wv.vocab.items():
-            self.wv.ngrams_word[w] = Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
-            all_ngrams += self.wv.ngrams_word[w]
+            all_ngrams = []
+            for w, v in self.wv.vocab.items():
+                self.wv.ngrams_word[w] = Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
+                all_ngrams += self.wv.ngrams_word[w]
 
-        all_ngrams = list(set(all_ngrams))
-        self.num_ngram_vectors = len(self.wv.vocab) + len(all_ngrams)
-        logger.info("Total number of ngrams is %d", self.num_ngram_vectors)
+            all_ngrams = list(set(all_ngrams))
+            self.num_ngram_vectors = len(self.wv.vocab) + len(all_ngrams)
+            logger.info("Total number of ngrams is %d", self.num_ngram_vectors)
 
-        ngram_indices = range(len(self.wv.vocab))  # keeping the first `len(self.wv.vocab)` rows intact
-        for i, ngram in enumerate(all_ngrams):
-            ngram_hash = Ft_Wrapper.ft_hash(ngram)
-            ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
-            self.wv.ngrams[ngram] = i + len(self.wv.vocab)
+            self.wv.hash2index = {}
+            ngram_indices = range(len(self.wv.vocab))  # keeping the first `len(self.wv.vocab)` rows intact
+            for i, ngram in enumerate(all_ngrams):
+                ngram_hash = Ft_Wrapper.ft_hash(ngram)
+                if ngram_hash in self.wv.hash2index:
+                    self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
+                else:
+                    ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
+                    self.wv.hash2index[ngram_hash] = i + len(self.wv.vocab)
+                    self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
 
-        self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
-        self.reset_ngram_weights()
+            self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
+            self.reset_ngram_weights()
+
+        else:
+            new_vocab_len = len(self.wv.vocab)
+            for ngram, idx in self.wv.hash2index.items():
+                self.wv.hash2index[ngram] = idx + new_vocab_len - self.old_vocab_len
+
+            new_ngrams = []
+            for w, v in self.wv.vocab.items():
+                self.wv.ngrams_word[w] = Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
+                new_ngrams += [ng for ng in self.wv.ngrams_word[w] if ng not in self.wv.ngrams]
+
+            new_ngrams = list(set(new_ngrams))
+            new_count = 0
+            for i, ngram in enumerate(new_ngrams):
+                ngram_hash = Ft_Wrapper.ft_hash(ngram)
+                if ngram_hash not in self.wv.hash2index:
+                    self.wv.hash2index[ngram_hash] = new_count + len(self.wv.vocab) + self.old_hash2index_len
+                    self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
+                else:
+                    self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
+
+            old_vocab_rows = self.wv.syn0_all[0:self.old_vocab_len, ]
+            old_ngram_rows = self.syn0_all[self.old_vocab_len:, ]
+
+            rand_obj = np.random
+            rand_obj.seed(self.seed)
+            new_vocab_rows = rand_obj.uniform(-1.0 / self.vector_size, 1.0 / self.vector_size, (len(self.wv.vocab) - self.old_vocab_len, self.vector_size))
+            new_ngram_rows = rand_obj.uniform(-1.0 / self.vector_size, 1.0 / self.vector_size, (len(self.wv.hash2index) - self.old_hash2index_len, self.vector_size))
+
+            self.wv.syn0_all = vstack([old_vocab_rows, new_vocab_rows, old_ngram_rows, new_ngram_rows])
 
     def reset_ngram_weights(self):
         rand_obj = np.random
