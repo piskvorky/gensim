@@ -69,7 +69,7 @@ class TestTranslationMatrix(unittest.TestCase):
 
         test_word_pair = [("one", "uno"), ("two", "due"), ("apple", "mela"), ("orange", "aranicione"), ("dog", "cane"), ("pig", "maiale"), ("cat", "gatto")]
         test_source_word, test_target_word = zip(*test_word_pair)
-        translated_words = model.translate(test_source_word, topn=3, gc=1, additional=10)
+        translated_words = model.translate(test_source_word, topn=3, gc=1, sample_num=10)
 
         self.assertTrue("uno" in translated_words["one"])
         self.assertTrue("due" in translated_words["two"])
