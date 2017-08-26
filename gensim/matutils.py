@@ -150,7 +150,7 @@ def zeros_aligned(shape, dtype, order='C', align=128):
     nbytes = np.prod(shape, dtype=np.int64) * np.dtype(dtype).itemsize
     buffer = np.zeros(nbytes + align, dtype=np.uint8)  # problematic on win64 ("maximum allowed dimension exceeded")
     start_index = -buffer.ctypes.data % align
-    return buffer[start_index : start_index + nbytes].view(dtype).reshape(shape, order=order)
+    return buffer[start_index: start_index + nbytes].view(dtype).reshape(shape, order=order)
 
 
 def ismatrix(m):
@@ -217,6 +217,7 @@ class Scipy2Corpus(object):
     This is the mirror function to `corpus2csc`.
 
     """
+
     def __init__(self, vecs):
         """
         `vecs` is a sequence of dense and/or sparse vectors, such as a 2d np array,
@@ -266,6 +267,7 @@ def full2sparse(vec, eps=1e-9):
     vec = np.asarray(vec, dtype=float)
     nnz = np.nonzero(abs(vec) > eps)[0]
     return list(zip(nnz, vec.take(nnz)))
+
 
 dense2vec = full2sparse
 
@@ -318,6 +320,7 @@ class Dense2Corpus(object):
     This is the mirror function to `corpus2dense`.
 
     """
+
     def __init__(self, dense, documents_columns=True):
         if documents_columns:
             self.dense = dense.T
@@ -330,7 +333,7 @@ class Dense2Corpus(object):
 
     def __len__(self):
         return len(self.dense)
-#endclass DenseCorpus
+# endclass DenseCorpus
 
 
 class Sparse2Corpus(object):
@@ -340,6 +343,7 @@ class Sparse2Corpus(object):
     This is the mirror function to `corpus2csc`.
 
     """
+
     def __init__(self, sparse, documents_columns=True):
         if documents_columns:
             self.sparse = sparse.tocsc()
@@ -352,7 +356,7 @@ class Sparse2Corpus(object):
 
     def __len__(self):
         return self.sparse.shape[1]
-#endclass Sparse2Corpus
+# endclass Sparse2Corpus
 
 
 def veclen(vec):
@@ -544,7 +548,7 @@ def hellinger(vec1, vec2):
         vec1, vec2 = dict(vec1), dict(vec2)
         if len(vec2) < len(vec1):
             vec1, vec2 = vec2, vec1  # swap references so that we iterate over the shorter vector
-        sim = np.sqrt(0.5*sum((np.sqrt(value) - np.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
+        sim = np.sqrt(0.5 * sum((np.sqrt(value) - np.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
         return sim
     else:
         sim = np.sqrt(0.5 * ((np.sqrt(vec1) - np.sqrt(vec2))**2).sum())
@@ -778,7 +782,7 @@ class MmWriter(object):
         logger.debug("closing %s" % self.fname)
         if hasattr(self, 'fout'):
             self.fout.close()
-#endclass MmWriter
+# endclass MmWriter
 
 
 class MmReader(object):
@@ -790,6 +794,7 @@ class MmReader(object):
     matrix at once (unlike scipy.io.mmread). This allows us to process corpora
     which are larger than the available RAM.
     """
+
     def __init__(self, input, transposed=True):
         """
         Initialize the matrix reader.
@@ -912,4 +917,4 @@ class MmReader(object):
 
             document.append((termid, val,))  # add another field to the current document
         return document
-#endclass MmReader
+# endclass MmReader

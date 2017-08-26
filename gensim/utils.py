@@ -13,8 +13,6 @@ from __future__ import with_statement
 import logging
 import warnings
 
-logger = logging.getLogger(__name__)
-
 try:
     from html.entities import name2codepoint as n2cp
 except ImportError:
@@ -41,11 +39,13 @@ import numpy as np
 import numbers
 import scipy.sparse
 
+from six import iterkeys, iteritems, u, string_types, unichr
+from six.moves import xrange
+
 if sys.version_info[0] >= 3:
     unicode = str
 
-from six import iterkeys, iteritems, u, string_types, unichr
-from six.moves import xrange
+logger = logging.getLogger(__name__)
 
 try:
     from smart_open import smart_open
@@ -129,6 +129,8 @@ class NoCM(object):
 
     def __exit__(self, type, value, traceback):
         pass
+
+
 nocm = NoCM()
 
 
@@ -230,6 +232,8 @@ def any2utf8(text, errors='strict', encoding='utf8'):
         return text.encode('utf8')
     # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
     return unicode(text, encoding, errors=errors).encode('utf8')
+
+
 to_utf8 = any2utf8
 
 
@@ -238,6 +242,8 @@ def any2unicode(text, encoding='utf8', errors='strict'):
     if isinstance(text, unicode):
         return text
     return unicode(text, encoding, errors=errors)
+
+
 to_unicode = any2unicode
 
 
@@ -502,7 +508,7 @@ class SaveLoad(object):
         except TypeError:  # `fname_or_handle` does not have write attribute
             self._smart_save(fname_or_handle, separately, sep_limit, ignore,
                              pickle_protocol=pickle_protocol)
-#endclass SaveLoad
+# endclass SaveLoad
 
 
 def identity(p):
@@ -532,6 +538,7 @@ class FakeDict(object):
     is a waste of memory.
 
     """
+
     def __init__(self, num_terms):
         self.num_terms = num_terms
 
@@ -655,6 +662,7 @@ class RepeatCorpus(SaveLoad):
     Used in the tutorial on distributed computing and likely not useful anywhere else.
 
     """
+
     def __init__(self, corpus, reps):
         """
         Wrap a `corpus` as another corpus of length `reps`. This is achieved by
@@ -823,6 +831,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
         # memory opt: wrap the chunk and then pop(), to avoid leaving behind a dangling reference
         yield wrapped_chunk.pop()
 
+
 grouper = chunkize_serial
 
 
@@ -858,7 +867,7 @@ class InputQueue(multiprocessing.Process):
             logger.debug("prepared another chunk of %i documents (qsize=%s)" %
                         (len(wrapped_chunk[0]), qsize))
             self.q.put(wrapped_chunk.pop(), block=True)
-#endclass InputQueue
+# endclass InputQueue
 
 
 if os.name == 'nt':
@@ -1036,7 +1045,7 @@ def has_pattern():
     Function which returns a flag indicating whether pattern is installed or not
     """
     try:
-        from pattern.en import parse
+        from pattern.en import parse  # noqa:F401
         return True
     except ImportError:
         return False
@@ -1138,6 +1147,7 @@ def qsize(queue):
     except NotImplementedError:
         # OS X doesn't support qsize
         return -1
+
 
 RULE_DEFAULT = 0
 RULE_DISCARD = 1
