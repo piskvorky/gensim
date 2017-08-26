@@ -22,7 +22,7 @@ Initialize a model with e.g.::
 Persist a model to disk with::
 
     >>> transmat.save(fname)
-    >>> transmat  = Word2Vec.load(fname)
+    >>> transmat  = TranslationMatrix.load(fname)
 
 Translate the source words to target words, for example
 

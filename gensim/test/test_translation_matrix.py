@@ -39,7 +39,7 @@ class TestTranslationMatrix(unittest.TestCase):
     def testPersistence(self):
         """Test storing/loading the entire model."""
         model = translation_matrix.TranslationMatrix(self.word_pair, self.source_word_vec, self.target_word_vec)
-        transmat = model.train(self.word_pair)
+        model.train(self.word_pair)
         model.save(temp_save_file())
 
         loaded_model = translation_matrix.TranslationMatrix.load(temp_save_file())
