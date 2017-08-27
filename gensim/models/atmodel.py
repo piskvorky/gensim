@@ -64,6 +64,7 @@ class AuthorTopicState(LdaState):
     reduce traffic.
 
     """
+
     def __init__(self, eta, lambda_shape, gamma_shape):
         self.eta = eta
         self.sstats = np.zeros(lambda_shape)
@@ -361,7 +362,7 @@ class AuthorTopicModel(LdaModel):
 
         """
         try:
-            _ = len(chunk)
+            _ = len(chunk)  # noqa:F841
         except:
             # convert iterators/generators to plain list, so we have len() etc.
             chunk = list(chunk)
