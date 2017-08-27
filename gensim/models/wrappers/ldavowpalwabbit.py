@@ -76,6 +76,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
     between Vowpal Wabbit and Python takes place by passing around data files
     on disk and calling the 'vw' binary with the subprocess module.
     """
+
     def __init__(self, vw_path, corpus=None, num_topics=100, id2word=None,
                  chunksize=256, passes=1, alpha=0.1, eta=0.1, decay=0.5,
                  offset=1, gamma_threshold=0.001, random_seed=None,
@@ -197,7 +198,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         _run_vw_command(cmd)
 
-        # ensure that future updates of this model use correct offset
+        # ensure that future updates of this model use correct offset
         self.offset += corpus_size
 
     def update(self, corpus):
@@ -216,7 +217,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         _run_vw_command(cmd)
 
-        # ensure that future updates of this model use correct offset
+        # ensure that future updates of this model use correct offset
         self.offset += corpus_size
 
     def log_perplexity(self, chunk):
@@ -312,7 +313,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
             LOG.debug("Writing model bytes to '%s'", lda_vw._model_filename)
             with utils.smart_open(lda_vw._model_filename, 'wb') as fhandle:
                 fhandle.write(lda_vw._model_data)
-            lda_vw._model_data = None # no need to keep in memory after this
+            lda_vw._model_data = None  # no need to keep in memory after this
 
         if lda_vw._topics_data:
             LOG.debug("Writing topic bytes to '%s'", lda_vw._topics_filename)
@@ -336,11 +337,11 @@ class LdaVowpalWabbit(utils.SaveLoad):
     def _get_vw_predict_command(self, corpus_size):
         """Get list of command line arguments for running prediction."""
         cmd = [self.vw_path,
-               '--testonly', # don't update model with this data
+               '--testonly',  # don't update model with this data
                '--lda_D', str(corpus_size),
-               '-i', self._model_filename, # load existing binary model
+               '-i', self._model_filename,  # load existing binary model
                '-d', self._corpus_filename,
-               '--learning_rate', '0', # possibly not needed, but harmless
+               '--learning_rate', '0',  # possibly not needed, but harmless
                '-p', self._predict_filename]
 
         if self.random_seed is not None:
@@ -364,7 +365,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
                '--cache_file', self._cache_filename,
                '--lda_epsilon', str(self.gamma_threshold),
                '--readable_model', self._topics_filename,
-               '-k', # clear cache
+               '-k',  # clear cache
                '-f', self._model_filename]
 
         if update:
@@ -569,6 +570,7 @@ def _run_vw_command(cmd):
 def _bit_length(num):
     """Return number of bits needed to encode given number."""
     return len(bin(num).lstrip('-0b'))
+
 
 def vwmodel2ldamodel(vw_model, iterations=50):
     """
