@@ -9,9 +9,9 @@ This module contains functions to perform segmentation on a list of topics.
 """
 
 import logging
-import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 def s_one_pre(topics):
     """
@@ -39,6 +39,7 @@ def s_one_pre(topics):
         s_one_pre.append(s_one_pre_t)
 
     return s_one_pre
+
 
 def s_one_one(topics):
     """
@@ -69,6 +70,7 @@ def s_one_one(topics):
         s_one_one.append(s_one_one_t)
 
     return s_one_one
+
 
 def s_one_set(topics):
     """
