@@ -205,15 +205,17 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     def load_document_topics(self):
         """
-        Return an iterator over the topic distribution of training corpus, by reading
-        the doctopics.txt generated during training.
+        Returns:
+            An iterator over the topic distribution of training corpus, by reading
+            the doctopics.txt generated during training.
         """
         return self.read_doctopics(self.fdoctopics())
 
     def get_topics(self):
         """
-        Return the term topic matrix learned during inference.
-        This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
+        Returns:
+            np.ndarray: `num_topics` x `vocabulary_size` array of floats which represents
+            the term topic matrix learned during inference.
         """
         topics = self.word_topics
         return topics / topics.sum(axis=1)[:, None]

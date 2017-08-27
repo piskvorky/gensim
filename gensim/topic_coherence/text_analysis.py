@@ -17,7 +17,7 @@ from collections import Counter
 
 import numpy as np
 import scipy.sparse as sps
-from six import viewitems, string_types
+from six import iteritems, string_types
 
 from gensim import utils
 from gensim.models.word2vec import Word2Vec
@@ -143,7 +143,7 @@ class InvertedIndexBased(BaseAnalyzer):
         return len(s1.intersection(s2))
 
     def index_to_dict(self):
-        contiguous2id = {n: word_id for word_id, n in viewitems(self.id2contiguous)}
+        contiguous2id = {n: word_id for word_id, n in iteritems(self.id2contiguous)}
         return {contiguous2id[n]: doc_id_set for n, doc_id_set in enumerate(self._inverted_index)}
 
 
@@ -242,7 +242,7 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         self._counter.clear()
 
         super(WordOccurrenceAccumulator, self).accumulate(texts, window_size)
-        for combo, count in viewitems(self._counter):
+        for combo, count in iteritems(self._counter):
             self._co_occurrences[combo] += count
 
         return self

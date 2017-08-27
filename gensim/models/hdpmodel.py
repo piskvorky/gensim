@@ -459,8 +459,9 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def get_topics(self):
         """
-        Return the term topic matrix learned during inference.
-        This is a `num_topics` x `vocabulary_size` np.ndarray of floats.
+        Returns:
+            np.ndarray: `num_topics` x `vocabulary_size` array of floats which represents
+            the term topic matrix learned during inference.
         """
         topics = self.m_lambda + self.m_eta
         return topics / topics.sum(axis=1)[:, None]
@@ -651,7 +652,7 @@ class HdpTopicFormatter(object):
                 logger.info(topic)
         else:
             topic = (topic_id, topic_terms)
-        
+
         # we only return the topic_terms
         return topic[1]
 
