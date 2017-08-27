@@ -3,13 +3,9 @@
 
 import logging
 
-from types import GeneratorType
-from copy import deepcopy
 import numpy as np
-from numpy import dot, zeros, ones, vstack, outer, random, sum as np_sum, empty, float32 as REAL
-from scipy.special import expit
+from numpy import zeros, ones, vstack, sum as np_sum, empty, float32 as REAL
 
-from gensim.utils import call_on_class_only
 from gensim.models.word2vec import Word2Vec, train_sg_pair, train_cbow_pair
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as Ft_Wrapper, compute_ngrams, ft_hash

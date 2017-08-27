@@ -388,8 +388,8 @@ class FastText(Word2Vec):
             self.wv.syn0[vocab.index] /= (len(word_ngrams) + 1)
         logger.info("loaded %s weight matrix for fastText model from %s", self.wv.syn0.shape, self.file_name)
 
+
 def compute_ngrams(word, min_n, max_n):
-    ngram_indices = []
     BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
     extended_word = BOW + word + EOW
     ngrams = []
@@ -397,6 +397,7 @@ def compute_ngrams(word, min_n, max_n):
         for i in range(0, len(extended_word) - ngram_length + 1):
             ngrams.append(extended_word[i:i + ngram_length])
     return ngrams
+
 
 def ft_hash(string):
     """
