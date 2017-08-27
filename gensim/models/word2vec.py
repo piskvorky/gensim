@@ -254,18 +254,29 @@ except ImportError:
 
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
-                  context_vectors=None, context_locks=None, compute_loss=False):
+                  context_vectors=None, context_locks=None, compute_loss=False, is_ft=False):
     if context_vectors is None:
-        context_vectors = model.wv.syn0
+        if is_ft:
+            context_vectors = model.wv.syn0_all
+        else:
+            context_vectors = model.wv.syn0
     if context_locks is None:
-        context_locks = model.syn0_lockf
+        if is_ft:
+            context_locks = model.syn0_all_lockf
+        else:
+            context_locks = model.syn0_lockf
 
     if word not in model.wv.vocab:
         return
     predict_word = model.wv.vocab[word]  # target word (NN output)
 
-    l1 = context_vectors[context_index]  # input word (NN input/projection layer)
-    lock_factor = context_locks[context_index]
+    if is_ft:
+        l1 = np_sum(context_vectors[context_index], axis=0)
+        if context_index:
+            l1 /= len(context_index)
+    else:
+        l1 = context_vectors[context_index]  # input word (NN input/projection layer)
+        lock_factor = context_locks[context_index]
 
     neu1e = zeros(l1.shape)
 
@@ -306,11 +317,27 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             model.running_training_loss -= log(expit(prod_term[0]))  # for the output word
 
     if learn_vectors:
-        l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
+        if is_ft:
+            for i in context_index:
+                model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
+        else:
+            l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
     return neu1e
 
 
-def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True, compute_loss=False):
+def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True, compute_loss=False,
+                    context_vectors=None, context_locks=None, is_ft=False):
+    if context_vectors is None:
+        if is_ft:
+            context_vectors = model.wv.syn0_all
+        else:
+            context_vectors = model.wv.syn0
+    if context_locks is None:
+        if is_ft:
+            context_locks = model.syn0_all_lockf
+        else:
+            context_locks = model.syn0_lockf
+
     neu1e = zeros(l1.shape)
 
     if model.hs:
@@ -352,7 +379,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
         if not model.cbow_mean and input_word_indices:
             neu1e /= len(input_word_indices)
         for i in input_word_indices:
-            model.wv.syn0[i] += neu1e * model.syn0_lockf[i]
+            context_vectors[i] += neu1e * context_locks[i]
 
     return neu1e
 
@@ -389,7 +416,8 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False):
+            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False,
+            init_wv=True):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -467,7 +495,8 @@ class Word2Vec(utils.SaveLoad):
         else:
             logger.debug('Fast version of {0} is being used'.format(__name__))
 
-        self.initialize_word_vectors()
+        if init_wv:
+            self.initialize_word_vectors()
         self.sg = int(sg)
         self.cum_table = None  # for negative sampling
         self.vector_size = int(size)

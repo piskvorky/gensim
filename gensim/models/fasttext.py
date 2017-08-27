@@ -10,9 +10,9 @@ from numpy import dot, zeros, ones, vstack, outer, random, sum as np_sum, empty,
 from scipy.special import expit
 
 from gensim.utils import call_on_class_only
-from gensim.models.word2vec import Word2Vec
+from gensim.models.word2vec import Word2Vec, train_sg_pair, train_cbow_pair
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
-from gensim.models.wrappers.fasttext import FastText as Ft_Wrapper
+from gensim.models.wrappers.fasttext import FastText as Ft_Wrapper, compute_ngrams, ft_hash
 
 logger = logging.getLogger(__name__)
 
@@ -44,42 +44,9 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
             if subwords_indices and model.cbow_mean:
                 l1 /= len(subwords_indices)
 
-            train_cbow_pair(model, word, subwords_indices, l1, alpha)  # train on the sliding window for target word
+            train_cbow_pair(model, word, subwords_indices, l1, alpha, is_ft=True)  # train on the sliding window for target word
         result += len(word_vocabs)
     return result
-
-
-def train_cbow_pair(model, word, input_subword_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
-    neu1e = zeros(l1.shape)
-
-    if model.hs:
-        l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-        fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
-        ga = (1. - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-        if learn_hidden:
-            model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
-        neu1e += dot(ga, l2a)  # save error
-
-    if model.negative:
-        # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
-        word_indices = [word.index]  # through word index get all subwords indices (need to make the changes in code)
-        while len(word_indices) < model.negative + 1:
-            w = model.cum_table.searchsorted(model.random.randint(model.cum_table[-1]))
-            if w != word.index:
-                word_indices.append(w)
-        l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
-        gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
-        if learn_hidden:
-            model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
-        neu1e += dot(gb, l2b)  # save error
-
-    if learn_vectors:
-        # learn input -> hidden, here for all words in the window separately
-        for i in input_subword_indices:
-            model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
-
-    return neu1e
 
 
 def train_batch_sg(model, sentences, alpha, work=None):
@@ -100,56 +67,10 @@ def train_batch_sg(model, sentences, alpha, work=None):
 
             for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                 if pos2 != pos:  # don't train on the `word` itself
-                    train_sg_pair(model, model.wv.index2word[word2.index], subwords_indices, alpha)
+                    train_sg_pair(model, model.wv.index2word[word2.index], subwords_indices, alpha, is_ft=True)
 
         result += len(word_vocabs)
     return result
-
-
-def train_sg_pair(model, word, input_subword_indices, alpha, learn_vectors=True, learn_hidden=True, context_vectors=None, context_locks=None):
-    if context_vectors is None:
-        context_vectors = model.wv.syn0_all
-    if context_locks is None:
-        context_locks = model.syn0_all_lockf
-
-    if word not in model.wv.vocab:
-        return
-    predict_word = model.wv.vocab[word]  # target word (NN output)
-
-    l1 = np_sum(context_vectors[input_subword_indices], axis=0)
-    if input_subword_indices:
-        l1 /= len(input_subword_indices)
-
-    neu1e = zeros(l1.shape)
-
-    if model.hs:
-        # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
-        l2a = deepcopy(model.syn1[predict_word.point])  # 2d matrix, codelen x layer1_size
-        fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
-        ga = (1 - predict_word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-        if learn_hidden:
-            model.syn1[predict_word.point] += outer(ga, l1)  # learn hidden -> output
-        neu1e += dot(ga, l2a)  # save error
-
-    if model.negative:
-        # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
-        word_indices = [predict_word.index]
-        while len(word_indices) < model.negative + 1:
-            w = model.cum_table.searchsorted(model.random.randint(model.cum_table[-1]))
-            if w != predict_word.index:
-                word_indices.append(w)
-        l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
-        gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
-        if learn_hidden:
-            model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
-        neu1e += dot(gb, l2b)  # save error
-
-    if learn_vectors:
-        for i in input_subword_indices:
-            model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
-
-    return neu1e
 
 
 class FastText(Word2Vec):
@@ -159,40 +80,8 @@ class FastText(Word2Vec):
             negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1, bucket=2000000,
             trim_rule=None, batch_words=MAX_WORDS_IN_BATCH):
 
-        self.load = call_on_class_only
-
+        # fastText specific functions and params
         self.initialize_ngram_vectors()
-
-        # params common between Word2Vec and fastText
-        self.sg = int(sg)
-        self.cum_table = None  # for negative sampling
-        self.vector_size = int(size)
-        self.layer1_size = int(size)
-        if size % 4 != 0:
-            logger.warning("consider setting layer size to a multiple of 4 for greater performance")
-        self.alpha = float(alpha)
-        self.min_alpha_yet_reached = float(alpha)  # To warn user if alpha increases
-        self.window = int(window)
-        self.max_vocab_size = max_vocab_size
-        self.seed = seed
-        self.random = random.RandomState(seed)
-        self.min_count = min_count
-        self.sample = sample
-        self.workers = int(workers)
-        self.min_alpha = float(min_alpha)
-        self.hs = hs
-        self.negative = negative
-        self.cbow_mean = int(cbow_mean)
-        self.hashfxn = hashfxn
-        self.iter = iter
-        self.null_word = null_word
-        self.train_count = 0
-        self.total_train_time = 0
-        self.sorted_vocab = sorted_vocab
-        self.batch_words = batch_words
-        self.model_trimmed_post_training = False
-
-        # fastText specific params
         self.bucket = bucket
         self.word_ngrams = word_ngrams
         self.min_n = min_n
@@ -201,25 +90,17 @@ class FastText(Word2Vec):
             self.bucket = 0
         self.wv.min_n = min_n
         self.wv.max_n = max_n
-
         self.wv.ngrams_word = {}
 
-        if sentences is not None:
-            if isinstance(sentences, GeneratorType):
-                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
-            self.build_vocab(sentences, trim_rule=trim_rule)
-            self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
-                start_alpha=self.alpha, end_alpha=self.min_alpha)
-        else:
-            if trim_rule is not None:
-                logger.warning("The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model. ")
-                logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored.")
+        super(FastText, self).__init__(sentences=sentences, size=size, alpha=alpha, window=window, min_count=min_count,
+            max_vocab_size=max_vocab_size, sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
+            sg=sg, hs=hs, negative=negative, cbow_mean=cbow_mean, hashfxn=hashfxn, iter=iter, null_word=null_word,
+            trim_rule=trim_rule, sorted_vocab=sorted_vocab, batch_words=batch_words, init_wv=False)
 
     def initialize_ngram_vectors(self):
         self.wv = FastTextKeyedVectors()
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
-        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
         if update:
             if not len(self.wv.vocab):
                 raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
@@ -227,8 +108,8 @@ class FastText(Word2Vec):
                     "before doing an online update.")
             self.old_vocab_len = len(self.wv.vocab)
             self.old_hash2index_len = len(self.wv.hash2index)
-        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
-        self.finalize_vocab(update=update)  # build tables & arrays
+
+        super(FastText, self).build_vocab(sentences, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, progress_per=progress_per, update=update)
         self.init_ngrams(update=update)
 
     def init_ngrams(self, update=False):
@@ -239,7 +120,7 @@ class FastText(Word2Vec):
 
             all_ngrams = []
             for w, v in self.wv.vocab.items():
-                self.wv.ngrams_word[w] = Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
+                self.wv.ngrams_word[w] = compute_ngrams(w, self.min_n, self.max_n)
                 all_ngrams += self.wv.ngrams_word[w]
 
             all_ngrams = list(set(all_ngrams))
@@ -249,7 +130,7 @@ class FastText(Word2Vec):
             self.wv.hash2index = {}
             ngram_indices = range(len(self.wv.vocab))  # keeping the first `len(self.wv.vocab)` rows intact
             for i, ngram in enumerate(all_ngrams):
-                ngram_hash = Ft_Wrapper.ft_hash(ngram)
+                ngram_hash = ft_hash(ngram)
                 if ngram_hash in self.wv.hash2index:
                     self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
                 else:
@@ -266,14 +147,14 @@ class FastText(Word2Vec):
 
             new_ngrams = []
             for w, v in self.wv.vocab.items():
-                self.wv.ngrams_word[w] = Ft_Wrapper.compute_ngrams(w, self.min_n, self.max_n)
+                self.wv.ngrams_word[w] = compute_ngrams(w, self.min_n, self.max_n)
                 new_ngrams += [ng for ng in self.wv.ngrams_word[w] if ng not in self.wv.ngrams]
 
             new_ngrams = list(set(new_ngrams))
             logger.info("Number of new ngrams is %d", len(new_ngrams))
             new_count = 0
             for i, ngram in enumerate(new_ngrams):
-                ngram_hash = Ft_Wrapper.ft_hash(ngram)
+                ngram_hash = ft_hash(ngram)
                 if ngram_hash not in self.wv.hash2index:
                     self.wv.hash2index[ngram_hash] = new_count + len(self.wv.vocab) + self.old_hash2index_len
                     self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]

@@ -326,9 +326,9 @@ class TestFastText(unittest.TestCase):
 
     def testHash(self):
         # Tests FastText.ft_hash method return values to those obtained from original C implementation
-        ft_hash = fasttext.FastText.ft_hash('test')
+        ft_hash = fasttext.ft_hash('test')
         self.assertEqual(ft_hash, 2949673445)
-        ft_hash = fasttext.FastText.ft_hash('word')
+        ft_hash = fasttext.ft_hash('word')
         self.assertEqual(ft_hash, 1788406269)
 
 

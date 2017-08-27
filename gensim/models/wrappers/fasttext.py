@@ -80,7 +80,7 @@ class FastTextKeyedVectors(KeyedVectors):
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
         else:
             word_vec = np.zeros(self.syn0_all.shape[1])
-            ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
+            ngrams = compute_ngrams(word, self.min_n, self.max_n)
             ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:
                 ngram_weights = self.syn0_all_norm
@@ -123,7 +123,7 @@ class FastTextKeyedVectors(KeyedVectors):
         if word in self.vocab:
             return True
         else:
-            word_ngrams = set(FastText.compute_ngrams(word, self.min_n, self.max_n))
+            word_ngrams = set(compute_ngrams(word, self.min_n, self.max_n))
             if len(word_ngrams & set(self.ngrams.keys())):
                 return True
             else:
@@ -364,14 +364,14 @@ class FastText(Word2Vec):
         self.wv.syn0 = np.zeros((len(self.wv.vocab), self.vector_size), dtype=REAL)
 
         for w, vocab in self.wv.vocab.items():
-            all_ngrams += self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
+            all_ngrams += compute_ngrams(w, self.wv.min_n, self.wv.max_n)
             self.wv.syn0[vocab.index] += np.array(self.wv.syn0_all[vocab.index])
 
         all_ngrams = set(all_ngrams)
         self.num_ngram_vectors = len(all_ngrams)
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
-            ngram_hash = self.ft_hash(ngram)
+            ngram_hash = ft_hash(ngram)
             ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
             self.wv.ngrams[ngram] = i
         self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
@@ -381,37 +381,35 @@ class FastText(Word2Vec):
         logger.info("loading weights for %s words for fastText model from %s", len(self.wv.vocab), self.file_name)
 
         for w, vocab in self.wv.vocab.items():
-            word_ngrams = self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
+            word_ngrams = compute_ngrams(w, self.wv.min_n, self.wv.max_n)
             for word_ngram in word_ngrams:
                 self.wv.syn0[vocab.index] += np.array(ngram_weights[self.wv.ngrams[word_ngram]])
 
             self.wv.syn0[vocab.index] /= (len(word_ngrams) + 1)
         logger.info("loaded %s weight matrix for fastText model from %s", self.wv.syn0.shape, self.file_name)
 
-    @staticmethod
-    def compute_ngrams(word, min_n, max_n):
-        ngram_indices = []
-        BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
-        extended_word = BOW + word + EOW
-        ngrams = []
-        for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
-            for i in range(0, len(extended_word) - ngram_length + 1):
-                ngrams.append(extended_word[i:i + ngram_length])
-        return ngrams
+def compute_ngrams(word, min_n, max_n):
+    ngram_indices = []
+    BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
+    extended_word = BOW + word + EOW
+    ngrams = []
+    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+        for i in range(0, len(extended_word) - ngram_length + 1):
+            ngrams.append(extended_word[i:i + ngram_length])
+    return ngrams
 
-    @staticmethod
-    def ft_hash(string):
-        """
-        Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-        used in fastText.
+def ft_hash(string):
+    """
+    Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+    used in fastText.
 
-        """
-        # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
-        old_settings = np.seterr(all='ignore')
-        h = np.uint32(2166136261)
-        for c in string:
-            h = h ^ np.uint32(ord(c))
-            h = h * np.uint32(16777619)
-        np.seterr(**old_settings)
-        return h
+    """
+    # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
+    old_settings = np.seterr(all='ignore')
+    h = np.uint32(2166136261)
+    for c in string:
+        h = h ^ np.uint32(ord(c))
+        h = h * np.uint32(16777619)
+    np.seterr(**old_settings)
+    return h
 
