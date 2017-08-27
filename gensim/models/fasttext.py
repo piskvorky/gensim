@@ -128,7 +128,7 @@ class FastText(Word2Vec):
             logger.info("Total number of ngrams is %d", len(all_ngrams))
 
             self.wv.hash2index = {}
-            ngram_indices = range(len(self.wv.vocab))  # keeping the first `len(self.wv.vocab)` rows intact
+            ngram_indices = list(range(len(self.wv.vocab)))  # keeping the first `len(self.wv.vocab)` rows intact
             for i, ngram in enumerate(all_ngrams):
                 ngram_hash = ft_hash(ngram)
                 if ngram_hash in self.wv.hash2index:
@@ -214,26 +214,7 @@ class FastText(Word2Vec):
             self.wv.syn0[v.index] = word_vec
 
     def word_vec(self, word, use_norm=False):
-        if word in self.wv.vocab:
-            if use_norm:
-                return self.wv.syn0norm[self.wv.vocab[word].index]
-            else:
-                return self.wv.syn0[self.wv.vocab[word].index]
-        else:
-            logger.info("Word is out of vocabulary")
-            word_vec = np.zeros(self.wv.syn0_all.shape[1])
-            ngrams = Ft_Wrapper.compute_ngrams(word, self.min_n, self.max_n)
-            ngrams = [ng for ng in ngrams if ng in self.wv.ngrams]
-            if use_norm:
-                ngram_weights = self.wv.syn0_all_norm
-            else:
-                ngram_weights = self.wv.syn0_all
-            for ngram in ngrams:
-                word_vec += ngram_weights[self.wv.ngrams[ngram]]
-            if word_vec.any():
-                return word_vec / len(ngrams)
-            else:  # No ngrams of the word are present in self.ngrams
-                raise KeyError('all ngrams for word %s absent from model' % word)
+        return FastTextKeyedVectors.word_vec(self.wv, word, use_norm=use_norm)
 
     @classmethod
     def load_fasttext_format(cls, *args, **kwargs):
