@@ -18,14 +18,13 @@ import numbers
 
 import six
 import numpy as np
-import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import ldamodel, ldamulticore
 from gensim import matutils, utils
 from gensim.test import basetests
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -61,13 +60,12 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.class_ = ldamodel.LdaModel
         self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
 
-
     def testTransform(self):
         passed = False
         # sometimes, LDA training gets stuck at a local minimum
         # in that case try re-training the model from scratch, hoping for a
         # better random initialization
-        for i in range(25): # restart at most 5 times
+        for i in range(25):  # restart at most 5 times
             # create the transformation model
             model = self.class_(id2word=dictionary, num_topics=2, passes=100)
             model.update(self.corpus)
@@ -76,9 +74,9 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             doc = list(corpus)[0]
             transformed = model[doc]
 
-            vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
+            vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
             expected = [0.13, 0.87]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
             if passed:
                 break
             logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
@@ -146,7 +144,6 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         kwargs['alpha'] = "gensim is cool"
         self.assertRaises(ValueError, self.class_, **kwargs)
 
-
     def testEtaAuto(self):
         model1 = self.class_(corpus, id2word=dictionary, eta='symmetric', passes=10)
         modelauto = self.class_(corpus, id2word=dictionary, eta='auto', passes=10)
@@ -193,7 +190,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(model.eta.shape, expected_shape)
         self.assertTrue(all(model.eta == np.array([0.3] * num_terms)))
 
-	# should be ok with num_topics x num_terms
+        # should be ok with num_topics x num_terms
         testeta = np.array([[0.5] * len(dictionary)] * 2)
         kwargs['eta'] = testeta
         self.class_(**kwargs)
@@ -234,7 +231,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testGetDocumentTopics(self):
 
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100, random_state=np.random.seed(0))
+        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
 
         doc_topics = model.get_document_topics(self.corpus)
 
@@ -244,26 +241,26 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
 
-        #Test case to use the get_document_topic function for the corpus
+        # Test case to use the get_document_topic function for the corpus
         all_topics = model.get_document_topics(self.corpus, per_word_topics=True)
 
         self.assertEqual(model.state.numdocs, len(corpus))
 
         for topic in all_topics:
             self.assertTrue(isinstance(topic, tuple))
-            for k, v in topic[0]: # list of doc_topics
+            for k, v in topic[0]:  # list of doc_topics
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
 
-            for w, topic_list in topic[1]: # list of word_topics
+            for w, topic_list in topic[1]:  # list of word_topics
                 self.assertTrue(isinstance(w, int))
                 self.assertTrue(isinstance(topic_list, list))
 
-            for w, phi_values in topic[2]: # list of word_phis
+            for w, phi_values in topic[2]:  # list of word_phis
                 self.assertTrue(isinstance(w, int))
                 self.assertTrue(isinstance(phi_values, list))
 
-        #Test case to check the filtering effect of minimum_probability and minimum_phi_value
+        # Test case to check the filtering effect of minimum_probability and minimum_phi_value
         doc_topic_count_na = 0
         word_phi_count_na = 0
 
@@ -273,25 +270,24 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
         for topic in all_topics:
             self.assertTrue(isinstance(topic, tuple))
-            for k, v in topic[0]: # list of doc_topics
+            for k, v in topic[0]:  # list of doc_topics
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
                 if len(topic[0]) != 0:
                     doc_topic_count_na += 1
 
-            for w, topic_list in topic[1]: # list of word_topics
+            for w, topic_list in topic[1]:  # list of word_topics
                 self.assertTrue(isinstance(w, int))
                 self.assertTrue(isinstance(topic_list, list))
 
-            for w, phi_values in topic[2]: # list of word_phis
+            for w, phi_values in topic[2]:  # list of word_phis
                 self.assertTrue(isinstance(w, int))
                 self.assertTrue(isinstance(phi_values, list))
                 if len(phi_values) != 0:
                     word_phi_count_na += 1
 
         self.assertTrue(model.state.numdocs > doc_topic_count_na)
-        self.assertTrue( sum([len(i) for i in corpus]) > word_phi_count_na)
-
+        self.assertTrue(sum([len(i) for i in corpus]) > word_phi_count_na)
 
         doc_topics, word_topics, word_phis = model.get_document_topics(self.corpus[1], per_word_topics=True)
 
@@ -309,8 +305,9 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
         # word_topics looks like this: ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).
         # we check one case in word_topics, i.e of the first word in the doc, and it's likely topics.
-        expected_word = 0
+
         # FIXME: Fails on osx and win
+        # expected_word = 0
         # self.assertEqual(word_topics[0][0], expected_word)
         # self.assertTrue(0 in word_topics[0][1])
 
@@ -325,9 +322,8 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             self.assertTrue(isinstance(probability, float))
 
         # checks if topic '1' is in the result list
-         # FIXME: Fails on osx and win
-         # self.assertTrue(1 in result[0])
-
+        # FIXME: Fails on osx and win
+        # self.assertTrue(1 in result[0])
 
         # if user has entered word instead, check with word
         result = model.get_term_topics(str(model.id2word[2]))
@@ -336,9 +332,8 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             self.assertTrue(isinstance(probability, float))
 
         # checks if topic '1' is in the result list
-         # FIXME: Fails on osx and win
-         # self.assertTrue(1 in result[0])
-
+        # FIXME: Fails on osx and win
+        # self.assertTrue(1 in result[0])
 
     def testPasses(self):
         # long message includes the original error message with a custom one
@@ -407,7 +402,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testModelCompatibilityWithPythonVersions(self):
         fname_model_2_7 = datapath('ldamodel_python_2_7')
@@ -417,11 +412,10 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(model_2_7.num_topics, model_3_5.num_topics)
         self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
         tstvec = []
-        self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec])) # try projecting an empty vector
-        id2word_2_7 = dict((k,v) for k,v in model_2_7.id2word.iteritems())
-        id2word_3_5 = dict((k,v) for k,v in model_3_5.id2word.iteritems())
+        self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec]))  # try projecting an empty vector
+        id2word_2_7 = dict((k, v) for k, v in model_2_7.id2word.iteritems())
+        id2word_3_5 = dict((k, v) for k, v in model_3_5.id2word.iteritems())
         self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
-
 
     def testPersistenceIgnore(self):
         fname = testfile('testPersistenceIgnore')
@@ -442,22 +436,22 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testLargeMmap(self):
         fname = testfile()
         model = self.model
 
         # simulate storing large arrays separately
-        model.save(testfile(), sep_limit=0)
+        model.save(fname, sep_limit=0)
 
         # test loading the large model arrays with mmap
-        model2 = self.class_.load(testfile(), mmap='r')
+        model2 = self.class_.load(fname, mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(isinstance(model2.expElogbeta, np.memmap))
         self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testLargeMmapCompressed(self):
         fname = testfile() + '.gz'
@@ -493,7 +487,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             self.assertTrue(isinstance(i[0], int))
             self.assertTrue(isinstance(i[1], six.string_types))
 
-#endclass TestLdaModel
+# endclass TestLdaModel
 
 
 class TestLdaMulticore(TestLdaModel):
@@ -507,7 +501,7 @@ class TestLdaMulticore(TestLdaModel):
         self.assertRaises(RuntimeError, self.class_, alpha='auto')
 
 
-#endclass TestLdaMulticore
+# endclass TestLdaMulticore
 
 
 if __name__ == '__main__':

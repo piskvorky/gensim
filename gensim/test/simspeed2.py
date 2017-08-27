@@ -20,9 +20,6 @@ import os
 import math
 from time import time
 
-import numpy as np
-import scipy.sparse
-
 import gensim
 
 

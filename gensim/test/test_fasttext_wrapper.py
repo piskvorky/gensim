@@ -225,7 +225,7 @@ class TestFastText(unittest.TestCase):
         model = fasttext.FastText.load_fasttext_format(datapath('non_ascii_fasttext'))
         self.assertTrue(u'který' in model)
         try:
-            vector = model[u'který']
+            vector = model[u'který']  # noqa:F841
         except UnicodeDecodeError:
             self.fail('Unable to access vector for utf8 encoded non-ascii word')
 
@@ -234,7 +234,7 @@ class TestFastText(unittest.TestCase):
         model = fasttext.FastText.load_fasttext_format(datapath('cp852_fasttext'), encoding='cp852')
         self.assertTrue(u'který' in model)
         try:
-            vector = model[u'který']
+            vector = model[u'který']  # noqa:F841
         except KeyError:
             self.fail('Unable to access vector for cp-852 word')
 

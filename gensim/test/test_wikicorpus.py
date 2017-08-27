@@ -10,8 +10,6 @@ Automated tests for checking the WikiCorpus
 
 
 import os
-import sys
-import types
 import logging
 import unittest
 

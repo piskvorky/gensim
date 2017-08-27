@@ -49,6 +49,7 @@ class TestSegmentation(unittest.TestCase):
                 self.assertEqual(actual[s_i][j][0], expected[s_i][j][0])
                 self.assertTrue(np.allclose(actual[s_i][j][1], expected[s_i][j][1]))
 
+
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)
     unittest.main()

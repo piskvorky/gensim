@@ -33,7 +33,7 @@ sentences = [
     ['graph', 'trees'],
     ['graph', 'minors', 'trees'],
     ['graph', 'minors', 'survey'],
-    ['graph', 'minors', 'survey','human','interface'] #test bigrams within same sentence
+    ['graph', 'minors', 'survey', 'human', 'interface']  # test bigrams within same sentence
 ]
 unicode_sentences = [[utils.to_unicode(w) for w in sentence] for sentence in sentences]
 
@@ -44,6 +44,7 @@ def gen_sentences():
 
 class TestPhrasesCommon(unittest.TestCase):
     """ Tests that need to be run for both Prases and Phraser classes."""
+
     def setUp(self):
         self.bigram = Phrases(sentences, min_count=1, threshold=1)
         self.bigram_default = Phrases(sentences)
@@ -195,11 +196,12 @@ class TestPhrasesModel(unittest.TestCase):
         """Test that max_vocab_size parameter is respected."""
         bigram = Phrases(sentences, max_vocab_size=5)
         self.assertTrue(len(bigram.vocab) <= 5)
-#endclass TestPhrasesModel
+# endclass TestPhrasesModel
 
 
 class TestPhraserModel(TestPhrasesCommon):
     """ Test Phraser models."""
+
     def setUp(self):
         """Set up Phraser models for the tests."""
         bigram_phrases = Phrases(sentences, min_count=1, threshold=1)

@@ -9,7 +9,7 @@ import logging
 import unittest
 import numpy as np
 
-from gensim.parsing.preprocessing import *
+from gensim.parsing.preprocessing import *  # noqa:F403
 
 
 # several documents
@@ -41,7 +41,6 @@ dataset = map(lambda x: strip_punctuation2(x.lower()),
         [doc1, doc2, doc3, doc4])
 # doc1 and doc2 have class 0, doc3 and doc4 avec class 1
 classes = np.array([[1, 0], [1, 0], [0, 1], [0, 1]])
-
 
 
 class TestPreprocessing(unittest.TestCase):

@@ -65,7 +65,6 @@ class TestLeeTest(unittest.TestCase):
         sim_m_size = np.shape(sim_matrix)[0]
         human_sim_vector = sim_matrix[matutils.triu_indices(sim_m_size, 1)]
 
-
     def test_corpus(self):
         """availability and integrity of corpus"""
         documents_in_bg_corpus = 300
@@ -74,7 +73,6 @@ class TestLeeTest(unittest.TestCase):
         self.assertEqual(len(bg_corpus), documents_in_bg_corpus)
         self.assertEqual(len(corpus), documents_in_corpus)
         self.assertEqual(len(human_sim_vector), len_sim_vector)
-
 
     def test_lee(self):
         """correlation with human data > 0.6
@@ -108,7 +106,6 @@ class TestLeeTest(unittest.TestCase):
         logging.info("LSI correlation coefficient is %s" % cor)
         self.assertTrue(cor > 0.6)
 
-
     # def test_lee_mallet(self):
     #     global bg_corpus, corpus, bg_corpus2, corpus2
 
@@ -132,7 +129,6 @@ class TestLeeTest(unittest.TestCase):
     #     cor = np.corrcoef(flat, human_sim_vector)[0, 1]
     #     logging.info("LDA correlation coefficient is %s" % cor)
     #     self.assertTrue(cor > 0.35)
-
 
 
 if __name__ == '__main__':
