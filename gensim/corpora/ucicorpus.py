@@ -21,7 +21,7 @@ from gensim.corpora import Dictionary
 from gensim.corpora import IndexedCorpus
 from gensim.matutils import MmReader
 from gensim.matutils import MmWriter
-from six import iteritems, string_types
+from six import iteritems
 from six.moves import xrange
 
 
@@ -118,7 +118,7 @@ class UciWriter(MmWriter):
                 offsets.append(posnow)
                 poslast = posnow
 
-            vector = [(x, int(y)) for (x, y) in bow if int(y) != 0] # integer count, not floating weights
+            vector = [(x, int(y)) for (x, y) in bow if int(y) != 0]  # integer count, not floating weights
             max_id, veclen = writer.write_vector(docno, vector)
             num_terms = max(num_terms, 1 + max_id)
             num_nnz += veclen
@@ -165,7 +165,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         (yielding one document at a time).
         """
         for docId, doc in super(UciCorpus, self).__iter__():
-            yield doc # get rid of docId, return the sparse vector only
+            yield doc  # get rid of docId, return the sparse vector only
 
     def create_dictionary(self):
         """
