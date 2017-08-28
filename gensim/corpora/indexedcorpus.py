@@ -51,7 +51,7 @@ class IndexedCorpus(interfaces.CorpusABC):
             # change self.index into a numpy.ndarray to support fancy indexing
             self.index = numpy.asarray(self.index)
             logger.info("loaded corpus index from %s" % index_fname)
-        except:
+        except Exception:
             self.index = None
         self.length = None
 

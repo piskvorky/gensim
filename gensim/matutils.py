@@ -150,7 +150,7 @@ def zeros_aligned(shape, dtype, order='C', align=128):
     nbytes = np.prod(shape, dtype=np.int64) * np.dtype(dtype).itemsize
     buffer = np.zeros(nbytes + align, dtype=np.uint8)  # problematic on win64 ("maximum allowed dimension exceeded")
     start_index = -buffer.ctypes.data % align
-    return buffer[start_index: start_index + nbytes].view(dtype).reshape(shape, order=order)
+    return buffer[start_index:start_index + nbytes].view(dtype).reshape(shape, order=order)
 
 
 def ismatrix(m):
@@ -435,7 +435,7 @@ def unitvec(vec, norm='l2'):
 
     try:
         first = next(iter(vec))  # is there at least one element?
-    except:
+    except Exception:
         return vec
 
     if isinstance(first, (tuple, list)) and len(first) == 2:  # gensim sparse format
@@ -869,7 +869,7 @@ class MmReader(object):
                 if docid != previd:
                     # change of document: return the document read so far (its id is prevId)
                     if previd >= 0:
-                        yield previd, document
+                        yield previd, document  # noqa:F821
 
                     # return implicit (empty) documents between previous id and new id
                     # too, to keep consistent document numbering and corpus length

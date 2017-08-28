@@ -91,7 +91,7 @@ class LdaSeqModel(utils.SaveLoad):
         if corpus is not None:
             try:
                 self.corpus_len = len(corpus)
-            except:
+            except Exception:
                 logger.warning("input corpus stream has no len(); counting documents")
                 self.corpus_len = sum(1 for _ in corpus)
 

@@ -405,7 +405,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         try:
             _ = len(chunk)
-        except:
+        except Exception:
             # convert iterators/generators to plain list, so we have len() etc.
             chunk = list(chunk)
         if len(chunk) > 1:
@@ -581,7 +581,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         try:
             lencorpus = len(corpus)
-        except:
+        except Exception:
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:

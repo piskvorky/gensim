@@ -682,7 +682,7 @@ class KeyedVectors(utils.SaveLoad):
                         a, b, c, expected = [word.upper() for word in line.split()]
                     else:
                         a, b, c, expected = [word for word in line.split()]
-                except:
+                except Exception:
                     logger.info("skipping invalid line #%i in %s" % (line_no, questions))
                     continue
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
@@ -773,7 +773,7 @@ class KeyedVectors(utils.SaveLoad):
                     else:
                         a, b, sim = [word for word in line.split(delimiter)]
                     sim = float(sim)
-                except:
+                except Exception:
                     logger.info('skipping invalid line #%d in %s', line_no, pairs)
                     continue
                 if a not in ok_vocab or b not in ok_vocab:

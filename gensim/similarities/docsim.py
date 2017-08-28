@@ -127,7 +127,7 @@ class Shard(utils.SaveLoad):
         try:
             index.num_best = self.num_best
             index.normalize = self.normalize
-        except:
+        except Exception:
             raise ValueError("num_best and normalize have to be set before querying a proxy Shard object")
         return index[query]
 

@@ -263,7 +263,7 @@ class SimilarityABC(utils.SaveLoad):
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
                 chunk_end = min(self.index.shape[0], chunk_start + self.chunksize)
-                chunk = self.index[chunk_start: chunk_end]
+                chunk = self.index[chunk_start:chunk_end]
                 for sim in self[chunk]:
                     yield sim
         else:

@@ -468,7 +468,7 @@ class SaveLoad(object):
             self.__dict__['__scipys'] = scipys
             self.__dict__['__ignoreds'] = ignoreds
             self.__dict__['__recursive_saveloads'] = recursive_saveloads
-        except:
+        except Exception:
             # restore the attributes if exception-interrupted
             for attrib, val in iteritems(asides):
                 setattr(self, attrib, val)
@@ -606,7 +606,7 @@ def is_corpus(obj):
     try:
         if 'Corpus' in obj.__class__.__name__:  # the most common case, quick hack
             return True, obj
-    except:
+    except Exception:
         pass
     try:
         if hasattr(obj, 'next') or hasattr(obj, '__next__'):
@@ -644,14 +644,14 @@ def get_my_ip():
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect((ns._pyroUri.host, ns._pyroUri.port))
         result, port = s.getsockname()
-    except:
+    except Exception:
         try:
             # see what ifconfig says about our default interface
             import commands
             result = commands.getoutput("ifconfig").split("\n")[1].split()[1][5:]
             if len(result.split('.')) != 4:
                 raise Exception()
-        except:
+        except Exception:
             # give up, leave the resolution to gethostbyname
             result = socket.gethostbyname(socket.gethostname())
     return result
@@ -802,7 +802,7 @@ def decode_htmlentities(text):
                     return safe_unichr(cp)
                 else:
                     return match.group()
-        except:
+        except Exception:
             # in case of errors, return original input
             return match.group()
 
