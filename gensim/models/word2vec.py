@@ -213,7 +213,7 @@ except ImportError:
 
             # now go over all words from the window, predicting each one in turn
             start = max(0, pos - model.window)
-            for pos2, word2 in enumerate(word_vocabs[start: pos + model.window + 1], start):
+            for pos2, word2 in enumerate(word_vocabs[start : pos + model.window + 1], start):
                 # don't train on OOV words and on the `word` itself
                 if word2 is not None and pos2 != pos:
                     log_prob_sentence += score_sg_pair(model, word, word2)
@@ -1456,6 +1456,7 @@ class Word2Vec(utils.SaveLoad):
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
+
     def __init__(self, dirname):
         self.dirname = dirname
 
@@ -1478,6 +1479,7 @@ class BrownCorpus(object):
 
 class Text8Corpus(object):
     """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
+
     def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
         self.fname = fname
         self.max_sentence_length = max_sentence_length
@@ -1538,7 +1540,7 @@ class LineSentence(object):
                 line = utils.to_unicode(line).split()
                 i = 0
                 while i < len(line):
-                    yield line[i: i + self.max_sentence_length]
+                    yield line[i : i + self.max_sentence_length]
                     i += self.max_sentence_length
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
@@ -1547,7 +1549,7 @@ class LineSentence(object):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
-                        yield line[i:i + self.max_sentence_length]
+                        yield line[i : i + self.max_sentence_length]
                         i += self.max_sentence_length
 
 
