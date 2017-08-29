@@ -314,6 +314,42 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertIsNone(cm1._accumulator)  # should uncache due to missing terms in accumulator
         self.assertEqual(6, len(cm1.topics[0]))
 
+    def testCompareCoherenceForTopics(self):
+        topics = [self.topics1, self.topics2]
+        cm = CoherenceModel.for_topics(
+            topics, dictionary=self.dictionary, texts=self.texts, coherence='c_v')
+        self.assertIsNotNone(cm._accumulator)
+
+        # Accumulator should have all relevant IDs.
+        for topic_list in topics:
+            cm.topics = topic_list
+            self.assertIsNotNone(cm._accumulator)
+
+        (coherence_topics1, coherence1), (coherence_topics2, coherence2) = \
+            cm.compare_model_topics(topics)
+
+        self.assertAlmostEqual(np.mean(coherence_topics1), coherence1, 4)
+        self.assertAlmostEqual(np.mean(coherence_topics2), coherence2, 4)
+        self.assertGreater(coherence1, coherence2)
+
+    def testCompareCoherenceForModels(self):
+        models = [self.ldamodel, self.ldamodel]
+        cm = CoherenceModel.for_models(
+            models, dictionary=self.dictionary, texts=self.texts, coherence='c_v')
+        self.assertIsNotNone(cm._accumulator)
+
+        # Accumulator should have all relevant IDs.
+        for model in models:
+            cm.model = model
+            self.assertIsNotNone(cm._accumulator)
+
+        (coherence_topics1, coherence1), (coherence_topics2, coherence2) = \
+            cm.compare_models(models)
+
+        self.assertAlmostEqual(np.mean(coherence_topics1), coherence1, 4)
+        self.assertAlmostEqual(np.mean(coherence_topics2), coherence2, 4)
+        self.assertAlmostEqual(coherence1, coherence2, places=4)
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

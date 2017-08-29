@@ -21,6 +21,7 @@ coherence measure of his/her choice by choosing a method in each of the pipeline
 import logging
 import multiprocessing as mp
 from collections import namedtuple
+import itertools
 
 import numpy as np
 
@@ -116,7 +117,7 @@ class CoherenceModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     """
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
-                 window_size=None, keyed_vectors=None, coherence='c_v', topn=10, processes=-1):
+                 window_size=None, keyed_vectors=None, coherence='c_v', topn=20, processes=-1):
         """
         Args:
             model : Pre-trained topic model. Should be provided if topics is not provided.
@@ -158,8 +159,8 @@ class CoherenceModel(interfaces.TransformationABC):
                 to corpus using the dictionary. For 'c_v', 'c_uci' and 'c_npmi' texts should be provided.
                 Corpus is not needed.
             topn : Integer corresponding to the number of top words to be extracted from each topic.
-            processes : number of processes to use for probability estimation phase; any value less than 1 will be
-                interpreted to mean num_cpus - 1; default is -1.
+            processes : number of processes to use for probability estimation phase; any value
+                less than 1 will be interpreted to mean num_cpus - 1; default is -1.
         """
         if model is None and topics is None:
             raise ValueError("One of model or topics has to be provided.")
@@ -216,6 +217,62 @@ class CoherenceModel(interfaces.TransformationABC):
 
         self.processes = processes if processes > 1 else max(1, mp.cpu_count() - 1)
 
+    @classmethod
+    def for_models(cls, models, dictionary, topn=20, **kwargs):
+        """Initialize a CoherenceModel with estimated probabilities for all of the given models.
+        
+        Args:
+            models (list): List of models to evalaute coherence of; the only requirement is
+                that each has a `get_topics` methods.
+        """
+        topics = [cls.top_topics_as_word_lists(model, dictionary, topn) for model in models]
+        kwargs['dictionary'] = dictionary
+        kwargs['topn'] = topn
+        return cls.for_topics(topics, **kwargs)
+
+    @staticmethod
+    def top_topics_as_word_lists(model, dictionary, topn=20):
+        if not dictionary.id2token:
+            dictionary.id2token = {v: k for k, v in dictionary.token2id.items()}
+
+        str_topics = []
+        for topic in model.get_topics():
+            bestn = matutils.argsort(topic, topn=topn, reverse=True)
+            beststr = [dictionary.id2token[_id] for _id in bestn]
+            str_topics.append(beststr)
+        return str_topics
+
+    @classmethod
+    def for_topics(cls, topics_as_topn_terms, **kwargs):
+        """Initialize a CoherenceModel with estimated probabilities for all of the given topics.
+        
+        Args:
+            topics_as_topn_terms (list of lists): Each element in the top-level list should be
+                the list of topics for a model. The topics for the model should be a list of 
+                top-N words, one per topic.
+        """
+        if not topics_as_topn_terms:
+            raise ValueError("len(topics) must be > 0.")
+        if any(len(topic_lists) == 0 for topic_lists in topics_as_topn_terms):
+            raise ValueError("found empty topic listing in `topics`")
+
+        topn = 0
+        for topic_list in topics_as_topn_terms:
+            for topic in topic_list:
+                topn = max(topn, len(topic))
+
+        super_topic = set()
+        for topic in topics_as_topn_terms:
+            super_topic.update(itertools.chain.from_iterable(topic))
+
+        logging.info(
+            "Number of relevant terms for all %d models: %d",
+            len(topics_as_topn_terms), len(super_topic))
+        cm = CoherenceModel(topics=[super_topic], topn=len(super_topic), **kwargs)
+        cm.estimate_probabilities()
+        cm.topn = topn
+        return cm
+
     def __str__(self):
         return str(self.measure)
 
@@ -262,21 +319,31 @@ class CoherenceModel(interfaces.TransformationABC):
 
     @topics.setter
     def topics(self, topics):
-        new_topics = None
-        if self.model is not None:
-            new_topics = self._get_topics()
-            if topics is not None:
-                logger.warning(
-                    "Ignoring topics you are attempting to set in favor of model's topics: %s",
-                    self.model)
-        elif topics is not None:
+        if topics is not None:
             new_topics = []
             for topic in topics:
-                topic_token_ids = np.array([self.dictionary.token2id[token] for token in topic])
+                topic_token_ids = self._ensure_elements_are_ids(topic)
                 new_topics.append(topic_token_ids)
+
+            if self.model is not None:
+                logger.warning(
+                    "The currently set model '%s' may be inconsistent with the newly set topics",
+                    self.model)
+        elif self.model is not None:
+            new_topics = self._get_topics()
+            logger.debug("Setting topics to those of the model: %s", self.model)
+        else:
+            new_topics = None
 
         self._update_accumulator(new_topics)
         self._topics = new_topics
+
+    def _ensure_elements_are_ids(self, topic):
+        try:
+            return np.array([self.dictionary.token2id[token] for token in topic])
+        except KeyError:  # might be a list of token ids already, but let's verify all in dict
+            topic = [self.dictionary.id2token[_id] for _id in topic]
+            return np.array([self.dictionary.token2id[token] for token in topic])
 
     def _update_accumulator(self, new_topics):
         if self._relevant_ids_will_differ(new_topics):
@@ -297,10 +364,15 @@ class CoherenceModel(interfaces.TransformationABC):
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""
+        return self._get_topics_from_model(self.model, self.topn)
+
+    @staticmethod
+    def _get_topics_from_model(model, topn):
+        """Internal helper function to return topics from a trained topic model."""
         try:
             return [
-                matutils.argsort(topic, topn=self.topn, reverse=True) for topic in
-                self.model.get_topics()
+                matutils.argsort(topic, topn=topn, reverse=True) for topic in
+                model.get_topics()
             ]
         except AttributeError:
             raise ValueError(
@@ -359,3 +431,62 @@ class CoherenceModel(interfaces.TransformationABC):
         """Return coherence value based on pipeline parameters."""
         confirmed_measures = self.get_coherence_per_topic()
         return self.aggregate_measures(confirmed_measures)
+
+    def compare_models(self, models):
+        model_topics = [self._get_topics_from_model(model, self.topn) for model in models]
+        return self.compare_model_topics(model_topics)
+
+    def compare_model_topics(self, model_topics):
+        """Perform the coherence evaluation for each of the models.
+        
+        This first precomputes the probabilities once, then evaluates coherence for
+        each model.
+
+        Since we have already precomputed the probabilities, this simply
+        involves using the accumulated stats in the `CoherenceModel` to
+        perform the evaluations, which should be pretty quick.
+
+        Args:
+            model_topics (list): of lists of top-N words for the model trained with that
+                number of topics.
+
+        Returns:
+            list: of `(avg_topic_coherences, avg_coherence)`.
+                These are the coherence values per topic and the overall model coherence.
+        """
+        orig_topics = self._topics
+        orig_topn = self.topn
+
+        try:
+            coherences = self._compare_model_topics(model_topics)
+        finally:
+            self.topics = orig_topics
+            self.topn = orig_topn
+
+        return coherences
+
+    def _compare_model_topics(self, model_topics):
+        coherences = []
+        last_topn_value = min(self.topn - 1, 4)
+        topn_grid = list(range(self.topn, last_topn_value, -5))
+
+        for model_num, topics in enumerate(model_topics):
+            self.topics = topics
+
+            # We evaluate at various values of N and average them. This is a more robust,
+            # according to: http://people.eng.unimelb.edu.au/tbaldwin/pubs/naacl2016.pdf
+            coherence_at_n = {}
+            for n in topn_grid:
+                self.topn = n
+                topic_coherences = self.get_coherence_per_topic()
+
+                # Let's record the coherences for each topic, as well as the aggregated
+                # coherence across all of the topics.
+                coherence_at_n[n] = (topic_coherences, self.aggregate_measures(topic_coherences))
+
+            topic_coherences, avg_coherences = zip(*coherence_at_n.values())
+            avg_topic_coherences = np.vstack(topic_coherences).mean(0)
+            avg_coherence = np.mean(avg_coherences)
+            logging.info("Avg coherence for model %d: %.5f" % (model_num, avg_coherence))
+            coherences.append((avg_topic_coherences, avg_coherence))
+        return coherences
