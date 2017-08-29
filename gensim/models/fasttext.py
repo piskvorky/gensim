@@ -92,7 +92,7 @@ class FastText(Word2Vec):
         super(FastText, self).__init__(sentences=sentences, size=size, alpha=alpha, window=window, min_count=min_count,
             max_vocab_size=max_vocab_size, sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
             sg=sg, hs=hs, negative=negative, cbow_mean=cbow_mean, hashfxn=hashfxn, iter=iter, null_word=null_word,
-            trim_rule=trim_rule, sorted_vocab=sorted_vocab, batch_words=batch_words, init_wv=True)
+            trim_rule=trim_rule, sorted_vocab=sorted_vocab, batch_words=batch_words)
 
     def initialize_word_vectors(self):
         self.wv = FastTextKeyedVectors()
