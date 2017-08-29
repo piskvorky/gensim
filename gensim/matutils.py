@@ -479,8 +479,13 @@ def isbow(vec):
         return False
     return True
 
-def symmetric_kl(distrib_p, distrib_q):
-    return numpy.sum([stats.entropy(distrib_p, distrib_q), stats.entropy(distrib_p, distrib_q)])
+def symmetric_kl(distrib_p, distrib_q, num_features=None):
+    """
+    A symmetric variation of Kullback-Leibler divergence. 
+    Used to measure the divergence between two probability distributions
+    """
+    distrib_p, distrib_q = convert_vec(distrib_p, distrib_q, num_features= num_features)
+    return (stats.entropy(distrib_p, distrib_q) + stats.entropy(distrib_q, distrib_p))
 
 def arun_metric(min_num_topics=10, max_num_topics=50, iterations=10):
     """
