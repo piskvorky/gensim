@@ -220,7 +220,7 @@ class CoherenceModel(interfaces.TransformationABC):
     @classmethod
     def for_models(cls, models, dictionary, topn=20, **kwargs):
         """Initialize a CoherenceModel with estimated probabilities for all of the given models.
-        
+
         Args:
             models (list): List of models to evalaute coherence of; the only requirement is
                 that each has a `get_topics` methods.
@@ -245,10 +245,10 @@ class CoherenceModel(interfaces.TransformationABC):
     @classmethod
     def for_topics(cls, topics_as_topn_terms, **kwargs):
         """Initialize a CoherenceModel with estimated probabilities for all of the given topics.
-        
+
         Args:
             topics_as_topn_terms (list of lists): Each element in the top-level list should be
-                the list of topics for a model. The topics for the model should be a list of 
+                the list of topics for a model. The topics for the model should be a list of
                 top-N words, one per topic.
         """
         if not topics_as_topn_terms:
@@ -438,7 +438,7 @@ class CoherenceModel(interfaces.TransformationABC):
 
     def compare_model_topics(self, model_topics):
         """Perform the coherence evaluation for each of the models.
-        
+
         This first precomputes the probabilities once, then evaluates coherence for
         each model.
 
