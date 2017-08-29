@@ -54,12 +54,17 @@ class FastTextKeyedVectors(KeyedVectors):
     """
     def __init__(self):
         super(FastTextKeyedVectors, self).__init__()
-        self.syn0_all_norm = None
+        self.syn0_vocab = None
+        self.syn0_vocab_norm = None
+        self.syn0_ngrams = None
+        self.syn0_ngrams_norm = None
         self.ngrams = {}
+        self.hash2index = {}
+        self.ngrams_word = {}
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_vocab_norm', 'syn0_ngrams_norm'])
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
@@ -79,13 +84,13 @@ class FastTextKeyedVectors(KeyedVectors):
         if word in self.vocab:
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
         else:
-            word_vec = np.zeros(self.syn0_all.shape[1])
+            word_vec = np.zeros(self.syn0_ngrams.shape[1])
             ngrams = compute_ngrams(word, self.min_n, self.max_n)
             ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:
-                ngram_weights = self.syn0_all_norm
+                ngram_weights = self.syn0_ngrams_norm
             else:
-                ngram_weights = self.syn0_all
+                ngram_weights = self.syn0_ngrams
             for ngram in ngrams:
                 word_vec += ngram_weights[self.ngrams[ngram]]
             if word_vec.any():
@@ -105,14 +110,14 @@ class FastTextKeyedVectors(KeyedVectors):
 
         """
         super(FastTextKeyedVectors, self).init_sims(replace)
-        if getattr(self, 'syn0_all_norm', None) is None or replace:
+        if getattr(self, 'syn0_ngrams_norm', None) is None or replace:
             logger.info("precomputing L2-norms of ngram weight vectors")
             if replace:
-                for i in xrange(self.syn0_all.shape[0]):
-                    self.syn0_all[i, :] /= sqrt((self.syn0_all[i, :] ** 2).sum(-1))
-                self.syn0_all_norm = self.syn0_all
+                for i in xrange(self.syn0_ngrams.shape[0]):
+                    self.syn0_ngrams[i, :] /= sqrt((self.syn0_ngrams[i, :] ** 2).sum(-1))
+                self.syn0_ngrams_norm = self.syn0_ngrams
             else:
-                self.syn0_all_norm = (self.syn0_all / sqrt((self.syn0_all ** 2).sum(-1))[..., newaxis]).astype(REAL)
+                self.syn0_ngrams_norm = (self.syn0_ngrams / sqrt((self.syn0_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
     def __contains__(self, word):
         """
@@ -219,7 +224,7 @@ class FastText(Word2Vec):
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_vocab_norm', 'syn0_ngrams_norm'])
         super(FastText, self).save(*args, **kwargs)
 
     @classmethod
@@ -340,11 +345,11 @@ class FastText(Word2Vec):
             dtype = np.dtype(np.float64)
 
         self.num_original_vectors = num_vectors
-        self.wv.syn0_all = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
-        self.wv.syn0_all = self.wv.syn0_all.reshape((num_vectors, dim))
-        assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
+        self.wv.syn0_ngrams = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
+        self.wv.syn0_ngrams = self.wv.syn0_ngrams.reshape((num_vectors, dim))
+        assert self.wv.syn0_ngrams.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
             'mismatch between actual weight matrix shape {} and expected shape {}'.format(
-                self.wv.syn0_all.shape, (self.bucket + len(self.wv.vocab), self.vector_size))
+                self.wv.syn0_ngrams.shape, (self.bucket + len(self.wv.vocab), self.vector_size))
 
         self.init_ngrams()
 
@@ -365,7 +370,7 @@ class FastText(Word2Vec):
 
         for w, vocab in self.wv.vocab.items():
             all_ngrams += compute_ngrams(w, self.wv.min_n, self.wv.max_n)
-            self.wv.syn0[vocab.index] += np.array(self.wv.syn0_all[vocab.index])
+            self.wv.syn0[vocab.index] += np.array(self.wv.syn0_ngrams[vocab.index])
 
         all_ngrams = set(all_ngrams)
         self.num_ngram_vectors = len(all_ngrams)
@@ -374,9 +379,9 @@ class FastText(Word2Vec):
             ngram_hash = ft_hash(ngram)
             ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
             self.wv.ngrams[ngram] = i
-        self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
+        self.wv.syn0_ngrams = self.wv.syn0_ngrams.take(ngram_indices, axis=0)
 
-        ngram_weights = self.wv.syn0_all
+        ngram_weights = self.wv.syn0_ngrams
 
         logger.info("loading weights for %s words for fastText model from %s", len(self.wv.vocab), self.file_name)
 

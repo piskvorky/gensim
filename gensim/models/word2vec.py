@@ -257,12 +257,14 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
                   context_vectors=None, context_locks=None, compute_loss=False, is_ft=False):
     if context_vectors is None:
         if is_ft:
-            context_vectors = model.wv.syn0_all
+            context_vectors_vocab = model.wv.syn0_vocab
+            context_vectors_ngrams = model.wv.syn0_ngrams
         else:
             context_vectors = model.wv.syn0
     if context_locks is None:
         if is_ft:
-            context_locks = model.syn0_all_lockf
+            context_locks_vocab = model.syn0_vocab_lockf
+            context_locks_ngrams = model.syn0_ngrams_lockf
         else:
             context_locks = model.syn0_lockf
 
@@ -271,9 +273,10 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
     predict_word = model.wv.vocab[word]  # target word (NN output)
 
     if is_ft:
-        l1 = np_sum(context_vectors[context_index], axis=0)
+        l1_vocab = context_vectors_vocab[context_index[0]]
+        l1_ngrams = np_sum(context_vectors_ngrams[context_index[1:]], axis=0)
         if context_index:
-            l1 /= len(context_index)
+            l1 = np_sum([l1_vocab, l1_ngrams], axis=0) / len(context_index)
     else:
         l1 = context_vectors[context_index]  # input word (NN input/projection layer)
         lock_factor = context_locks[context_index]
@@ -318,8 +321,9 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
 
     if learn_vectors:
         if is_ft:
-            for i in context_index:
-                model.wv.syn0_all[i] += neu1e * model.syn0_all_lockf[i]
+            model.wv.syn0_vocab[context_index[0]] += neu1e * model.syn0_vocab_lockf[context_index[0]]
+            for i in context_index[1:]:
+                model.wv.syn0_ngrams[i] += neu1e * model.syn0_ngrams_lockf[i]
         else:
             l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
     return neu1e
@@ -329,12 +333,14 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
                     context_vectors=None, context_locks=None, is_ft=False):
     if context_vectors is None:
         if is_ft:
-            context_vectors = model.wv.syn0_all
+            context_vectors_vocab = model.wv.syn0_vocab
+            context_vectors_ngrams = model.wv.syn0_ngrams
         else:
             context_vectors = model.wv.syn0
     if context_locks is None:
         if is_ft:
-            context_locks = model.syn0_all_lockf
+            context_locks_vocab = model.syn0_vocab_lockf
+            context_locks_ngrams = model.syn0_ngrams_lockf
         else:
             context_locks = model.syn0_lockf
 
@@ -376,10 +382,18 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
 
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
-        if not model.cbow_mean and input_word_indices:
-            neu1e /= len(input_word_indices)
-        for i in input_word_indices:
-            context_vectors[i] += neu1e * context_locks[i]
+        if is_ft:
+            if not model.cbow_mean and input_word_indices:
+                neu1e /= (len(input_word_indices[0]) + len(input_word_indices[1]))
+            for i in input_word_indices[0]:
+                context_vectors_vocab[i] += neu1e * context_locks_vocab[i]
+            for i in input_word_indices[1]:
+                context_vectors_ngrams[i] += neu1e * context_locks_ngrams[i]
+        else:
+            if not model.cbow_mean and input_word_indices:
+                neu1e /= len(input_word_indices)
+            for i in input_word_indices:
+                context_vectors[i] += neu1e * context_locks[i]
 
     return neu1e
 

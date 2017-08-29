@@ -74,7 +74,8 @@ class TestFastTextModel(unittest.TestCase):
 
         self.assertEqual(model.wv.syn0.shape, (12, 10))
         self.assertEqual(len(model.wv.vocab), 12)
-        self.assertEqual(model.wv.syn0_all.shape[1], 10)
+        self.assertEqual(model.wv.syn0_vocab.shape[1], 10)
+        self.assertEqual(model.wv.syn0_ngrams.shape[1], 10)
         self.model_sanity(model)
 
         # test querying for "most similar" by vector
@@ -90,7 +91,8 @@ class TestFastTextModel(unittest.TestCase):
     def models_equal(self, model, model2):
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
         self.assertEqual(model.num_ngram_vectors, model2.num_ngram_vectors)
-        self.assertTrue(np.allclose(model.wv.syn0_all, model2.wv.syn0_all))
+        self.assertTrue(np.allclose(model.wv.syn0_vocab, model2.wv.syn0_vocab))
+        self.assertTrue(np.allclose(model.wv.syn0_ngrams, model2.wv.syn0_ngrams))
         self.assertTrue(np.allclose(model.wv.syn0, model2.wv.syn0))
         if model.hs:
             self.assertTrue(np.allclose(model.syn1, model2.syn1))
@@ -107,7 +109,7 @@ class TestFastTextModel(unittest.TestCase):
         wv = model.wv
         wv.save(testfile())
         loaded_wv = FastTextKeyedVectors.load(testfile())
-        self.assertTrue(np.allclose(wv.syn0_all, loaded_wv.syn0_all))
+        self.assertTrue(np.allclose(wv.syn0_ngrams, loaded_wv.syn0_ngrams))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
         self.assertEqual(len(wv.ngrams), len(loaded_wv.ngrams))
 
@@ -117,17 +119,18 @@ class TestFastTextModel(unittest.TestCase):
         model.save(testfile())
         loaded_model = FT_gensim.load(testfile())
         self.assertTrue(loaded_model.wv.syn0norm is None)
-        self.assertTrue(loaded_model.wv.syn0_all_norm is None)
+        self.assertTrue(loaded_model.wv.syn0_ngrams_norm is None)
 
         wv = model.wv
         wv.save(testfile())
         loaded_kv = FastTextKeyedVectors.load(testfile())
         self.assertTrue(loaded_kv.syn0norm is None)
-        self.assertTrue(loaded_kv.syn0_all_norm is None)
+        self.assertTrue(loaded_kv.syn0_ngrams_norm is None)
 
     def model_sanity(self, model):
         self.assertEqual(model.wv.syn0.shape, (len(model.wv.vocab), model.vector_size))
-        self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model.vector_size))
+        self.assertEqual(model.wv.syn0_vocab.shape, (len(model.wv.vocab), model.vector_size))
+        self.assertEqual(model.wv.syn0_ngrams.shape, (model.num_ngram_vectors, model.vector_size))
 
     def test_load_fasttext_format(self):
         try:
@@ -137,7 +140,7 @@ class TestFastTextModel(unittest.TestCase):
         vocab_size, model_size = 1762, 10
         self.assertEqual(model.wv.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(model.wv.vocab), vocab_size, model_size)
-        self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model_size))
+        self.assertEqual(model.wv.syn0_ngrams.shape, (model.num_ngram_vectors, model_size))
 
         expected_vec = [
             -0.57144,
@@ -187,7 +190,7 @@ class TestFastTextModel(unittest.TestCase):
         vocab_size, model_size = 1763, 10
         self.assertEqual(new_model.wv.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(new_model.wv.vocab), vocab_size, model_size)
-        self.assertEqual(new_model.wv.syn0_all.shape, (new_model.num_ngram_vectors, model_size))
+        self.assertEqual(new_model.wv.syn0_ngrams.shape, (new_model.num_ngram_vectors, model_size))
 
         expected_vec = [
             -0.025627,
@@ -228,7 +231,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEquals(new_model.wv.max_n, 6)
         self.assertEquals(new_model.wv.min_n, 3)
         self.assertEqual(new_model.wv.syn0.shape, (len(new_model.wv.vocab), new_model.vector_size))
-        self.assertEqual(new_model.wv.syn0_all.shape, (new_model.num_ngram_vectors, new_model.vector_size))
+        self.assertEqual(new_model.wv.syn0_ngrams.shape, (new_model.num_ngram_vectors, new_model.vector_size))
         # self.modelSanity(new_model)
 
     def test_load_model_with_non_ascii_vocab(self):
@@ -417,9 +420,9 @@ class TestFastTextModel(unittest.TestCase):
         model.build_vocab(terro, update=True)  # update vocab
         self.assertTrue('terrorism' in model.wv.vocab)
         self.assertTrue('orism>' in model.wv.ngrams)
-        orig0_all = np.copy(model.wv.syn0_all)
+        orig0_all = np.copy(model.wv.syn0_ngrams)
         model.train(terro, total_examples=len(terro), epochs=model.iter)
-        self.assertFalse(np.allclose(model.wv.syn0_all, orig0_all))
+        self.assertFalse(np.allclose(model.wv.syn0_ngrams, orig0_all))
         sim = model.n_similarity(['war'], ['terrorism'])
         self.assertLess(0., sim)
 
