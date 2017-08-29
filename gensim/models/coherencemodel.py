@@ -18,13 +18,12 @@ coherence measure of his/her choice by choosing a method in each of the pipeline
   coherence measures. http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf.
 """
 
+import itertools
 import logging
 import multiprocessing as mp
 from collections import namedtuple
-import itertools
 
 import numpy as np
-
 from gensim import interfaces, matutils
 from gensim.topic_coherence import (segmentation, probability_estimation,
                                     direct_confirmation_measure, indirect_confirmation_measure,
@@ -260,6 +259,10 @@ class CoherenceModel(interfaces.TransformationABC):
         for topic_list in topics_as_topn_terms:
             for topic in topic_list:
                 topn = max(topn, len(topic))
+
+        if 'topn' in kwargs:
+            topn = min(kwargs.get('topn'), topn)
+            del kwargs['topn']
 
         super_topic = set()
         for topic in topics_as_topn_terms:
