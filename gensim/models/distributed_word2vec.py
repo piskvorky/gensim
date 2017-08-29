@@ -148,52 +148,52 @@ class TfWord2Vec(KeyedVectors):
     def train(self):
         ps_hosts = self.FLAGS.ps_hosts.split(',')
         worker_hosts = self.FLAGS.worker_hosts.split(',')
+
+        # Create a cluster from the parameter server and worker hosts.
         cluster = tf.train.ClusterSpec({'ps': ps_hosts, 'worker': worker_hosts})
 
+        # Create and start a server for the local task.
         server = tf.train.Server(cluster, job_name=self.FLAGS.job_name,
                                      task_index=self.FLAGS.task_index)
+
         if self.FLAGS.job_name == "ps":
             server.join()
         elif self.FLAGS.job_name == "worker":
             # Build graph
             with tf.device(tf.train.replica_device_setter(
                     worker_device='/job:worker/task:%d' % self.FLAGS.task_index,
-                    cluster=cluster, ps_ops=['Variable', 'Placeholder'])):
+                    cluster=cluster)):
 
                 global_step = tf.contrib.framework.get_or_create_global_step()
 
                 # Input data.
-                with tf.name_scope('input'):
-                    train_inputs = tf.placeholder(tf.int32, shape=[self.batch_size])
-                    train_labels = tf.placeholder(tf.int32, shape=[self.batch_size, 1])
+                train_inputs = tf.placeholder(tf.int32, shape=[self.batch_size])
+                train_labels = tf.placeholder(tf.int32, shape=[self.batch_size, 1])
 
                 # Look up embeddings for inputs.
-                with tf.name_scope('embeddings'):
-                    embeddings = tf.Variable(
+                embeddings = tf.Variable(
                         tf.random_uniform([self.vocab_size, self.vector_size],
                                                                     -1.0, 1.0))
-                    embed = tf.nn.embedding_lookup(embeddings, train_inputs)
+                embed = tf.nn.embedding_lookup(embeddings, train_inputs)
 
                 # Construct the variables for the NCE loss
-                with tf.name_scope('nce_loss'):
-                    nce_weights = tf.Variable(
+                nce_weights = tf.Variable(
                         tf.truncated_normal([self.vocab_size, self.vector_size],
                                             stddev=1.0 / math.sqrt(self.vector_size)))
-                    nce_biases = tf.Variable(tf.zeros([self.vocab_size]))
+                nce_biases = tf.Variable(tf.zeros([self.vocab_size]))
 
-                    # Compute the average NCE loss for the batch.
-                    # tf.nce_loss automatically draws a new sample of the
-                    # negative labels each time we evaluate the loss.
-                    loss = tf.reduce_mean(tf.nn.nce_loss(weights=nce_weights,
-                                                    biases=nce_biases,
-                                                    labels=train_labels,
-                                                    inputs=embed,
-                                                    num_sampled=self.negative,
-                                                    num_classes=self.vocab_size))
+                # Compute the average NCE loss for the batch.
+                # tf.nce_loss automatically draws a new sample of the
+                # negative labels each time we evaluate the loss.
+                loss = tf.reduce_mean(tf.nn.nce_loss(weights=nce_weights,
+                                                biases=nce_biases,
+                                                labels=train_labels,
+                                                inputs=embed,
+                                                num_sampled=self.negative,
+                                                num_classes=self.vocab_size))
 
                 # Construct the SGD optimizer using a learning rate of 1.0.
-                with tf.name_scope('train'):
-                    optimizer = tf.train.GradientDescentOptimizer(1.0).minimize(loss)
+                optimizer = tf.train.GradientDescentOptimizer(1.0).minimize(loss)
 
                 norm = tf.sqrt(
                     tf.reduce_sum(tf.square(embeddings), 1, keep_dims=True))
@@ -210,7 +210,7 @@ class TfWord2Vec(KeyedVectors):
             average_loss = 0
             norm_vec = []
             embed_vec = []
-            with sv.prepare_or_wait_for_session(server.target) as sess:
+            with sv.prepare_or_wait_for_session(server.target, config=None) as sess:
                 for step in xrange(self.concurrent_steps):
                     batch_inputs, batch_labels = self.generate_batch(
                                                     batch_size=self.batch_size,
@@ -227,7 +227,7 @@ class TfWord2Vec(KeyedVectors):
                         # The average loss is an estimate of the loss over the last
                         # 2000 batches.
                         logger.info('Average loss at step %d: %.5f', step, average_loss)
-                        print('Average loss at step %d: %.5f', step, average_loss)
+                        print('Task: {}. Average loss at step {}: {}'.format(self.FLAGS.task_index, step, average_loss))
                         average_loss = 0
 
             self.syn0norm = norm_vec
