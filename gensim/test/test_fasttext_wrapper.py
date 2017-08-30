@@ -36,7 +36,7 @@ class TestFastText(unittest.TestCase):
         self.test_model_file = datapath('lee_fasttext')
         self.test_new_model_file = datapath('lee_fasttext_new')
         # Load pre-trained model to perform tests in case FastText binary isn't available in test environment
-        self.test_model = fasttext.FastText.load(self.test_model_file)
+        self.test_model = fasttext.FastText.load_fasttext_format(self.test_model_file)
 
     def model_sanity(self, model):
         """Even tiny models trained on any corpus should pass these sanity checks"""

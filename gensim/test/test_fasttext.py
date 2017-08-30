@@ -61,7 +61,7 @@ class TestFastTextModel(unittest.TestCase):
         ft_home = os.environ.get('FT_HOME', None)
         self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
         self.test_model_file = datapath('lee_fasttext')
-        self.test_model = FT_gensim.load(self.test_model_file)
+        self.test_model = FT_gensim.load_fasttext_format(self.test_model_file)
         self.test_new_model_file = datapath('lee_fasttext_new')
 
     def test_training(self):
@@ -180,7 +180,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEquals(model.bucket, 1000)
         self.assertEquals(model.wv.max_n, 6)
         self.assertEquals(model.wv.min_n, 3)
-        self.model_sanity(model)
+        self.assertEqual(model.wv.syn0.shape, (len(model.wv.vocab), model.vector_size))
+        self.assertEqual(model.wv.syn0_ngrams.shape, (model.num_ngram_vectors, model.vector_size))
 
     def test_load_fasttext_new_format(self):
         try:
@@ -232,7 +233,6 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEquals(new_model.wv.min_n, 3)
         self.assertEqual(new_model.wv.syn0.shape, (len(new_model.wv.vocab), new_model.vector_size))
         self.assertEqual(new_model.wv.syn0_ngrams.shape, (new_model.num_ngram_vectors, new_model.vector_size))
-        # self.modelSanity(new_model)
 
     def test_load_model_with_non_ascii_vocab(self):
         model = FT_gensim.load_fasttext_format(datapath('non_ascii_fasttext'))
