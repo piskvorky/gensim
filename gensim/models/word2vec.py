@@ -321,9 +321,9 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
 
     if learn_vectors:
         if is_ft:
-            model.wv.syn0_vocab[context_index[0]] += neu1e * model.syn0_vocab_lockf[context_index[0]]
+            model.wv.syn0_vocab[context_index[0]] += neu1e * context_locks_vocab[context_index[0]]
             for i in context_index[1:]:
-                model.wv.syn0_ngrams[i] += neu1e * model.syn0_ngrams_lockf[i]
+                model.wv.syn0_ngrams[i] += neu1e * context_locks_ngrams[i]
         else:
             l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
     return neu1e

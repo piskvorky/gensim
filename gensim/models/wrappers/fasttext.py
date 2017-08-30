@@ -113,7 +113,7 @@ class FastTextKeyedVectors(KeyedVectors):
         if getattr(self, 'syn0_ngrams_norm', None) is None or replace:
             logger.info("precomputing L2-norms of ngram weight vectors")
             if replace:
-                for i in xrange(self.syn0_ngrams.shape[0]):
+                for i in range(self.syn0_ngrams.shape[0]):
                     self.syn0_ngrams[i, :] /= sqrt((self.syn0_ngrams[i, :] ** 2).sum(-1))
                 self.syn0_ngrams_norm = self.syn0_ngrams
             else:
