@@ -871,6 +871,9 @@ class TestHdpTransformer(unittest.TestCase):
             doc = list(self.corpus)[0]  # transform only the first document
             transformed = self.model.transform(doc)
         expected = numpy.array([0.76777752, 0.01757334, 0.01600339, 0.01374061, 0.01275931, 0.01126313, 0.01058131, 0.01167185])
+        print("#####")
+        print(transformed[0])
+        print(expected)
         passed = numpy.allclose(transformed[0], expected, atol=1e-2)
         self.assertTrue(passed)
 
