@@ -845,6 +845,7 @@ class TestTfIdfTransformer(unittest.TestCase):
 
 class TestHdpTransformer(unittest.TestCase):
     def setUp(self):
+        numpy.random.seed(0)
         self.model = HdpTransformer(id2word=dictionary, random_state=42)
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.model.fit(self.corpus)
@@ -860,7 +861,7 @@ class TestHdpTransformer(unittest.TestCase):
         docs = [self.corpus[0], self.corpus[1]]
         transformed_docs = self.model.transform(docs)
         expected_docs = [[0.81043386270128193, 0.049357139518070477, 0.035840906753517532, 0.026542006926698079, 0.019925705902962578, 0.014776690981729117, 0.011068909979528148],
-            [0.03795908,  0.39542609,  0.50650585,  0.0151082 ,  0.01132749, 0.,  0.]]
+            [0.03795908, 0.39542609, 0.50650585, 0.0151082, 0.01132749, 0., 0.]]
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0], atol=1e-2))
         self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1], atol=1e-2))
 
