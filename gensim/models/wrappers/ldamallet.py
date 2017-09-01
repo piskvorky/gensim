@@ -183,7 +183,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     def load_word_topics(self):
         logger.info("loading assigned topics from %s", self.fstate())
-        word_topics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
+        word_topics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float64)
         if hasattr(self.id2word, 'token2id'):
             word2id = self.id2word.token2id
         else:
