@@ -866,11 +866,11 @@ class TestHdpTransformer(unittest.TestCase):
         self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1], atol=1e-2))
 
     def testPartialFit(self):
-        for i in range(10):
+        for i in range(5):
             self.model.partial_fit(X=self.corpus)  # fit against the model again
-            doc = list(self.corpus)[0]  # transform only the first document
-            transformed = self.model.transform(doc)
-        expected = numpy.array([0.76777752, 0.01757334, 0.01600339, 0.01374061, 0.01275931, 0.01126313, 0.01058131, 0.01167185])
+
+        transformed = self.model.transform(list(self.corpus)[0])
+        expected = numpy.array([0.77901173, 0.0232508, 0.02054655, 0.01769651, 0.01600487, 0.01478038, 0.01237056, 0.01194372, 0.01070444])
         print("#####")
         print(transformed[0])
         print(expected)
