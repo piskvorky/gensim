@@ -871,9 +871,6 @@ class TestHdpTransformer(unittest.TestCase):
 
         transformed = self.model.transform(list(self.corpus)[0])
         expected = numpy.array([0.77901173, 0.0232508, 0.02054655, 0.01769651, 0.01600487, 0.01478038, 0.01237056, 0.01194372, 0.01070444])
-        print("#####")
-        print(transformed[0])
-        print(expected)
         passed = numpy.allclose(transformed[0], expected, atol=1e-2)
         self.assertTrue(passed)
 
