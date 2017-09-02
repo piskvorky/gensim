@@ -195,7 +195,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
-                 random_state=None, ns_conf={}, minimum_phi_value=0.01,
+                 random_state=None, ns_conf=None, minimum_phi_value=0.01,
                  per_word_topics=False, callbacks=None):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
@@ -316,6 +316,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # set up distributed version
             try:
                 import Pyro4
+                if ns_conf is None:
+                    ns_conf = {}
+
                 with utils.getNS(**ns_conf) as ns:
                     from gensim.models.lda_dispatcher import LDA_DISPATCHER_PREFIX
                     self.dispatcher = Pyro4.Proxy(ns.list(prefix=LDA_DISPATCHER_PREFIX)[LDA_DISPATCHER_PREFIX])
