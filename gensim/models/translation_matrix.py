@@ -101,8 +101,9 @@ class TranslationMatrix(utils.SaveLoad):
     to the target language.
      The main methods are:
 
-    1. constructor, which build a translation matrix
-    2. the translate method, which given new word and its vector representation,
+    1. constructor,
+    2. the `train` method, which initialize everything needed to build a translation matrix
+    3. the `translate` method, which given new word and its vector representation,
     we map it to the other language space by computing z = Wx, then return the
     word whose representation is close to z.
 
@@ -121,7 +122,7 @@ class TranslationMatrix(utils.SaveLoad):
         Examples: [("one", "uno"), ("two", "due")]
 
         Args:
-            `word_pair` (list): a list pair of `word_pair`
+            `word_pair` (list): a list pair of words
             `source_lang_vec` (KeyedVectors): a set of word vector of source language
             `target_lang_vec` (KeyedVectors): a set of word vector of target language
         """
@@ -143,6 +144,7 @@ class TranslationMatrix(utils.SaveLoad):
         build the translation matrix that mapping from source space to target space.
 
         Args:
+            `word_pair` (list): a list pair of words
             `source_space` (Space object): source language space
             `target_space` (Space object): target language space
 
@@ -261,3 +263,56 @@ class TranslationMatrix(utils.SaveLoad):
                 translated_target_word.append(target_space.index2word[map_space_id])
             translated_word[word] = translated_target_word
         return translated_word
+
+
+class BackMappingTranslationMatrix(utils.SaveLoad):
+    """
+        Objects of this class realize the BackMapping translation matrix which map the
+        source model's document vector to the target model's document vector(old model).
+         The main methods are:
+
+        1. constructor, intializing
+        2. the `train` method, which build a translation matrix
+        2. the `infer_vector` method, which given the target model's document vector
+        we map it to the other language space by computing z = Wx, then return the
+        word whose representation is close to z.
+
+        the details use seen the notebook (translation matrix revist.ipynb)
+
+        >>> transmat = BackMappingTranslationMatrix(tagged, source_lang_vec, target_lang_vec)
+        >>> transmat.train(word_pair)
+        >>> infered_vec = transmat.infer_vector(tagged_doc)
+
+        """
+    def __init__(self, tagged_doc, source_lang_vec, target_lang_vec, random_state=None):
+
+        self.tagged_doc = tagged_doc
+        self.source_lang_vec = source_lang_vec
+        self.target_lang_vec = target_lang_vec
+
+        self.random_state = utils.get_random_state(random_state)
+        self.translation_matrix = None
+
+    def train(self, tagged_doc):
+        """
+        build the translation matrix that mapping from the source model's vector to target model's vector
+
+        Returns:
+            `translation matrix` that mapping from the source model's vector to target model's vector
+        """
+
+        m1 = [self.source_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_doc]
+        m2 = [self.target_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_doc]
+
+        self.translation_matrix = np.linalg.lstsq(m1, m2, -1)[0]
+        return self.translation_matrix
+
+    def infer_vector(self, target_doc_vec):
+        """
+        translate the target model's document vector to the source model's document vector
+
+        Returns:
+            `infered_vec` the tagged_doc's document vector in the source model
+        """
+        infered_vec = np.dot(target_doc_vec, self.translation_matrix)
+        return infered_vec
