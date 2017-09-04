@@ -118,7 +118,13 @@ echo '--------------------------------------------------------------------------
 # Excluding vec files since they contain non-utf8 content and flake8 raises exception for non-utf8 input
 # We need the following command to exit with 0 hence the echo in case
 # there is no match
-MODIFIED_FILES="$(git diff --name-only $COMMIT_RANGE -- . ':(exclude)*.vec' || echo "no_match")"
+MODIFIED_PY_FILES="$(git diff --name-only $COMMIT_RANGE | grep '[a-zA-Z0-9]*.py$' || echo "no_match")"
+MODIFIED_IPYNB_FILES="$(git diff --name-only $COMMIT_RANGE | grep '[a-zA-Z0-9]*.ipynb$' || echo "no_match")"
+
+
+echo "*.py files: " $MODIFIED_PY_FILES
+echo "*.ipynb files: " $MODIFIED_IPYNB_FILES
+
 
 check_files() {
     files="$1"
@@ -131,9 +137,19 @@ check_files() {
     fi
 }
 
-if [[ "$MODIFIED_FILES" == "no_match" ]]; then
-    echo "No file has been modified"
+if [[ "$MODIFIED_PY_FILES" == "no_match" ]]; then
+    echo "No .py files has been modified"
 else
-    check_files "$(echo "$MODIFIED_FILES" )" "--ignore=E501,E731,E12,W503 --exclude=*.sh,*.md,*.yml,*.rst,*.ipynb,*.txt,*.csv,*.vec,Dockerfile*,*.c,*.pyx,*.inc,*.html"
+    check_files "$(echo "$MODIFIED_PY_FILES" )" "--ignore=E501,E731,E12,W503"
 fi
 echo -e "No problem detected by flake8\n"
+
+if [[ "$MODIFIED_IPYNB_FILES" == "no_match" ]]; then
+    echo "No .ipynb file has been modified"
+else
+    for fname in ${MODIFIED_IPYNB_FILES}
+    do
+        echo "File: $fname"
+        jupyter nbconvert --to script --stdout $fname | flake8 - --show-source --ignore=E501,E731,E12,W503,E402 --builtins=get_ipython || true
+    done
+fi
