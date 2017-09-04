@@ -30,22 +30,19 @@ Example:
 
 
 import logging
+import os
 import random
 import tempfile
-import os
-
-import numpy
-
 import xml.etree.ElementTree as et
 import zipfile
 
-from six import iteritems
+import numpy
 from smart_open import smart_open
 
 from gensim import utils, matutils
-from gensim.utils import check_output, revdict
-from gensim.models.ldamodel import LdaModel
 from gensim.models import basemodel
+from gensim.models.ldamodel import LdaModel
+from gensim.utils import check_output, revdict
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +183,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     def load_word_topics(self):
         logger.info("loading assigned topics from %s", self.fstate())
-        word_topics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
+        word_topics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float64)
         if hasattr(self.id2word, 'token2id'):
             word2id = self.id2word.token2id
         else:
@@ -208,10 +205,20 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     def load_document_topics(self):
         """
-        Return an iterator over the topic distribution of training corpus, by reading
-        the doctopics.txt generated during training.
+        Returns:
+            An iterator over the topic distribution of training corpus, by reading
+            the doctopics.txt generated during training.
         """
         return self.read_doctopics(self.fdoctopics())
+
+    def get_topics(self):
+        """
+        Returns:
+            np.ndarray: `num_topics` x `vocabulary_size` array of floats which represents
+            the term topic matrix learned during inference.
+        """
+        topics = self.word_topics
+        return topics / topics.sum(axis=1)[:, None]
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """

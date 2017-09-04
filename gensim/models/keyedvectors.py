@@ -832,5 +832,8 @@ class KeyedVectors(utils.SaveLoad):
         if not KERAS_INSTALLED:
             raise ImportError("Please install Keras to use this function")
         weights = self.syn0
-        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights])  # No extra mem usage here as `Embedding` layer doesn't create any new matrix for weights
+
+        # set `trainable` as `False` to use the pretrained word embedding
+        # No extra mem usage here as `Embedding` layer doesn't create any new matrix for weights
+        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights], trainable=train_embeddings)
         return layer
