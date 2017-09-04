@@ -147,5 +147,9 @@ echo -e "No problem detected by flake8\n"
 if [[ "$MODIFIED_IPYNB_FILES" == "no_match" ]]; then
     echo "No .ipynb file has been modified"
 else
-    jupyter nbconvert --to script --stdout $MODIFIED_IPYNB_FILES | flake8 - --show-source --ignore=E501,E731,E12,W503,E402 --builtins=get_ipython || true
+    for fname in ${MODIFIED_IPYNB_FILES}
+    do
+        echo "File: $fname"
+        jupyter nbconvert --to script --stdout $fname | flake8 - --show-source --ignore=E501,E731,E12,W503,E402 --builtins=get_ipython || true
+    done
 fi
