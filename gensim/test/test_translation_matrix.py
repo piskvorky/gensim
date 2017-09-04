@@ -4,7 +4,10 @@ import os
 import unittest
 import tempfile
 import numpy as np
+import gensim
 
+from collections import namedtuple
+from gensim.models.doc2vec import Doc2Vec
 from gensim import utils
 from gensim.models import translation_matrix
 from gensim.models import KeyedVectors
@@ -78,3 +81,38 @@ class TestTranslationMatrix(unittest.TestCase):
         self.assertTrue("cane" in translated_words["dog"])
         self.assertTrue("maiale" in translated_words["pig"])
         self.assertTrue("gatto" in translated_words["cat"])
+
+
+def read_sentiment_docs(filename):
+    sentiment_document = namedtuple('SentimentDocument', 'words tags')
+    alldocs = []  # will hold all docs in original order
+    with gensim.utils.smart_open(filename, encoding='utf-8') as alldata:
+        for line_no, line in enumerate(alldata):
+            tokens = gensim.utils.to_unicode(line).split()
+            words = tokens
+            tags = str(line_no)
+            alldocs.append(sentiment_document(words, tags))
+    return alldocs
+
+
+class TestBackMappingTranslationMatrix(unittest.TestCase):
+    def setUp(self):
+        filename = datapath("alldata-id-10.txt")
+        train_docs = read_sentiment_docs(filename)
+        self.train_docs = train_docs
+        self.source_doc_vec_file = datapath("small_tag_doc_5_iter50.bin")
+        self.target_doc_vec_file = datapath("large_tag_doc_10_iter50.bin")
+
+        self.source_doc_vec = Doc2Vec.load(self.source_doc_vec_file)
+        self.target_doc_vec = Doc2Vec.load(self.target_doc_vec_file)
+
+    def test_translation_matrix(self):
+        model = translation_matrix.BackMappingTranslationMatrix(self.train_docs[:5], self.source_doc_vec, self.target_doc_vec)
+        transmat = model.train(self.train_docs[:5])
+        self.assertEqual(transmat.shape, (100, 100))
+
+    def test_infer_vector(self):
+        model = translation_matrix.BackMappingTranslationMatrix(self.train_docs[:5], self.source_doc_vec, self.target_doc_vec)
+        model.train(self.train_docs[:5])
+        infered_vec = model.infer_vector(self.target_doc_vec.docvecs[self.train_docs[5].tags])
+        self.assertEqual(infered_vec.shape, (100, ))
