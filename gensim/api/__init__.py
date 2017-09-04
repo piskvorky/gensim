@@ -92,7 +92,7 @@ def download(file_name):
         data_url = data_links(file_name)
         if data_url is not None:
             index = data_url.rfind("/")
-            data_dir = os.path.join(data_folder_dir, data_url[index+1:])
+            data_dir = os.path.join(data_folder_dir, data_url[index + 1:])
             urllib.urlretrieve(data_url, data_dir)
         logger.info("%s downloaded", file_name)
     if not is_installed:
