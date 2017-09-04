@@ -100,8 +100,8 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
         filename = datapath("alldata-id-10.txt")
         train_docs = read_sentiment_docs(filename)
         self.train_docs = train_docs
-        self.source_doc_vec_file = datapath("small_tag_doc_5_iter50.bin")
-        self.target_doc_vec_file = datapath("large_tag_doc_10_iter50.bin")
+        self.source_doc_vec_file = datapath("small_tag_doc_5_iter50")
+        self.target_doc_vec_file = datapath("large_tag_doc_10_iter50")
 
         self.source_doc_vec = Doc2Vec.load(self.source_doc_vec_file)
         self.target_doc_vec = Doc2Vec.load(self.target_doc_vec_file)

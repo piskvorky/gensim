@@ -217,11 +217,11 @@ class TranslationMatrix(utils.SaveLoad):
         # if the language word vector not provided by user, use the model's
         # language word vector as default
         if source_lang_vec is None:
-            warnings.warn("The parameter source_lang_vec isn't specified, use the model's source language word vector as default")
+            warnings.warn("The parameter source_lang_vec isn't specified, use the model's source language word vector as default.")
             source_lang_vec = self.source_lang_vec
 
         if target_lang_vec is None:
-            warnings.warn("The parameter target_lang_vec isn't specified, use the model's target language word vector as default")
+            warnings.warn("The parameter target_lang_vec isn't specified, use the model's target language word vector as default.")
             target_lang_vec = self.target_lang_vec
 
         # if additional is provided, bootstrapping vocabulary from the source language word vector model.
