@@ -138,8 +138,14 @@ check_files() {
 }
 
 if [[ "$MODIFIED_PY_FILES" == "no_match" ]]; then
-    echo "No file has been modified"
+    echo "No .py files has been modified"
 else
     check_files "$(echo "$MODIFIED_PY_FILES" )" "--ignore=E501,E731,E12,W503"
 fi
 echo -e "No problem detected by flake8\n"
+
+if [[ "$MODIFIED_IPYNB_FILES" == "no_match" ]]; then
+    echo "No .ipynb file has been modified"
+else
+    jupyter nbconvert --to script --stdout $MODIFIED_IPYNB_FILES | flake8 - --show-source --ignore=E501,E731,E12,W503,E402 --builtins=get_ipython || true
+fi
