@@ -287,7 +287,7 @@ class KeyedVectors(utils.SaveLoad):
         else:
             raise KeyError("word '%s' not in vocabulary" % word)
 
-    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
+    def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
         similarity, negative words negatively.
@@ -310,6 +310,11 @@ class KeyedVectors(utils.SaveLoad):
           [('queen', 0.50882536), ...]
 
         """
+        if positive is None:
+            positive = []
+        if negative is None:
+            negative = []
+
         self.init_sims()
 
         if isinstance(positive, string_types) and not negative:
@@ -442,7 +447,7 @@ class KeyedVectors(utils.SaveLoad):
         # Compute WMD.
         return emd(d1, d2, distance_matrix)
 
-    def most_similar_cosmul(self, positive=[], negative=[], topn=10):
+    def most_similar_cosmul(self, positive=None, negative=None, topn=10):
         """
         Find the top-N most similar words, using the multiplicative combination objective
         proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
@@ -464,6 +469,11 @@ class KeyedVectors(utils.SaveLoad):
         .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
 
         """
+        if positive is None:
+            positive = []
+        if negative is None:
+            negative = []
+
         self.init_sims()
 
         if isinstance(positive, string_types) and not negative:

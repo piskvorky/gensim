@@ -1011,15 +1011,18 @@ def getNS(host=None, port=None, broadcast=True, hmac_key=None):
         raise RuntimeError("Pyro name server not found")
 
 
-def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf={}):
+def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None):
     """
     Register object with name server (starting the name server if not running
     yet) and block until the daemon is terminated. The object is registered under
     `name`, or `name`+ some random suffix if `random_suffix` is set.
 
     """
+    if ns_conf is None:
+        ns_conf = {}
     if random_suffix:
         name += '.' + hex(random.randint(0, 0xffffff))[2:]
+
     import Pyro4
     with getNS(**ns_conf) as ns:
         with Pyro4.Daemon(ip or get_my_ip(), port or 0) as daemon:

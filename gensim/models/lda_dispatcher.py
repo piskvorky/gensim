@@ -56,14 +56,14 @@ class Dispatcher(object):
     There should never be more than one dispatcher running at any one time.
     """
 
-    def __init__(self, maxsize=MAX_JOBS_QUEUE, ns_conf={}):
+    def __init__(self, maxsize=MAX_JOBS_QUEUE, ns_conf=None):
         """
         Note that the constructor does not fully initialize the dispatcher;
         use the `initialize()` function to populate it with workers etc.
         """
         self.maxsize = maxsize
-        self.callback = None # a pyro proxy to this object (unknown at init time, but will be set later)
-        self.ns_conf = ns_conf
+        self.callback = None  # a pyro proxy to this object (unknown at init time, but will be set later)
+        self.ns_conf = ns_conf if ns_conf is not None else {}
 
     @Pyro4.expose
     def initialize(self, **model_params):
