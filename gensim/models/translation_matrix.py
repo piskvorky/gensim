@@ -271,7 +271,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         source model's document vector to the target model's document vector(old model).
          The main methods are:
 
-        1. constructor, intializing
+        1. constructor, initializing
         2. the `train` method, which build a translation matrix
         2. the `infer_vector` method, which given the target model's document vector
         we map it to the other language space by computing z = Wx, then return the
@@ -284,16 +284,27 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         >>> infered_vec = transmat.infer_vector(tagged_doc)
 
         """
-    def __init__(self, tagged_doc, source_lang_vec, target_lang_vec, random_state=None):
+    def __init__(self, tagged_docs, source_lang_vec, target_lang_vec, random_state=None):
+        """
+        Initialize the model from a list of `tagged_docs`. Each word_pair is tupe
+         with source language word and target language word.
 
-        self.tagged_doc = tagged_doc
+        Examples: [("one", "uno"), ("two", "due")]
+
+        Args:
+            `tagged_docs` (list): a list tagged document
+            `source_lang_vec` (Doc2vec): provide the document vector
+            `target_lang_vec` (Doc2vec): provide the document vector
+        """
+
+        self.tagged_docs = tagged_docs
         self.source_lang_vec = source_lang_vec
         self.target_lang_vec = target_lang_vec
 
         self.random_state = utils.get_random_state(random_state)
         self.translation_matrix = None
 
-    def train(self, tagged_doc):
+    def train(self, tagged_docs):
         """
         build the translation matrix that mapping from the source model's vector to target model's vector
 
@@ -301,8 +312,8 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
             `translation matrix` that mapping from the source model's vector to target model's vector
         """
 
-        m1 = [self.source_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_doc]
-        m2 = [self.target_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_doc]
+        m1 = [self.source_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_docs]
+        m2 = [self.target_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_docs]
 
         self.translation_matrix = np.linalg.lstsq(m1, m2, -1)[0]
         return self.translation_matrix
