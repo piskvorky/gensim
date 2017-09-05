@@ -1563,7 +1563,7 @@ class PathLineSentences(object):
         """
         `source` should be a path to a directory (as a string) where all files can be opened by the
         LineSentence class. Each file will be read up to
-        `limit` lines (or no clipped if limit is None, the default).
+        `limit` lines (or not clipped if limit is None, the default).
 
         Example::
 
@@ -1577,23 +1577,23 @@ class PathLineSentences(object):
         self.limit = limit
 
         if os.path.isfile(self.source):
-            logging.warning('single file read, better to use models.word2vec.LineSentence')
+            logger.warning('single file read, better to use models.word2vec.LineSentence')
             self.input_files = [self.source]  # force code compatibility with list of files
         elif os.path.isdir(self.source):
             self.source = os.path.join(self.source, '')  # ensures os-specific slash at end of path
-            logging.debug('reading directory ' + self.source)
+            logger.warning('reading directory %s', self.source)
             self.input_files = os.listdir(self.source)
-            self.input_files = [self.source + file for file in self.input_files]  # make full paths
+            self.input_files = [self.source + filename for filename in self.input_files]  # make full paths
             self.input_files.sort()  # makes sure it happens in filename order
         else:  # not a file or a directory, then we can't do anything with it
             raise ValueError('input is neither a file nor a path')
 
-        logging.info('files read into PathLineSentences:' + '\n'.join(self.input_files))
+        logger.info('files read into PathLineSentences: %s', '\n'.join(self.input_files))
 
     def __iter__(self):
         '''iterate through the files'''
         for file_name in self.input_files:
-            logging.info('reading file ' + file_name)
+            logger.info('reading file %s', file_name)
             with utils.smart_open(file_name) as fin:
                 for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
