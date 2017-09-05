@@ -48,7 +48,7 @@ import warnings
 try:
     from queue import Queue
 except ImportError:
-    from Queue import Queue
+    from Queue import Queue  # noqa:F401
 
 from collections import namedtuple, defaultdict
 from timeit import default_timer
@@ -158,7 +158,7 @@ except ImportError:
             word2_indexes = [word2.index for pos2, word2 in window_pos if pos2 != pos]
             l1 = np_sum(word_vectors[word2_indexes], axis=0) + np_sum(doctag_vectors[doctag_indexes], axis=0)
             count = len(word2_indexes) + len(doctag_indexes)
-            if model.cbow_mean and count > 1 :
+            if model.cbow_mean and count > 1:
                 l1 /= count
             neu1e = train_cbow_pair(model, word, word2_indexes, l1, alpha,
                                     learn_vectors=False, learn_hidden=learn_hidden)
@@ -223,7 +223,6 @@ except ImportError:
                 padded_document_indexes[(pos - pre_pad_count): pos]  # preceding words
                 + padded_document_indexes[(pos + 1):(pos + 1 + post_pad_count)]  # following words
             )
-            word_context_len = len(word_context_indexes)
             predict_word = model.wv.vocab[model.wv.index2word[padded_document_indexes[pos]]]
             # numpy advanced-indexing copies; concatenate, flatten to 1d
             l1 = concatenate((doctag_vectors[doctag_indexes], word_vectors[word_context_indexes])).ravel()
@@ -253,6 +252,7 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
     Replaces "sentence as a list of words" from Word2Vec.
 
     """
+
     def __str__(self):
         return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
 
@@ -288,6 +288,7 @@ class DocvecsArray(utils.SaveLoad):
     implementation, based on another persistence mechanism like LMDB, LevelDB,
     or SQLite, should also be possible.
     """
+
     def __init__(self, mapfile_path=None):
         self.doctags = {}  # string -> Doctag (only filled if necessary)
         self.max_rawint = -1  # highest rawint-indexed doctag
@@ -381,9 +382,9 @@ class DocvecsArray(utils.SaveLoad):
     def reset_weights(self, model):
         length = max(len(self.doctags), self.count)
         if self.mapfile_path:
-            self.doctag_syn0 = np_memmap(self.mapfile_path+'.doctag_syn0', dtype=REAL,
+            self.doctag_syn0 = np_memmap(self.mapfile_path + '.doctag_syn0', dtype=REAL,
                                          mode='w+', shape=(length, model.vector_size))
-            self.doctag_syn0_lockf = np_memmap(self.mapfile_path+'.doctag_syn0_lockf', dtype=REAL,
+            self.doctag_syn0_lockf = np_memmap(self.mapfile_path + '.doctag_syn0_lockf', dtype=REAL,
                                                mode='w+', shape=(length,))
             self.doctag_syn0_lockf.fill(1.0)
         else:
@@ -416,7 +417,7 @@ class DocvecsArray(utils.SaveLoad):
             else:
                 if self.mapfile_path:
                     self.doctag_syn0norm = np_memmap(
-                        self.mapfile_path+'.doctag_syn0norm', dtype=REAL,
+                        self.mapfile_path + '.doctag_syn0norm', dtype=REAL,
                         mode='w+', shape=self.doctag_syn0.shape)
                 else:
                     self.doctag_syn0norm = empty(self.doctag_syn0.shape, dtype=REAL)
@@ -549,6 +550,7 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
 
 class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
+
     def __init__(self, documents=None, dm_mean=None,
                  dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, **kwargs):
@@ -863,6 +865,7 @@ class Doc2Vec(Word2Vec):
 class TaggedBrownCorpus(object):
     """Iterate over documents from the Brown corpus (part of NLTK data), yielding
     each document out as a TaggedDocument object."""
+
     def __init__(self, dirname):
         self.dirname = dirname
 
@@ -888,6 +891,7 @@ class TaggedLineDocument(object):
 
     Words are expected to be already preprocessed and separated by whitespace,
     tags are constructed automatically from the document line number."""
+
     def __init__(self, source):
         """
         `source` can be either a string (filename) or a file object.

@@ -45,6 +45,8 @@ def remove_stopwords(s):
 
 
 RE_PUNCT = re.compile('([%s])+' % re.escape(string.punctuation), re.UNICODE)
+
+
 def strip_punctuation(s):
     s = utils.to_unicode(s)
     return RE_PUNCT.sub(" ", s)
@@ -58,9 +60,11 @@ strip_punctuation2 = strip_punctuation
 
 
 RE_TAGS = re.compile(r"<([^>]+)>", re.UNICODE)
+
+
 def strip_tags(s):
     s = utils.to_unicode(s)
-    return RE_TAGS.sub("",s)
+    return RE_TAGS.sub("", s)
 
 
 def strip_short(s, minsize=3):
@@ -69,18 +73,24 @@ def strip_short(s, minsize=3):
 
 
 RE_NUMERIC = re.compile(r"[0-9]+", re.UNICODE)
+
+
 def strip_numeric(s):
     s = utils.to_unicode(s)
     return RE_NUMERIC.sub("", s)
 
 
 RE_NONALPHA = re.compile(r"\W", re.UNICODE)
+
+
 def strip_non_alphanum(s):
     s = utils.to_unicode(s)
     return RE_NONALPHA.sub(" ", s)
 
 
 RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
+
+
 def strip_multiple_whitespaces(s):
     s = utils.to_unicode(s)
     return RE_WHITESPACE.sub(" ", s)
@@ -88,6 +98,8 @@ def strip_multiple_whitespaces(s):
 
 RE_AL_NUM = re.compile(r"([a-z]+)([0-9]+)", flags=re.UNICODE)
 RE_NUM_AL = re.compile(r"([0-9]+)([a-z]+)", flags=re.UNICODE)
+
+
 def split_alphanum(s):
     s = utils.to_unicode(s)
     s = RE_AL_NUM.sub(r"\1 \2", s)
@@ -101,6 +113,8 @@ def stem_text(text):
     text = utils.to_unicode(text)
     p = PorterStemmer()
     return ' '.join(p.stem(word) for word in text.split())
+
+
 stem = stem_text
 
 DEFAULT_FILTERS = [lambda x: x.lower(), strip_tags, strip_punctuation, strip_multiple_whitespaces,

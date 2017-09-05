@@ -48,6 +48,7 @@ class TfidfModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
+
     def __init__(
             self, corpus=None, id2word=None, dictionary=None,
             wlocal=utils.identity, wglobal=df2idf, normalize=True):
@@ -101,10 +102,8 @@ class TfidfModel(interfaces.TransformationABC):
             # be initialized in some other way
             pass
 
-
     def __str__(self):
         return "TfidfModel(num_docs=%s, num_nnz=%s)" % (self.num_docs, self.num_nnz)
-
 
     def initialize(self, corpus):
         """
@@ -133,7 +132,6 @@ class TfidfModel(interfaces.TransformationABC):
             self.num_docs, n_features, self.num_nnz)
         self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
 
-
     def __getitem__(self, bow, eps=1e-12):
         """
         Return tf-idf representation of the input vector and/or corpus.
@@ -160,4 +158,4 @@ class TfidfModel(interfaces.TransformationABC):
         # make sure there are no explicit zeroes in the vector (must be sparse)
         vector = [(termid, weight) for termid, weight in vector if abs(weight) > eps]
         return vector
-#endclass TfidfModel
+# endclass TfidfModel

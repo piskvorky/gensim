@@ -13,21 +13,22 @@ sudo python ./setup.py install
 import os
 import sys
 import warnings
-import io
+
+import ez_setup
+from setuptools import setup, find_packages, Extension
+from setuptools.command.build_ext import build_ext
 
 if sys.version_info[:2] < (2, 7) or (sys.version_info[:1] == 3 and sys.version_info[:2] < (3, 5)):
     raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
 
-import ez_setup
 ez_setup.use_setuptools()
-from setuptools import setup, find_packages, Extension
-from setuptools.command.build_ext import build_ext
-
 
 # the following code is adapted from tornado's setup.py:
 # https://github.com/tornadoweb/tornado/blob/master/setup.py
 # to support installing without the extension on platforms where
 # no compiler is available.
+
+
 class custom_build_ext(build_ext):
     """Allow C extension building to fail.
 
@@ -89,17 +90,16 @@ http://api.mongodb.org/python/current/installation.html#osx
     # importing numpy directly in this script, before it's actually installed!
     # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
     def finalize_options(self):
-            build_ext.finalize_options(self)
-            # Prevent numpy from thinking it is still in its setup process:
-            # https://docs.python.org/2/library/__builtin__.html#module-__builtin__
-            if isinstance(__builtins__, dict):
-                __builtins__["__NUMPY_SETUP__"] = False
-            else:
-                __builtins__.__NUMPY_SETUP__ = False
+        build_ext.finalize_options(self)
+        # Prevent numpy from thinking it is still in its setup process:
+        # https://docs.python.org/2/library/__builtin__.html#module-__builtin__
+        if isinstance(__builtins__, dict):
+            __builtins__["__NUMPY_SETUP__"] = False
+        else:
+            __builtins__.__NUMPY_SETUP__ = False
 
-            import numpy
-            self.include_dirs.append(numpy.get_include())
-
+        import numpy
+        self.include_dirs.append(numpy.get_include())
 
 
 model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
@@ -111,7 +111,6 @@ WHEELHOUSE_UPLOADER_COMMANDS = set(['fetch_artifacts', 'upload_all'])
 if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
     import wheelhouse_uploader.cmd
     cmdclass.update(vars(wheelhouse_uploader.cmd))
-
 
 
 LONG_DESCRIPTION = u"""

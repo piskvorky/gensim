@@ -64,6 +64,7 @@ class AuthorTopicState(LdaState):
     reduce traffic.
 
     """
+
     def __init__(self, eta, lambda_shape, gamma_shape):
         self.eta = eta
         self.sstats = np.zeros(lambda_shape)
@@ -361,8 +362,8 @@ class AuthorTopicModel(LdaModel):
 
         """
         try:
-            _ = len(chunk)
-        except:
+            _ = len(chunk)  # noqa:F841
+        except Exception:
             # convert iterators/generators to plain list, so we have len() etc.
             chunk = list(chunk)
         if len(chunk) > 1:
@@ -596,7 +597,7 @@ class AuthorTopicModel(LdaModel):
 
             try:
                 len_input_corpus = len(corpus)
-            except:
+            except Exception:
                 logger.warning("input corpus stream has no len(); counting documents")
                 len_input_corpus = sum(1 for _ in corpus)
             if len_input_corpus == 0:

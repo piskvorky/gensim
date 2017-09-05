@@ -82,6 +82,7 @@ class Shard(utils.SaveLoad):
     request (query).
 
     """
+
     def __init__(self, fname, index):
         self.dirname, self.fname = os.path.split(fname)
         self.length = len(index)
@@ -126,7 +127,7 @@ class Shard(utils.SaveLoad):
         try:
             index.num_best = self.num_best
             index.normalize = self.normalize
-        except:
+        except Exception:
             raise ValueError("num_best and normalize have to be set before querying a proxy Shard object")
         return index[query]
 
@@ -149,6 +150,7 @@ class Similarity(interfaces.SimilarityABC):
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
 
     """
+
     def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=256, shardsize=32768, norm='l2'):
         """
         Construct the index from `corpus`. The index can be later extended by calling
@@ -456,7 +458,7 @@ class Similarity(interfaces.SimilarityABC):
         for fname in glob.glob(self.output_prefix + '*'):
             logger.info("deleting %s", fname)
             os.remove(fname)
-#endclass Similarity
+# endclass Similarity
 
 
 class MatrixSimilarity(interfaces.SimilarityABC):
@@ -473,6 +475,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
     See also `Similarity` and `SparseMatrixSimilarity` in this module.
 
     """
+
     def __init__(self, corpus, num_best=None, dtype=numpy.float32, num_features=None, chunksize=256, corpus_len=None):
         """
         `num_features` is the number of features in the corpus (will be determined
@@ -550,7 +553,8 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
     def __str__(self):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.index.shape[1])
-#endclass MatrixSimilarity
+# endclass MatrixSimilarity
+
 
 class WmdSimilarity(interfaces.SimilarityABC):
     """
@@ -576,6 +580,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>> query = 'Very good, you should seat outdoor.'
         >>> sims = instance[query]
     """
+
     def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v_and_replace=True, chunksize=256):
         """
         corpus:                         List of lists of strings, as in gensim.models.word2vec.
@@ -618,7 +623,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
             # Compute similarity for each query.
             qresult = [self.w2v_model.wmdistance(document, query[qidx]) for document in self.corpus]
             qresult = numpy.array(qresult)
-            qresult = 1./(1.+qresult)  # Similarity is the negative of the distance.
+            qresult = 1. / (1. + qresult)  # Similarity is the negative of the distance.
 
             # Append single query result to list of all results.
             result.append(qresult)
@@ -633,7 +638,8 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
     def __str__(self):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.wv.syn0.shape[1])
-#endclass WmdSimilarity
+# endclass WmdSimilarity
+
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
     """
@@ -652,6 +658,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
     See also `Similarity` and `MatrixSimilarity` in this module.
     """
+
     def __init__(self, corpus, num_features=None, num_terms=None, num_docs=None, num_nnz=None,
                  num_best=None, chunksize=500, dtype=numpy.float32, maintain_sparsity=False):
         self.num_best = num_best
@@ -729,4 +736,4 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
             # otherwise, return a 2d matrix (#queries x #index)
             result = result.toarray().T
         return result
-#endclass SparseMatrixSimilarity
+# endclass SparseMatrixSimilarity

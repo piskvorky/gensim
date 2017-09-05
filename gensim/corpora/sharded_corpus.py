@@ -26,6 +26,12 @@ import numpy
 import scipy.sparse as sparse
 import time
 
+from six.moves import xrange
+
+import gensim
+from gensim.corpora import IndexedCorpus
+from gensim.interfaces import TransformedCorpus
+
 logger = logging.getLogger(__name__)
 
 #: Specifies which dtype should be used for serializing the shards.
@@ -35,13 +41,6 @@ try:
     _default_dtype = theano.config.floatX
 except ImportError:
     logger.info('Could not import Theano, will use standard float for default ShardedCorpus dtype.')
-
-
-from six.moves import xrange
-
-import gensim
-from gensim.corpora import IndexedCorpus
-from gensim.interfaces import TransformedCorpus
 
 
 class ShardedCorpus(IndexedCorpus):
@@ -233,7 +232,7 @@ class ShardedCorpus(IndexedCorpus):
         self.current_shard = None    # The current shard itself (numpy ndarray)
         self.current_shard_n = None  # Current shard is the current_shard_n-th
         self.current_offset = None   # The index into the dataset which
-                                     # corresponds to index 0 of current shard
+        # corresponds to index 0 of current shard
 
         logger.info('Initializing sharded corpus with prefix '
                      '{0}'.format(output_prefix))
@@ -331,7 +330,7 @@ class ShardedCorpus(IndexedCorpus):
         """
         new_shard = False
         if n is None:
-            n = self.n_shards # Saving the *next* one by default.
+            n = self.n_shards  # Saving the *next* one by default.
             new_shard = True
 
         if not filename:
@@ -347,7 +346,7 @@ class ShardedCorpus(IndexedCorpus):
         """
         Load (unpickle) the n-th shard as the "live" part of the dataset
         into the Dataset object."""
-        #logger.debug('ShardedCorpus loading shard {0}, '
+        # logger.debug('ShardedCorpus loading shard {0}, '
         #              'current shard: {1}'.format(n, self.current_shard_n))
 
         # No-op if the shard is already open.
@@ -416,7 +415,7 @@ class ShardedCorpus(IndexedCorpus):
 
         """
         if self.current_shard_n == self.n_shards:
-            return False # There's no next shard.
+            return False  # There's no next shard.
         return (self.offsets[self.current_shard_n + 1] <= offset) \
                and (offset < self.offsets[self.current_shard_n + 2])
 
@@ -611,7 +610,7 @@ class ShardedCorpus(IndexedCorpus):
                 # This fails on one-past
                 # slice indexing; that's why there's a code branch here.
 
-            #logger.debug('ShardedCorpus: Retrieving slice {0}: '
+            # logger.debug('ShardedCorpus: Retrieving slice {0}: '
             #              'shard {1}'.format((offset.start, offset.stop),
             #                                 (first_shard, last_shard)))
 
@@ -656,13 +655,13 @@ class ShardedCorpus(IndexedCorpus):
             shard_stop = self.offsets[self.current_shard_n + 1] - \
                          self.current_offset
 
-            #s_result[result_start:result_stop] = self.current_shard[
+            # s_result[result_start:result_stop] = self.current_shard[
             #                                         shard_start:shard_stop]
             s_result = self.__add_to_slice(s_result, result_start, result_stop,
                                            shard_start, shard_stop)
 
             # First and last get special treatment, these are in between
-            for shard_n in xrange(first_shard+1, last_shard):
+            for shard_n in xrange(first_shard + 1, last_shard):
                 self.load_shard(shard_n)
 
                 result_start = result_stop
@@ -753,7 +752,7 @@ class ShardedCorpus(IndexedCorpus):
 
         """
         def row_sparse2gensim(row_idx, csr_matrix):
-            indices = csr_matrix.indices[csr_matrix.indptr[row_idx]:csr_matrix.indptr[row_idx+1]]
+            indices = csr_matrix.indices[csr_matrix.indptr[row_idx]:csr_matrix.indptr[row_idx + 1]]
             g_row = [(col_idx, csr_matrix[row_idx, col_idx]) for col_idx in indices]
             return g_row
 

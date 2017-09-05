@@ -218,7 +218,7 @@ class Projection(utils.SaveLoad):
                     self.u[:, i] *= -1.0
 #        diff = np.dot(self.u.T, self.u) - np.eye(self.u.shape[1])
 #        logger.info('orth error after=%f' % np.sum(diff * diff))
-#endclass Projection
+# endclass Projection
 
 
 class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
@@ -242,6 +242,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     .. [2] https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q4-how-do-you-output-the-u-s-vt-matrices-of-lsi
 
     """
+
     def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
                  decay=1.0, distributed=False, onepass=True,
                  power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS):
@@ -327,7 +328,6 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if corpus is not None:
             self.add_documents(corpus)
-
 
     def add_documents(self, corpus, chunksize=None, decay=None):
         """
@@ -581,7 +581,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         except Exception as e:
             logging.warning("failed to load projection from %s: %s" % (projection_fname, e))
         return result
-#endclass LsiModel
+# endclass LsiModel
 
 
 def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):

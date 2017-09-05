@@ -17,7 +17,6 @@ import logging
 import unittest
 
 from gensim import utils
-from gensim.corpora import Dictionary
 from gensim.summarization import keywords
 
 
@@ -75,7 +74,6 @@ class TestKeywordsTest(unittest.TestCase):
 
         self.assertTrue(keywords(text) is not None)
 
-
     def test_keywords_ratio(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
@@ -89,7 +87,7 @@ class TestKeywordsTest(unittest.TestCase):
         selected_docs_12 = keywords(text, ratio=0.1, split=True)
         selected_docs_21 = keywords(text, ratio=0.2, split=True)
 
-        self.assertAlmostEqual(float(len(selected_docs_21))/len(selected_docs_12), float(21)/12, places=1)
+        self.assertAlmostEqual(float(len(selected_docs_21)) / len(selected_docs_12), float(21) / 12, places=1)
 
 
 if __name__ == '__main__':

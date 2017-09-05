@@ -63,7 +63,7 @@ class VarEmbed(KeyedVectors):
         morpho_embeddings = D['morpheme_embeddings']
         result.load_word_embeddings(word_embeddings, word_to_ix)
         if morfessor_model:
-            if sys.version_info >= (2, 7):  #Morfessor is only supported for Python 2.7 and above.
+            if sys.version_info >= (2, 7):  # Morfessor is only supported for Python 2.7 and above.
                 try:
                     import morfessor
                     morfessor_model = morfessor.MorfessorIO().read_binary_model_file(morfessor_model)
@@ -90,7 +90,7 @@ class VarEmbed(KeyedVectors):
         self.vocab_size = len(counts)
         self.vector_size = word_embeddings.shape[1]
         self.syn0 = np.zeros((self.vocab_size, self.vector_size))
-        self.index2word = [None]*self.vocab_size
+        self.index2word = [None] * self.vocab_size
         logger.info("Corpus has %i words", len(self.vocab))
         for word_id, word in enumerate(counts):
             self.vocab[word] = Vocab(index=word_id, count=counts[word])
@@ -98,7 +98,6 @@ class VarEmbed(KeyedVectors):
             self.index2word[word_id] = word
         assert((len(self.vocab), self.vector_size) == self.syn0.shape)
         logger.info("Loaded matrix of %d size and %d dimensions", self.vocab_size, self.vector_size)
-
 
     def add_morphemes_to_embeddings(self, morfessor_model, morpho_embeddings, morpho_to_ix):
         """ Method to include morpheme embeddings into varembed vectors
@@ -109,4 +108,3 @@ class VarEmbed(KeyedVectors):
                 [morpho_embeddings[morpho_to_ix.get(m, -1)] for m in morfessor_model.viterbi_segment(word)[0]]).sum(axis=0)
             self.syn0[self.vocab[word].index] += morpheme_embedding
         logger.info("Added morphemes to word vectors")
-

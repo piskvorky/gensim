@@ -34,6 +34,7 @@ class RpModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
+
     def __init__(self, corpus, id2word=None, num_topics=300):
         """
         `id2word` is a mapping from word ids (integers) to words (strings). It is
@@ -94,4 +95,4 @@ class RpModel(interfaces.TransformationABC):
     def __setstate__(self, state):
         self.__dict__ = state
         self.freshly_loaded = True
-#endclass RpModel
+# endclass RpModel

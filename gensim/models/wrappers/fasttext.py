@@ -31,14 +31,13 @@ import logging
 import tempfile
 import os
 import struct
+from six.moves import xrange
 
 import numpy as np
 from numpy import float32 as REAL, sqrt, newaxis
 from gensim import utils
 from gensim.models.keyedvectors import KeyedVectors, Vocab
 from gensim.models.word2vec import Word2Vec
-
-from six import string_types
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +51,7 @@ class FastTextKeyedVectors(KeyedVectors):
     Subclasses KeyedVectors to implement oov lookups, storing ngrams and other FastText specific methods
 
     """
+
     def __init__(self):
         super(FastTextKeyedVectors, self).__init__()
         self.syn0_all_norm = None
@@ -90,7 +90,7 @@ class FastTextKeyedVectors(KeyedVectors):
                 word_vec += ngram_weights[self.ngrams[ngram]]
             if word_vec.any():
                 return word_vec / len(ngrams)
-            else: # No ngrams of the word are present in self.ngrams
+            else:  # No ngrams of the word are present in self.ngrams
                 raise KeyError('all ngrams for word %s absent from model' % word)
 
     def init_sims(self, replace=False):
@@ -212,7 +212,7 @@ class FastText(Word2Vec):
             cmd.append("-%s" % option)
             cmd.append(str(value))
 
-        output = utils.check_output(args=cmd)
+        output = utils.check_output(args=cmd)  # noqa:F841
         model = cls.load_fasttext_format(output_file)
         cls.delete_training_files(output_file)
         return model
@@ -390,7 +390,6 @@ class FastText(Word2Vec):
 
     @staticmethod
     def compute_ngrams(word, min_n, max_n):
-        ngram_indices = []
         BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
         extended_word = BOW + word + EOW
         ngrams = []
@@ -414,4 +413,3 @@ class FastText(Word2Vec):
             h = h * np.uint32(16777619)
         np.seterr(**old_settings)
         return h
-

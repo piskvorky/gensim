@@ -21,17 +21,13 @@ from __future__ import division
 
 import logging
 import os
-import sys
 import copy
 import multiprocessing
-
-import numpy as np
 
 from gensim import utils
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
 
-from six import string_types
 from smart_open import smart_open
 from shutil import copyfile, rmtree
 
@@ -45,7 +41,7 @@ class Wordrank(KeyedVectors):
     takes place by working with data files on disk and calling the Wordrank binary and glove's
     helper binaries (for preparing training data) with subprocess module.
     """
-    
+
     @classmethod
     def train(cls, wr_path, corpus_file, out_name, size=100, window=15, symmetric=1, min_count=5, max_vocab_size=0,
               sgd_num=100, lrate=0.001, period=10, iter=90, epsilon=0.75, dump_period=10, reg=0, alpha=100,
@@ -126,7 +122,7 @@ class Wordrank(KeyedVectors):
         with smart_open(meta_file, 'wb') as f:
             meta_info = "{0} {1}\n{2} {3}\n{4} {5}".format(numwords, numwords, numlines, cooccurrence_shuf_file.split('/')[-1], numwords, vocab_file.split('/')[-1])
             f.write(meta_info.encode('utf-8'))
-            
+
         if iter % dump_period == 0:
             iter += 1
         else:
@@ -162,7 +158,7 @@ class Wordrank(KeyedVectors):
             cmd.append('--%s' % option)
             cmd.append(str(value))
         logger.info("Running wordrank binary")
-        output = utils.check_output(args=cmd)
+        output = utils.check_output(args=cmd)  # noqa:F841
 
         # use embeddings from max. iteration's dump
         max_iter_dump = iter - (iter % dump_period)
@@ -176,7 +172,7 @@ class Wordrank(KeyedVectors):
 
     @classmethod
     def load_wordrank_model(cls, model_file, vocab_file=None, context_file=None, sorted_vocab=1, ensemble=1):
-        glove2word2vec(model_file, model_file+'.w2vformat')
+        glove2word2vec(model_file, model_file + '.w2vformat')
         model = cls.load_word2vec_format('%s.w2vformat' % model_file)
         if ensemble and context_file:
             model.ensemble_embedding(model_file, context_file)
@@ -209,7 +205,7 @@ class Wordrank(KeyedVectors):
 
     def ensemble_embedding(self, word_embedding, context_embedding):
         """Replace syn0 with the sum of context and word embeddings."""
-        glove2word2vec(context_embedding, context_embedding+'.w2vformat')
+        glove2word2vec(context_embedding, context_embedding + '.w2vformat')
         w_emb = KeyedVectors.load_word2vec_format('%s.w2vformat' % word_embedding)
         c_emb = KeyedVectors.load_word2vec_format('%s.w2vformat' % context_embedding)
         # compare vocab words using keys of dict vocab
@@ -223,4 +219,3 @@ class Wordrank(KeyedVectors):
         new_emb = w_emb.syn0 + c_emb.syn0
         self.syn0 = new_emb
         return new_emb
-

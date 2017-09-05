@@ -33,7 +33,6 @@ The algorithm:
 import logging
 import numbers
 import os
-from random import sample
 
 import numpy as np
 import six
@@ -92,6 +91,7 @@ class LdaState(utils.SaveLoad):
     reduce traffic.
 
     """
+
     def __init__(self, eta, shape):
         self.eta = eta
         self.sstats = np.zeros(shape)
@@ -191,6 +191,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     Model persistency is achieved through its `load`/`save` methods.
     """
+
     def __init__(self, corpus=None, num_topics=100, id2word=None,
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
@@ -412,7 +413,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         try:
             _ = len(chunk)
-        except:
+        except Exception:
             # convert iterators/generators to plain list, so we have len() etc.
             chunk = list(chunk)
         if len(chunk) > 1:
@@ -588,7 +589,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         try:
             lencorpus = len(corpus)
-        except:
+        except Exception:
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:

@@ -22,7 +22,6 @@ from os import remove
 
 import six
 import numpy as np
-import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import atmodel
@@ -483,10 +482,10 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         model = self.model
 
         # simulate storing large arrays separately
-        model.save(testfile(), sep_limit=0)
+        model.save(fname, sep_limit=0)
 
         # test loading the large model arrays with mmap
-        model2 = self.class_.load(testfile(), mmap='r')
+        model2 = self.class_.load(fname, mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(isinstance(model2.expElogbeta, np.memmap))
         self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))

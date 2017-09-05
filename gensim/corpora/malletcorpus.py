@@ -56,8 +56,8 @@ class MalletCorpus(LowCorpus):
                 yield self.line2doc(line)
 
     def line2doc(self, line):
-        l = [word for word in utils.to_unicode(line).strip().split(' ') if word]
-        docid, doclang, words = l[0], l[1], l[2:]
+        splited_line = [word for word in utils.to_unicode(line).strip().split(' ') if word]
+        docid, doclang, words = splited_line[0], splited_line[1], splited_line[2:]
 
         doc = super(MalletCorpus, self).line2doc(' '.join(words))
 

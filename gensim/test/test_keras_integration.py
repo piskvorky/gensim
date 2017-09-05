@@ -112,7 +112,7 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
                     texts.append(sentence)
                     texts_w2v.append(sentence.split(' '))
                     labels.append(label_id)
-            except:
+            except Exception:
                 None
 
         # Vectorize the text samples into a 2D integer tensor

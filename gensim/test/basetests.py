@@ -17,14 +17,14 @@ class TestBaseTopicModel(object):
         topics = self.model.show_topics(formatted=True)
         for topic_no, topic in topics:
             self.assertTrue(isinstance(topic_no, int))
-            self.assertTrue(isinstance(topic, str) or isinstance(topic, unicode))
+            self.assertTrue(isinstance(topic, str) or isinstance(topic, unicode))  # noqa:F821
 
     def testPrintTopics(self):
         topics = self.model.print_topics()
 
         for topic_no, topic in topics:
             self.assertTrue(isinstance(topic_no, int))
-            self.assertTrue(isinstance(topic, str) or isinstance(topic, unicode))
+            self.assertTrue(isinstance(topic, str) or isinstance(topic, unicode))  # noqa:F821
 
     def testShowTopic(self):
         topic = self.model.show_topic(1)
