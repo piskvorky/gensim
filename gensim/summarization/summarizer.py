@@ -211,6 +211,11 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
 
     most_important_docs = summarize_corpus(corpus, ratio=ratio if word_count is None else 1)
 
+    # If couldn't get important docs, the algorithm ends.
+    if not most_important_docs:
+        logger.warning("Couldn't get relevant sentences.")
+        return
+
     # Extracts the most important sentences with the selected criterion.
     extracted_sentences = _extract_important_sentences(sentences, corpus, most_important_docs, word_count)
 
