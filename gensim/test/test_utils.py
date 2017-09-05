@@ -10,10 +10,17 @@ Automated tests for checking various utils functions.
 
 import logging
 import unittest
-
+import os
 from gensim import utils
 from six import iteritems
 import numpy as np
+
+try:
+    FileNotFoundError
+    PermissionError
+except NameError:
+    FileNotFoundError = IOError
+    PermissionError = OSError
 
 
 class TestIsCorpus(unittest.TestCase):
@@ -82,6 +89,11 @@ class TestUtils(unittest.TestCase):
         body = u'It&#146;s the Year of the Horse. YES VIN DIESEL &#128588; &#128175;'
         expected = u'It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af'
         self.assertEquals(utils.decode_htmlentities(body), expected)
+
+    def test_check_output(self):
+        if os.name == 'posix':
+            self.assertTrue(utils.check_output(args=['/bin/sh', '-c', 'echo', '0']))
+            self.assertRaises(FileNotFoundError, utils.check_output, args=['nonexistentFile'])
 
 class TestSampleDict(unittest.TestCase):
     def test_sample_dict(self):
