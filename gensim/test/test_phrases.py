@@ -174,7 +174,6 @@ class TestPhrasesModel(unittest.TestCase):
         bigram = Phrases(sentences, min_count=1, threshold=.5, scoring='npmi')
 
         seen_scores = set()
-
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
         for phrase, score in bigram.export_phrases(test_sentences):
             seen_scores.add(round(score, 3))
@@ -183,6 +182,22 @@ class TestPhrasesModel(unittest.TestCase):
             .882,  # score for graph minors
             .714  # score for human interface
         ])
+
+    def testCustomScorer(self):
+        """ test using a custom scoring function """
+        # all scores will be 1
+        def dumb_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
+            return 1
+
+        bigram = Phrases(sentences, min_count=1, threshold=.001, scoring=dumb_scorer)
+
+        seen_scores = []
+        test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
+        for phrase, score in bigram.export_phrases(test_sentences):
+            seen_scores.append(score)
+
+        assert all(seen_scores) # all scores 1
+        assert len(seen_scores) == 3 #'graph minors' and 'survey human' and 'interface system'
 
     def testBadParameters(self):
         """Test the phrases module with bad parameters."""
