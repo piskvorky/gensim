@@ -122,8 +122,8 @@ class DmlSource(ArticleSource):
 
     def idFromDir(self, path):
         assert len(path) > len(self.baseDir)
-        intId = path[1 + path.rfind('#') :]
-        pathId = path[1 + len(self.baseDir) :]
+        intId = path[1 + path.rfind('#'):]
+        pathId = path[1 + len(self.baseDir):]
         return (intId, pathId)
 
     def isArticle(self, path):
@@ -191,7 +191,7 @@ class DmlCzSource(DmlSource):
     def idFromDir(self, path):
         assert len(path) > len(self.baseDir)
         dmlczId = open(os.path.join(path, 'dspace_id')).read().strip()
-        pathId = path[len(self.baseDir) + 1 :]
+        pathId = path[1 + len(self.baseDir):]
         return (dmlczId, pathId)
 
     def isArticle(self, path):
@@ -292,8 +292,8 @@ class ArxmlivSource(ArticleSource):
 
     def idFromDir(self, path):
         assert len(path) > len(self.baseDir)
-        intId = path[1 + path.rfind('#') :]
-        pathId = path[1 + len(self.baseDir) :]
+        intId = path[1 + path.rfind('#'):]
+        pathId = path[1 + len(self.baseDir):]
         return (intId, pathId)
 
     def isArticle(self, path):
