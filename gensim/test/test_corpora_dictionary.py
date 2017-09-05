@@ -127,21 +127,21 @@ class TestDictionary(unittest.TestCase):
         # provide keep_tokens argument, keep the tokens given
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=3, no_above=1.0, keep_tokens=['human', 'survey'])
-        expected = set(['graph', 'trees', 'human', 'system', 'user', 'survey'])
+        expected = {'graph', 'trees', 'human', 'system', 'user', 'survey'}
         self.assertEqual(set(d.token2id.keys()), expected)
 
     def testFilterKeepTokens_unchangedFunctionality(self):
         # do not provide keep_tokens argument, filter_extremes functionality is unchanged
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=3, no_above=1.0)
-        expected = set(['graph', 'trees', 'system', 'user'])
+        expected = {'graph', 'trees', 'system', 'user'}
         self.assertEqual(set(d.token2id.keys()), expected)
 
     def testFilterKeepTokens_unseenToken(self):
         # do provide keep_tokens argument with unseen tokens, filter_extremes functionality is unchanged
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=3, no_above=1.0, keep_tokens=['unknown_token'])
-        expected = set(['graph', 'trees', 'system', 'user'])
+        expected = {'graph', 'trees', 'system', 'user'}
         self.assertEqual(set(d.token2id.keys()), expected)
 
     def testFilterMostFrequent(self):

@@ -36,7 +36,8 @@ class TestHashDictionary(unittest.TestCase):
                 ['trees'],
                 ['graph', 'trees'],
                 ['graph', 'minors', 'trees'],
-                ['graph', 'minors', 'survey']]
+                ['graph', 'minors', 'survey']
+        ]
 
     def testDocFreqOneDoc(self):
         texts = [['human', 'interface', 'computer']]
@@ -92,7 +93,7 @@ class TestHashDictionary(unittest.TestCase):
         # two words
         texts = [['human', 'cat']]
         d = HashDictionary(texts, debug=True, myhash=zlib.adler32)
-        expected = {9273: set(['cat']), 31002: set(['human'])}
+        expected = {9273: {'cat'}, 31002: {'human'}}
         self.assertEqual(d.id2token, expected)
 
         # now the same thing, with debug off
@@ -105,7 +106,7 @@ class TestHashDictionary(unittest.TestCase):
         # all words map to the same id
         d = HashDictionary(self.texts, id_range=1, debug=True)
         dfs = {0: 9}
-        id2token = {0: set(['minors', 'graph', 'system', 'trees', 'eps', 'computer', 'survey', 'user', 'human', 'time', 'interface', 'response'])}
+        id2token = {0: {'minors', 'graph', 'system', 'trees', 'eps', 'computer', 'survey', 'user', 'human', 'time', 'interface', 'response'}}
         token2id = {'minors': 0, 'graph': 0, 'system': 0, 'trees': 0, 'eps': 0, 'computer': 0, 'survey': 0, 'user': 0, 'human': 0, 'time': 0, 'interface': 0, 'response': 0}
         self.assertEqual(d.dfs, dfs)
         self.assertEqual(d.id2token, id2token)
@@ -114,7 +115,7 @@ class TestHashDictionary(unittest.TestCase):
         # 2 ids: 0/1 for even/odd number of bytes in the word
         d = HashDictionary(self.texts, id_range=2, myhash=lambda key: len(key))
         dfs = {0: 7, 1: 7}
-        id2token = {0: set(['minors', 'system', 'computer', 'survey', 'user', 'time', 'response']), 1: set(['interface', 'graph', 'trees', 'eps', 'human'])}
+        id2token = {0: {'minors', 'system', 'computer', 'survey', 'user', 'time', 'response'}, 1: {'interface', 'graph', 'trees', 'eps', 'human'}}
         token2id = {'minors': 0, 'graph': 1, 'system': 0, 'trees': 1, 'eps': 1, 'computer': 0, 'survey': 0, 'user': 0, 'human': 1, 'time': 0, 'interface': 1, 'response': 0}
         self.assertEqual(d.dfs, dfs)
         self.assertEqual(d.id2token, id2token)
@@ -122,18 +123,7 @@ class TestHashDictionary(unittest.TestCase):
 
     def testBuild(self):
         d = HashDictionary(self.texts, myhash=zlib.adler32)
-        expected = {5232: 2,
-                     5798: 3,
-                     10608: 2,
-                     12466: 2,
-                     12736: 3,
-                     15001: 2,
-                     18451: 3,
-                     23844: 3,
-                     28591: 2,
-                     29104: 2,
-                     31002: 2,
-                     31049: 2}
+        expected = {5232: 2, 5798: 3, 10608: 2, 12466: 2, 12736: 3, 15001: 2, 18451: 3, 23844: 3, 28591: 2, 29104: 2, 31002: 2, 31049: 2}
 
         self.assertEqual(d.dfs, expected)
         expected = {'minors': 15001, 'graph': 18451, 'system': 5798, 'trees': 23844, 'eps': 31049, 'computer': 10608, 'survey': 28591, 'user': 12736, 'human': 31002, 'time': 29104, 'interface': 12466, 'response': 5232}

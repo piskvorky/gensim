@@ -151,9 +151,7 @@ class Wordrank(KeyedVectors):
         }
 
         # run wordrank executable with wr_args
-        cmd = ['mpirun', '-np']
-        cmd.append(str(np))
-        cmd.append(os.path.join(wr_path, 'wordrank'))
+        cmd = ['mpirun', '-np', str(np), os.path.join(wr_path, 'wordrank')]
         for option, value in wr_args.items():
             cmd.append('--%s' % option)
             cmd.append(str(value))

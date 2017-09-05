@@ -40,7 +40,7 @@ class DmlConfig(object):
         self.sources = {}  # all article sources; see sources.DmlSource class for an example of source
 
         if acceptLangs is None:  # which languages to accept
-            acceptLangs = set(['any'])  # if not specified, accept all languages (including unknown/unspecified)
+            acceptLangs = {'any'}  # if not specified, accept all languages (including unknown/unspecified)
         self.acceptLangs = set(acceptLangs)
         logger.info('initialized %s', self)
 

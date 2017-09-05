@@ -527,7 +527,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             alpha[i] = sticks[i] * left
             left = left - alpha[i]
         alpha[self.m_T - 1] = left
-        alpha = alpha * self.m_alpha
+        alpha *= self.m_alpha
 
         # beta
         beta = (self.m_lambda + self.m_eta) / (self.m_W * self.m_eta +

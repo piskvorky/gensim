@@ -381,7 +381,7 @@ def ret_log_normalize_vec(vec, axis=1):
         log_shift = log_max - np.log(len(vec) + 1.0) - max_val
         tot = np.sum(np.exp(vec + log_shift))
         log_norm = np.log(tot) - log_shift
-        vec = vec - log_norm
+        vec -= log_norm
     else:
         if axis == 1:  # independently normalize each sample
             max_val = np.max(vec, 1)

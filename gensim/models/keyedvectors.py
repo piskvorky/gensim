@@ -694,7 +694,7 @@ class KeyedVectors(utils.SaveLoad):
 
                 original_vocab = self.vocab
                 self.vocab = ok_vocab
-                ignore = set([a, b, c])  # input words to be ignored
+                ignore = {a, b, c}  # input words to be ignored
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
                 sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)

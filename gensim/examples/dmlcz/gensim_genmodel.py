@@ -56,19 +56,19 @@ if __name__ == '__main__':
         model = tfidfmodel.TfidfModel(corpus, id2word=id2word, normalize=True)
         model.save(config.resultFile('model_tfidf.pkl'))
     elif method == 'lda':
-        model = ldamodel.LdaModel(corpus, id2word=id2word, numTopics=DIM_LDA)
+        model = ldamodel.LdaModel(corpus, id2word=id2word, num_topics=DIM_LDA)
         model.save(config.resultFile('model_lda.pkl'))
     elif method == 'lsi':
         # first, transform word counts to tf-idf weights
         tfidf = tfidfmodel.TfidfModel(corpus, id2word=id2word, normalize=True)
         # then find the transformation from tf-idf to latent space
-        model = lsimodel.LsiModel(tfidf[corpus], id2word=id2word, numTopics=DIM_LSI)
+        model = lsimodel.LsiModel(tfidf[corpus], id2word=id2word, num_topics=DIM_LSI)
         model.save(config.resultFile('model_lsi.pkl'))
     elif method == 'rp':
         # first, transform word counts to tf-idf weights
         tfidf = tfidfmodel.TfidfModel(corpus, id2word=id2word, normalize=True)
         # then find the transformation from tf-idf to latent space
-        model = rpmodel.RpModel(tfidf[corpus], id2word=id2word, numTopics=DIM_RP)
+        model = rpmodel.RpModel(tfidf[corpus], id2word=id2word, num_topics=DIM_RP)
         model.save(config.resultFile('model_rp.pkl'))
     else:
         raise ValueError('unknown topic extraction method: %s' % repr(method))

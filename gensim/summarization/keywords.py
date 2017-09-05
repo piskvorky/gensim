@@ -30,7 +30,7 @@ def _get_pos_filters():
     return frozenset(INCLUDING_FILTER), frozenset(EXCLUDING_FILTER)
 
 
-def _get_words_for_graph(tokens, pos_filter):
+def _get_words_for_graph(tokens, pos_filter=None):
     if pos_filter is None:
         include_filters, exclude_filters = _get_pos_filters()
     else:

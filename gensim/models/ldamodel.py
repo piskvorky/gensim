@@ -1130,7 +1130,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             if isinstance(ignore, six.string_types):
                 ignore = [ignore]
             ignore = [e for e in ignore if e]  # make sure None and '' are not in the list
-            ignore = list(set(['state', 'dispatcher', 'id2word']) | set(ignore))
+            ignore = list({'state', 'dispatcher', 'id2word'} | set(ignore))
         else:
             ignore = ['state', 'dispatcher', 'id2word']
 

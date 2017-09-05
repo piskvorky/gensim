@@ -708,12 +708,11 @@ class Word2Vec(utils.SaveLoad):
         logger.info("sample=%g downsamples %i most-common words", sample, downsample_unique)
         logger.info("downsampling leaves estimated %i word corpus (%.1f%% of prior %i)", downsample_total, downsample_total * 100.0 / max(retain_total, 1), retain_total)
 
-        # return from each step: words-affected, resulting-corpus-size
-        report_values = {'drop_unique': drop_unique, 'retain_total': retain_total,
-                         'downsample_unique': downsample_unique, 'downsample_total': int(downsample_total)}
-
-        # print extra memory estimates
-        report_values['memory'] = self.estimate_memory(vocab_size=len(retain_words))
+        # return from each step: words-affected, resulting-corpus-size, extra memory estimates
+        report_values = {
+            'drop_unique': drop_unique, 'retain_total': retain_total, 'downsample_unique': downsample_unique,
+            'downsample_total': int(downsample_total), 'memory': self.estimate_memory(vocab_size=len(retain_words))
+        }
 
         return report_values
 

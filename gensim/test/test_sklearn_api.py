@@ -341,9 +341,7 @@ class TestLdaSeqWrapper(unittest.TestCase):
 
     def testTransform(self):
         # transforming two documents
-        docs = []
-        docs.append(list(corpus_ldaseq)[0])
-        docs.append(list(corpus_ldaseq)[1])
+        docs = [list(corpus_ldaseq)[0], list(corpus_ldaseq)[1]]
         transformed_vecs = self.model.transform(docs)
         self.assertEqual(transformed_vecs.shape[0], 2)
         self.assertEqual(transformed_vecs.shape[1], self.model.num_topics)
@@ -412,9 +410,7 @@ class TestRpWrapper(unittest.TestCase):
 
     def testTransform(self):
         # tranform two documents
-        docs = []
-        docs.append(list(self.corpus)[0])
-        docs.append(list(self.corpus)[1])
+        docs = [list(self.corpus)[0], list(self.corpus)[1]]
         matrix = self.model.transform(docs)
         self.assertEqual(matrix.shape[0], 2)
         self.assertEqual(matrix.shape[1], self.model.num_topics)
@@ -648,10 +644,7 @@ class TestD2VTransformer(unittest.TestCase):
 
     def testTransform(self):
         # tranform multiple documents
-        docs = []
-        docs.append(w2v_texts[0])
-        docs.append(w2v_texts[1])
-        docs.append(w2v_texts[2])
+        docs = [w2v_texts[0], w2v_texts[1], w2v_texts[2]]
         matrix = self.model.transform(docs)
         self.assertEqual(matrix.shape[0], 3)
         self.assertEqual(matrix.shape[1], self.model.size)

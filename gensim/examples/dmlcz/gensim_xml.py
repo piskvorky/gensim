@@ -110,9 +110,9 @@ if __name__ == '__main__':
 
     # initialize structure for similarity queries
     if method == 'lsi' or method == 'rp':  # for these methods, use dense vectors
-        index = MatrixSimilarity(input, numBest=MAX_SIMILAR + 1, numFeatures=input.numTerms)
+        index = MatrixSimilarity(input, num_best=MAX_SIMILAR + 1, num_features=input.numTerms)
     else:
-        index = SparseMatrixSimilarity(input, numBest=MAX_SIMILAR + 1)
+        index = SparseMatrixSimilarity(input, num_best=MAX_SIMILAR + 1)
 
     index.normalize = False  # do not normalize query vectors during similarity queries (the index is already built normalized, so it would be a no-op)
     generateSimilar(corpus, index, method)  # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz specific format
