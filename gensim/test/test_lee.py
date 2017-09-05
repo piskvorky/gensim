@@ -103,7 +103,7 @@ class TestLeeTest(unittest.TestCase):
         flat = res[matutils.triu_indices(len(corpus), 1)]
 
         cor = np.corrcoef(flat, human_sim_vector)[0, 1]
-        logging.info("LSI correlation coefficient is %s" % cor)
+        logging.info("LSI correlation coefficient is %s", cor)
         self.assertTrue(cor > 0.6)
 
     # def test_lee_mallet(self):

@@ -101,7 +101,7 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
         data = np.empty((num_nnz,), dtype=dtype)
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
-                logger.info("PROGRESS: at document #%i/%i" % (docno, num_docs))
+                logger.info("PROGRESS: at document #%i/%i", docno, num_docs)
             posnext = posnow + len(doc)
             indices[posnow: posnext] = [feature_id for feature_id, _ in doc]
             data[posnow: posnext] = [feature_weight for _, feature_weight in doc]
@@ -114,7 +114,7 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
         num_nnz, data, indices, indptr = 0, [], [], [0]
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
-                logger.info("PROGRESS: at document #%i" % (docno))
+                logger.info("PROGRESS: at document #%i", docno)
             indices.extend([feature_id for feature_id, _ in doc])
             data.extend([feature_weight for _, feature_weight in doc])
             num_nnz += len(doc)
@@ -628,7 +628,7 @@ def qr_destroy(la):
     del la[0], la  # now `a` is the only reference to the input matrix
     m, n = a.shape
     # perform q, r = QR(a); code hacked out of scipy.linalg.qr
-    logger.debug("computing QR of %s dense matrix" % str(a.shape))
+    logger.debug("computing QR of %s dense matrix", str(a.shape))
     geqrf, = get_lapack_funcs(('geqrf',), (a,))
     qr, tau, work, info = geqrf(a, lwork=-1, overwrite_a=True)
     qr, tau, work, info = geqrf(a, lwork=work[0], overwrite_a=True)
@@ -675,12 +675,10 @@ class MmWriter(object):
 
         if num_nnz < 0:
             # we don't know the matrix shape/density yet, so only log a general line
-            logger.info("saving sparse matrix to %s" % self.fname)
+            logger.info("saving sparse matrix to %s", self.fname)
             self.fout.write(utils.to_utf8(' ' * 50 + '\n'))  # 48 digits must be enough for everybody
         else:
-            logger.info(
-                "saving sparse %sx%s matrix with %i non-zero entries to %s",
-                num_docs, num_terms, num_nnz, self.fname)
+            logger.info("saving sparse %sx%s matrix with %i non-zero entries to %s", num_docs, num_terms, num_nnz, self.fname)
             self.fout.write(utils.to_utf8('%s %s %s\n' % (num_docs, num_terms, num_nnz)))
         self.last_docno = -1
         self.headers_written = True
@@ -737,7 +735,7 @@ class MmWriter(object):
             else:
                 bow = doc
             if docno % progress_cnt == 0:
-                logger.info("PROGRESS: saving document #%i" % docno)
+                logger.info("PROGRESS: saving document #%i", docno)
             if index:
                 posnow = mw.fout.tell()
                 if posnow == poslast:
@@ -755,11 +753,7 @@ class MmWriter(object):
         num_terms = num_terms or _num_terms
 
         if num_docs * num_terms != 0:
-            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" % (
-                num_docs, num_terms,
-                100.0 * num_nnz / (num_docs * num_terms),
-                num_nnz,
-                num_docs * num_terms))
+            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)", num_docs, num_terms, 100.0 * num_nnz / (num_docs * num_terms), num_nnz, num_docs * num_terms)
 
         # now write proper headers, by seeking and overwriting the spaces written earlier
         mw.fake_headers(num_docs, num_terms, num_nnz)
@@ -779,7 +773,7 @@ class MmWriter(object):
         self.close()  # does nothing if called twice (on an already closed file), so no worries
 
     def close(self):
-        logger.debug("closing %s" % self.fname)
+        logger.debug("closing %s", self.fname)
         if hasattr(self, 'fout'):
             self.fout.close()
 # endclass MmWriter
@@ -806,7 +800,7 @@ class MmReader(object):
         `input` is either a string (file path) or a file-like object that supports
         `seek()` (e.g. gzip.GzipFile, bz2.BZ2File).
         """
-        logger.info("initializing corpus reader from %s" % input)
+        logger.info("initializing corpus reader from %s", input)
         self.input, self.transposed = input, transposed
         with utils.file_or_filename(self.input) as lines:
             try:
@@ -826,9 +820,7 @@ class MmReader(object):
                         self.num_docs, self.num_terms = self.num_terms, self.num_docs
                     break
 
-        logger.info(
-            "accepted corpus with %i documents, %i features, %i non-zero entries",
-            self.num_docs, self.num_terms, self.num_nnz)
+        logger.info("accepted corpus with %i documents, %i features, %i non-zero entries", self.num_docs, self.num_terms, self.num_nnz)
 
     def __len__(self):
         return self.num_docs

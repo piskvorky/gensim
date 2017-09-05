@@ -171,7 +171,7 @@ class DtmModel(utils.SaveLoad):
         Serialize documents in LDA-C format to a temporary text file,.
 
         """
-        logger.info("serializing temporary corpus to %s" % self.fcorpustxt())
+        logger.info("serializing temporary corpus to %s", self.fcorpustxt())
         # write out the corpus in a file format that DTM understands:
         corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
 
@@ -194,10 +194,10 @@ class DtmModel(utils.SaveLoad):
             p0=self.lda_max_em_iter, p1=self.lda_sequence_min_iter, p2=self.lda_sequence_max_iter, p3=self.top_chain_var, p4=self.rng_seed)
 
         arguments = arguments + " " + params
-        logger.info("training DTM with args %s" % arguments)
+        logger.info("training DTM with args %s", arguments)
 
         cmd = [self.dtm_path] + arguments.split()
-        logger.info("Running command %s" % cmd)
+        logger.info("Running command %s", cmd)
         check_output(args=cmd, stderr=PIPE)
 
         self.em_steps = np.loadtxt(self.fem_steps())
@@ -278,9 +278,6 @@ class DtmModel(utils.SaveLoad):
                 else:
                     topic = self.show_topic(i, time, num_words=num_words)
                 shown.append(topic)
-                # if log:
-                # logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i],
-                #     topic))
         return shown
 
     def show_topic(self, topicid, time, topn=50, num_words=None):

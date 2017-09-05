@@ -55,8 +55,8 @@ def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
                 vector_row = '\t'.join(str(x) for x in model[word])
                 file_vector.write(vector_row + '\n')
 
-    logger.info("2D tensor file saved to %s" % outfiletsv)
-    logger.info("Tensor metadata file saved to %s" % outfiletsvmeta)
+    logger.info("2D tensor file saved to %s", outfiletsv)
+    logger.info("Tensor metadata file saved to %s", outfiletsvmeta)
 
 
 if __name__ == "__main__":

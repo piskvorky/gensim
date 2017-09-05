@@ -72,20 +72,20 @@ def generateSimilar(corpus, index, method):
         if SAVE_EMPTY or articles:
             output = ''.join(articles)  # concat all similars to one string
             if not DRY_RUN:  # only open output files for writing if DRY_RUN is false
-                logging.info("generating %s (%i similars)" % (outfile, len(articles)))
+                logging.info("generating %s (%i similars)", outfile, len(articles))
                 outfile = open(outfile, 'w')
                 outfile.write(SIMILAR % output)  # add xml headers and print to file
                 outfile.close()
             else:
-                logging.info("would be generating %s (%i similars):%s\n" % (outfile, len(articles), output))
+                logging.info("would be generating %s (%i similars):%s\n", outfile, len(articles), output)
         else:
-            logging.debug("skipping %s (no similar found)" % outfile)
+            logging.debug("skipping %s (no similar found)", outfile)
 
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
     logging.root.setLevel(level=logging.INFO)
-    logging.info("running %s" % ' '.join(sys.argv))
+    logging.info("running %s", ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
 
@@ -100,9 +100,9 @@ if __name__ == '__main__':
     config = dmlcorpus.DmlConfig('%s_%s' % (gensim_build.PREFIX, language),
                                  resultDir=gensim_build.RESULT_DIR, acceptLangs=[language])
 
-    logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
+    logging.info("loading word id mapping from %s", config.resultFile('wordids.txt'))
     id2word = dmlcorpus.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
-    logging.info("loaded %i word ids" % len(id2word))
+    logging.info("loaded %i word ids", len(id2word))
 
     corpus = dmlcorpus.DmlCorpus.load(config.resultFile('.pkl'))
     input = MmCorpus(config.resultFile('_%s.mm' % method))
@@ -117,4 +117,4 @@ if __name__ == '__main__':
     index.normalize = False  # do not normalize query vectors during similarity queries (the index is already built normalized, so it would be a no-op)
     generateSimilar(corpus, index, method)  # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz specific format
 
-    logging.info("finished running %s" % program)
+    logging.info("finished running %s", program)

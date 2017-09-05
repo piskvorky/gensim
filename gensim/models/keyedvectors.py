@@ -146,11 +146,11 @@ class KeyedVectors(utils.SaveLoad):
             total_vec = len(self.vocab)
         vector_size = self.syn0.shape[1]
         if fvocab is not None:
-            logger.info("storing vocabulary in %s" % (fvocab))
+            logger.info("storing vocabulary in %s", fvocab)
             with utils.smart_open(fvocab, 'wb') as vout:
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
-        logger.info("storing %sx%s projection weights into %s" % (total_vec, vector_size, fname))
+        logger.info("storing %sx%s projection weights into %s", total_vec, vector_size, fname)
         assert (len(self.vocab), vector_size) == self.syn0.shape
         with utils.smart_open(fname, 'wb') as fout:
             fout.write(utils.to_utf8("%s %s\n" % (total_vec, vector_size)))
@@ -257,14 +257,11 @@ class KeyedVectors(utils.SaveLoad):
                     word, weights = parts[0], [REAL(x) for x in parts[1:]]
                     add_word(word, weights)
         if result.syn0.shape[0] != len(result.vocab):
-            logger.info(
-                "duplicate words detected, shrinking matrix size from %i to %i",
-                result.syn0.shape[0], len(result.vocab)
-            )
+            logger.info("duplicate words detected, shrinking matrix size from %i to %i", result.syn0.shape[0], len(result.vocab))
             result.syn0 = ascontiguousarray(result.syn0[: len(result.vocab)])
         assert (len(result.vocab), vector_size) == result.syn0.shape
 
-        logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
+        logger.info("loaded %s matrix from %s", result.syn0.shape, fname)
         return result
 
     def word_vec(self, word, use_norm=False):
@@ -400,12 +397,10 @@ class KeyedVectors(utils.SaveLoad):
         diff1 = len_pre_oov1 - len(document1)
         diff2 = len_pre_oov2 - len(document2)
         if diff1 > 0 or diff2 > 0:
-            logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
-                        diff1, diff2)
+            logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).', diff1, diff2)
 
         if len(document1) == 0 or len(document2) == 0:
-            logger.info('At least one of the documents had no words that were'
-                        'in the vocabulary. Aborting (returning inf).')
+            logger.info('At least one of the documents had no words that werein the vocabulary. Aborting (returning inf).')
             return float('inf')
 
         dictionary = Dictionary(documents=[document1, document2])
@@ -645,9 +640,7 @@ class KeyedVectors(utils.SaveLoad):
     def log_accuracy(section):
         correct, incorrect = len(section['correct']), len(section['incorrect'])
         if correct + incorrect > 0:
-            logger.info("%s: %.1f%% (%i/%i)" %
-                        (section['section'], 100.0 * correct / (correct + incorrect),
-                         correct, correct + incorrect))
+            logger.info("%s: %.1f%% (%i/%i)", section['section'], 100.0 * correct / (correct + incorrect), correct, correct + incorrect)
 
     def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, case_insensitive=True):
         """
@@ -693,10 +686,10 @@ class KeyedVectors(utils.SaveLoad):
                     else:
                         a, b, c, expected = [word for word in line.split()]
                 except Exception:
-                    logger.info("skipping invalid line #%i in %s" % (line_no, questions))
+                    logger.info("skipping invalid line #%i in %s", line_no, questions)
                     continue
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
-                    logger.debug("skipping line #%i with OOV words: %s" % (line_no, line.strip()))
+                    logger.debug("skipping line #%i with OOV words: %s", line_no, line.strip())
                     continue
 
                 original_vocab = self.vocab
@@ -802,15 +795,9 @@ class KeyedVectors(utils.SaveLoad):
         pearson = stats.pearsonr(similarity_gold, similarity_model)
         oov_ratio = float(oov) / (len(similarity_gold) + oov) * 100
 
-        logger.debug(
-            'Pearson correlation coefficient against %s: %f with p-value %f',
-            pairs, pearson[0], pearson[1]
-        )
-        logger.debug(
-            'Spearman rank-order correlation coefficient against %s: %f with p-value %f',
-            pairs, spearman[0], spearman[1]
-        )
-        logger.debug('Pairs with unknown words: %d' % oov)
+        logger.debug('Pearson correlation coefficient against %s: %f with p-value %f', pairs, pearson[0], pearson[1])
+        logger.debug('Spearman rank-order correlation coefficient against %s: %f with p-value %f', pairs, spearman[0], spearman[1])
+        logger.debug('Pairs with unknown words: %d', oov)
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio
 

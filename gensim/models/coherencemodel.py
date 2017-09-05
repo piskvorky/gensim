@@ -236,9 +236,7 @@ class CoherenceModel(interfaces.TransformationABC):
         if self.model is not None:
             new_topics = self._get_topics()
             if topics is not None:
-                logger.warning(
-                    "Ignoring topics you are attempting to set in favor of model's topics: %s",
-                    self.model)
+                logger.warning("Ignoring topics you are attempting to set in favor of model's topics: %s", self.model)
         elif topics is not None:
             new_topics = []
             for topic in topics:

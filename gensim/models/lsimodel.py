@@ -397,8 +397,6 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     self.projection = self.dispatcher.getstate()
                 self.docs_processed += doc_no
-#            logger.info("top topics after adding %i documents" % doc_no)
-#            self.print_debug(10)
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             assert self.onepass, "distributed two-pass algo not supported yet"
@@ -579,7 +577,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         try:
             result.projection = super(LsiModel, cls).load(projection_fname, *args, **kwargs)
         except Exception as e:
-            logging.warning("failed to load projection from %s: %s" % (projection_fname, e))
+            logging.warning("failed to load projection from %s: %s", projection_fname, e)
         return result
 # endclass LsiModel
 
@@ -723,7 +721,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
 
     if scipy.sparse.issparse(corpus):
         b = qt * corpus
-        logger.info("2nd phase: running dense svd on %s matrix" % str(b.shape))
+        logger.info("2nd phase: running dense svd on %s matrix", str(b.shape))
         u, s, vt = scipy.linalg.svd(b, full_matrices=False)
         del b, vt
     else:

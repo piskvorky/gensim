@@ -56,7 +56,7 @@ class SvmLightCorpus(IndexedCorpus):
 
         """
         IndexedCorpus.__init__(self, fname)
-        logger.info("loading corpus from %s" % fname)
+        logger.info("loading corpus from %s", fname)
 
         self.fname = fname  # input file, see class doc for format
         self.length = None
@@ -89,7 +89,7 @@ class SvmLightCorpus(IndexedCorpus):
         This function is automatically called by `SvmLightCorpus.serialize`; don't
         call it directly, call `serialize` instead.
         """
-        logger.info("converting corpus to SVMlight format: %s" % fname)
+        logger.info("converting corpus to SVMlight format: %s", fname)
 
         offsets = []
         with utils.smart_open(fname, 'wb') as fout:

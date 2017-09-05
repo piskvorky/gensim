@@ -55,7 +55,7 @@ class NormModel(interfaces.TransformationABC):
         """
         Calculates the norm by calling matutils.unitvec with the norm parameter.
         """
-        logger.info("Performing %s normalization..." % (self.norm))
+        logger.info("Performing %s normalization...", self.norm)
         norms = []
         numnnz = 0
         docno = 0

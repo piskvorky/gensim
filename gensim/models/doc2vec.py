@@ -70,9 +70,9 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
     from gensim.models.word2vec_inner import FAST_VERSION  # blas-adaptation shared from word2vec
-    logger.debug('Fast version of {0} is being used'.format(__name__))
+    logger.debug('Fast version of %s is being used', __name__)
 except ImportError:
-    logger.warning('Slow version of {0} is being used'.format(__name__))
+    logger.warning('Slow version of %s is being used', __name__)
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
 
@@ -494,7 +494,7 @@ class DocvecsArray(utils.SaveLoad):
         self.init_sims()
 
         docs = [doc for doc in docs if doc in self.doctags or 0 <= doc < self.count]  # filter out unknowns
-        logger.debug("using docs %s" % docs)
+        logger.debug("using docs %s", docs)
         if not docs:
             raise ValueError("cannot select a doc from an empty list")
         vectors = vstack(self.doctag_syn0norm[self._int_index(doc)] for doc in docs).astype(REAL)
@@ -664,7 +664,7 @@ class Doc2Vec(Word2Vec):
         if self.dm and self.dm_concat:
             # expand l1 size to match concatenated tags+words length
             self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
-            logger.info("using concatenative %d-dimensional layer1" % (self.layer1_size))
+            logger.info("using concatenative %d-dimensional layer1", self.layer1_size)
         super(Doc2Vec, self).reset_weights()
         self.docvecs.reset_weights(self)
 
@@ -685,15 +685,11 @@ class Doc2Vec(Word2Vec):
         for document_no, document in enumerate(documents):
             if not checked_string_types:
                 if isinstance(document.words, string_types):
-                    logger.warning(
-                        "Each 'words' should be a list of words (usually unicode strings)."
-                        "First 'words' here is instead plain %s." % type(document.words)
-                    )
+                    logger.warning("Each 'words' should be a list of words (usually unicode strings). First 'words' here is instead plain %s.", type(document.words))
                 checked_string_types += 1
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
-                logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags",
-                            document_no, total_words, interval_rate, len(vocab), len(self.docvecs))
+                logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags", document_no, total_words, interval_rate, len(vocab), len(self.docvecs))
                 interval_start = default_timer()
                 interval_count = total_words
             document_length = len(document.words)
@@ -709,8 +705,7 @@ class Doc2Vec(Word2Vec):
                 utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
-        logger.info("collected %i word types and %i unique tags from a corpus of %i examples and %i words",
-                    len(vocab), len(self.docvecs), document_no + 1, total_words)
+        logger.info("collected %i word types and %i unique tags from a corpus of %i examples and %i words", len(vocab), len(self.docvecs), document_no + 1, total_words)
         self.corpus_count = document_no + 1
         self.raw_vocab = vocab
 
@@ -850,7 +845,7 @@ class Doc2Vec(Word2Vec):
             with utils.smart_open(fname, 'ab') as fout:
                 if not word_vec:
                     total_vec = len(self.docvecs)
-                    logger.info("storing %sx%s projection weights into %s" % (total_vec, self.vector_size, fname))
+                    logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
                     fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vector_size)))
                 # store as in input order
                 for i in range(len(self.docvecs)):

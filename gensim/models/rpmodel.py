@@ -61,7 +61,7 @@ class RpModel(interfaces.TransformationABC):
             self.num_terms = 1 + max([-1] + self.id2word.keys())
 
         shape = self.num_topics, self.num_terms
-        logger.info("constructing %s random matrix" % str(shape))
+        logger.info("constructing %s random matrix", str(shape))
         # Now construct the projection matrix itself.
         # Here i use a particular form, derived in "Achlioptas: Database-friendly random projection",
         # and his (1) scenario of Theorem 1.1 in particular (all entries are +1/-1).

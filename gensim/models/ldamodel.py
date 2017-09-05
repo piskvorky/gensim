@@ -147,8 +147,7 @@ class LdaState(utils.SaveLoad):
         if other.numdocs == 0 or targetsize == other.numdocs:
             scale = 1.0
         else:
-            logger.info("merging changes from %i documents into a model of %i documents",
-                        other.numdocs, targetsize)
+            logger.info("merging changes from %i documents into a model of %i documents", other.numdocs, targetsize)
             scale = 1.0 * targetsize / other.numdocs
         self.sstats += rhot * scale * other.sstats
 
@@ -327,7 +326,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     self.dispatcher.initialize(id2word=self.id2word, num_topics=self.num_topics,
                                                chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
                     self.numworkers = len(self.dispatcher.getworkers())
-                    logger.info("using distributed version with %i workers" % self.numworkers)
+                    logger.info("using distributed version with %i workers", self.numworkers)
             except Exception as err:
                 logger.error("failed to initialize distributed LDA (%s)", err)
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
@@ -533,8 +532,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         subsample_ratio = 1.0 * total_docs / len(chunk)
         perwordbound = self.bound(chunk, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
-        logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
-                    (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
+        logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words", perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words)
         return perwordbound
 
     def update(self, corpus, chunksize=None, decay=None, offset=None,
@@ -621,12 +619,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             "iterating %ix with a convergence threshold of %f",
             updatetype, self.num_topics, passes, lencorpus,
             updateafter, evalafter, iterations,
-            gamma_threshold)
+            gamma_threshold
+        )
 
         if updates_per_pass * passes < 10:
-            logger.warning(
-                "too few updates, training might not converge; consider "
-                "increasing the number of passes or iterations to improve accuracy")
+            logger.warning("too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy")
 
         # rho is the "speed" of updating; TODO try other fncs
         # pass_ + num_updates handles increasing the starting t for each pass,
@@ -643,7 +640,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         for pass_ in xrange(passes):
             if self.dispatcher:
-                logger.info('initializing %s workers' % self.numworkers)
+                logger.info('initializing %s workers', self.numworkers)
                 self.dispatcher.reset(self.state)
             else:
                 other = LdaState(self.eta, self.state.sstats.shape)
@@ -658,13 +655,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
-                    logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i',
-                                pass_, chunk_no * chunksize + len(chunk), lencorpus)
+                    logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i', pass_, chunk_no * chunksize + len(chunk), lencorpus)
                     # this will eventually block until some jobs finish, because the queue has a small finite length
                     self.dispatcher.putjob(chunk)
                 else:
-                    logger.info('PROGRESS: pass %i, at document #%i/%i',
-                                pass_, chunk_no * chunksize + len(chunk), lencorpus)
+                    logger.info('PROGRESS: pass %i, at document #%i/%i', pass_, chunk_no * chunksize + len(chunk), lencorpus)
                     gammat = self.do_estep(chunk, other)
 
                     if self.optimize_alpha:

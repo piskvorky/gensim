@@ -85,7 +85,7 @@ class MalletCorpus(LowCorpus):
             logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
 
-        logger.info("storing corpus in Mallet format into %s" % fname)
+        logger.info("storing corpus in Mallet format into %s", fname)
 
         truncated = 0
         offsets = []
@@ -106,9 +106,7 @@ class MalletCorpus(LowCorpus):
                 fout.write(utils.to_utf8('%s %s %s\n' % (doc_id, doc_lang, ' '.join(words))))
 
         if truncated:
-            logger.warning("Mallet format can only save vectors with "
-                            "integer elements; %i float entries were truncated to integer value" %
-                            truncated)
+            logger.warning("Mallet format can only save vectors with integer elements; %i float entries were truncated to integer value", truncated)
 
         return offsets
 

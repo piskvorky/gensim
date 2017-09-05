@@ -318,9 +318,7 @@ class FastText(Word2Vec):
             'and expected number of words ({} words)'.format(len(self.wv.vocab), nwords))
         if len(self.wv.vocab) != vocab_size:
             # expecting to log this warning only for pretrained french vector, wiki.fr
-            logger.warning(
-                "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
-                len(self.wv.vocab), vocab_size)
+            logger.warning("mismatch between final vocab size (%s words), and expected vocab size (%s words)", len(self.wv.vocab), vocab_size)
 
         if self.new_format:
             for j in range(pruneidx_size):

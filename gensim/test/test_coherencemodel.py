@@ -70,9 +70,7 @@ class TestCoherenceModel(unittest.TestCase):
 
         vw_path = os.environ.get('VOWPAL_WABBIT_PATH', None)
         if not vw_path:
-            logging.info(
-                "Environment variable 'VOWPAL_WABBIT_PATH' not specified,"
-                " skipping sanity checks for LDA Model")
+            logging.info("Environment variable 'VOWPAL_WABBIT_PATH' not specified, skipping sanity checks for LDA Model")
             self.vw_path = None
         else:
             self.vw_path = vw_path

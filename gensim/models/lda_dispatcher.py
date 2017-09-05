@@ -85,11 +85,11 @@ class Dispatcher(object):
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
-                    logger.info("registering worker #%i at %s" % (workerid, uri))
+                    logger.info("registering worker #%i at %s", workerid, uri)
                     worker.initialize(workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
                 except Pyro4.errors.PyroError:
-                    logger.warning("unresponsive worker at %s, deleting it from the name server" % uri)
+                    logger.warning("unresponsive worker at %s, deleting it from the name server", uri)
                     ns.remove(name)
 
         if not self.workers:
@@ -104,16 +104,16 @@ class Dispatcher(object):
 
     @Pyro4.expose
     def getjob(self, worker_id):
-        logger.info("worker #%i requesting a new job" % worker_id)
+        logger.info("worker #%i requesting a new job", worker_id)
         job = self.jobs.get(block=True, timeout=1)
-        logger.info("worker #%i got a new job (%i left)" % (worker_id, self.jobs.qsize()))
+        logger.info("worker #%i got a new job (%i left)", worker_id, self.jobs.qsize())
         return job
 
     @Pyro4.expose
     def putjob(self, job):
         self._jobsreceived += 1
         self.jobs.put(job, block=True, timeout=HUGE_TIMEOUT)
-        logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
+        logger.info("added a new job (len(queue)=%i items)", self.jobs.qsize())
 
     @Pyro4.expose
     def getstate(self):
@@ -121,11 +121,11 @@ class Dispatcher(object):
         Merge states from across all workers and return the result.
         """
         logger.info("end of input, assigning all remaining jobs")
-        logger.debug("jobs done: %s, jobs received: %s" % (self._jobsdone, self._jobsreceived))
+        logger.debug("jobs done: %s, jobs received: %s", self._jobsdone, self._jobsreceived)
         while self._jobsdone < self._jobsreceived:
             time.sleep(0.5)  # check every half a second
 
-        logger.info("merging states from %i workers" % len(self.workers))
+        logger.info("merging states from %i workers", len(self.workers))
         workers = list(self.workers.values())
         result = workers[0].getstate()
         for worker in workers[1:]:
@@ -140,7 +140,7 @@ class Dispatcher(object):
         Initialize all workers for a new EM iterations.
         """
         for workerid, worker in iteritems(self.workers):
-            logger.info("resetting worker %s" % workerid)
+            logger.info("resetting worker %s", workerid)
             worker.reset(state)
             worker.requestjob()
         self._jobsdone = 0
@@ -158,7 +158,7 @@ class Dispatcher(object):
         and `worker.requestjob()`.
         """
         self._jobsdone += 1
-        logger.info("worker #%s finished job #%i" % (workerid, self._jobsdone))
+        logger.info("worker #%s finished job #%i", workerid, self._jobsdone)
         self.workers[workerid].requestjob()  # tell the worker to ask for another job, asynchronously (one-way)
 
     def jobsdone(self):
@@ -171,7 +171,7 @@ class Dispatcher(object):
         Terminate all registered workers and then the dispatcher.
         """
         for workerid, worker in iteritems(self.workers):
-            logger.info("terminating worker %s" % workerid)
+            logger.info("terminating worker %s", workerid)
             worker.exit()
         logger.info("terminating dispatcher")
         os._exit(0)  # exit the whole process (not just this thread ala sys.exit())

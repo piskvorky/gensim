@@ -51,7 +51,7 @@ COMPUTE_NORM2 = False
 def norm2(a):
     """Spectral norm ("norm 2") of a symmetric matrix `a`."""
     if COMPUTE_NORM2:
-        logging.info("computing spectral norm of a %s matrix" % str(a.shape))
+        logging.info("computing spectral norm of a %s matrix", str(a.shape))
         return scipy.linalg.eigvalsh(a).max()  # much faster than np.linalg.norm(2)
     else:
         return np.nan
@@ -82,7 +82,7 @@ class ClippedCorpus(object):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.info("running %s" % " ".join(sys.argv))
+    logging.info("running %s", " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
     # do we have enough cmd line arguments?
@@ -105,7 +105,7 @@ if __name__ == '__main__':
         m = int(sys.argv[3])
     else:
         m = mm.num_terms
-    logging.info("using %i documents and %i features" % (n, m))
+    logging.info("using %i documents and %i features", n, m)
     corpus = ClippedCorpus(mm, n, m)
     id2word = gensim.utils.FakeDict(m)
 
@@ -137,7 +137,7 @@ if __name__ == '__main__':
         print_error("baseline", aat,
                     np.zeros((m, factors)), np.zeros((factors)), ideal_fro, ideal_n2)
         if sparsesvd:
-            logging.info("computing SVDLIBC SVD for %i factors" % (factors))
+            logging.info("computing SVDLIBC SVD for %i factors", factors)
             taken = time.time()
             corpus_ram = gensim.matutils.corpus2csc(corpus, num_terms=m)
             ut, s, vt = sparsesvd(corpus_ram, factors)
@@ -152,8 +152,7 @@ if __name__ == '__main__':
             del u
         for power_iters in POWER_ITERS:
             for chunksize in CHUNKSIZE:
-                logging.info("computing incremental SVD for %i factors, %i power iterations, chunksize %i" %
-                             (factors, power_iters, chunksize))
+                logging.info("computing incremental SVD for %i factors, %i power iterations, chunksize %i", factors, power_iters, chunksize)
                 taken = time.time()
                 gensim.models.lsimodel.P2_EXTRA_ITERS = power_iters
                 model = gensim.models.LsiModel(corpus, id2word=id2word, num_topics=factors,
@@ -165,8 +164,7 @@ if __name__ == '__main__':
                        (factors, power_iters, chunksize, taken, s[0], s[-1]))
                 print_error('incremental SVD', aat, u, s, ideal_fro, ideal_n2)
                 del u
-            logging.info("computing multipass SVD for %i factors, %i power iterations" %
-                   (factors, power_iters,))
+            logging.info("computing multipass SVD for %i factors, %i power iterations", factors, power_iters,)
             taken = time.time()
             model = gensim.models.LsiModel(corpus, id2word=id2word, num_topics=factors, chunksize=2000,
                                            onepass=False, power_iters=power_iters)
@@ -178,4 +176,4 @@ if __name__ == '__main__':
             print_error('multipass SVD', aat, u, s, ideal_fro, ideal_n2)
             del u
 
-    logging.info("finished running %s" % program)
+    logging.info("finished running %s", program)

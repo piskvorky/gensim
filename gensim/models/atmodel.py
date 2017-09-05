@@ -452,8 +452,7 @@ class AuthorTopicModel(LdaModel):
                 sstats[:, ids] += np.outer(expElogtheta_sum_a.T, cts / phinorm)
 
         if len(chunk) > 1:
-            logger.debug("%i/%i documents converged within %i iterations",
-                         converged, len(chunk), self.iterations)
+            logger.debug("%i/%i documents converged within %i iterations", converged, len(chunk), self.iterations)
 
         if collect_sstats:
             # This step finishes computing the sufficient statistics for the
@@ -492,8 +491,7 @@ class AuthorTopicModel(LdaModel):
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         subsample_ratio = 1.0 * total_docs / len(chunk)
         perwordbound = self.bound(chunk, chunk_doc_idx, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
-        logger.info("%.3f per-word bound, %.1f perplexity estimate based on a corpus of %i documents with %i words" %
-                    (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
+        logger.info("%.3f per-word bound, %.1f perplexity estimate based on a corpus of %i documents with %i words", perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words)
         return perwordbound
 
     def update(self, corpus=None, author2doc=None, doc2author=None, chunksize=None, decay=None, offset=None,
@@ -674,17 +672,14 @@ class AuthorTopicModel(LdaModel):
         evalafter = min(lencorpus, (eval_every or 0) * self.numworkers * chunksize)
 
         updates_per_pass = max(1, lencorpus / updateafter)
-        logger.info("running %s author-topic training, %s topics, %s authors, %i passes over "
-                    "the supplied corpus of %i documents, updating model once "
-                    "every %i documents, evaluating perplexity every %i documents, "
-                    "iterating %ix with a convergence threshold of %f",
-                    updatetype, self.num_topics, num_input_authors, passes, lencorpus,
-                        updateafter, evalafter, iterations,
-                        gamma_threshold)
+        logger.info(
+            "running %s author-topic training, %s topics, %s authors, %i passes over the supplied corpus of %i documents, updating model once "
+            "every %i documents, evaluating perplexity every %i documents, iterating %ix with a convergence threshold of %f",
+            updatetype, self.num_topics, num_input_authors, passes, lencorpus, updateafter, evalafter, iterations, gamma_threshold
+        )
 
         if updates_per_pass * passes < 10:
-            logger.warning("too few updates, training might not converge; consider "
-                           "increasing the number of passes or iterations to improve accuracy")
+            logger.warning("too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy")
 
         # rho is the "speed" of updating; TODO try other fncs
         # pass_ + num_updates handles increasing the starting t for each pass,
@@ -694,7 +689,7 @@ class AuthorTopicModel(LdaModel):
 
         for pass_ in xrange(passes):
             if self.dispatcher:
-                logger.info('initializing %s workers' % self.numworkers)
+                logger.info('initializing %s workers', self.numworkers)
                 self.dispatcher.reset(self.state)
             else:
                 # gamma is not needed in "other", thus its shape is (0, 0).
@@ -713,13 +708,11 @@ class AuthorTopicModel(LdaModel):
 
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
-                    logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i',
-                                pass_, chunk_no * chunksize + len(chunk), lencorpus)
+                    logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i', pass_, chunk_no * chunksize + len(chunk), lencorpus)
                     # this will eventually block until some jobs finish, because the queue has a small finite length
                     self.dispatcher.putjob(chunk)
                 else:
-                    logger.info('PROGRESS: pass %i, at document #%i/%i',
-                                pass_, chunk_no * chunksize + len(chunk), lencorpus)
+                    logger.info('PROGRESS: pass %i, at document #%i/%i', pass_, chunk_no * chunksize + len(chunk), lencorpus)
                     # do_estep requires the indexes of the documents being trained on, to know what authors
                     # correspond to the documents.
                     gammat = self.do_estep(chunk, self.author2doc, self.doc2author, rho(), other, chunk_doc_idx)

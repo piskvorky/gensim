@@ -436,7 +436,7 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
     http://nlp.stanford.edu/~socherr/stanfordSentimentTreebank.zip
     has been expanded. It's not too big, so compose entirely into memory.
     """
-    logging.info("loading corpus from %s" % dirname)
+    logging.info("loading corpus from %s", dirname)
 
     # many mangled chars in sentences (datasetSentences.txt)
     chars_sst_mangled = ['à', 'á', 'â', 'ã', 'æ', 'ç', 'è', 'é', 'í',
@@ -502,8 +502,7 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
     assert len([phrase for phrase in phrases if phrase.split == 'test']) == 2210  # 'test'
     assert len([phrase for phrase in phrases if phrase.split == 'dev']) == 1100  # 'dev'
 
-    logging.info("loaded corpus with %i sentences and %i phrases from %s",
-                 len(info_by_sentence), len(phrases), dirname)
+    logging.info("loaded corpus with %i sentences and %i phrases from %s", len(info_by_sentence), len(phrases), dirname)
 
     return phrases
 

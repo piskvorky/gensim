@@ -36,7 +36,7 @@ class CsvCorpus(interfaces.CorpusABC):
         `labels` = are class labels present in the input file? => skip the first column
 
         """
-        logger.info("loading corpus from %s" % fname)
+        logger.info("loading corpus from %s", fname)
         self.fname = fname
         self.length = None
         self.labels = labels
@@ -45,7 +45,7 @@ class CsvCorpus(interfaces.CorpusABC):
         head = ''.join(itertools.islice(utils.smart_open(self.fname), 5))
         self.headers = csv.Sniffer().has_header(head)
         self.dialect = csv.Sniffer().sniff(head)
-        logger.info("sniffed CSV delimiter=%r, headers=%s" % (self.dialect.delimiter, self.headers))
+        logger.info("sniffed CSV delimiter=%r, headers=%s", self.dialect.delimiter, self.headers)
 
     def __iter__(self):
         """

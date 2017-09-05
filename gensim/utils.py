@@ -106,12 +106,12 @@ def synchronous(tlockname):
         @wraps(func)
         def _synchronizer(self, *args, **kwargs):
             tlock = getattr(self, tlockname)
-            logger.debug("acquiring lock %r for %s" % (tlockname, func.__name__))
+            logger.debug("acquiring lock %r for %s", tlockname, func.__name__)
 
             with tlock:  # use lock as a context manager to perform safe acquire/release pairs
-                logger.debug("acquired lock %r for %s" % (tlockname, func.__name__))
+                logger.debug("acquired lock %r for %s", tlockname, func.__name__)
                 result = func(self, *args, **kwargs)
-                logger.debug("releasing lock %r for %s" % (tlockname, func.__name__))
+                logger.debug("releasing lock %r for %s", tlockname, func.__name__)
                 return result
         return _synchronizer
     return _synched
@@ -275,7 +275,7 @@ class SaveLoad(object):
         is encountered.
 
         """
-        logger.info("loading %s object from %s" % (cls.__name__, fname))
+        logger.info("loading %s object from %s", cls.__name__, fname)
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
@@ -296,13 +296,11 @@ class SaveLoad(object):
 
         for attrib in getattr(self, '__recursive_saveloads', []):
             cfname = '.'.join((fname, attrib))
-            logger.info("loading %s recursively from %s.* with mmap=%s" % (
-                attrib, cfname, mmap))
+            logger.info("loading %s recursively from %s.* with mmap=%s", attrib, cfname, mmap)
             getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
 
         for attrib in getattr(self, '__numpys', []):
-            logger.info("loading %s from %s with mmap=%s" % (
-                attrib, subname(fname, attrib), mmap))
+            logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
 
             if compress:
                 if mmap:
@@ -315,8 +313,7 @@ class SaveLoad(object):
             setattr(self, attrib, val)
 
         for attrib in getattr(self, '__scipys', []):
-            logger.info("loading %s from %s with mmap=%s" % (
-                attrib, subname(fname, attrib), mmap))
+            logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
             sparse = unpickle(subname(fname, attrib))
             if compress:
                 if mmap:
@@ -334,7 +331,7 @@ class SaveLoad(object):
             setattr(self, attrib, sparse)
 
         for attrib in getattr(self, '__ignoreds', []):
-            logger.info("setting ignored attribute %s to None" % (attrib))
+            logger.info("setting ignored attribute %s to None", attrib)
             setattr(self, attrib, None)
 
     @staticmethod
@@ -370,9 +367,7 @@ class SaveLoad(object):
         in both Python 2 and 3.
 
         """
-        logger.info(
-            "saving %s object under %s, separately %s" % (
-                self.__class__.__name__, fname, separately))
+        logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
@@ -428,8 +423,7 @@ class SaveLoad(object):
             for attrib, val in iteritems(asides):
                 if isinstance(val, np.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
-                    logger.info("storing np array '%s' to %s" % (
-                        attrib, subname(fname, attrib)))
+                    logger.info("storing np array '%s' to %s", attrib, subname(fname, attrib))
 
                     if compress:
                         np.savez_compressed(subname(fname, attrib), val=np.ascontiguousarray(val))
@@ -438,8 +432,7 @@ class SaveLoad(object):
 
                 elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
                     scipys.append(attrib)
-                    logger.info("storing scipy.sparse array '%s' under %s" % (
-                        attrib, subname(fname, attrib)))
+                    logger.info("storing scipy.sparse array '%s' under %s", attrib, subname(fname, attrib))
 
                     if compress:
                         np.savez_compressed(
@@ -461,7 +454,7 @@ class SaveLoad(object):
                     finally:
                         val.data, val.indptr, val.indices = data, indptr, indices
                 else:
-                    logger.info("not storing attribute %s" % (attrib))
+                    logger.info("not storing attribute %s", attrib)
                     ignoreds.append(attrib)
 
             self.__dict__['__numpys'] = numpys
@@ -504,7 +497,7 @@ class SaveLoad(object):
         """
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
-            logger.info("saved %s object" % self.__class__.__name__)
+            logger.info("saved %s object", self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
             self._smart_save(fname_or_handle, separately, sep_limit, ignore,
                              pickle_protocol=pickle_protocol)
@@ -864,8 +857,7 @@ class InputQueue(multiprocessing.Process):
                 qsize = self.q.qsize()
             except NotImplementedError:
                 qsize = '?'
-            logger.debug("prepared another chunk of %i documents (qsize=%s)" %
-                        (len(wrapped_chunk[0]), qsize))
+            logger.debug("prepared another chunk of %i documents (qsize=%s)", len(wrapped_chunk[0]), qsize)
             self.q.put(wrapped_chunk.pop(), block=True)
 # endclass InputQueue
 
@@ -997,7 +989,7 @@ def upload_chunked(server, docs, chunksize=1000, preprocess=None):
     start = 0
     for chunk in grouper(docs, chunksize):
         end = start + len(chunk)
-        logger.info("uploading documents %i-%i" % (start, end - 1))
+        logger.info("uploading documents %i-%i", start, end - 1)
         if preprocess is not None:
             pchunk = []
             for doc in chunk:
@@ -1039,7 +1031,7 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None
             uri = daemon.register(obj, name)
             ns.remove(name)
             ns.register(name, uri)
-            logger.info("%s registered with nameserver (URI '%s')" % (name, uri))
+            logger.info("%s registered with nameserver (URI '%s')", name, uri)
             daemon.requestLoop()
 
 
@@ -1138,8 +1130,7 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
         if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
-    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
-                old_len - len(vocab), min_reduce, old_len, len(vocab))
+    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)", old_len - len(vocab), min_reduce, old_len, len(vocab))
     return result
 
 

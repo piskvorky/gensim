@@ -334,15 +334,9 @@ class WikiCorpus(TextCorpus):
                     else:
                         yield tokens
         except KeyboardInterrupt:
-            logger.warn(
-                "user terminated iteration over Wikipedia corpus after %i documents with %i positions"
-                " (total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS)
+            logger.warn("user terminated iteration over Wikipedia corpus after %i documents with %i positions (total %i articles, %i positions before pruning articles shorter than %i words)", articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS)
         else:
-            logger.info(
-                "finished iterating over Wikipedia corpus of %i documents with %i positions"
-                " (total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS)
+            logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions (total %i articles, %i positions before pruning articles shorter than %i words)", articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS)
             self.length = articles  # cache corpus length
         finally:
             pool.terminate()

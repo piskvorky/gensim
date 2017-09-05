@@ -31,7 +31,7 @@ DIM_LDA = 100  # for latent dirichlet allocation
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
     logging.root.setLevel(level=logging.INFO)
-    logging.info("running %s" % ' '.join(sys.argv))
+    logging.info("running %s", ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
 
@@ -46,9 +46,9 @@ if __name__ == '__main__':
     config = dmlcorpus.DmlConfig('%s_%s' % (gensim_build.PREFIX, language),
                                  resultDir=gensim_build.RESULT_DIR, acceptLangs=[language])
 
-    logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
+    logging.info("loading word id mapping from %s", config.resultFile('wordids.txt'))
     id2word = dmlcorpus.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
-    logging.info("loaded %i word ids" % len(id2word))
+    logging.info("loaded %i word ids", len(id2word))
 
     corpus = MmCorpus(config.resultFile('bow.mm'))
 
@@ -75,4 +75,4 @@ if __name__ == '__main__':
 
     MmCorpus.saveCorpus(config.resultFile('%s.mm' % method), model[corpus])
 
-    logging.info("finished running %s" % program)
+    logging.info("finished running %s", program)

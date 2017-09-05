@@ -95,7 +95,7 @@ class CorpusABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
         # example code:
-        logger.info("converting corpus to ??? format: %s" % fname)
+        logger.info("converting corpus to ??? format: %s", fname)
         with utils.smart_open(fname, 'wb') as fout:
             for doc in corpus:  # iterate over the document stream
                 fmt = str(doc)  # format the document appropriately...

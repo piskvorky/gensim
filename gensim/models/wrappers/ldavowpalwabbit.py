@@ -143,8 +143,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
                 raise ValueError('at least one of corpus/id2word must be '
                                  'specified, to establish input space '
                                  'dimensionality')
-            LOG.warning('no word id mapping provided; initializing from '
-                        'corpus, assuming identity')
+            LOG.warning('no word id mapping provided; initializing from corpus, assuming identity')
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         elif len(self.id2word) > 0:
@@ -228,12 +227,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         vw_data = self._predict(chunk)[1]
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         bound = -vw_data['average_loss']
-        LOG.info("%.3f per-word bound, %.1f perplexity estimate based on a "
-                 "held-out corpus of %i documents with %i words",
-                 bound,
-                 numpy.exp2(-bound),
-                 vw_data['corpus_size'],
-                 corpus_words)
+        LOG.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words", bound, numpy.exp2(-bound), vw_data['corpus_size'], corpus_words)
         return bound
 
     def get_topics(self):

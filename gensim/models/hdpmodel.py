@@ -196,7 +196,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             raise RuntimeError("model must be trained to perform inference")
         chunk = list(chunk)
         if len(chunk) > 1:
-            logger.debug("performing inference on a chunk of %i documents" % len(chunk))
+            logger.debug("performing inference on a chunk of %i documents", len(chunk))
 
         gamma = np.zeros((len(chunk), self.lda_beta.shape[0]))
         for d, doc in enumerate(chunk):
@@ -492,7 +492,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         else:
             fname = 'doc-%i' % doc_count
         fname = '%s/%s.topics' % (self.outputdir, fname)
-        logger.info("saving topics to %s" % fname)
+        logger.info("saving topics to %s", fname)
         betas = self.m_lambda + self.m_eta
         np.savetxt(fname, betas)
 
@@ -560,10 +560,10 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 lda_betad = self.lda_beta[:, doc_word_ids]
                 log_predicts = np.log(np.dot(theta, lda_betad))
                 doc_score = sum(log_predicts) / len(doc)
-                logger.info('TEST: %6d    %.5f' % (i, doc_score))
+                logger.info('TEST: %6d    %.5f', i, doc_score)
                 score += likelihood
                 total_words += sum(doc_word_counts)
-        logger.info('TEST: average score: %.5f, total score: %.5f,  test docs: %d' % (score / total_words, score, len(corpus)))
+        logger.info('TEST: average score: %.5f, total score: %.5f,  test docs: %d', score / total_words, score, len(corpus))
         return score
 # endclass HdpModel
 

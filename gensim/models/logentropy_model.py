@@ -71,7 +71,7 @@ class LogEntropyModel(interfaces.TransformationABC):
         glob_num_words, doc_no = 0, -1
         for doc_no, bow in enumerate(corpus):
             if doc_no % 10000 == 0:
-                logger.info("PROGRESS: processing document #%i" % doc_no)
+                logger.info("PROGRESS: processing document #%i", doc_no)
             glob_num_words += len(bow)
             for term_id, term_count in bow:
                 glob_freq[term_id] = glob_freq.get(term_id, 0) + term_count
@@ -81,9 +81,7 @@ class LogEntropyModel(interfaces.TransformationABC):
         self.n_words = glob_num_words
 
         # and finally compute the global weights
-        logger.info("calculating global log entropy weights for %i "
-                     "documents and %i features (%i matrix non-zeros)"
-                     % (self.n_docs, len(glob_freq), self.n_words))
+        logger.info("calculating global log entropy weights for %i documents and %i features (%i matrix non-zeros)", self.n_docs, len(glob_freq), self.n_words)
         logger.debug('iterating over corpus')
         for doc_no2, bow in enumerate(corpus):
             for key, freq in bow:

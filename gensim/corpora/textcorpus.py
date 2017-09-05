@@ -171,9 +171,7 @@ class TextCorpus(interfaces.CorpusABC):
             else:
                 logger.info("Input stream provided but dictionary already initialized")
         else:
-            logger.warning(
-                "No input document stream provided; assuming "
-                "dictionary will be initialized some other way.")
+            logger.warning("No input document stream provided; assuming dictionary will be initialized some other way.")
 
     def __iter__(self):
         """The function that defines a corpus.

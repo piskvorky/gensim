@@ -72,8 +72,7 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
             passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
             if passed:
                 break
-            logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
-                            (i, sorted(vec), sorted(expected)))
+            logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)", i, sorted(vec), sorted(expected))
         self.assertTrue(passed)
 
     def testSparseTransform(self):
@@ -91,8 +90,7 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
             passed = np.allclose(sorted(vec), sorted(expected), atol=1e-2)  # must contain the same values, up to re-ordering
             if passed:
                 break
-            logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
-                            (i, sorted(vec), sorted(expected)))
+            logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)", i, sorted(vec), sorted(expected))
         self.assertTrue(passed)
 
     def testMallet2Model(self):
