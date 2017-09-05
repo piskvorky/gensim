@@ -1588,7 +1588,7 @@ class PathLineSentences(object):
         else:  # not a file or a directory, then we can't do anything with it
             raise ValueError('input is neither a file nor a path')
 
-        logger.info('files read into PathLineSentences: %s', '\n'.join(self.input_files))
+        logger.info('files read into PathLineSentences:%s', '\n'.join(self.input_files))
 
     def __iter__(self):
         '''iterate through the files'''
