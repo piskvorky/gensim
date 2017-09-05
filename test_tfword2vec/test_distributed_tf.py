@@ -40,7 +40,7 @@ def main(_):
     filename = maybe_download('text8.zip', 31344016)
     vocabulary = read_data(filename)
     start = time.time()
-    tfw2v = gensim.models.TfWord2Vec(train_data=vocabulary, concurrent_steps=40000,
+    tfw2v = gensim.models.TfWord2Vec(train_data=vocabulary, train_epochs=5,
                                     eval_data='questions-words.txt', FLAGS=FLAGS)
     print("Time:", time.time() - start)
     tfw2v.eval()

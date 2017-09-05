@@ -17,6 +17,7 @@ import tensorflow as tf
 
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
+from gensim.utils import keep_vocab_item
 import logging
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class TfWord2Vec(KeyedVectors):
 
     def __init__(self, train_data=None, eval_data=None, save_path=None, size=100, alpha=0.025,
                  window=5, num_skips=2, min_count=5, sample=1e-3, negative=25,
-                 batch_size=500, train_epochs=15, concurrent_steps=12, FLAGS=None):
+                 batch_size=500, train_epochs=5, concurrent_steps=12, FLAGS=None):
 
         """Word2vec as TensorFlow graph.
             Args:
@@ -64,9 +65,7 @@ class TfWord2Vec(KeyedVectors):
         self.save_path = save_path
         self.FLAGS = FLAGS
 
-        self.vocab_size = 70000
-
-        self.build_dataset(train_data, self.vocab_size)
+        self.build_dataset(train_data)
         self.data_index = 0
         self.train()
 
@@ -75,24 +74,26 @@ class TfWord2Vec(KeyedVectors):
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
         super(TfWord2Vec, self).save(*args, **kwargs)
 
-    def build_dataset(self, words, n_words):
-        """Build the dictionary and replace rare words with UNK token."""
-        self.count = [['UNK', -1]]
-        self.count.extend(collections.Counter(words).most_common(n_words - 1))
+    def build_dataset(self, words):
+        """Build the dictionary"""
+        self.vocab = collections.Counter()
+        for word in words:
+            self.vocab[word] += 1
         self.dict = dict()
-        for word, _ in self.count:
-            self.dict[word] = len(self.dict)
+        rare_words = 0
+        for word in self.vocab:
+            if keep_vocab_item(word, self.vocab[word], self.min_count):
+                self.dict[word] = len(self.dict)
+            else:
+                rare_words += 1
+        self.vocab_size = len(self.dict)
         self.data = list()
-        unk_count = 0
         for word in words:
             if word in self.dict:
                 index = self.dict[word]
-            else:
-                index = 0  # dictionary['UNK']
-                unk_count += 1
             self.data.append(index)
-        self.count[0][1] = unk_count
         self.reversed_dict = dict(zip(self.dict.values(), self.dict.keys()))
+        print("Count of vocabulary: {}. Count of rare words: {}. Data contains {} words.".format(self.vocab_size, rare_words, len(words)))
 
     def read_analogies(self):
         """Reads through the analogy question file.
@@ -211,24 +212,29 @@ class TfWord2Vec(KeyedVectors):
             norm_vec = []
             embed_vec = []
             with sv.prepare_or_wait_for_session(server.target, config=None) as sess:
-                for step in xrange(self.concurrent_steps):
-                    batch_inputs, batch_labels = self.generate_batch(
-                                                    batch_size=self.batch_size,
-                                                    num_skips=self.num_skips,
-                                                    skip_window=self.window)
-                    feed_dict = {train_inputs: batch_inputs,
-                                 train_labels: batch_labels}
-                    _, loss_val, norm_vec, embed_vec = sess.run(
-                        [optimizer, loss, norm, embeddings], feed_dict=feed_dict)
-                    average_loss += loss_val
+                for epoch in xrange(self.train_epochs):
+                    step = 0
+                    prev_index = 0
+                    while self.data_index >= prev_index:
+                        prev_index = self.data_index
+                        batch_inputs, batch_labels = self.generate_batch(
+                                                        batch_size=self.batch_size,
+                                                        num_skips=self.num_skips,
+                                                        skip_window=self.window)
+                        feed_dict = {train_inputs: batch_inputs,
+                                     train_labels: batch_labels}
+                        _, loss_val, norm_vec, embed_vec = sess.run(
+                            [optimizer, loss, norm, embeddings], feed_dict=feed_dict)
+                        average_loss += loss_val
 
-                    if step % 2000 == 0 and step > 0:
-                        average_loss /= 2000
-                        # The average loss is an estimate of the loss over the last
-                        # 2000 batches.
-                        logger.info('Average loss at step %d: %.5f', step, average_loss)
-                        print('Task: {}. Average loss at step {}: {}'.format(self.FLAGS.task_index, step, average_loss))
-                        average_loss = 0
+                        step += 1
+                        if step % 500 == 0 and step > 0:
+                            average_loss /= 500
+                            # The average loss is an estimate of the loss over the last
+                            # 2000 batches.
+                            print('Task: {}. Average loss at step {}: {}.'.format(self.FLAGS.task_index,
+                                                                                step, average_loss))
+                            average_loss = 0
 
             self.syn0norm = norm_vec
             self.syn0 = embed_vec
@@ -304,5 +310,5 @@ class TfWord2Vec(KeyedVectors):
                     else:
                         continue
 
-        print("Eval %4d/%d accuracy = %4.1f%%" % (correct, total,
+        print("Eval {}/{} accuracy = {}" % (correct, total,
                                                   correct * 100.0 / total))
