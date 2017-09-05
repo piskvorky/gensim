@@ -185,6 +185,13 @@ class TestSummarizationTest(unittest.TestCase):
 
         self.assertTrue(summarize_corpus(corpus) is None)
 
+    def test_low_distinct_words_summarization_is_none(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "testlowdistinctwords.txt"), mode="r") as f:
+            text = f.read()
+
+        self.assertTrue(summarize(text) is None)
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
