@@ -31,33 +31,65 @@ except ImportError:
 
 logger = logging.getLogger('gensim.models.sldamodel')
 
+def dirichlet_expectation(alpha):
+    """
+    For a vector theta ~ Dir(alpha), computes E[log(theta)] given alpha.
+    """
+    if (len(alpha.shape) == 1):
+        return(psi(alpha) - psi(n.sum(alpha)))
+    return(psi(alpha) - psi(n.sum(alpha, 1))[:, n.newaxis])
 
+def get_lambda(self):
+        return self.eta + self.sstats
+    
+def get_Elogbeta(self):
+        return dirichlet_expectation(self.get_lambda())
 
 class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
+    
+    def __init__(self, corpus=None, n_topics=100, alpha='symmetric', beta, mu, nu, nu2, 
+                 sigma2, iterations = 100, report_iter=10, seed=None):
     """
-    The constructor estimates Latent Dirichlet Allocation model parameters based
-    on a training corpus:
-
-    >>> slda = sLdaModel(corpus, num_topics=10)
-
-    You can then infer topic distributions on new, unseen documents, with
-
-    >>> doc_slda = slda[doc_bow]
-
-    The model can be updated (trained) with new documents via
-
-    >>> slda.update(other_corpus)
-
-    Model persistency is achieved through its `load`/`save` methods.
+    Supervised latent Dirichlet allocation, using collapsed Gibbs
+    sampling.
+    Args
+        n_topics : int
+            Number of topics
+        alpha : array-like, shape = (n_topics,)
+            Dirichlet distribution parameter for each document's topic
+            distribution.
+        beta : array-like, shape = (n_terms,)
+            Dirichlet distribution parameter for each topic's term distribution.
+        mu : float
+            Mean of regression coefficients (eta).
+        nu2 : float
+            Variance of regression coefficients (eta).
+        sigma2 : float
+            Variance of response (y).
+        n_iter : int, default=100
+            Number of iterations of Gibbs sampler
+        n_report_iter : int, default=10
+            Number of iterations of Gibbs sampler between progress reports.
+        seed : int, optional
+            Seed for random number generator
     """
-
+        self.n_topics = n_topics
+        self.alpha = alpha
+        self.beta = beta
+        self.mu = mu
+        self.nu2 = nu2
+        self.sigma2 = sigma2
+        self.iterations = iterations
+        self.report_iter = n_report_iter
+        self.seed = seed
+        
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """
         Args:
             num_topics (int): show results for first `num_topics` topics.
-                Unlike LSA, there is no natural ordering between the topics in LDA.
+                Unlike LSA, there is no natural ordering between the topics in sLDA.
                 The returned `num_topics <= self.num_topics` subset of all topics is
-                therefore arbitrary and may change between two LDA training runs.
+                therefore arbitrary and may change between two sLDA training runs.
             num_words (int): include top `num_words` with highest probabilities in topic.
             log (bool): If True, log output in addition to returning it.
             formatted (bool): If True, format topics as strings, otherwise return them as
@@ -115,3 +147,34 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         topics = self.state.get_lambda()
         return topics / topics.sum(axis=1)[:, None]
+    
+    def save(self, fname, ignore=['state', 'dispatcher'], separately=None, *args, **kwargs):
+        """
+        Save the model to file.
+        """
+        if self.state is not None:
+            self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
+        if 'id2word' not in ignore:
+            utils.pickle(self.id2word, utils.smart_extension(fname, '.id2word'))
+
+        if ignore is not None and ignore:
+            if isinstance(ignore, six.string_types):
+                ignore = [ignore]
+            ignore = [e for e in ignore if e]
+            ignore = list(set(['state', 'dispatcher', 'id2word']) | set(ignore))
+        else:
+            ignore = ['state', 'dispatcher', 'id2word']
+
+        separately_explicit = ['expElogbeta', 'sstats']
+        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
+            separately_explicit.append('alpha')
+        if (isinstance(self.eta, six.string_types) and self.mu == 'auto') or (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
+            separately_explicit.append('eta')
+        if separately:
+            if isinstance(separately, six.string_types):
+                separately = [separately]
+            separately = [e for e in separately if e]  # make sure None and '' are not in the list
+            separately = list(set(separately_explicit) | set(separately))
+        else:
+            separately = separately_explicit
+        super(sLdaModel, self).save(fname, ignore=ignore, separately=separately, *args, **kwargs)
