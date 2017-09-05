@@ -67,7 +67,7 @@ test_script:
   - "cd empty_folder"
   - "pip install pyemd testfixtures sklearn Morfessor==2.0.2a4"
   - "pip freeze"
-  - "python -c \"import nose; nose.main()\"  -s -v gensim"
+  - "python -c \"import nose; nose.main()\" -s -v gensim"
   # Move back to the project folder
   - "cd .."
 
