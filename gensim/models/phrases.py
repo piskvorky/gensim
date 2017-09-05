@@ -436,7 +436,7 @@ def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
             continue
         unigrams = k.split(sep)
         for i in range(1, len(unigrams)):
-            if unigrams[i-1] not in common_terms:
+            if unigrams[i - 1] not in common_terms:
                 # do not join common terms
                 cterms = list(it.takewhile(lambda w: w in common_terms, unigrams[i:]))
                 tail = unigrams[i + len(cterms):]

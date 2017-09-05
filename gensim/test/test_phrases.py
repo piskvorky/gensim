@@ -50,7 +50,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(
             result,
             [["hall", "of", "fame"],
-             ["chief", "of",  "political_bureau"],
+             ["chief", "of", "political_bureau"],
              ["chief_of_political", "bureau"],
              ["beware", "of", "the", "dog_in_the_yard"],
              ["beware_of_the_dog", "in", "the", "yard"]])
@@ -424,12 +424,12 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
 
         min_count = float(bigram.min_count)
         len_vocab = float(len(bigram.vocab))
-        graph = bigram.vocab["graph"]
-        data = bigram.vocab["data"]
-        data_and_graph = bigram.vocab["data_and_graph"]
-        human = bigram.vocab["human"]
-        interface = bigram.vocab["interface"]
-        human_interface = bigram.vocab["human_interface"]
+        graph = float(bigram.vocab[b"graph"])
+        data = float(bigram.vocab[b"data"])
+        data_and_graph = float(bigram.vocab[b"data_and_graph"])
+        human = float(bigram.vocab[b"human"])
+        interface = float(bigram.vocab[b"interface"])
+        human_interface = float(bigram.vocab[b"human_interface"])
 
         assert seen_scores == set([
             # score for data and graph
