@@ -205,7 +205,7 @@ class KeyedVectors(utils.SaveLoad):
         logger.info("loading projection weights from %s", fname)
         with utils.smart_open(fname) as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
-            vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
+            vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
             if limit:
                 vocab_size = min(vocab_size, limit)
             result = cls()
@@ -254,7 +254,7 @@ class KeyedVectors(utils.SaveLoad):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
-                    word, weights = parts[0], list(map(REAL, parts[1:]))
+                    word, weights = parts[0], [REAL(x) for x in parts[1:]]
                     add_word(word, weights)
         if result.syn0.shape[0] != len(result.vocab):
             logger.info(

@@ -35,7 +35,7 @@ class TestKeywordsTest(unittest.TestCase):
         with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.kw.txt"), mode="r") as f:
             kw = f.read().strip().split("\n")
 
-        self.assertEqual(set(map(str, generated_keywords)), set(map(str, kw)))
+        self.assertEqual({str(x) for x in generated_keywords}, {str(x) for x in kw})
 
     def test_text_keywords_words(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -61,7 +61,7 @@ class TestKeywordsTest(unittest.TestCase):
         with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.kwpos.txt"), mode="r") as f:
             kw = f.read().strip().split("\n")
 
-        self.assertEqual(set(map(str, generated_keywords_NNVBJJ)), set(map(str, kw)))
+        self.assertEqual({str(x) for x in generated_keywords_NNVBJJ}, {str(x) for x in kw})
 
     def test_text_summarization_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')

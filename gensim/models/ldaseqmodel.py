@@ -596,7 +596,7 @@ class sslm(utils.SaveLoad):
         totals = np.zeros(sstats.shape[1])
 
         # computing variance, fwd_variance
-        self.variance, self.fwd_variance = map(np.array, list(zip(*[self.compute_post_variance(w, self.chain_variance) for w in range(0, W)])))
+        self.variance, self.fwd_variance = (np.array(x) for x in list(zip(*[self.compute_post_variance(w, self.chain_variance) for w in range(0, W)])))
 
         # column sum of sstats
         totals = sstats.sum(axis=0)
@@ -643,7 +643,7 @@ class sslm(utils.SaveLoad):
 
         chain_variance = self.chain_variance
         # computing mean, fwd_mean
-        self.mean, self.fwd_mean = map(np.array, (zip(*[self.compute_post_mean(w, self.chain_variance) for w in range(0, W)])))
+        self.mean, self.fwd_mean = (np.array(x) for x in zip(*[self.compute_post_mean(w, self.chain_variance) for w in range(0, W)]))
         self.zeta = self.update_zeta()
 
         for w in range(0, W):

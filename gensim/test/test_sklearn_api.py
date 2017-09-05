@@ -190,7 +190,7 @@ class TestLdaWrapper(unittest.TestCase):
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
             cache = pickle.loads(uncompressed_content)
         data = cache
-        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        id2word = Dictionary([x.split() for x in data.data])
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
@@ -280,7 +280,7 @@ class TestLsiWrapper(unittest.TestCase):
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
             cache = pickle.loads(uncompressed_content)
         data = cache
-        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        id2word = Dictionary([x.split() for x in data.data])
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
@@ -363,7 +363,7 @@ class TestLdaSeqWrapper(unittest.TestCase):
         data = cache
         test_data = data.data[0:2]
         test_target = data.target[0:2]
-        id2word = Dictionary(map(lambda x: x.split(), test_data))
+        id2word = Dictionary([x.split() for x in data.data])
         corpus = [id2word.doc2bow(i.split()) for i in test_data]
         model = LdaSeqTransformer(id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim')
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
@@ -433,7 +433,7 @@ class TestRpWrapper(unittest.TestCase):
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
             cache = pickle.loads(uncompressed_content)
         data = cache
-        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        id2word = Dictionary([x.split() for x in data.data])
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
@@ -517,8 +517,8 @@ class TestWord2VecWrapper(unittest.TestCase):
             ('calculus', 'mathematics'), ('mathematical', 'mathematics'), ('geometry', 'mathematics'), ('operations', 'mathematics'), ('curves', 'mathematics'),
             ('natural', 'physics'), ('nuclear', 'physics'), ('science', 'physics'), ('electromagnetism', 'physics'), ('natural', 'physics')
         ]
-        train_input = list(map(lambda x: x[0], train_data))
-        train_target = list(map(lambda x: class_dict[x[1]], train_data))
+        train_input = [x[0] for x in train_data]
+        train_target = [class_dict[x[1]] for x in train_data]
 
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         clf.fit(model.transform(train_input), train_target)
@@ -682,8 +682,8 @@ class TestD2VTransformer(unittest.TestCase):
             (['calculus', 'mathematical'], 'mathematics'), (['geometry', 'operations', 'curves'], 'mathematics'),
             (['natural', 'nuclear'], 'physics'), (['science', 'electromagnetism', 'natural'], 'physics')
         ]
-        train_input = list(map(lambda x: x[0], train_data))
-        train_target = list(map(lambda x: class_dict[x[1]], train_data))
+        train_input = [x[0] for x in train_data]
+        train_target = [class_dict[x[1]] for x in train_data]
 
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         clf.fit(model.transform(train_input), train_target)
@@ -737,7 +737,7 @@ class TestText2BowTransformer(unittest.TestCase):
         doc = ['computer system interface time computer system']
         bow_vec = self.model.transform(doc)[0]
         expected_values = [1, 1, 2, 2]  # comparing only the word-counts
-        values = list(map(lambda x: x[1], bow_vec))
+        values = [x[1] for x in bow_vec]
         self.assertEqual(sorted(expected_values), sorted(values))
 
     def testSetGetParams(self):
@@ -815,7 +815,7 @@ class TestTfIdfTransformer(unittest.TestCase):
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
             cache = pickle.loads(uncompressed_content)
         data = cache
-        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        id2word = Dictionary([x.split() for x in data.data])
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         tfidf_model = TfIdfTransformer()
         tfidf_model.fit(corpus)
@@ -881,7 +881,7 @@ class TestHdpTransformer(unittest.TestCase):
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
             cache = pickle.loads(uncompressed_content)
         data = cache
-        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        id2word = Dictionary([x.split() for x in data.data])
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         model = HdpTransformer(id2word=id2word)
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)

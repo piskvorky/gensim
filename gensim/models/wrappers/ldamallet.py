@@ -305,14 +305,9 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
                 # the MALLET doctopic format changed in 2.0.8 to exclude the id,
                 # this handles the file differently dependent on the pattern
                 if len(parts) == 2 * self.num_topics:
-                    doc = [(id_, weight)
-                           for id_, weight in zip(map(int, parts[::2]),
-                                                  map(float, parts[1::2]))
-                           if abs(weight) > eps]
+                    doc = [(id_, weight) for id_, weight in ((int(x), float(y)) for (x, y) in zip(parts[::2], parts[1::2])) if abs(weight) > eps]
                 elif len(parts) == self.num_topics and mallet_version != '2.0.7':
-                    doc = [(id_, weight)
-                           for id_, weight in enumerate(map(float, parts))
-                           if abs(weight) > eps]
+                    doc = [(id_, weight) for id_, weight in enumerate(float(x) for x in parts) if abs(weight) > eps]
                 else:
                     if mallet_version == "2.0.7":
                         """

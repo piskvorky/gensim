@@ -118,12 +118,11 @@ class LowCorpus(IndexedCorpus):
                     use_words.append(word)
                     marker.add(word)
             # construct a list of (wordIndex, wordFrequency) 2-tuples
-            doc = list(zip(map(self.word2id.get, use_words),
-                      map(words.count, use_words)))
+            doc = [(self.word2id.get(w), words.count(w)) for w in use_words]
         else:
             uniq_words = set(words)
             # construct a list of (word, wordFrequency) 2-tuples
-            doc = list(zip(uniq_words, map(words.count, uniq_words)))
+            doc = [(w, words.count(w)) for w in uniq_words]
 
         # return the document, then forget it and move on to the next one
         # note that this way, only one doc is stored in memory at a time, not the whole corpus

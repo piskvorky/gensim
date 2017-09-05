@@ -36,8 +36,7 @@ occurrence of a collection of exact words,
 for many searching purposes, a little fuzziness would help. """
 
 
-dataset = map(lambda x: strip_punctuation2(x.lower()),
-        [doc1, doc2, doc3, doc4])
+dataset = [strip_punctuation2(x.lower()) for x in [doc1, doc2, doc3, doc4]]
 # doc1 and doc2 have class 0, doc3 and doc4 avec class 1
 classes = np.array([[1, 0], [1, 0], [0, 1], [0, 1]])
 

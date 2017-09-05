@@ -60,7 +60,7 @@ class CsvCorpus(interfaces.CorpusABC):
         for line_no, line in enumerate(reader):
             if self.labels:
                 line.pop(0)  # ignore the first column = class label
-            yield list(enumerate(map(float, line)))
+            yield list(enumerate(float(x) for x in line))
 
         self.length = line_no + 1  # store the total number of CSV rows = documents
 

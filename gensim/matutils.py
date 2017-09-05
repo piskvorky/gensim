@@ -821,7 +821,7 @@ class MmReader(object):
             for lineno, line in enumerate(lines):
                 line = utils.to_unicode(line)
                 if not line.startswith('%'):
-                    self.num_docs, self.num_terms, self.num_nnz = map(int, line.split())
+                    self.num_docs, self.num_terms, self.num_nnz = (int(x) for x in line.split())
                     if not self.transposed:
                         self.num_docs, self.num_terms = self.num_terms, self.num_docs
                     break

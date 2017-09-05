@@ -82,7 +82,7 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
         max_num_topics = 0
         for k, v in enumerate(docs):
             X[k] = self.gensim_model[v]
-            max_num_topics = max(max_num_topics, max(list(map(lambda x: x[0], X[k]))) + 1)
+            max_num_topics = max(max_num_topics, max(x[0] for x in X[k]) + 1)
 
         for k, v in enumerate(X):
             # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future

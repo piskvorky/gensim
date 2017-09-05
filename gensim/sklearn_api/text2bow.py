@@ -34,7 +34,7 @@ class Text2BowTransformer(TransformerMixin, BaseEstimator):
         """
         Fit the model according to the given training data.
         """
-        tokenized_docs = list(map(lambda x: list(self.tokenizer(x)), X))
+        tokenized_docs = [list(self.tokenizer(x)) for x in X]
         self.gensim_model = Dictionary(documents=tokenized_docs, prune_at=self.prune_at)
         return self
 
@@ -48,7 +48,7 @@ class Text2BowTransformer(TransformerMixin, BaseEstimator):
         # input as python lists
         check = lambda x: [x] if isinstance(x, string_types) else x
         docs = check(docs)
-        tokenized_docs = list(map(lambda x: list(self.tokenizer(x)), docs))
+        tokenized_docs = [list(self.tokenizer(x)) for x in docs]
         X = [[] for _ in range(0, len(tokenized_docs))]
 
         for k, v in enumerate(tokenized_docs):
@@ -61,6 +61,6 @@ class Text2BowTransformer(TransformerMixin, BaseEstimator):
         if self.gensim_model is None:
             self.gensim_model = Dictionary(prune_at=self.prune_at)
 
-        tokenized_docs = list(map(lambda x: list(self.tokenizer(x)), X))
+        tokenized_docs = [list(self.tokenizer(x)) for x in X]
         self.gensim_model.add_documents(tokenized_docs)
         return self
