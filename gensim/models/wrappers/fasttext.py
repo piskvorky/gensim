@@ -41,6 +41,11 @@ from gensim.models.word2vec import Word2Vec
 
 logger = logging.getLogger(__name__)
 
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
+
 FASTTEXT_FILEFORMAT_MAGIC = 793712314
 
 

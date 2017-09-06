@@ -150,7 +150,7 @@ def zeros_aligned(shape, dtype, order='C', align=128):
     nbytes = np.prod(shape, dtype=np.int64) * np.dtype(dtype).itemsize
     buffer = np.zeros(nbytes + align, dtype=np.uint8)  # problematic on win64 ("maximum allowed dimension exceeded")
     start_index = -buffer.ctypes.data % align
-    return buffer[start_index : start_index + nbytes].view(dtype).reshape(shape, order=order)
+    return buffer[start_index: start_index + nbytes].view(dtype).reshape(shape, order=order)
 
 
 def ismatrix(m):
