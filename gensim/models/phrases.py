@@ -183,7 +183,7 @@ class Phrases(interfaces.TransformationABC):
             else:
                 raise ValueError('unknown scoring method string %s specified' % (scoring))
 
-        scoring_parameters = ['worda_count','wordb_count','bigram_count','len_vocab','min_count','corpus_word_count']
+        scoring_parameters = ['worda_count', 'wordb_count', 'bigram_count', 'len_vocab', 'min_count', 'corpus_word_count']
         if callable(scoring):
             if all(parameter in getargspec(scoring)[0] for parameter in scoring_parameters):
                 self.scoring = scoring
