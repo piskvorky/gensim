@@ -43,31 +43,31 @@ logger = logging.getLogger('gensim.api')
 logger.addHandler(console)
 
 
-def download(file_name):
-    url = "https://github.com/chaitaliSaini/Corpus_and_models/releases/download/{f}/{f}.tar.gz".format(f=file_name)
-    data_folder_dir = os.path.join(base_dir, file_name)
+def download(dataset):
+    url = "https://github.com/chaitaliSaini/Corpus_and_models/releases/download/{f}/{f}.tar.gz".format(f=dataset)
+    data_folder_dir = os.path.join(base_dir, dataset)
     data = catalogue(print_list=False)
     corpuses = data['gensim']['corpus']
     models = data['gensim']['model']
-    if file_name not in corpuses and file_name not in models:
+    if dataset not in corpuses and dataset not in models:
         logger.error(
             "Incorect Model/corpus name. Use catalogue(print_list=TRUE) or"
             " python -m gensim -c to get a list of models/corpuses"
             " available.")
         sys.exit(0)
-    compressed_folder_name = "{f}.tar.gz".format(f=file_name)
+    compressed_folder_name = "{f}.tar.gz".format(f=dataset)
     compressed_folder_dir = os.path.join(base_dir, compressed_folder_name)
     is_installed = False
     is_downloaded = False
-    installed_message = "{f} installed".format(f=file_name)
-    downloaded_message = "{f} downloaded".format(f=file_name)
+    installed_message = "{f} installed".format(f=dataset)
+    downloaded_message = "{f} downloaded".format(f=dataset)
     if os.path.exists(data_folder_dir):
         log_file_dir = os.path.join(base_dir, 'api.log')
         with open(log_file_dir) as f:
             f = f.readlines()
         for line in f:
             if installed_message in line:
-                print("{} has already been installed".format(file_name))
+                print("{} has already been installed".format(dataset))
                 is_installed = True
                 sys.exit(0)
     if os.path.exists(data_folder_dir) and not is_installed:
@@ -87,24 +87,24 @@ def download(file_name):
                     "write permissions for %s or you can try creating it manually",
                     data_folder_dir, base_dir)
                 sys.exit(0)
-        logger.info("Downloading %s", file_name)
+        logger.info("Downloading %s", dataset)
         urllib.urlretrieve(url, compressed_folder_dir)
-        data_url = data_links(file_name)
+        data_url = data_links(dataset)
         if data_url is not None:
             index = data_url.rfind("/")
             data_dir = os.path.join(data_folder_dir, data_url[index + 1:])
             urllib.urlretrieve(data_url, data_dir)
-        logger.info("%s downloaded", file_name)
+        logger.info("%s downloaded", dataset)
     if not is_installed:
             tar = tarfile.open(compressed_folder_dir)
             logger.info("Extracting files from %s", data_folder_dir)
             tar.extractall(data_folder_dir)
             tar.close()
-            logger.info("%s installed", file_name)
+            logger.info("%s installed", dataset)
 
 
 def catalogue(print_list=False):
-    url = "https://raw.githubusercontent.com/chaitaliSaini/Corpus_and_models/master/list.json"
+    url = "https://raw.githubusercontent.com/chaitaliSaini/Corpus_and_models/master/list_with_filename.json"
     response = urlopen(url)
     data = response.read().decode("utf-8")
     data = json.loads(data)
@@ -121,14 +121,14 @@ def catalogue(print_list=False):
     return data
 
 
-def info(file_name):
-    data = catalogue(False)
+def info(dataset):
+    data = catalogue()
     corpuses = data['gensim']['corpus']
     models = data['gensim']['model']
-    if file_name in corpuses:
-        print(data['gensim']['corpus'][file_name])
-    elif file_name in models:
-        print(data['gensim']['model'][file_name])
+    if dataset in corpuses:
+        print(data['gensim']['corpus'][dataset]["desc"])
+    elif dataset in models:
+        print(data['gensim']['model'][dataset]["desc"])
     else:
         catalogue(print_list=True)
         raise Exception(
@@ -136,27 +136,39 @@ def info(file_name):
             "above.")
 
 
-def load(file_name, return_path=False):
-    folder_dir = os.path.join(base_dir, file_name)
+def get_filename(dataset):
+    data = catalogue()
+    corpuses = data['gensim']['corpus']
+    models = data['gensim']['model']
+    if dataset in corpuses:
+        return data['gensim']['corpus'][dataset]["filename"]
+    elif dataset in models:
+        return data['gensim']['model'][dataset]["filename"]
+
+
+def load(dataset, return_path=False):
+    file_name = get_filename(dataset)
+    folder_dir = os.path.join(base_dir, dataset)
+    file_dir = os.path.join(folder_dir, file_name)
     if not os.path.exists(folder_dir):
         raise Exception(
             "Incorrect model/corpus name. Use catalogue(print_list=True) to get a list of "
             "avalible models/corpus. If the model/corpus name you entered is"
             " in the catalogue, then please download the model/corpus by "
-            "calling download('{f}') function".format(f=file_name))
+            "calling download('{f}') function".format(f=dataset))
     elif return_path:
-        return folder_dir
+        return file_dir
     else:
         sys.path.insert(0, base_dir)
-        module = __import__(file_name)
+        module = __import__(dataset)
         data = module.load_data()
         return data
 
 
-def data_links(file_name):
+def data_links(dataset):
     url = "https://raw.githubusercontent.com/chaitaliSaini/Corpus_and_models/master/links.json"
     response = urlopen(url)
     data = response.read().decode("utf-8")
     data = json.loads(data)
-    if file_name in data['data_links']:
-        return data['data_links'][file_name]['link']
+    if dataset in data['data_links']:
+        return data['data_links'][dataset]['link']
