@@ -42,7 +42,7 @@ class MalletCorpus(LowCorpus):
 
     def _calculate_num_docs(self):
         with utils.smart_open(self.fname) as fin:
-            result = sum([1 for x in fin])
+            result = sum(1 for _ in fin)
         return result
 
     def __iter__(self):

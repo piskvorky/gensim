@@ -199,11 +199,12 @@ class Dictionary(utils.SaveLoad, Mapping):
         else:
             good_ids = (
                 v for v in itervalues(self.token2id)
-                if no_below <= self.dfs.get(v, 0) <= no_above_abs)
+                if no_below <= self.dfs.get(v, 0) <= no_above_abs
+            )
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
-        bad_words = [(self[id], self.dfs.get(id, 0)) for id in set(self).difference(good_ids)]
+        bad_words = [(self[idx], self.dfs.get(idx, 0)) for idx in set(self).difference(good_ids)]
         logger.info("discarding %i tokens: %s...", len(self) - len(good_ids), bad_words[:10])
         logger.info("keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents", len(good_ids), no_below, no_above_abs, 100.0 * no_above)
 
@@ -225,7 +226,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         most_frequent_ids = sorted(most_frequent_ids, key=self.dfs.get, reverse=True)
         most_frequent_ids = most_frequent_ids[:remove_n]
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
-        most_frequent_words = [(self[id], self.dfs.get(id, 0)) for id in most_frequent_ids]
+        most_frequent_words = [(self[idx], self.dfs.get(idx, 0)) for idx in most_frequent_ids]
         logger.info("discarding %i tokens: %s...", len(most_frequent_ids), most_frequent_words[:10])
 
         self.filter_tokens(bad_ids=most_frequent_ids)
@@ -240,20 +241,12 @@ class Dictionary(utils.SaveLoad, Mapping):
         """
         if bad_ids is not None:
             bad_ids = set(bad_ids)
-            self.token2id = dict((token, tokenid)
-                                 for token, tokenid in iteritems(self.token2id)
-                                 if tokenid not in bad_ids)
-            self.dfs = dict((tokenid, freq)
-                            for tokenid, freq in iteritems(self.dfs)
-                            if tokenid not in bad_ids)
+            self.token2id = dict((token, tokenid) for token, tokenid in iteritems(self.token2id) if tokenid not in bad_ids)
+            self.dfs = dict((tokenid, freq) for tokenid, freq in iteritems(self.dfs) if tokenid not in bad_ids)
         if good_ids is not None:
             good_ids = set(good_ids)
-            self.token2id = dict((token, tokenid)
-                                 for token, tokenid in iteritems(self.token2id)
-                                 if tokenid in good_ids)
-            self.dfs = dict((tokenid, freq)
-                            for tokenid, freq in iteritems(self.dfs)
-                            if tokenid in good_ids)
+            self.token2id = dict((token, tokenid) for token, tokenid in iteritems(self.token2id) if tokenid in good_ids)
+            self.dfs = dict((tokenid, freq) for tokenid, freq in iteritems(self.dfs) if tokenid in good_ids)
         self.compactify()
 
     def compactify(self):
@@ -329,7 +322,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             old2new[other_id] = new_id
             try:
                 self.dfs[new_id] += other.dfs[other_id]
-            except Exception:
+            except AttributeError:
                 # `other` isn't a Dictionary (probably just a dict) => ignore dfs, keep going
                 pass
         try:
@@ -404,10 +397,10 @@ class Dictionary(utils.SaveLoad, Mapping):
             result.token2id = dict((unicode(i), i) for i in xrange(max_id + 1))
         else:
             # id=>word mapping given: simply copy it
-            result.token2id = dict((utils.to_unicode(token), id) for id, token in iteritems(id2word))
-        for id in itervalues(result.token2id):
+            result.token2id = dict((utils.to_unicode(token), idx) for idx, token in iteritems(id2word))
+        for idx in itervalues(result.token2id):
             # make sure all token ids have a valid `dfs` entry
-            result.dfs[id] = result.dfs.get(id, 0)
+            result.dfs[idx] = result.dfs.get(idx, 0)
 
         logger.info("built %s from %i documents (total %i corpus positions)", result, result.num_docs, result.num_pos)
         return result

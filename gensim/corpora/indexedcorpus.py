@@ -95,8 +95,7 @@ class IndexedCorpus(interfaces.CorpusABC):
                 offsets = serializer.save_corpus(fname, corpus, id2word, metadata=metadata)
 
         if offsets is None:
-            raise NotImplementedError("called serialize on class %s which doesn't support indexing!" %
-                serializer.__name__)
+            raise NotImplementedError("called serialize on class %s which doesn't support indexing!" % serializer.__name__)
 
         # store offsets persistently, using pickle
         # we shouldn't have to worry about self.index being a numpy.ndarray as the serializer will return
@@ -115,7 +114,7 @@ class IndexedCorpus(interfaces.CorpusABC):
             return len(self.index)
         if self.length is None:
             logger.info("caching corpus length")
-            self.length = sum(1 for doc in self)
+            self.length = sum(1 for _ in self)
         return self.length
 
     def __getitem__(self, docno):
