@@ -1228,7 +1228,7 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
         logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.wv.syn0.shape, fname))
 
-    def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
+    def most_similar(self, positive=(), negative=(), topn=10, restrict_vocab=None, indexer=None):
         """
         Deprecated. Use self.wv.most_similar() instead.
         Refer to the documentation for `gensim.models.KeyedVectors.most_similar`
@@ -1242,7 +1242,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return self.wv.wmdistance(document1, document2)
 
-    def most_similar_cosmul(self, positive=None, negative=None, topn=10):
+    def most_similar_cosmul(self, positive=(), negative=(), topn=10):
         """
         Deprecated. Use self.wv.most_similar_cosmul() instead.
         Refer to the documentation for `gensim.models.KeyedVectors.most_similar_cosmul`
