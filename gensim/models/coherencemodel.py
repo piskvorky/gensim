@@ -24,6 +24,7 @@ import multiprocessing as mp
 from collections import namedtuple
 
 import numpy as np
+
 from gensim import interfaces, matutils
 from gensim.topic_coherence import (segmentation, probability_estimation,
                                     direct_confirmation_measure, indirect_confirmation_measure,
@@ -260,9 +261,7 @@ class CoherenceModel(interfaces.TransformationABC):
             for topic in topic_list:
                 topn = max(topn, len(topic))
 
-        if 'topn' in kwargs:
-            topn = min(kwargs.get('topn'), topn)
-            del kwargs['topn']
+        topn = min(kwargs.pop('topn', topn), topn)
 
         super_topic = set()
         for topic in topics_as_topn_terms:
