@@ -423,7 +423,7 @@ class DocvecsArray(utils.SaveLoad):
                     self.doctag_syn0norm = empty(self.doctag_syn0.shape, dtype=REAL)
                 np_divide(self.doctag_syn0, sqrt((self.doctag_syn0 ** 2).sum(-1))[..., newaxis], self.doctag_syn0norm)
 
-    def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None, indexer=None):
+    def most_similar(self, positive=(), negative=(), topn=10, clip_start=0, clip_end=None, indexer=None):
         """
         Find the top-N most similar docvecs known from training. Positive docs contribute
         positively towards the similarity, negative docs negatively.
@@ -437,10 +437,6 @@ class DocvecsArray(utils.SaveLoad):
         range of the underlying doctag_syn0norm vectors. (This may be useful if the ordering
         there was chosen to be significant, such as more popular tag IDs in lower indexes.)
         """
-        if positive is None:
-            positive = []
-        if negative is None:
-            negative = []
 
         self.init_sims()
         clip_end = clip_end or len(self.doctag_syn0norm)
