@@ -138,8 +138,8 @@ class Phrases(interfaces.TransformationABC):
 
         `scoring` specifies how potential phrases are scored for comparison to the `threshold`
         setting. `scoring` can be set with either a string that refers to a built-in scoring function,
-        or with a function with the expected parameter names.
-        Two built-in scoring functions are available by setting `scoring` to a string:
+        or with a function with the expected parameter names. Two built-in scoring functions are available
+        by setting `scoring` to a string:
             'default': from "Efficient Estimaton of Word Representations in Vector Space" by
                 Mikolov, et. al.:
                 (count(worda followed by wordb) - min_count) * N /
@@ -249,8 +249,7 @@ class Phrases(interfaces.TransformationABC):
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab, total_words = \
-        self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
+        min_reduce, vocab, total_words = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
 
         self.corpus_word_count += total_words
         if len(self.vocab) > 0:
@@ -286,11 +285,10 @@ class Phrases(interfaces.TransformationABC):
         delimiter = self.delimiter  # delimiter used for lookup
         min_count = self.min_count
         scorer = self.scoring
-        corpus_word_count = self.corpus_word_count
         # made floats for scoring function
         len_vocab = float(len(vocab))
         scorer_min_count = float(min_count)
-        corpus_word_count = float(corpus_word_count)
+        corpus_word_count = float(self.corpus_word_count)
 
 
 
@@ -306,12 +304,10 @@ class Phrases(interfaces.TransformationABC):
                         count_a = float(vocab[word_a])
                         count_b = float(vocab[word_b])
                         count_ab = float(vocab[bigram_word])
-                        # scoring function should have all these parameters
+                        # scoring MUST have all these parameters, even if they are not used
                         score = scorer(worda_count=count_a, wordb_count=count_b, bigram_count=count_ab, len_vocab=len_vocab, min_count=scorer_min_count, corpus_word_count=corpus_word_count)
                         # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
-                        #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
-                        # added mincount check because if the scorer doesn't contain min_count
-                        # it would not be enforced otherwise
+                        #     bigram_word, count_ab, scorer_min_count, count_a, count_ab, len_vocab, score)
                         if score > threshold and count_ab >= min_count:
                             if as_tuples:
                                 yield ((word_a, word_b), score)
@@ -342,6 +338,16 @@ class Phrases(interfaces.TransformationABC):
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
 
+        vocab = self.vocab
+        threshold = self.threshold
+        delimiter = self.delimiter  # delimiter used for lookup
+        min_count = self.min_count
+        scorer = self.scoring
+        # made floats for scoring function
+        len_vocab = float(len(vocab))
+        scorer_min_count = float(min_count)
+        corpus_word_count = float(self.corpus_word_count)
+
         is_single, sentence = _is_single(sentence)
         if not is_single:
             # if the input is an entire corpus (rather than a single sentence),
@@ -351,20 +357,20 @@ class Phrases(interfaces.TransformationABC):
         s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
         vocab = self.vocab
-        threshold = self.threshold
-        delimiter = self.delimiter
-        min_count = self.min_count
+
         for word_a, word_b in zip(s, s[1:]):
-            if word_a in vocab and word_b in vocab:
+            # last bigram check was moved here to save a few CPU cycles
+            if word_a in vocab and word_b in vocab and not last_bigram:
                 bigram_word = delimiter.join((word_a, word_b))
-                if bigram_word in vocab and not last_bigram:
-                    pa = float(vocab[word_a])
-                    pb = float(vocab[word_b])
-                    pab = float(vocab[bigram_word])
-                    score = (pab - min_count) / pa / pb * len(vocab)
+                if bigram_word in vocab:
+                    count_a = float(vocab[word_a])
+                    count_b = float(vocab[word_b])
+                    count_ab = float(vocab[bigram_word])
+                    # scoring MUST have all these parameters, even if they are not used
+                    score = scorer(worda_count=count_a, wordb_count=count_b, bigram_count=count_ab, len_vocab=len_vocab, min_count=scorer_min_count, corpus_word_count=corpus_word_count)
                     # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
-                    #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
-                    if score > threshold:
+                    #     bigram_word, count_ab, scorer_min_count, count_a, count_ab, len_vocab, score)
+                    if score > threshold and count_ab >= min_count:
                         new_s.append(bigram_word)
                         last_bigram = True
                         continue

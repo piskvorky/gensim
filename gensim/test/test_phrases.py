@@ -12,6 +12,7 @@ import logging
 import unittest
 import os
 import sys
+import pdb
 
 from gensim import utils
 from gensim.models.phrases import Phrases, Phraser
@@ -169,6 +170,15 @@ class TestPhrasesModel(unittest.TestCase):
             3.444  # score for human interface
         ])
 
+    def test__getitem__(self):
+        """ test Phrases[sentences] with a single sentence"""
+        bigram = Phrases(sentences, min_count=1, threshold=1)
+        # pdb.set_trace()
+        test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
+        phrased_sentences = bigram[test_sentences].__iter__().next()
+
+        assert phrased_sentences == ['graph_minors', 'survey', 'human_interface']
+
     def testScoringNpmi(self):
         """ test normalized pointwise mutual information scoring """
         bigram = Phrases(sentences, min_count=1, threshold=.5, scoring='npmi')
@@ -182,6 +192,9 @@ class TestPhrasesModel(unittest.TestCase):
             .882,  # score for graph minors
             .714  # score for human interface
         ])
+
+        phrased_sentences = bigram[test_sentences].__iter__().next()
+        assert phrased_sentences == ['graph_minors', 'survey', 'human_interface']
 
     def testCustomScorer(self):
         """ test using a custom scoring function """
