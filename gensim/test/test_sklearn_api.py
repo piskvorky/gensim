@@ -957,12 +957,14 @@ class TestPhrasesTransformer(unittest.TestCase):
         phrases_transformer = PhrasesTransformer()
         self.assertRaises(NotFittedError, phrases_transformer.transform, phrases_sentences[0])
 
+
 # specifically test pluggable scoring in Phrases, because possible pickling issues with function parameter
 
-# all scores will be 1
 # this is intentionally in main rather than a class method to support pickling
+# all scores will be 1
 def dumb_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
     return 1
+
 
 class TestPhrasesTransformerCustomScorer(unittest.TestCase):
 
