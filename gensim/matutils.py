@@ -21,26 +21,12 @@ import scipy.sparse
 from scipy.stats import entropy
 import scipy.linalg
 from scipy.linalg.lapack import get_lapack_funcs
+from scipy.linalg.special_matrices import triu
 from scipy.special import psi  # gamma function utils
 
 from six import iteritems, itervalues, string_types
 from six.moves import xrange, zip as izip
 
-# scipy is not a stable package yet, locations change, so try to work
-# around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)
-try:
-    from scipy.linalg.basic import triu
-except ImportError:
-    from scipy.linalg.special_matrices import triu
-
-try:
-    from np import triu_indices
-except ImportError:
-    # np < 1.4
-    def triu_indices(n, k=0):
-        m = np.ones((n, n), int)
-        a = triu(m, k)
-        return np.where(a != 0)
 
 blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
@@ -333,7 +319,6 @@ class Dense2Corpus(object):
 
     def __len__(self):
         return len(self.dense)
-# endclass DenseCorpus
 
 
 class Sparse2Corpus(object):
@@ -356,7 +341,6 @@ class Sparse2Corpus(object):
 
     def __len__(self):
         return self.sparse.shape[1]
-# endclass Sparse2Corpus
 
 
 def veclen(vec):
@@ -391,10 +375,10 @@ def ret_log_normalize_vec(vec, axis=1):
             vec = vec - log_norm[:, np.newaxis]
         elif axis == 0:  # normalize each feature
             k = ret_log_normalize_vec(vec.T)
-            return (k[0].T, k[1])
+            return k[0].T, k[1]
         else:
             raise ValueError("'%s' is not a supported axis" % axis)
-    return (vec, log_norm)
+    return vec, log_norm
 
 
 blas_nrm2 = blas('nrm2', np.array([], dtype=float))
@@ -435,7 +419,7 @@ def unitvec(vec, norm='l2'):
 
     try:
         first = next(iter(vec))  # is there at least one element?
-    except Exception:
+    except StopIteration:
         return vec
 
     if isinstance(first, (tuple, list)) and len(first) == 2:  # gensim sparse format
@@ -476,10 +460,10 @@ def isbow(vec):
         vec = vec.todense().tolist()
     try:
         id_, val_ = vec[0]  # checking first value to see if it is in bag of words format by unpacking
-        id_, val_ = int(id_), float(val_)
+        int(id_), float(val_)
     except IndexError:
         return True  # this is to handle the empty input case
-    except Exception:
+    except (ValueError, TypeError):
         return False
     return True
 
@@ -610,7 +594,7 @@ def dirichlet_expectation(alpha):
     For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
 
     """
-    if (len(alpha.shape) == 1):
+    if len(alpha.shape) == 1:
         result = psi(alpha) - psi(np.sum(alpha))
     else:
         result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
@@ -776,7 +760,6 @@ class MmWriter(object):
         logger.debug("closing %s", self.fname)
         if hasattr(self, 'fout'):
             self.fout.close()
-# endclass MmWriter
 
 
 class MmReader(object):
@@ -909,4 +892,3 @@ class MmReader(object):
 
             document.append((termid, val,))  # add another field to the current document
         return document
-# endclass MmReader

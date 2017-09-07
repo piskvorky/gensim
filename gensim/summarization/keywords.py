@@ -97,7 +97,7 @@ def _process_text(graph, tokens, split_text):
 
 def _queue_iterator(queue):
     iterations = queue.qsize()
-    for i in xrange(iterations):
+    for _ in xrange(iterations):
         var = queue.get()
         yield var
         queue.put(var)
@@ -197,7 +197,7 @@ def _format_results(_keywords, combined_keywords, split, scores):
     return "\n".join(combined_keywords)
 
 
-def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=['NN', 'JJ'], lemmatize=False, deacc=True):
+def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=('NN', 'JJ'), lemmatize=False, deacc=True):
     # Gets a dict of word -> lemma
     text = to_unicode(text)
     tokens = _clean_text_by_word(text, deacc=deacc)
