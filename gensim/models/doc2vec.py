@@ -109,9 +109,10 @@ except ImportError:
             train_batch_sg(model, [doc_words], alpha, work)
         for doctag_index in doctag_indexes:
             for word in doc_words:
-                train_sg_pair(model, word, doctag_index, alpha, learn_vectors=learn_doctags,
-                              learn_hidden=learn_hidden, context_vectors=doctag_vectors,
-                              context_locks=doctag_locks)
+                train_sg_pair(
+                    model, word, doctag_index, alpha, learn_vectors=learn_doctags, learn_hidden=learn_hidden,
+                    context_vectors=doctag_vectors, context_locks=doctag_locks
+                )
 
         return len(doc_words)
 
@@ -173,9 +174,9 @@ except ImportError:
 
         return len(word_vocabs)
 
-    def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
-                                 learn_doctags=True, learn_words=True, learn_hidden=True,
-                                 word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
+    def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None, neu1=None, learn_doctags=True,
+                                 learn_words=True, learn_hidden=True, word_vectors=None, word_locks=None,
+                                 doctag_vectors=None, doctag_locks=None):
         """
         Update distributed memory model ("PV-DM") by training on a single document, using a
         concatenation of the context window word vectors (rather than a sum or average).
@@ -382,10 +383,8 @@ class DocvecsArray(utils.SaveLoad):
     def reset_weights(self, model):
         length = max(len(self.doctags), self.count)
         if self.mapfile_path:
-            self.doctag_syn0 = np_memmap(self.mapfile_path + '.doctag_syn0', dtype=REAL,
-                                         mode='w+', shape=(length, model.vector_size))
-            self.doctag_syn0_lockf = np_memmap(self.mapfile_path + '.doctag_syn0_lockf', dtype=REAL,
-                                               mode='w+', shape=(length,))
+            self.doctag_syn0 = np_memmap(self.mapfile_path + '.doctag_syn0', dtype=REAL, mode='w+', shape=(length, model.vector_size))
+            self.doctag_syn0_lockf = np_memmap(self.mapfile_path + '.doctag_syn0_lockf', dtype=REAL, mode='w+', shape=(length,))
             self.doctag_syn0_lockf.fill(1.0)
         else:
             self.doctag_syn0 = empty((length, model.vector_size), dtype=REAL)
@@ -551,8 +550,7 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
 class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
 
-    def __init__(self, documents=None, dm_mean=None,
-                 dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
+    def __init__(self, documents=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, **kwargs):
         """
         Initialize the model from an iterable of `documents`. Each document is a
@@ -716,15 +714,20 @@ class Doc2Vec(Word2Vec):
             indexed_doctags = self.docvecs.indexed_doctags(doc.tags)
             doctag_indexes, doctag_vectors, doctag_locks, ignored = indexed_doctags
             if self.sg:
-                tally += train_document_dbow(self, doc.words, doctag_indexes, alpha, work,
-                                             train_words=self.dbow_words,
-                                             doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+                tally += train_document_dbow(
+                    self, doc.words, doctag_indexes, alpha, work, train_words=self.dbow_words,
+                    doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                )
             elif self.dm_concat:
-                tally += train_document_dm_concat(self, doc.words, doctag_indexes, alpha, work, neu1,
-                                                  doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+                tally += train_document_dm_concat(
+                    self, doc.words, doctag_indexes, alpha, work, neu1,
+                    doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                )
             else:
-                tally += train_document_dm(self, doc.words, doctag_indexes, alpha, work, neu1,
-                                           doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+                tally += train_document_dm(
+                    self, doc.words, doctag_indexes, alpha, work, neu1,
+                    doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                )
             self.docvecs.trained_item(indexed_doctags)
         return tally, self._raw_word_count(job)
 
@@ -749,17 +752,20 @@ class Doc2Vec(Word2Vec):
 
         for i in range(steps):
             if self.sg:
-                train_document_dbow(self, doc_words, doctag_indexes, alpha, work,
-                                    learn_words=False, learn_hidden=False,
-                                    doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+                train_document_dbow(
+                    self, doc_words, doctag_indexes, alpha, work,
+                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                )
             elif self.dm_concat:
-                train_document_dm_concat(self, doc_words, doctag_indexes, alpha, work, neu1,
-                                         learn_words=False, learn_hidden=False,
-                                         doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+                train_document_dm_concat(
+                    self, doc_words, doctag_indexes, alpha, work, neu1,
+                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                )
             else:
-                train_document_dm(self, doc_words, doctag_indexes, alpha, work, neu1,
-                                  learn_words=False, learn_hidden=False,
-                                  doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+                train_document_dm(
+                    self, doc_words, doctag_indexes, alpha, work, neu1,
+                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                )
             alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
 
         return doctag_vectors[0]

@@ -50,8 +50,8 @@ class LdaSeqModel(utils.SaveLoad):
     """
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
-                initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
-                random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
+                 initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
+                 random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
         """
         `corpus` is any iterable gensim corpus
 
@@ -91,7 +91,7 @@ class LdaSeqModel(utils.SaveLoad):
         if corpus is not None:
             try:
                 self.corpus_len = len(corpus)
-            except Exception:
+            except TypeError:
                 logger.warning("input corpus stream has no len(); counting documents")
                 self.corpus_len = sum(1 for _ in corpus)
 
@@ -206,7 +206,7 @@ class LdaSeqModel(utils.SaveLoad):
             topic_bound = self.fit_lda_seq_topics(topic_suffstats)
             bound += topic_bound
 
-            if ((bound - old_bound) < 0):
+            if (bound - old_bound) < 0:
                 # if max_iter is too low, increase iterations.
                 if lda_inference_max_iter < LOWER_ITER:
                     lda_inference_max_iter *= ITER_MULT_LOW
@@ -310,7 +310,6 @@ class LdaSeqModel(utils.SaveLoad):
         Fit lda sequence topic wise.
         """
         lhood = 0
-        lhood_term = 0
 
         for k, chain in enumerate(self.topic_chains):
             logger.info("Fitting topic number %i", k)
@@ -415,8 +414,6 @@ class LdaSeqModel(utils.SaveLoad):
         doc_topic = ldapost.gamma / ldapost.gamma.sum()
         # should even the likelihoods be returned?
         return doc_topic
-
-# endclass LdaSeqModel
 
 
 class sslm(utils.SaveLoad):
@@ -593,8 +590,6 @@ class sslm(utils.SaveLoad):
         sslm_max_iter = 2
         converged = sslm_fit_threshold + 1
 
-        totals = np.zeros(sstats.shape[1])
-
         # computing variance, fwd_variance
         self.variance, self.fwd_variance = (np.array(x) for x in list(zip(*[self.compute_post_variance(w, self.chain_variance) for w in range(0, W)])))
 
@@ -631,8 +626,8 @@ class sslm(utils.SaveLoad):
         Compute log probability bound.
         Forumula is as described in appendix of DTM by Blei. (formula no. 5)
         """
-        W = self.vocab_len
-        T = self.num_time_slices
+        w = self.vocab_len
+        t = self.num_time_slices
 
         term_1 = 0
         term_2 = 0
@@ -643,19 +638,19 @@ class sslm(utils.SaveLoad):
 
         chain_variance = self.chain_variance
         # computing mean, fwd_mean
-        self.mean, self.fwd_mean = (np.array(x) for x in zip(*[self.compute_post_mean(w, self.chain_variance) for w in range(0, W)]))
+        self.mean, self.fwd_mean = (np.array(x) for x in zip(*[self.compute_post_mean(w, self.chain_variance) for w in range(0, w)]))
         self.zeta = self.update_zeta()
 
-        for w in range(0, W):
-            val += (self.variance[w][0] - self.variance[w][T]) / 2 * chain_variance
+        for w in range(0, w):
+            val += (self.variance[w][0] - self.variance[w][t]) / 2 * chain_variance
 
         logger.info("Computing bound, all times")
 
-        for t in range(1, T + 1):
+        for t in range(1, t + 1):
             term_1 = 0.0
             term_2 = 0.0
             ent = 0.0
-            for w in range(0, W):
+            for w in range(0, w):
 
                 m = self.mean[w][t]
                 prev_m = self.mean[w][t - 1]
@@ -803,7 +798,6 @@ class sslm(utils.SaveLoad):
 
             for u in range(1, T + 1):
                 mean_u = mean[u]
-                variance_u_prev = variance[u - 1]  # noqa:F841
                 mean_u_prev = mean[u - 1]
                 dmean_u = mean_deriv[u]
                 dmean_u_prev = mean_deriv[u - 1]
@@ -1026,7 +1020,6 @@ class LdaPost(utils.SaveLoad):
             topic_suffstats[k] = topic_ss
 
         return topic_suffstats
-# endclass LdaPost
 
 
 # the following functions are used in update_obs as the function to optimize
@@ -1060,7 +1053,6 @@ def f_obs(x, *args):
     for t in range(1, T + 1):
         mean_t = mean[t]
         mean_t_prev = mean[t - 1]
-        var_t_prev = variance[t - 1]  # noqa:F841
 
         val = mean_t - mean_t_prev
         term1 += val * val

@@ -84,7 +84,7 @@ def construct_doc2author(corpus, author2doc):
     return doc2author
 
 
-def construct_author2doc(corpus, doc2author):
+def construct_author2doc(doc2author):
     """Make a mapping from author IDs to document IDs."""
 
     # First get a set of all authors.
@@ -118,10 +118,10 @@ class AuthorTopicModel(LdaModel):
     """
 
     def __init__(self, corpus=None, num_topics=100, id2word=None, author2doc=None, doc2author=None,
-            chunksize=2000, passes=1, iterations=50, decay=0.5, offset=1.0,
-            alpha='symmetric', eta='symmetric', update_every=1, eval_every=10,
-            gamma_threshold=0.001, serialized=False, serialization_path=None,
-            minimum_probability=0.01, random_state=None):
+                 chunksize=2000, passes=1, iterations=50, decay=0.5, offset=1.0,
+                 alpha='symmetric', eta='symmetric', update_every=1, eval_every=10,
+                 gamma_threshold=0.001, serialized=False, serialization_path=None,
+                 minimum_probability=0.01, random_state=None):
         """
         If the iterable corpus and one of author2doc/doc2author dictionaries are given,
         start training straight away. If not given, the model is left untrained
@@ -300,7 +300,7 @@ class AuthorTopicModel(LdaModel):
 
         """
         if self.serialized:
-            # Tnitialize the corpus as a serialized empty list.
+            # Initialize the corpus as a serialized empty list.
             # This corpus will be extended in self.update.
             MmCorpus.serialize(self.serialization_path, [])  # Serialize empty corpus.
             self.corpus = MmCorpus(self.serialization_path)  # Store serialized corpus object in self.corpus.
@@ -333,9 +333,8 @@ class AuthorTopicModel(LdaModel):
             assert isinstance(corpus, list), "If serialized == False, all input corpora must be lists."
             self.corpus.extend(corpus)
 
-    def compute_phinorm(self, ids, authors_d, expElogthetad, expElogbetad):
+    def compute_phinorm(self, expElogthetad, expElogbetad):
         """Efficiently computes the normalizing factor in phi."""
-        phinorm = np.zeros(len(ids))
         expElogtheta_sum = expElogthetad.sum(axis=0)
         phinorm = expElogtheta_sum.dot(expElogbetad) + 1e-100
 
@@ -362,8 +361,8 @@ class AuthorTopicModel(LdaModel):
 
         """
         try:
-            _ = len(chunk)  # noqa:F841
-        except Exception:
+            len(chunk)
+        except TypeError:
             # convert iterators/generators to plain list, so we have len() etc.
             chunk = list(chunk)
         if len(chunk) > 1:
@@ -389,9 +388,9 @@ class AuthorTopicModel(LdaModel):
             # TODO: this is duplication of code in LdaModel. Refactor.
             if doc and not isinstance(doc[0][0], six.integer_types + (np.integer,)):
                 # make sure the term IDs are ints, otherwise np will get upset
-                ids = [int(id) for id, _ in doc]
+                ids = [int(idx) for idx, _ in doc]
             else:
-                ids = [id for id, _ in doc]
+                ids = [idx for idx, _ in doc]
             cts = np.array([cnt for _, cnt in doc])
 
             # Get all authors in current document, and convert the author names to integer IDs.
@@ -406,11 +405,10 @@ class AuthorTopicModel(LdaModel):
             expElogbetad = self.expElogbeta[:, ids]
 
             # Compute the normalizing constant of phi for the current document.
-            phinorm = self.compute_phinorm(ids, authors_d, expElogthetad, expElogbetad)
+            phinorm = self.compute_phinorm(expElogthetad, expElogbetad)
 
             # Iterate between gamma and phi until convergence
-            for iteration in xrange(self.iterations):
-
+            for _ in xrange(self.iterations):
                 lastgamma = tilde_gamma.copy()
 
                 # Update gamma.
@@ -428,7 +426,7 @@ class AuthorTopicModel(LdaModel):
                 expElogthetad = np.exp(Elogthetad)
 
                 # Update the normalizing constant in phi.
-                phinorm = self.compute_phinorm(ids, authors_d, expElogthetad, expElogbetad)
+                phinorm = self.compute_phinorm(expElogthetad, expElogbetad)
 
                 # Check for convergence.
                 # Criterion is mean change in "local" gamma.
@@ -494,9 +492,8 @@ class AuthorTopicModel(LdaModel):
         logger.info("%.3f per-word bound, %.1f perplexity estimate based on a corpus of %i documents with %i words", perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words)
         return perwordbound
 
-    def update(self, corpus=None, author2doc=None, doc2author=None, chunksize=None, decay=None, offset=None,
-            passes=None, update_every=None, eval_every=None, iterations=None,
-            gamma_threshold=None, chunks_as_numpy=False):
+    def update(self, corpus=None, author2doc=None, doc2author=None, chunksize=None, decay=None, offset=None, passes=None,
+               update_every=None, eval_every=None, iterations=None, gamma_threshold=None, chunks_as_numpy=False):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -588,14 +585,14 @@ class AuthorTopicModel(LdaModel):
             if doc2author is None:
                 doc2author = construct_doc2author(corpus, author2doc)
             elif author2doc is None:
-                author2doc = construct_author2doc(corpus, doc2author)
+                author2doc = construct_author2doc(doc2author)
 
             # Number of authors that need to be updated.
             num_input_authors = len(author2doc)
 
             try:
                 len_input_corpus = len(corpus)
-            except Exception:
+            except TypeError:
                 logger.warning("input corpus stream has no len(); counting documents")
                 len_input_corpus = sum(1 for _ in corpus)
             if len_input_corpus == 0:
@@ -648,7 +645,7 @@ class AuthorTopicModel(LdaModel):
 
             # Train on all documents of authors in input_corpus.
             train_corpus_idx = []
-            for a in author2doc.keys():  # For all authors in input corpus.
+            for _ in author2doc.keys():  # For all authors in input corpus.
                 for doc_ids in self.author2doc.values():  # For all documents in total corpus.
                     train_corpus_idx.extend(doc_ids)
 
@@ -750,8 +747,6 @@ class AuthorTopicModel(LdaModel):
                     other = self.dispatcher.getstate()
                 self.do_mstep(rho(), other, pass_ > 0)
                 del other
-                dirty = False
-        # endfor entire corpus update
 
     def bound(self, chunk, chunk_doc_idx=None, subsample_ratio=1.0, author2doc=None, doc2author=None):
         """
@@ -826,11 +821,11 @@ class AuthorTopicModel(LdaModel):
 
             # Computing the bound requires summing over expElogtheta[a, k] * expElogbeta[k, v], which
             # is the same computation as in normalizing phi.
-            phinorm = self.compute_phinorm(ids, authors_d, expElogtheta[authors_d, :], expElogbeta[:, ids])
+            phinorm = self.compute_phinorm(expElogtheta[authors_d, :], expElogbeta[:, ids])
             word_score += np.log(1.0 / len(authors_d)) * sum(cts) + cts.dot(np.log(phinorm))
 
         # Compensate likelihood for when `chunk` above is only a sample of the whole corpus. This ensures
-        # that the likelihood is always rougly on the same scale.
+        # that the likelihood is always roughly on the same scale.
         word_score *= subsample_ratio
 
         # E[log p(theta | alpha) - log q(theta | gamma)]
@@ -856,12 +851,12 @@ class AuthorTopicModel(LdaModel):
         return total_score
 
     def get_document_topics(self, word_id, minimum_probability=None):
-        '''
+        """
         This method overwrites `LdaModel.get_document_topics` and simply raises an
         exception. `get_document_topics` is not valid for the author-topic model,
         use `get_author_topics` instead.
 
-        '''
+        """
 
         raise NotImplementedError('Method "get_document_topics" is not valid for the author-topic model. Use the "get_author_topics" method.')
 
@@ -884,13 +879,12 @@ class AuthorTopicModel(LdaModel):
 
         topic_dist = self.state.gamma[author_id, :] / sum(self.state.gamma[author_id, :])
 
-        author_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                if topicvalue >= minimum_probability]
+        author_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist) if topicvalue >= minimum_probability]
 
         return author_topics
 
     def __getitem__(self, author_names, eps=None):
-        '''
+        """
         Return topic distribution for input author as a list of
         (topic_id, topic_probabiity) 2-tuples.
 
@@ -898,7 +892,7 @@ class AuthorTopicModel(LdaModel):
 
         Do not call this method directly, instead use `model[author_names]`.
 
-        '''
+        """
         if isinstance(author_names, list):
             items = []
             for a in author_names:
@@ -907,4 +901,3 @@ class AuthorTopicModel(LdaModel):
             items = self.get_author_topics(author_names, minimum_probability=eps)
 
         return items
-# endclass AuthorTopicModel

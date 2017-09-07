@@ -49,9 +49,8 @@ class TfidfModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     """
 
-    def __init__(
-            self, corpus=None, id2word=None, dictionary=None,
-            wlocal=utils.identity, wglobal=df2idf, normalize=True):
+    def __init__(self, corpus=None, id2word=None, dictionary=None,
+                 wlocal=utils.identity, wglobal=df2idf, normalize=True):
         """
         Compute tf-idf by multiplying a local component (term frequency) with a
         global component (inverse document frequency), and normalizing
@@ -155,4 +154,3 @@ class TfidfModel(interfaces.TransformationABC):
         # make sure there are no explicit zeroes in the vector (must be sparse)
         vector = [(termid, weight) for termid, weight in vector if abs(weight) > eps]
         return vector
-# endclass TfidfModel

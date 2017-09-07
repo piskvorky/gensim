@@ -73,4 +73,3 @@ class NormModel(interfaces.TransformationABC):
 
     def __getitem__(self, bow):
         return self.normalize(bow)
-# endclass NormModel

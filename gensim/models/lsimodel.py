@@ -182,8 +182,10 @@ class Projection(utils.SaveLoad):
         assert not other.u
 
         # find the rotation that diagonalizes r
-        k = np.bmat([[np.diag(decay * self.s), np.multiply(c, other.s)],
-                        [matutils.pad(np.array([]).reshape(0, 0), min(m, n2), n1), np.multiply(r, other.s)]])
+        k = np.bmat([
+            [np.diag(decay * self.s), np.multiply(c, other.s)],
+            [matutils.pad(np.array([]).reshape(0, 0), min(m, n2), n1), np.multiply(r, other.s)]
+        ])
         logger.debug("computing SVD of %s dense matrix", k.shape)
         try:
             # in np < 1.1.0, running SVD sometimes results in "LinAlgError: SVD did not converge'.
@@ -216,9 +218,6 @@ class Projection(utils.SaveLoad):
             for i in xrange(self.u.shape[1]):
                 if self.u[0, i] < 0.0:
                     self.u[:, i] *= -1.0
-#        diff = np.dot(self.u.T, self.u) - np.eye(self.u.shape[1])
-#        logger.info('orth error after=%f' % np.sum(diff * diff))
-# endclass Projection
 
 
 class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
@@ -308,16 +307,14 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.dispatcher = None
         else:
             if not onepass:
-                raise NotImplementedError("distributed stochastic LSA not implemented yet; "
-                                          "run either distributed one-pass, or serial randomized.")
+                raise NotImplementedError("distributed stochastic LSA not implemented yet; run either distributed one-pass, or serial randomized.")
             try:
                 import Pyro4
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')
                 logger.debug("looking for dispatcher at %s", str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
-                                      chunksize=chunksize, decay=decay,
-                                      power_iters=self.power_iters, extra_samples=self.extra_samples,
-                                      distributed=False, onepass=onepass)
+                dispatcher.initialize(
+                    id2word=self.id2word, num_topics=num_topics, chunksize=chunksize, decay=decay,
+                    power_iters=self.power_iters, extra_samples=self.extra_samples, distributed=False, onepass=onepass)
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
                 logger.info("using distributed version with %i workers", self.numworkers)
@@ -359,7 +356,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 update.u, update.s = stochastic_svd(
                     corpus, self.num_topics,
                     num_terms=self.num_terms, chunksize=chunksize,
-                    extra_dims=self.extra_samples, power_iters=self.power_iters)
+                    extra_dims=self.extra_samples, power_iters=self.power_iters
+                )
                 self.projection.merge(update, decay=decay)
                 self.docs_processed += len(corpus) if hasattr(corpus, '__len__') else 0
             else:
@@ -579,7 +577,6 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         except Exception as e:
             logging.warning("failed to load projection from %s: %s", projection_fname, e)
         return result
-# endclass LsiModel
 
 
 def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
@@ -622,8 +619,7 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
         logger.info('topic #%s(%.3f): %s, ..., %s', topic, s[topic], ', '.join(pos), ', '.join(neg))
 
 
-def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
-                   power_iters=0, dtype=np.float64, eps=1e-6):
+def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None, power_iters=0, dtype=np.float64, eps=1e-6):
     """
     Run truncated Singular Value Decomposition (SVD) on a sparse input.
 
@@ -677,7 +673,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         q, _ = matutils.qr_destroy(y)  # orthonormalize the range
 
         logger.debug("running %i power iterations", power_iters)
-        for power_iter in xrange(power_iters):
+        for _ in xrange(power_iters):
             q = corpus.T * q
             q = [corpus * q]
             q, _ = matutils.qr_destroy(q)  # orthonormalize the range after each power iteration step

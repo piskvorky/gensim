@@ -95,4 +95,3 @@ class RpModel(interfaces.TransformationABC):
     def __setstate__(self, state):
         self.__dict__ = state
         self.freshly_loaded = True
-# endclass RpModel

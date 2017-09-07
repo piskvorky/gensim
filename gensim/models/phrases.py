@@ -179,7 +179,8 @@ class Phrases(interfaces.TransformationABC):
         """Get short string representation of this phrase detector."""
         return "%s<%i vocab, min_count=%s, threshold=%s, max_vocab_size=%s>" % (
             self.__class__.__name__, len(self.vocab), self.min_count,
-            self.threshold, self.max_vocab_size)
+            self.threshold, self.max_vocab_size
+        )
 
     @staticmethod
     def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
@@ -260,11 +261,9 @@ class Phrases(interfaces.TransformationABC):
         corpus_word_count = self.corpus_word_count
 
         if scoring == 'default':
-            scoring_function = \
-            partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
+            scoring_function = partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
         elif scoring == 'npmi':
-            scoring_function = \
-            partial(self.npmi_scorer, corpus_word_count=corpus_word_count)
+            scoring_function = partial(self.npmi_scorer, corpus_word_count=corpus_word_count)
         # no else here to catch unknown scoring function, check is done in Phrases.__init__
 
         for sentence in sentences:

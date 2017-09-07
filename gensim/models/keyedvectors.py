@@ -232,7 +232,7 @@ class KeyedVectors(utils.SaveLoad):
 
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
-                for line_no in xrange(vocab_size):
+                for _ in xrange(vocab_size):
                     # mixed text and binary: read text first, then binary
                     word = []
                     while True:
@@ -253,7 +253,7 @@ class KeyedVectors(utils.SaveLoad):
                         raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
-                        raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
+                        raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
                     word, weights = parts[0], [REAL(x) for x in parts[1:]]
                     add_word(word, weights)
         if result.syn0.shape[0] != len(result.vocab):
@@ -476,8 +476,7 @@ class KeyedVectors(utils.SaveLoad):
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
-        all_words = set([self.vocab[word].index for word in positive + negative
-            if not isinstance(word, ndarray) and word in self.vocab])
+        all_words = {self.vocab[word].index for word in positive + negative if not isinstance(word, ndarray) and word in self.vocab}
 
         positive = [
             self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
@@ -633,8 +632,7 @@ class KeyedVectors(utils.SaveLoad):
             raise ZeroDivisionError('Atleast one of the passed list is empty.')
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
-        return dot(matutils.unitvec(array(v1).mean(axis=0)),
-                   matutils.unitvec(array(v2).mean(axis=0)))
+        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
     @staticmethod
     def log_accuracy(section):
@@ -685,7 +683,7 @@ class KeyedVectors(utils.SaveLoad):
                         a, b, c, expected = [word.upper() for word in line.split()]
                     else:
                         a, b, c, expected = [word for word in line.split()]
-                except Exception:
+                except ValueError:
                     logger.info("skipping invalid line #%i in %s", line_no, questions)
                     continue
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
@@ -729,8 +727,7 @@ class KeyedVectors(utils.SaveLoad):
         logger.info('Spearman rank-order correlation coefficient against %s: %.4f', pairs, spearman[0])
         logger.info('Pairs with unknown words ratio: %.1f%%', oov)
 
-    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True,
-                            dummy4unknown=False):
+    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
         """
         Compute correlation of the model with human similarity judgments. `pairs` is a filename of a dataset where
         lines are 3-tuples, each consisting of a word pair and a similarity value, separated by `delimiter`.
@@ -776,7 +773,7 @@ class KeyedVectors(utils.SaveLoad):
                     else:
                         a, b, sim = [word for word in line.split(delimiter)]
                     sim = float(sim)
-                except Exception:
+                except (ValueError, TypeError):
                     logger.info('skipping invalid line #%d in %s', line_no, pairs)
                     continue
                 if a not in ok_vocab or b not in ok_vocab:

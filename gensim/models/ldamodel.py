@@ -48,12 +48,7 @@ from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
 
 # log(sum(exp(x))) that tries to avoid overflow
-try:
-    # try importing from here if older scipy is installed
-    from scipy.maxentropy import logsumexp
-except ImportError:
-    # maxentropy has been removed in recent releases, logsumexp now in misc
-    from scipy.misc import logsumexp
+from scipy.misc import logsumexp
 
 
 logger = logging.getLogger('gensim.models.ldamodel')
@@ -381,8 +376,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return init_prior, is_auto
 
     def __str__(self):
-        return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % \
-            (self.num_terms, self.num_topics, self.decay, self.chunksize)
+        return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (self.num_terms, self.num_topics, self.decay, self.chunksize)
 
     def sync_state(self):
         self.expElogbeta = np.exp(self.state.get_Elogbeta())
@@ -411,8 +405,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         try:
-            _ = len(chunk)
-        except Exception:
+            len(chunk)
+        except TypeError:
             # convert iterators/generators to plain list, so we have len() etc.
             chunk = list(chunk)
         if len(chunk) > 1:
@@ -435,9 +429,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         for d, doc in enumerate(chunk):
             if len(doc) > 0 and not isinstance(doc[0][0], six.integer_types + (np.integer,)):
                 # make sure the term IDs are ints, otherwise np will get upset
-                ids = [int(id) for id, _ in doc]
+                ids = [int(idx) for idx, _ in doc]
             else:
-                ids = [id for id, _ in doc]
+                ids = [idx for idx, _ in doc]
             cts = np.array([cnt for _, cnt in doc])
             gammad = gamma[d, :]
             Elogthetad = Elogtheta[d, :]
@@ -461,7 +455,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 phinorm = np.dot(expElogthetad, expElogbetad) + 1e-100
                 # If gamma hasn't changed much, we're done.
                 meanchange = np.mean(abs(gammad - lastgamma))
-                if (meanchange < self.gamma_threshold):
+                if meanchange < self.gamma_threshold:
                     converged += 1
                     break
             gamma[d, :] = gammad
@@ -471,8 +465,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 sstats[:, ids] += np.outer(expElogthetad.T, cts / phinorm)
 
         if len(chunk) > 1:
-            logger.debug("%i/%i documents converged within %i iterations",
-                         converged, len(chunk), self.iterations)
+            logger.debug("%i/%i documents converged within %i iterations", converged, len(chunk), self.iterations)
 
         if collect_sstats:
             # This step finishes computing the sufficient statistics for the
@@ -865,7 +858,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         topic = self.get_topics()[topicid]
         topic = topic / topic.sum()  # normalize to probability distribution
         bestn = matutils.argsort(topic, topn, reverse=True)
-        return [(id, topic[id]) for id in bestn]
+        return [(idx, topic[idx]) for idx in bestn]
 
     def top_topics(self, corpus=None, texts=None, dictionary=None, window_size=None,
                    coherence='u_mass', topn=20, processes=-1):
@@ -883,7 +876,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         cm = CoherenceModel(
             model=self, corpus=corpus, texts=texts, dictionary=dictionary,
             window_size=window_size, coherence=coherence, topn=topn,
-            processes=processes)
+            processes=processes
+        )
         coherence_scores = cm.get_coherence_per_topic()
 
         str_topics = []
@@ -1091,7 +1085,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         return self.get_document_topics(bow, eps, self.minimum_phi_value, self.per_word_topics)
 
-    def save(self, fname, ignore=['state', 'dispatcher'], separately=None, *args, **kwargs):
+    def save(self, fname, ignore=('state', 'dispatcher'), separately=None, *args, **kwargs):
         """
         Save the model to file.
 
@@ -1183,10 +1177,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # check if `id2word_fname` file is present on disk
         # if present -> the model to be loaded was saved using a >= 0.13.2 version of Gensim, so set `result.id2word` using the `id2word_fname` file
         # if not present -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so `result.id2word` already set after the main pickle load
-        if (os.path.isfile(id2word_fname)):
+        if os.path.isfile(id2word_fname):
             try:
                 result.id2word = utils.unpickle(id2word_fname)
             except Exception as e:
                 logging.warning("failed to load id2word dictionary from %s: %s", id2word_fname, e)
         return result
-# endclass LdaModel

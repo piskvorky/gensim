@@ -382,11 +382,10 @@ class Word2Vec(utils.SaveLoad):
 
     """
 
-    def __init__(
-            self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-            max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-            sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False):
+    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
+                 max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
+                 sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
+                 trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -498,8 +497,7 @@ class Word2Vec(utils.SaveLoad):
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
-            self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
-                       start_alpha=self.alpha, end_alpha=self.min_alpha)
+            self.train(sentences, total_examples=self.corpus_count, epochs=self.iter, start_alpha=self.alpha, end_alpha=self.min_alpha)
         else:
             if trim_rule is not None:
                 logger.warning("The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model. ")
@@ -778,8 +776,7 @@ class Word2Vec(utils.SaveLoad):
         return sum(len(sentence) for sentence in job)
 
     def train(self, sentences, total_examples=None, total_words=None,
-              epochs=None, start_alpha=None, end_alpha=None,
-              word_count=0,
+              epochs=None, start_alpha=None, end_alpha=None, word_count=0,
               queue_factor=2, report_delay=1.0, compute_loss=None):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
@@ -795,7 +792,7 @@ class Word2Vec(utils.SaveLoad):
         explicit `epochs` argument MUST be provided. In the common and recommended case, where `train()`
         is only called once, the model's cached `iter` value should be supplied as `epochs` value.
         """
-        if (self.model_trimmed_post_training):
+        if self.model_trimmed_post_training:
             raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
         if FAST_VERSION < 0:
             warnings.warn("C extension not loaded for Word2Vec, training will be slow. Install a C compiler and reinstall gensim for fast training.")
@@ -1003,9 +1000,7 @@ class Word2Vec(utils.SaveLoad):
             raise RuntimeError("you must first build vocabulary before scoring new data")
 
         if not self.hs:
-            raise RuntimeError("We have currently only implemented score \
-                    for the hierarchical softmax scheme, so you need to have \
-                    run word2vec with hs=1 and negative=0 for this to work.")
+            raise RuntimeError("We have currently only implemented score for the hierarchical softmax scheme, so you need to have run word2vec with hs=1 and negative=0 for this to work.")
 
         def worker_loop():
             """Compute log probability for each sentence, lifting lists of sentences from the jobs queue."""
@@ -1103,9 +1098,7 @@ class Word2Vec(utils.SaveLoad):
 
         # Raise an error if an online update is run before initial training on a corpus
         if not len(self.wv.syn0):
-            raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
-                "First build the vocabulary of your model with a corpus "
-                "before doing an online update.")
+            raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. First build the vocabulary of your model with a corpus before doing an online update.")
 
         self.wv.syn0 = vstack([self.wv.syn0, newsyn0])
 
@@ -1163,7 +1156,7 @@ class Word2Vec(utils.SaveLoad):
                 # TOCONSIDER: maybe mismatched vectors still useful enough to merge (truncating/padding)?
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
-                for line_no in xrange(vocab_size):
+                for _ in xrange(vocab_size):
                     # mixed text and binary: read text first, then binary
                     word = []
                     while True:
@@ -1263,9 +1256,7 @@ class Word2Vec(utils.SaveLoad):
     def predict_output_word(self, context_words_list, topn=10):
         """Report the probability distribution of the center word given the context words as input to the trained model."""
         if not self.negative:
-            raise RuntimeError("We have currently only implemented predict_output_word "
-                "for the negative sampling scheme, so you need to have "
-                "run word2vec with negative > 0 for this to work.")
+            raise RuntimeError("We have currently only implemented predict_output_word for the negative sampling scheme, so you need to have run word2vec with negative > 0 for this to work.")
 
         if not hasattr(self.wv, 'syn0') or not hasattr(self, 'syn1neg'):
             raise RuntimeError("Parameters required for predicting the output words not found.")
@@ -1552,7 +1543,7 @@ class PathLineSentences(object):
         logging.info('files read into PathLineSentences:%s', '\n'.join(self.input_files))
 
     def __iter__(self):
-        '''iterate through the files'''
+        """iterate through the files"""
         for file_name in self.input_files:
             logging.info('reading file %s', file_name)
             with utils.smart_open(file_name) as fin:
@@ -1610,7 +1601,8 @@ if __name__ == "__main__":
     model = Word2Vec(
         corpus, size=args.size, min_count=args.min_count, workers=args.threads,
         window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
-        negative=args.negative, cbow_mean=1, iter=args.iter)
+        negative=args.negative, cbow_mean=1, iter=args.iter
+    )
 
     if args.output:
         outfile = args.output

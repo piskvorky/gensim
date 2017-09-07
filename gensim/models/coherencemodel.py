@@ -292,7 +292,8 @@ class CoherenceModel(interfaces.TransformationABC):
             self._accumulator = self.measure.prob(
                 texts=self.texts, segmented_topics=segmented_topics,
                 dictionary=self.dictionary, window_size=self.window_size,
-                processes=self.processes)
+                processes=self.processes
+            )
 
         return self._accumulator
 

@@ -143,11 +143,13 @@ class LdaMulticore(LdaModel):
         if isinstance(alpha, six.string_types) and alpha == 'auto':
             raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
 
-        super(LdaMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
+        super(LdaMulticore, self).__init__(
+            corpus=corpus, num_topics=num_topics,
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
             gamma_threshold=gamma_threshold, random_state=random_state, minimum_probability=minimum_probability,
-            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
+            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics
+        )
 
     def update(self, corpus, chunks_as_numpy=False):
         """
@@ -169,7 +171,7 @@ class LdaMulticore(LdaModel):
         """
         try:
             lencorpus = len(corpus)
-        except Exception:
+        except TypeError:
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
