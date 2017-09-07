@@ -248,7 +248,7 @@ class ShardedCorpus(IndexedCorpus):
             logger.info('Cloning existing...')
             self.init_by_clone()
 
-    def init_shards(self, corpus, shardsize=4096, dtype=_default_dtype):
+    def init_shards(self, output_prefix, corpus, shardsize=4096, dtype=_default_dtype):
         """Initialize shards from the corpus."""
 
         if not gensim.utils.is_corpus(corpus):

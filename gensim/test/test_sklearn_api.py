@@ -361,7 +361,7 @@ class TestLdaSeqWrapper(unittest.TestCase):
         data = cache
         test_data = data.data[0:2]
         test_target = data.target[0:2]
-        id2word = Dictionary([x.split() for x in data.data])
+        id2word = Dictionary([x.split() for x in test_data])
         corpus = [id2word.doc2bow(i.split()) for i in test_data]
         model = LdaSeqTransformer(id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim')
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)

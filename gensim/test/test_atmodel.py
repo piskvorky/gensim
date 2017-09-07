@@ -434,7 +434,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
             for test_rhot in test_rhots:
                 model.update(corpus, author2doc)
 
-                msg = ", ".join(str(x) for x in [passes, model.num_updates, model.state.numdocs])
+                msg = "{}, {}, {}".format(passes, model.num_updates, model.state.numdocs)
                 self.assertAlmostEqual(final_rhot(), test_rhot, msg=msg)
 
             self.assertEqual(model.state.numdocs, len(corpus) * len(test_rhots))
