@@ -213,6 +213,9 @@ class Phrases(interfaces.TransformationABC):
             load_pickle = pickle.loads(test_pickle)
         except pickle.PickleError:
             raise pickle.PickleError('unable to pickle custom Phrases scoring function')
+        finally:
+            del(test_pickle)
+            del(load_pickle)
 
         if sentences is not None:
             self.add_vocab(sentences)
