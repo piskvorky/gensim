@@ -123,6 +123,14 @@ class TestPhrasesCommon(unittest.TestCase):
         self.assertTrue(isinstance(transformed, unicode))
 
 
+# scorer for testCustomScorer
+# function is outside of the scope of the test because for picklability of custom scorer
+# Phrases tests for picklability
+# all scores will be 1
+def dumb_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
+    return 1
+
+
 class TestPhrasesModel(unittest.TestCase):
     def testExportPhrases(self):
         """Test Phrases bigram export_phrases functionality."""
@@ -194,9 +202,6 @@ class TestPhrasesModel(unittest.TestCase):
 
     def testCustomScorer(self):
         """ test using a custom scoring function """
-        # all scores will be 1
-        def dumb_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
-            return 1
 
         bigram = Phrases(sentences, min_count=1, threshold=.001, scoring=dumb_scorer)
 

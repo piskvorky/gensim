@@ -66,6 +66,7 @@ from collections import defaultdict
 import itertools as it
 from math import log
 from inspect import getargspec
+import pickle
 
 from six import iteritems, string_types, next
 
@@ -162,6 +163,7 @@ class Phrases(interfaces.TransformationABC):
             corpus_word_count: the total number of (non-unique) tokens in `sentences`
         A scoring function without any of these parameters (even if the parameters are not used) will
             raise a ValueError on initialization of the Phrases class
+        The scoring function must be picklable
 
         """
         if min_count <= 0:
@@ -198,6 +200,13 @@ class Phrases(interfaces.TransformationABC):
         self.delimiter = delimiter
         self.progress_per = progress_per
         self.corpus_word_count = 0
+
+        # ensure picklability of custom scorer
+        try:
+            test_pickle = pickle.dumps(self.scoring)
+            load_pickle = pickle.loads(test_pickle)
+        except pickle.PickleError:
+            raise pickle.PickleError('unable to pickle custom Phrases scoring function')
 
         if sentences is not None:
             self.add_vocab(sentences)
