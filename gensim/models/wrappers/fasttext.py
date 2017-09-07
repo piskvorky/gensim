@@ -61,6 +61,8 @@ class FastTextKeyedVectors(KeyedVectors):
         self.ngrams = {}
         self.hash2index = {}
         self.ngrams_word = {}
+        self.min_n = 0
+        self.max_n = 0
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors

@@ -96,6 +96,8 @@ class FastText(Word2Vec):
 
     def initialize_word_vectors(self):
         self.wv = FastTextKeyedVectors()
+        self.wv.min_n = self.min_n
+        self.wv.max_n = self.max_n
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
         if update:
