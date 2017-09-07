@@ -174,9 +174,9 @@ class TestPhrasesModel(unittest.TestCase):
         bigram = Phrases(sentences, min_count=1, threshold=1)
         # pdb.set_trace()
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
-        phrased_sentences = bigram[test_sentences].__iter__().next()
+        phrased_sentence = next(bigram[test_sentences].__iter__())
 
-        assert phrased_sentences == ['graph_minors', 'survey', 'human_interface']
+        assert phrased_sentence == ['graph_minors', 'survey', 'human_interface']
 
     def testScoringNpmi(self):
         """ test normalized pointwise mutual information scoring """
@@ -192,9 +192,6 @@ class TestPhrasesModel(unittest.TestCase):
             .714  # score for human interface
         ])
 
-        phrased_sentences = bigram[test_sentences].__iter__().next()
-        assert phrased_sentences == ['graph_minors', 'survey', 'human_interface']
-
     def testCustomScorer(self):
         """ test using a custom scoring function """
         # all scores will be 1
@@ -209,7 +206,7 @@ class TestPhrasesModel(unittest.TestCase):
             seen_scores.append(score)
 
         assert all(seen_scores)  # all scores 1
-        assert len(seen_scores) == 3  # 'graph minors' and 'survey human' and 'interface system'
+        assert len(seen_scores) == 3  #'graph minors' and 'survey human' and 'interface system'
 
     def testBadParameters(self):
         """Test the phrases module with bad parameters."""
