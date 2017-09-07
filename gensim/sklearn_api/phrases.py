@@ -22,7 +22,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
     """
 
     def __init__(self, min_count=5, threshold=10.0, max_vocab_size=40000000,
-            delimiter=b'_', progress_per=10000):
+            delimiter=b'_', progress_per=10000, scoring='default'):
         """
         Sklearn wrapper for Phrases model.
         """
@@ -32,13 +32,14 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         self.max_vocab_size = max_vocab_size
         self.delimiter = delimiter
         self.progress_per = progress_per
+        self.scoring = scoring
 
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
         """
         self.gensim_model = models.Phrases(sentences=X, min_count=self.min_count, threshold=self.threshold,
-            max_vocab_size=self.max_vocab_size, delimiter=self.delimiter, progress_per=self.progress_per)
+            max_vocab_size=self.max_vocab_size, delimiter=self.delimiter, progress_per=self.progress_per, scoring=self.scoring)
         return self
 
     def transform(self, docs):
@@ -62,7 +63,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
     def partial_fit(self, X):
         if self.gensim_model is None:
             self.gensim_model = models.Phrases(sentences=X, min_count=self.min_count, threshold=self.threshold,
-                max_vocab_size=self.max_vocab_size, delimiter=self.delimiter, progress_per=self.progress_per)
+                max_vocab_size=self.max_vocab_size, delimiter=self.delimiter, progress_per=self.progress_per, scoring=self.scoring)
 
         self.gensim_model.add_vocab(X)
         return self
