@@ -21,7 +21,7 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models.wrappers import ldamallet
 from gensim import matutils
 from gensim.models import ldamodel
-from gensim.test import test_base_tm
+from gensim.test import basetmtests
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -46,7 +46,7 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-class TestLdaMallet(unittest.TestCase, test_base_tm.TestBaseTopicModel):
+class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
         mallet_home = os.environ.get('MALLET_HOME', None)
         self.mallet_path = os.path.join(mallet_home, 'bin', 'mallet') if mallet_home else None

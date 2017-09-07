@@ -26,7 +26,7 @@ import numpy as np
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import atmodel
 from gensim import matutils
-from gensim.test import test_base_tm
+from gensim.test import basetmtests
 
 # TODO:
 # Test that computing the bound on new unseen documents works as expected (this is somewhat different
@@ -73,7 +73,7 @@ def testfile(test_fname=''):
     return os.path.join(tempfile.gettempdir(), fname)
 
 
-class TestAuthorTopicModel(unittest.TestCase, test_base_tm.TestBaseTopicModel):
+class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = atmodel.AuthorTopicModel

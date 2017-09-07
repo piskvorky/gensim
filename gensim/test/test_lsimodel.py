@@ -21,7 +21,7 @@ import scipy.linalg
 from gensim import matutils
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import lsimodel
-from gensim.test import test_base_tm
+from gensim.test import basetmtests
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 
@@ -49,7 +49,7 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-class TestLsiModel(unittest.TestCase, test_base_tm.TestBaseTopicModel):
+class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.model = lsimodel.LsiModel(self.corpus, num_topics=2)
