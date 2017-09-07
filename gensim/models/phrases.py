@@ -175,7 +175,7 @@ class Phrases(interfaces.TransformationABC):
         # set scoring based on string
         # intentially override the value of the scoring parameter rather than set self.scoring here,
         # to still run the check of scoring function parameters in the next code block
-        if type(scoring) is str:
+        if isinstance(scoring, basestring):
             if scoring == 'default':
                 scoring = original_scorer
             elif scoring == 'npmi':
@@ -392,15 +392,15 @@ class Phrases(interfaces.TransformationABC):
 
     # calculation of score based on original mikolov word2vec paper
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
-        return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
+    return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
 
 
 # normalized PMI, requires corpus size
 def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
-        pa = worda_count / corpus_word_count
-        pb = wordb_count / corpus_word_count
-        pab = bigram_count / corpus_word_count
-        return log(pab / (pa * pb)) / -log(pab)
+    pa = worda_count / corpus_word_count
+    pb = wordb_count / corpus_word_count
+    pab = bigram_count / corpus_word_count
+    return log(pab / (pa * pb)) / -log(pab)
 
 
 def pseudocorpus(source_vocab, sep):
