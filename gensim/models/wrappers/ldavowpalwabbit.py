@@ -140,9 +140,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         if self.id2word is None:
             if corpus is None:
-                raise ValueError('at least one of corpus/id2word must be '
-                                 'specified, to establish input space '
-                                 'dimensionality')
+                raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
             LOG.warning('no word id mapping provided; initializing from corpus, assuming identity')
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
@@ -227,7 +225,10 @@ class LdaVowpalWabbit(utils.SaveLoad):
         vw_data = self._predict(chunk)[1]
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         bound = -vw_data['average_loss']
-        LOG.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words", bound, numpy.exp2(-bound), vw_data['corpus_size'], corpus_words)
+        LOG.info(
+            "%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words",
+            bound, numpy.exp2(-bound), vw_data['corpus_size'], corpus_words
+        )
         return bound
 
     def get_topics(self):
@@ -349,27 +350,31 @@ class LdaVowpalWabbit(utils.SaveLoad):
         If 'update' is set to True, this specifies that we're further training
         an existing model.
         """
-        cmd = [self.vw_path,
-               '-d', self._corpus_filename,
-               '--power_t', str(self.decay),
-               '--initial_t', str(self.offset),
-               '--minibatch', str(self.chunksize),
-               '--lda_D', str(corpus_size),
-               '--passes', str(self.passes),
-               '--cache_file', self._cache_filename,
-               '--lda_epsilon', str(self.gamma_threshold),
-               '--readable_model', self._topics_filename,
-               '-k',  # clear cache
-               '-f', self._model_filename]
+        cmd = [
+            self.vw_path,
+            '-d', self._corpus_filename,
+            '--power_t', str(self.decay),
+            '--initial_t', str(self.offset),
+            '--minibatch', str(self.chunksize),
+            '--lda_D', str(corpus_size),
+            '--passes', str(self.passes),
+            '--cache_file', self._cache_filename,
+            '--lda_epsilon', str(self.gamma_threshold),
+            '--readable_model', self._topics_filename,
+            '-k',  # clear cache
+            '-f', self._model_filename
+        ]
 
         if update:
             cmd.extend(['-i', self._model_filename])
         else:
             # these params are read from model file if updating
-            cmd.extend(['--lda', str(self.num_topics),
-                        '-b', str(_bit_length(self.num_terms)),
-                        '--lda_alpha', str(self.alpha),
-                        '--lda_rho', str(self.eta)])
+            cmd.extend([
+                '--lda', str(self.num_topics),
+                '-b', str(_bit_length(self.num_terms)),
+                '--lda_alpha', str(self.alpha),
+                '--lda_rho', str(self.eta)
+            ])
 
         if self.random_seed is not None:
             cmd.extend(['--random_seed', str(self.random_seed)])
@@ -387,8 +392,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         of:
         <word_id> <topic_1_gamma> <topic_2_gamma> ...
         """
-        topics = numpy.zeros((self.num_topics, self.num_terms),
-                             dtype=numpy.float32)
+        topics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
 
         with utils.smart_open(self._topics_filename) as topics_file:
             found_data = False
@@ -431,8 +435,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         vw_data = _parse_vw_output(_run_vw_command(cmd))
         vw_data['corpus_size'] = corpus_size
 
-        predictions = numpy.zeros((corpus_size, self.num_topics),
-                                  dtype=numpy.float32)
+        predictions = numpy.zeros((corpus_size, self.num_topics), dtype=numpy.float32)
 
         with utils.smart_open(self._predict_filename) as fhandle:
             for i, line in enumerate(fhandle):
@@ -553,9 +556,7 @@ def _run_vw_command(cmd):
     LOG.debug("Vowpal Wabbit output: %s", output)
 
     if proc.returncode != 0:
-        raise subprocess.CalledProcessError(proc.returncode,
-                                            ' '.join(cmd),
-                                            output=output)
+        raise subprocess.CalledProcessError(proc.returncode, ' '.join(cmd), output=output)
 
     return output
 

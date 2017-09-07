@@ -116,9 +116,9 @@ class Wordrank(KeyedVectors):
             utils.check_output(w, args=cmd_del_vocab_freq)
 
         with smart_open(vocab_file, 'rb') as f:
-            numwords = sum(1 for line in f)
+            numwords = sum(1 for _ in f)
         with smart_open(cooccurrence_shuf_file, 'rb') as f:
-            numlines = sum(1 for line in f)
+            numlines = sum(1 for _ in f)
         with smart_open(meta_file, 'wb') as f:
             meta_info = "{0} {1}\n{2} {3}\n{4} {5}".format(numwords, numwords, numlines, cooccurrence_shuf_file.split('/')[-1], numwords, vocab_file.split('/')[-1])
             f.write(meta_info.encode('utf-8'))
@@ -127,11 +127,10 @@ class Wordrank(KeyedVectors):
             iter += 1
         else:
             logger.warning(
-                'Resultant embedding will be from %d iterations rather than the input %d iterations, '
-                'as wordrank dumps the embedding only at dump_period intervals. '
-                'Input an appropriate combination of parameters (iter, dump_period) such that '
-                '"iter mod dump_period" is zero.', iter - (iter % dump_period), iter
-                )
+                'Resultant embedding will be from %d iterations rather than the input %d iterations, as wordrank dumps the embedding only at dump_period intervals. '
+                'Input an appropriate combination of parameters (iter, dump_period) such that "iter mod dump_period" is zero.',
+                iter - (iter % dump_period), iter
+            )
 
         wr_args = {
             'path': meta_dir,
@@ -156,7 +155,7 @@ class Wordrank(KeyedVectors):
             cmd.append('--%s' % option)
             cmd.append(str(value))
         logger.info("Running wordrank binary")
-        output = utils.check_output(args=cmd)  # noqa:F841
+        utils.check_output(args=cmd)
 
         # use embeddings from max. iteration's dump
         max_iter_dump = iter - (iter % dump_period)

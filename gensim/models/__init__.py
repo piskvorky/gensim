@@ -44,7 +44,6 @@ class VocabTransform(interfaces.TransformationABC):
     """
 
     def __init__(self, old2new, id2token=None):
-        # id2word = dict((newid, oldid2word[oldid]) for oldid, newid in old2new.iteritems())
         self.old2new = old2new
         self.id2token = id2token
 
@@ -58,4 +57,3 @@ class VocabTransform(interfaces.TransformationABC):
             return self._apply(bow)
 
         return sorted((self.old2new[oldid], weight) for oldid, weight in bow if oldid in self.old2new)
-# endclass VocabTransform

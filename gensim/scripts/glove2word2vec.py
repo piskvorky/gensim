@@ -17,7 +17,6 @@ The only difference between the two formats is an extra header line in word2vec,
 which contains the number of vectors and their dimensionality (two integers).
 """
 
-import os
 import sys
 import logging
 import argparse

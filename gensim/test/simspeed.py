@@ -93,7 +93,7 @@ if __name__ == '__main__':
         # `sims` stores the entire N x N sim matrix in memory!
         # this is not necessary, but i added it to test the accuracy of the result
         # (=report mean diff below)
-        sims = [sim for sim in index_dense]
+        sims = list(index_dense)
         taken = time() - start
         sims = np.asarray(sims)
         if chunksize == 0:
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     for chunksize in [0, 1, 4, 8, 16, 64, 128, 256, 512, 1024]:
         index_dense.chunksize = chunksize
         start = time()
-        sims = [sim for sim in index_dense]
+        sims = list(index_dense)
         taken = time() - start
         if chunksize == 0:
             queries = len(corpus_dense)
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     for chunksize in [0, 5, 10, 100, 500, 1000, 5000]:
         index_sparse.chunksize = chunksize
         start = time()
-        sims = [sim for sim in index_sparse]
+        sims = list(index_sparse)
         taken = time() - start
         sims = np.asarray(sims)
         if chunksize == 0:
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     for chunksize in [0, 5, 10, 100, 500, 1000, 5000]:
         index_sparse.chunksize = chunksize
         start = time()
-        sims = [sim for sim in index_sparse]
+        sims = list(index_sparse)
         taken = time() - start
         if chunksize == 0:
             queries = len(corpus_sparse)

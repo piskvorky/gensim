@@ -17,7 +17,7 @@ import tempfile
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import hdpmodel
-from gensim.test import basetests
+from gensim.test import test_base_tm
 
 import numpy as np
 
@@ -44,7 +44,7 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-class TestHdpModel(unittest.TestCase, basetests.TestBaseTopicModel):
+class TestHdpModel(unittest.TestCase, test_base_tm.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = hdpmodel.HdpModel

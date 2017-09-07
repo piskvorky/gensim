@@ -88,7 +88,7 @@ class DtmModel(utils.SaveLoad):
 
         try:
             lencorpus = len(corpus)
-        except Exception:
+        except TypeError:
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
@@ -255,13 +255,6 @@ class DtmModel(utils.SaveLoad):
         else:
             num_topics = min(num_topics, self.num_topics)
             chosen_topics = range(num_topics)
-            # add a little random jitter, to randomize results around the same
-            # alpha
-            # sort_alpha = self.alpha + 0.0001 * \
-            #     numpy.random.rand(len(self.alpha))
-            # sorted_topics = list(numpy.argsort(sort_alpha))
-            # chosen_topics = sorted_topics[: topics / 2] + \
-            #     sorted_topics[-topics / 2:]
 
         if times < 0 or times >= len(self.time_slices):
             times = len(self.time_slices)
@@ -293,13 +286,13 @@ class DtmModel(utils.SaveLoad):
 
         topics = self.lambda_[:, :, time]
         topic = topics[topicid]
-        # liklihood to probability
+        # likelihood to probability
         topic = np.exp(topic)
         # normalize to probability dist
         topic = topic / topic.sum()
         # sort according to prob
         bestn = matutils.argsort(topic, topn, reverse=True)
-        beststr = [(topic[id], self.id2word[id]) for id in bestn]
+        beststr = [(topic[idx], self.id2word[idx]) for idx in bestn]
         return beststr
 
     def print_topic(self, topicid, time, topn=10, num_words=None):

@@ -21,7 +21,7 @@ import scipy.linalg
 from gensim import matutils
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import lsimodel
-from gensim.test import basetests
+from gensim.test import test_base_tm
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 
@@ -49,7 +49,7 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-class TestLsiModel(unittest.TestCase, basetests.TestBaseTopicModel):
+class TestLsiModel(unittest.TestCase, test_base_tm.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.model = lsimodel.LsiModel(self.corpus, num_topics=2)
@@ -178,7 +178,7 @@ class TestLsiModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(self.model.docs_processed, 9)
         self.assertEqual(self.model.docs_processed, self.corpus.num_docs)
 
-    def testGetTopics(self):
+    def test_get_topics(self):
         topics = self.model.get_topics()
         vocab_size = len(self.model.id2word)
         for topic in topics:

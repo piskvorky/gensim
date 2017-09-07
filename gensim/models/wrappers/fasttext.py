@@ -19,7 +19,7 @@ The wrapped model can NOT be updated with new documents for online training -- u
 Example:
 
 >>> from gensim.models.wrappers import FastText
->>> model = fasttext.FastText.train('/Users/kofola/fastText/fasttext', corpus_file='text8')
+>>> model = FastText.train('/Users/kofola/fastText/fasttext', corpus_file='text8')
 >>> print model['forests']  # prints vector for given out-of-vocabulary word
 
 .. [1] https://github.com/facebookresearch/fastText#enriching-word-vectors-with-subword-information
@@ -151,7 +151,7 @@ class FastText(Word2Vec):
 
     @classmethod
     def train(cls, ft_path, corpus_file, output_file=None, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
-            word_ngrams=1, loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
+              word_ngrams=1, loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
         """
         `ft_path` is the path to the FastText executable, e.g. `/home/kofola/fastText/fasttext`.
 
@@ -217,7 +217,7 @@ class FastText(Word2Vec):
             cmd.append("-%s" % option)
             cmd.append(str(value))
 
-        output = utils.check_output(args=cmd)  # noqa:F841
+        utils.check_output(args=cmd)
         model = cls.load_fasttext_format(output_file)
         cls.delete_training_files(output_file)
         return model
@@ -270,17 +270,17 @@ class FastText(Word2Vec):
         magic, version = self.struct_unpack(file_handle, '@2i')
         if magic == FASTTEXT_FILEFORMAT_MAGIC:  # newer format
             self.new_format = True
-            dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
+            dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
         else:  # older format
             self.new_format = False
             dim = magic
             ws = version
-            epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
+            epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
         # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
         self.vector_size = dim
         self.window = ws
         self.iter = epoch
-        self.min_count = minCount
+        self.min_count = min_count
         self.negative = neg
         self.hs = loss == 1
         self.sg = model == 2

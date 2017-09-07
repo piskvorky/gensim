@@ -259,7 +259,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         topic = self.word_topics[topicid]
         topic = topic / topic.sum()  # normalize to probability dist
         bestn = matutils.argsort(topic, topn, reverse=True)
-        beststr = [(self.id2word[id], topic[id]) for id in bestn]
+        beststr = [(self.id2word[idx], topic[idx]) for idx in bestn]
         return beststr
 
     def get_version(self, direc_path):
