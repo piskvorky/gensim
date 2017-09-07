@@ -225,6 +225,92 @@ class TestPhrasesModel(unittest.TestCase):
         """Test that max_vocab_size parameter is respected."""
         bigram = Phrases(sentences, max_vocab_size=5)
         self.assertTrue(len(bigram.vocab) <= 5)
+
+    def testSaveLoadCustomScorer(self):
+        """ saving and loading a Phrases object with a custom scorer """
+
+        try:
+            bigram = Phrases(sentences, min_count=1, threshold=.001, scoring=dumb_scorer)
+            bigram.save("test_phrases_testSaveLoadCustomScorer_temp_save.pkl")
+            bigram_loaded = Phrases.load("test_phrases_testSaveLoadCustomScorer_temp_save.pkl")
+            seen_scores = []
+            test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
+            for phrase, score in bigram_loaded.export_phrases(test_sentences):
+                seen_scores.append(score)
+
+            assert all(seen_scores)  # all scores 1
+            assert len(seen_scores) == 3  # 'graph minors' and 'survey human' and 'interface system'
+
+        finally:
+            if os.path.exists("test_phrases_testSaveLoadCustomScorer_temp_save.pkl"):
+                os.remove("test_phrases_testSaveLoadCustomScorer_temp_save.pkl")
+
+    def testSaveLoad(self):
+        """ Saving and loading a Phrases object."""
+
+        try:
+            bigram = Phrases(sentences, min_count=1, threshold=1)
+            bigram.save("test_phrases_testSaveLoad_temp_save.pkl")
+            bigram_loaded = Phrases.load("test_phrases_testSaveLoad_temp_save.pkl")
+            seen_scores = set()
+            test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
+            for phrase, score in bigram_loaded.export_phrases(test_sentences):
+                seen_scores.add(round(score, 3))
+
+            assert seen_scores == set([
+                5.167,  # score for graph minors
+                3.444  # score for human interface
+            ])
+
+        finally:
+            if os.path.exists("test_phrases_testSaveLoad_temp_save.pkl"):
+                os.remove("test_phrases_testSaveLoad_temp_save.pkl")
+
+    def testSaveLoadStringScoring(self):
+        """ Saving and loading a Phrases object with a string scoring parameter.
+        This should ensure backwards compatibility with the previous version of Phrases"""
+
+        try:
+            bigram = Phrases(sentences, min_count=1, threshold=1)
+            bigram.scoring = "default"
+            bigram.save("test_phrases_testSaveLoadStringScoring_temp_save.pkl")
+            bigram_loaded = Phrases.load("test_phrases_testSaveLoadStringScoring_temp_save.pkl")
+            seen_scores = set()
+            test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
+            for phrase, score in bigram_loaded.export_phrases(test_sentences):
+                seen_scores.add(round(score, 3))
+
+            assert seen_scores == set([
+                5.167,  # score for graph minors
+                3.444  # score for human interface
+            ])
+
+        finally:
+            if os.path.exists("test_phrases_testSaveLoadStringScoring_temp_save.pkl"):
+                os.remove("test_phrases_testSaveLoadStringScoring_temp_save.pkl")
+
+    def testSaveLoadNoScoring(self):
+        """ Saving and loading a Phrases object with no scoring parameter.
+        This should ensure backwards compatibility with old versions of Phrases"""
+
+        try:
+            bigram = Phrases(sentences, min_count=1, threshold=1)
+            del(bigram.scoring)
+            bigram.save("test_phrases_testSaveLoadNoScoring_temp_save.pkl")
+            bigram_loaded = Phrases.load("test_phrases_testSaveLoadNoScoring_temp_save.pkl")
+            seen_scores = set()
+            test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
+            for phrase, score in bigram_loaded.export_phrases(test_sentences):
+                seen_scores.add(round(score, 3))
+
+            assert seen_scores == set([
+                5.167,  # score for graph minors
+                3.444  # score for human interface
+            ])
+
+        finally:
+            if os.path.exists("test_phrases_testSaveLoadNoScoring_temp_save.pkl"):
+                os.remove("test_phrases_testSaveLoadNoScoring_temp_save.pkl")
 # endclass TestPhrasesModel
 
 

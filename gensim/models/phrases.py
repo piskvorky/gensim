@@ -74,7 +74,6 @@ from gensim import utils, interfaces
 
 logger = logging.getLogger(__name__)
 
-
 def _is_single(obj):
     """
     Check whether `obj` is a single document or an entire corpus.
@@ -177,6 +176,13 @@ class Phrases(interfaces.TransformationABC):
         # set scoring based on string
         # intentially override the value of the scoring parameter rather than set self.scoring here,
         # to still run the check of scoring function parameters in the next code block
+
+        # for python 2 and 3 compatibility. basestring is used to check if scoring is a string
+        try:
+            basestring
+        except NameError:
+            basestring = str
+
         if isinstance(scoring, basestring):
             if scoring == 'default':
                 scoring = original_scorer
@@ -395,11 +401,46 @@ class Phrases(interfaces.TransformationABC):
 
         return [utils.to_unicode(w) for w in new_s]
 
-    # these two built-in scoring methods don't cast everything to float because the casting is done in the call
-    # to the scoring method in __getitem__ and export_phrases.
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """
+        Load a previously saved Phrases class. Handles backwards compatibility from older Phrases versions which did not support
+            pluggable scoring functions. Otherwise, relies on utils.load
+        """
+
+        # for python 2 and 3 compatibility. basestring is used to check if model.scoring is a string
+        try:
+            basestring
+        except NameError:
+            basestring = str
+
+        model = super(Phrases, cls).load(*args, **kwargs)
+        # update older models
+        # if no scoring parameter, use default scoring
+        if not hasattr(model, 'scoring'):
+            logger.info('older version of Phrases loaded without scoring function')
+            logger.info('setting pluggable scoring method to original_scorer for compatibility')
+            model.scoring = original_scorer
+        # if there is a scoring parameter, and it's a text value, load the proper scoring function
+        if hasattr(model, 'scoring'):
+            if isinstance(model.scoring, basestring):
+                if model.scoring == 'default':
+                    logger.info('older version of Phrases loaded with "default" scoring parameter')
+                    logger.info('setting scoring method to original_scorer pluggable scoring method for compatibility')
+                    model.scoring = original_scorer
+                elif model.scoring == 'npmi':
+                    logger.info('older version of Phrases loaded with "npmi" scoring parameter')
+                    logger.info('setting scoring method to npmi_scorer pluggable scoring method for compatibility')
+                    model.scoring = npmi_scorer
+                else:
+                    raise ValueError('failed to load Phrases model with unknown scoring setting %s' % (model.scoring))
+        return model
 
 
-    # calculation of score based on original mikolov word2vec paper
+# these two built-in scoring methods don't cast everything to float because the casting is done in the call
+# to the scoring method in __getitem__ and export_phrases.
+
+# calculation of score based on original mikolov word2vec paper
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
     return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
 
