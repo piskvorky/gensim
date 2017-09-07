@@ -12,7 +12,7 @@ Corpus in the Matrix Market format.
 
 import logging
 
-from gensim import interfaces, matutils
+from gensim import matutils
 from gensim.corpora import IndexedCorpus
 
 
@@ -23,6 +23,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
     """
     Corpus in the Matrix Market format.
     """
+
     def __init__(self, fname):
         # avoid calling super(), too confusing
         IndexedCorpus.__init__(self, fname)

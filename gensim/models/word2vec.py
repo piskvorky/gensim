@@ -115,17 +115,15 @@ except ImportError:
     from Queue import Queue, Empty
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
-    double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, vstack, logaddexp
+    uint32, seterr, array, uint8, vstack, fromstring, sqrt,\
+    empty, sum as np_sum, ones, logaddexp
 
 from scipy.special import expit
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
-from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -215,7 +213,7 @@ except ImportError:
 
             # now go over all words from the window, predicting each one in turn
             start = max(0, pos - model.window)
-            for pos2, word2 in enumerate(word_vocabs[start : pos + model.window + 1], start):
+            for pos2, word2 in enumerate(word_vocabs[start: pos + model.window + 1], start):
                 # don't train on OOV words and on the `word` itself
                 if word2 is not None and pos2 != pos:
                     log_prob_sentence += score_sg_pair(model, word, word2)
@@ -413,7 +411,6 @@ def score_cbow_pair(model, word, l1):
     return sum(lprob)
 
 
-
 class Word2Vec(utils.SaveLoad):
     """
     Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
@@ -544,10 +541,10 @@ class Word2Vec(utils.SaveLoad):
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences, total_examples=self.corpus_count, epochs=self.iter,
                        start_alpha=self.alpha, end_alpha=self.min_alpha)
-        else :
-            if trim_rule is not None :
+        else:
+            if trim_rule is not None:
                 logger.warning("The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model. ")
-                logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored." )
+                logger.warning("Model initialized without sentences. trim_rule provided, if any, will be ignored.")
 
     def initialize_word_vectors(self):
         self.wv = KeyedVectors()
@@ -1181,12 +1178,12 @@ class Word2Vec(utils.SaveLoad):
         # randomize the remaining words
         for i in xrange(len(self.wv.syn0), len(self.wv.vocab)):
             # construct deterministic seed from word AND seed argument
-            newsyn0[i-len(self.wv.syn0)] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
+            newsyn0[i - len(self.wv.syn0)] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
 
         # Raise an error if an online update is run before initial training on a corpus
         if not len(self.wv.syn0):
-            raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. " \
-                "First build the vocabulary of your model with a corpus " \
+            raise RuntimeError("You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
+                "First build the vocabulary of your model with a corpus "
                 "before doing an online update.")
 
         self.wv.syn0 = vstack([self.wv.syn0, newsyn0])
@@ -1272,7 +1269,7 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
         logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.wv.syn0.shape, fname))
 
-    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
+    def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
         """
         Deprecated. Use self.wv.most_similar() instead.
         Refer to the documentation for `gensim.models.KeyedVectors.most_similar`
@@ -1286,7 +1283,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return self.wv.wmdistance(document1, document2)
 
-    def most_similar_cosmul(self, positive=[], negative=[], topn=10):
+    def most_similar_cosmul(self, positive=None, negative=None, topn=10):
         """
         Deprecated. Use self.wv.most_similar_cosmul() instead.
         Refer to the documentation for `gensim.models.KeyedVectors.most_similar_cosmul`
@@ -1363,10 +1360,10 @@ class Word2Vec(utils.SaveLoad):
         if word2_indices and self.cbow_mean:
             l1 /= len(word2_indices)
 
-        prob_values = exp(dot(l1, self.syn1neg.T))     # propagate hidden -> output and take softmax to get probabilities
+        prob_values = exp(dot(l1, self.syn1neg.T))  # propagate hidden -> output and take softmax to get probabilities
         prob_values /= sum(prob_values)
         top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
-        return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]   #returning the most probable output words with their probabilities
+        return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]  # returning the most probable output words with their probabilities
 
     def init_sims(self, replace=False):
         """
@@ -1418,7 +1415,7 @@ class Word2Vec(utils.SaveLoad):
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha)
 
-    def _minimize_model(self, save_syn1 = False, save_syn1neg = False, save_syn0_lockf = False):
+    def _minimize_model(self, save_syn1=False, save_syn1neg=False, save_syn0_lockf=False):
         warnings.warn("This method would be deprecated in the future. Keep just_word_vectors = model.wv to retain just the KeyedVectors instance for read-only querying of word vectors.")
         if save_syn1 and save_syn1neg and save_syn0_lockf:
             return
@@ -1500,6 +1497,7 @@ class Word2Vec(utils.SaveLoad):
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
+
     def __init__(self, dirname):
         self.dirname = dirname
 
@@ -1522,6 +1520,7 @@ class BrownCorpus(object):
 
 class Text8Corpus(object):
     """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
+
     def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
         self.fname = fname
         self.max_sentence_length = max_sentence_length
@@ -1582,7 +1581,7 @@ class LineSentence(object):
                 line = utils.to_unicode(line).split()
                 i = 0
                 while i < len(line):
-                    yield line[i : i + self.max_sentence_length]
+                    yield line[i: i + self.max_sentence_length]
                     i += self.max_sentence_length
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
@@ -1591,7 +1590,7 @@ class LineSentence(object):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
-                        yield line[i:i + self.max_sentence_length]
+                        yield line[i: i + self.max_sentence_length]
                         i += self.max_sentence_length
 
 
@@ -1660,7 +1659,7 @@ if __name__ == "__main__":
         print(globals()['__doc__'] % locals())
         sys.exit(1)
 
-    from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pickle
+    from gensim.models.word2vec import Word2Vec  # noqa:F811 avoid referencing __main__ in pickle
 
     seterr(all='raise')  # don't ignore numpy errors
 

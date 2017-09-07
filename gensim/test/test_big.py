@@ -12,7 +12,6 @@ Automated tests for checking processing/storing large inputs.
 import logging
 import unittest
 import os
-import itertools
 import tempfile
 
 import numpy as np
@@ -27,6 +26,7 @@ def testfile():
 
 class BigCorpus(object):
     """A corpus of a large number of docs & large vocab"""
+
     def __init__(self, words_only=False, num_terms=200000, num_docs=1000000, doc_len=100):
         self.dictionary = gensim.utils.FakeDict(num_terms)
         self.words_only = words_only
@@ -47,6 +47,7 @@ class BigCorpus(object):
 if os.environ.get('GENSIM_BIG', False):
     class TestLargeData(unittest.TestCase):
         """Try common operations, using large models. You'll need ~8GB RAM to run these tests"""
+
         def testWord2Vec(self):
             corpus = BigCorpus(words_only=True, num_docs=100000, num_terms=3000000, doc_len=200)
             model = gensim.models.Word2Vec(corpus, size=300, workers=4)

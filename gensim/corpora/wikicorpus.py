@@ -187,6 +187,8 @@ def get_namespace(tag):
         raise ValueError("%s not recognized as MediaWiki dump namespace"
                          % namespace)
     return namespace
+
+
 _get_namespace = get_namespace
 
 
@@ -233,6 +235,8 @@ def extract_pages(f, filter_namespaces=False):
             # ./revision/text element. The pages comprise the bulk of the
             # file, so in practice we prune away enough.
             elem.clear()
+
+
 _extract_pages = extract_pages  # for backward compatibility
 
 
@@ -266,6 +270,7 @@ class WikiCorpus(TextCorpus):
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
+
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
                  filter_namespaces=('0',)):
         """

@@ -53,6 +53,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
     takes place by passing around data files on disk and calling Java with subprocess.call().
 
     """
+
     def __init__(self, mallet_path, corpus=None, num_topics=100, alpha=50, id2word=None, workers=4, prefix=None,
                  optimize_interval=0, iterations=1000, topic_threshold=0.0):
         """
@@ -84,7 +85,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         if self.num_terms == 0:
             raise ValueError("cannot compute LDA over an empty collection (no terms)")
         self.num_topics = num_topics
-        self.topic_threshold=topic_threshold
+        self.topic_threshold = topic_threshold
         self.alpha = alpha
         if prefix is None:
             rand_prefix = hex(random.randint(0, 0xffffff))[2:] + '_'
@@ -183,7 +184,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     def load_word_topics(self):
         logger.info("loading assigned topics from %s", self.fstate())
-        word_topics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
+        word_topics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float64)
         if hasattr(self.id2word, 'token2id'):
             word2id = self.id2word.token2id
         else:
@@ -193,7 +194,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             _ = next(fin)  # header
             self.alpha = numpy.array([float(val) for val in next(fin).split()[2:]])
             assert len(self.alpha) == self.num_topics, "mismatch between MALLET vs. requested topics"
-            _ = next(fin)  # beta
+            _ = next(fin)  # noqa:F841 beta
             for lineno, line in enumerate(fin):
                 line = utils.to_unicode(line)
                 doc, source, pos, typeindex, token, topic = line.split(" ")
@@ -233,9 +234,9 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             chosen_topics = range(num_topics)
         else:
             num_topics = min(num_topics, self.num_topics)
-            sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha)) # add a little random jitter, to randomize results around the same alpha
+            sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha))  # add a little random jitter, to randomize results around the same alpha
             sorted_topics = list(matutils.argsort(sort_alpha))
-            chosen_topics = sorted_topics[:num_topics//2] + sorted_topics[-num_topics//2 : ]
+            chosen_topics = sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
         shown = []
         for i in chosen_topics:
             if formatted:
@@ -287,8 +288,6 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
                 return doc.find(namespace + 'version').text.split("-")[0]
             except Exception:
                 return "Can't parse pom.xml version file"
-
-
 
     def read_doctopics(self, fname, eps=1e-6, renorm=True):
         """

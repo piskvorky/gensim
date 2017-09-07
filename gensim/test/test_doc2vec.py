@@ -22,7 +22,7 @@ from testfixtures import log_capture
 
 import numpy as np
 
-from gensim import utils, matutils
+from gensim import utils
 from gensim.models import doc2vec, keyedvectors
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
@@ -40,6 +40,7 @@ class DocsLeeCorpus(object):
         with open(datapath('lee_background.cor')) as f:
             for i, line in enumerate(f):
                 yield doc2vec.TaggedDocument(utils.simple_preprocess(line), [self._tag(i)])
+
 
 list_corpus = list(DocsLeeCorpus())
 
@@ -62,12 +63,14 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.tst')
 
+
 def load_on_instance():
     # Save and load a Doc2Vec Model on instance for test
     model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
     model.save(testfile())
-    model = doc2vec.Doc2Vec() # should fail at this point
+    model = doc2vec.Doc2Vec()  # should fail at this point
     return model.load(testfile())
+
 
 class TestDoc2VecModel(unittest.TestCase):
     def test_persistence(self):
@@ -378,7 +381,7 @@ class TestDoc2VecModel(unittest.TestCase):
     def testLoadOnClassError(self):
         """Test if exception is raised when loading doc2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
-#endclass TestDoc2VecModel
+# endclass TestDoc2VecModel
 
 
 if not hasattr(TestDoc2VecModel, 'assertLess'):
@@ -397,6 +400,7 @@ class ConcatenatedDoc2Vec(object):
     Models must have exactly-matching vocabulary and document IDs. (Models should
     be trained separately; this wrapper just returns concatenated results.)
     """
+
     def __init__(self, models):
         self.models = models
         if hasattr(models[0], 'docvecs'):

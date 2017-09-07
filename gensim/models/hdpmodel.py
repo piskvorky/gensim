@@ -50,6 +50,7 @@ logger = logging.getLogger(__name__)
 meanchangethresh = 0.00001
 rhot_bound = 0.0
 
+
 def expect_log_sticks(sticks):
     """
     For stick-breaking hdp, return the E[log(sticks)]
@@ -121,6 +122,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     Model persistency is achieved through its `load`/`save` methods.
 
     """
+
     def __init__(self, corpus, id2word, max_chunks=None, max_time=None,
                  chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
                  gamma=1, eta=0.01, scale=1.0, var_converge=0.0001,
@@ -302,7 +304,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         chunkids = [unique_words[id] for id in doc_word_ids]
 
         Elogbeta_doc = self.m_Elogbeta[:, doc_word_ids]
-        ## very similar to the hdp equations
+        # very similar to the hdp equations
         v = np.zeros((2, self.m_K - 1))
         v[0] = 1.0
         v[1] = self.m_alpha
@@ -313,21 +315,20 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         likelihood = 0.0
         old_likelihood = -1e200
         converge = 1.0
-        eps = 1e-100
 
         iter = 0
         max_iter = 100
         # not yet support second level optimization yet, to be done in the future
         while iter < max_iter and (converge < 0.0 or converge > var_converge):
-            ### update variational parameters
+            # update variational parameters
 
             # var_phi
             if iter < 3:
-                var_phi = np.dot(phi.T,  (Elogbeta_doc * doc_word_counts).T)
+                var_phi = np.dot(phi.T, (Elogbeta_doc * doc_word_counts).T)
                 (log_var_phi, log_norm) = matutils.ret_log_normalize_vec(var_phi)
                 var_phi = np.exp(log_var_phi)
             else:
-                var_phi = np.dot(phi.T,  (Elogbeta_doc * doc_word_counts).T) + Elogsticks_1st
+                var_phi = np.dot(phi.T, (Elogbeta_doc * doc_word_counts).T) + Elogsticks_1st
                 (log_var_phi, log_norm) = matutils.ret_log_normalize_vec(var_phi)
                 var_phi = np.exp(log_var_phi)
 
@@ -337,7 +338,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 (log_phi, log_norm) = matutils.ret_log_normalize_vec(phi)
                 phi = np.exp(log_phi)
             else:
-                phi = np.dot(var_phi, Elogbeta_doc).T + Elogsticks_2nd
+                phi = np.dot(var_phi, Elogbeta_doc).T + Elogsticks_2nd  # noqa:F821
                 (log_phi, log_norm) = matutils.ret_log_normalize_vec(phi)
                 phi = np.exp(log_phi)
 
@@ -406,7 +407,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if opt_o:
             self.optimal_ordering()
 
-        ## update top level sticks
+        # update top level sticks
         self.m_var_sticks[0] = self.m_varphi_ss[:self.m_T - 1] + 1.0
         var_phi_sum = np.flipud(self.m_varphi_ss[1:])
         self.m_var_sticks[1] = np.flipud(np.cumsum(var_phi_sum)) + self.m_gamma
@@ -529,7 +530,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         alpha = alpha * self.m_alpha
 
         # beta
-        beta = (self.m_lambda + self.m_eta) / (self.m_W * self.m_eta + \
+        beta = (self.m_lambda + self.m_eta) / (self.m_W * self.m_eta +
                 self.m_lambda_sum[:, np.newaxis])
 
         return (alpha, beta)
@@ -564,7 +565,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 total_words += sum(doc_word_counts)
         logger.info('TEST: average score: %.5f, total score: %.5f,  test docs: %d' % (score / total_words, score, len(corpus)))
         return score
-#endclass HdpModel
+# endclass HdpModel
 
 
 class HdpTopicFormatter(object):
@@ -624,14 +625,14 @@ class HdpTopicFormatter(object):
 
         return shown
 
-    def print_topic(self, topic_id, topn= None, num_words=None):
+    def print_topic(self, topic_id, topn=None, num_words=None):
         if num_words is not None:  # deprecated num_words is used
             warnings.warn("The parameter num_words for print_topic() would be deprecated in the updated version. Please use topn instead.")
             topn = num_words
 
         return self.show_topic(topic_id, topn, formatted=True)
 
-    def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words= None,):
+    def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words=None,):
         if num_words is not None:  # deprecated num_words is used
             warnings.warn("The parameter num_words for show_topic() would be deprecated in the updated version. Please use topn instead.")
             topn = num_words
@@ -655,7 +656,6 @@ class HdpTopicFormatter(object):
 
         # we only return the topic_terms
         return topic[1]
-
 
     def show_topic_terms(self, topic_data, num_words):
         return [(self.dictionary[wid], weight) for (weight, wid) in topic_data[:num_words]]

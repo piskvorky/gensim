@@ -15,17 +15,13 @@ import os
 import os.path
 import tempfile
 
-import six
-import scipy.linalg
-
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import hdpmodel
-from gensim import matutils
 from gensim.test import basetests
 
 import numpy as np
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -63,8 +59,8 @@ class TestHdpModel(unittest.TestCase, basetests.TestBaseTopicModel):
         prob, word = results[1].split('+')[0].split('*')
         self.assertEqual(results[0], 0)
         self.assertEqual(prob, expected_prob)
-        self.assertEqual(word, expected_word)        
- 
+        self.assertEqual(word, expected_word)
+
         return
 
     def testLDAmodel(self):

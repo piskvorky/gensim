@@ -17,7 +17,9 @@ Example: python -m gensim.models.lsi_worker
 
 
 from __future__ import with_statement
-import os, sys, logging
+import os
+import sys
+import logging
 import threading
 import tempfile
 try:
@@ -31,8 +33,7 @@ from gensim import utils
 logger = logging.getLogger('gensim.models.lsi_worker')
 
 
-SAVE_DEBUG = 0 # save intermediate models after every SAVE_DEBUG updates (0 for never)
-
+SAVE_DEBUG = 0  # save intermediate models after every SAVE_DEBUG updates (0 for never)
 
 
 class Worker(object):
@@ -42,8 +43,8 @@ class Worker(object):
     @Pyro4.expose
     def initialize(self, myid, dispatcher, **model_params):
         self.lock_update = threading.Lock()
-        self.jobsdone = 0 # how many jobs has this worker completed?
-        self.myid = myid # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
+        self.jobsdone = 0  # how many jobs has this worker completed?
+        self.myid = myid  # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
         self.dispatcher = dispatcher
         self.finished = False
         logger.info("initializing worker #%s" % myid)
@@ -72,7 +73,6 @@ class Worker(object):
         else:
             logger.info("worker #%i stopping asking for jobs" % self.myid)
 
-
     @utils.synchronous('lock_update')
     def processjob(self, job):
         self.model.add_documents(job)
@@ -97,17 +97,15 @@ class Worker(object):
         self.model.projection = self.model.projection.empty_like()
         self.finished = False
 
-
     @Pyro4.oneway
     def exit(self):
         logger.info("terminating worker #%i" % self.myid)
         os._exit(0)
-#endclass Worker
-
+# endclass Worker
 
 
 def main():
-    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logger.info("running %s" % " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
@@ -119,7 +117,6 @@ def main():
     utils.pyro_daemon('gensim.lsi_worker', Worker(), random_suffix=True)
 
     logger.info("finished running %s" % program)
-
 
 
 if __name__ == '__main__':

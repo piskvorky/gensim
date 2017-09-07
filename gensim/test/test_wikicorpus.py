@@ -10,8 +10,6 @@ Automated tests for checking the WikiCorpus
 
 
 import os
-import sys
-import types
 import logging
 import unittest
 
@@ -49,9 +47,9 @@ class TestWikiCorpus(unittest.TestCase):
         """
         wc = WikiCorpus(datapath(FILENAME), processes=1)
 
-        l = wc.get_texts()
-        self.assertTrue(u'anarchism' in next(l))
-        self.assertTrue(u'autism' in next(l))
+        texts = wc.get_texts()
+        self.assertTrue(u'anarchism' in next(texts))
+        self.assertTrue(u'autism' in next(texts))
 
     def test_unicode_element(self):
         """
@@ -60,8 +58,8 @@ class TestWikiCorpus(unittest.TestCase):
         """
         wc = WikiCorpus(datapath(FILENAME_U), processes=1)
 
-        l = wc.get_texts()
-        self.assertTrue(u'папа' in next(l))
+        texts = wc.get_texts()
+        self.assertTrue(u'папа' in next(texts))
 
 
 if __name__ == '__main__':

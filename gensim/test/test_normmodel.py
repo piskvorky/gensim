@@ -22,7 +22,7 @@ from scipy.sparse import issparse
 from gensim.corpora import mmcorpus
 from gensim.models import normmodel
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -136,7 +136,7 @@ class TestNormModel(unittest.TestCase):
         model2 = normmodel.NormModel.load(fname)
         self.assertTrue(model.norms == model2.norms)
         tstvec = []
-        self.assertTrue(np.allclose(model.normalize(tstvec), model2.normalize(tstvec))) # try projecting an empty vector
+        self.assertTrue(np.allclose(model.normalize(tstvec), model2.normalize(tstvec)))  # try projecting an empty vector
 
     def testPersistenceCompressed(self):
         fname = testfile() + '.gz'
@@ -145,7 +145,7 @@ class TestNormModel(unittest.TestCase):
         model2 = normmodel.NormModel.load(fname, mmap=None)
         self.assertTrue(model.norms == model2.norms)
         tstvec = []
-        self.assertTrue(np.allclose(model.normalize(tstvec), model2.normalize(tstvec))) # try projecting an empty vector
+        self.assertTrue(np.allclose(model.normalize(tstvec), model2.normalize(tstvec)))  # try projecting an empty vector
 
 
 if __name__ == '__main__':

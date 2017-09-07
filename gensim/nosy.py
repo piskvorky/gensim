@@ -24,7 +24,7 @@ import fnmatch
 
 EXTENSIONS = ['*.py']
 EXECUTABLE = 'nosetests test/'
-DEFAULTARGS = '--with-color -exe'# -w tests'
+DEFAULTARGS = '--with-color -exe'  # -w tests'
 
 
 def checkSum():
@@ -38,6 +38,7 @@ def checkSum():
                 stats = os.stat(os.path.join(root, f))
                 val += stats[stat.ST_SIZE] + stats[stat.ST_MTIME]
     return val
+
 
 if __name__ == '__main__':
     val = 0

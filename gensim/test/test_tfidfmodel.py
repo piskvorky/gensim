@@ -15,15 +15,12 @@ import os
 import os.path
 import tempfile
 
-import six
 import numpy as np
-import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import tfidfmodel
-from gensim import matutils
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -46,7 +43,6 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-
 class TestTfidfModel(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
@@ -62,7 +58,6 @@ class TestTfidfModel(unittest.TestCase):
         expected = [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
         self.assertTrue(np.allclose(transformed, expected))
 
-
     def testInit(self):
         # create the transformation model by analyzing a corpus
         # uses the global `corpus`!
@@ -77,7 +72,6 @@ class TestTfidfModel(unittest.TestCase):
         model2 = tfidfmodel.TfidfModel(dictionary=dictionary)
         self.assertEqual(model1.idfs, model2.idfs)
 
-
     def testPersistence(self):
         fname = testfile()
         model = tfidfmodel.TfidfModel(self.corpus, normalize=True)
@@ -85,7 +79,7 @@ class TestTfidfModel(unittest.TestCase):
         model2 = tfidfmodel.TfidfModel.load(fname)
         self.assertTrue(model.idfs == model2.idfs)
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testPersistenceCompressed(self):
         fname = testfile() + '.gz'
@@ -94,9 +88,8 @@ class TestTfidfModel(unittest.TestCase):
         model2 = tfidfmodel.TfidfModel.load(fname, mmap=None)
         self.assertTrue(model.idfs == model2.idfs)
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
-#endclass TestTfidfModel
-
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
+# endclass TestTfidfModel
 
 
 if __name__ == '__main__':

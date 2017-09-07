@@ -15,10 +15,7 @@ import os
 import os.path
 import tempfile
 
-import six
 import numpy as np
-import scipy.linalg
-
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models.wrappers import ldamallet
@@ -26,7 +23,7 @@ from gensim import matutils
 from gensim.models import ldamodel
 from gensim.test import basetests
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
@@ -44,10 +41,10 @@ dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
 
-
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
+
 
 class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
     def setUp(self):
@@ -60,40 +57,38 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
         # self.model is used in TestBaseTopicModel
         self.model = ldamallet.LdaMallet(self.mallet_path, corpus, id2word=dictionary, num_topics=2, iterations=1)
 
-
     def testTransform(self):
         if not self.mallet_path:
             return
         passed = False
-        for i in range(5): # restart at most 5 times
+        for i in range(5):  # restart at most 5 times
             # create the transformation model
             model = ldamallet.LdaMallet(self.mallet_path, corpus, id2word=dictionary, num_topics=2, iterations=200)
             # transform one document
             doc = list(corpus)[0]
             transformed = model[doc]
-            vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
+            vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
             expected = [0.49, 0.51]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
             if passed:
                 break
             logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
                             (i, sorted(vec), sorted(expected)))
         self.assertTrue(passed)
 
-
     def testSparseTransform(self):
         if not self.mallet_path:
             return
         passed = False
-        for i in range(5): # restart at most 5 times
+        for i in range(5):  # restart at most 5 times
             # create the sparse transformation model with the appropriate topic_threshold
             model = ldamallet.LdaMallet(self.mallet_path, corpus, id2word=dictionary, num_topics=2, iterations=200, topic_threshold=0.5)
             # transform one document
             doc = list(corpus)[0]
             transformed = model[doc]
-            vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
+            vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
             expected = [1.0, 0.0]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-2) # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-2)  # must contain the same values, up to re-ordering
             if passed:
                 break
             logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
@@ -103,7 +98,7 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
     def testMallet2Model(self):
         if not self.mallet_path:
             return
-        passed = False
+
         tm1 = ldamallet.LdaMallet(self.mallet_path, corpus=corpus, num_topics=2, id2word=dictionary)
         tm2 = ldamallet.malletmodel2ldamodel(tm1)
         for document in corpus:
@@ -129,7 +124,7 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(np.allclose(model.word_topics, model2.word_topics))
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testPersistenceCompressed(self):
         if not self.mallet_path:
@@ -141,7 +136,7 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(np.allclose(model.word_topics, model2.word_topics))
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testLargeMmap(self):
         if not self.mallet_path:
@@ -150,15 +145,15 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
         model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
 
         # simulate storing large arrays separately
-        model.save(testfile(), sep_limit=0)
+        model.save(fname, sep_limit=0)
 
         # test loading the large model arrays with mmap
-        model2 = ldamodel.LdaModel.load(testfile(), mmap='r')
+        model2 = ldamodel.LdaModel.load(fname, mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(isinstance(model2.word_topics, np.memmap))
         self.assertTrue(np.allclose(model.word_topics, model2.word_topics))
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testLargeMmapCompressed(self):
         if not self.mallet_path:
@@ -171,9 +166,9 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
 
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, ldamodel.LdaModel.load, fname, mmap='r')
-#endclass TestLdaMallet
+# endclass TestLdaMallet
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
-    
