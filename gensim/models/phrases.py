@@ -389,11 +389,13 @@ class Phrases(interfaces.TransformationABC):
     # these two built-in scoring methods don't cast everything to float because the casting is done in the call
     # to the scoring method in __getitem__ and export_phrases.
 
+
     # calculation of score based on original mikolov word2vec paper
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
         return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
 
-    # normalized PMI, requires corpus size
+
+# normalized PMI, requires corpus size
 def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
         pa = worda_count / corpus_word_count
         pb = wordb_count / corpus_word_count
