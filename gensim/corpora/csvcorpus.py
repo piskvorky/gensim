@@ -63,5 +63,3 @@ class CsvCorpus(interfaces.CorpusABC):
             yield list(enumerate(float(x) for x in line))
 
         self.length = line_no + 1  # store the total number of CSV rows = documents
-
-# endclass CsvCorpus

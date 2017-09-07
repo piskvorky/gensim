@@ -127,5 +127,3 @@ class BleiCorpus(IndexedCorpus):
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
-
-# endclass BleiCorpus

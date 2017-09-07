@@ -129,5 +129,3 @@ class SvmLightCorpus(IndexedCorpus):
         """
         pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc)  # +1 to convert 0-base to 1-base
         return "%s %s\n" % (label, pairs)
-
-# endclass SvmLightCorpus

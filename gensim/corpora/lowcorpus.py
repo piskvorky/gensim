@@ -182,5 +182,3 @@ class LowCorpus(IndexedCorpus):
     def id2word(self, val):
         self._id2word = val
         self.word2id = dict((v, k) for k, v in iteritems(val))
-
-# endclass LowCorpus

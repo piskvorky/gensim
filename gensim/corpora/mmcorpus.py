@@ -48,5 +48,3 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         logger.info("storing corpus in Matrix Market format to %s", fname)
         num_terms = len(id2word) if id2word is not None else None
         return matutils.MmWriter.write_corpus(fname, corpus, num_terms=num_terms, index=True, progress_cnt=progress_cnt, metadata=metadata)
-
-# endclass MmCorpus

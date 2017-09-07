@@ -333,4 +333,3 @@ class WikiCorpus(TextCorpus):
             self.length = articles  # cache corpus length
         finally:
             pool.terminate()
-# endclass WikiCorpus

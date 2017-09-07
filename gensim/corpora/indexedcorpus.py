@@ -127,6 +127,3 @@ class IndexedCorpus(interfaces.CorpusABC):
             return self.docbyoffset(self.index[docno])
         else:
             raise ValueError('Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')
-
-
-# endclass IndexedCorpus

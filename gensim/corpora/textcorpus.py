@@ -304,7 +304,6 @@ class TextCorpus(interfaces.CorpusABC):
             # cache the corpus length
             self.length = sum(1 for _ in self.getstream())
         return self.length
-# endclass TextCorpus
 
 
 class TextDirectoryCorpus(TextCorpus):
@@ -429,7 +428,6 @@ class TextDirectoryCorpus(TextCorpus):
             self.length = sum(1 for _ in self.iter_filepaths())
         else:
             self.length = sum(1 for _ in self.getstream())
-# endclass TextDirectoryCorpus
 
 
 def walk(top, topdown=True, onerror=None, followlinks=False, depth=0):
