@@ -206,7 +206,7 @@ class TestPhrasesModel(unittest.TestCase):
             seen_scores.append(score)
 
         assert all(seen_scores)  # all scores 1
-        assert len(seen_scores) == 3  #'graph minors' and 'survey human' and 'interface system'
+        assert len(seen_scores) == 3  # 'graph minors' and 'survey human' and 'interface system'
 
     def testBadParameters(self):
         """Test the phrases module with bad parameters."""

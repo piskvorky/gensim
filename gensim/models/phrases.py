@@ -177,9 +177,9 @@ class Phrases(interfaces.TransformationABC):
         # to still run the check of scoring function parameters in the next code block
         if type(scoring) is str:
             if scoring == 'default':
-                scoring = self.original_scorer
+                scoring = original_scorer
             elif scoring == 'npmi':
-                scoring = self.npmi_scorer
+                scoring = npmi_scorer
             else:
                 raise ValueError('unknown scoring method string %s specified' % (scoring))
 
@@ -390,13 +390,11 @@ class Phrases(interfaces.TransformationABC):
     # to the scoring method in __getitem__ and export_phrases.
 
     # calculation of score based on original mikolov word2vec paper
-    @staticmethod
-    def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
+def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
         return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
 
     # normalized PMI, requires corpus size
-    @staticmethod
-    def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
+def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
         pa = worda_count / corpus_word_count
         pb = wordb_count / corpus_word_count
         pab = bigram_count / corpus_word_count
