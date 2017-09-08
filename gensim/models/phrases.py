@@ -108,7 +108,7 @@ class Phrases(interfaces.TransformationABC):
 
     """
 
-    def __init__(self, sentences=None, min_count=5, threshold=10.0,  max_vocab_size=40000000,
+    def __init__(self, sentences=None, min_count=5, threshold=10.0, max_vocab_size=40000000,
                  delimiter=b'_', progress_per=10000, scoring='default'):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be

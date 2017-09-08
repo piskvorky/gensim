@@ -21,7 +21,6 @@ from gensim.corpora import Dictionary
 from gensim.corpora import IndexedCorpus
 from gensim.matutils import MmReader
 from gensim.matutils import MmWriter
-from six import iteritems
 from six.moves import xrange
 
 
