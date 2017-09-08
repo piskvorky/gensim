@@ -113,7 +113,10 @@ class LdaSeqModel(utils.SaveLoad):
         # the sslm class is described below and contains information on topic-word probabilities and doc-topic probabilities.
         self.topic_chains = []
         for topic in range(0, num_topics):
-            sslm_ = sslm(num_time_slices=self.num_time_slices, vocab_len=self.vocab_len, num_topics=self.num_topics, chain_variance=chain_variance, obs_variance=obs_variance)
+            sslm_ = sslm(
+                num_time_slices=self.num_time_slices, vocab_len=self.vocab_len, num_topics=self.num_topics,
+                chain_variance=chain_variance, obs_variance=obs_variance
+            )
             self.topic_chains.append(sslm_)
 
         # the following are class variables which are to be integrated during Document Influence Model
@@ -125,7 +128,10 @@ class LdaSeqModel(utils.SaveLoad):
         # if a corpus and time_slice is provided, depending on the user choice of initializing LDA, we start DTM.
         if corpus is not None and time_slice is not None:
             if initialize == 'gensim':
-                lda_model = ldamodel.LdaModel(corpus, id2word=self.id2word, num_topics=self.num_topics, passes=passes, alpha=self.alphas, random_state=random_state)
+                lda_model = ldamodel.LdaModel(
+                    corpus, id2word=self.id2word, num_topics=self.num_topics,
+                    passes=passes, alpha=self.alphas, random_state=random_state
+                )
                 self.sstats = np.transpose(lda_model.state.sstats)
             if initialize == 'ldamodel':
                 self.sstats = np.transpose(lda_model.state.sstats)
@@ -227,7 +233,8 @@ class LdaSeqModel(utils.SaveLoad):
 
         return bound
 
-    def lda_seq_infer(self, corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter, chunksize):
+    def lda_seq_infer(self, corpus, topic_suffstats, gammas, lhoods,
+                      iter_, lda_inference_max_iter, chunksize):
         """
         Inference or E- Step.
         This is used to set up the gensim LdaModel to be used for each time-slice.
@@ -243,14 +250,21 @@ class LdaSeqModel(utils.SaveLoad):
 
         model = "DTM"
         if model == "DTM":
-            bound, gammas = self.inferDTMseq(corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter, chunksize)
+            bound, gammas = self.inferDTMseq(
+                corpus, topic_suffstats, gammas, lhoods, lda,
+                ldapost, iter_, bound, lda_inference_max_iter, chunksize
+            )
         elif model == "DIM":
             self.InfluenceTotalFixed(corpus)
-            bound, gammas = self.inferDIMseq(corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter, chunksize)
+            bound, gammas = self.inferDIMseq(
+                corpus, topic_suffstats, gammas, lhoods, lda,
+                ldapost, iter_, bound, lda_inference_max_iter, chunksize
+            )
 
         return bound, gammas
 
-    def inferDTMseq(self, corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter, chunksize):
+    def inferDTMseq(self, corpus, topic_suffstats, gammas, lhoods, lda,
+                    ldapost, iter_, bound, lda_inference_max_iter, chunksize):
         """
         Computes the likelihood of a sequential corpus under an LDA seq model, and return the likelihood bound.
         Need to pass the LdaSeq model, corpus, sufficient stats, gammas and lhoods matrices previously created,
@@ -281,9 +295,13 @@ class LdaSeqModel(utils.SaveLoad):
 
                 # TODO: replace fit_lda_post with appropriate ldamodel functions, if possible.
                 if iter_ == 0:
-                    doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, None, lda_inference_max_iter=lda_inference_max_iter)
+                    doc_lhood = LdaPost.fit_lda_post(
+                        ldapost, doc_num, time, None, lda_inference_max_iter=lda_inference_max_iter
+                    )
                 else:
-                    doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, self, lda_inference_max_iter=lda_inference_max_iter)
+                    doc_lhood = LdaPost.fit_lda_post(
+                        ldapost, doc_num, time, self, lda_inference_max_iter=lda_inference_max_iter
+                    )
 
                 if topic_suffstats is not None:
                     topic_suffstats = LdaPost.update_lda_seq_ss(ldapost, time, doc, topic_suffstats)
@@ -720,7 +738,9 @@ class sslm(utils.SaveLoad):
 
                 if model == "DTM":
                     # slowest part of method
-                    obs = optimize.fmin_cg(f=f_obs, fprime=df_obs, x0=obs, gtol=TOL, args=args, epsilon=STEP_SIZE, disp=0)
+                    obs = optimize.fmin_cg(
+                        f=f_obs, fprime=df_obs, x0=obs, gtol=TOL, args=args, epsilon=STEP_SIZE, disp=0
+                    )
                 if model == "DIM":
                     pass
                 runs += 1

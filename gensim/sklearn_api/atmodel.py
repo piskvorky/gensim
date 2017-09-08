@@ -59,8 +59,9 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
             corpus=X, num_topics=self.num_topics, id2word=self.id2word,
             author2doc=self.author2doc, doc2author=self.doc2author, chunksize=self.chunksize, passes=self.passes,
             iterations=self.iterations, decay=self.decay, offset=self.offset, alpha=self.alpha, eta=self.eta,
-            update_every=self.update_every, eval_every=self.eval_every, gamma_threshold=self.gamma_threshold, serialized=self.serialized,
-            serialization_path=self.serialization_path, minimum_probability=self.minimum_probability, random_state=self.random_state
+            update_every=self.update_every, eval_every=self.eval_every, gamma_threshold=self.gamma_threshold,
+            serialized=self.serialized, serialization_path=self.serialization_path,
+            minimum_probability=self.minimum_probability, random_state=self.random_state
         )
         return self
 
@@ -71,7 +72,9 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
         """
         # The input as array of array
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         check = lambda x: [x] if not isinstance(x, list) else x
         author_names = check(author_names)
@@ -94,8 +97,9 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
                 corpus=X, num_topics=self.num_topics, id2word=self.id2word,
                 author2doc=self.author2doc, doc2author=self.doc2author, chunksize=self.chunksize, passes=self.passes,
                 iterations=self.iterations, decay=self.decay, offset=self.offset, alpha=self.alpha, eta=self.eta,
-                update_every=self.update_every, eval_every=self.eval_every, gamma_threshold=self.gamma_threshold, serialized=self.serialized,
-                serialization_path=self.serialization_path, minimum_probability=self.minimum_probability, random_state=self.random_state
+                update_every=self.update_every, eval_every=self.eval_every, gamma_threshold=self.gamma_threshold,
+                serialized=self.serialized, serialization_path=self.serialization_path,
+                minimum_probability=self.minimum_probability, random_state=self.random_state
             )
 
         self.gensim_model.update(corpus=X, author2doc=author2doc, doc2author=doc2author)

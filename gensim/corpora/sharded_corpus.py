@@ -252,14 +252,19 @@ class ShardedCorpus(IndexedCorpus):
         """Initialize shards from the corpus."""
 
         if not gensim.utils.is_corpus(corpus):
-            raise ValueError('Cannot initialize shards without a corpus to read from! (Got corpus type: {0})'.format(type(corpus)))
+            raise ValueError(
+                "Cannot initialize shards without a corpus to read from! (Got corpus type: {0})".format(type(corpus))
+            )
 
         proposed_dim = self._guess_n_features(corpus)
         if proposed_dim != self.dim:
             if self.dim is None:
                 logger.info('Deriving dataset dimension from corpus: %d', proposed_dim)
             else:
-                logger.warning('Dataset dimension derived from input corpus differs from initialization argument, using corpus. (corpus %d, init arg %d)', proposed_dim, self.dim)
+                logger.warning(
+                    "Dataset dimension derived from input corpus differs from initialization argument, "
+                    "using corpus. (corpus %d, init arg %d)", proposed_dim, self.dim
+                )
 
         self.dim = proposed_dim
         self.offsets = [0]
@@ -302,7 +307,11 @@ class ShardedCorpus(IndexedCorpus):
             if self.dim is None:
                 logger.info('Loaded dataset dimension: %d', temp.dim)
             else:
-                logger.warning('Loaded dataset dimension differs from init arg dimension, using loaded dim. (loaded %d, init %d)', temp.dim, self.dim)
+                logger.warning(
+                    "Loaded dataset dimension differs from init arg dimension, "
+                    "using loaded dim. (loaded %d, init %d)",
+                    temp.dim, self.dim
+                )
 
         self.dim = temp.dim  # To be consistent with the loaded data!
 

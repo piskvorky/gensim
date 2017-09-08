@@ -97,6 +97,10 @@ class VarEmbed(KeyedVectors):
         """
         for word in self.vocab:
             morpheme_embedding = np.array(
-                [morpho_embeddings[morpho_to_ix.get(m, -1)] for m in morfessor_model.viterbi_segment(word)[0]]).sum(axis=0)
+                [
+                    morpho_embeddings[morpho_to_ix.get(m, -1)]
+                    for m in morfessor_model.viterbi_segment(word)[0]
+                ]
+            ).sum(axis=0)
             self.syn0[self.vocab[word].index] += morpheme_embedding
         logger.info("Added morphemes to word vectors")

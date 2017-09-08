@@ -84,7 +84,10 @@ class LowCorpus(IndexedCorpus):
         self.num_terms = len(self.word2id)
         self.use_wordids = True  # return documents as (wordIndex, wordCount) 2-tuples
 
-        logger.info("loaded corpus with %i documents and %i terms from %s", self.num_docs, self.num_terms, fname)
+        logger.info(
+            "loaded corpus with %i documents and %i terms from %s",
+            self.num_docs, self.num_terms, fname
+        )
 
     def _calculate_num_docs(self):
         # the first line in input data is the number of documents (integer). throws exception on bad input.
@@ -163,7 +166,10 @@ class LowCorpus(IndexedCorpus):
                 fout.write(utils.to_utf8('%s\n' % ' '.join(words)))
 
         if truncated:
-            logger.warning("List-of-words format can only save vectors with integer elements; %i float entries were truncated to integer value", truncated)
+            logger.warning(
+                "List-of-words format can only save vectors with integer elements; "
+                "%i float entries were truncated to integer value", truncated
+            )
         return offsets
 
     def docbyoffset(self, offset):

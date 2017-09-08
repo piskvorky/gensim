@@ -119,7 +119,10 @@ class HashDictionary(utils.SaveLoad, dict):
             if docno % 10000 == 0:
                 logger.info("adding document #%i to %s", docno, self)
             self.doc2bow(document, allow_update=True)  # ignore the result, here we only care about updating token ids
-        logger.info("built %s from %i documents (total %i corpus positions)", self, self.num_docs, self.num_pos)
+        logger.info(
+            "built %s from %i documents (total %i corpus positions)",
+            self, self.num_docs, self.num_pos
+        )
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """
@@ -191,7 +194,10 @@ class HashDictionary(utils.SaveLoad, dict):
         self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if self.id2token.get(tokenid, set())}
 
         # for word->document frequency
-        logger.info("kept statistics for which were in no less than %i and no more than %i (=%.1f%%) documents", no_below, no_above_abs, 100.0 * no_above)
+        logger.info(
+            "kept statistics for which were in no less than %i and no more than %i (=%.1f%%) documents",
+            no_below, no_above_abs, 100.0 * no_above
+        )
 
     def save_as_text(self, fname):
         """

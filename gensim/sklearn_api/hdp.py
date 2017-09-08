@@ -23,8 +23,8 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
     Base HDP module
     """
 
-    def __init__(self, id2word, max_chunks=None, max_time=None, chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
-                 gamma=1, eta=0.01, scale=1.0, var_converge=0.0001, outputdir=None, random_state=None):
+    def __init__(self, id2word, max_chunks=None, max_time=None, chunksize=256, kappa=1.0, tau=64.0, K=15, T=150,
+                 alpha=1, gamma=1, eta=0.01, scale=1.0, var_converge=0.0001, outputdir=None, random_state=None):
         """
         Sklearn api for HDP model. See gensim.models.HdpModel for parameter details.
         """
@@ -72,7 +72,9 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
         or a single document like : [(4, 1), (7, 1)]
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # The input as array of array
         check = lambda x: [x] if isinstance(x[0], tuple) else x

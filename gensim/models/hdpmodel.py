@@ -214,8 +214,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         gamma = self.inference([bow])[0]
         topic_dist = gamma / sum(gamma) if sum(gamma) != 0 else []
-        return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                if topicvalue >= eps]
+        return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist) if topicvalue >= eps]
 
     def update(self, corpus):
         save_freq = max(1, int(10000 / self.chunksize))  # save every 10k docs, roughly
@@ -287,7 +286,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 doc_score = self.doc_e_step(
                     ss, Elogsticks_1st,
                     unique_words, doc_word_ids,
-                    doc_word_counts, self.m_var_converge)
+                    doc_word_counts, self.m_var_converge
+                )
                 count += sum(doc_word_counts)
                 score += doc_score
 
@@ -443,7 +443,10 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         if num_words is not None:  # deprecated num_words is used
-            logger.warning("The parameter num_words for show_topic() would be deprecated in the updated version. Please use topn instead.")
+            logger.warning(
+                "The parameter num_words for show_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
             topn = num_words
 
         if not self.m_status_up_to_date:
@@ -556,7 +559,10 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 logger.info('TEST: %6d    %.5f', i, doc_score)
                 score += likelihood
                 total_words += sum(doc_word_counts)
-        logger.info('TEST: average score: %.5f, total score: %.5f,  test docs: %d', score / total_words, score, len(corpus))
+        logger.info(
+            "TEST: average score: %.5f, total score: %.5f,  test docs: %d",
+            score / total_words, score, len(corpus)
+        )
         return score
 
 
@@ -619,14 +625,20 @@ class HdpTopicFormatter(object):
 
     def print_topic(self, topic_id, topn=None, num_words=None):
         if num_words is not None:  # deprecated num_words is used
-            warnings.warn("The parameter num_words for print_topic() would be deprecated in the updated version. Please use topn instead.")
+            warnings.warn(
+                "The parameter num_words for print_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
             topn = num_words
 
         return self.show_topic(topic_id, topn, formatted=True)
 
     def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words=None,):
         if num_words is not None:  # deprecated num_words is used
-            warnings.warn("The parameter num_words for show_topic() would be deprecated in the updated version. Please use topn instead.")
+            warnings.warn(
+                "The parameter num_words for show_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
             topn = num_words
 
         lambdak = list(self.data[topic_id, :])

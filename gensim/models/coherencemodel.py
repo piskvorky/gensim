@@ -168,7 +168,8 @@ class CoherenceModel(interfaces.TransformationABC):
             if isinstance(model.id2word, FakeDict):
                 raise ValueError(
                     "The associated dictionary should be provided with the corpus or 'id2word'"
-                    " for topic model should be set as the associated dictionary.")
+                    " for topic model should be set as the associated dictionary."
+                )
             else:
                 self.dictionary = model.id2word
         else:
@@ -273,7 +274,8 @@ class CoherenceModel(interfaces.TransformationABC):
         except AttributeError:
             raise ValueError(
                 "This topic model is not currently supported. Supported topic models"
-                " should implement the `get_topics` method.")
+                " should implement the `get_topics` method."
+            )
 
     def segment_topics(self):
         return self.measure.seg(self.topics)

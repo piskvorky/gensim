@@ -87,7 +87,9 @@ class TfidfModel(interfaces.TransformationABC):
             # statistics we need to construct the IDF mapping. we can skip the
             # step that goes through the corpus (= an optimization).
             if corpus is not None:
-                logger.warning("constructor received both corpus and explicit inverse document frequencies; ignoring the corpus")
+                logger.warning(
+                    "constructor received both corpus and explicit inverse document frequencies; ignoring the corpus"
+                )
             self.num_docs, self.num_nnz = dictionary.num_docs, dictionary.num_nnz
             self.dfs = dictionary.dfs.copy()
             self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
@@ -125,7 +127,10 @@ class TfidfModel(interfaces.TransformationABC):
 
         # and finally compute the idf weights
         n_features = max(dfs) if dfs else 0
-        logger.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)", self.num_docs, n_features, self.num_nnz)
+        logger.info(
+            "calculating IDF weights for %i documents and %i features (%i matrix non-zeros)",
+            self.num_docs, n_features, self.num_nnz
+        )
         self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
 
     def __getitem__(self, bow, eps=1e-12):

@@ -22,10 +22,10 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
     Base Doc2Vec module
     """
 
-    def __init__(self, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1, docvecs=None, docvecs_mapfile=None,
-                 comment=None, trim_rule=None, size=100, alpha=0.025, window=5, min_count=5, max_vocab_size=None,
-                 sample=1e-3, seed=1, workers=3, min_alpha=0.0001, hs=0, negative=5, cbow_mean=1, hashfxn=hash,
-                 iter=5, sorted_vocab=1, batch_words=10000):
+    def __init__(self, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1, docvecs=None,
+                 docvecs_mapfile=None, comment=None, trim_rule=None, size=100, alpha=0.025, window=5, min_count=5,
+                 max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001, hs=0, negative=5, cbow_mean=1,
+                 hashfxn=hash, iter=5, sorted_vocab=1, batch_words=10000):
         """
         Sklearn api for Doc2Vec model. See gensim.models.Doc2Vec and gensim.models.Word2Vec for parameter details.
         """
@@ -82,7 +82,9 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         or a single document like : ['calculus', 'mathematical']
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # The input as array of array
         check = lambda x: [x] if isinstance(x[0], string_types) else x

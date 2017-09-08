@@ -108,9 +108,8 @@ class Phrases(interfaces.TransformationABC):
 
     """
 
-    def __init__(self, sentences=None, min_count=5, threshold=10.0,
-                 max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
-                 scoring='default'):
+    def __init__(self, sentences=None, min_count=5, threshold=10.0,  max_vocab_size=40000000,
+                 delimiter=b'_', progress_per=10000, scoring='default'):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -192,7 +191,10 @@ class Phrases(interfaces.TransformationABC):
         min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
-                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types", sentence_no, total_words, len(vocab))
+                logger.info(
+                    "PROGRESS: at sentence #%i, processed %i words and %i word types",
+                    sentence_no, total_words, len(vocab)
+                )
             sentence = [utils.any2utf8(w) for w in sentence]
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
@@ -208,7 +210,10 @@ class Phrases(interfaces.TransformationABC):
                 utils.prune_vocab(vocab, min_reduce)
                 min_reduce += 1
 
-        logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences", len(vocab), total_words, sentence_no + 1)
+        logger.info(
+            "collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences",
+            len(vocab), total_words, sentence_no + 1
+        )
         return min_reduce, vocab, total_words
 
     def add_vocab(self, sentences):

@@ -50,7 +50,10 @@ class UciReader(MmReader):
             except StopIteration:
                 pass
 
-        logger.info('accepted corpus with %i documents, %i features, %i non-zero entries', self.num_docs, self.num_terms, self.num_nnz)
+        logger.info(
+            "accepted corpus with %i documents, %i features, %i non-zero entries",
+            self.num_docs, self.num_terms, self.num_nnz
+        )
 
     def skip_headers(self, input_file):
         for lineno, _ in enumerate(input_file):
@@ -122,7 +125,11 @@ class UciWriter(MmWriter):
         num_docs = docno + 1
 
         if num_docs * num_terms != 0:
-            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)", num_docs, num_terms, 100.0 * num_nnz / (num_docs * num_terms), num_nnz, num_docs * num_terms)
+            logger.info(
+                "saved %ix%i matrix, density=%.3f%% (%i/%i)",
+                num_docs, num_terms, 100.0 * num_nnz / (num_docs * num_terms),
+                num_nnz, num_docs * num_terms
+            )
 
         # now write proper headers, by seeking and overwriting the spaces written earlier
         writer.update_headers(num_docs, num_terms, num_nnz)

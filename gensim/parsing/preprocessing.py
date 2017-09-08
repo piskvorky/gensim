@@ -117,7 +117,11 @@ def stem_text(text):
 
 stem = stem_text
 
-DEFAULT_FILTERS = [lambda x: x.lower(), strip_tags, strip_punctuation, strip_multiple_whitespaces, strip_numeric, remove_stopwords, strip_short, stem_text]
+DEFAULT_FILTERS = [
+    lambda x: x.lower(), strip_tags, strip_punctuation,
+    strip_multiple_whitespaces, strip_numeric,
+    remove_stopwords, strip_short, stem_text
+]
 
 
 def preprocess_string(s, filters=DEFAULT_FILTERS):

@@ -45,7 +45,8 @@ class CoherenceMetric(Metric):
     """
     Metric class for coherence evaluation
     """
-    def __init__(self, corpus=None, texts=None, dictionary=None, coherence=None, window_size=None, topn=10, logger=None, viz_env=None, title=None):
+    def __init__(self, corpus=None, texts=None, dictionary=None, coherence=None,
+                 window_size=None, topn=10, logger=None, viz_env=None, title=None):
         """
         Args:
             corpus : Gensim document corpus.
@@ -108,7 +109,10 @@ class CoherenceMetric(Metric):
         self.model = None
         self.topics = None
         super(CoherenceMetric, self).set_parameters(**kwargs)
-        cm = gensim.models.CoherenceModel(self.model, self.topics, self.texts, self.corpus, self.dictionary, self.window_size, self.coherence, self.topn)
+        cm = gensim.models.CoherenceModel(
+            self.model, self.topics, self.texts, self.corpus, self.dictionary,
+            self.window_size, self.coherence, self.topn
+        )
         return cm.get_coherence()
 
 
@@ -146,7 +150,8 @@ class DiffMetric(Metric):
     """
     Metric class for topic difference evaluation
     """
-    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True, annotation=False, normed=True, logger=None, viz_env=None, title=None):
+    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True,
+                 annotation=False, normed=True, logger=None, viz_env=None, title=None):
         """
         Args:
             distance : measure used to calculate difference between any topic pair. Available values:
@@ -181,7 +186,10 @@ class DiffMetric(Metric):
             other_model : second topic model instance to calculate the difference from
         """
         super(DiffMetric, self).set_parameters(**kwargs)
-        diff_diagonal, _ = self.model.diff(self.other_model, self.distance, self.num_words, self.n_ann_terms, self.diagonal, self.annotation, self.normed)
+        diff_diagonal, _ = self.model.diff(
+            self.other_model, self.distance, self.num_words, self.n_ann_terms,
+            self.diagonal, self.annotation, self.normed
+        )
         return diff_diagonal
 
 
@@ -189,7 +197,8 @@ class ConvergenceMetric(Metric):
     """
     Metric class for convergence evaluation
     """
-    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True, annotation=False, normed=True, logger=None, viz_env=None, title=None):
+    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True,
+                 annotation=False, normed=True, logger=None, viz_env=None, title=None):
         """
         Args:
             distance : measure used to calculate difference between any topic pair. Available values:
@@ -224,7 +233,10 @@ class ConvergenceMetric(Metric):
             other_model : second topic model instance to calculate the difference from
         """
         super(ConvergenceMetric, self).set_parameters(**kwargs)
-        diff_diagonal, _ = self.model.diff(self.other_model, self.distance, self.num_words, self.n_ann_terms, self.diagonal, self.annotation, self.normed)
+        diff_diagonal, _ = self.model.diff(
+            self.other_model, self.distance, self.num_words, self.n_ann_terms,
+            self.diagonal, self.annotation, self.normed
+        )
         return np.sum(diff_diagonal)
 
 
@@ -287,23 +299,33 @@ class Callback(object):
                 if epoch == 0:
                     if value.ndim > 0:
                         diff_mat = np.array([value])
-                        viz_metric = self.viz.heatmap(X=diff_mat.T, env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=label, title=label))
+                        viz_metric = self.viz.heatmap(
+                            X=diff_mat.T, env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=label, title=label)
+                        )
                         # store current epoch's diff diagonal
                         self.diff_mat.put(diff_mat)
                         # saving initial plot window
                         self.windows.append(copy.deepcopy(viz_metric))
                     else:
-                        viz_metric = self.viz.line(Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=label, title=label))
+                        viz_metric = self.viz.line(
+                            Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env,
+                            opts=dict(xlabel='Epochs', ylabel=label, title=label)
+                        )
                         # saving initial plot window
                         self.windows.append(copy.deepcopy(viz_metric))
                 else:
                     if value.ndim > 0:
                         # concatenate with previous epoch's diff diagonals
                         diff_mat = np.concatenate((self.diff_mat.get(), np.array([value])))
-                        self.viz.heatmap(X=diff_mat.T, env=metric.viz_env, win=self.windows[i], opts=dict(xlabel='Epochs', ylabel=label, title=label))
+                        self.viz.heatmap(
+                            X=diff_mat.T, env=metric.viz_env, win=self.windows[i],
+                            opts=dict(xlabel='Epochs', ylabel=label, title=label)
+                        )
                         self.diff_mat.put(diff_mat)
                     else:
-                        self.viz.updateTrace(Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, win=self.windows[i])
+                        self.viz.updateTrace(
+                            Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, win=self.windows[i]
+                        )
 
             if metric.logger == "shell":
                 statement = "".join(("Epoch ", str(epoch), ": ", label, " estimate: ", str(value)))

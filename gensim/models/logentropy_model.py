@@ -58,8 +58,7 @@ class LogEntropyModel(interfaces.TransformationABC):
             self.initialize(corpus)
 
     def __str__(self):
-        return "LogEntropyModel(n_docs=%s, n_words=%s)" % (self.n_docs,
-                                                           self.n_words)
+        return "LogEntropyModel(n_docs=%s, n_words=%s)" % (self.n_docs, self.n_words)
 
     def initialize(self, corpus):
         """
@@ -81,12 +80,14 @@ class LogEntropyModel(interfaces.TransformationABC):
         self.n_words = glob_num_words
 
         # and finally compute the global weights
-        logger.info("calculating global log entropy weights for %i documents and %i features (%i matrix non-zeros)", self.n_docs, len(glob_freq), self.n_words)
+        logger.info(
+            "calculating global log entropy weights for %i documents and %i features (%i matrix non-zeros)",
+            self.n_docs, len(glob_freq), self.n_words
+        )
         logger.debug('iterating over corpus')
         for doc_no2, bow in enumerate(corpus):
             for key, freq in bow:
-                p = (float(freq) / glob_freq[key]) * math.log(float(freq) /
-                                                              glob_freq[key])
+                p = (float(freq) / glob_freq[key]) * math.log(float(freq) / glob_freq[key])
                 self.entr[key] = self.entr.get(key, 0.0) + p
         if doc_no2 != doc_no:
             raise ValueError("LogEntropyModel doesn't support generators as training data")
@@ -105,8 +106,11 @@ class LogEntropyModel(interfaces.TransformationABC):
             return self._apply(bow)
 
         # unknown (new) terms will be given zero weight (NOT infinity/huge)
-        vector = [(term_id, math.log(tf + 1) * self.entr.get(term_id))
-                  for term_id, tf in bow if term_id in self.entr]
+        vector = [
+            (term_id, math.log(tf + 1) * self.entr.get(term_id))
+            for term_id, tf in bow
+            if term_id in self.entr
+        ]
         if self.normalize:
             vector = matutils.unitvec(vector)
         return vector

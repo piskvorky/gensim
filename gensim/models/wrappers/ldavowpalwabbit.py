@@ -140,8 +140,10 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         if self.id2word is None:
             if corpus is None:
-                raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
-            logger.warning('no word id mapping provided; initializing from corpus, assuming identity')
+                raise ValueError(
+                    "at least one of corpus/id2word must be specified, to establish input space dimensionality"
+                )
+            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         elif len(self.id2word) > 0:
@@ -150,8 +152,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
             self.num_terms = 0
 
         if self.num_terms == 0:
-            raise ValueError('cannot compute LDA over an empty collection '
-                             '(no terms)')
+            raise ValueError("cannot compute LDA over an empty collection (no terms)")
 
         # LDA parameters
         self.num_topics = num_topics
@@ -331,13 +332,15 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
     def _get_vw_predict_command(self, corpus_size):
         """Get list of command line arguments for running prediction."""
-        cmd = [self.vw_path,
-               '--testonly',  # don't update model with this data
-               '--lda_D', str(corpus_size),
-               '-i', self._model_filename,  # load existing binary model
-               '-d', self._corpus_filename,
-               '--learning_rate', '0',  # possibly not needed, but harmless
-               '-p', self._predict_filename]
+        cmd = [
+            self.vw_path,
+            '--testonly',  # don't update model with this data
+            '--lda_D', str(corpus_size),
+            '-i', self._model_filename,  # load existing binary model
+            '-d', self._corpus_filename,
+            '--learning_rate', '0',  # possibly not needed, but harmless
+            '-p', self._predict_filename
+        ]
 
         if self.random_seed is not None:
             cmd.extend(['--random_seed', str(self.random_seed)])
@@ -583,6 +586,7 @@ def vwmodel2ldamodel(vw_model, iterations=50):
     model_gensim = LdaModel(
         num_topics=vw_model.num_topics, id2word=vw_model.id2word, chunksize=vw_model.chunksize,
         passes=vw_model.passes, alpha=vw_model.alpha, eta=vw_model.eta, decay=vw_model.decay,
-        offset=vw_model.offset, iterations=iterations, gamma_threshold=vw_model.gamma_threshold)
+        offset=vw_model.offset, iterations=iterations, gamma_threshold=vw_model.gamma_threshold
+    )
     model_gensim.expElogbeta[:] = vw_model._get_topics()
     return model_gensim

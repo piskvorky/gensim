@@ -118,7 +118,10 @@ class Dictionary(utils.SaveLoad, Mapping):
             # update Dictionary with the document
             self.doc2bow(document, allow_update=True)  # ignore the result, here we only care about updating token ids
 
-        logger.info("built %s from %i documents (total %i corpus positions)", self, self.num_docs, self.num_pos)
+        logger.info(
+            "built %s from %i documents (total %i corpus positions)",
+            self, self.num_docs, self.num_pos
+        )
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """
@@ -206,7 +209,10 @@ class Dictionary(utils.SaveLoad, Mapping):
             good_ids = good_ids[:keep_n]
         bad_words = [(self[idx], self.dfs.get(idx, 0)) for idx in set(self).difference(good_ids)]
         logger.info("discarding %i tokens: %s...", len(self) - len(good_ids), bad_words[:10])
-        logger.info("keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents", len(good_ids), no_below, no_above_abs, 100.0 * no_above)
+        logger.info(
+            "keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents",
+            len(good_ids), no_below, no_above_abs, 100.0 * no_above
+        )
 
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         self.filter_tokens(good_ids=good_ids)
@@ -402,5 +408,8 @@ class Dictionary(utils.SaveLoad, Mapping):
             # make sure all token ids have a valid `dfs` entry
             result.dfs[idx] = result.dfs.get(idx, 0)
 
-        logger.info("built %s from %i documents (total %i corpus positions)", result, result.num_docs, result.num_pos)
+        logger.info(
+            "built %s from %i documents (total %i corpus positions)",
+            result, result.num_docs, result.num_pos
+        )
         return result

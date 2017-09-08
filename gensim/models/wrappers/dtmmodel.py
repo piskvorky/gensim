@@ -41,9 +41,9 @@ class DtmModel(utils.SaveLoad):
 
     """
 
-    def __init__(
-            self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100, id2word=None, prefix=None,
-            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
+    def __init__(self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100,
+                 id2word=None, prefix=None, lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10,
+                 alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
         """
         `dtm_path` is path to the dtm executable, e.g. `C:/dtm/dtm-win64.exe`.
 
@@ -97,8 +97,10 @@ class DtmModel(utils.SaveLoad):
             raise ValueError("""There is a text without words in the input corpus.
                     This breaks method='fixed' (The DIM model).""")
         if lencorpus != sum(time_slices):
-            raise ValueError("mismatched timeslices %{slices} for corpus of len {clen}".format(
-                slices=sum(time_slices), clen=lencorpus))
+            raise ValueError(
+                "mismatched timeslices %{slices} for corpus of len {clen}"
+                .format(slices=sum(time_slices), clen=lencorpus)
+            )
         self.lencorpus = lencorpus
         if prefix is None:
             rand_prefix = hex(random.randint(0, 0xffffff))[2:] + '_'
@@ -187,11 +189,19 @@ class DtmModel(utils.SaveLoad):
         """
         self.convert_input(corpus, time_slices)
 
-        arguments = "--ntopics={p0} --model={mofrl}  --mode={p1} --initialize_lda={p2} --corpus_prefix={p3} --outname={p4} --alpha={p5}".format(
-            p0=self.num_topics, mofrl=model, p1=mode, p2=self.initialize_lda, p3=self.fcorpus(), p4=self.foutname(), p5=self.alpha)
+        arguments = \
+            "--ntopics={p0} --model={mofrl}  --mode={p1} --initialize_lda={p2} --corpus_prefix={p3} " \
+            "--outname={p4} --alpha={p5}".format(
+                p0=self.num_topics, mofrl=model, p1=mode, p2=self.initialize_lda,
+                p3=self.fcorpus(), p4=self.foutname(), p5=self.alpha
+            )
 
-        params = "--lda_max_em_iter={p0} --lda_sequence_min_iter={p1}  --lda_sequence_max_iter={p2} --top_chain_var={p3} --rng_seed={p4} ".format(
-            p0=self.lda_max_em_iter, p1=self.lda_sequence_min_iter, p2=self.lda_sequence_max_iter, p3=self.top_chain_var, p4=self.rng_seed)
+        params = \
+            "--lda_max_em_iter={p0} --lda_sequence_min_iter={p1}  --lda_sequence_max_iter={p2} " \
+            "--top_chain_var={p3} --rng_seed={p4} ".format(
+                p0=self.lda_max_em_iter, p1=self.lda_sequence_min_iter, p2=self.lda_sequence_max_iter,
+                p3=self.top_chain_var, p4=self.rng_seed
+            )
 
         arguments = arguments + " " + params
         logger.info("training DTM with args %s", arguments)
@@ -280,8 +290,10 @@ class DtmModel(utils.SaveLoad):
 
         """
         if num_words is not None:  # deprecated num_words is used
-            logger.warning("The parameter num_words for show_topic() would be deprecated in the updated version.")
-            logger.warning("Please use topn instead.")
+            logger.warning(
+                "The parameter num_words for show_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
             topn = num_words
 
         topics = self.lambda_[:, :, time]
@@ -298,7 +310,10 @@ class DtmModel(utils.SaveLoad):
     def print_topic(self, topicid, time, topn=10, num_words=None):
         """Return the given topic, formatted as a string."""
         if num_words is not None:  # deprecated num_words is used
-            warnings.warn("The parameter num_words for print_topic() would be deprecated in the updated version. Please use topn instead.")
+            warnings.warn(
+                "The parameter num_words for print_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
             topn = num_words
 
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])

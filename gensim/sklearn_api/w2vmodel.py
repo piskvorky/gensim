@@ -70,7 +70,9 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
         Return the word-vectors for the input list of words.
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # The input as array of array
         check = lambda x: [x] if isinstance(x, six.string_types) else x
@@ -84,4 +86,7 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
         return np.reshape(np.array(X), (len(words), self.size))
 
     def partial_fit(self, X):
-        raise NotImplementedError("'partial_fit' has not been implemented for W2VTransformer. However, the model can be updated with a fixed vocabulary using Gensim API call.")
+        raise NotImplementedError(
+            "'partial_fit' has not been implemented for W2VTransformer. "
+            "However, the model can be updated with a fixed vocabulary using Gensim API call."
+        )

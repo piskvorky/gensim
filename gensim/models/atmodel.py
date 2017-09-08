@@ -212,7 +212,9 @@ class AuthorTopicModel(LdaModel):
 
         self.id2word = id2word
         if corpus is None and self.id2word is None:
-            raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
+            raise ValueError(
+                "at least one of corpus/id2word must be specified, to establish input space dimensionality"
+            )
 
         if self.id2word is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
@@ -252,7 +254,9 @@ class AuthorTopicModel(LdaModel):
         if serialized and not serialization_path:
             raise ValueError("If serialized corpora are used, a the path to a folder where the corpus should be saved must be provided (serialized_path).")
         if serialized and serialization_path:
-            assert not isfile(serialization_path), "A file already exists at the serialization_path path; choose a different serialization_path, or delete the file."
+            assert not isfile(serialization_path), \
+                "A file already exists at the serialization_path path; " \
+                "choose a different serialization_path, or delete the file."
         self.serialization_path = serialization_path
 
         # Initialize an empty self.corpus.
@@ -260,7 +264,8 @@ class AuthorTopicModel(LdaModel):
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
-        assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
+        assert self.alpha.shape == (self.num_topics,), \
+            "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
         if isinstance(eta, six.string_types):
             if eta == 'asymmetric':
@@ -272,7 +277,8 @@ class AuthorTopicModel(LdaModel):
 
         assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
                 "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
-                (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
+                (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms)
+        )
 
         # VB constants
         self.iterations = iterations
@@ -450,7 +456,10 @@ class AuthorTopicModel(LdaModel):
                 sstats[:, ids] += np.outer(expElogtheta_sum_a.T, cts / phinorm)
 
         if len(chunk) > 1:
-            logger.debug("%i/%i documents converged within %i iterations", converged, len(chunk), self.iterations)
+            logger.debug(
+                "%i/%i documents converged within %i iterations",
+                converged, len(chunk), self.iterations
+            )
 
         if collect_sstats:
             # This step finishes computing the sufficient statistics for the
@@ -470,7 +479,10 @@ class AuthorTopicModel(LdaModel):
         # TODO: this method is somewhat similar to the one in LdaModel. Refactor if possible.
         if state is None:
             state = self.state
-        gamma, sstats = self.inference(chunk, author2doc, doc2author, rhot, collect_sstats=True, chunk_doc_idx=chunk_doc_idx)
+        gamma, sstats = self.inference(
+            chunk, author2doc, doc2author, rhot,
+            collect_sstats=True, chunk_doc_idx=chunk_doc_idx
+        )
         state.sstats += sstats
         state.numdocs += len(chunk)
         return gamma
@@ -489,7 +501,10 @@ class AuthorTopicModel(LdaModel):
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         subsample_ratio = 1.0 * total_docs / len(chunk)
         perwordbound = self.bound(chunk, chunk_doc_idx, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
-        logger.info("%.3f per-word bound, %.1f perplexity estimate based on a corpus of %i documents with %i words", perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words)
+        logger.info(
+            "%.3f per-word bound, %.1f perplexity estimate based on a corpus of %i documents with %i words",
+            perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words
+        )
         return perwordbound
 
     def update(self, corpus=None, author2doc=None, doc2author=None, chunksize=None, decay=None, offset=None, passes=None,
@@ -672,7 +687,8 @@ class AuthorTopicModel(LdaModel):
         logger.info(
             "running %s author-topic training, %s topics, %s authors, %i passes over the supplied corpus of %i documents, updating model once "
             "every %i documents, evaluating perplexity every %i documents, iterating %ix with a convergence threshold of %f",
-            updatetype, self.num_topics, num_input_authors, passes, lencorpus, updateafter, evalafter, iterations, gamma_threshold
+            updatetype, self.num_topics, num_input_authors, passes, lencorpus, updateafter,
+            evalafter, iterations, gamma_threshold
         )
 
         if updates_per_pass * passes < 10:
@@ -705,11 +721,17 @@ class AuthorTopicModel(LdaModel):
 
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
-                    logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i', pass_, chunk_no * chunksize + len(chunk), lencorpus)
+                    logger.info(
+                        "PROGRESS: pass %i, dispatching documents up to #%i/%i",
+                        pass_, chunk_no * chunksize + len(chunk), lencorpus
+                    )
                     # this will eventually block until some jobs finish, because the queue has a small finite length
                     self.dispatcher.putjob(chunk)
                 else:
-                    logger.info('PROGRESS: pass %i, at document #%i/%i', pass_, chunk_no * chunksize + len(chunk), lencorpus)
+                    logger.info(
+                        "PROGRESS: pass %i, at document #%i/%i",
+                        pass_, chunk_no * chunksize + len(chunk), lencorpus
+                    )
                     # do_estep requires the indexes of the documents being trained on, to know what authors
                     # correspond to the documents.
                     gammat = self.do_estep(chunk, self.author2doc, self.doc2author, rho(), other, chunk_doc_idx)

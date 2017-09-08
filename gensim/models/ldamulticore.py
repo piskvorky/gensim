@@ -196,7 +196,10 @@ class LdaMulticore(LdaModel):
         )
 
         if updates_per_pass * self.passes < 10:
-            logger.warning("too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy")
+            logger.warning(
+                "too few updates, training might not converge; "
+                "consider increasing the number of passes or iterations to improve accuracy"
+            )
 
         job_queue = Queue(maxsize=2 * self.workers)
         result_queue = Queue()
@@ -241,7 +244,10 @@ class LdaMulticore(LdaModel):
                         job_queue.put((chunk_no, chunk, self), block=False, timeout=0.1)
                         chunk_put = True
                         queue_size[0] += 1
-                        logger.info('PROGRESS: pass %i, dispatched chunk #%i = documents up to #%i/%i, outstanding queue size %i', pass_, chunk_no, chunk_no * self.chunksize + len(chunk), lencorpus, queue_size[0])
+                        logger.info(
+                            "PROGRESS: pass %i, dispatched chunk #%i = documents up to #%i/%i, outstanding queue size %i",
+                            pass_, chunk_no, chunk_no * self.chunksize + len(chunk), lencorpus, queue_size[0]
+                        )
                     except queue.Full:
                         # in case the input job queue is full, keep clearing the
                         # result queue, to make sure we don't deadlock

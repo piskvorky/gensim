@@ -209,7 +209,9 @@ class Similarity(interfaces.SimilarityABC):
         return len(self.fresh_docs) + sum([len(shard) for shard in self.shards])
 
     def __str__(self):
-        return "Similarity index with %i documents in %i shards (stored under %s)" % (len(self), len(self.shards), self.output_prefix)
+        return "Similarity index with %i documents in %i shards (stored under %s)" % (
+            len(self), len(self.shards), self.output_prefix
+        )
 
     def add_documents(self, corpus):
         """
@@ -261,7 +263,9 @@ class Similarity(interfaces.SimilarityABC):
         # consider the shard sparse if its density is < 30%
         issparse = 0.3 > 1.0 * self.fresh_nnz / (len(self.fresh_docs) * self.num_features)
         if issparse:
-            index = SparseMatrixSimilarity(self.fresh_docs, num_terms=self.num_features, num_docs=len(self.fresh_docs), num_nnz=self.fresh_nnz)
+            index = SparseMatrixSimilarity(
+                self.fresh_docs, num_terms=self.num_features, num_docs=len(self.fresh_docs), num_nnz=self.fresh_nnz
+            )
         else:
             index = MatrixSimilarity(self.fresh_docs, num_features=self.num_features)
         logger.info("creating %s shard #%s", 'sparse' if issparse else 'dense', shardid)
@@ -491,7 +495,10 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         if corpus is not None:
             if self.num_features <= 0:
-                raise ValueError("cannot index a corpus with zero features (you must specify either `num_features` or a non-empty corpus in the constructor)")
+                raise ValueError(
+                    "cannot index a corpus with zero features (you must specify either `num_features` "
+                    "or a non-empty corpus in the constructor)"
+                )
             logger.info("creating matrix with %i documents and %i features", corpus_len, num_features)
             self.index = numpy.empty(shape=(corpus_len, num_features), dtype=dtype)
             # iterate over corpus, populating the numpy index matrix with (normalized)

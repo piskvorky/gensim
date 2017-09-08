@@ -62,7 +62,9 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
         or a single document like : [(4, 1), (7, 1)]
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # The input as array of array
         check = lambda x: [x] if isinstance(x[0], tuple) else x
@@ -84,8 +86,8 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
 
         if self.gensim_model is None:
             self.gensim_model = models.LsiModel(
-                num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize,
-                decay=self.decay, onepass=self.onepass, power_iters=self.power_iters, extra_samples=self.extra_samples
+                num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize, decay=self.decay,
+                onepass=self.onepass, power_iters=self.power_iters, extra_samples=self.extra_samples
             )
 
         self.gensim_model.add_documents(corpus=X)

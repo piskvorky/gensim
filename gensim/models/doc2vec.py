@@ -480,7 +480,11 @@ class DocvecsArray(utils.SaveLoad):
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_docs), reverse=True)
         # ignore (don't return) docs from the input
-        result = [(self.index_to_doctag(sim + clip_start), float(dists[sim])) for sim in best if (sim + clip_start) not in all_docs]
+        result = [
+            (self.index_to_doctag(sim + clip_start), float(dists[sim]))
+            for sim in best
+            if (sim + clip_start) not in all_docs
+        ]
         return result[:topn]
 
     def doesnt_match(self, docs):
@@ -683,11 +687,17 @@ class Doc2Vec(Word2Vec):
         for document_no, document in enumerate(documents):
             if not checked_string_types:
                 if isinstance(document.words, string_types):
-                    logger.warning("Each 'words' should be a list of words (usually unicode strings). First 'words' here is instead plain %s.", type(document.words))
+                    logger.warning(
+                        "Each 'words' should be a list of words (usually unicode strings). First 'words' here is instead plain %s.",
+                        type(document.words)
+                    )
                 checked_string_types += 1
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
-                logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags", document_no, total_words, interval_rate, len(vocab), len(self.docvecs))
+                logger.info(
+                    "PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags",
+                    document_no, total_words, interval_rate, len(vocab), len(self.docvecs)
+                )
                 interval_start = default_timer()
                 interval_count = total_words
             document_length = len(document.words)
@@ -703,7 +713,10 @@ class Doc2Vec(Word2Vec):
                 utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
-        logger.info("collected %i word types and %i unique tags from a corpus of %i examples and %i words", len(vocab), len(self.docvecs), document_no + 1, total_words)
+        logger.info(
+            "collected %i word types and %i unique tags from a corpus of %i examples and %i words",
+            len(vocab), len(self.docvecs), document_no + 1, total_words
+        )
         self.corpus_count = document_no + 1
         self.raw_vocab = vocab
 

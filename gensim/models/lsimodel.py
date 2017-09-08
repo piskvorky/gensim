@@ -161,8 +161,9 @@ class Projection(utils.SaveLoad):
             self.s = other.s.copy()
             return
         if self.m != other.m:
-            raise ValueError("vector space mismatch: update is using %s features, expected %s" %
-                             (other.m, self.m))
+            raise ValueError(
+                "vector space mismatch: update is using %s features, expected %s" % (other.m, self.m)
+            )
         logger.info("merging projections: %s + %s", str(self.u.shape), str(other.u.shape))
         m, n1, n2 = self.u.shape[0], self.u.shape[1], other.u.shape[1]
         # TODO Maybe keep the bases as elementary reflectors, without
@@ -299,7 +300,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.num_terms = 1 + (max(self.id2word.keys()) if self.id2word else -1)
 
         self.docs_processed = 0
-        self.projection = Projection(self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples)
+        self.projection = Projection(
+            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples
+        )
 
         self.numworkers = 1
         if not distributed:
@@ -307,14 +310,18 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.dispatcher = None
         else:
             if not onepass:
-                raise NotImplementedError("distributed stochastic LSA not implemented yet; run either distributed one-pass, or serial randomized.")
+                raise NotImplementedError(
+                    "distributed stochastic LSA not implemented yet; "
+                    "run either distributed one-pass, or serial randomized."
+                )
             try:
                 import Pyro4
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')
                 logger.debug("looking for dispatcher at %s", str(dispatcher._pyroUri))
                 dispatcher.initialize(
                     id2word=self.id2word, num_topics=num_topics, chunksize=chunksize, decay=decay,
-                    power_iters=self.power_iters, extra_samples=self.extra_samples, distributed=False, onepass=onepass)
+                    power_iters=self.power_iters, extra_samples=self.extra_samples, distributed=False, onepass=onepass
+                )
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
                 logger.info("using distributed version with %i workers", self.numworkers)
@@ -383,7 +390,10 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         logger.info("dispatched documents up to #%s", doc_no)
                     else:
                         # serial version, there is only one "worker" (myself) => process the job directly
-                        update = Projection(self.num_terms, self.num_topics, job, extra_dims=self.extra_samples, power_iters=self.power_iters)
+                        update = Projection(
+                            self.num_terms, self.num_topics, job, extra_dims=self.extra_samples,
+                            power_iters=self.power_iters
+                        )
                         del job
                         self.projection.merge(update, decay=decay)
                         del update
@@ -398,14 +408,18 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             assert self.onepass, "distributed two-pass algo not supported yet"
-            update = Projection(self.num_terms, self.num_topics, corpus.tocsc(), extra_dims=self.extra_samples, power_iters=self.power_iters)
+            update = Projection(
+                self.num_terms, self.num_topics, corpus.tocsc(), extra_dims=self.extra_samples,
+                power_iters=self.power_iters
+            )
             self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents", corpus.shape[1])
             self.docs_processed += corpus.shape[1]
 
     def __str__(self):
         return "LsiModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (
-            self.num_terms, self.num_topics, self.decay, self.chunksize)
+            self.num_terms, self.num_topics, self.decay, self.chunksize
+        )
 
     def __getitem__(self, bow, scaled=False, chunksize=512):
         """
@@ -619,7 +633,8 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
         logger.info('topic #%s(%.3f): %s, ..., %s', topic, s[topic], ', '.join(pos), ', '.join(neg))
 
 
-def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None, power_iters=0, dtype=np.float64, eps=1e-6):
+def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
+                   power_iters=0, dtype=np.float64, eps=1e-6):
     """
     Run truncated Singular Value Decomposition (SVD) on a sparse input.
 
@@ -691,8 +706,10 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None, po
             num_docs += n
             logger.debug("multiplying chunk * gauss")
             o = np.random.normal(0.0, 1.0, (n, samples)).astype(dtype)  # draw a random gaussian matrix
-            sparsetools.csc_matvecs(m, n, samples, chunk.indptr, chunk.indices,  # y = y + chunk * o
-                                    chunk.data, o.ravel(), y.ravel())
+            sparsetools.csc_matvecs(
+                m, n, samples, chunk.indptr, chunk.indices,  # y = y + chunk * o
+                chunk.data, o.ravel(), y.ravel()
+            )
             del chunk, o
         y = [y]
         q, _ = matutils.qr_destroy(y)  # orthonormalize the range

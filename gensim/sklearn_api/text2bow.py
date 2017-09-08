@@ -43,7 +43,9 @@ class Text2BowTransformer(TransformerMixin, BaseEstimator):
         Return the BOW format for the input documents.
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # input as python lists
         check = lambda x: [x] if isinstance(x, string_types) else x

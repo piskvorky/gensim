@@ -257,7 +257,10 @@ class KeyedVectors(utils.SaveLoad):
                     word, weights = parts[0], [REAL(x) for x in parts[1:]]
                     add_word(word, weights)
         if result.syn0.shape[0] != len(result.vocab):
-            logger.info("duplicate words detected, shrinking matrix size from %i to %i", result.syn0.shape[0], len(result.vocab))
+            logger.info(
+                "duplicate words detected, shrinking matrix size from %i to %i",
+                result.syn0.shape[0], len(result.vocab)
+            )
             result.syn0 = ascontiguousarray(result.syn0[: len(result.vocab)])
         assert (len(result.vocab), vector_size) == result.syn0.shape
 
@@ -400,7 +403,10 @@ class KeyedVectors(utils.SaveLoad):
             logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).', diff1, diff2)
 
         if len(document1) == 0 or len(document2) == 0:
-            logger.info('At least one of the documents had no words that werein the vocabulary. Aborting (returning inf).')
+            logger.info(
+                "At least one of the documents had no words that werein the vocabulary. "
+                "Aborting (returning inf)."
+            )
             return float('inf')
 
         dictionary = Dictionary(documents=[document1, document2])
@@ -476,7 +482,10 @@ class KeyedVectors(utils.SaveLoad):
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
-        all_words = {self.vocab[word].index for word in positive + negative if not isinstance(word, ndarray) and word in self.vocab}
+        all_words = {
+            self.vocab[word].index for word in positive + negative
+            if not isinstance(word, ndarray) and word in self.vocab
+            }
 
         positive = [
             self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
@@ -638,7 +647,10 @@ class KeyedVectors(utils.SaveLoad):
     def log_accuracy(section):
         correct, incorrect = len(section['correct']), len(section['incorrect'])
         if correct + incorrect > 0:
-            logger.info("%s: %.1f%% (%i/%i)", section['section'], 100.0 * correct / (correct + incorrect), correct, correct + incorrect)
+            logger.info(
+                "%s: %.1f%% (%i/%i)",
+                section['section'], 100.0 * correct / (correct + incorrect), correct, correct + incorrect
+            )
 
     def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, case_insensitive=True):
         """
@@ -793,7 +805,10 @@ class KeyedVectors(utils.SaveLoad):
         oov_ratio = float(oov) / (len(similarity_gold) + oov) * 100
 
         logger.debug('Pearson correlation coefficient against %s: %f with p-value %f', pairs, pearson[0], pearson[1])
-        logger.debug('Spearman rank-order correlation coefficient against %s: %f with p-value %f', pairs, spearman[0], spearman[1])
+        logger.debug(
+            'Spearman rank-order correlation coefficient against %s: %f with p-value %f',
+            pairs, spearman[0], spearman[1]
+        )
         logger.debug('Pairs with unknown words: %d', oov)
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio
@@ -828,5 +843,8 @@ class KeyedVectors(utils.SaveLoad):
 
         # set `trainable` as `False` to use the pretrained word embedding
         # No extra mem usage here as `Embedding` layer doesn't create any new matrix for weights
-        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights], trainable=train_embeddings)
+        layer = Embedding(
+            input_dim=weights.shape[0], output_dim=weights.shape[1],
+            weights=[weights], trainable=train_embeddings
+        )
         return layer

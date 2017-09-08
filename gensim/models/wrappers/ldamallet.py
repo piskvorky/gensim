@@ -143,7 +143,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
                 self.corpus2mallet(corpus, fout)
 
         # convert the text file above into MALLET's internal format
-        cmd = self.mallet_path + ' import-file --preserve-case --keep-sequence --remove-stopwords --token-regex "\S+" --input %s --output %s'
+        cmd = self.mallet_path + " import-file --preserve-case --keep-sequence --remove-stopwords --token-regex \"\S+\" --input %s --output %s"
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
@@ -158,8 +158,10 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             '--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s '\
             '--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s'
         cmd = cmd % (
-            self.fcorpusmallet(), self.num_topics, self.alpha, self.optimize_interval, self.workers,
-            self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer(), self.topic_threshold)
+            self.fcorpusmallet(), self.num_topics, self.alpha, self.optimize_interval,
+            self.workers, self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations,
+            self.finferencer(), self.topic_threshold
+        )
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s", cmd)
         check_output(args=cmd, shell=True)
@@ -176,7 +178,10 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
         self.convert_input(bow, infer=True)
         cmd = self.mallet_path + ' infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s --doc-topics-threshold %s'
-        cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations, self.topic_threshold)
+        cmd = cmd % (
+            self.fcorpusmallet() + '.infer', self.finferencer(),
+            self.fdoctopics() + '.infer', iterations, self.topic_threshold
+        )
         logger.info("inferring topics with MALLET LDA '%s'", cmd)
         check_output(args=cmd, shell=True)
         result = list(self.read_doctopics(self.fdoctopics() + '.infer'))
@@ -368,6 +373,7 @@ def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
     model_gensim = LdaModel(
         id2word=mallet_model.id2word, num_topics=mallet_model.num_topics,
         alpha=mallet_model.alpha, iterations=iterations,
-        gamma_threshold=gamma_threshold)
+        gamma_threshold=gamma_threshold
+    )
     model_gensim.expElogbeta[:] = mallet_model.wordtopics
     return model_gensim

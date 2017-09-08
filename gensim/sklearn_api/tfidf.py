@@ -21,7 +21,8 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
     Base Tf-Idf module
     """
 
-    def __init__(self, id2word=None, dictionary=None, wlocal=gensim.utils.identity, wglobal=gensim.models.tfidfmodel.df2idf, normalize=True):
+    def __init__(self, id2word=None, dictionary=None, wlocal=gensim.utils.identity,
+                 wglobal=gensim.models.tfidfmodel.df2idf, normalize=True):
         """
         Sklearn wrapper for Tf-Idf model.
         """
@@ -45,7 +46,9 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
         Return the transformed documents after multiplication with the tf-idf matrix.
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # input as python lists
         check = lambda x: [x] if isinstance(x[0], tuple) else x
