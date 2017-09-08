@@ -500,13 +500,21 @@ class ShardedCorpus(IndexedCorpus):
                 return self._guess_n_features(corpus.corpus)
         else:
             if not self.dim:
-                raise TypeError('Couldn\'t find number of features, refusing to guess (dimension set to {0}, type of corpus: {1}).'.format(self.dim, type(corpus)))
+                raise TypeError(
+                    "Couldn't find number of features, refusing to guess "
+                    "(dimension set to {0}, type of corpus: {1})."
+                    .format(self.dim, type(corpus))
+                )
             else:
-                logger.warning('Couldn\'t find number of features, trusting supplied dimension (%d)', self.dim)
+                logger.warning("Couldn't find number of features, trusting supplied dimension (%d)", self.dim)
                 n_features = self.dim
 
         if self.dim and n_features != self.dim:
-            logger.warning('Discovered inconsistent dataset dim (%d) and feature count from corpus (%d). Coercing to dimension given by argument.', self.dim, n_features)
+            logger.warning(
+                "Discovered inconsistent dataset dim (%d) and feature count from corpus (%d). "
+                "Coercing to dimension given by argument.",
+                self.dim, n_features
+            )
 
         return n_features
 
