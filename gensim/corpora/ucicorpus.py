@@ -170,7 +170,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         dictionary.dfs = defaultdict(int)
 
         dictionary.id2token = self.id2word
-        dictionary.token2id = dict((v, k) for k, v in iteritems(self.id2word))
+        dictionary.token2id = utils.revdict(self.id2word)
 
         dictionary.num_docs = self.num_docs
         dictionary.num_nnz = self.num_nnz

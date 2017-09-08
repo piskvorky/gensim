@@ -944,7 +944,7 @@ def revdict(d):
     result (which one is kept is arbitrary).
 
     """
-    return dict((v, k) for (k, v) in iteritems(dict(d)))
+    return {v: k for (k, v) in iteritems(dict(d))}
 
 
 def toptexts(query, texts, index, n=10):

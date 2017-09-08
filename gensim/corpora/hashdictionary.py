@@ -182,10 +182,13 @@ class HashDictionary(utils.SaveLoad, dict):
         ok = [item for item in iteritems(self.dfs_debug) if no_below <= item[1] <= no_above_abs]
         ok = frozenset(word for word, freq in sorted(ok, key=lambda x: -x[1])[:keep_n])
 
-        self.dfs_debug = dict((word, freq) for word, freq in iteritems(self.dfs_debug) if word in ok)
-        self.token2id = dict((token, tokenid) for token, tokenid in iteritems(self.token2id) if token in self.dfs_debug)
-        self.id2token = dict((tokenid, set(token for token in tokens if token in self.dfs_debug)) for tokenid, tokens in iteritems(self.id2token))
-        self.dfs = dict((tokenid, freq) for tokenid, freq in iteritems(self.dfs) if self.id2token.get(tokenid, set()))
+        self.dfs_debug = {word: freq for word, freq in iteritems(self.dfs_debug) if word in ok}
+        self.token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if token in self.dfs_debug}
+        self.id2token = {
+            tokenid: {token for token in tokens if token in self.dfs_debug}
+            for tokenid, tokens in iteritems(self.id2token)
+        }
+        self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if self.id2token.get(tokenid, set())}
 
         # for word->document frequency
         logger.info("kept statistics for which were in no less than %i and no more than %i (=%.1f%%) documents", no_below, no_above_abs, 100.0 * no_above)

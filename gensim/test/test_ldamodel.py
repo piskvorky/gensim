@@ -378,7 +378,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     #             model = self.class_(id2word=dictionary, num_topics=2, passes=200, eta=eta)
     #             model.update(self.corpus)
 
-    #             topics = [dict((word, p) for p, word in model.show_topic(j, topn=None)) for j in range(2)]
+    #             topics = [{word: p for p, word in model.show_topic(j, topn=None)} for j in range(2)]
 
     #             # check that the word 'system' in the topic we seeded got a high weight,
     #             # and the word 'trees' (the main word in the other topic) a low weight --
@@ -412,8 +412,8 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
         tstvec = []
         self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec]))  # try projecting an empty vector
-        id2word_2_7 = dict((k, v) for k, v in model_2_7.id2word.iteritems())
-        id2word_3_5 = dict((k, v) for k, v in model_3_5.id2word.iteritems())
+        id2word_2_7 = dict(model_2_7.id2word.iteritems())
+        id2word_3_5 = dict(model_3_5.id2word.iteritems())
         self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
 
     def testPersistenceIgnore(self):
