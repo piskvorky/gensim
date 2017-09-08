@@ -196,7 +196,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             raise RuntimeError("model must be trained to perform inference")
         chunk = list(chunk)
         if len(chunk) > 1:
-            logger.debug("performing inference on a chunk of %i documents" % len(chunk))
+            logger.debug("performing inference on a chunk of %i documents", len(chunk))
 
         gamma = np.zeros((len(chunk), self.lda_beta.shape[0]))
         for d, doc in enumerate(chunk):
@@ -214,8 +214,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         gamma = self.inference([bow])[0]
         topic_dist = gamma / sum(gamma) if sum(gamma) != 0 else []
-        return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                if topicvalue >= eps]
+        return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist) if topicvalue >= eps]
 
     def update(self, corpus):
         save_freq = max(1, int(10000 / self.chunksize))  # save every 10k docs, roughly
@@ -265,7 +264,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     unique_words[word_id] = len(unique_words)
                     word_list.append(word_id)
 
-        Wt = len(word_list)  # length of words in these documents
+        wt = len(word_list)  # length of words in these documents
 
         # ...and do the lazy updates on the necessary columns of lambda
         rw = np.array([self.m_r[t] for t in self.m_timestamp[word_list]])
@@ -274,7 +273,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             psi(self.m_eta + self.m_lambda[:, word_list]) - \
             psi(self.m_W * self.m_eta + self.m_lambda_sum[:, np.newaxis])
 
-        ss = SuffStats(self.m_T, Wt, len(chunk))
+        ss = SuffStats(self.m_T, wt, len(chunk))
 
         Elogsticks_1st = expect_log_sticks(self.m_var_sticks)  # global sticks
 
@@ -285,19 +284,19 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             if len(doc) > 0:
                 doc_word_ids, doc_word_counts = zip(*doc)
                 doc_score = self.doc_e_step(
-                    doc, ss, Elogsticks_1st,
-                    word_list, unique_words, doc_word_ids,
-                    doc_word_counts, self.m_var_converge)
+                    ss, Elogsticks_1st,
+                    unique_words, doc_word_ids,
+                    doc_word_counts, self.m_var_converge
+                )
                 count += sum(doc_word_counts)
                 score += doc_score
 
         if update:
             self.update_lambda(ss, word_list, opt_o)
 
-        return (score, count)
+        return score, count
 
-    def doc_e_step(self, doc, ss, Elogsticks_1st, word_list,
-                   unique_words, doc_word_ids, doc_word_counts, var_converge):
+    def doc_e_step(self, ss, Elogsticks_1st, unique_words, doc_word_ids, doc_word_counts, var_converge):
         """
         e step for a single doc
         """
@@ -392,8 +391,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_rhot = rhot
 
         # Update appropriate columns of lambda based on documents.
-        self.m_lambda[:, word_list] = self.m_lambda[:, word_list] * (1 - rhot) + \
-            rhot * self.m_D * sstats.m_var_beta_ss / sstats.m_chunksize
+        self.m_lambda[:, word_list] = self.m_lambda[:, word_list] * (1 - rhot) + rhot * self.m_D * sstats.m_var_beta_ss / sstats.m_chunksize
         self.m_lambda_sum = (1 - rhot) * self.m_lambda_sum + \
             rhot * self.m_D * np.sum(sstats.m_var_beta_ss, axis=1) / sstats.m_chunksize
 
@@ -401,8 +399,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_timestamp[word_list] = self.m_updatect
         self.m_r.append(self.m_r[-1] + np.log(1 - rhot))
 
-        self.m_varphi_ss = (1.0 - rhot) * self.m_varphi_ss + rhot * \
-            sstats.m_var_sticks_ss * self.m_D / sstats.m_chunksize
+        self.m_varphi_ss = (1.0 - rhot) * self.m_varphi_ss + rhot * sstats.m_var_sticks_ss * self.m_D / sstats.m_chunksize
 
         if opt_o:
             self.optimal_ordering()
@@ -431,10 +428,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         topics we've learned we'll get the correct behavior.
         """
         for w in xrange(self.m_W):
-            self.m_lambda[:, w] *= np.exp(self.m_r[-1] -
-                                          self.m_r[self.m_timestamp[w]])
-        self.m_Elogbeta = psi(self.m_eta + self.m_lambda) - \
-            psi(self.m_W * self.m_eta + self.m_lambda_sum[:, np.newaxis])
+            self.m_lambda[:, w] *= np.exp(self.m_r[-1] - self.m_r[self.m_timestamp[w]])
+        self.m_Elogbeta = psi(self.m_eta + self.m_lambda) - psi(self.m_W * self.m_eta + self.m_lambda_sum[:, np.newaxis])
 
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
@@ -448,8 +443,10 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         if num_words is not None:  # deprecated num_words is used
-            logger.warning("The parameter num_words for show_topic() would be deprecated in the updated version.")
-            logger.warning("Please use topn instead.")
+            logger.warning(
+                "The parameter num_words for show_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
             topn = num_words
 
         if not self.m_status_up_to_date:
@@ -492,7 +489,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         else:
             fname = 'doc-%i' % doc_count
         fname = '%s/%s.topics' % (self.outputdir, fname)
-        logger.info("saving topics to %s" % fname)
+        logger.info("saving topics to %s", fname)
         betas = self.m_lambda + self.m_eta
         np.savetxt(fname, betas)
 
@@ -527,13 +524,12 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             alpha[i] = sticks[i] * left
             left = left - alpha[i]
         alpha[self.m_T - 1] = left
-        alpha = alpha * self.m_alpha
+        alpha *= self.m_alpha
 
         # beta
-        beta = (self.m_lambda + self.m_eta) / (self.m_W * self.m_eta +
-                self.m_lambda_sum[:, np.newaxis])
+        beta = (self.m_lambda + self.m_eta) / (self.m_W * self.m_eta + self.m_lambda_sum[:, np.newaxis])
 
-        return (alpha, beta)
+        return alpha, beta
 
     def suggested_lda_model(self):
         """
@@ -560,12 +556,14 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 lda_betad = self.lda_beta[:, doc_word_ids]
                 log_predicts = np.log(np.dot(theta, lda_betad))
                 doc_score = sum(log_predicts) / len(doc)
-                logger.info('TEST: %6d    %.5f' % (i, doc_score))
+                logger.info('TEST: %6d    %.5f', i, doc_score)
                 score += likelihood
                 total_words += sum(doc_word_counts)
-        logger.info('TEST: average score: %.5f, total score: %.5f,  test docs: %d' % (score / total_words, score, len(corpus)))
+        logger.info(
+            "TEST: average score: %.5f, total score: %.5f,  test docs: %d",
+            score / total_words, score, len(corpus)
+        )
         return score
-# endclass HdpModel
 
 
 class HdpTopicFormatter(object):
@@ -627,14 +625,20 @@ class HdpTopicFormatter(object):
 
     def print_topic(self, topic_id, topn=None, num_words=None):
         if num_words is not None:  # deprecated num_words is used
-            warnings.warn("The parameter num_words for print_topic() would be deprecated in the updated version. Please use topn instead.")
+            warnings.warn(
+                "The parameter num_words for print_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
             topn = num_words
 
         return self.show_topic(topic_id, topn, formatted=True)
 
     def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words=None,):
         if num_words is not None:  # deprecated num_words is used
-            warnings.warn("The parameter num_words for show_topic() would be deprecated in the updated version. Please use topn instead.")
+            warnings.warn(
+                "The parameter num_words for show_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
             topn = num_words
 
         lambdak = list(self.data[topic_id, :])
@@ -668,4 +672,3 @@ class HdpTopicFormatter(object):
 
         fmt = (topic_id, fmt)
         return fmt
-# endclass HdpTopicFormatter

@@ -80,7 +80,7 @@ class Dispatcher(object):
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
-                    logger.info("registering worker #%i from %s" % (workerid, uri))
+                    logger.info("registering worker #%i from %s", workerid, uri)
                     worker.initialize(workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
                 except Pyro4.errors.PyroError:
@@ -99,16 +99,16 @@ class Dispatcher(object):
 
     @Pyro4.expose
     def getjob(self, worker_id):
-        logger.info("worker #%i requesting a new job" % worker_id)
+        logger.info("worker #%i requesting a new job", worker_id)
         job = self.jobs.get(block=True, timeout=1)
-        logger.info("worker #%i got a new job (%i left)" % (worker_id, self.jobs.qsize()))
+        logger.info("worker #%i got a new job (%i left)", worker_id, self.jobs.qsize())
         return job
 
     @Pyro4.expose
     def putjob(self, job):
         self._jobsreceived += 1
         self.jobs.put(job, block=True, timeout=HUGE_TIMEOUT)
-        logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
+        logger.info("added a new job (len(queue)=%i items)", self.jobs.qsize())
 
     @Pyro4.expose
     def getstate(self):
@@ -116,7 +116,7 @@ class Dispatcher(object):
         Merge projections from across all workers and return the final projection.
         """
         logger.info("end of input, assigning all remaining jobs")
-        logger.debug("jobs done: %s, jobs received: %s" % (self._jobsdone, self._jobsreceived))
+        logger.debug("jobs done: %s, jobs received: %s", self._jobsdone, self._jobsreceived)
         while self._jobsdone < self._jobsreceived:
             time.sleep(0.5)  # check every half a second
 
@@ -124,11 +124,11 @@ class Dispatcher(object):
         # and not `workers - 1` merges!
         # but merging only takes place once, after all input data has been processed,
         # so the overall effect would be small... compared to the amount of coding :-)
-        logger.info("merging states from %i workers" % len(self.workers))
+        logger.info("merging states from %i workers", self.workers)
         workers = list(self.workers.items())
         result = workers[0][1].getstate()
         for workerid, worker in workers[1:]:
-            logger.info("pulling state from worker %s" % workerid)
+            logger.info("pulling state from worker %s", workerid)
             result.merge(worker.getstate())
         logger.info("sending out merged projection")
         return result
@@ -139,7 +139,7 @@ class Dispatcher(object):
         Initialize all workers for a new decomposition.
         """
         for workerid, worker in iteritems(self.workers):
-            logger.info("resetting worker %s" % workerid)
+            logger.info("resetting worker %s", workerid)
             worker.reset()
             worker.requestjob()
         self._jobsdone = 0
@@ -157,7 +157,7 @@ class Dispatcher(object):
         worker.requestjob().
         """
         self._jobsdone += 1
-        logger.info("worker #%s finished job #%i" % (workerid, self._jobsdone))
+        logger.info("worker #%s finished job #%i", workerid, self._jobsdone)
         worker = self.workers[workerid]
         worker.requestjob()  # tell the worker to ask for another job, asynchronously (one-way)
 
@@ -171,7 +171,7 @@ class Dispatcher(object):
         Terminate all registered workers and then the dispatcher.
         """
         for workerid, worker in iteritems(self.workers):
-            logger.info("terminating worker %s" % workerid)
+            logger.info("terminating worker %s", workerid)
             worker.exit()
         logger.info("terminating dispatcher")
         os._exit(0)  # exit the whole process (not just this thread ala sys.exit())
@@ -180,7 +180,7 @@ class Dispatcher(object):
 
 def main():
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logger.info("running %s" % " ".join(sys.argv))
+    logger.info("running %s", " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
     # make sure we have enough cmd line parameters
@@ -194,7 +194,7 @@ def main():
         maxsize = int(sys.argv[1])
     utils.pyro_daemon('gensim.lsi_dispatcher', Dispatcher(maxsize=maxsize))
 
-    logger.info("finished running %s" % program)
+    logger.info("finished running %s", program)
 
 
 if __name__ == '__main__':

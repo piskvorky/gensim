@@ -112,8 +112,7 @@ class TextCorpus(interfaces.CorpusABC):
     6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
 
     """
-    def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None,
-                 tokenizer=None, token_filters=None):
+    def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None, tokenizer=None, token_filters=None):
         """
         Args:
             input (str): path to top-level directory to traverse for corpus documents.
@@ -171,9 +170,7 @@ class TextCorpus(interfaces.CorpusABC):
             else:
                 logger.info("Input stream provided but dictionary already initialized")
         else:
-            logger.warning(
-                "No input document stream provided; assuming "
-                "dictionary will be initialized some other way.")
+            logger.warning("No input document stream provided; assuming dictionary will be initialized some other way.")
 
     def __iter__(self):
         """The function that defines a corpus.
@@ -231,8 +228,7 @@ class TextCorpus(interfaces.CorpusABC):
         yield (self.tokenizer, tokens)
 
         for token_filter in self.token_filters:
-            tokens = token_filter(tokens)
-            yield (token_filter, tokens)
+            yield (token_filter, token_filter(tokens))
 
     def get_texts(self):
         """Iterate over the collection, yielding one document at a time. A document
@@ -308,7 +304,6 @@ class TextCorpus(interfaces.CorpusABC):
             # cache the corpus length
             self.length = sum(1 for _ in self.getstream())
         return self.length
-# endclass TextCorpus
 
 
 class TextDirectoryCorpus(TextCorpus):
@@ -433,7 +428,6 @@ class TextDirectoryCorpus(TextCorpus):
             self.length = sum(1 for _ in self.iter_filepaths())
         else:
             self.length = sum(1 for _ in self.getstream())
-# endclass TextDirectoryCorpus
 
 
 def walk(top, topdown=True, onerror=None, followlinks=False, depth=0):

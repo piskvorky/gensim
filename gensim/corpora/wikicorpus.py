@@ -57,9 +57,11 @@ RE_P15 = re.compile('\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
 
 # MediaWiki namespaces (https://www.mediawiki.org/wiki/Manual:Namespace) that
 # ought to be ignored
-IGNORED_NAMESPACES = ['Wikipedia', 'Category', 'File', 'Portal', 'Template',
-                      'MediaWiki', 'User', 'Help', 'Book', 'Draft',
-                      'WikiProject', 'Special', 'Talk']
+IGNORED_NAMESPACES = [
+    'Wikipedia', 'Category', 'File', 'Portal', 'Template',
+    'MediaWiki', 'User', 'Help', 'Book', 'Draft', 'WikiProject',
+    'Special', 'Talk'
+]
 
 
 def filter_wiki(raw):
@@ -143,10 +145,7 @@ def remove_template(s):
         prev_c = c
 
     # Remove all the templates
-    s = ''.join([s[end + 1:start] for start, end in
-                 zip(starts + [None], [-1] + ends)])
-
-    return s
+    return ''.join([s[end + 1:start] for start, end in zip(starts + [None], [-1] + ends)])
 
 
 def remove_file(s):
@@ -184,8 +183,7 @@ def get_namespace(tag):
     m = re.match("^{(.*?)}", tag)
     namespace = m.group(1) if m else ""
     if not namespace.startswith("http://www.mediawiki.org/xml/export-"):
-        raise ValueError("%s not recognized as MediaWiki dump namespace"
-                         % namespace)
+        raise ValueError("%s not recognized as MediaWiki dump namespace" % namespace)
     return namespace
 
 
@@ -271,8 +269,7 @@ class WikiCorpus(TextCorpus):
 
     """
 
-    def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
-                 filter_namespaces=('0',)):
+    def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None, filter_namespaces=('0',)):
         """
         Initialize the corpus. Unless a dictionary is provided, this scans the
         corpus once, to determine its vocabulary.
@@ -311,10 +308,10 @@ class WikiCorpus(TextCorpus):
         """
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0
-        texts = \
-            ((text, self.lemmatize, title, pageid)
-             for title, text, pageid
-             in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
+        texts = (
+            (text, self.lemmatize, title, pageid) for title, text, pageid
+            in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces)
+        )
         pool = multiprocessing.Pool(self.processes, init_to_ignore_interrupt)
 
         try:
@@ -335,15 +332,16 @@ class WikiCorpus(TextCorpus):
                         yield tokens
         except KeyboardInterrupt:
             logger.warn(
-                "user terminated iteration over Wikipedia corpus after %i documents with %i positions"
-                " (total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS)
+                "user terminated iteration over Wikipedia corpus after %i documents with %i positions "
+                "(total %i articles, %i positions before pruning articles shorter than %i words)",
+                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+            )
         else:
             logger.info(
-                "finished iterating over Wikipedia corpus of %i documents with %i positions"
-                " (total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS)
+                "finished iterating over Wikipedia corpus of %i documents with %i positions "
+                "(total %i articles, %i positions before pruning articles shorter than %i words)",
+                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+            )
             self.length = articles  # cache corpus length
         finally:
             pool.terminate()
-# endclass WikiCorpus

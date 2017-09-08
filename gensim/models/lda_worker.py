@@ -50,7 +50,7 @@ class Worker(object):
         self.myid = myid  # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
         self.dispatcher = dispatcher
         self.finished = False
-        logger.info("initializing worker #%s" % myid)
+        logger.info("initializing worker #%s", myid)
         self.model = ldamodel.LdaModel(**model_params)
 
     @Pyro4.expose
@@ -70,27 +70,26 @@ class Worker(object):
                 # no new job: try again, unless we're finished with all work
                 continue
         if job is not None:
-            logger.info("worker #%s received job #%i" % (self.myid, self.jobsdone))
+            logger.info("worker #%s received job #%i", self.myid, self.jobsdone)
             self.processjob(job)
             self.dispatcher.jobdone(self.myid)
         else:
-            logger.info("worker #%i stopping asking for jobs" % self.myid)
+            logger.info("worker #%i stopping asking for jobs", self.myid)
 
     @utils.synchronous('lock_update')
     def processjob(self, job):
-        logger.debug("starting to process job #%i" % self.jobsdone)
+        logger.debug("starting to process job #%i", self.jobsdone)
         self.model.do_estep(job)
         self.jobsdone += 1
         if SAVE_DEBUG and self.jobsdone % SAVE_DEBUG == 0:
             fname = os.path.join(tempfile.gettempdir(), 'lda_worker.pkl')
             self.model.save(fname)
-        logger.info("finished processing job #%i" % (self.jobsdone - 1))
+        logger.info("finished processing job #%i", self.jobsdone - 1)
 
     @Pyro4.expose
     @utils.synchronous('lock_update')
     def getstate(self):
-        logger.info("worker #%i returning its state after %s jobs" %
-                    (self.myid, self.jobsdone))
+        logger.info("worker #%i returning its state after %s jobs", self.myid, self.jobsdone)
         result = self.model.state
         assert isinstance(result, ldamodel.LdaState)
         self.model.clear()  # free up mem in-between two EM cycles
@@ -101,7 +100,7 @@ class Worker(object):
     @utils.synchronous('lock_update')
     def reset(self, state):
         assert state is not None
-        logger.info("resetting worker #%i" % self.myid)
+        logger.info("resetting worker #%i", self.myid)
         self.model.state = state
         self.model.sync_state()
         self.model.state.reset()
@@ -109,32 +108,29 @@ class Worker(object):
 
     @Pyro4.oneway
     def exit(self):
-        logger.info("terminating worker #%i" % self.myid)
+        logger.info("terminating worker #%i", self.myid)
         os._exit(0)
-# endclass Worker
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
     parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
-    parser.add_argument("--no-broadcast", help="Disable broadcast (default: %(default)s)",
-                        action='store_const', default=True, const=False)
+    parser.add_argument("--no-broadcast", help="Disable broadcast (default: %(default)s)", action='store_const', default=True, const=False)
     parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
-    parser.add_argument('-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel",
-                        const=logging.INFO, default=logging.WARNING)
+    parser.add_argument('-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel", const=logging.INFO, default=logging.WARNING)
     args = parser.parse_args()
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
     logger.info("running %s", " ".join(sys.argv))
 
-    ns_conf = {"broadcast": args.no_broadcast,
-               "host": args.host,
-               "port": args.port,
-               "hmac_key": args.hmac}
-
+    ns_conf = {
+        "broadcast": args.no_broadcast,
+        "host": args.host,
+        "port": args.port,
+        "hmac_key": args.hmac
+    }
     utils.pyro_daemon(LDA_WORKER_PREFIX, Worker(), random_suffix=True, ns_conf=ns_conf)
-
     logger.info("finished running %s", " ".join(sys.argv))
 
 

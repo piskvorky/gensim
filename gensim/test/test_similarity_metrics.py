@@ -24,15 +24,17 @@ module_path = os.path.dirname(__file__)  # needed because sample data files are 
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+texts = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey']
+]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 

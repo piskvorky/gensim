@@ -17,7 +17,9 @@ from gensim.models.keyedvectors import KeyedVectors
 try:
     from annoy import AnnoyIndex
 except ImportError:
-    raise ImportError("Annoy has not been installed, if you wish to use the annoy indexer, please run `pip install annoy`")
+    raise ImportError(
+        "Annoy has not been installed, if you wish to use the annoy indexer, please run `pip install annoy`"
+    )
 
 
 class AnnoyIndexer(object):
@@ -49,7 +51,8 @@ class AnnoyIndexer(object):
         fname_dict = fname + '.d'
         if not (os.path.exists(fname) and os.path.exists(fname_dict)):
             raise IOError(
-                "Can't find index files '%s' and '%s' - Unable to restore AnnoyIndexer state." % (fname, fname_dict))
+                "Can't find index files '%s' and '%s' - Unable to restore AnnoyIndexer state." % (fname, fname_dict)
+            )
         else:
             with smart_open(fname_dict) as f:
                 d = _pickle.loads(f.read())

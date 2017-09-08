@@ -17,7 +17,7 @@ import tempfile
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import hdpmodel
-from gensim.test import basetests
+from gensim.test import basetmtests
 
 import numpy as np
 
@@ -26,15 +26,17 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+texts = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey']
+]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
@@ -44,7 +46,7 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-class TestHdpModel(unittest.TestCase, basetests.TestBaseTopicModel):
+class TestHdpModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = hdpmodel.HdpModel

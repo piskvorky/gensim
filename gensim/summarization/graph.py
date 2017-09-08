@@ -242,8 +242,7 @@ class Graph(IGraph):
             self.del_edge_labeling((v, u))
 
     def del_edge_labeling(self, edge):
-        keys = [edge]
-        keys.append(edge[::-1])
+        keys = [edge, edge[::-1]]
 
         for key in keys:
             for mapping in [self.edge_properties, self.edge_attr]:

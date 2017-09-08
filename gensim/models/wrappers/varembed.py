@@ -18,14 +18,10 @@ The wrapped model can not be updated with new documents for online training.
 """
 
 import logging
-import sys
-
 import numpy as np
 
-from gensim.models.keyedvectors import KeyedVectors
-
-# utility fnc for pickling, common scipy operations etc
 from gensim import utils
+from gensim.models.keyedvectors import KeyedVectors
 from gensim.models.word2vec import Vocab
 
 logger = logging.getLogger(__name__)
@@ -56,25 +52,21 @@ class VarEmbed(KeyedVectors):
         result = cls()
         if vectors is None:
             raise Exception("Please provide vectors binary to load varembed model")
-        D = utils.unpickle(vectors)
-        word_to_ix = D['word_to_ix']
-        morpho_to_ix = D['morpho_to_ix']
-        word_embeddings = D['word_embeddings']
-        morpho_embeddings = D['morpheme_embeddings']
+        d = utils.unpickle(vectors)
+        word_to_ix = d['word_to_ix']
+        morpho_to_ix = d['morpho_to_ix']
+        word_embeddings = d['word_embeddings']
+        morpho_embeddings = d['morpheme_embeddings']
         result.load_word_embeddings(word_embeddings, word_to_ix)
         if morfessor_model:
-            if sys.version_info >= (2, 7):  # Morfessor is only supported for Python 2.7 and above.
-                try:
-                    import morfessor
-                    morfessor_model = morfessor.MorfessorIO().read_binary_model_file(morfessor_model)
-                    result.add_morphemes_to_embeddings(morfessor_model, morpho_embeddings, morpho_to_ix)
-                except ImportError:
-                    # Morfessor Package not found.
-                    logger.error('Could not import morfessor. Not using morpheme embeddings')
-                    raise ImportError('Could not import morfessor.')
-            else:
-                # Raise exception in Python 2.6 or earlier.
-                raise Exception('Using Morphemes requires Python 2.7 and above. Morfessor is not supported in python 2.6')
+            try:
+                import morfessor
+                morfessor_model = morfessor.MorfessorIO().read_binary_model_file(morfessor_model)
+                result.add_morphemes_to_embeddings(morfessor_model, morpho_embeddings, morpho_to_ix)
+            except ImportError:
+                # Morfessor Package not found.
+                logger.error('Could not import morfessor. Not using morpheme embeddings')
+                raise ImportError('Could not import morfessor.')
 
         logger.info('Loaded varembed model vectors from %s', vectors)
         return result
@@ -105,6 +97,10 @@ class VarEmbed(KeyedVectors):
         """
         for word in self.vocab:
             morpheme_embedding = np.array(
-                [morpho_embeddings[morpho_to_ix.get(m, -1)] for m in morfessor_model.viterbi_segment(word)[0]]).sum(axis=0)
+                [
+                    morpho_embeddings[morpho_to_ix.get(m, -1)]
+                    for m in morfessor_model.viterbi_segment(word)[0]
+                ]
+            ).sum(axis=0)
             self.syn0[self.vocab[word].index] += morpheme_embedding
         logger.info("Added morphemes to word vectors")

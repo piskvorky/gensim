@@ -79,7 +79,10 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
 
         word_a = 'graph'
         word_b = 'trees'
-        output = model.predict([np.asarray([keras_w2v_model.wv.vocab[word_a].index]), np.asarray([keras_w2v_model.wv.vocab[word_b].index])])
+        output = model.predict([
+            np.asarray([keras_w2v_model.wv.vocab[word_a].index]),
+            np.asarray([keras_w2v_model.wv.vocab[word_b].index])
+        ])
         # output is the cosine distance between the two words (as a similarity measure)
 
         self.assertTrue(type(output[0][0][0]) == np.float32)     # verify that  a float is returned
@@ -113,7 +116,7 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
                     texts_w2v.append(sentence.split(' '))
                     labels.append(label_id)
             except Exception:
-                None
+                pass
 
         # Vectorize the text samples into a 2D integer tensor
         tokenizer = Tokenizer()
@@ -128,11 +131,11 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         y_train = labels
 
         # prepare the embedding layer using the wrapper
-        Keras_w2v = self.model_twenty_ng
-        Keras_w2v.build_vocab(texts_w2v)
-        Keras_w2v.train(texts, total_examples=Keras_w2v.corpus_count, epochs=Keras_w2v.iter)
-        Keras_w2v_wv = Keras_w2v.wv
-        embedding_layer = Keras_w2v_wv.get_embedding_layer()
+        keras_w2v = self.model_twenty_ng
+        keras_w2v.build_vocab(texts_w2v)
+        keras_w2v.train(texts, total_examples=keras_w2v.corpus_count, epochs=keras_w2v.iter)
+        keras_w2v_wv = keras_w2v.wv
+        embedding_layer = keras_w2v_wv.get_embedding_layer()
 
         # create a 1D convnet to solve our classification task
         sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')

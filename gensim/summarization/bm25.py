@@ -18,7 +18,7 @@ class BM25(object):
 
     def __init__(self, corpus):
         self.corpus_size = len(corpus)
-        self.avgdl = sum(map(lambda x: float(len(x)), corpus)) / self.corpus_size
+        self.avgdl = sum(float(len(x)) for x in corpus) / self.corpus_size
         self.corpus = corpus
         self.f = []
         self.df = {}
@@ -62,7 +62,7 @@ class BM25(object):
 
 def get_bm25_weights(corpus):
     bm25 = BM25(corpus)
-    average_idf = sum(map(lambda k: float(bm25.idf[k]), bm25.idf.keys())) / len(bm25.idf.keys())
+    average_idf = sum(float(val) for val in bm25.idf.values()) / len(bm25.idf)
 
     weights = []
     for doc in corpus:

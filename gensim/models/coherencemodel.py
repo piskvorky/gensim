@@ -168,7 +168,8 @@ class CoherenceModel(interfaces.TransformationABC):
             if isinstance(model.id2word, FakeDict):
                 raise ValueError(
                     "The associated dictionary should be provided with the corpus or 'id2word'"
-                    " for topic model should be set as the associated dictionary.")
+                    " for topic model should be set as the associated dictionary."
+                )
             else:
                 self.dictionary = model.id2word
         else:
@@ -236,9 +237,7 @@ class CoherenceModel(interfaces.TransformationABC):
         if self.model is not None:
             new_topics = self._get_topics()
             if topics is not None:
-                logger.warning(
-                    "Ignoring topics you are attempting to set in favor of model's topics: %s",
-                    self.model)
+                logger.warning("Ignoring topics you are attempting to set in favor of model's topics: %s", self.model)
         elif topics is not None:
             new_topics = []
             for topic in topics:
@@ -275,7 +274,8 @@ class CoherenceModel(interfaces.TransformationABC):
         except AttributeError:
             raise ValueError(
                 "This topic model is not currently supported. Supported topic models"
-                " should implement the `get_topics` method.")
+                " should implement the `get_topics` method."
+            )
 
     def segment_topics(self):
         return self.measure.seg(self.topics)
@@ -294,7 +294,8 @@ class CoherenceModel(interfaces.TransformationABC):
             self._accumulator = self.measure.prob(
                 texts=self.texts, segmented_topics=segmented_topics,
                 dictionary=self.dictionary, window_size=self.window_size,
-                processes=self.processes)
+                processes=self.processes
+            )
 
         return self._accumulator
 
