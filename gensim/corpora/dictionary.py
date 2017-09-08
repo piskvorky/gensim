@@ -322,7 +322,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             old2new[other_id] = new_id
             try:
                 self.dfs[new_id] += other.dfs[other_id]
-            except AttributeError:
+            except Exception:
                 # `other` isn't a Dictionary (probably just a dict) => ignore dfs, keep going
                 pass
         try:
