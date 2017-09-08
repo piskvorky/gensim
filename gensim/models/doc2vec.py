@@ -847,7 +847,7 @@ class Doc2Vec(Word2Vec):
                     fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vector_size)))
                 # store as in input order
                 for i in range(len(self.docvecs)):
-                    doctag = "%s%s" % (prefix, self.docvecs.index_to_doctag(i))
+                    doctag = u"%s%s" % (prefix, self.docvecs.index_to_doctag(i))
                     row = self.docvecs.doctag_syn0[i]
                     if binary:
                         fout.write(utils.to_utf8(doctag) + b" " + row.tostring())
