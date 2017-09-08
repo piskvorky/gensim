@@ -174,7 +174,7 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
     Returns a summarized version of the given text using a variation of
     the TextRank algorithm.
     The input must be longer than INPUT_MIN_LENGTH sentences for the
-    summary to make sense and must be given as a string.
+    summary to make sense and must be given as a string
 
     The output summary will consist of the most representative sentences
     and will also be returned as a string, divided by newlines. If the
@@ -191,21 +191,31 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
         If both parameters are provided, the ratio will be ignored.
 
     """
+    if not isinstance(text, str):
+        msg = 'The input text must be a string.'
+        logger.warning(msg)
+        raise ValueError(msg)
+
     # Gets a list of processed sentences.
     sentences = _clean_text_by_sentences(text)
 
     # If no sentence could be identified, the function ends.
     if len(sentences) == 0:
-        logger.warning("Input text is empty.")
-        return
+        msg = "Input text is empty."
+        logger.warning(msg)
+        raise ValueError(msg)
 
     # If only one sentence is present, the function raises an error (Avoids ZeroDivisionError).
     if len(sentences) == 1:
-        raise ValueError("input must have more than one sentence")
+        msg = "Input text must have more than one sentence."
+        logger.warning(msg)
+        raise ValueError(msg)
 
     # Warns if the text is too short.
     if len(sentences) < INPUT_MIN_LENGTH:
-        logger.warning("Input text is expected to have at least " + str(INPUT_MIN_LENGTH) + " sentences.")
+        msg = "Input text is expected to have at least " + str(INPUT_MIN_LENGTH) + " sentences."
+        logger.warning(msg)
+        raise ValueError(msg)
 
     corpus = _build_corpus(sentences)
 
