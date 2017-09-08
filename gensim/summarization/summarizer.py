@@ -210,6 +210,12 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
     corpus = _build_corpus(sentences)
 
     most_important_docs = summarize_corpus(corpus, ratio=ratio if word_count is None else 1)
+    # temporary workaround for bug #1531. Will return the text as if it had been summarized
+    if most_important_docs is None:
+        msg = 'WARNING: Due to bug #1531 it was not possible to summarize the text. '
+        msg += 'It will be returned unchanged. Please fix.'
+        logger.warning(msg)
+        return text
 
     # Extracts the most important sentences with the selected criterion.
     extracted_sentences = _extract_important_sentences(sentences, corpus, most_important_docs, word_count)
