@@ -101,7 +101,6 @@ class TestHashDictionary(unittest.TestCase):
         expected = {}
         self.assertEqual(d.id2token, expected)
 
-
     def testRange(self):
         # all words map to the same id
         d = HashDictionary(self.texts, id_range=1, debug=True)
@@ -121,10 +120,9 @@ class TestHashDictionary(unittest.TestCase):
         self.assertEqual(d.id2token, id2token)
         self.assertEqual(d.token2id, token2id)
 
-
     def testBuild(self):
         d = HashDictionary(self.texts, myhash=zlib.adler32)
-        expected =  {5232: 2,
+        expected = {5232: 2,
                      5798: 3,
                      10608: 2,
                      12466: 2,
@@ -176,7 +174,6 @@ class TestHashDictionary(unittest.TestCase):
         self.assertTrue(os.path.exists(tmpf))
         d2 = d.load(tmpf)
         self.assertEqual(len(d), len(d2))
-
 
 
 if __name__ == '__main__':

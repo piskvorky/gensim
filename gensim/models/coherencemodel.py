@@ -116,6 +116,7 @@ class CoherenceModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
+
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
                  window_size=None, keyed_vectors=None, coherence='c_v', topn=20, processes=-1):
         """

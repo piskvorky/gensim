@@ -77,6 +77,7 @@ class LdaMulticore(LdaModel):
     Model persistency is achieved through its `load`/`save` methods.
 
     """
+
     def __init__(self, corpus=None, num_topics=100, id2word=None, workers=None,
                  chunksize=2000, passes=1, batch=False, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
@@ -125,7 +126,7 @@ class LdaMulticore(LdaModel):
 
         `decay` and `offset` parameters are the same as Kappa and Tau_0 in
         Hoffman et al, respectively.
-        
+
         `random_state` can be a numpy.random.RandomState object or the seed for one
 
         Example:
@@ -145,9 +146,8 @@ class LdaMulticore(LdaModel):
         super(LdaMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
-            gamma_threshold=gamma_threshold, random_state=random_state, minimum_probability= minimum_probability,
+            gamma_threshold=gamma_threshold, random_state=random_state, minimum_probability=minimum_probability,
             minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
-
 
     def update(self, corpus, chunks_as_numpy=False):
         """
@@ -169,7 +169,7 @@ class LdaMulticore(LdaModel):
         """
         try:
             lencorpus = len(corpus)
-        except:
+        except Exception:
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
@@ -249,7 +249,7 @@ class LdaMulticore(LdaModel):
                         process_result_queue()
 
                 process_result_queue()
-            #endfor single corpus pass
+            # endfor single corpus pass
 
             # wait for all outstanding jobs to finish
             while queue_size[0] > 0:
@@ -257,7 +257,7 @@ class LdaMulticore(LdaModel):
 
             if reallen != lencorpus:
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
-        #endfor entire update
+        # endfor entire update
 
         pool.terminate()
 

@@ -15,11 +15,8 @@ Example: ./gensim_build.py eng
 import logging
 import sys
 import os.path
-import re
-
 
 from gensim.corpora import sources, dmlcorpus
-
 
 PREFIX = 'dmlcz'
 
@@ -51,12 +48,12 @@ else:
 
 def buildDmlCorpus(config):
     dml = dmlcorpus.DmlCorpus()
-    dml.processConfig(config, shuffle = True)
+    dml.processConfig(config, shuffle=True)
     dml.buildDictionary()
-    dml.dictionary.filterExtremes(noBelow=5, noAbove=0.3) # ignore too (in)frequent words
+    dml.dictionary.filterExtremes(noBelow=5, noAbove=0.3)  # ignore too (in)frequent words
 
-    dml.save(config.resultFile('.pkl')) # save the mappings as binary data (actual documents are not saved, only their URIs)
-    dml.saveAsText() # save id mappings and documents as text data (matrix market format)
+    dml.save(config.resultFile('.pkl'))  # save the mappings as binary data (actual documents are not saved, only their URIs)
+    dml.saveAsText()  # save id mappings and documents as text data (matrix market format)
     return dml
 
 

@@ -39,11 +39,13 @@ import six
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
 from six.moves import xrange
+from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jensen_shannon
 from gensim.models import basemodel, CoherenceModel
+from gensim.models.callbacks import Callback
 
 # log(sum(exp(x))) that tries to avoid overflow
 try:
@@ -89,6 +91,7 @@ class LdaState(utils.SaveLoad):
     reduce traffic.
 
     """
+
     def __init__(self, eta, shape):
         self.eta = eta
         self.sstats = np.zeros(shape)
@@ -188,12 +191,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     Model persistency is achieved through its `load`/`save` methods.
     """
+
     def __init__(self, corpus=None, num_topics=100, id2word=None,
                  distributed=False, chunksize=2000, passes=1, update_every=1,
-                 alpha='symmetric', eta=None, decay=0.5, offset=1.0,
-                 eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01, random_state=None, ns_conf={},
-                 minimum_phi_value=0.01, per_word_topics=False):
+                 alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
+                 iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
+                 random_state=None, ns_conf=None, minimum_phi_value=0.01,
+                 per_word_topics=False, callbacks=None):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -237,6 +241,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         `random_state` can be a np.random.RandomState object or the seed for one
 
+        `callbacks` a list of metric callbacks to log/visualize evaluation metrics of topic model during training
+
         Example:
 
         >>> lda = LdaModel(corpus, num_topics=100)  # train model
@@ -278,6 +284,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eval_every = eval_every
         self.minimum_phi_value = minimum_phi_value
         self.per_word_topics = per_word_topics
+        self.callbacks = callbacks
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
@@ -310,6 +317,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # set up distributed version
             try:
                 import Pyro4
+                if ns_conf is None:
+                    ns_conf = {}
+
                 with utils.getNS(**ns_conf) as ns:
                     from gensim.models.lda_dispatcher import LDA_DISPATCHER_PREFIX
                     self.dispatcher = Pyro4.Proxy(ns.list(prefix=LDA_DISPATCHER_PREFIX)[LDA_DISPATCHER_PREFIX])
@@ -403,7 +413,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         try:
             _ = len(chunk)
-        except:
+        except Exception:
             # convert iterators/generators to plain list, so we have len() etc.
             chunk = list(chunk)
         if len(chunk) > 1:
@@ -579,7 +589,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         try:
             lencorpus = len(corpus)
-        except:
+        except Exception:
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
@@ -623,6 +633,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # while allowing it to "reset" on the first pass of each update
         def rho():
             return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
+
+        if self.callbacks:
+            # pass the list of input callbacks to Callback class
+            callback = Callback(self.callbacks)
+            callback.set_model(self)
+            # initialize metrics list to store metric values after every epoch
+            self.metrics = defaultdict(list)
 
         for pass_ in xrange(passes):
             if self.dispatcher:
@@ -672,8 +689,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         other = LdaState(self.eta, self.state.sstats.shape)
                     dirty = False
             # endfor single corpus iteration
+
             if reallen != lencorpus:
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
+
+            # append current epoch's metric values
+            if self.callbacks:
+                current_metrics = callback.on_epoch_end(pass_)
+                for metric, value in current_metrics.items():
+                    self.metrics[metric].append(value)
 
             if dirty:
                 # finish any remaining updates
@@ -684,6 +708,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self.do_mstep(rho(), other, pass_ > 0)
                 del other
                 dirty = False
+
         # endfor entire corpus update
 
     def do_mstep(self, rho, other, extra_pass=False):

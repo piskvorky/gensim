@@ -2,15 +2,16 @@
 This package contains implementations of various streaming corpus I/O format.
 """
 
-from .indexedcorpus import IndexedCorpus  # must appear before the other classes
 # bring corpus classes directly into package namespace, to save some typing
-from .bleicorpus import BleiCorpus
-from .dictionary import Dictionary
-from .hashdictionary import HashDictionary
-from .lowcorpus import LowCorpus
-from .malletcorpus import MalletCorpus
-from .mmcorpus import MmCorpus
-from .svmlightcorpus import SvmLightCorpus
-from .textcorpus import TextCorpus, TextDirectoryCorpus
-from .ucicorpus import UciCorpus
-from .wikicorpus import WikiCorpus
+from .indexedcorpus import IndexedCorpus  # noqa:F401 must appear before the other classes
+
+from .mmcorpus import MmCorpus  # noqa:F401
+from .bleicorpus import BleiCorpus  # noqa:F401
+from .svmlightcorpus import SvmLightCorpus  # noqa:F401
+from .lowcorpus import LowCorpus  # noqa:F401
+from .dictionary import Dictionary  # noqa:F401
+from .hashdictionary import HashDictionary  # noqa:F401
+from .wikicorpus import WikiCorpus  # noqa:F401
+from .textcorpus import TextCorpus, TextDirectoryCorpus  # noqa:F401
+from .ucicorpus import UciCorpus  # noqa:F401
+from .malletcorpus import MalletCorpus  # noqa:F401

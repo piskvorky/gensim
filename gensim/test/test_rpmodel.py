@@ -15,15 +15,13 @@ import os
 import os.path
 import tempfile
 
-import six
 import numpy as np
-import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import rpmodel
 from gensim import matutils
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -46,24 +44,22 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-
 class TestRpModel(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
 
     def testTransform(self):
         # create the transformation model
-        np.random.seed(13) # HACK; set fixed seed so that we always get the same random matrix (and can compare against expected results)
+        np.random.seed(13)  # HACK; set fixed seed so that we always get the same random matrix (and can compare against expected results)
         model = rpmodel.RpModel(self.corpus, num_topics=2)
 
         # transform one document
         doc = list(self.corpus)[0]
         transformed = model[doc]
-        vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
+        vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
 
         expected = np.array([-0.70710677, 0.70710677])
-        self.assertTrue(np.allclose(vec, expected)) # transformed entries must be equal up to sign
-
+        self.assertTrue(np.allclose(vec, expected))  # transformed entries must be equal up to sign
 
     def testPersistence(self):
         fname = testfile()
@@ -73,7 +69,7 @@ class TestRpModel(unittest.TestCase):
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(np.allclose(model.projection, model2.projection))
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testPersistenceCompressed(self):
         fname = testfile() + '.gz'
@@ -83,8 +79,8 @@ class TestRpModel(unittest.TestCase):
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(np.allclose(model.projection, model2.projection))
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
-#endclass TestRpModel
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
+# endclass TestRpModel
 
 
 if __name__ == '__main__':

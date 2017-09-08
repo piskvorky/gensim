@@ -71,7 +71,6 @@ class TestMiislita(unittest.TestCase):
         miislita2 = corpora.MmCorpus(ftmp)
         self.assertEqual(list(miislita), list(miislita2))
 
-
     def test_save_load_ability(self):
         """
         Make sure we can save and load (un/pickle) TextCorpus objects (as long
@@ -89,7 +88,6 @@ class TestMiislita(unittest.TestCase):
 
         self.assertEqual(len(miislita), len(miislita2))
         self.assertEqual(miislita.dictionary.token2id, miislita2.dictionary.token2id)
-
 
     def test_miislita_high_level(self):
         # construct corpus from file

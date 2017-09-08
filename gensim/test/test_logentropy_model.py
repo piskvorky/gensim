@@ -15,15 +15,12 @@ import os
 import os.path
 import tempfile
 
-import six
 import numpy as np
-import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import logentropy_model
-from gensim import matutils
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -51,7 +48,6 @@ class TestLogEntropyModel(unittest.TestCase):
         self.corpus_small = mmcorpus.MmCorpus(datapath('test_corpus_small.mm'))
         self.corpus_ok = mmcorpus.MmCorpus(datapath('test_corpus_ok.mm'))
 
-
     def testTransform(self):
         # create the transformation model
         model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=False)
@@ -64,7 +60,6 @@ class TestLogEntropyModel(unittest.TestCase):
                     (1, 0.30730215324230725),
                     (3, 1.20941755462856)]
         self.assertTrue(np.allclose(transformed, expected))
-
 
     def testPersistence(self):
         fname = testfile()
@@ -83,7 +78,7 @@ class TestLogEntropyModel(unittest.TestCase):
         self.assertTrue(model.entr == model2.entr)
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))
-#endclass TestLogEntropyModel
+# endclass TestLogEntropyModel
 
 
 if __name__ == '__main__':

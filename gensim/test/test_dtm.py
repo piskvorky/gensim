@@ -69,6 +69,7 @@ class TestDtmModel(unittest.TestCase):
                     id2word=self.id2word, model='dtm', initialize_lda=False,
                     rng_seed=1)
 
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     unittest.main()

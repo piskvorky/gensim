@@ -21,7 +21,6 @@ import math
 from time import time
 
 import numpy as np
-import scipy.sparse
 
 import gensim
 
@@ -66,7 +65,7 @@ if __name__ == '__main__':
                 sims.extend(sim)
         else:
             sims = [index_dense[vec] for vec in query]
-        assert len(sims) == len(query) # make sure we have one result for each query document
+        assert len(sims) == len(query)  # make sure we have one result for each query document
         taken = time() - start
         queries = math.ceil(1.0 * len(query) / chunksize)
         logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
@@ -85,7 +84,7 @@ if __name__ == '__main__':
                 sims.extend(sim)
         else:
             sims = [index_sparse[vec] for vec in query]
-        assert len(sims) == len(query) # make sure we have one result for each query document
+        assert len(sims) == len(query)  # make sure we have one result for each query document
         taken = time() - start
         queries = math.ceil(1.0 * len(query) / chunksize)
         logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %

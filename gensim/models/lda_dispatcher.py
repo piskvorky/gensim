@@ -44,7 +44,7 @@ MAX_JOBS_QUEUE = 10
 # timeout for the Queue object put/get blocking methods.
 # it should theoretically be infinity, but then keyboard interrupts don't work.
 # so this is really just a hack, see http://bugs.python.org/issue1360
-HUGE_TIMEOUT = 365 * 24 * 60 * 60 # one year
+HUGE_TIMEOUT = 365 * 24 * 60 * 60  # one year
 
 LDA_DISPATCHER_PREFIX = 'gensim.lda_dispatcher'
 
@@ -56,14 +56,14 @@ class Dispatcher(object):
     There should never be more than one dispatcher running at any one time.
     """
 
-    def __init__(self, maxsize=MAX_JOBS_QUEUE, ns_conf={}):
+    def __init__(self, maxsize=MAX_JOBS_QUEUE, ns_conf=None):
         """
         Note that the constructor does not fully initialize the dispatcher;
         use the `initialize()` function to populate it with workers etc.
         """
         self.maxsize = maxsize
-        self.callback = None # a pyro proxy to this object (unknown at init time, but will be set later)
-        self.ns_conf = ns_conf
+        self.callback = None  # a pyro proxy to this object (unknown at init time, but will be set later)
+        self.ns_conf = ns_conf if ns_conf is not None else {}
 
     @Pyro4.expose
     def initialize(self, **model_params):
@@ -123,7 +123,7 @@ class Dispatcher(object):
         logger.info("end of input, assigning all remaining jobs")
         logger.debug("jobs done: %s, jobs received: %s" % (self._jobsdone, self._jobsreceived))
         while self._jobsdone < self._jobsreceived:
-            time.sleep(0.5) # check every half a second
+            time.sleep(0.5)  # check every half a second
 
         logger.info("merging states from %i workers" % len(self.workers))
         workers = list(self.workers.values())
@@ -159,13 +159,11 @@ class Dispatcher(object):
         """
         self._jobsdone += 1
         logger.info("worker #%s finished job #%i" % (workerid, self._jobsdone))
-        self.workers[workerid].requestjob() # tell the worker to ask for another job, asynchronously (one-way)
-
+        self.workers[workerid].requestjob()  # tell the worker to ask for another job, asynchronously (one-way)
 
     def jobsdone(self):
         """Wrap self._jobsdone, needed for remote access through Pyro proxies"""
         return self._jobsdone
-
 
     @Pyro4.oneway
     def exit(self):
@@ -176,8 +174,8 @@ class Dispatcher(object):
             logger.info("terminating worker %s" % workerid)
             worker.exit()
         logger.info("terminating dispatcher")
-        os._exit(0) # exit the whole process (not just this thread ala sys.exit())
-#endclass Dispatcher
+        os._exit(0)  # exit the whole process (not just this thread ala sys.exit())
+# endclass Dispatcher
 
 
 def main():

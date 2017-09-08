@@ -59,7 +59,7 @@ import logging
 try:
     from queue import Queue, Empty
 except ImportError:
-    from Queue import Queue, Empty
+    from Queue import Queue, Empty  # noqa:F401
 
 # If pyemd C extension is available, import it.
 # If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
@@ -69,9 +69,9 @@ try:
 except ImportError:
     PYEMD_EXT = False
 
-from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
-    double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
+from numpy import dot, zeros, dtype, float32 as REAL,\
+    double, array, vstack, fromstring, sqrt, newaxis,\
+    ndarray, sum as np_sum, prod, ascontiguousarray
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -94,6 +94,7 @@ class Vocab(object):
     and for constructing binary trees (incl. both word leaves and inner nodes).
 
     """
+
     def __init__(self, **kwargs):
         self.count = 0
         self.__dict__.update(kwargs)
@@ -111,6 +112,7 @@ class KeyedVectors(utils.SaveLoad):
     Class to contain vectors and vocab for the Word2Vec training class and other w2v methods not directly
     involved in training such as most_similar()
     """
+
     def __init__(self):
         self.syn0 = []
         self.syn0norm = None
@@ -159,7 +161,6 @@ class KeyedVectors(utils.SaveLoad):
                     fout.write(utils.to_utf8(word) + b" " + row.tostring())
                 else:
                     fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
-
 
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
@@ -287,7 +288,7 @@ class KeyedVectors(utils.SaveLoad):
         else:
             raise KeyError("word '%s' not in vocabulary" % word)
 
-    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
+    def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
         similarity, negative words negatively.
@@ -310,6 +311,11 @@ class KeyedVectors(utils.SaveLoad):
           [('queen', 0.50882536), ...]
 
         """
+        if positive is None:
+            positive = []
+        if negative is None:
+            negative = []
+
         self.init_sims()
 
         if isinstance(positive, string_types) and not negative:
@@ -417,7 +423,7 @@ class KeyedVectors(utils.SaveLoad):
         distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
         for i, t1 in dictionary.items():
             for j, t2 in dictionary.items():
-                if not t1 in docset1 or not t2 in docset2:
+                if t1 not in docset1 or t2 not in docset2:
                     continue
                 # Compute Euclidean distance between word vectors.
                 distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
@@ -442,7 +448,7 @@ class KeyedVectors(utils.SaveLoad):
         # Compute WMD.
         return emd(d1, d2, distance_matrix)
 
-    def most_similar_cosmul(self, positive=[], negative=[], topn=10):
+    def most_similar_cosmul(self, positive=None, negative=None, topn=10):
         """
         Find the top-N most similar words, using the multiplicative combination objective
         proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
@@ -464,13 +470,18 @@ class KeyedVectors(utils.SaveLoad):
         .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
 
         """
+        if positive is None:
+            positive = []
+        if negative is None:
+            negative = []
+
         self.init_sims()
 
         if isinstance(positive, string_types) and not negative:
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
-        all_words = set([self.vocab[word].index for word in positive+negative
+        all_words = set([self.vocab[word].index for word in positive + negative
             if not isinstance(word, ndarray) and word in self.vocab])
 
         positive = [
@@ -562,7 +573,6 @@ class KeyedVectors(utils.SaveLoad):
         return sorted(zip(dists, used_words))[0][1]
 
     def __getitem__(self, words):
-
         """
         Accept a single word or a list of words as input.
 
@@ -682,7 +692,7 @@ class KeyedVectors(utils.SaveLoad):
                         a, b, c, expected = [word.upper() for word in line.split()]
                     else:
                         a, b, c, expected = [word for word in line.split()]
-                except:
+                except Exception:
                     logger.info("skipping invalid line #%i in %s" % (line_no, questions))
                     continue
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
@@ -773,7 +783,7 @@ class KeyedVectors(utils.SaveLoad):
                     else:
                         a, b, sim = [word for word in line.split(delimiter)]
                     sim = float(sim)
-                except:
+                except Exception:
                     logger.info('skipping invalid line #%d in %s', line_no, pairs)
                     continue
                 if a not in ok_vocab or b not in ok_vocab:
@@ -804,7 +814,6 @@ class KeyedVectors(utils.SaveLoad):
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio
 
-
     def init_sims(self, replace=False):
         """
         Precompute L2-normalized vectors.
@@ -832,5 +841,8 @@ class KeyedVectors(utils.SaveLoad):
         if not KERAS_INSTALLED:
             raise ImportError("Please install Keras to use this function")
         weights = self.syn0
-        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights])  # No extra mem usage here as `Embedding` layer doesn't create any new matrix for weights
+
+        # set `trainable` as `False` to use the pretrained word embedding
+        # No extra mem usage here as `Embedding` layer doesn't create any new matrix for weights
+        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights], trainable=train_embeddings)
         return layer

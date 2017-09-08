@@ -107,6 +107,7 @@ class Phrases(interfaces.TransformationABC):
     and `phrases[corpus]` syntax.
 
     """
+
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
                  max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
                  scoring='default'):
@@ -390,6 +391,7 @@ class Phraser(interfaces.TransformationABC):
     other values.)
 
     """
+
     def __init__(self, phrases_model):
         self.threshold = phrases_model.threshold
         self.min_count = phrases_model.min_count
@@ -460,7 +462,7 @@ if __name__ == '__main__':
         sys.exit(1)
     infile = sys.argv[1]
 
-    from gensim.models import Phrases  # for pickle
+    from gensim.models import Phrases  # noqa:F811 for pickle
     from gensim.models.word2vec import Text8Corpus
     sentences = Text8Corpus(infile)
 

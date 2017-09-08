@@ -5,19 +5,19 @@ Tests to check DTM math functions and Topic-Word, Doc-Topic proportions.
 """
 
 import numpy as np  # for arrays, array broadcasting etc.
-from gensim.models import ldaseqmodel, ldamodel
+from gensim.models import ldaseqmodel
 from gensim.corpora import Dictionary
 import os.path
 import unittest
 import logging
 
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data/DTM', fname)
 
 
 class TestLdaSeq(unittest.TestCase):
-	# we are setting up a DTM model and fitting it, and checking topic-word and doc-topic results.
+        # we are setting up a DTM model and fitting it, and checking topic-word and doc-topic results.
     def setUp(self):
         texts = [
             [u'senior', u'studios', u'studios', u'studios', u'creators', u'award', u'mobile', u'currently', u'challenges', u'senior', u'summary', u'senior', u'motivated', u'creative', u'senior'],
@@ -56,7 +56,7 @@ class TestLdaSeq(unittest.TestCase):
         sstats = np.loadtxt(datapath('sstats_test.txt'))
         dictionary = Dictionary(texts)
         corpus = [dictionary.doc2bow(text) for text in texts]
-        self.ldaseq = ldaseqmodel.LdaSeqModel(corpus = corpus , id2word= dictionary, num_topics=2, time_slice=[10, 10, 11], initialize='own', sstats=sstats)
+        self.ldaseq = ldaseqmodel.LdaSeqModel(corpus=corpus, id2word=dictionary, num_topics=2, time_slice=[10, 10, 11], initialize='own', sstats=sstats)
 
     # testing topic word proportions
     def testTopicWord(self):
@@ -71,6 +71,7 @@ class TestLdaSeq(unittest.TestCase):
         doc_topic = self.ldaseq.doc_topics(0)
         expected_doc_topic = 0.00066577896138482028
         self.assertAlmostEqual(doc_topic[0], expected_doc_topic, places=2)
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

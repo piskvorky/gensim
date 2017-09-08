@@ -14,7 +14,7 @@ from __future__ import with_statement
 from os import path
 import logging
 
-from gensim import interfaces, utils
+from gensim import utils
 from gensim.corpora import IndexedCorpus
 from six.moves import xrange
 

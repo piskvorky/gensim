@@ -19,11 +19,9 @@ which contains the number of vectors and their dimensionality (two integers).
 
 import os
 import sys
-import random
 import logging
 import argparse
 
-import gensim
 from smart_open import smart_open
 
 logger = logging.getLogger(__name__)
@@ -73,4 +71,3 @@ if __name__ == "__main__":
     # do the actual conversion
     num_lines, num_dims = glove2word2vec(args.input, args.output)
     logger.info('Converted model with %i vectors and %i dimensions', num_lines, num_dims)
-    

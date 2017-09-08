@@ -27,7 +27,7 @@ import gensim.models.wrappers.ldavowpalwabbit as ldavowpalwabbit
 from gensim.models.wrappers.ldavowpalwabbit import LdaVowpalWabbit
 
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -69,7 +69,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_save_load(self):
         """Test loading/saving LdaVowpalWabbit model."""
-        if not self.vw_path: # for python 2.6
+        if not self.vw_path:  # for python 2.6
             return
         lda = LdaVowpalWabbit(self.vw_path,
                               corpus=self.corpus,
@@ -104,7 +104,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_model_update(self):
         """Test updating existing LdaVowpalWabbit model."""
-        if not self.vw_path: # for python 2.6
+        if not self.vw_path:  # for python 2.6
             return
         lda = LdaVowpalWabbit(self.vw_path,
                               corpus=[self.corpus[0]],
@@ -124,7 +124,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_perplexity(self):
         """Test LdaVowpalWabbit perplexity is within expected range."""
-        if not self.vw_path: # for python 2.6
+        if not self.vw_path:  # for python 2.6
             return
         lda = LdaVowpalWabbit(self.vw_path,
                               corpus=self.corpus,
@@ -144,7 +144,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_topic_coherence(self):
         """Test LdaVowpalWabbit topic coherence."""
-        if not self.vw_path: # for python 2.6
+        if not self.vw_path:  # for python 2.6
             return
         corpus, dictionary = get_corpus()
         lda = LdaVowpalWabbit(self.vw_path,
@@ -196,7 +196,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_corpus_to_vw(self):
         """Test corpus to Vowpal Wabbit format conversion."""
-        if not self.vw_path: # for python 2.6
+        if not self.vw_path:  # for python 2.6
             return
         corpus = [[(0, 5), (7, 1), (5, 3), (0, 2)],
                   [(7, 2), (2, 1), (3, 11)],

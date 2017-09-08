@@ -439,7 +439,7 @@ class AccumulatingWorker(mp.Process):
             logger.info(
                 "%s interrupted after processing %d documents",
                 self.__class__.__name__, self.accumulator.num_docs)
-        except:
+        except Exception:
             logger.exception("worker encountered unexpected exception")
         finally:
             self.reply_to_master()

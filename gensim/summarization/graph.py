@@ -77,7 +77,7 @@ class IGraph(object):
         pass
 
     @abstractmethod
-    def add_edge(self, edge, wt=1, label='', attrs=[]):
+    def add_edge(self, edge, wt=1, label='', attrs=None):
         """
         Add an edge to the graph connecting two nodes.
 
@@ -172,7 +172,9 @@ class Graph(IGraph):
     def has_node(self, node):
         return node in self.node_neighbors
 
-    def add_edge(self, edge, wt=1, label='', attrs=[]):
+    def add_edge(self, edge, wt=1, label='', attrs=None):
+        if attrs is None:
+            attrs = []
         u, v = edge
         if v not in self.node_neighbors[u] and u not in self.node_neighbors[v]:
             self.node_neighbors[u].append(v)
