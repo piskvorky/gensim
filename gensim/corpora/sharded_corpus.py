@@ -455,7 +455,7 @@ class ShardedCorpus(IndexedCorpus):
                     os.rename(new_shard_name, self._shard_name(shard_n))
             # If something happens when we're in this stage, we're screwed.
             except Exception as e:
-                print(e)
+                logger.exception(e)
                 raise RuntimeError('Resizing completely failed for some reason. Sorry, dataset is probably ruined...')
             finally:
                 # Sets the new shard stats.
