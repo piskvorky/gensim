@@ -55,13 +55,13 @@ class TestKeywordsTest(unittest.TestCase):
             text = f.read()
 
         # calculate keywords using only certain parts of speech
-        generated_keywords_NNVBJJ = keywords(text, pos_filter=['NN', 'VB', 'JJ'], ratio=0.3, split=True)
+        generated_keywords_nnvbjj = keywords(text, pos_filter=['NN', 'VB', 'JJ'], ratio=0.3, split=True)
 
         # To be compared to the reference.
         with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.kwpos.txt"), mode="r") as f:
             kw = f.read().strip().split("\n")
 
-        self.assertEqual({str(x) for x in generated_keywords_NNVBJJ}, {str(x) for x in kw})
+        self.assertEqual({str(x) for x in generated_keywords_nnvbjj}, {str(x) for x in kw})
 
     def test_text_summarization_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')

@@ -31,15 +31,17 @@ def datapath(fname):
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
-         ['survey', 'user', 'computer', 'system', 'response', 'time'],
-         ['eps', 'user', 'interface', 'system'],
-         ['system', 'human', 'system', 'eps'],
-         ['user', 'response', 'time'],
-         ['trees'],
-         ['graph', 'trees'],
-         ['graph', 'minors', 'trees'],
-         ['graph', 'minors', 'survey']]
+texts = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey']
+]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
@@ -84,7 +86,8 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             [0.01274618, -0.49016181],
             [0.04888203, -1.11294699],
             [0.08063836, -1.56345594],
-            [0.27381003, -1.34694159]])
+            [0.27381003, -1.34694159]
+        ])
         self.assertTrue(np.allclose(abs(got), abs(expected)))  # must equal up to sign
 
     def testOnlineTransform(self):
@@ -187,8 +190,6 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertEqual(vocab_size, topic.shape[0])
             # LSI topics are not probability distributions
             # self.assertAlmostEqual(np.sum(topic), 1.0, 5)
-
-# endclass TestLsiModel
 
 
 if __name__ == '__main__':

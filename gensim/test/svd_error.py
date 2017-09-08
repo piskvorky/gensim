@@ -65,8 +65,10 @@ def print_error(name, aat, u, s, ideal_nf, ideal_n2):
     err = -np.dot(u, np.dot(np.diag(s), u.T))
     err += aat
     nf, n2 = np.linalg.norm(err), norm2(err)
-    print('%s error: norm_frobenius=%f (/ideal=%g), norm2=%f (/ideal=%g), RMSE=%g' %
-           (name, nf, nf / ideal_nf, n2, n2 / ideal_n2, rmse(err)))
+    print(
+        '%s error: norm_frobenius=%f (/ideal=%g), norm2=%f (/ideal=%g), RMSE=%g' %
+        (name, nf, nf / ideal_nf, n2, n2 / ideal_n2, rmse(err))
+    )
     sys.stdout.flush()
 
 
@@ -152,27 +154,40 @@ if __name__ == '__main__':
             del u
         for power_iters in POWER_ITERS:
             for chunksize in CHUNKSIZE:
-                logging.info("computing incremental SVD for %i factors, %i power iterations, chunksize %i", factors, power_iters, chunksize)
+                logging.info(
+                    "computing incremental SVD for %i factors, %i power iterations, chunksize %i",
+                    factors, power_iters, chunksize
+                )
                 taken = time.time()
                 gensim.models.lsimodel.P2_EXTRA_ITERS = power_iters
-                model = gensim.models.LsiModel(corpus, id2word=id2word, num_topics=factors,
-                                               chunksize=chunksize, power_iters=power_iters)
+                model = gensim.models.LsiModel(
+                    corpus, id2word=id2word, num_topics=factors,
+                    chunksize=chunksize, power_iters=power_iters
+                )
                 taken = time.time() - taken
                 u, s = model.projection.u.astype(np.float32), model.projection.s.astype(np.float32)**2
                 del model
-                print("incremental SVD for %i factors, %i power iterations, chunksize %i took %s s (spectrum %f .. %f)" %
-                       (factors, power_iters, chunksize, taken, s[0], s[-1]))
+                print(
+                    "incremental SVD for %i factors, %i power iterations, "
+                    "chunksize %i took %s s (spectrum %f .. %f)" %
+                    (factors, power_iters, chunksize, taken, s[0], s[-1])
+                )
                 print_error('incremental SVD', aat, u, s, ideal_fro, ideal_n2)
                 del u
-            logging.info("computing multipass SVD for %i factors, %i power iterations", factors, power_iters,)
+            logging.info("computing multipass SVD for %i factors, %i power iterations", factors, power_iters)
             taken = time.time()
-            model = gensim.models.LsiModel(corpus, id2word=id2word, num_topics=factors, chunksize=2000,
-                                           onepass=False, power_iters=power_iters)
+            model = gensim.models.LsiModel(
+                corpus, id2word=id2word, num_topics=factors, chunksize=2000,
+                onepass=False, power_iters=power_iters
+            )
             taken = time.time() - taken
             u, s = model.projection.u.astype(np.float32), model.projection.s.astype(np.float32)**2
             del model
-            print("multipass SVD for %i factors, %i power iterations took %s s (spectrum %f .. %f)" %
-                   (factors, power_iters, taken, s[0], s[-1]))
+            print(
+                "multipass SVD for %i factors, "
+                "%i power iterations took %s s (spectrum %f .. %f)" %
+                (factors, power_iters, taken, s[0], s[-1])
+            )
             print_error('multipass SVD', aat, u, s, ideal_fro, ideal_n2)
             del u
 

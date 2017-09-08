@@ -27,15 +27,17 @@ module_path = os.path.dirname(__file__)  # needed because sample data files are 
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+texts = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey']
+]
 
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
@@ -72,7 +74,10 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
             passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
             if passed:
                 break
-            logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)", i, sorted(vec), sorted(expected))
+            logging.warning(
+                "LDA failed to converge on attempt %i (got %s, expected %s)",
+                i, sorted(vec), sorted(expected)
+            )
         self.assertTrue(passed)
 
     def testSparseTransform(self):
@@ -81,7 +86,9 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
         passed = False
         for i in range(5):  # restart at most 5 times
             # create the sparse transformation model with the appropriate topic_threshold
-            model = ldamallet.LdaMallet(self.mallet_path, corpus, id2word=dictionary, num_topics=2, iterations=200, topic_threshold=0.5)
+            model = ldamallet.LdaMallet(
+                self.mallet_path, corpus, id2word=dictionary, num_topics=2, iterations=200, topic_threshold=0.5
+            )
             # transform one document
             doc = list(corpus)[0]
             transformed = model[doc]
@@ -90,7 +97,10 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
             passed = np.allclose(sorted(vec), sorted(expected), atol=1e-2)  # must contain the same values, up to re-ordering
             if passed:
                 break
-            logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)", i, sorted(vec), sorted(expected))
+            logging.warning(
+                "LDA failed to converge on attempt %i (got %s, expected %s)",
+                i, sorted(vec), sorted(expected)
+            )
         self.assertTrue(passed)
 
     def testMallet2Model(self):

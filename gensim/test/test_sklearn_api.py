@@ -43,10 +43,19 @@ texts = [
 ]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
-author2doc = {'john': [0, 1, 2, 3, 4, 5, 6], 'jane': [2, 3, 4, 5, 6, 7, 8], 'jack': [0, 2, 4, 6, 8], 'jill': [1, 3, 5, 7]}
+author2doc = {
+    'john': [0, 1, 2, 3, 4, 5, 6],
+    'jane': [2, 3, 4, 5, 6, 7, 8],
+    'jack': [0, 2, 4, 6, 8],
+    'jill': [1, 3, 5, 7]
+}
 
 texts_new = texts[0:3]
-author2doc_new = {'jill': [0], 'bob': [0, 1], 'sally': [1, 2]}
+author2doc_new = {
+    'jill': [0],
+    'bob': [0, 1],
+    'sally': [1, 2]
+}
 dictionary_new = Dictionary(texts_new)
 corpus_new = [dictionary_new.doc2bow(text) for text in texts_new]
 
@@ -91,11 +100,16 @@ w2v_texts = [
     ['geometry', 'is', 'the', 'study', 'of', 'shape'],
     ['algebra', 'is', 'the', 'study', 'of', 'generalizations', 'of', 'arithmetic', 'operations'],
     ['differential', 'calculus', 'is', 'related', 'to', 'rates', 'of', 'change', 'and', 'slopes', 'of', 'curves'],
-    ['integral', 'calculus', 'is', 'realted', 'to', 'accumulation', 'of', 'quantities', 'and', 'the', 'areas', 'under', 'and', 'between', 'curves'],
-    ['physics', 'is', 'the', 'natural', 'science', 'that', 'involves', 'the', 'study', 'of', 'matter', 'and', 'its', 'motion', 'and', 'behavior', 'through', 'space', 'and', 'time'],
+    ['integral', 'calculus', 'is', 'realted', 'to', 'accumulation', 'of', 'quantities', 'and',
+     'the', 'areas', 'under', 'and', 'between', 'curves'],
+    ['physics', 'is', 'the', 'natural', 'science', 'that', 'involves', 'the', 'study', 'of', 'matter',
+     'and', 'its', 'motion', 'and', 'behavior', 'through', 'space', 'and', 'time'],
     ['the', 'main', 'goal', 'of', 'physics', 'is', 'to', 'understand', 'how', 'the', 'universe', 'behaves'],
-    ['physics', 'also', 'makes', 'significant', 'contributions', 'through', 'advances', 'in', 'new', 'technologies', 'that', 'arise', 'from', 'theoretical', 'breakthroughs'],
-    ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics', 'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically', 'transformed', 'modern', 'day', 'society']
+    ['physics', 'also', 'makes', 'significant', 'contributions', 'through', 'advances', 'in', 'new',
+     'technologies', 'that', 'arise', 'from', 'theoretical', 'breakthroughs'],
+    ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics',
+     'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically',
+     'transformed', 'modern', 'day', 'society']
 ]
 
 d2v_sentences = [models.doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(w2v_texts)]
@@ -129,7 +143,9 @@ phrases_sentences = [
 class TestLdaWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        self.model = LdaTransformer(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        self.model = LdaTransformer(
+            id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0)
+        )
         self.model.fit(corpus)
 
     def testTransform(self):
@@ -157,11 +173,16 @@ class TestLdaWrapper(unittest.TestCase):
 
     def testConsistencyWithGensimModel(self):
         # training an LdaTransformer with `num_topics`=10
-        self.model = LdaTransformer(id2word=dictionary, num_topics=10, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        self.model = LdaTransformer(
+            id2word=dictionary, num_topics=10, passes=100, minimum_probability=0, random_state=numpy.random.seed(0)
+        )
         self.model.fit(corpus)
 
         # training a Gensim LdaModel with the same params
-        gensim_ldamodel = models.LdaModel(corpus=corpus, id2word=dictionary, num_topics=10, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        gensim_ldamodel = models.LdaModel(
+            corpus=corpus, id2word=dictionary, num_topics=10, passes=100,
+            minimum_probability=0, random_state=numpy.random.seed(0)
+        )
 
         texts_new = ['graph', 'eulerian']
         bow = self.model.id2word.doc2bow(texts_new)
@@ -238,7 +259,10 @@ class TestLdaWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        lda_wrapper = LdaTransformer(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        lda_wrapper = LdaTransformer(
+            id2word=dictionary, num_topics=2, passes=100,
+            minimum_probability=0, random_state=numpy.random.seed(0)
+        )
         texts_new = ['graph', 'eulerian']
         bow = lda_wrapper.id2word.doc2bow(texts_new)
         self.assertRaises(NotFittedError, lda_wrapper.transform, bow)
@@ -336,7 +360,9 @@ class TestLsiWrapper(unittest.TestCase):
 
 class TestLdaSeqWrapper(unittest.TestCase):
     def setUp(self):
-        self.model = LdaSeqTransformer(id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='gensim')
+        self.model = LdaSeqTransformer(
+            id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='gensim'
+        )
         self.model.fit(corpus_ldaseq)
 
     def testTransform(self):
@@ -510,8 +536,10 @@ class TestWord2VecWrapper(unittest.TestCase):
 
         class_dict = {'mathematics': 1, 'physics': 0}
         train_data = [
-            ('calculus', 'mathematics'), ('mathematical', 'mathematics'), ('geometry', 'mathematics'), ('operations', 'mathematics'), ('curves', 'mathematics'),
-            ('natural', 'physics'), ('nuclear', 'physics'), ('science', 'physics'), ('electromagnetism', 'physics'), ('natural', 'physics')
+            ('calculus', 'mathematics'), ('mathematical', 'mathematics'),
+            ('geometry', 'mathematics'), ('operations', 'mathematics'),
+            ('curves', 'mathematics'), ('natural', 'physics'), ('nuclear', 'physics'),
+            ('science', 'physics'), ('electromagnetism', 'physics'), ('natural', 'physics')
         ]
         train_input = [x[0] for x in train_data]
         train_target = [class_dict[x[1]] for x in train_data]
@@ -787,8 +815,11 @@ class TestTfIdfTransformer(unittest.TestCase):
         # tranform multiple documents
         docs = [corpus[0], corpus[1]]
         transformed_docs = self.model.transform(docs)
-        expected_docs = [[(0, 0.5773502691896257), (1, 0.5773502691896257), (2, 0.5773502691896257)],
-            [(3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.3244870206138555), (6, 0.44424552527467476), (7, 0.3244870206138555), (8, 0.44424552527467476)]]
+        expected_docs = [
+            [(0, 0.5773502691896257), (1, 0.5773502691896257), (2, 0.5773502691896257)],
+            [(3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.3244870206138555),
+             (6, 0.44424552527467476), (7, 0.3244870206138555), (8, 0.44424552527467476)]
+        ]
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
 
@@ -847,14 +878,20 @@ class TestHdpTransformer(unittest.TestCase):
         # tranform one document
         doc = self.corpus[0]
         transformed_doc = self.model.transform(doc)
-        expected_doc = [[0.81043386270128193, 0.049357139518070477, 0.035840906753517532, 0.026542006926698079, 0.019925705902962578, 0.014776690981729117, 0.011068909979528148]]
+        expected_doc = [
+            [0.81043386270128193, 0.049357139518070477, 0.035840906753517532,
+             0.026542006926698079, 0.019925705902962578, 0.014776690981729117, 0.011068909979528148]
+        ]
         self.assertTrue(numpy.allclose(transformed_doc, expected_doc, atol=1e-2))
 
         # tranform multiple documents
         docs = [self.corpus[0], self.corpus[1]]
         transformed_docs = self.model.transform(docs)
-        expected_docs = [[0.81043386270128193, 0.049357139518070477, 0.035840906753517532, 0.026542006926698079, 0.019925705902962578, 0.014776690981729117, 0.011068909979528148],
-            [0.03795908, 0.39542609, 0.50650585, 0.0151082, 0.01132749, 0., 0.]]
+        expected_docs = [
+            [0.81043386270128193, 0.049357139518070477, 0.035840906753517532,
+             0.026542006926698079, 0.019925705902962578, 0.014776690981729117, 0.011068909979528148],
+            [0.03795908, 0.39542609, 0.50650585, 0.0151082, 0.01132749, 0., 0.]
+        ]
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0], atol=1e-2))
         self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1], atol=1e-2))
 

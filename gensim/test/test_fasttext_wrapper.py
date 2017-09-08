@@ -56,7 +56,8 @@ class TestFastText(unittest.TestCase):
             return  # Use self.skipTest once python < 2.7 is no longer supported
         vocab_size, model_size = 1763, 10
         trained_model = fasttext.FastText.train(
-            self.ft_path, self.corpus_file, size=model_size, output_file=testfile())
+            self.ft_path, self.corpus_file, size=model_size, output_file=testfile()
+        )
 
         self.assertEqual(trained_model.wv.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(trained_model.wv.vocab), vocab_size)
@@ -72,11 +73,13 @@ class TestFastText(unittest.TestCase):
             logger.info("FT_HOME env variable not set, skipping test")
             return  # Use self.skipTest once python < 2.7 is no longer supported
         test_model_min_count_5 = fasttext.FastText.train(
-            self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=5)
+            self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=5
+        )
         self.assertTrue('forests' not in test_model_min_count_5.wv.vocab)
 
         test_model_min_count_1 = fasttext.FastText.train(
-            self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=1)
+            self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=1
+        )
         self.assertTrue('forests' in test_model_min_count_1.wv.vocab)
 
     def testModelSize(self):
@@ -85,7 +88,8 @@ class TestFastText(unittest.TestCase):
             logger.info("FT_HOME env variable not set, skipping test")
             return  # Use self.skipTest once python < 2.7 is no longer supported
         test_model_size_20 = fasttext.FastText.train(
-            self.ft_path, self.corpus_file, output_file=testfile(), size=20)
+            self.ft_path, self.corpus_file, output_file=testfile(), size=20
+        )
         self.assertEqual(test_model_size_20.vector_size, 20)
         self.assertEqual(test_model_size_20.wv.syn0.shape[1], 20)
         self.assertEqual(test_model_size_20.wv.syn0_all.shape[1], 20)
@@ -245,8 +249,10 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(self.test_model.n_similarity(['the'], ['and']), self.test_model.n_similarity(['and'], ['the']))
         # Out of vocab check
         self.assertTrue(numpy.allclose(self.test_model.n_similarity(['night', 'nights'], ['nights', 'night']), 1.0))
-        self.assertEqual(self.test_model.n_similarity(['night'], ['nights']),
-                         self.test_model.n_similarity(['nights'], ['night']))
+        self.assertEqual(
+            self.test_model.n_similarity(['night'], ['nights']),
+            self.test_model.n_similarity(['nights'], ['night'])
+        )
 
     def testSimilarity(self):
         """Test similarity for in-vocab and out-of-vocab words"""

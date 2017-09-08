@@ -29,15 +29,17 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+texts = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey']
+]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
@@ -230,7 +232,9 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
     def testGetDocumentTopics(self):
 
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
+        model = self.class_(
+            self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0)
+        )
 
         doc_topics = model.get_document_topics(self.corpus)
 
@@ -263,7 +267,9 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         doc_topic_count_na = 0
         word_phi_count_na = 0
 
-        all_topics = model.get_document_topics(self.corpus, minimum_probability=0.8, minimum_phi_value=1.0, per_word_topics=True)
+        all_topics = model.get_document_topics(
+            self.corpus, minimum_probability=0.8, minimum_phi_value=1.0, per_word_topics=True
+        )
 
         self.assertEqual(model.state.numdocs, len(corpus))
 
@@ -312,7 +318,9 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
     def testTermTopics(self):
 
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
+        model = self.class_(
+            self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0)
+        )
 
         # check with word_type
         result = model.get_term_topics(2)
