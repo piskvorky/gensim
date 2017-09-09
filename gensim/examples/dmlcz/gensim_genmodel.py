@@ -31,7 +31,7 @@ DIM_LDA = 100  # for latent dirichlet allocation
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
     logging.root.setLevel(level=logging.INFO)
-    logging.info("running %s" % ' '.join(sys.argv))
+    logging.info("running %s", ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
 
@@ -46,9 +46,9 @@ if __name__ == '__main__':
     config = dmlcorpus.DmlConfig('%s_%s' % (gensim_build.PREFIX, language),
                                  resultDir=gensim_build.RESULT_DIR, acceptLangs=[language])
 
-    logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
+    logging.info("loading word id mapping from %s", config.resultFile('wordids.txt'))
     id2word = dmlcorpus.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
-    logging.info("loaded %i word ids" % len(id2word))
+    logging.info("loaded %i word ids", len(id2word))
 
     corpus = MmCorpus(config.resultFile('bow.mm'))
 
@@ -56,23 +56,23 @@ if __name__ == '__main__':
         model = tfidfmodel.TfidfModel(corpus, id2word=id2word, normalize=True)
         model.save(config.resultFile('model_tfidf.pkl'))
     elif method == 'lda':
-        model = ldamodel.LdaModel(corpus, id2word=id2word, numTopics=DIM_LDA)
+        model = ldamodel.LdaModel(corpus, id2word=id2word, num_topics=DIM_LDA)
         model.save(config.resultFile('model_lda.pkl'))
     elif method == 'lsi':
         # first, transform word counts to tf-idf weights
         tfidf = tfidfmodel.TfidfModel(corpus, id2word=id2word, normalize=True)
         # then find the transformation from tf-idf to latent space
-        model = lsimodel.LsiModel(tfidf[corpus], id2word=id2word, numTopics=DIM_LSI)
+        model = lsimodel.LsiModel(tfidf[corpus], id2word=id2word, num_topics=DIM_LSI)
         model.save(config.resultFile('model_lsi.pkl'))
     elif method == 'rp':
         # first, transform word counts to tf-idf weights
         tfidf = tfidfmodel.TfidfModel(corpus, id2word=id2word, normalize=True)
         # then find the transformation from tf-idf to latent space
-        model = rpmodel.RpModel(tfidf[corpus], id2word=id2word, numTopics=DIM_RP)
+        model = rpmodel.RpModel(tfidf[corpus], id2word=id2word, num_topics=DIM_RP)
         model.save(config.resultFile('model_rp.pkl'))
     else:
         raise ValueError('unknown topic extraction method: %s' % repr(method))
 
     MmCorpus.saveCorpus(config.resultFile('%s.mm' % method), model[corpus])
 
-    logging.info("finished running %s" % program)
+    logging.info("finished running %s", program)

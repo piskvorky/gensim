@@ -36,8 +36,7 @@ occurrence of a collection of exact words,
 for many searching purposes, a little fuzziness would help. """
 
 
-dataset = map(lambda x: strip_punctuation2(x.lower()),
-        [doc1, doc2, doc3, doc4])
+dataset = [strip_punctuation2(x.lower()) for x in [doc1, doc2, doc3, doc4]]
 # doc1 and doc2 have class 0, doc3 and doc4 avec class 1
 classes = np.array([[1, 0], [1, 0], [0, 1], [0, 1]])
 
@@ -45,40 +44,33 @@ classes = np.array([[1, 0], [1, 0], [0, 1], [0, 1]])
 class TestPreprocessing(unittest.TestCase):
 
     def testStripNumeric(self):
-        self.assertEqual(strip_numeric("salut les amis du 59"),
-                          "salut les amis du ")
+        self.assertEqual(strip_numeric("salut les amis du 59"), "salut les amis du ")
 
     def testStripShort(self):
-        self.assertEqual(strip_short("salut les amis du 59", 3),
-                          "salut les amis")
+        self.assertEqual(strip_short("salut les amis du 59", 3), "salut les amis")
 
     def testStripTags(self):
-        self.assertEqual(strip_tags("<i>Hello</i> <b>World</b>!"),
-                          "Hello World!")
+        self.assertEqual(strip_tags("<i>Hello</i> <b>World</b>!"), "Hello World!")
 
     def testStripMultipleWhitespaces(self):
-        self.assertEqual(strip_multiple_whitespaces("salut  les\r\nloulous!"),
-                          "salut les loulous!")
+        self.assertEqual(strip_multiple_whitespaces("salut  les\r\nloulous!"), "salut les loulous!")
 
     def testStripNonAlphanum(self):
-        self.assertEqual(strip_non_alphanum("toto nf-kappa titi"),
-                          "toto nf kappa titi")
+        self.assertEqual(strip_non_alphanum("toto nf-kappa titi"), "toto nf kappa titi")
 
     def testSplitAlphanum(self):
-        self.assertEqual(split_alphanum("toto diet1 titi"),
-                          "toto diet 1 titi")
-        self.assertEqual(split_alphanum("toto 1diet titi"),
-                          "toto 1 diet titi")
+        self.assertEqual(split_alphanum("toto diet1 titi"), "toto diet 1 titi")
+        self.assertEqual(split_alphanum("toto 1diet titi"), "toto 1 diet titi")
 
     def testStripStopwords(self):
-        self.assertEqual(remove_stopwords("the world is square"),
-                          "world square")
+        self.assertEqual(remove_stopwords("the world is square"), "world square")
 
     def testStemText(self):
-        target = "while it is quit us to be abl to search a larg " + \
-                "collect of document almost instantli for a joint occurr " + \
-                "of a collect of exact words, for mani search purposes, " + \
-                "a littl fuzzi would help."
+        target = \
+            "while it is quit us to be abl to search a larg " + \
+            "collect of document almost instantli for a joint occurr " + \
+            "of a collect of exact words, for mani search purposes, " + \
+            "a littl fuzzi would help."
         self.assertEqual(stem_text(doc5), target)
 
 

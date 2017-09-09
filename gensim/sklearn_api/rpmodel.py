@@ -47,7 +47,9 @@ class RpTransformer(TransformerMixin, BaseEstimator):
         or a single document like : [(0, 1.0), (1, 1.0), (2, 1.0)]
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # The input as array of array
         check = lambda x: [x] if isinstance(x[0], tuple) else x

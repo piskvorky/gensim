@@ -26,15 +26,17 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+texts = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey']
+]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
@@ -80,7 +82,6 @@ class TestRpModel(unittest.TestCase):
         self.assertTrue(np.allclose(model.projection, model2.projection))
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
-# endclass TestRpModel
 
 
 if __name__ == '__main__':

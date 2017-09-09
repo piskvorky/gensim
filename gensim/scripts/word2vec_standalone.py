@@ -61,17 +61,8 @@ logger = logging.getLogger(__name__)
 
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
-        level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
     logger.info("running %s", " ".join(sys.argv))
-
-    # check and process cmdline input
-    program = os.path.basename(sys.argv[0])
-    if len(sys.argv) < 2:
-        print(globals()['__doc__'] % locals())
-        sys.exit(1)
-
     seterr(all='raise')  # don't ignore numpy errors
 
     parser = argparse.ArgumentParser()
@@ -107,7 +98,8 @@ if __name__ == "__main__":
     model = Word2Vec(
         corpus, size=args.size, min_count=args.min_count, workers=args.threads,
         window=args.window, sample=args.sample, alpha=args.alpha, sg=skipgram,
-        hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter)
+        hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter
+    )
 
     if args.output:
         outfile = args.output
@@ -124,4 +116,4 @@ if __name__ == "__main__":
         questions_file = args.accuracy
         model.accuracy(questions_file)
 
-    logger.info("finished running %s", program)
+    logger.info("finished running %s", os.path.basename(sys.argv[0]))

@@ -36,7 +36,7 @@ class VocabTransform(interfaces.TransformationABC):
     Old features that have no counterpart in the new ids are discarded. This
     can be used to filter vocabulary of a corpus "online"::
 
-    >>> old2new = dict((oldid, newid) for newid, oldid in enumerate(ids_you_want_to_keep))
+    >>> old2new = {oldid: newid for newid, oldid in enumerate(ids_you_want_to_keep)}
     >>> vt = VocabTransform(old2new)
     >>> for vec_with_new_ids in vt[corpus_with_old_ids]:
     >>>     ...
@@ -44,7 +44,6 @@ class VocabTransform(interfaces.TransformationABC):
     """
 
     def __init__(self, old2new, id2token=None):
-        # id2word = dict((newid, oldid2word[oldid]) for oldid, newid in old2new.iteritems())
         self.old2new = old2new
         self.id2token = id2token
 
@@ -58,4 +57,3 @@ class VocabTransform(interfaces.TransformationABC):
             return self._apply(bow)
 
         return sorted((self.old2new[oldid], weight) for oldid, weight in bow if oldid in self.old2new)
-# endclass VocabTransform

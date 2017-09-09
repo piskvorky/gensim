@@ -63,7 +63,7 @@ class TestLeeTest(unittest.TestCase):
         # read the human similarity data
         sim_matrix = np.loadtxt(os.path.join(pre_path, sim_file))
         sim_m_size = np.shape(sim_matrix)[0]
-        human_sim_vector = sim_matrix[matutils.triu_indices(sim_m_size, 1)]
+        human_sim_vector = sim_matrix[np.triu_indices(sim_m_size, 1)]
 
     def test_corpus(self):
         """availability and integrity of corpus"""
@@ -100,35 +100,11 @@ class TestLeeTest(unittest.TestCase):
         for i, par1 in enumerate(corpus_lsi):
             for j, par2 in enumerate(corpus_lsi):
                 res[i, j] = matutils.cossim(par1, par2)
-        flat = res[matutils.triu_indices(len(corpus), 1)]
+        flat = res[np.triu_indices(len(corpus), 1)]
 
         cor = np.corrcoef(flat, human_sim_vector)[0, 1]
-        logging.info("LSI correlation coefficient is %s" % cor)
+        logging.info("LSI correlation coefficient is %s", cor)
         self.assertTrue(cor > 0.6)
-
-    # def test_lee_mallet(self):
-    #     global bg_corpus, corpus, bg_corpus2, corpus2
-
-    #     # create a dictionary and corpus (bag of words)
-    #     dictionary = corpora.Dictionary(bg_corpus2)
-    #     bg_corpus = [dictionary.doc2bow(text) for text in bg_corpus2]
-    #     corpus = [dictionary.doc2bow(text) for text in corpus2]
-
-    #     # initialize an LDA transformation from background corpus
-    #     lda = models.wrappers.LdaMallet('/Users/kofola/Downloads/mallet-2.0.7/bin/mallet',
-    #         corpus=bg_corpus, id2word=dictionary, num_topics=200, optimize_interval=10)
-    #     corpus_lda = lda[corpus]
-
-    #     # compute pairwise similarity matrix and extract upper triangular
-    #     res = np.zeros((len(corpus), len(corpus)))
-    #     for i, par1 in enumerate(corpus_lda):
-    #         for j, par2 in enumerate(corpus_lda):
-    #             res[i, j] = matutils.cossim(par1, par2)
-    #     flat = res[matutils.triu_indices(len(corpus), 1)]
-
-    #     cor = np.corrcoef(flat, human_sim_vector)[0, 1]
-    #     logging.info("LDA correlation coefficient is %s" % cor)
-    #     self.assertTrue(cor > 0.35)
 
 
 if __name__ == '__main__':

@@ -56,8 +56,7 @@ class CorpusABC(utils.SaveLoad):
 
     def save(self, *args, **kwargs):
         import warnings
-        warnings.warn("corpus.save() stores only the (tiny) iteration object; "
-            "to serialize the actual corpus content, use e.g. MmCorpus.serialize(corpus)")
+        warnings.warn("corpus.save() stores only the (tiny) iteration object; to serialize the actual corpus content, use e.g. MmCorpus.serialize(corpus)")
         super(CorpusABC, self).save(*args, **kwargs)
 
     def __len__(self):
@@ -95,12 +94,11 @@ class CorpusABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
         # example code:
-        logger.info("converting corpus to ??? format: %s" % fname)
+        logger.info("converting corpus to ??? format: %s", fname)
         with utils.smart_open(fname, 'wb') as fout:
             for doc in corpus:  # iterate over the document stream
                 fmt = str(doc)  # format the document appropriately...
                 fout.write(utils.to_utf8("%s\n" % fmt))  # serialize the formatted document to disk
-# endclass CorpusABC
 
 
 class TransformedCorpus(CorpusABC):
@@ -127,7 +125,6 @@ class TransformedCorpus(CorpusABC):
             return self.obj[self.corpus[docno]]
         else:
             raise RuntimeError('Type {} does not support slicing.'.format(type(self.corpus)))
-# endclass TransformedCorpus
 
 
 class TransformationABC(utils.SaveLoad):
@@ -162,7 +159,6 @@ class TransformationABC(utils.SaveLoad):
         and return the result as another corpus.
         """
         return TransformedCorpus(self, corpus, chunksize, **kwargs)
-# endclass TransformationABC
 
 
 class SimilarityABC(utils.SaveLoad):
@@ -263,7 +259,7 @@ class SimilarityABC(utils.SaveLoad):
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
                 chunk_end = min(self.index.shape[0], chunk_start + self.chunksize)
-                chunk = self.index[chunk_start : chunk_end]
+                chunk = self.index[chunk_start: chunk_end]
                 for sim in self[chunk]:
                     yield sim
         else:
@@ -272,4 +268,3 @@ class SimilarityABC(utils.SaveLoad):
 
         # restore old normalization value
         self.normalize = norm
-# endclass SimilarityABC

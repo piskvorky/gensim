@@ -25,7 +25,7 @@ import gensim
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.info("running %s" % " ".join(sys.argv))
+    logging.info("running %s", " ".join(sys.argv))
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
@@ -47,8 +47,10 @@ if __name__ == '__main__':
 
     density = 100.0 * sum(shard.num_nnz for shard in index_sparse.shards) / (len(index_sparse) * sparse_features)
 
-    logging.info("test 1 (dense): similarity of all vs. all (%i documents, %i dense features)" %
-                 (len(corpus_dense), index_dense.num_features))
+    logging.info(
+        "test 1 (dense): similarity of all vs. all (%i documents, %i dense features)",
+        len(corpus_dense), index_dense.num_features
+    )
     for chunksize in [1, 8, 32, 64, 128, 256, 512, 1024, index_dense.shardsize]:
         index_dense.chunksize = chunksize
         start = time()
@@ -56,8 +58,10 @@ if __name__ == '__main__':
             pass
         taken = time() - start
         queries = math.ceil(1.0 * len(corpus_dense) / chunksize)
-        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunksize, taken, len(corpus_dense) / taken, queries / taken))
+        logging.info(
+            "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
+            chunksize, taken, len(corpus_dense) / taken, queries / taken
+        )
 
     index_dense.num_best = 10
     logging.info("test 2 (dense): as above, but only ask for the top-10 most similar for each document")
@@ -67,12 +71,17 @@ if __name__ == '__main__':
         sims = [sim for sim in index_dense]
         taken = time() - start
         queries = math.ceil(1.0 * len(corpus_dense) / chunksize)
-        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunksize, taken, len(corpus_dense) / taken, queries / taken))
+        logging.info(
+            "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
+            chunksize, taken, len(corpus_dense) / taken, queries / taken
+        )
     index_dense.num_best = None
 
-    logging.info("test 3 (sparse): similarity of all vs. all (%i documents, %i features, %.2f%% density)" %
-                 (len(corpus_sparse), index_sparse.num_features, density))
+    logging.info(
+        "test 3 (sparse): similarity of all vs. all (%i documents, %i features, %.2f%% density)",
+        len(corpus_sparse), index_sparse.num_features, density
+    )
+
     for chunksize in [1, 5, 10, 100, 256, 500, 1000, index_sparse.shardsize]:
         index_sparse.chunksize = chunksize
         start = time()
@@ -80,8 +89,10 @@ if __name__ == '__main__':
             pass
         taken = time() - start
         queries = math.ceil(1.0 * len(corpus_sparse) / chunksize)
-        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunksize, taken, len(corpus_sparse) / taken, queries / taken))
+        logging.info(
+            "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
+            chunksize, taken, len(corpus_sparse) / taken, queries / taken
+        )
 
     index_sparse.num_best = 10
     logging.info("test 4 (sparse): as above, but only ask for the top-10 most similar for each document")
@@ -92,8 +103,10 @@ if __name__ == '__main__':
             pass
         taken = time() - start
         queries = math.ceil(1.0 * len(corpus_sparse) / chunksize)
-        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunksize, taken, len(corpus_sparse) / taken, queries / taken))
+        logging.info(
+            "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
+            chunksize, taken, len(corpus_sparse) / taken, queries / taken
+        )
     index_sparse.num_best = None
 
     # Difference between test #5 and test #1 is that the query in #5 is a gensim iterable
@@ -101,8 +114,10 @@ if __name__ == '__main__':
     # because it needs to convert sparse vecs to numpy arrays and normalize them to
     # unit length=extra work, which #1 avoids.
     query = list(itertools.islice(corpus_dense, 1000))
-    logging.info("test 5 (dense): dense corpus of %i docs vs. index (%i documents, %i dense features)" %
-                 (len(query), len(index_dense), index_dense.num_features))
+    logging.info(
+        "test 5 (dense): dense corpus of %i docs vs. index (%i documents, %i dense features)",
+        len(query), len(index_dense), index_dense.num_features
+    )
     for chunksize in [1, 8, 32, 64, 128, 256, 512, 1024]:
         start = time()
         if chunksize > 1:
@@ -114,13 +129,17 @@ if __name__ == '__main__':
                 _ = index_dense[vec]
         taken = time() - start
         queries = math.ceil(1.0 * len(query) / chunksize)
-        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunksize, taken, len(query) / taken, queries / taken))
+        logging.info(
+            "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
+            chunksize, taken, len(query) / taken, queries / taken
+        )
 
     # Same comment as for test #5.
     query = list(itertools.islice(corpus_dense, 1000))
-    logging.info("test 6 (sparse): sparse corpus of %i docs vs. sparse index (%i documents, %i features, %.2f%% density)" %
-                 (len(query), len(corpus_sparse), index_sparse.num_features, density))
+    logging.info(
+        "test 6 (sparse): sparse corpus of %i docs vs. sparse index (%i documents, %i features, %.2f%% density)",
+        len(query), len(corpus_sparse), index_sparse.num_features, density
+    )
     for chunksize in [1, 5, 10, 100, 500, 1000]:
         start = time()
         if chunksize > 1:
@@ -132,7 +151,9 @@ if __name__ == '__main__':
                 _ = index_sparse[vec]
         taken = time() - start
         queries = math.ceil(1.0 * len(query) / chunksize)
-        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunksize, taken, len(query) / taken, queries / taken))
+        logging.info(
+            "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
+            chunksize, taken, len(query) / taken, queries / taken
+        )
 
-    logging.info("finished running %s" % program)
+    logging.info("finished running %s", program)

@@ -26,7 +26,7 @@ import numpy as np
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import atmodel
 from gensim import matutils
-from gensim.test import basetests
+from gensim.test import basetmtests
 
 # TODO:
 # Test that computing the bound on new unseen documents works as expected (this is somewhat different
@@ -40,23 +40,38 @@ module_path = os.path.dirname(__file__)  # needed because sample data files are 
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+texts = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey']
+]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
 # Assign some authors randomly to the documents above.
-author2doc = {'john': [0, 1, 2, 3, 4, 5, 6], 'jane': [2, 3, 4, 5, 6, 7, 8], 'jack': [0, 2, 4, 6, 8], 'jill': [1, 3, 5, 7]}
-doc2author = {0: ['john', 'jack'], 1: ['john', 'jill'], 2: ['john', 'jane', 'jack'], 3: ['john', 'jane', 'jill'],
-        4: ['john', 'jane', 'jack'], 5: ['john', 'jane', 'jill'], 6: ['john', 'jane', 'jack'], 7: ['jane', 'jill'],
-        8: ['jane', 'jack']}
+author2doc = {
+    'john': [0, 1, 2, 3, 4, 5, 6],
+    'jane': [2, 3, 4, 5, 6, 7, 8],
+    'jack': [0, 2, 4, 6, 8],
+    'jill': [1, 3, 5, 7]
+}
+doc2author = {
+    0: ['john', 'jack'],
+    1: ['john', 'jill'],
+    2: ['john', 'jane', 'jack'],
+    3: ['john', 'jane', 'jill'],
+    4: ['john', 'jane', 'jack'],
+    5: ['john', 'jane', 'jill'],
+    6: ['john', 'jane', 'jack'],
+    7: ['jane', 'jill'],
+    8: ['jane', 'jack']
+}
 
 # More data with new and old authors (to test update method).
 # Although the text is just a subset of the previous, the model
@@ -73,7 +88,7 @@ def testfile(test_fname=''):
     return os.path.join(tempfile.gettempdir(), fname)
 
 
-class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
+class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = atmodel.AuthorTopicModel
@@ -101,8 +116,10 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
             passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
             if passed:
                 break
-            logging.warning("Author-topic model failed to converge on attempt %i (got %s, expected %s)" %
-                            (i, sorted(vec), sorted(expected)))
+            logging.warning(
+                "Author-topic model failed to converge on attempt %i (got %s, expected %s)",
+                i, sorted(vec), sorted(expected)
+            )
         self.assertTrue(passed)
 
     def testBasic(self):
@@ -117,8 +134,14 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testAuthor2docMissing(self):
         # Check that the results are the same if author2doc is constructed automatically from doc2author.
-        model = self.class_(corpus, author2doc=author2doc, doc2author=doc2author, id2word=dictionary, num_topics=2, random_state=0)
-        model2 = self.class_(corpus, doc2author=doc2author, id2word=dictionary, num_topics=2, random_state=0)
+        model = self.class_(
+            corpus, author2doc=author2doc, doc2author=doc2author,
+            id2word=dictionary, num_topics=2, random_state=0
+        )
+        model2 = self.class_(
+            corpus, doc2author=doc2author, id2word=dictionary,
+            num_topics=2, random_state=0
+        )
 
         # Compare Jill's topics before in both models.
         jill_topics = model.get_author_topics('jill')
@@ -129,8 +152,14 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testDoc2authorMissing(self):
         # Check that the results are the same if doc2author is constructed automatically from author2doc.
-        model = self.class_(corpus, author2doc=author2doc, doc2author=doc2author, id2word=dictionary, num_topics=2, random_state=0)
-        model2 = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, random_state=0)
+        model = self.class_(
+            corpus, author2doc=author2doc, doc2author=doc2author,
+            id2word=dictionary, num_topics=2, random_state=0
+        )
+        model2 = self.class_(
+            corpus, author2doc=author2doc, id2word=dictionary,
+            num_topics=2, random_state=0
+        )
 
         # Compare Jill's topics before in both models.
         jill_topics = model.get_author_topics('jill')
@@ -185,7 +214,10 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
     def testSerialized(self):
         # Test the model using serialized corpora. Basic tests, plus test of update functionality.
 
-        model = self.class_(self.corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, serialized=True, serialization_path=datapath('testcorpus_serialization.mm'))
+        model = self.class_(
+            self.corpus, author2doc=author2doc, id2word=dictionary, num_topics=2,
+            serialized=True, serialization_path=datapath('testcorpus_serialization.mm')
+        )
 
         jill_topics = model.get_author_topics('jill')
         jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
@@ -216,7 +248,10 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         # better random initialization
         for i in range(25):  # restart at most 5 times
             # create the transformation model
-            model = self.class_(id2word=dictionary, num_topics=2, passes=100, random_state=0, serialized=True, serialization_path=datapath('testcorpus_serialization.mm'))
+            model = self.class_(
+                id2word=dictionary, num_topics=2, passes=100, random_state=0,
+                serialized=True, serialization_path=datapath('testcorpus_serialization.mm')
+            )
             model.update(self.corpus, author2doc)
 
             jill_topics = model.get_author_topics('jill')
@@ -234,13 +269,21 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
             remove(datapath('testcorpus_serialization.mm'))
             if passed:
                 break
-            logging.warning("Author-topic model failed to converge on attempt %i (got %s, expected %s)" %
-                            (i, sorted(vec), sorted(expected)))
+            logging.warning(
+                "Author-topic model failed to converge on attempt %i (got %s, expected %s)",
+                i, sorted(vec), sorted(expected)
+            )
         self.assertTrue(passed)
 
     def testAlphaAuto(self):
-        model1 = self.class_(corpus, author2doc=author2doc, id2word=dictionary, alpha='symmetric', passes=10, num_topics=2)
-        modelauto = self.class_(corpus, author2doc=author2doc, id2word=dictionary, alpha='auto', passes=10, num_topics=2)
+        model1 = self.class_(
+            corpus, author2doc=author2doc, id2word=dictionary,
+            alpha='symmetric', passes=10, num_topics=2
+        )
+        modelauto = self.class_(
+            corpus, author2doc=author2doc, id2word=dictionary,
+            alpha='auto', passes=10, num_topics=2
+        )
 
         # did we learn something?
         self.assertFalse(all(np.equal(model1.alpha, modelauto.alpha)))
@@ -301,8 +344,14 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertRaises(ValueError, self.class_, **kwargs)
 
     def testEtaAuto(self):
-        model1 = self.class_(corpus, author2doc=author2doc, id2word=dictionary, eta='symmetric', passes=10, num_topics=2)
-        modelauto = self.class_(corpus, author2doc=author2doc, id2word=dictionary, eta='auto', passes=10, num_topics=2)
+        model1 = self.class_(
+            corpus, author2doc=author2doc, id2word=dictionary,
+            eta='symmetric', passes=10, num_topics=2
+        )
+        modelauto = self.class_(
+            corpus, author2doc=author2doc, id2word=dictionary,
+            eta='auto', passes=10, num_topics=2
+        )
 
         # did we learn something?
         self.assertFalse(all(np.equal(model1.eta, modelauto.eta)))
@@ -388,7 +437,10 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testGetAuthorTopics(self):
 
-        model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
+        model = self.class_(
+            corpus, author2doc=author2doc, id2word=dictionary, num_topics=2,
+            passes=100, random_state=np.random.seed(0)
+        )
 
         author_topics = []
         for a in model.id2author.values():
@@ -402,7 +454,10 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testTermTopics(self):
 
-        model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
+        model = self.class_(
+            corpus, author2doc=author2doc, id2word=dictionary, num_topics=2,
+            passes=100, random_state=np.random.seed(0)
+        )
 
         # check with word_type
         result = model.get_term_topics(2)
@@ -436,7 +491,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
             for test_rhot in test_rhots:
                 model.update(corpus, author2doc)
 
-                msg = ", ".join(map(str, [passes, model.num_updates, model.state.numdocs]))
+                msg = "{}, {}, {}".format(passes, model.num_updates, model.state.numdocs)
                 self.assertAlmostEqual(final_rhot(), test_rhot, msg=msg)
 
             self.assertEqual(model.state.numdocs, len(corpus) * len(test_rhots))
