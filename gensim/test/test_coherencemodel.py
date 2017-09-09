@@ -15,7 +15,6 @@ import unittest
 from unittest import SkipTest
 
 import numpy as np
-
 from gensim.corpora.dictionary import Dictionary
 from gensim.matutils import argsort
 from gensim.models.coherencemodel import CoherenceModel, BOOLEAN_DOCUMENT_BASED
@@ -311,7 +310,6 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertEqual(topics_before, cm1._topics)
 
         cm1.topn = 6  # should be able to expand given the model
-        self.assertIsNone(cm1._accumulator)  # should uncache due to missing terms in accumulator
         self.assertEqual(6, len(cm1.topics[0]))
 
     def testCompareCoherenceForTopics(self):
