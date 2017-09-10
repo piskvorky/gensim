@@ -5,7 +5,9 @@ import unittest
 import tempfile
 import numpy as np
 import gensim
+import math
 
+from scipy.spatial.distance import cosine
 from collections import namedtuple
 from gensim.models.doc2vec import Doc2Vec
 from gensim import utils
@@ -116,3 +118,9 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
         model.train(self.train_docs[:5])
         infered_vec = model.infer_vector(self.target_doc_vec.docvecs[self.train_docs[5].tags])
         self.assertEqual(infered_vec.shape, (100, ))
+
+        expected = 0.5852653528
+        eps = 1e-10
+        caculated = cosine(self.target_doc_vec.docvecs[self.train_docs[5].tags], infered_vec)
+        self.assertLessEqual(math.fabs(caculated - expected), eps)
+
