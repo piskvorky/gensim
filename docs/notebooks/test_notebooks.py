@@ -28,16 +28,11 @@ def _notebook_run(path):
                     print(str(e.traceback).split("\n")[-2])
                 else:
                     raise e
-            except TimeoutError as e:
+            except RuntimeError as e:
                 print(e)
 
             finally:
                 nbformat.write(nb, fout)
-        #nb = nbformat.read(fout, nbformat.current_nbformat)
-
-    #errors = errors.extend(
-        #[output for cell in nb.cells if "outputs" in cell
-        # for output in cell["outputs"] if output.output_type == "error"])
 
     return nb, errors
 

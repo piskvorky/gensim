@@ -28,7 +28,7 @@ def precompute_idfs(wglobal, dfs, total_docs):
     """Precompute the inverse document frequency mapping for all terms."""
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
-    return dict((termid, wglobal(df, total_docs)) for termid, df in iteritems(dfs))
+    return {termid: wglobal(df, total_docs) for termid, df in iteritems(dfs)}
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -48,9 +48,9 @@ class TfidfModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(
-            self, corpus=None, id2word=None, dictionary=None,
-            wlocal=utils.identity, wglobal=df2idf, normalize=True):
+
+    def __init__(self, corpus=None, id2word=None, dictionary=None,
+                 wlocal=utils.identity, wglobal=df2idf, normalize=True):
         """
         Compute tf-idf by multiplying a local component (term frequency) with a
         global component (inverse document frequency), and normalizing
@@ -88,7 +88,8 @@ class TfidfModel(interfaces.TransformationABC):
             # step that goes through the corpus (= an optimization).
             if corpus is not None:
                 logger.warning(
-                    "constructor received both corpus and explicit inverse document frequencies; ignoring the corpus")
+                    "constructor received both corpus and explicit inverse document frequencies; ignoring the corpus"
+                )
             self.num_docs, self.num_nnz = dictionary.num_docs, dictionary.num_nnz
             self.dfs = dictionary.dfs.copy()
             self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
@@ -101,10 +102,8 @@ class TfidfModel(interfaces.TransformationABC):
             # be initialized in some other way
             pass
 
-
     def __str__(self):
         return "TfidfModel(num_docs=%s, num_nnz=%s)" % (self.num_docs, self.num_nnz)
-
 
     def initialize(self, corpus):
         """
@@ -130,9 +129,9 @@ class TfidfModel(interfaces.TransformationABC):
         n_features = max(dfs) if dfs else 0
         logger.info(
             "calculating IDF weights for %i documents and %i features (%i matrix non-zeros)",
-            self.num_docs, n_features, self.num_nnz)
+            self.num_docs, n_features, self.num_nnz
+        )
         self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
-
 
     def __getitem__(self, bow, eps=1e-12):
         """
@@ -160,4 +159,3 @@ class TfidfModel(interfaces.TransformationABC):
         # make sure there are no explicit zeroes in the vector (must be sparse)
         vector = [(termid, weight) for termid, weight in vector if abs(weight) > eps]
         return vector
-#endclass TfidfModel

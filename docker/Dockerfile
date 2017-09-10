@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 MAINTAINER Parul Sethi <parul1sethi@gmail.com>
 
 ENV GENSIM_REPOSITORY https://github.com/RaRe-Technologies/gensim.git
-ENV GENSIM_VERSION bd6db9a41baf219ecc4a1770cc21b01c8ff122e5
+ENV GENSIM_BRANCH develop
 
 # Installs python, pip and setup tools (with fixed versions)
 RUN apt-get update \
@@ -47,6 +47,7 @@ RUN pip2 install \
     matplotlib==2.0.0 \
     nltk==3.2.2 \
     pandas==0.19.2 \
+    spacy==1.8.1 \
     git+https://github.com/mila-udem/blocks.git@7beb788f1fcfc78d56c59a5edf9b4e8d98f8d7d9 \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
@@ -56,6 +57,7 @@ RUN pip3 install \
     matplotlib==2.0.0 \
     nltk==3.2.2 \
     pandas==0.19.2 \
+    spacy==1.8.1 \
     git+https://github.com/mila-udem/blocks.git@7beb788f1fcfc78d56c59a5edf9b4e8d98f8d7d9 \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
@@ -63,10 +65,14 @@ RUN pip3 install \
 RUN pip2 install -U numpy
 RUN pip3 install -U numpy
 
+# Download english model of Spacy
+RUN python2 -m spacy download en
+RUN python3 -m spacy download en
+
 # Download gensim from Github
 RUN git clone $GENSIM_REPOSITORY \
     && cd /gensim \
-    && git checkout $GENSIM_VERSION \
+    && git checkout $GENSIM_BRANCH \
     && pip2 install .[test] \
     && python2 setup.py install \
     && pip3 install .[test] \
@@ -76,12 +82,14 @@ RUN git clone $GENSIM_REPOSITORY \
 RUN mkdir /gensim/gensim_dependencies
 
 # Set ENV variables for wrappers
+ENV WR_HOME /gensim/gensim_dependencies/wordrank
 ENV FT_HOME /gensim/gensim_dependencies/fastText
 ENV MALLET_HOME /gensim/gensim_dependencies/mallet
 ENV DTM_PATH /gensim/gensim_dependencies/dtm/dtm/main
 ENV VOWPAL_WABBIT_PATH /gensim/gensim_dependencies/vowpal_wabbit/vowpalwabbit/vw
 
-# For fixed version downloads of gensim wrappers dependencies 
+# For fixed version downloads of gensim wrappers dependencies
+ENV WORDRANK_VERSION 44f3f7786f76c79c083dfad9d64e20bacfb4a0b0
 ENV FASTTEXT_VERSION f24a781021862f0e475a5fb9c55b7c1cec3b6e2e
 ENV MORPHOLOGICALPRIORSFORWORDEMBEDDINGS_VERSION ec2e37a3bcb8bd7b56b75b043c47076bc5decf22
 ENV DTM_VERSION 67139e6f526b2bc33aef56dc36176a1b8b210056
@@ -90,7 +98,17 @@ ENV VOWPAL_WABBIT_VERSION 69ecc2847fa0c876c6e0557af409f386f0ced59a
 
 # Install custom dependencies
 
-# TODO: Install wordrank (need to install mpich/openmpi with multithreading enabled)
+# Install mpich (a wordrank dependency) and remove openmpi to avoid mpirun conflict
+RUN apt-get purge -y openmpi-common openmpi-bin libopenmpi1.10
+RUN apt-get install -y mpich
+
+# Install wordrank
+RUN cd /gensim/gensim_dependencies \
+    && git clone https://bitbucket.org/shihaoji/wordrank \
+    && cd /gensim/gensim_dependencies/wordrank \
+    && git checkout $WORDRANK_VERSION \
+    && sed -i -e 's/#export CC=gcc CXX=g++/export CC=gcc CXX=g++/g' install.sh \
+    && sh ./install.sh
 
 # Install fastText
 RUN cd /gensim/gensim_dependencies \

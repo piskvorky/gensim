@@ -22,7 +22,7 @@ from testfixtures import log_capture
 
 import numpy as np
 
-from gensim import utils, matutils
+from gensim import utils
 from gensim.models import doc2vec, keyedvectors
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
@@ -40,6 +40,7 @@ class DocsLeeCorpus(object):
         with open(datapath('lee_background.cor')) as f:
             for i, line in enumerate(f):
                 yield doc2vec.TaggedDocument(utils.simple_preprocess(line), [self._tag(i)])
+
 
 list_corpus = list(DocsLeeCorpus())
 
@@ -62,12 +63,14 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.tst')
 
+
 def load_on_instance():
     # Save and load a Doc2Vec Model on instance for test
     model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
     model.save(testfile())
-    model = doc2vec.Doc2Vec() # should fail at this point
+    model = doc2vec.Doc2Vec()  # should fail at this point
     return model.load(testfile())
+
 
 class TestDoc2VecModel(unittest.TestCase):
     def test_persistence(self):
@@ -226,20 +229,26 @@ class TestDoc2VecModel(unittest.TestCase):
 
     def test_dmm_hs(self):
         """Test DM/mean doc2vec training."""
-        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=1, negative=0,
-                                alpha=0.05, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(
+            list_corpus, dm=1, dm_mean=1, size=24, window=4,
+            hs=1, negative=0, alpha=0.05, min_count=2, iter=20
+        )
         self.model_sanity(model)
 
     def test_dms_hs(self):
         """Test DM/sum doc2vec training."""
-        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=1, negative=0,
-                                alpha=0.05, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(
+            list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=1,
+            negative=0, alpha=0.05, min_count=2, iter=20
+        )
         self.model_sanity(model)
 
     def test_dmc_hs(self):
         """Test DM/concatenate doc2vec training."""
-        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=1, negative=0,
-                                alpha=0.05, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(
+            list_corpus, dm=1, dm_concat=1, size=24, window=4,
+            hs=1, negative=0, alpha=0.05, min_count=2, iter=20
+        )
         self.model_sanity(model)
 
     def test_dbow_neg(self):
@@ -249,20 +258,26 @@ class TestDoc2VecModel(unittest.TestCase):
 
     def test_dmm_neg(self):
         """Test DM/mean doc2vec training."""
-        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0, negative=10,
-                                alpha=0.05, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(
+            list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0,
+            negative=10, alpha=0.05, min_count=2, iter=20
+        )
         self.model_sanity(model)
 
     def test_dms_neg(self):
         """Test DM/sum doc2vec training."""
-        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=0, negative=10,
-                                alpha=0.05, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(
+            list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=0,
+            negative=10, alpha=0.05, min_count=2, iter=20
+        )
         self.model_sanity(model)
 
     def test_dmc_neg(self):
         """Test DM/concatenate doc2vec training."""
-        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=0, negative=10,
-                                alpha=0.05, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(
+            list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=0,
+            negative=10, alpha=0.05, min_count=2, iter=20
+        )
         self.model_sanity(model)
 
     def test_parallel(self):
@@ -293,10 +308,14 @@ class TestDoc2VecModel(unittest.TestCase):
     def test_deterministic_dmc(self):
         """Test doc2vec results identical with identical RNG seed."""
         # bigger, dmc
-        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=24, window=4, hs=1, negative=3,
-                                seed=42, workers=1)
-        model2 = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=24, window=4, hs=1, negative=3,
-                                 seed=42, workers=1)
+        model = doc2vec.Doc2Vec(
+            DocsLeeCorpus(), dm=1, dm_concat=1, size=24,
+            window=4, hs=1, negative=3, seed=42, workers=1
+        )
+        model2 = doc2vec.Doc2Vec(
+            DocsLeeCorpus(), dm=1, dm_concat=1, size=24,
+            window=4, hs=1, negative=3, seed=42, workers=1
+        )
         self.models_equal(model, model2)
 
     def test_mixed_tag_types(self):
@@ -338,12 +357,18 @@ class TestDoc2VecModel(unittest.TestCase):
                 self.assertTrue(not hasattr(model, 'syn0_lockf'))
                 self.assertTrue(model.docvecs and not hasattr(model.docvecs, 'doctag_syn0'))
                 self.assertTrue(model.docvecs and not hasattr(model.docvecs, 'doctag_syn0_lockf'))
-        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=1, negative=0, alpha=0.05, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(
+            list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=1,
+            negative=0, alpha=0.05, min_count=2, iter=20
+        )
         model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
         self.assertTrue(model.docvecs and hasattr(model.docvecs, 'doctag_syn0'))
         self.assertTrue(hasattr(model, 'syn1'))
         self.model_sanity(model, keep_training=False)
-        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0, negative=1, alpha=0.05, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(
+            list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0,
+            negative=1, alpha=0.05, min_count=2, iter=20
+        )
         model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
         self.model_sanity(model, keep_training=False)
         self.assertTrue(hasattr(model, 'syn1neg'))
@@ -378,7 +403,7 @@ class TestDoc2VecModel(unittest.TestCase):
     def testLoadOnClassError(self):
         """Test if exception is raised when loading doc2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
-#endclass TestDoc2VecModel
+# endclass TestDoc2VecModel
 
 
 if not hasattr(TestDoc2VecModel, 'assertLess'):
@@ -397,6 +422,7 @@ class ConcatenatedDoc2Vec(object):
     Models must have exactly-matching vocabulary and document IDs. (Models should
     be trained separately; this wrapper just returns concatenated results.)
     """
+
     def __init__(self, models):
         self.models = models
         if hasattr(models[0], 'docvecs'):
@@ -432,11 +458,13 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
     http://nlp.stanford.edu/~socherr/stanfordSentimentTreebank.zip
     has been expanded. It's not too big, so compose entirely into memory.
     """
-    logging.info("loading corpus from %s" % dirname)
+    logging.info("loading corpus from %s", dirname)
 
     # many mangled chars in sentences (datasetSentences.txt)
-    chars_sst_mangled = ['à', 'á', 'â', 'ã', 'æ', 'ç', 'è', 'é', 'í',
-                         'í', 'ï', 'ñ', 'ó', 'ô', 'ö', 'û', 'ü']
+    chars_sst_mangled = [
+        'à', 'á', 'â', 'ã', 'æ', 'ç', 'è', 'é', 'í',
+        'í', 'ï', 'ñ', 'ó', 'ô', 'ö', 'û', 'ü'
+    ]
     sentence_fixups = [(char.encode('utf-8').decode('latin1'), char) for char in chars_sst_mangled]
     # more junk, and the replace necessary for sentence-phrase consistency
     sentence_fixups.extend([
@@ -498,8 +526,10 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
     assert len([phrase for phrase in phrases if phrase.split == 'test']) == 2210  # 'test'
     assert len([phrase for phrase in phrases if phrase.split == 'dev']) == 1100  # 'dev'
 
-    logging.info("loaded corpus with %i sentences and %i phrases from %s",
-                 len(info_by_sentence), len(phrases), dirname)
+    logging.info(
+        "loaded corpus with %i sentences and %i phrases from %s",
+        len(info_by_sentence), len(phrases), dirname
+    )
 
     return phrases
 

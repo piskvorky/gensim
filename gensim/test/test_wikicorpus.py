@@ -10,8 +10,6 @@ Automated tests for checking the WikiCorpus
 
 
 import os
-import sys
-import types
 import logging
 import unittest
 
@@ -30,7 +28,7 @@ class TestWikiCorpus(unittest.TestCase):
 
     # #TODO: sporadic failure to be investigated
     # def test_get_texts_returns_generator_of_lists(self):
-    #     logger.debug("Current Python Version is " + str(sys.version_info))
+    #     logger.debug("Current Python Version is %s", str(sys.version_info))
     #     if sys.version_info < (2, 7, 0):
     #         return
     #
@@ -49,9 +47,9 @@ class TestWikiCorpus(unittest.TestCase):
         """
         wc = WikiCorpus(datapath(FILENAME), processes=1)
 
-        l = wc.get_texts()
-        self.assertTrue(u'anarchism' in next(l))
-        self.assertTrue(u'autism' in next(l))
+        texts = wc.get_texts()
+        self.assertTrue(u'anarchism' in next(texts))
+        self.assertTrue(u'autism' in next(texts))
 
     def test_unicode_element(self):
         """
@@ -60,8 +58,8 @@ class TestWikiCorpus(unittest.TestCase):
         """
         wc = WikiCorpus(datapath(FILENAME_U), processes=1)
 
-        l = wc.get_texts()
-        self.assertTrue(u'папа' in next(l))
+        texts = wc.get_texts()
+        self.assertTrue(u'папа' in next(texts))
 
 
 if __name__ == '__main__':

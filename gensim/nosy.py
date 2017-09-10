@@ -24,10 +24,10 @@ import fnmatch
 
 EXTENSIONS = ['*.py']
 EXECUTABLE = 'nosetests test/'
-DEFAULTARGS = '--with-color -exe'# -w tests'
+DEFAULTARGS = '--with-color -exe'  # -w tests'
 
 
-def checkSum():
+def check_sum():
     """
     Return a long which can be used to know if any .py files have changed.
     """
@@ -39,14 +39,14 @@ def checkSum():
                 val += stats[stat.ST_SIZE] + stats[stat.ST_MTIME]
     return val
 
+
 if __name__ == '__main__':
     val = 0
     try:
         while True:
-            if checkSum() != val:
-                val = checkSum()
-                os.system('%s %s %s' % (EXECUTABLE, DEFAULTARGS,
-                    ' '.join(sys.argv[1:])))
+            if check_sum() != val:
+                val = check_sum()
+                os.system('%s %s %s' % (EXECUTABLE, DEFAULTARGS, ' '.join(sys.argv[1:])))
                 print(datetime.datetime.now().__str__())
                 print('=' * 77)
             time.sleep(1)

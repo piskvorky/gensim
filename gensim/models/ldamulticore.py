@@ -77,6 +77,7 @@ class LdaMulticore(LdaModel):
     Model persistency is achieved through its `load`/`save` methods.
 
     """
+
     def __init__(self, corpus=None, num_topics=100, id2word=None, workers=None,
                  chunksize=2000, passes=1, batch=False, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
@@ -125,7 +126,7 @@ class LdaMulticore(LdaModel):
 
         `decay` and `offset` parameters are the same as Kappa and Tau_0 in
         Hoffman et al, respectively.
-        
+
         `random_state` can be a numpy.random.RandomState object or the seed for one
 
         Example:
@@ -142,12 +143,13 @@ class LdaMulticore(LdaModel):
         if isinstance(alpha, six.string_types) and alpha == 'auto':
             raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
 
-        super(LdaMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
+        super(LdaMulticore, self).__init__(
+            corpus=corpus, num_topics=num_topics,
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
-            gamma_threshold=gamma_threshold, random_state=random_state, minimum_probability= minimum_probability,
-            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
-
+            gamma_threshold=gamma_threshold, random_state=random_state, minimum_probability=minimum_probability,
+            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics
+        )
 
     def update(self, corpus, chunks_as_numpy=False):
         """
@@ -169,7 +171,7 @@ class LdaMulticore(LdaModel):
         """
         try:
             lencorpus = len(corpus)
-        except:
+        except TypeError:
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
@@ -187,15 +189,17 @@ class LdaMulticore(LdaModel):
         evalafter = min(lencorpus, (self.eval_every or 0) * updateafter)
 
         updates_per_pass = max(1, lencorpus / updateafter)
-        logger.info("running %s LDA training, %s topics, %i passes over the"
-            " supplied corpus of %i documents, updating every %i documents,"
-            " evaluating every ~%i documents, iterating %ix with a convergence threshold of %f",
-            updatetype, self.num_topics, self.passes, lencorpus, updateafter, evalafter,
-            self.iterations, self.gamma_threshold)
+        logger.info(
+            "running %s LDA training, %s topics, %i passes over the supplied corpus of %i documents, "
+            "updating every %i documents, evaluating every ~%i documents, iterating %ix with a convergence threshold of %f",
+            updatetype, self.num_topics, self.passes, lencorpus, updateafter, evalafter, self.iterations, self.gamma_threshold
+        )
 
         if updates_per_pass * self.passes < 10:
-            logger.warning("too few updates, training might not converge; consider "
-                "increasing the number of passes or iterations to improve accuracy")
+            logger.warning(
+                "too few updates, training might not converge; "
+                "consider increasing the number of passes or iterations to improve accuracy"
+            )
 
         job_queue = Queue(maxsize=2 * self.workers)
         result_queue = Queue()
@@ -240,16 +244,17 @@ class LdaMulticore(LdaModel):
                         job_queue.put((chunk_no, chunk, self), block=False, timeout=0.1)
                         chunk_put = True
                         queue_size[0] += 1
-                        logger.info('PROGRESS: pass %i, dispatched chunk #%i = '
-                            'documents up to #%i/%i, outstanding queue size %i',
-                            pass_, chunk_no, chunk_no * self.chunksize + len(chunk), lencorpus, queue_size[0])
+                        logger.info(
+                            "PROGRESS: pass %i, dispatched chunk #%i = documents up to #%i/%i, outstanding queue size %i",
+                            pass_, chunk_no, chunk_no * self.chunksize + len(chunk), lencorpus, queue_size[0]
+                        )
                     except queue.Full:
                         # in case the input job queue is full, keep clearing the
                         # result queue, to make sure we don't deadlock
                         process_result_queue()
 
                 process_result_queue()
-            #endfor single corpus pass
+            # endfor single corpus pass
 
             # wait for all outstanding jobs to finish
             while queue_size[0] > 0:
@@ -257,7 +262,7 @@ class LdaMulticore(LdaModel):
 
             if reallen != lencorpus:
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
-        #endfor entire update
+        # endfor entire update
 
         pool.terminate()
 

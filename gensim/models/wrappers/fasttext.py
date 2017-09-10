@@ -19,7 +19,7 @@ The wrapped model can NOT be updated with new documents for online training -- u
 Example:
 
 >>> from gensim.models.wrappers import FastText
->>> model = fasttext.FastText.train('/Users/kofola/fastText/fasttext', corpus_file='text8')
+>>> model = FastText.train('/Users/kofola/fastText/fasttext', corpus_file='text8')
 >>> print model['forests']  # prints vector for given out-of-vocabulary word
 
 .. [1] https://github.com/facebookresearch/fastText#enriching-word-vectors-with-subword-information
@@ -31,6 +31,7 @@ import logging
 import tempfile
 import os
 import struct
+from six.moves import xrange
 
 import numpy as np
 from numpy import float32 as REAL, sqrt, newaxis
@@ -38,9 +39,12 @@ from gensim import utils
 from gensim.models.keyedvectors import KeyedVectors, Vocab
 from gensim.models.word2vec import Word2Vec
 
-from six import string_types
-
 logger = logging.getLogger(__name__)
+
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
 
 FASTTEXT_FILEFORMAT_MAGIC = 793712314
 
@@ -52,6 +56,7 @@ class FastTextKeyedVectors(KeyedVectors):
     Subclasses KeyedVectors to implement oov lookups, storing ngrams and other FastText specific methods
 
     """
+
     def __init__(self):
         super(FastTextKeyedVectors, self).__init__()
         self.syn0_all_norm = None
@@ -90,7 +95,7 @@ class FastTextKeyedVectors(KeyedVectors):
                 word_vec += ngram_weights[self.ngrams[ngram]]
             if word_vec.any():
                 return word_vec / len(ngrams)
-            else: # No ngrams of the word are present in self.ngrams
+            else:  # No ngrams of the word are present in self.ngrams
                 raise KeyError('all ngrams for word %s absent from model' % word)
 
     def init_sims(self, replace=False):
@@ -146,7 +151,7 @@ class FastText(Word2Vec):
 
     @classmethod
     def train(cls, ft_path, corpus_file, output_file=None, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
-            word_ngrams=1, loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
+              word_ngrams=1, loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
         """
         `ft_path` is the path to the FastText executable, e.g. `/home/kofola/fastText/fasttext`.
 
@@ -212,7 +217,7 @@ class FastText(Word2Vec):
             cmd.append("-%s" % option)
             cmd.append(str(value))
 
-        output = utils.check_output(args=cmd)
+        utils.check_output(args=cmd)
         model = cls.load_fasttext_format(output_file)
         cls.delete_training_files(output_file)
         return model
@@ -265,17 +270,17 @@ class FastText(Word2Vec):
         magic, version = self.struct_unpack(file_handle, '@2i')
         if magic == FASTTEXT_FILEFORMAT_MAGIC:  # newer format
             self.new_format = True
-            dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
+            dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
         else:  # older format
             self.new_format = False
             dim = magic
             ws = version
-            epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
+            epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
         # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
         self.vector_size = dim
         self.window = ws
         self.iter = epoch
-        self.min_count = minCount
+        self.min_count = min_count
         self.negative = neg
         self.hs = loss == 1
         self.sg = model == 2
@@ -307,7 +312,9 @@ class FastText(Word2Vec):
                 # For more info : https://github.com/facebookresearch/fastText/issues/218
 
                 assert word == "__label__", (
-                    'mismatched vocab_size ({}) and nwords ({}), extra word "{}"'.format(vocab_size, nwords, word))
+                    'mismatched vocab_size ({}) and nwords ({}), extra word "{}"'
+                    .format(vocab_size, nwords, word)
+                )
                 continue   # don't add word to vocab
 
             self.wv.vocab[word] = Vocab(index=i, count=count)
@@ -320,7 +327,8 @@ class FastText(Word2Vec):
             # expecting to log this warning only for pretrained french vector, wiki.fr
             logger.warning(
                 "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
-                len(self.wv.vocab), vocab_size)
+                len(self.wv.vocab), vocab_size
+            )
 
         if self.new_format:
             for j in range(pruneidx_size):
@@ -332,7 +340,9 @@ class FastText(Word2Vec):
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.vector_size == dim, (
-            'mismatch between vector size in model params ({}) and model vectors ({})'.format(self.vector_size, dim))
+            'mismatch between vector size in model params ({}) and model vectors ({})'
+            .format(self.vector_size, dim)
+        )
         float_size = struct.calcsize('@f')
         if float_size == 4:
             dtype = np.dtype(np.float32)
@@ -343,8 +353,10 @@ class FastText(Word2Vec):
         self.wv.syn0_all = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
         self.wv.syn0_all = self.wv.syn0_all.reshape((num_vectors, dim))
         assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
-            'mismatch between actual weight matrix shape {} and expected shape {}'.format(
-                self.wv.syn0_all.shape, (self.bucket + len(self.wv.vocab), self.vector_size))
+            'mismatch between actual weight matrix shape {} and expected shape {}'\
+            .format(
+                self.wv.syn0_all.shape, (self.bucket + len(self.wv.vocab), self.vector_size)
+            )
 
         self.init_ngrams()
 
@@ -378,7 +390,10 @@ class FastText(Word2Vec):
 
         ngram_weights = self.wv.syn0_all
 
-        logger.info("loading weights for %s words for fastText model from %s", len(self.wv.vocab), self.file_name)
+        logger.info(
+            "loading weights for %s words for fastText model from %s",
+            len(self.wv.vocab), self.file_name
+        )
 
         for w, vocab in self.wv.vocab.items():
             word_ngrams = self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
@@ -386,11 +401,13 @@ class FastText(Word2Vec):
                 self.wv.syn0[vocab.index] += np.array(ngram_weights[self.wv.ngrams[word_ngram]])
 
             self.wv.syn0[vocab.index] /= (len(word_ngrams) + 1)
-        logger.info("loaded %s weight matrix for fastText model from %s", self.wv.syn0.shape, self.file_name)
+        logger.info(
+            "loaded %s weight matrix for fastText model from %s",
+            self.wv.syn0.shape, self.file_name
+        )
 
     @staticmethod
     def compute_ngrams(word, min_n, max_n):
-        ngram_indices = []
         BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
         extended_word = BOW + word + EOW
         ngrams = []
@@ -414,4 +431,3 @@ class FastText(Word2Vec):
             h = h * np.uint32(16777619)
         np.seterr(**old_settings)
         return h
-
