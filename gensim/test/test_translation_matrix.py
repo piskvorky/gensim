@@ -119,8 +119,7 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
         infered_vec = model.infer_vector(self.target_doc_vec.docvecs[self.train_docs[5].tags])
         self.assertEqual(infered_vec.shape, (100, ))
 
-        expected = 0.5852653528
+        expected = 0.6453547135
         eps = 1e-10
         caculated = cosine(self.target_doc_vec.docvecs[self.train_docs[5].tags], infered_vec)
         self.assertLessEqual(math.fabs(caculated - expected), eps)
-

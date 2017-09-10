@@ -315,7 +315,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         m1 = [self.source_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_docs]
         m2 = [self.target_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_docs]
 
-        self.translation_matrix = np.linalg.lstsq(m1, m2, -1)[0]
+        self.translation_matrix = np.linalg.lstsq(m2, m1, -1)[0]
         return self.translation_matrix
 
     def infer_vector(self, target_doc_vec):
