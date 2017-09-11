@@ -116,7 +116,7 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt,\
-    empty, sum as np_sum, ones, logaddexp
+    empty, sum as np_sum, ones, logaddexp, argmax
 
 from scipy.special import expit
 
