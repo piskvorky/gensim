@@ -1290,6 +1290,13 @@ class Word2Vec(utils.SaveLoad):
         Refer to the documentation for `gensim.models.KeyedVectors.similarity`
         """
         return self.wv.similarity(w1, w2)
+    
+    def most_similar_to_given(self, w1, word_list):
+        """
+        Deprecated. Use self.wv.most_similar_to_given() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.most_similar_to_given`
+        """
+        return self.wv.most_similar_to_given(self, w1, word_list)
 
     def n_similarity(self, ws1, ws2):
         """
