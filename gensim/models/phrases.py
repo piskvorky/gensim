@@ -67,6 +67,7 @@ import itertools as it
 from math import log
 from inspect import getargspec
 import pickle
+import six
 
 from six import iteritems, string_types, next
 
@@ -177,13 +178,7 @@ class Phrases(interfaces.TransformationABC):
         # intentially override the value of the scoring parameter rather than set self.scoring here,
         # to still run the check of scoring function parameters in the next code block
 
-        # for python 2 and 3 compatibility. basestring is used to check if scoring is a string
-        try:
-            basestring
-        except NameError:
-            basestring = str
-
-        if isinstance(scoring, basestring):
+        if isinstance(scoring, six.string_types):
             if scoring == 'default':
                 scoring = original_scorer
             elif scoring == 'npmi':
