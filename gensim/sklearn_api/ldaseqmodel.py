@@ -22,9 +22,9 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
     Base LdaSeq module
     """
 
-    def __init__(self, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
-                initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
-                random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
+    def __init__(self, time_slice=None, id2word=None, alphas=0.01, num_topics=10, initialize='gensim', sstats=None,
+                 lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10, random_state=None,
+                 lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
         """
         Sklearn wrapper for LdaSeq model. See gensim.models.LdaSeqModel for parameter details.
         """
@@ -50,11 +50,13 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
         Fit the model according to the given training data.
         Calls gensim.models.LdaSeqModel
         """
-        self.gensim_model = models.LdaSeqModel(corpus=X, time_slice=self.time_slice, id2word=self.id2word,
+        self.gensim_model = models.LdaSeqModel(
+            corpus=X, time_slice=self.time_slice, id2word=self.id2word,
             alphas=self.alphas, num_topics=self.num_topics, initialize=self.initialize, sstats=self.sstats,
             lda_model=self.lda_model, obs_variance=self.obs_variance, chain_variance=self.chain_variance,
             passes=self.passes, random_state=self.random_state, lda_inference_max_iter=self.lda_inference_max_iter,
-            em_min_iter=self.em_min_iter, em_max_iter=self.em_max_iter, chunksize=self.chunksize)
+            em_min_iter=self.em_min_iter, em_max_iter=self.em_max_iter, chunksize=self.chunksize
+        )
         return self
 
     def transform(self, docs):

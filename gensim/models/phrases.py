@@ -244,7 +244,8 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
         """Get short string representation of this phrase detector."""
         return "%s<%i vocab, min_count=%s, threshold=%s, max_vocab_size=%s>" % (
             self.__class__.__name__, len(self.vocab), self.min_count,
-            self.threshold, self.max_vocab_size)
+            self.threshold, self.max_vocab_size
+        )
 
     @staticmethod
     def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000,
@@ -257,8 +258,10 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
         min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
-                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
-                            (sentence_no, total_words, len(vocab)))
+                logger.info(
+                    "PROGRESS: at sentence #%i, processed %i words and %i word types",
+                    sentence_no, total_words, len(vocab),
+                )
             s = [utils.any2utf8(w) for w in sentence]
             last_uncommon = None
             in_between = []
@@ -278,8 +281,10 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
                 utils.prune_vocab(vocab, min_reduce)
                 min_reduce += 1
 
-        logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
-                    (len(vocab), total_words, sentence_no + 1))
+        logger.info(
+            "collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences",
+            len(vocab), total_words, sentence_no + 1
+        )
         return min_reduce, vocab, total_words
 
     def add_vocab(self, sentences):
@@ -377,7 +382,8 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
             self.analyze_sentence,
             threshold=self.threshold,
             common_terms=self.common_terms,
-            scoring=self.get_scoring_function())
+            scoring=self.get_scoring_function()
+        )
         for sentence in sentences:
             bigrams = analyze_sentence(sentence)
             # keeps only not None scores
@@ -420,12 +426,14 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
             sentence,
             threshold=self.threshold,
             common_terms=self.common_terms,
-            scoring=self.get_scoring_function())
+            scoring=self.get_scoring_function()
+        )
         new_s = []
         for words, score in bigrams:
             if score is not None:
                 words = delimiter.join(words)
             new_s.append(words)
+
         return [utils.to_unicode(w) for w in new_s]
 
 
@@ -525,7 +533,7 @@ class Phraser(SentenceAnalyzer, interfaces.TransformationABC):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.info("running %s" % " ".join(sys.argv))
+    logging.info("running %s", " ".join(sys.argv))
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])

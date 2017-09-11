@@ -37,13 +37,13 @@ logger = logging.getLogger(__name__)
 
 
 def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
-    '''
+    """
     Convert Word2Vec mode to 2D tensor TSV file and metadata file
     Args:
-        param1 (str): word2vec model file path
-        param2 (str): filename prefix
-        param2 (bool): set True to use a binary Word2Vec model, defaults to False
-    '''
+        word2vec_model_path (str): word2vec model file path
+        tensor_filename (str): filename prefix
+        binary (bool): set True to use a binary Word2Vec model, defaults to False
+    """
     model = gensim.models.KeyedVectors.load_word2vec_format(word2vec_model_path, binary=binary)
     outfiletsv = tensor_filename + '_tensor.tsv'
     outfiletsvmeta = tensor_filename + '_metadata.tsv'
@@ -52,11 +52,11 @@ def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
         with open(outfiletsvmeta, 'w+') as file_metadata:
             for word in model.index2word:
                 file_metadata.write(gensim.utils.to_utf8(word) + gensim.utils.to_utf8('\n'))
-                vector_row = '\t'.join(map(str, model[word]))
+                vector_row = '\t'.join(str(x) for x in model[word])
                 file_vector.write(vector_row + '\n')
 
-    logger.info("2D tensor file saved to %s" % outfiletsv)
-    logger.info("Tensor metadata file saved to %s" % outfiletsvmeta)
+    logger.info("2D tensor file saved to %s", outfiletsv)
+    logger.info("Tensor metadata file saved to %s", outfiletsvmeta)
 
 
 if __name__ == "__main__":
@@ -64,24 +64,12 @@ if __name__ == "__main__":
     logging.root.setLevel(level=logging.INFO)
     logger.info("running %s", ' '.join(sys.argv))
 
-    # check and process cmdline input
-    program = os.path.basename(sys.argv[0])
-    if len(sys.argv) < 2:
-        print(globals()['__doc__'] % locals())
-        sys.exit(1)
-
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-i", "--input", required=True,
-        help="Input word2vec model")
-    parser.add_argument(
-        "-o", "--output", required=True,
-        help="Output tensor file name prefix")
-    parser.add_argument("-b", "--binary",
-                        required=False,
-                        help="If word2vec model in binary format, set True, else False")
+    parser.add_argument("-i", "--input", required=True, help="Input word2vec model")
+    parser.add_argument("-o", "--output", required=True, help="Output tensor file name prefix")
+    parser.add_argument("-b", "--binary", required=False, help="If word2vec model in binary format, set True, else False")
     args = parser.parse_args()
 
     word2vec2tensor(args.input, args.output, args.binary)
 
-    logger.info("finished running %s", program)
+    logger.info("finished running %s", os.path.basename(sys.argv[0]))

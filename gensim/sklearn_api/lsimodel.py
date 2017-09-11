@@ -24,8 +24,7 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
     Base LSI module
     """
 
-    def __init__(self, num_topics=200, id2word=None, chunksize=20000,
-                 decay=1.0, onepass=True, power_iters=2, extra_samples=100):
+    def __init__(self, num_topics=200, id2word=None, chunksize=20000, decay=1.0, onepass=True, power_iters=2, extra_samples=100):
         """
         Sklearn wrapper for LSI model. See gensim.model.LsiModel for parameter details.
         """
@@ -48,8 +47,10 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
         else:
             corpus = X
 
-        self.gensim_model = models.LsiModel(corpus=corpus, num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize,
-            decay=self.decay, onepass=self.onepass, power_iters=self.power_iters, extra_samples=self.extra_samples)
+        self.gensim_model = models.LsiModel(
+            corpus=corpus, num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize,
+            decay=self.decay, onepass=self.onepass, power_iters=self.power_iters, extra_samples=self.extra_samples
+        )
         return self
 
     def transform(self, docs):
@@ -61,7 +62,9 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
         or a single document like : [(4, 1), (7, 1)]
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # The input as array of array
         check = lambda x: [x] if isinstance(x[0], tuple) else x
@@ -82,8 +85,10 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
             X = matutils.Sparse2Corpus(X)
 
         if self.gensim_model is None:
-            self.gensim_model = models.LsiModel(num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize,
-                decay=self.decay, onepass=self.onepass, power_iters=self.power_iters, extra_samples=self.extra_samples)
+            self.gensim_model = models.LsiModel(
+                num_topics=self.num_topics, id2word=self.id2word, chunksize=self.chunksize, decay=self.decay,
+                onepass=self.onepass, power_iters=self.power_iters, extra_samples=self.extra_samples
+            )
 
         self.gensim_model.add_documents(corpus=X)
         return self

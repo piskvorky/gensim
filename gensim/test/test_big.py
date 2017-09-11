@@ -38,7 +38,7 @@ class BigCorpus(object):
             doc_len = np.random.poisson(self.doc_len)
             ids = np.random.randint(0, len(self.dictionary), doc_len)
             if self.words_only:
-                yield [str(id) for id in ids]
+                yield [str(idx) for idx in ids]
             else:
                 weights = np.random.poisson(3, doc_len)
                 yield sorted(zip(ids, weights))
@@ -53,21 +53,21 @@ if os.environ.get('GENSIM_BIG', False):
             model = gensim.models.Word2Vec(corpus, size=300, workers=4)
             model.save(testfile(), ignore=['syn1'])
             del model
-            model = gensim.models.Word2Vec.load(testfile())
+            gensim.models.Word2Vec.load(testfile())
 
         def testLsiModel(self):
             corpus = BigCorpus(num_docs=50000)
             model = gensim.models.LsiModel(corpus, num_topics=500, id2word=corpus.dictionary)
             model.save(testfile())
             del model
-            model = gensim.models.LsiModel.load(testfile())
+            gensim.models.LsiModel.load(testfile())
 
         def testLdaModel(self):
             corpus = BigCorpus(num_docs=5000)
             model = gensim.models.LdaModel(corpus, num_topics=500, id2word=corpus.dictionary)
             model.save(testfile())
             del model
-            model = gensim.models.LdaModel.load(testfile())
+            gensim.models.LdaModel.load(testfile())
 
 
 if __name__ == '__main__':

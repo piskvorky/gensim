@@ -13,27 +13,27 @@ import six
 
 
 class TestBaseTopicModel(object):
-    def testPrintTopic(self):
+    def test_print_topic(self):
         topics = self.model.show_topics(formatted=True)
         for topic_no, topic in topics:
             self.assertTrue(isinstance(topic_no, int))
             self.assertTrue(isinstance(topic, str) or isinstance(topic, unicode))  # noqa:F821
 
-    def testPrintTopics(self):
+    def test_print_topics(self):
         topics = self.model.print_topics()
 
         for topic_no, topic in topics:
             self.assertTrue(isinstance(topic_no, int))
             self.assertTrue(isinstance(topic, str) or isinstance(topic, unicode))  # noqa:F821
 
-    def testShowTopic(self):
+    def test_show_topic(self):
         topic = self.model.show_topic(1)
 
         for k, v in topic:
             self.assertTrue(isinstance(k, six.string_types))
             self.assertTrue(isinstance(v, (np.floating, float)))
 
-    def testShowTopics(self):
+    def test_show_topics(self):
         topics = self.model.show_topics(formatted=False)
 
         for topic_no, topic in topics:
@@ -43,7 +43,7 @@ class TestBaseTopicModel(object):
                 self.assertTrue(isinstance(k, six.string_types))
                 self.assertTrue(isinstance(v, (np.floating, float)))
 
-    def testGetTopics(self):
+    def test_get_topics(self):
         topics = self.model.get_topics()
         vocab_size = len(self.model.id2word)
         for topic in topics:

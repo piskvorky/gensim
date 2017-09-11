@@ -33,11 +33,11 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 TOPIC_WORDS = [
-'cat lion leopard mouse jaguar lynx cheetah tiger kitten puppy'.split(),
-'engine car wheel brakes tyre motor suspension cylinder exhaust clutch'.split(),
-'alice bob robert tim sue rachel dave harry alex jim'.split(),
-'c cplusplus go python haskell scala java ruby csharp erlang'.split(),
-'eggs ham mushrooms cereal coffee beans tea juice sausages bacon'.split()
+    'cat lion leopard mouse jaguar lynx cheetah tiger kitten puppy'.split(),
+    'engine car wheel brakes tyre motor suspension cylinder exhaust clutch'.split(),
+    'alice bob robert tim sue rachel dave harry alex jim'.split(),
+    'c cplusplus go python haskell scala java ruby csharp erlang'.split(),
+    'eggs ham mushrooms cereal coffee beans tea juice sausages bacon'.split()
 ]
 
 
@@ -71,30 +71,29 @@ class TestLdaVowpalWabbit(unittest.TestCase):
         """Test loading/saving LdaVowpalWabbit model."""
         if not self.vw_path:  # for python 2.6
             return
-        lda = LdaVowpalWabbit(self.vw_path,
-                              corpus=self.corpus,
-                              passes=10,
-                              chunksize=256,
-                              id2word=self.dictionary,
-                              cleanup_files=True,
-                              alpha=0.1,
-                              eta=0.1,
-                              num_topics=len(TOPIC_WORDS),
-                              random_seed=1)
+        lda = LdaVowpalWabbit(
+            self.vw_path, corpus=self.corpus, passes=10, chunksize=256,
+            id2word=self.dictionary, cleanup_files=True, alpha=0.1,
+            eta=0.1, num_topics=len(TOPIC_WORDS), random_seed=1
+        )
 
         with tempfile.NamedTemporaryFile() as fhandle:
             lda.save(fhandle.name)
             lda2 = LdaVowpalWabbit.load(fhandle.name)
 
             # ensure public fields are saved/loaded correctly
-            saved_fields = [lda.alpha, lda.chunksize, lda.cleanup_files,
-                            lda.decay, lda.eta, lda.gamma_threshold,
-                            lda.id2word, lda.num_terms, lda.num_topics,
-                            lda.passes, lda.random_seed, lda.vw_path]
-            loaded_fields = [lda2.alpha, lda2.chunksize, lda2.cleanup_files,
-                             lda2.decay, lda2.eta, lda2.gamma_threshold,
-                             lda2.id2word, lda2.num_terms, lda2.num_topics,
-                             lda2.passes, lda2.random_seed, lda2.vw_path]
+            saved_fields = [
+                lda.alpha, lda.chunksize, lda.cleanup_files,
+                lda.decay, lda.eta, lda.gamma_threshold,
+                lda.id2word, lda.num_terms, lda.num_topics,
+                lda.passes, lda.random_seed, lda.vw_path
+            ]
+            loaded_fields = [
+                lda2.alpha, lda2.chunksize, lda2.cleanup_files,
+                lda2.decay, lda2.eta, lda2.gamma_threshold,
+                lda2.id2word, lda2.num_terms, lda2.num_topics,
+                lda2.passes, lda2.random_seed, lda2.vw_path
+            ]
             self.assertEqual(saved_fields, loaded_fields)
 
             # ensure topic matrices are saved/loaded correctly
@@ -106,16 +105,11 @@ class TestLdaVowpalWabbit(unittest.TestCase):
         """Test updating existing LdaVowpalWabbit model."""
         if not self.vw_path:  # for python 2.6
             return
-        lda = LdaVowpalWabbit(self.vw_path,
-                              corpus=[self.corpus[0]],
-                              passes=10,
-                              chunksize=256,
-                              id2word=self.dictionary,
-                              cleanup_files=True,
-                              alpha=0.1,
-                              eta=0.1,
-                              num_topics=len(TOPIC_WORDS),
-                              random_seed=1)
+        lda = LdaVowpalWabbit(
+            self.vw_path, corpus=[self.corpus[0]], passes=10, chunksize=256,
+            id2word=self.dictionary, cleanup_files=True, alpha=0.1,
+            eta=0.1, num_topics=len(TOPIC_WORDS), random_seed=1
+        )
 
         lda.update(self.corpus[1:])
         result = lda.log_perplexity(self.corpus)
@@ -126,16 +120,10 @@ class TestLdaVowpalWabbit(unittest.TestCase):
         """Test LdaVowpalWabbit perplexity is within expected range."""
         if not self.vw_path:  # for python 2.6
             return
-        lda = LdaVowpalWabbit(self.vw_path,
-                              corpus=self.corpus,
-                              passes=10,
-                              chunksize=256,
-                              id2word=self.dictionary,
-                              cleanup_files=True,
-                              alpha=0.1,
-                              eta=0.1,
-                              num_topics=len(TOPIC_WORDS),
-                              random_seed=1)
+        lda = LdaVowpalWabbit(
+            self.vw_path, corpus=self.corpus, passes=10, chunksize=256,
+            id2word=self.dictionary, cleanup_files=True, alpha=0.1,
+            eta=0.1, num_topics=len(TOPIC_WORDS), random_seed=1)
 
         # varies, but should be between -1 and -5
         result = lda.log_perplexity(self.corpus)
@@ -147,16 +135,11 @@ class TestLdaVowpalWabbit(unittest.TestCase):
         if not self.vw_path:  # for python 2.6
             return
         corpus, dictionary = get_corpus()
-        lda = LdaVowpalWabbit(self.vw_path,
-                              corpus=corpus,
-                              passes=10,
-                              chunksize=256,
-                              id2word=dictionary,
-                              cleanup_files=True,
-                              alpha=0.1,
-                              eta=0.1,
-                              num_topics=len(TOPIC_WORDS),
-                              random_seed=1)
+        lda = LdaVowpalWabbit(
+            self.vw_path, corpus=corpus, passes=10, chunksize=256,
+            id2word=dictionary, cleanup_files=True, alpha=0.1,
+            eta=0.1, num_topics=len(TOPIC_WORDS), random_seed=1
+        )
         lda.print_topics(5, 10)
 
         # map words in known topic to an ID
@@ -198,11 +181,13 @@ class TestLdaVowpalWabbit(unittest.TestCase):
         """Test corpus to Vowpal Wabbit format conversion."""
         if not self.vw_path:  # for python 2.6
             return
-        corpus = [[(0, 5), (7, 1), (5, 3), (0, 2)],
-                  [(7, 2), (2, 1), (3, 11)],
-                  [(1, 1)],
-                  [],
-                  [(5, 2), (0, 1)]]
+        corpus = [
+            [(0, 5), (7, 1), (5, 3), (0, 2)],
+            [(7, 2), (2, 1), (3, 11)],
+            [(1, 1)],
+            [],
+            [(5, 2), (0, 1)]
+        ]
         expected = """
 | 0:5 7:1 5:3 0:2
 | 7:2 2:1 3:11
