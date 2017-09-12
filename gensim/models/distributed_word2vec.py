@@ -18,15 +18,14 @@ import tensorflow as tf
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
 from gensim.utils import keep_vocab_item
-import logging
-logger = logging.getLogger(__name__)
+import time
 
 
 class TfWord2Vec(KeyedVectors):
 
-    def __init__(self, train_data=None, eval_data=None, save_path=None, size=100, alpha=0.025,
-                 window=5, num_skips=2, min_count=5, sample=1e-3, negative=25,
-                 batch_size=500, train_epochs=5, concurrent_steps=12, FLAGS=None):
+    def __init__(self, train_data=None, eval_data=None, save_path=None, size=100,
+                 window=5, num_skips=2, min_count=5, negative=25, alpha=0.025,
+                 batch_size=500, train_epochs=1, FLAGS=None):
 
         """Word2vec as TensorFlow graph.
             Args:
@@ -34,18 +33,15 @@ class TfWord2Vec(KeyedVectors):
             eval_data: Data for evaluation.
             save_path: Directory to write the model.
             size: The dimensionality of the feature vectors.
-            alpha: The initial learning rate (will linearly drop to `min_alpha` as training progresses).
             window: The maximum distance between the current and predicted word within a sentence.
             num_skips: How many times to reuse an input to generate a label
             min_count: Ignore all words with total frequency lower than this.
-            sample: Threshold for configuring which higher-frequency words are randomly downsampled;
-                default is 1e-3, useful range is (0, 1e-5).
             negative: If > 0, negative sampling will be used, the int for negative
                 specifies how many "noise words" should be drawn (usually between 5-20).
                 Default is 5. If set to 0, no negative samping is used.
             batch_size: Numbers of training examples each step processes.
+            alpha: learning rate
             train_epochs: Number of epochs to train, each epoch processes the training data once.
-            concurrent_steps: The number of concurrent training steps.
         """
         if train_data is None:
             raise ValueError("Train_data must be specified")
@@ -53,20 +49,35 @@ class TfWord2Vec(KeyedVectors):
         self.train_data = train_data
         self.eval_data = eval_data
         self.vector_size = int(size)
-        self.sample = sample
         self.negative = negative
-        self.alpha = float(alpha)
         self.train_epochs = train_epochs
         self.batch_size = batch_size
-        self.concurrent_steps = concurrent_steps
         self.window = window
         self.num_skips = num_skips
         self.min_count = min_count
         self.save_path = save_path
+        self.alpha = alpha
         self.FLAGS = FLAGS
 
+        # We pick a random validation set to sample nearest neighbors. Here we limit the
+        # validation samples to the words that have a low numeric ID, which by
+        # construction are also the most frequent.
+        self.valid_size = 16     # Random set of words to evaluate similarity on.
+        self.valid_window = 100  # Only pick dev samples in the head of the distribution.
+        self.valid_examples = np.random.choice(self.valid_window, self.valid_size, replace=False)
+
         self.build_dataset(train_data)
-        self.data_index = 0
+        ps_hosts = self.FLAGS.ps_hosts.split(',')
+        worker_hosts = self.FLAGS.worker_hosts.split(',')
+
+        # Create a cluster from the parameter server and worker hosts.
+        self.cluster = tf.train.ClusterSpec({'ps': ps_hosts, 'worker': worker_hosts})
+        self.num_workers = len(worker_hosts)
+        self.data_size = len(self.data) // self.num_workers
+        self.data_index = self.FLAGS.task_index * self.data_size
+        self.max_index = self.data_index + self.data_size
+        self.start_index = self.data_index
+
         self.train()
 
     def save(self, *args, **kwargs):
@@ -76,13 +87,14 @@ class TfWord2Vec(KeyedVectors):
 
     def build_dataset(self, words):
         """Build the dictionary"""
-        self.vocab = collections.Counter()
+        vocab = collections.Counter()
         for word in words:
-            self.vocab[word] += 1
+            vocab[word] += 1
+        self.vocab = vocab.most_common()
         self.dict = dict()
         rare_words = 0
-        for word in self.vocab:
-            if keep_vocab_item(word, self.vocab[word], self.min_count):
+        for word, count in self.vocab:
+            if keep_vocab_item(word, count, self.min_count):
                 self.dict[word] = len(self.dict)
             else:
                 rare_words += 1
@@ -127,6 +139,8 @@ class TfWord2Vec(KeyedVectors):
         batch = np.ndarray(shape=(batch_size), dtype=np.int32)
         labels = np.ndarray(shape=(batch_size, 1), dtype=np.int32)
         span = 2 * skip_window + 1  # [ skip_window target skip_window ]
+        if self.data_index + (batch_size // num_skips) > self.max_index:
+            self.max_index = -1
         buffer = collections.deque(maxlen=span)
         for _ in range(span):
             buffer.append(self.data[self.data_index])
@@ -143,18 +157,12 @@ class TfWord2Vec(KeyedVectors):
             buffer.append(self.data[self.data_index])
             self.data_index = (self.data_index + 1) % len(self.data)
         # Backtrack a little bit to avoid skipping words in the end of a batch
-        self.data_index = (self.data_index + len(self.data) - span) % len(self.data)
+        self.data_index = self.data_index - span
         return batch, labels
 
     def train(self):
-        ps_hosts = self.FLAGS.ps_hosts.split(',')
-        worker_hosts = self.FLAGS.worker_hosts.split(',')
-
-        # Create a cluster from the parameter server and worker hosts.
-        cluster = tf.train.ClusterSpec({'ps': ps_hosts, 'worker': worker_hosts})
-
         # Create and start a server for the local task.
-        server = tf.train.Server(cluster, job_name=self.FLAGS.job_name,
+        server = tf.train.Server(self.cluster, job_name=self.FLAGS.job_name,
                                      task_index=self.FLAGS.task_index)
 
         if self.FLAGS.job_name == "ps":
@@ -163,13 +171,15 @@ class TfWord2Vec(KeyedVectors):
             # Build graph
             with tf.device(tf.train.replica_device_setter(
                     worker_device='/job:worker/task:%d' % self.FLAGS.task_index,
-                    cluster=cluster)):
+                    cluster=self.cluster)):
 
                 global_step = tf.contrib.framework.get_or_create_global_step()
 
                 # Input data.
                 train_inputs = tf.placeholder(tf.int32, shape=[self.batch_size])
                 train_labels = tf.placeholder(tf.int32, shape=[self.batch_size, 1])
+
+                valid_dataset = tf.constant(self.valid_examples, dtype=tf.int32)
 
                 # Look up embeddings for inputs.
                 embeddings = tf.Variable(
@@ -193,11 +203,15 @@ class TfWord2Vec(KeyedVectors):
                                                 num_sampled=self.negative,
                                                 num_classes=self.vocab_size))
 
-                # Construct the SGD optimizer using a learning rate of 1.0.
-                optimizer = tf.train.GradientDescentOptimizer(1.0).minimize(loss)
+                # Construct the SGD optimizer using a learning rate.
+                optimizer = tf.train.GradientDescentOptimizer(self.alpha).minimize(loss)
 
                 norm = tf.sqrt(
                     tf.reduce_sum(tf.square(embeddings), 1, keep_dims=True))
+
+                normalized_embeddings = embeddings / norm
+                valid_embeddings = tf.nn.embedding_lookup(normalized_embeddings, valid_dataset)
+                similarity = tf.matmul(valid_embeddings, normalized_embeddings, transpose_b=True)
 
                 # Add variable initializer.
                 init = tf.global_variables_initializer()
@@ -209,35 +223,43 @@ class TfWord2Vec(KeyedVectors):
                                      init_op=init)
 
             average_loss = 0
-            norm_vec = []
-            embed_vec = []
             with sv.prepare_or_wait_for_session(server.target, config=None) as sess:
+                start_time = time.time()
                 for epoch in xrange(self.train_epochs):
                     step = 0
-                    prev_index = 0
-                    while self.data_index >= prev_index:
-                        prev_index = self.data_index
+                    while self.data_index < self.max_index:
                         batch_inputs, batch_labels = self.generate_batch(
                                                         batch_size=self.batch_size,
                                                         num_skips=self.num_skips,
                                                         skip_window=self.window)
                         feed_dict = {train_inputs: batch_inputs,
                                      train_labels: batch_labels}
-                        _, loss_val, norm_vec, embed_vec = sess.run(
-                            [optimizer, loss, norm, embeddings], feed_dict=feed_dict)
+                        _, loss_val = sess.run([optimizer, loss], feed_dict=feed_dict)
                         average_loss += loss_val
 
                         step += 1
                         if step % 500 == 0 and step > 0:
                             average_loss /= 500
-                            # The average loss is an estimate of the loss over the last
-                            # 2000 batches.
-                            print('Task: {}. Average loss at step {}: {}.'.format(self.FLAGS.task_index,
-                                                                                step, average_loss))
+                            # The average loss is an estimate of the loss over the last batches.
+                            print('Task: {}. Average loss at step {}: {}. Data index: {}. Time: {}'.format(
+                                   self.FLAGS.task_index, step, average_loss, self.data_index, time.time() - start_time))
                             average_loss = 0
 
-            self.syn0norm = norm_vec
-            self.syn0 = embed_vec
+                    sim = similarity.eval()
+                    for i in xrange(self.valid_size):
+                        valid_word = self.reversed_dict[self.valid_examples[i]]
+                        top_k = 8  # number of nearest neighbors
+                        nearest = (-sim[i, :]).argsort()[1:top_k + 1]
+                        log_str = 'Nearest to %s:' % valid_word
+                        for k in xrange(top_k):
+                            close_word = self.reversed_dict[nearest[k]]
+                            log_str = '%s %s,' % (log_str, close_word)
+                        print(log_str)
+
+                    self.syn0norm = normalized_embeddings.eval()
+                    self.syn0 = embeddings.eval()
+                    self.data_index = self.start_index
+                    self.max_index = self.data_index + self.data_size
 
     @classmethod
     def load_tf_model(cls, model_file):
@@ -245,7 +267,7 @@ class TfWord2Vec(KeyedVectors):
         model = KeyedVectors.load_word2vec_format('%s.w2vformat' % model_file)
         return model
 
-    def eval_graph(self, analogy):
+    def build_eval_graph(self):
         """Build the eval graph and predict the top 4 answers for analogy
         questions."""
 
@@ -256,14 +278,16 @@ class TfWord2Vec(KeyedVectors):
         # The eval feeds three vectors of word ids for a, b, c, each of
         # which is of size N, where N is the number of analogies we want to
         # evaluate in one batch.
-        eval_graph = tf.Graph()
-        with eval_graph.as_default():
+
+        tf.reset_default_graph()
+        self.eval_graph = tf.Graph()
+        with self.eval_graph.as_default():
             analogy_a = tf.placeholder(dtype=tf.int32)  # [N]
             analogy_b = tf.placeholder(dtype=tf.int32)  # [N]
             analogy_c = tf.placeholder(dtype=tf.int32)  # [N]
 
             # Normalized word embeddings of shape [vocab_size, emb_dim].
-            nemb = tf.nn.l2_normalize(self.syn0, 1)
+            nemb = tf.Variable(self.syn0norm)
 
             # Each row of a_emb, b_emb, c_emb is a word's embedding vector.
             # They all have the shape [N, emb_dim]
@@ -282,11 +306,19 @@ class TfWord2Vec(KeyedVectors):
             # For each question (row in dist), find the top 4 words.
             _, pred_idx = tf.nn.top_k(dist, 4)
 
-        with tf.Session(graph=eval_graph) as session:
-            idx, = session.run([pred_idx], {analogy_a: analogy[:, 0],
-                                            analogy_b: analogy[:, 1],
-                                            analogy_c: analogy[:, 2]
-                                            })
+            # Nodes in the construct graph which are used by training and
+            # evaluation to run/feed/fetch.
+            self.analogy_a = analogy_a
+            self.analogy_b = analogy_b
+            self.analogy_c = analogy_c
+            self.analogy_pred_idx = pred_idx
+
+    def predict(self, analogy, session):
+        """Predict the top 4 answers for analogy questions."""
+        idx, = session.run([self.analogy_pred_idx], {
+            self.analogy_a: analogy[:, 0],
+            self.analogy_b: analogy[:, 1],
+            self.analogy_c: analogy[:, 2]})
         return idx
 
     def eval(self):
@@ -298,17 +330,25 @@ class TfWord2Vec(KeyedVectors):
         correct = 0
         total = self.analogy_questions.shape[0]
         start = 0
-        while start < total:
-            limit = start + 2500
-            sub = self.analogy_questions[start:limit, :]
-            idx = self.eval_graph(sub)
-            start = limit
-            for question in xrange(sub.shape[0]):
-                for j in xrange(4):
-                    if idx[question, j] == sub[question, 3]:
-                        correct += 1
-                    else:
-                        continue
-
-        print("Eval {}/{} accuracy = {}" % (correct, total,
+        self.build_eval_graph()
+        with tf.Session(graph=self.eval_graph) as session:
+            session.run(tf.global_variables_initializer())
+            while start < total:
+                limit = start + 2500
+                sub = self.analogy_questions[start:limit, :]
+                idx = self.predict(sub, session)
+                start = limit
+                for question in xrange(sub.shape[0]):
+                    for j in xrange(4):
+                        if idx[question, j] == sub[question, 3]:
+                            # Bingo! We predicted correctly. E.g., [italy, rome, france, paris].
+                            correct += 1
+                            break
+                        elif idx[question, j] in sub[question, :3]:
+                            # We need to skip words already in the question.
+                            continue
+                        else:
+                            # The correct label is not the precision@1
+                            break
+        print("Eval %4d/%d accuracy = %4.1f%%" % (correct, total,
                                                   correct * 100.0 / total))
