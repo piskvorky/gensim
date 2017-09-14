@@ -53,32 +53,39 @@ class TestCoherenceModel(unittest.TestCase):
         # `topics1` is clearly better as it has a clear distinction between system-human
         # interaction and graphs. Hence both the coherence measures for `topics1` should be
         # greater.
-        self.topics1 = [['human', 'computer', 'system', 'interface'],
-                        ['graph', 'minors', 'trees', 'eps']]
-        self.topics2 = [['user', 'graph', 'minors', 'system'],
-                        ['time', 'graph', 'survey', 'minors']]
+        self.topics1 = [
+            ['human', 'computer', 'system', 'interface'],
+            ['graph', 'minors', 'trees', 'eps']
+        ]
+        self.topics2 = [
+            ['user', 'graph', 'minors', 'system'],
+            ['time', 'graph', 'survey', 'minors']
+        ]
         self.ldamodel = LdaModel(
             corpus=self.corpus, id2word=self.dictionary, num_topics=2,
-            passes=0, iterations=0)
+            passes=0, iterations=0
+        )
 
         mallet_home = os.environ.get('MALLET_HOME', None)
         self.mallet_path = os.path.join(mallet_home, 'bin', 'mallet') if mallet_home else None
         if self.mallet_path:
             self.malletmodel = LdaMallet(
                 mallet_path=self.mallet_path, corpus=self.corpus,
-                id2word=self.dictionary, num_topics=2, iterations=0)
+                id2word=self.dictionary, num_topics=2, iterations=0
+            )
 
         vw_path = os.environ.get('VOWPAL_WABBIT_PATH', None)
         if not vw_path:
             logging.info(
-                "Environment variable 'VOWPAL_WABBIT_PATH' not specified,"
-                " skipping sanity checks for LDA Model")
+                "Environment variable 'VOWPAL_WABBIT_PATH' not specified, skipping sanity checks for LDA Model"
+            )
             self.vw_path = None
         else:
             self.vw_path = vw_path
             self.vwmodel = LdaVowpalWabbit(
                 self.vw_path, corpus=self.corpus, id2word=self.dictionary,
-                num_topics=2, passes=0)
+                num_topics=2, passes=0
+            )
 
     def check_coherence_measure(self, coherence):
         """Check provided topic coherence algorithm on given topics"""
@@ -179,20 +186,24 @@ class TestCoherenceModel(unittest.TestCase):
         # not providing dictionary
         self.assertRaises(
             ValueError, CoherenceModel, topics=self.topics1, corpus=self.corpus,
-            coherence='u_mass')
+            coherence='u_mass'
+        )
         # not providing texts for c_v and instead providing corpus
         self.assertRaises(
             ValueError, CoherenceModel, topics=self.topics1, corpus=self.corpus,
-            dictionary=self.dictionary, coherence='c_v')
+            dictionary=self.dictionary, coherence='c_v'
+        )
         # not providing corpus or texts for u_mass
         self.assertRaises(
             ValueError, CoherenceModel, topics=self.topics1, dictionary=self.dictionary,
-            coherence='u_mass')
+            coherence='u_mass'
+        )
 
     def testPersistence(self):
         fname = testfile()
         model = CoherenceModel(
-            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass')
+            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass'
+        )
         model.save(fname)
         model2 = CoherenceModel.load(fname)
         self.assertTrue(model.get_coherence() == model2.get_coherence())
@@ -200,7 +211,8 @@ class TestCoherenceModel(unittest.TestCase):
     def testPersistenceCompressed(self):
         fname = testfile() + '.gz'
         model = CoherenceModel(
-            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass')
+            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass'
+        )
         model.save(fname)
         model2 = CoherenceModel.load(fname)
         self.assertTrue(model.get_coherence() == model2.get_coherence())
@@ -208,7 +220,8 @@ class TestCoherenceModel(unittest.TestCase):
     def testPersistenceAfterProbabilityEstimationUsingCorpus(self):
         fname = testfile()
         model = CoherenceModel(
-            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass')
+            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass'
+        )
         model.estimate_probabilities()
         model.save(fname)
         model2 = CoherenceModel.load(fname)
@@ -218,7 +231,8 @@ class TestCoherenceModel(unittest.TestCase):
     def testPersistenceAfterProbabilityEstimationUsingTexts(self):
         fname = testfile()
         model = CoherenceModel(
-            topics=self.topics1, texts=self.texts, dictionary=self.dictionary, coherence='c_v')
+            topics=self.topics1, texts=self.texts, dictionary=self.dictionary, coherence='c_v'
+        )
         model.estimate_probabilities()
         model.save(fname)
         model2 = CoherenceModel.load(fname)

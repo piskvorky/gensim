@@ -21,26 +21,12 @@ import scipy.sparse
 from scipy.stats import entropy
 import scipy.linalg
 from scipy.linalg.lapack import get_lapack_funcs
+from scipy.linalg.special_matrices import triu
 from scipy.special import psi  # gamma function utils
 
 from six import iteritems, itervalues, string_types
 from six.moves import xrange, zip as izip
 
-# scipy is not a stable package yet, locations change, so try to work
-# around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)
-try:
-    from scipy.linalg.basic import triu
-except ImportError:
-    from scipy.linalg.special_matrices import triu
-
-try:
-    from np import triu_indices
-except ImportError:
-    # np < 1.4
-    def triu_indices(n, k=0):
-        m = np.ones((n, n), int)
-        a = triu(m, k)
-        return np.where(a != 0)
 
 blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
@@ -101,7 +87,7 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
         data = np.empty((num_nnz,), dtype=dtype)
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
-                logger.info("PROGRESS: at document #%i/%i" % (docno, num_docs))
+                logger.info("PROGRESS: at document #%i/%i", docno, num_docs)
             posnext = posnow + len(doc)
             indices[posnow: posnext] = [feature_id for feature_id, _ in doc]
             data[posnow: posnext] = [feature_weight for _, feature_weight in doc]
@@ -114,7 +100,7 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
         num_nnz, data, indices, indptr = 0, [], [], [0]
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
-                logger.info("PROGRESS: at document #%i" % (docno))
+                logger.info("PROGRESS: at document #%i", docno)
             indices.extend([feature_id for feature_id, _ in doc])
             data.extend([feature_weight for _, feature_weight in doc])
             num_nnz += len(doc)
@@ -150,7 +136,7 @@ def zeros_aligned(shape, dtype, order='C', align=128):
     nbytes = np.prod(shape, dtype=np.int64) * np.dtype(dtype).itemsize
     buffer = np.zeros(nbytes + align, dtype=np.uint8)  # problematic on win64 ("maximum allowed dimension exceeded")
     start_index = -buffer.ctypes.data % align
-    return buffer[start_index : start_index + nbytes].view(dtype).reshape(shape, order=order)
+    return buffer[start_index: start_index + nbytes].view(dtype).reshape(shape, order=order)
 
 
 def ismatrix(m):
@@ -217,6 +203,7 @@ class Scipy2Corpus(object):
     This is the mirror function to `corpus2csc`.
 
     """
+
     def __init__(self, vecs):
         """
         `vecs` is a sequence of dense and/or sparse vectors, such as a 2d np array,
@@ -266,6 +253,7 @@ def full2sparse(vec, eps=1e-9):
     vec = np.asarray(vec, dtype=float)
     nnz = np.nonzero(abs(vec) > eps)[0]
     return list(zip(nnz, vec.take(nnz)))
+
 
 dense2vec = full2sparse
 
@@ -318,6 +306,7 @@ class Dense2Corpus(object):
     This is the mirror function to `corpus2dense`.
 
     """
+
     def __init__(self, dense, documents_columns=True):
         if documents_columns:
             self.dense = dense.T
@@ -330,7 +319,6 @@ class Dense2Corpus(object):
 
     def __len__(self):
         return len(self.dense)
-#endclass DenseCorpus
 
 
 class Sparse2Corpus(object):
@@ -340,6 +328,7 @@ class Sparse2Corpus(object):
     This is the mirror function to `corpus2csc`.
 
     """
+
     def __init__(self, sparse, documents_columns=True):
         if documents_columns:
             self.sparse = sparse.tocsc()
@@ -352,7 +341,6 @@ class Sparse2Corpus(object):
 
     def __len__(self):
         return self.sparse.shape[1]
-#endclass Sparse2Corpus
 
 
 def veclen(vec):
@@ -377,7 +365,7 @@ def ret_log_normalize_vec(vec, axis=1):
         log_shift = log_max - np.log(len(vec) + 1.0) - max_val
         tot = np.sum(np.exp(vec + log_shift))
         log_norm = np.log(tot) - log_shift
-        vec = vec - log_norm
+        vec -= log_norm
     else:
         if axis == 1:  # independently normalize each sample
             max_val = np.max(vec, 1)
@@ -387,10 +375,10 @@ def ret_log_normalize_vec(vec, axis=1):
             vec = vec - log_norm[:, np.newaxis]
         elif axis == 0:  # normalize each feature
             k = ret_log_normalize_vec(vec.T)
-            return (k[0].T, k[1])
+            return k[0].T, k[1]
         else:
             raise ValueError("'%s' is not a supported axis" % axis)
-    return (vec, log_norm)
+    return vec, log_norm
 
 
 blas_nrm2 = blas('nrm2', np.array([], dtype=float))
@@ -431,7 +419,7 @@ def unitvec(vec, norm='l2'):
 
     try:
         first = next(iter(vec))  # is there at least one element?
-    except:
+    except StopIteration:
         return vec
 
     if isinstance(first, (tuple, list)) and len(first) == 2:  # gensim sparse format
@@ -472,20 +460,18 @@ def isbow(vec):
         vec = vec.todense().tolist()
     try:
         id_, val_ = vec[0]  # checking first value to see if it is in bag of words format by unpacking
-        id_, val_ = int(id_), float(val_)
+        int(id_), float(val_)
     except IndexError:
         return True  # this is to handle the empty input case
-    except Exception:
+    except (ValueError, TypeError):
         return False
     return True
 
 
-def kullback_leibler(vec1, vec2, num_features=None):
+def convert_vec(vec1, vec2, num_features=None):
     """
-    A distance metric between two probability distributions.
-    Returns a distance value in range <0, +∞> where values closer to 0 mean less distance (and a higher similarity)
-    Uses the scipy.stats.entropy method to identify kullback_leibler convergence value.
-    If the distribution draws from a certain number of docs, that value must be passed.
+    Convert vectors to appropriate forms required by entropy input.
+    Checks for sparsity and bag of word format.
     """
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
@@ -495,12 +481,12 @@ def kullback_leibler(vec1, vec2, num_features=None):
         if num_features is not None:  # if not None, make as large as the documents drawing from
             dense1 = sparse2full(vec1, num_features)
             dense2 = sparse2full(vec2, num_features)
-            return entropy(dense1, dense2)
+            return dense1, dense2
         else:
             max_len = max(len(vec1), len(vec2))
             dense1 = sparse2full(vec1, max_len)
             dense2 = sparse2full(vec2, max_len)
-            return entropy(dense1, dense2)
+            return dense1, dense2
     else:
         # this conversion is made because if it is not in bow format, it might be a list within a list after conversion
         # the scipy implementation of Kullback fails in such a case so we pick up only the nested list.
@@ -508,7 +494,28 @@ def kullback_leibler(vec1, vec2, num_features=None):
             vec1 = vec1[0]
         if len(vec2) == 1:
             vec2 = vec2[0]
-        return scipy.stats.entropy(vec1, vec2)
+        return vec1, vec2
+
+
+def kullback_leibler(vec1, vec2, num_features=None):
+    """
+    A distance metric between two probability distributions.
+    Returns a distance value in range <0, +∞> where values closer to 0 mean less distance (and a higher similarity)
+    Uses the scipy.stats.entropy method to identify kullback_leibler convergence value.
+    If the distribution draws from a certain number of docs, that value must be passed.
+    """
+    vec1, vec2 = convert_vec(vec1, vec2, num_features=num_features)
+    return entropy(vec1, vec2)
+
+
+def jensen_shannon(vec1, vec2, num_features=None):
+    """
+    A method of measuring the similarity between two probability distributions.
+    It is a symmetrized and finite version of the Kullback–Leibler divergence.
+    """
+    vec1, vec2 = convert_vec(vec1, vec2, num_features=num_features)
+    avg_vec = 0.5 * (vec1 + vec2)
+    return 0.5 * (entropy(vec1, avg_vec) + entropy(vec2, avg_vec))
 
 
 def hellinger(vec1, vec2):
@@ -525,7 +532,7 @@ def hellinger(vec1, vec2):
         vec1, vec2 = dict(vec1), dict(vec2)
         if len(vec2) < len(vec1):
             vec1, vec2 = vec2, vec1  # swap references so that we iterate over the shorter vector
-        sim = np.sqrt(0.5*sum((np.sqrt(value) - np.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
+        sim = np.sqrt(0.5 * sum((np.sqrt(value) - np.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
         return sim
     else:
         sim = np.sqrt(0.5 * ((np.sqrt(vec1) - np.sqrt(vec2))**2).sum())
@@ -587,7 +594,7 @@ def dirichlet_expectation(alpha):
     For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
 
     """
-    if (len(alpha.shape) == 1):
+    if len(alpha.shape) == 1:
         result = psi(alpha) - psi(np.sum(alpha))
     else:
         result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
@@ -605,7 +612,7 @@ def qr_destroy(la):
     del la[0], la  # now `a` is the only reference to the input matrix
     m, n = a.shape
     # perform q, r = QR(a); code hacked out of scipy.linalg.qr
-    logger.debug("computing QR of %s dense matrix" % str(a.shape))
+    logger.debug("computing QR of %s dense matrix", str(a.shape))
     geqrf, = get_lapack_funcs(('geqrf',), (a,))
     qr, tau, work, info = geqrf(a, lwork=-1, overwrite_a=True)
     qr, tau, work, info = geqrf(a, lwork=work[0], overwrite_a=True)
@@ -652,12 +659,10 @@ class MmWriter(object):
 
         if num_nnz < 0:
             # we don't know the matrix shape/density yet, so only log a general line
-            logger.info("saving sparse matrix to %s" % self.fname)
+            logger.info("saving sparse matrix to %s", self.fname)
             self.fout.write(utils.to_utf8(' ' * 50 + '\n'))  # 48 digits must be enough for everybody
         else:
-            logger.info(
-                "saving sparse %sx%s matrix with %i non-zero entries to %s",
-                num_docs, num_terms, num_nnz, self.fname)
+            logger.info("saving sparse %sx%s matrix with %i non-zero entries to %s", num_docs, num_terms, num_nnz, self.fname)
             self.fout.write(utils.to_utf8('%s %s %s\n' % (num_docs, num_terms, num_nnz)))
         self.last_docno = -1
         self.headers_written = True
@@ -714,7 +719,7 @@ class MmWriter(object):
             else:
                 bow = doc
             if docno % progress_cnt == 0:
-                logger.info("PROGRESS: saving document #%i" % docno)
+                logger.info("PROGRESS: saving document #%i", docno)
             if index:
                 posnow = mw.fout.tell()
                 if posnow == poslast:
@@ -732,11 +737,7 @@ class MmWriter(object):
         num_terms = num_terms or _num_terms
 
         if num_docs * num_terms != 0:
-            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" % (
-                num_docs, num_terms,
-                100.0 * num_nnz / (num_docs * num_terms),
-                num_nnz,
-                num_docs * num_terms))
+            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)", num_docs, num_terms, 100.0 * num_nnz / (num_docs * num_terms), num_nnz, num_docs * num_terms)
 
         # now write proper headers, by seeking and overwriting the spaces written earlier
         mw.fake_headers(num_docs, num_terms, num_nnz)
@@ -756,10 +757,9 @@ class MmWriter(object):
         self.close()  # does nothing if called twice (on an already closed file), so no worries
 
     def close(self):
-        logger.debug("closing %s" % self.fname)
+        logger.debug("closing %s", self.fname)
         if hasattr(self, 'fout'):
             self.fout.close()
-#endclass MmWriter
 
 
 class MmReader(object):
@@ -771,6 +771,7 @@ class MmReader(object):
     matrix at once (unlike scipy.io.mmread). This allows us to process corpora
     which are larger than the available RAM.
     """
+
     def __init__(self, input, transposed=True):
         """
         Initialize the matrix reader.
@@ -782,7 +783,7 @@ class MmReader(object):
         `input` is either a string (file path) or a file-like object that supports
         `seek()` (e.g. gzip.GzipFile, bz2.BZ2File).
         """
-        logger.info("initializing corpus reader from %s" % input)
+        logger.info("initializing corpus reader from %s", input)
         self.input, self.transposed = input, transposed
         with utils.file_or_filename(self.input) as lines:
             try:
@@ -797,14 +798,12 @@ class MmReader(object):
             for lineno, line in enumerate(lines):
                 line = utils.to_unicode(line)
                 if not line.startswith('%'):
-                    self.num_docs, self.num_terms, self.num_nnz = map(int, line.split())
+                    self.num_docs, self.num_terms, self.num_nnz = (int(x) for x in line.split())
                     if not self.transposed:
                         self.num_docs, self.num_terms = self.num_terms, self.num_docs
                     break
 
-        logger.info(
-            "accepted corpus with %i documents, %i features, %i non-zero entries",
-            self.num_docs, self.num_terms, self.num_nnz)
+        logger.info("accepted corpus with %i documents, %i features, %i non-zero entries", self.num_docs, self.num_terms, self.num_nnz)
 
     def __len__(self):
         return self.num_docs
@@ -845,7 +844,7 @@ class MmReader(object):
                 if docid != previd:
                     # change of document: return the document read so far (its id is prevId)
                     if previd >= 0:
-                        yield previd, document
+                        yield previd, document  # noqa:F821
 
                     # return implicit (empty) documents between previous id and new id
                     # too, to keep consistent document numbering and corpus length
@@ -893,4 +892,3 @@ class MmReader(object):
 
             document.append((termid, val,))  # add another field to the current document
         return document
-#endclass MmReader

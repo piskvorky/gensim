@@ -4,6 +4,7 @@
 # Copyright (C) 2016 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+import logging
 import unittest
 import numpy as np
 
@@ -31,14 +32,22 @@ class TestLdaDiff(unittest.TestCase):
         self.model = LdaModel(corpus=self.corpus, id2word=self.dictionary, num_topics=self.num_topics, passes=10)
 
     def testBasic(self):
+        # test for matrix case
         mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms)
 
         self.assertEqual(mdiff.shape, (self.num_topics, self.num_topics))
         self.assertEquals(len(annotation), self.num_topics)
         self.assertEquals(len(annotation[0]), self.num_topics)
 
+        # test for diagonal case
+        mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms, diagonal=True)
+
+        self.assertEqual(mdiff.shape, (self.num_topics,))
+        self.assertEquals(len(annotation), self.num_topics)
+
     def testIdentity(self):
         for dist_name in ["hellinger", "kullback_leibler", "jaccard"]:
+            # test for matrix case
             mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms, distance=dist_name)
 
             for row in annotation:
@@ -51,6 +60,23 @@ class TestLdaDiff(unittest.TestCase):
             if dist_name == "jaccard":
                 self.assertTrue(np.allclose(mdiff, np.zeros(mdiff.shape, dtype=mdiff.dtype)))
 
+            # test for diagonal case
+            mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms, distance=dist_name, diagonal=True)
+
+            for (int_tokens, diff_tokens) in annotation:
+                self.assertEquals(diff_tokens, [])
+                self.assertEquals(len(int_tokens), self.n_ann_terms)
+
+            self.assertTrue(np.allclose(mdiff, np.zeros(mdiff.shape, dtype=mdiff.dtype)))
+
+            if dist_name == "jaccard":
+                self.assertTrue(np.allclose(mdiff, np.zeros(mdiff.shape, dtype=mdiff.dtype)))
+
     def testInput(self):
         self.assertRaises(ValueError, self.model.diff, self.model, n_ann_terms=self.n_ann_terms, distance='something')
         self.assertRaises(ValueError, self.model.diff, [], n_ann_terms=self.n_ann_terms, distance='something')
+
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    unittest.main()

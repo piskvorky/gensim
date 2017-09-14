@@ -17,7 +17,7 @@ from collections import Counter
 
 import numpy as np
 import scipy.sparse as sps
-from six import viewitems, string_types
+from six import iteritems, string_types
 
 from gensim import utils
 
@@ -64,9 +64,7 @@ class BaseAnalyzer(object):
     def num_docs(self, num):
         self._num_docs = num
         if self._num_docs % self.log_every == 0:
-            logger.info(
-                "%s accumulated stats from %d documents",
-                self.__class__.__name__, self._num_docs)
+            logger.info("%s accumulated stats from %d documents", self.__class__.__name__, self._num_docs)
 
     def analyze_text(self, text, doc_num=None):
         raise NotImplementedError("Base classes should implement analyze_text.")
@@ -142,7 +140,7 @@ class InvertedIndexBased(BaseAnalyzer):
         return len(s1.intersection(s2))
 
     def index_to_dict(self):
-        contiguous2id = {n: word_id for word_id, n in viewitems(self.id2contiguous)}
+        contiguous2id = {n: word_id for word_id, n in iteritems(self.id2contiguous)}
         return {contiguous2id[n]: doc_id_set for n, doc_id_set in enumerate(self._inverted_index)}
 
 
@@ -241,7 +239,7 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         self._counter.clear()
 
         super(WordOccurrenceAccumulator, self).accumulate(texts, window_size)
-        for combo, count in viewitems(self._counter):
+        for combo, count in iteritems(self._counter):
             self._co_occurrences[combo] += count
 
         return self
@@ -369,9 +367,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
             before = self._num_docs / self.log_every
             self._num_docs += sum(len(doc) - window_size + 1 for doc in batch)
             if before < (self._num_docs / self.log_every):
-                logger.info(
-                    "%d batches submitted to accumulate stats from %d documents (%d virtual)",
-                    (batch_num + 1), (batch_num + 1) * self.batch_size, self._num_docs)
+                logger.info("%d batches submitted to accumulate stats from %d documents (%d virtual)", (batch_num + 1), (batch_num + 1) * self.batch_size, self._num_docs)
 
     def terminate_workers(self, input_q, output_q, workers, interrupted=False):
         """Wait until all workers have transmitted their WordOccurrenceAccumulator instances,
@@ -414,9 +410,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         # Workers do partial accumulation, so none of the co-occurrence matrices are symmetrized.
         # This is by design, to avoid unnecessary matrix additions/conversions during accumulation.
         accumulator._symmetrize()
-        logger.info(
-            "accumulated word occurrence stats for %d virtual documents",
-            accumulator.num_docs)
+        logger.info("accumulated word occurrence stats for %d virtual documents", accumulator.num_docs)
         return accumulator
 
 
@@ -435,10 +429,8 @@ class AccumulatingWorker(mp.Process):
         try:
             self._run()
         except KeyboardInterrupt:
-            logger.info(
-                "%s interrupted after processing %d documents",
-                self.__class__.__name__, self.accumulator.num_docs)
-        except:
+            logger.info("%s interrupted after processing %d documents", self.__class__.__name__, self.accumulator.num_docs)
+        except Exception:
             logger.exception("worker encountered unexpected exception")
         finally:
             self.reply_to_master()
@@ -455,13 +447,9 @@ class AccumulatingWorker(mp.Process):
 
             self.accumulator.partial_accumulate(docs, self.window_size)
             n_docs += len(docs)
-            logger.debug(
-                "completed batch %d; %d documents processed (%d virtual)",
-                batch_num, n_docs, self.accumulator.num_docs)
+            logger.debug("completed batch %d; %d documents processed (%d virtual)", batch_num, n_docs, self.accumulator.num_docs)
 
-        logger.debug(
-            "finished all batches; %d documents processed (%d virtual)",
-            n_docs, self.accumulator.num_docs)
+        logger.debug("finished all batches; %d documents processed (%d virtual)", n_docs, self.accumulator.num_docs)
 
     def reply_to_master(self):
         logger.info("serializing accumulator to return to master...")

@@ -27,7 +27,6 @@ import tempfile
 import os
 from subprocess import PIPE
 import numpy as np
-import six
 
 from gensim import utils, corpora, matutils
 from gensim.utils import check_output
@@ -42,9 +41,9 @@ class DtmModel(utils.SaveLoad):
 
     """
 
-    def __init__(
-            self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100, id2word=None, prefix=None,
-            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
+    def __init__(self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100,
+                 id2word=None, prefix=None, lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10,
+                 alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
         """
         `dtm_path` is path to the dtm executable, e.g. `C:/dtm/dtm-win64.exe`.
 
@@ -89,7 +88,7 @@ class DtmModel(utils.SaveLoad):
 
         try:
             lencorpus = len(corpus)
-        except:
+        except TypeError:
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
@@ -98,8 +97,10 @@ class DtmModel(utils.SaveLoad):
             raise ValueError("""There is a text without words in the input corpus.
                     This breaks method='fixed' (The DIM model).""")
         if lencorpus != sum(time_slices):
-            raise ValueError("mismatched timeslices %{slices} for corpus of len {clen}".format(
-                slices=sum(time_slices), clen=lencorpus))
+            raise ValueError(
+                "mismatched timeslices %{slices} for corpus of len {clen}"
+                .format(slices=sum(time_slices), clen=lencorpus)
+            )
         self.lencorpus = lencorpus
         if prefix is None:
             rand_prefix = hex(random.randint(0, 0xffffff))[2:] + '_'
@@ -172,7 +173,7 @@ class DtmModel(utils.SaveLoad):
         Serialize documents in LDA-C format to a temporary text file,.
 
         """
-        logger.info("serializing temporary corpus to %s" % self.fcorpustxt())
+        logger.info("serializing temporary corpus to %s", self.fcorpustxt())
         # write out the corpus in a file format that DTM understands:
         corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
 
@@ -188,17 +189,25 @@ class DtmModel(utils.SaveLoad):
         """
         self.convert_input(corpus, time_slices)
 
-        arguments = "--ntopics={p0} --model={mofrl}  --mode={p1} --initialize_lda={p2} --corpus_prefix={p3} --outname={p4} --alpha={p5}".format(
-            p0=self.num_topics, mofrl=model, p1=mode, p2=self.initialize_lda, p3=self.fcorpus(), p4=self.foutname(), p5=self.alpha)
+        arguments = \
+            "--ntopics={p0} --model={mofrl}  --mode={p1} --initialize_lda={p2} --corpus_prefix={p3} " \
+            "--outname={p4} --alpha={p5}".format(
+                p0=self.num_topics, mofrl=model, p1=mode, p2=self.initialize_lda,
+                p3=self.fcorpus(), p4=self.foutname(), p5=self.alpha
+            )
 
-        params = "--lda_max_em_iter={p0} --lda_sequence_min_iter={p1}  --lda_sequence_max_iter={p2} --top_chain_var={p3} --rng_seed={p4} ".format(
-            p0=self.lda_max_em_iter, p1=self.lda_sequence_min_iter, p2=self.lda_sequence_max_iter, p3=self.top_chain_var, p4=self.rng_seed)
+        params = \
+            "--lda_max_em_iter={p0} --lda_sequence_min_iter={p1}  --lda_sequence_max_iter={p2} " \
+            "--top_chain_var={p3} --rng_seed={p4} ".format(
+                p0=self.lda_max_em_iter, p1=self.lda_sequence_min_iter, p2=self.lda_sequence_max_iter,
+                p3=self.top_chain_var, p4=self.rng_seed
+            )
 
         arguments = arguments + " " + params
-        logger.info("training DTM with args %s" % arguments)
+        logger.info("training DTM with args %s", arguments)
 
         cmd = [self.dtm_path] + arguments.split()
-        logger.info("Running command %s" % cmd)
+        logger.info("Running command %s", cmd)
         check_output(args=cmd, stderr=PIPE)
 
         self.em_steps = np.loadtxt(self.fem_steps())
@@ -222,9 +231,9 @@ class DtmModel(utils.SaveLoad):
         self.obs_ = np.zeros((self.num_topics, self.num_terms * len(self.time_slices)))
 
         for t in range(self.num_topics):
-                topic = "%03d" % t
-                self.lambda_[t, :] = np.loadtxt(self.fout_prob().format(i=topic))
-                self.obs_[t, :] = np.loadtxt(self.fout_observations().format(i=topic))
+            topic = "%03d" % t
+            self.lambda_[t, :] = np.loadtxt(self.fout_prob().format(i=topic))
+            self.obs_[t, :] = np.loadtxt(self.fout_observations().format(i=topic))
         # cast to correct shape, lambda[5,10,0] is the proportion of the 10th
         # topic in doc 5 at time 0
         self.lambda_.shape = (self.num_topics, self.num_terms, len(self.time_slices))
@@ -256,13 +265,6 @@ class DtmModel(utils.SaveLoad):
         else:
             num_topics = min(num_topics, self.num_topics)
             chosen_topics = range(num_topics)
-             # add a little random jitter, to randomize results around the same
-            # alpha
-            # sort_alpha = self.alpha + 0.0001 * \
-            #     numpy.random.rand(len(self.alpha))
-            # sorted_topics = list(numpy.argsort(sort_alpha))
-            # chosen_topics = sorted_topics[: topics / 2] + \
-            #     sorted_topics[-topics / 2:]
 
         if times < 0 or times >= len(self.time_slices):
             times = len(self.time_slices)
@@ -279,9 +281,6 @@ class DtmModel(utils.SaveLoad):
                 else:
                     topic = self.show_topic(i, time, num_words=num_words)
                 shown.append(topic)
-                # if log:
-                # logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i],
-                #     topic))
         return shown
 
     def show_topic(self, topicid, time, topn=50, num_words=None):
@@ -291,25 +290,30 @@ class DtmModel(utils.SaveLoad):
 
         """
         if num_words is not None:  # deprecated num_words is used
-            logger.warning("The parameter num_words for show_topic() would be deprecated in the updated version.")
-            logger.warning("Please use topn instead.")
+            logger.warning(
+                "The parameter num_words for show_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
             topn = num_words
 
         topics = self.lambda_[:, :, time]
         topic = topics[topicid]
-        # liklihood to probability
+        # likelihood to probability
         topic = np.exp(topic)
         # normalize to probability dist
         topic = topic / topic.sum()
         # sort according to prob
         bestn = matutils.argsort(topic, topn, reverse=True)
-        beststr = [(topic[id], self.id2word[id]) for id in bestn]
+        beststr = [(topic[idx], self.id2word[idx]) for idx in bestn]
         return beststr
 
     def print_topic(self, topicid, time, topn=10, num_words=None):
         """Return the given topic, formatted as a string."""
         if num_words is not None:  # deprecated num_words is used
-            warnings.warn("The parameter num_words for print_topic() would be deprecated in the updated version. Please use topn instead.")
+            warnings.warn(
+                "The parameter num_words for print_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
             topn = num_words
 
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
@@ -320,8 +324,8 @@ class DtmModel(utils.SaveLoad):
         all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
         input parameter is the year to do the visualisation.
         """
-        topic_term = np.exp(self.lambda_[:,:,time]) / np.exp(self.lambda_[:,:,time]).sum()
-        topic_term = topic_term * self.num_topics
+        topic_term = np.exp(self.lambda_[:, :, time]) / np.exp(self.lambda_[:, :, time]).sum()
+        topic_term *= self.num_topics
 
         doc_topic = self.gamma_
 
@@ -339,7 +343,7 @@ class DtmModel(utils.SaveLoad):
 
     def dtm_coherence(self, time, num_words=20):
         """
-        returns all topics of a particular time-slice without probabilitiy values for it to be used 
+        returns all topics of a particular time-slice without probabilitiy values for it to be used
         for either "u_mass" or "c_v" coherence.
         TODO:
             because of print format right now can only return for 1st time-slice.
