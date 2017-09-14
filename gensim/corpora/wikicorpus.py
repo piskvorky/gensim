@@ -257,7 +257,7 @@ def init_to_ignore_interrupt():
 
 class WikiCorpus(TextCorpus):
     """
-    Treat a wikipedia articles dump (\*articles.xml.bz2) as a (read-only) corpus.
+    Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
 
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
