@@ -99,7 +99,7 @@ class TestSummarizationTest(unittest.TestCase):
         self.assertNotEqual(summarize_corpus(corpus), [])
 
     def test_empty_text_summarization_is_empty_string(self):
-        self.assertTrue(summarize("") is u"")
+        self.assertEquals(summarize(""), u"")
 
     def test_empty_text_summarization_with_split_is_empty_list(self):
         self.assertEquals(summarize("", split=True), [])
@@ -161,7 +161,7 @@ class TestSummarizationTest(unittest.TestCase):
 
     def test_low_distinct_words_summarization_is_empty_string(self):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
-        self.assertTrue(summarize(text) is u"")
+        self.assertEquals(summarize(text), u"")
 
     def test_low_distinct_words_summarization_with_split_is_empty_list(self):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
