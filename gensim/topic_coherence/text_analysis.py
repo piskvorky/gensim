@@ -65,7 +65,9 @@ class BaseAnalyzer(object):
     def num_docs(self, num):
         self._num_docs = num
         if self._num_docs % self.log_every == 0:
-            logger.info("%s accumulated stats from %d documents", self.__class__.__name__, self._num_docs)
+            logger.info(
+                "%s accumulated stats from %d documents",
+                self.__class__.__name__, self._num_docs)
 
     def analyze_text(self, text, doc_num=None):
         raise NotImplementedError("Base classes should implement analyze_text.")
@@ -368,7 +370,9 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
             before = self._num_docs / self.log_every
             self._num_docs += sum(len(doc) - window_size + 1 for doc in batch)
             if before < (self._num_docs / self.log_every):
-                logger.info("%d batches submitted to accumulate stats from %d documents (%d virtual)", (batch_num + 1), (batch_num + 1) * self.batch_size, self._num_docs)
+                logger.info(
+                    "%d batches submitted to accumulate stats from %d documents (%d virtual)",
+                    (batch_num + 1), (batch_num + 1) * self.batch_size, self._num_docs)
 
     def terminate_workers(self, input_q, output_q, workers, interrupted=False):
         """Wait until all workers have transmitted their WordOccurrenceAccumulator instances,
@@ -430,7 +434,9 @@ class AccumulatingWorker(mp.Process):
         try:
             self._run()
         except KeyboardInterrupt:
-            logger.info("%s interrupted after processing %d documents", self.__class__.__name__, self.accumulator.num_docs)
+            logger.info(
+                "%s interrupted after processing %d documents",
+                self.__class__.__name__, self.accumulator.num_docs)
         except Exception:
             logger.exception("worker encountered unexpected exception")
         finally:
@@ -448,9 +454,13 @@ class AccumulatingWorker(mp.Process):
 
             self.accumulator.partial_accumulate(docs, self.window_size)
             n_docs += len(docs)
-            logger.debug("completed batch %d; %d documents processed (%d virtual)", batch_num, n_docs, self.accumulator.num_docs)
+            logger.debug(
+                "completed batch %d; %d documents processed (%d virtual)",
+                batch_num, n_docs, self.accumulator.num_docs)
 
-        logger.debug("finished all batches; %d documents processed (%d virtual)", n_docs, self.accumulator.num_docs)
+        logger.debug(
+            "finished all batches; %d documents processed (%d virtual)",
+            n_docs, self.accumulator.num_docs)
 
     def reply_to_master(self):
         logger.info("serializing accumulator to return to master...")
@@ -464,16 +474,19 @@ class WordVectorsAccumulator(UsesDictionary):
     def __init__(self, relevant_ids, dictionary, model=None, **model_kwargs):
         """
         Args:
-        ----
-        model: if None, a new Word2Vec model is trained on the given text corpus. If not None,
-               it should be a pre-trained Word2Vec context
-               vectors (gensim.models.keyedvectors.KeyedVectors instance).
-        model_kwargs: if model is None, these keyword arguments will be passed through to the
-                      Word2Vec constructor.
+            model: if None, a new Word2Vec model is trained on the given text corpus.
+                If not None, it should be a pre-trained Word2Vec context vectors
+                (gensim.models.keyedvectors.KeyedVectors instance).
+            model_kwargs: if model is None, these keyword arguments will be passed
+                through to the Word2Vec constructor.
         """
         super(WordVectorsAccumulator, self).__init__(relevant_ids, dictionary)
         self.model = model
         self.model_kwargs = model_kwargs
+
+    def not_in_vocab(self, words):
+        uniq_words = set(utils.flatten(words))
+        return set(word for word in uniq_words if word not in self.model.vocab)
 
     def get_occurrences(self, word):
         """Return number of docs the word occurs in, once `accumulate` has been called."""

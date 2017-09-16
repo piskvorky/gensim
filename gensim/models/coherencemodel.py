@@ -18,7 +18,6 @@ coherence measure of his/her choice by choosing a method in each of the pipeline
   coherence measures. http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf.
 """
 
-import itertools
 import logging
 import multiprocessing as mp
 from collections import namedtuple
@@ -26,11 +25,11 @@ from collections import namedtuple
 import numpy as np
 
 from gensim import interfaces, matutils
+from gensim import utils
 from gensim.topic_coherence import (segmentation, probability_estimation,
                                     direct_confirmation_measure, indirect_confirmation_measure,
                                     aggregation)
 from gensim.topic_coherence.probability_estimation import unique_ids_from_segments
-from gensim.utils import is_corpus, FakeDict
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +173,7 @@ class CoherenceModel(interfaces.TransformationABC):
 
         # Check if associated dictionary is provided.
         if dictionary is None:
-            if isinstance(model.id2word, FakeDict):
+            if isinstance(model.id2word, utils.FakeDict):
                 raise ValueError(
                     "The associated dictionary should be provided with the corpus or 'id2word'"
                     " for topic model should be set as the associated dictionary.")
@@ -192,7 +191,7 @@ class CoherenceModel(interfaces.TransformationABC):
         self.corpus = corpus
 
         if coherence in BOOLEAN_DOCUMENT_BASED:
-            if is_corpus(corpus)[0]:
+            if utils.is_corpus(corpus)[0]:
                 self.corpus = corpus
             elif self.texts is not None:
                 self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
@@ -263,10 +262,7 @@ class CoherenceModel(interfaces.TransformationABC):
                 topn = max(topn, len(topic))
 
         topn = min(kwargs.pop('topn', topn), topn)
-
-        super_topic = set()
-        for topic in topics_as_topn_terms:
-            super_topic.update(itertools.chain.from_iterable(topic))
+        super_topic = utils.flatten(topics_as_topn_terms)
 
         logging.info(
             "Number of relevant terms for all %d models: %d",
@@ -407,7 +403,7 @@ class CoherenceModel(interfaces.TransformationABC):
 
         return self._accumulator
 
-    def get_coherence_per_topic(self, segmented_topics=None, with_std=False):
+    def get_coherence_per_topic(self, segmented_topics=None, with_std=False, with_support=False):
         """Return list of coherence values for each topic based on pipeline parameters."""
         measure = self.measure
         if segmented_topics is None:
@@ -415,12 +411,15 @@ class CoherenceModel(interfaces.TransformationABC):
         if self._accumulator is None:
             self.estimate_probabilities(segmented_topics)
 
+        kwargs = dict(with_std=with_std, with_support=with_support)
         if self.coherence in BOOLEAN_DOCUMENT_BASED or self.coherence == 'c_w2v':
-            kwargs = dict(with_std=with_std)
+            pass
         elif self.coherence == 'c_v':
-            kwargs = dict(topics=self.topics, measure='nlr', gamma=1, with_std=with_std)
+            kwargs['topics'] = self.topics
+            kwargs['measure'] = 'nlr'
+            kwargs['gamma'] = 1
         else:
-            kwargs = dict(normalize=(self.coherence == 'c_npmi'), with_std=with_std)
+            kwargs['normalize'] = (self.coherence == 'c_npmi')
 
         return measure.conf(segmented_topics, self._accumulator, **kwargs)
 
@@ -485,11 +484,15 @@ class CoherenceModel(interfaces.TransformationABC):
 
                 # Let's record the coherences for each topic, as well as the aggregated
                 # coherence across all of the topics.
-                coherence_at_n[n] = (topic_coherences, self.aggregate_measures(topic_coherences))
+                # Some of them may be nan (if all words were OOV), so do mean value imputation.
+                filled_coherences = np.array(topic_coherences)
+                filled_coherences[np.isnan(filled_coherences)] = np.nanmean(filled_coherences)
+                coherence_at_n[n] = (topic_coherences, self.aggregate_measures(filled_coherences))
 
             topic_coherences, avg_coherences = zip(*coherence_at_n.values())
             avg_topic_coherences = np.vstack(topic_coherences).mean(0)
-            avg_coherence = np.mean(avg_coherences)
-            logging.info("Avg coherence for model %d: %.5f" % (model_num, avg_coherence))
-            coherences.append((avg_topic_coherences, avg_coherence))
+            model_coherence = np.mean(avg_coherences)
+            logging.info("Avg coherence for model %d: %.5f" % (model_num, model_coherence))
+            coherences.append((avg_topic_coherences, model_coherence))
+
         return coherences
