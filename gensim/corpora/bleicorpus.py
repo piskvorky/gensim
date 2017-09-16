@@ -14,7 +14,7 @@ from __future__ import with_statement
 from os import path
 import logging
 
-from gensim import interfaces, utils
+from gensim import utils
 from gensim.corpora import IndexedCorpus
 from six.moves import xrange
 
@@ -45,7 +45,7 @@ class BleiCorpus(IndexedCorpus):
         `fname.vocab`.
         """
         IndexedCorpus.__init__(self, fname)
-        logger.info("loading corpus from %s" % fname)
+        logger.info("loading corpus from %s", fname)
 
         if fname_vocab is None:
             fname_base, _ = path.splitext(fname)
@@ -102,7 +102,7 @@ class BleiCorpus(IndexedCorpus):
         else:
             num_terms = 1 + max([-1] + id2word.keys())
 
-        logger.info("storing corpus in Blei's LDA-C format into %s" % fname)
+        logger.info("storing corpus in Blei's LDA-C format into %s", fname)
         with utils.smart_open(fname, 'wb') as fout:
             offsets = []
             for doc in corpus:
@@ -113,7 +113,7 @@ class BleiCorpus(IndexedCorpus):
 
         # write out vocabulary, in a format compatible with Blei's topics.py script
         fname_vocab = utils.smart_extension(fname, '.vocab')
-        logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
+        logger.info("saving vocabulary of %i words to %s", num_terms, fname_vocab)
         with utils.smart_open(fname_vocab, 'wb') as fout:
             for featureid in xrange(num_terms):
                 fout.write(utils.to_utf8("%s\n" % id2word.get(featureid, '---')))
@@ -127,5 +127,3 @@ class BleiCorpus(IndexedCorpus):
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
-
-# endclass BleiCorpus

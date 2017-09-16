@@ -49,11 +49,10 @@ Example: python -m gensim.scripts.word2vec_standalone -train data.txt -output ve
 """
 
 
-import argparse
 import logging
 import os.path
 import sys
-
+import argparse
 from numpy import seterr
 
 logger = logging.getLogger(__name__)
@@ -62,17 +61,8 @@ from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pic
 from gensim.corpora.textcorpus import LineSentence
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
-        level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
     logger.info("running %s", " ".join(sys.argv))
-
-    # check and process cmdline input
-    program = os.path.basename(sys.argv[0])
-    if len(sys.argv) < 2:
-        print(globals()['__doc__'] % locals())
-        sys.exit(1)
-
     seterr(all='raise')  # don't ignore numpy errors
 
     parser = argparse.ArgumentParser()
@@ -108,7 +98,8 @@ if __name__ == "__main__":
     model = Word2Vec(
         corpus, size=args.size, min_count=args.min_count, workers=args.threads,
         window=args.window, sample=args.sample, alpha=args.alpha, sg=skipgram,
-        hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter)
+        hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter
+    )
 
     if args.output:
         outfile = args.output
@@ -125,4 +116,4 @@ if __name__ == "__main__":
         questions_file = args.accuracy
         model.accuracy(questions_file)
 
-    logger.info("finished running %s", program)
+    logger.info("finished running %s", os.path.basename(sys.argv[0]))

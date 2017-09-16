@@ -438,9 +438,9 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
             length = len(self)
 
         if not n <= length:
-            raise ValueError("n is larger than length of corpus.")
+            raise ValueError("n {0:d} is larger/equal than length of corpus {1:d}.".format(n, length))
         if not 0 <= n:
-            raise ValueError("Negative sample size.")
+            raise ValueError("Negative sample size n {0:d}.".format(n))
 
         # Use get_texts because some docs from getstream may be removed in preprocessing.
         for i, sample in enumerate(self.get_texts()):
@@ -456,7 +456,7 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
         if n != 0:
             # This means that length was set to be greater than number of items in corpus
             # and we were not able to sample enough documents before the stream ended.
-            raise ValueError("length greater than number of documents in corpus")
+            raise ValueError("length {0:d} greater than number of documents in corpus {1:d}".format(length, i + 1))
 
     def __len__(self):
         if self.length is None:
@@ -467,7 +467,6 @@ class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
         # cache the corpus length
         # Use get_texts because some docs from getstream may be removed in preprocessing.
         self.length = sum(1 for _ in self.get_texts())
-# endclass TextCorpus
 
 
 class TextDirectoryCorpus(TextCorpus):
@@ -577,7 +576,6 @@ class TextDirectoryCorpus(TextCorpus):
                         yield line.strip()
                 else:
                     yield f.read().strip()
-# endclass TextDirectoryCorpus
 
 
 def unicode_and_tokenize(text):

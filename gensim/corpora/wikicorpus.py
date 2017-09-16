@@ -54,9 +54,11 @@ RE_P15 = re.compile('\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
 
 # MediaWiki namespaces (https://www.mediawiki.org/wiki/Manual:Namespace) that
 # ought to be ignored
-IGNORED_NAMESPACES = ['Wikipedia', 'Category', 'File', 'Portal', 'Template',
-                      'MediaWiki', 'User', 'Help', 'Book', 'Draft',
-                      'WikiProject', 'Special', 'Talk']
+IGNORED_NAMESPACES = [
+    'Wikipedia', 'Category', 'File', 'Portal', 'Template',
+    'MediaWiki', 'User', 'Help', 'Book', 'Draft', 'WikiProject',
+    'Special', 'Talk'
+]
 
 
 def filter_wiki(raw):
@@ -140,10 +142,10 @@ def remove_template(s):
         prev_c = c
 
     # Remove all the templates
-    s = ''.join([s[end + 1:start] for start, end in
-                 zip(starts + [None], [-1] + ends)])
-
-    return s
+    return ''.join([
+        s[end + 1:start]
+        for start, end in zip(starts + [None], [-1] + ends)
+    ])
 
 
 def remove_file(s):
@@ -181,9 +183,10 @@ def get_namespace(tag):
     m = re.match("^{(.*?)}", tag)
     namespace = m.group(1) if m else ""
     if not namespace.startswith("http://www.mediawiki.org/xml/export-"):
-        raise ValueError("%s not recognized as MediaWiki dump namespace"
-                         % namespace)
+        raise ValueError("%s not recognized as MediaWiki dump namespace" % namespace)
     return namespace
+
+
 _get_namespace = get_namespace
 
 
@@ -230,6 +233,8 @@ def extract_pages(f, filter_namespaces=False):
             # ./revision/text element. The pages comprise the bulk of the
             # file, so in practice we prune away enough.
             elem.clear()
+
+
 _extract_pages = extract_pages  # for backward compatibility
 
 
@@ -244,6 +249,7 @@ class WikiCorpus(textcorpus.TextCorpus):
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
+
     def __init__(self, source, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
                  filter_namespaces=('0',), metadata=False, token_filters=None, tokenizer=None,
                  character_filters=None):
@@ -329,4 +335,3 @@ class WikiCorpus(textcorpus.TextCorpus):
             return ((tokens, (pageid, title)) for tokens, title, pageid in doc_token_stream)
         else:
             return doc_token_stream
-# endclass WikiCorpus

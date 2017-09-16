@@ -116,12 +116,12 @@ class TestUtils(unittest.TestCase):
 
 class TestSampleDict(unittest.TestCase):
     def test_sample_dict(self):
-        d = {1:2,2:3,3:4,4:5}
-        expected_dict = [(1,2),(2,3)]
-        expected_dict_random = [(k,v) for k,v in iteritems(d)]
-        sampled_dict = utils.sample_dict(d,2,False)
-        self.assertEqual(sampled_dict,expected_dict)
-        sampled_dict_random = utils.sample_dict(d,2)
+        d = {1: 2, 2: 3, 3: 4, 4: 5}
+        expected_dict = [(1, 2), (2, 3)]
+        expected_dict_random = [(k, v) for k, v in iteritems(d)]
+        sampled_dict = utils.sample_dict(d, 2, False)
+        self.assertEqual(sampled_dict, expected_dict)
+        sampled_dict_random = utils.sample_dict(d, 2)
         if sampled_dict_random in expected_dict_random:
             self.assertTrue(True)
 
