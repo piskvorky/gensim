@@ -176,15 +176,3 @@ class StatefulProcessingPool(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._pool.terminate()
-
-
-if __name__ == "__main__":
-    class _TextTokenizer(StatefulProcessor):
-        def process(self, text):
-            return text.split()
-
-    pool = StatefulProcessingPool(4, processor_class=_TextTokenizer)
-    texts = ['this is some test text for multiprocessing'] * 10
-
-    results = pool.imap(texts)
-    print(list(results))
