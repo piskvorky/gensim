@@ -39,8 +39,6 @@ import re
 import signal
 import sys
 
-from gensim.models.word2vec import MAX_WORDS_IN_BATCH
-
 try:
     from itertools import imap
 except ImportError:  # Python 3...
@@ -53,6 +51,8 @@ from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
 from gensim.utils import deaccent, simple_tokenize, walk_with_depth
 
 logger = logging.getLogger(__name__)
+
+MAX_WORDS_IN_BATCH = 10000
 
 
 def remove_stopwords(tokens, stopwords=STOPWORDS):
