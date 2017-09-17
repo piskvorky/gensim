@@ -22,7 +22,7 @@ except ImportError:
 
 
 SEPARATOR = r"@"
-RE_SENTENCE = re.compile('(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)  # backup (\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)
+RE_SENTENCE = re.compile('(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE | re.DOTALL)
 AB_SENIOR = re.compile("([A-Z][a-z]{1,2}\.)\s(\w)", re.UNICODE)
 AB_ACRONYM = re.compile("(\.[a-zA-Z]\.)\s(\w)", re.UNICODE)
 AB_ACRONYM_LETTERS = re.compile("([a-zA-Z])\.([a-zA-Z])\.", re.UNICODE)
