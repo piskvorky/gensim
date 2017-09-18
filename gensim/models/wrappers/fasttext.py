@@ -134,7 +134,7 @@ class FastTextKeyedVectors(KeyedVectors):
         if word in self.vocab:
             return True
         else:
-            char_ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
+            char_ngrams = compute_ngrams(word, self.min_n, self.max_n)
             return any(ng in self.ngrams for ng in char_ngrams)
 
 
@@ -353,12 +353,12 @@ class FastText(Word2Vec):
             dtype = np.dtype(np.float64)
 
         self.num_original_vectors = num_vectors
-        self.wv.syn0_all = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
-        self.wv.syn0_all = self.wv.syn0_all.reshape((num_vectors, dim))
-        assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
+        self.wv.syn0_ngrams = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
+        self.wv.syn0_ngrams = self.wv.syn0_ngrams.reshape((num_vectors, dim))
+        assert self.wv.syn0_ngrams.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
             'mismatch between actual weight matrix shape {} and expected shape {}'\
             .format(
-                self.wv.syn0_all.shape, (self.bucket + len(self.wv.vocab), self.vector_size)
+                self.wv.syn0_ngrams.shape, (self.bucket + len(self.wv.vocab), self.vector_size)
             )
 
         self.init_ngrams()
