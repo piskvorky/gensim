@@ -36,6 +36,10 @@ logger = logging.getLogger(__name__)
 # ignore articles shorter than ARTICLE_MIN_WORDS characters (after full preprocessing)
 ARTICLE_MIN_WORDS = 50
 
+# default thresholds for lengths of individual tokens
+TOKEN_MIN_LEN = 2
+TOKEN_MAX_LEN = 15
+
 
 RE_P0 = re.compile('<!--.*?-->', re.DOTALL | re.UNICODE)  # comments
 RE_P1 = re.compile('<ref([> ].*?)(</ref>|/>)', re.DOTALL | re.UNICODE)  # footnotes
@@ -163,18 +167,19 @@ def remove_file(s):
     return s
 
 
-def tokenize(content):
+def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
     """
     Tokenize a piece of text from wikipedia. The input string `content` is assumed
     to be mark-up free (see `filter_wiki()`).
 
-    Return list of tokens as utf8 bytestrings. Ignore words shorted than 2 or longer
-    that 15 characters (not bytes!).
+    Set `token_min_len`, `token_max_len` as character length (not bytes!) thresholds for individual tokens.
+
+    Return list of tokens as utf8 bytestrings.
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
     return [
-        utils.to_unicode(token) for token in utils.tokenize(content, lower=True, errors='ignore')
-        if 2 <= len(token) <= 15 and not token.startswith('_')
+        utils.to_unicode(token) for token in utils.tokenize(content, lower=lower, errors='ignore')
+        if token_min_len <= len(token) <= token_max_len and not token.startswith('_')
     ]
 
 
@@ -238,23 +243,38 @@ def extract_pages(f, filter_namespaces=False):
 _extract_pages = extract_pages  # for backward compatibility
 
 
-def process_article(args):
+def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
     """
     Parse a wikipedia article, returning its content as a list of tokens
     (utf8-encoded strings).
+
+    Set `tokenizer_func` (defaults to `tokenize`) parameter for languages like japanese or thai to perform better
+    tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower).
     """
     text, lemmatize, title, pageid = args
     text = filter_wiki(text)
     if lemmatize:
         result = utils.lemmatize(text)
     else:
-        result = tokenize(text)
+        result = tokenizer_func(text, token_min_len, token_max_len, lower)
     return result, title, pageid
 
 
 def init_to_ignore_interrupt():
     """Should only be used when master is prepared to handle termination of child processes."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
+def _process_article(args):
+    """Should not be called explicitly. Use `process_article` instead."""
+
+    tokenizer_func, token_min_len, token_max_len, lower = args[-1]
+    args = args[:-1]
+
+    return process_article(
+        args, tokenizer_func=tokenizer_func, token_min_len=token_min_len,
+        token_max_len=token_max_len, lower=lower
+    )
 
 
 class WikiCorpus(TextCorpus):
@@ -272,8 +292,9 @@ class WikiCorpus(TextCorpus):
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
-
-    def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None, filter_namespaces=('0',)):
+    def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
+                 filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
+                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
         """
         Initialize the corpus. Unless a dictionary is provided, this scans the
         corpus once, to determine its vocabulary.
@@ -283,6 +304,18 @@ class WikiCorpus(TextCorpus):
         this automatic logic by forcing the `lemmatize` parameter explicitly.
         self.metadata if set to true will ensure that serialize will write out article titles to a pickle file.
 
+        Set `article_min_tokens` as a min threshold for article token count (defaults to 50). Any article below this is
+        ignored.
+
+        Set `tokenizer_func` (defaults to `tokenize`) with a custom function reference to control tokenization else use
+        the default regexp tokenization. Set this parameter for languages like japanese or thai to perform better
+        tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower). The
+        parameter values are as configured on the class instance by default.
+
+        Set `lower` to control if everything should be converted to lowercase or not (default True).
+
+        Set `token_min_len`, `token_max_len` as thresholds for token lengths that are returned (default to 2 and 15).
+
         """
         self.fname = fname
         self.filter_namespaces = filter_namespaces
@@ -291,6 +324,12 @@ class WikiCorpus(TextCorpus):
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
         self.lemmatize = lemmatize
+        self.tokenizer_func = tokenizer_func
+        self.article_min_tokens = article_min_tokens
+        self.token_min_len = token_min_len
+        self.token_max_len = token_max_len
+        self.lower = lower
+
         if dictionary is None:
             self.dictionary = Dictionary(self.get_texts())
         else:
@@ -302,7 +341,7 @@ class WikiCorpus(TextCorpus):
         of tokens.
 
         Only articles of sufficient length are returned (short articles & redirects
-        etc are ignored).
+        etc are ignored). This is control by `article_min_tokens` on the class instance.
 
         Note that this iterates over the **texts**; if you want vectors, just use
         the standard corpus interface instead of this function::
@@ -310,23 +349,27 @@ class WikiCorpus(TextCorpus):
         >>> for vec in wiki_corpus:
         >>>     print(vec)
         """
+
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0
-        texts = (
-            (text, self.lemmatize, title, pageid) for title, text, pageid
-            in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces)
-        )
+
+        tokenization_params = (self.tokenizer_func, self.token_min_len, self.token_max_len, self.lower)
+        texts = \
+            ((text, self.lemmatize, title, pageid, tokenization_params)
+             for title, text, pageid
+             in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
         pool = multiprocessing.Pool(self.processes, init_to_ignore_interrupt)
 
         try:
             # process the corpus in smaller chunks of docs, because multiprocessing.Pool
             # is dumb and would load the entire input into RAM at once...
             for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
-                for tokens, title, pageid in pool.imap(process_article, group):
+                for tokens, title, pageid in pool.imap(_process_article, group):
                     articles_all += 1
                     positions_all += len(tokens)
                     # article redirects and short stubs are pruned here
-                    if len(tokens) < ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
+                    if len(tokens) < self.article_min_tokens or \
+                            any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
                         continue
                     articles += 1
                     positions += len(tokens)
