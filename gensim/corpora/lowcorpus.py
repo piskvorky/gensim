@@ -15,7 +15,7 @@ import logging
 
 from gensim import utils
 from gensim.corpora import IndexedCorpus
-from six import iteritems, iterkeys
+from six import iterkeys
 from six.moves import xrange, zip as izip
 
 
@@ -63,7 +63,7 @@ class LowCorpus(IndexedCorpus):
         simple splitting on spaces.
         """
         IndexedCorpus.__init__(self, fname)
-        logger.info("loading corpus from %s" % fname)
+        logger.info("loading corpus from %s", fname)
 
         self.fname = fname  # input file, see class doc for format
         self.line2words = line2words  # how to translate lines into words (simply split on space by default)
@@ -79,13 +79,15 @@ class LowCorpus(IndexedCorpus):
             all_terms = sorted(all_terms)  # sort the list of all words; rank in that list = word's integer id
             self.id2word = dict(izip(xrange(len(all_terms)), all_terms))  # build a mapping of word id(int) -> word (string)
         else:
-            logger.info("using provided word mapping (%i ids)" % len(id2word))
+            logger.info("using provided word mapping (%i ids)", len(id2word))
             self.id2word = id2word
         self.num_terms = len(self.word2id)
         self.use_wordids = True  # return documents as (wordIndex, wordCount) 2-tuples
 
-        logger.info("loaded corpus with %i documents and %i terms from %s" %
-                     (self.num_docs, self.num_terms, fname))
+        logger.info(
+            "loaded corpus with %i documents and %i terms from %s",
+            self.num_docs, self.num_terms, fname
+        )
 
     def _calculate_num_docs(self):
         # the first line in input data is the number of documents (integer). throws exception on bad input.
@@ -118,12 +120,11 @@ class LowCorpus(IndexedCorpus):
                     use_words.append(word)
                     marker.add(word)
             # construct a list of (wordIndex, wordFrequency) 2-tuples
-            doc = list(zip(map(self.word2id.get, use_words),
-                      map(words.count, use_words)))
+            doc = [(self.word2id.get(w), words.count(w)) for w in use_words]
         else:
             uniq_words = set(words)
             # construct a list of (word, wordFrequency) 2-tuples
-            doc = list(zip(uniq_words, map(words.count, uniq_words)))
+            doc = [(w, words.count(w)) for w in uniq_words]
 
         # return the document, then forget it and move on to the next one
         # note that this way, only one doc is stored in memory at a time, not the whole corpus
@@ -165,9 +166,10 @@ class LowCorpus(IndexedCorpus):
                 fout.write(utils.to_utf8('%s\n' % ' '.join(words)))
 
         if truncated:
-            logger.warning("List-of-words format can only save vectors with "
-                            "integer elements; %i float entries were truncated to integer value" %
-                            truncated)
+            logger.warning(
+                "List-of-words format can only save vectors with integer elements; "
+                "%i float entries were truncated to integer value", truncated
+            )
         return offsets
 
     def docbyoffset(self, offset):
@@ -185,6 +187,4 @@ class LowCorpus(IndexedCorpus):
     @id2word.setter
     def id2word(self, val):
         self._id2word = val
-        self.word2id = dict((v, k) for k, v in iteritems(val))
-
-# endclass LowCorpus
+        self.word2id = utils.revdict(val)

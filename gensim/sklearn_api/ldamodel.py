@@ -24,11 +24,9 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
     Base LDA module
     """
 
-    def __init__(
-            self, num_topics=100, id2word=None, chunksize=2000, passes=1,
-            update_every=1, alpha='symmetric', eta=None, decay=0.5,
-            offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
-            minimum_probability=0.01, random_state=None, scorer='perplexity'):
+    def __init__(self, num_topics=100, id2word=None, chunksize=2000, passes=1, update_every=1, alpha='symmetric',
+                 eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
+                 minimum_probability=0.01, random_state=None, scorer='perplexity'):
         """
         Sklearn wrapper for LDA model. See gensim.model.LdaModel for parameter details.
 
@@ -63,12 +61,14 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         else:
             corpus = X
 
-        self.gensim_model = models.LdaModel(corpus=corpus, num_topics=self.num_topics, id2word=self.id2word,
+        self.gensim_model = models.LdaModel(
+            corpus=corpus, num_topics=self.num_topics, id2word=self.id2word,
             chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
             alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
             eval_every=self.eval_every, iterations=self.iterations,
             gamma_threshold=self.gamma_threshold, minimum_probability=self.minimum_probability,
-            random_state=self.random_state)
+            random_state=self.random_state
+        )
         return self
 
     def transform(self, docs):
@@ -109,11 +109,13 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
             X = matutils.Sparse2Corpus(X)
 
         if self.gensim_model is None:
-            self.gensim_model = models.LdaModel(num_topics=self.num_topics, id2word=self.id2word,
+            self.gensim_model = models.LdaModel(
+                num_topics=self.num_topics, id2word=self.id2word,
                 chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
                 alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
                 eval_every=self.eval_every, iterations=self.iterations, gamma_threshold=self.gamma_threshold,
-                minimum_probability=self.minimum_probability, random_state=self.random_state)
+                minimum_probability=self.minimum_probability, random_state=self.random_state
+            )
 
         self.gensim_model.update(corpus=X)
         return self

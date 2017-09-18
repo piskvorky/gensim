@@ -31,7 +31,10 @@ class TestGlove2Word2Vec(unittest.TestCase):
         self.output_file = testfile()
 
     def testConversion(self):
-        output = check_output(args=['python', '-m', 'gensim.scripts.glove2word2vec', '--input', self.datapath, '--output', self.output_file])  # noqa:F841
+        check_output(args=[
+            'python', '-m', 'gensim.scripts.glove2word2vec',
+            '--input', self.datapath, '--output', self.output_file
+        ])
         # test that the converted model loads successfully
         try:
             self.test_model = gensim.models.KeyedVectors.load_word2vec_format(self.output_file)
@@ -40,7 +43,9 @@ class TestGlove2Word2Vec(unittest.TestCase):
             if os.path.isfile(os.path.join(self.output_file)):
                 self.fail('model file %s was created but could not be loaded.' % self.output_file)
             else:
-                self.fail('model file %s creation failed, check the parameters and input file format.' % self.output_file)
+                self.fail(
+                    'model file %s creation failed, check the parameters and input file format.' % self.output_file
+                )
 
 
 if __name__ == '__main__':

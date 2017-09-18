@@ -28,7 +28,7 @@ class TestWikiCorpus(unittest.TestCase):
 
     # #TODO: sporadic failure to be investigated
     # def test_get_texts_returns_generator_of_lists(self):
-    #     logger.debug("Current Python Version is " + str(sys.version_info))
+    #     logger.debug("Current Python Version is %s", str(sys.version_info))
     #     if sys.version_info < (2, 7, 0):
     #         return
     #

@@ -363,10 +363,10 @@ class PorterStemmer(object):
         return self.b[:self.k + 1]
 
     def stem_sentence(self, txt):
-        return " ".join(map(self.stem, txt.split()))
+        return " ".join(self.stem(x) for x in txt.split())
 
     def stem_documents(self, docs):
-        return map(self.stem_sentence, docs)
+        return [self.stem_sentence(x) for x in docs]
 
 
 if __name__ == '__main__':

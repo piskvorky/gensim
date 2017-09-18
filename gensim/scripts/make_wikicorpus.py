@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
     logging.root.setLevel(level=logging.INFO)
-    logger.info("running %s" % ' '.join(sys.argv))
+    logger.info("running %s", ' '.join(sys.argv))
 
     # check and process input arguments
     if len(sys.argv) < 3:
@@ -107,4 +107,4 @@ if __name__ == '__main__':
     # ~4h; result file is 15GB! bzip2'ed down to 4.5GB
     MmCorpus.serialize(outp + '_tfidf.mm', tfidf[mm], progress_cnt=10000)
 
-    logger.info("finished running %s" % program)
+    logger.info("finished running %s", program)

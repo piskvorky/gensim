@@ -15,11 +15,13 @@ Thus, indirect confirmation measures may capture semantic support that direct me
 
 The formula used to compute indirect confirmation measure is:
 
-m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
+m_{sim}_{(m, \gamma)}(W', W*) =
+    s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
 
 where s_sim can be cosine, dice or jaccard similarity and
 
-\vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
+\vec{V}^{\,}_{m,\gamma}(W') =
+    \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
 Here 'm' is the direct confirmation measure used.
 """
@@ -30,12 +32,62 @@ import logging
 import numpy as np
 import scipy.sparse as sps
 
-from gensim.topic_coherence import direct_confirmation_measure
+from gensim.topic_coherence.direct_confirmation_measure import (
+    aggregate_segment_sims, log_ratio_measure)
 
 logger = logging.getLogger(__name__)
 
 
-def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamma=1):
+def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_support=False):
+    """For each topic segmentation, compute average cosine similarity using a
+    WordVectorsAccumulator.
+
+    Args:
+    Args:
+        segmented_topics (list): Output from the segmentation module of the segmented
+            topics. Is a list of list of tuples.
+        accumulator: word occurrence accumulator from probability_estimation.
+        with_std (bool): True to also include standard deviation across topic segment
+            sets in addition to the mean coherence for each topic; default is False.
+        with_support (bool): True to also include support across topic segments. The
+            support is defined as the number of pairwise similarity comparisons were
+            used to compute the overall topic coherence.
+
+    Returns:
+        list : of word2vec cosine similarities per topic.
+    """
+    topic_coherences = []
+    total_oov = 0
+
+    for topic_index, topic_segments in enumerate(segmented_topics):
+        segment_sims = []
+        num_oov = 0
+        for w_prime, w_star in topic_segments:
+            if not hasattr(w_prime, '__iter__'):
+                w_prime = [w_prime]
+            if not hasattr(w_star, '__iter__'):
+                w_star = [w_star]
+
+            try:
+                segment_sims.append(accumulator.ids_similarity(w_prime, w_star))
+            except ZeroDivisionError:
+                num_oov += 1
+
+        if num_oov > 0:
+            total_oov += 1
+            logger.warning(
+                "%d terms for topic %d are not in word2vec model vocabulary",
+                num_oov, topic_index)
+        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std, with_support))
+
+    if total_oov > 0:
+        logger.warning("%d terms for are not in word2vec model vocabulary", total_oov)
+    return topic_coherences
+
+
+def cosine_similarity(
+        segmented_topics, accumulator, topics, measure='nlr', gamma=1,
+        with_std=False, with_support=False):
     """
     This function calculates the indirect cosine measure. Given context vectors
     u = V(W') and w = V(W*) for the word sets of a pair S_i = (W', W*) indirect
@@ -43,28 +95,36 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
 
     The formula used is:
 
-        m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
+        m_{sim}_{(m, \gamma)}(W', W*) =
+            s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
 
     where each vector:
 
-        \vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
+        \vec{V}^{\,}_{m,\gamma}(W') =
+            \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
     Args:
-
-        segmented_topics : Output from the segmentation module of the segmented topics. Is a list of list of tuples.
-        accumulator : Output from the probability_estimation module. Is an accumulator of word occurrences (see text_analysis module).
+        segmented_topics : Output from the segmentation module of the segmented topics.
+            Is a list of list of tuples.
+        accumulator : Output from the probability_estimation module. Is an accumulator
+            of word occurrences (see text_analysis module).
         topics : Topics obtained from the trained topic model.
-        measure : String. Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
+        measure (str): Direct confirmation measure to be used. Supported values are
+            "nlr" (normalized log ratio).
         gamma : Gamma value for computing W', W* vectors; default is 1.
+        with_std (bool): True to also include standard deviation across topic segment
+            sets in addition to the mean coherence for each topic; default is False.
+        with_support (bool): True to also include support across topic segments. The
+            support is defined as the number of pairwise similarity comparisons were
+            used to compute the overall topic coherence.
 
     Returns:
-
-        s_cos_sim : list of indirect cosine similarity measure for each topic.
+        list : of indirect cosine similarity measure for each topic.
 
     """
     context_vectors = ContextVectorComputer(measure, topics, accumulator, gamma)
 
-    s_cos_sim = []
+    topic_coherences = []
     for topic_words, topic_segments in zip(topics, segmented_topics):
         topic_words = tuple(topic_words)  # because tuples are hashable
         segment_sims = np.zeros(len(topic_segments))
@@ -72,9 +132,10 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
             w_prime_cv = context_vectors[w_prime, topic_words]
             w_star_cv = context_vectors[w_star, topic_words]
             segment_sims[i] = _cossim(w_prime_cv, w_star_cv)
-        s_cos_sim.append(np.mean(segment_sims))
 
-    return s_cos_sim
+        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std, with_support))
+
+    return topic_coherences
 
 
 class ContextVectorComputer(object):
@@ -130,7 +191,7 @@ def _pair_npmi(pair, accumulator):
     """Compute normalized pairwise mutual information (NPMI) between a pair of words.
     The pair is an iterable of (word_id1, word_id2).
     """
-    return direct_confirmation_measure.log_ratio_measure([[pair]], accumulator, True)[0]
+    return log_ratio_measure([[pair]], accumulator, True)[0]
 
 
 def _cossim(cv1, cv2):

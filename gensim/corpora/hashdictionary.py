@@ -101,7 +101,7 @@ class HashDictionary(utils.SaveLoad, dict):
         return range(len(self))
 
     def __str__(self):
-        return ("HashDictionary(%i id range)" % len(self))
+        return "HashDictionary(%i id range)" % len(self)
 
     @staticmethod
     def from_documents(*args, **kwargs):
@@ -117,11 +117,12 @@ class HashDictionary(utils.SaveLoad, dict):
         """
         for docno, document in enumerate(documents):
             if docno % 10000 == 0:
-                logger.info("adding document #%i to %s" % (docno, self))
+                logger.info("adding document #%i to %s", docno, self)
             self.doc2bow(document, allow_update=True)  # ignore the result, here we only care about updating token ids
         logger.info(
             "built %s from %i documents (total %i corpus positions)",
-            self, self.num_docs, self.num_pos)
+            self, self.num_docs, self.num_pos
+        )
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """
@@ -182,24 +183,21 @@ class HashDictionary(utils.SaveLoad, dict):
         """
         no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
         ok = [item for item in iteritems(self.dfs_debug) if no_below <= item[1] <= no_above_abs]
-        ok = frozenset(word for word, freq in sorted(ok, key=lambda item: -item[1])[:keep_n])
+        ok = frozenset(word for word, freq in sorted(ok, key=lambda x: -x[1])[:keep_n])
 
-        self.dfs_debug = dict((word, freq)
-                              for word, freq in iteritems(self.dfs_debug)
-                              if word in ok)
-        self.token2id = dict((token, tokenid)
-                             for token, tokenid in iteritems(self.token2id)
-                             if token in self.dfs_debug)
-        self.id2token = dict((tokenid, set(token for token in tokens if token in self.dfs_debug))
-                             for tokenid, tokens in iteritems(self.id2token))
-        self.dfs = dict((tokenid, freq)
-                        for tokenid, freq in iteritems(self.dfs)
-                        if self.id2token.get(tokenid, set()))
+        self.dfs_debug = {word: freq for word, freq in iteritems(self.dfs_debug) if word in ok}
+        self.token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if token in self.dfs_debug}
+        self.id2token = {
+            tokenid: {token for token in tokens if token in self.dfs_debug}
+            for tokenid, tokens in iteritems(self.id2token)
+        }
+        self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if self.id2token.get(tokenid, set())}
 
         # for word->document frequency
         logger.info(
             "kept statistics for which were in no less than %i and no more than %i (=%.1f%%) documents",
-            no_below, no_above_abs, 100.0 * no_above)
+            no_below, no_above_abs, 100.0 * no_above
+        )
 
     def save_as_text(self, fname):
         """
@@ -216,6 +214,6 @@ class HashDictionary(utils.SaveLoad, dict):
                 words = sorted(self[tokenid])
                 if words:
                     words_df = [(word, self.dfs_debug.get(word, 0)) for word in words]
-                    words_df = ["%s(%i)" % item for item in sorted(words_df, key=lambda item: -item[1])]
+                    words_df = ["%s(%i)" % item for item in sorted(words_df, key=lambda x: -x[1])]
                     words_df = '\t'.join(words_df)
                     fout.write(utils.to_utf8("%i\t%i\t%s\n" % (tokenid, self.dfs.get(tokenid, 0), words_df)))

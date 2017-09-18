@@ -25,15 +25,17 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+texts = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey']
+]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
@@ -56,9 +58,11 @@ class TestLogEntropyModel(unittest.TestCase):
         doc = list(self.corpus_ok)[0]
         transformed = model[doc]
 
-        expected = [(0, 0.3748900964125389),
-                    (1, 0.30730215324230725),
-                    (3, 1.20941755462856)]
+        expected = [
+            (0, 0.3748900964125389),
+            (1, 0.30730215324230725),
+            (3, 1.20941755462856)
+        ]
         self.assertTrue(np.allclose(transformed, expected))
 
     def testPersistence(self):
@@ -78,7 +82,6 @@ class TestLogEntropyModel(unittest.TestCase):
         self.assertTrue(model.entr == model2.entr)
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))
-# endclass TestLogEntropyModel
 
 
 if __name__ == '__main__':
