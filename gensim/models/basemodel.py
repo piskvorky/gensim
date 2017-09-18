@@ -14,3 +14,11 @@ class BaseTopicModel(object):
         probable words for `topics` number of topics to log.
         Set `topics=-1` to print all topics."""
         return self.show_topics(num_topics=num_topics, num_words=num_words, log=True)
+
+    def get_topics(self):
+        """
+        Returns:
+            np.ndarray: `num_topics` x `vocabulary_size` array of floats which represents
+            the term topic matrix learned during inference.
+        """
+        raise NotImplementedError
