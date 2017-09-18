@@ -17,7 +17,6 @@ import logging
 import unittest
 
 from gensim import utils
-from gensim.corpora import Dictionary
 from gensim.summarization import keywords
 
 
@@ -36,7 +35,7 @@ class TestKeywordsTest(unittest.TestCase):
         with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.kw.txt"), mode="r") as f:
             kw = f.read().strip().split("\n")
 
-        self.assertEqual(set(map(str, generated_keywords)), set(map(str, kw)))
+        self.assertEqual({str(x) for x in generated_keywords}, {str(x) for x in kw})
 
     def test_text_keywords_words(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -56,13 +55,13 @@ class TestKeywordsTest(unittest.TestCase):
             text = f.read()
 
         # calculate keywords using only certain parts of speech
-        generated_keywords_NNVBJJ = keywords(text, pos_filter=['NN', 'VB', 'JJ'], ratio=0.3, split=True)
+        generated_keywords_nnvbjj = keywords(text, pos_filter=['NN', 'VB', 'JJ'], ratio=0.3, split=True)
 
         # To be compared to the reference.
         with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.kwpos.txt"), mode="r") as f:
             kw = f.read().strip().split("\n")
 
-        self.assertEqual(set(map(str, generated_keywords_NNVBJJ)), set(map(str, kw)))
+        self.assertEqual({str(x) for x in generated_keywords_nnvbjj}, {str(x) for x in kw})
 
     def test_text_summarization_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -74,7 +73,6 @@ class TestKeywordsTest(unittest.TestCase):
         text = "\n".join(text.split('\n')[:8])
 
         self.assertTrue(keywords(text) is not None)
-
 
     def test_keywords_ratio(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -89,7 +87,7 @@ class TestKeywordsTest(unittest.TestCase):
         selected_docs_12 = keywords(text, ratio=0.1, split=True)
         selected_docs_21 = keywords(text, ratio=0.2, split=True)
 
-        self.assertAlmostEqual(float(len(selected_docs_21))/len(selected_docs_12), float(21)/12, places=1)
+        self.assertAlmostEqual(float(len(selected_docs_21)) / len(selected_docs_12), float(21) / 12, places=1)
 
 
 if __name__ == '__main__':

@@ -61,9 +61,11 @@ RE_P15 = re.compile('\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
 
 # MediaWiki namespaces (https://www.mediawiki.org/wiki/Manual:Namespace) that
 # ought to be ignored
-IGNORED_NAMESPACES = ['Wikipedia', 'Category', 'File', 'Portal', 'Template',
-                      'MediaWiki', 'User', 'Help', 'Book', 'Draft',
-                      'WikiProject', 'Special', 'Talk']
+IGNORED_NAMESPACES = [
+    'Wikipedia', 'Category', 'File', 'Portal', 'Template',
+    'MediaWiki', 'User', 'Help', 'Book', 'Draft', 'WikiProject',
+    'Special', 'Talk'
+]
 
 
 def filter_wiki(raw):
@@ -147,10 +149,7 @@ def remove_template(s):
         prev_c = c
 
     # Remove all the templates
-    s = ''.join([s[end + 1:start] for start, end in
-                 zip(starts + [None], [-1] + ends)])
-
-    return s
+    return ''.join([s[end + 1:start] for start, end in zip(starts + [None], [-1] + ends)])
 
 
 def remove_file(s):
@@ -189,9 +188,10 @@ def get_namespace(tag):
     m = re.match("^{(.*?)}", tag)
     namespace = m.group(1) if m else ""
     if not namespace.startswith("http://www.mediawiki.org/xml/export-"):
-        raise ValueError("%s not recognized as MediaWiki dump namespace"
-                         % namespace)
+        raise ValueError("%s not recognized as MediaWiki dump namespace" % namespace)
     return namespace
+
+
 _get_namespace = get_namespace
 
 
@@ -238,11 +238,12 @@ def extract_pages(f, filter_namespaces=False):
             # ./revision/text element. The pages comprise the bulk of the
             # file, so in practice we prune away enough.
             elem.clear()
+
+
 _extract_pages = extract_pages  # for backward compatibility
 
 
-def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN,
-                    lower=True):
+def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
     """
     Parse a wikipedia article, returning its content as a list of tokens
     (utf8-encoded strings).
@@ -278,10 +279,14 @@ def _process_article(args):
 
 class WikiCorpus(TextCorpus):
     """
-    Treat a wikipedia articles dump (\*articles.xml.bz2) as a (read-only) corpus.
+    Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
 
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
+
+    **Note:** "multistream" archives are *not* supported in Python 2 due to
+    `limitations in the core bz2 library
+    <https://docs.python.org/2/library/bz2.html#de-compression-of-files>`_.
 
     >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
@@ -374,15 +379,16 @@ class WikiCorpus(TextCorpus):
                         yield tokens
         except KeyboardInterrupt:
             logger.warn(
-                "user terminated iteration over Wikipedia corpus after %i documents with %i positions"
-                " (total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, self.article_min_tokens)
+                "user terminated iteration over Wikipedia corpus after %i documents with %i positions "
+                "(total %i articles, %i positions before pruning articles shorter than %i words)",
+                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+            )
         else:
             logger.info(
-                "finished iterating over Wikipedia corpus of %i documents with %i positions"
-                " (total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, self.article_min_tokens)
+                "finished iterating over Wikipedia corpus of %i documents with %i positions "
+                "(total %i articles, %i positions before pruning articles shorter than %i words)",
+                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+            )
             self.length = articles  # cache corpus length
         finally:
             pool.terminate()
-# endclass WikiCorpus

@@ -11,11 +11,10 @@ Corpus for the DML-CZ project.
 
 
 import logging
-import itertools
 import os.path
 
 from gensim import interfaces, matutils
-import dictionary # for constructing word->id mappings
+import dictionary  # for constructing word->id mappings
 
 
 logger = logging.getLogger('gensim.corpora.dmlcorpus')
@@ -34,39 +33,35 @@ class DmlConfig(object):
     output files and which articles to accept for the corpus (= an additional filter
     over the sources).
     """
-    def __init__(self, configId, resultDir, acceptLangs = None):
-        self.resultDir = resultDir # output files will be stored in this directory
-        self.configId = configId # configId is a string that is used as filename prefix for all files, so keep it simple
-        self.sources = {} # all article sources; see sources.DmlSource class for an example of source
 
-        if acceptLangs is None: # which languages to accept
-            acceptLangs = set(['any']) # if not specified, accept all languages (including unknown/unspecified)
+    def __init__(self, configId, resultDir, acceptLangs=None):
+        self.resultDir = resultDir  # output files will be stored in this directory
+        self.configId = configId  # configId is a string that is used as filename prefix for all files, so keep it simple
+        self.sources = {}  # all article sources; see sources.DmlSource class for an example of source
+
+        if acceptLangs is None:  # which languages to accept
+            acceptLangs = {'any'}  # if not specified, accept all languages (including unknown/unspecified)
         self.acceptLangs = set(acceptLangs)
-        logger.info('initialized %s' % self)
-
+        logger.info('initialized %s', self)
 
     def resultFile(self, fname):
         return os.path.join(self.resultDir, self.configId + '_' + fname)
 
-
     def acceptArticle(self, metadata):
-        lang = metadata.get('language', 'unk') # if there was no language field in the article metadata, set language to 'unk' = unknown
+        lang = metadata.get('language', 'unk')  # if there was no language field in the article metadata, set language to 'unk' = unknown
         if 'any' not in self.acceptLangs and lang not in self.acceptLangs:
             return False
         return True
-
 
     def addSource(self, source):
         sourceId = str(source)
         assert sourceId not in self.sources, "source %s already present in the config!" % sourceId
         self.sources[sourceId] = source
 
-
     def __str__(self):
         return ("DmlConfig(id=%s, sources=[%s], acceptLangs=[%s])" %
                 (self.configId, ', '.join(self.sources.iterkeys()), ', '.join(self.acceptLangs)))
-#endclass DmlConfig
-
+# endclass DmlConfig
 
 
 class DmlCorpus(interfaces.CorpusABC):
@@ -79,15 +74,14 @@ class DmlCorpus(interfaces.CorpusABC):
     DmlCorpus has methods for building a dictionary (mapping between words and
     their ids).
     """
+
     def __init__(self):
         self.documents = []
         self.config = None
         self.dictionary = dictionary.Dictionary()
 
-
     def __len__(self):
         return len(self.documents)
-
 
     def __iter__(self):
         """
@@ -101,8 +95,7 @@ class DmlCorpus(interfaces.CorpusABC):
 
             contents = source.getContent(docUri)
             words = [source.normalizeWord(word) for word in source.tokenize(contents)]
-            yield self.dictionary.doc2bow(words, allowUpdate = False)
-
+            yield self.dictionary.doc2bow(words, allowUpdate=False)
 
     def buildDictionary(self):
         """
@@ -112,25 +105,22 @@ class DmlCorpus(interfaces.CorpusABC):
         them into tokens and converting tokens to their ids (creating new ids as
         necessary).
         """
-        logger.info("creating dictionary from %i articles" % len(self.documents))
+        logger.info("creating dictionary from %i articles", len(self.documents))
         self.dictionary = dictionary.Dictionary()
         numPositions = 0
         for docNo, (sourceId, docUri) in enumerate(self.documents):
             if docNo % 1000 == 0:
-                logger.info("PROGRESS: at document #%i/%i (%s, %s)" %
-                             (docNo, len(self.documents), sourceId, docUri))
+                logger.info("PROGRESS: at document #%i/%i (%s, %s)", docNo, len(self.documents), sourceId, docUri)
             source = self.config.sources[sourceId]
             contents = source.getContent(docUri)
             words = [source.normalizeWord(word) for word in source.tokenize(contents)]
             numPositions += len(words)
 
             # convert to bag-of-words, but ignore the result -- here we only care about updating token ids
-            _ = self.dictionary.doc2bow(words, allowUpdate = True)
-        logger.info("built %s from %i documents (total %i corpus positions)" %
-                     (self.dictionary, len(self.documents), numPositions))
+            _ = self.dictionary.doc2bow(words, allowUpdate=True)  # noqa:F841
+        logger.info("built %s from %i documents (total %i corpus positions)", self.dictionary, len(self.documents), numPositions)
 
-
-    def processConfig(self, config, shuffle = False):
+    def processConfig(self, config, shuffle=False):
         """
         Parse the directories specified in the config, looking for suitable articles.
 
@@ -143,32 +133,29 @@ class DmlCorpus(interfaces.CorpusABC):
         """
         self.config = config
         self.documents = []
-        logger.info("processing config %s" % config)
+        logger.info("processing config %s", config)
         for sourceId, source in config.sources.iteritems():
-            logger.info("processing source '%s'" % sourceId)
+            logger.info("processing source '%s'", sourceId)
             accepted = []
             for articleUri in source.findArticles():
-                meta = source.getMeta(articleUri) # retrieve metadata (= dictionary of key->value)
-                if config.acceptArticle(meta): # do additional filtering on articles, based on the article's metadata
+                meta = source.getMeta(articleUri)  # retrieve metadata (= dictionary of key->value)
+                if config.acceptArticle(meta):  # do additional filtering on articles, based on the article's metadata
                     accepted.append((sourceId, articleUri))
-            logger.info("accepted %i articles for source '%s'" %
-                         (len(accepted), sourceId))
+            logger.info("accepted %i articles for source '%s'", len(accepted), sourceId)
             self.documents.extend(accepted)
 
         if not self.documents:
             logger.warning('no articles at all found from the config; something went wrong!')
 
         if shuffle:
-            logger.info("shuffling %i documents for random order" % len(self.documents))
+            logger.info("shuffling %i documents for random order", len(self.documents))
             import random
             random.shuffle(self.documents)
 
-        logger.info("accepted total of %i articles for %s" %
-                     (len(self.documents), str(config)))
-
+        logger.info("accepted total of %i articles for %s", len(self.documents), str(config))
 
     def saveDictionary(self, fname):
-        logger.info("saving dictionary mapping to %s" % fname)
+        logger.info("saving dictionary mapping to %s", fname)
         fout = open(fname, 'w')
         for tokenId, token in self.dictionary.id2token.iteritems():
             fout.write("%i\t%s\n" % (tokenId, token))
@@ -186,14 +173,13 @@ class DmlCorpus(interfaces.CorpusABC):
         return result
 
     def saveDocuments(self, fname):
-        logger.info("saving documents mapping to %s" % fname)
+        logger.info("saving documents mapping to %s", fname)
         fout = open(fname, 'w')
         for docNo, docId in enumerate(self.documents):
             sourceId, docUri = docId
             intId, pathId = docUri
             fout.write("%i\t%s\n" % (docNo, repr(docId)))
         fout.close()
-
 
     def saveAsText(self):
         """
@@ -211,7 +197,6 @@ class DmlCorpus(interfaces.CorpusABC):
         self.saveDocuments(self.config.resultFile('docids.txt'))
         matutils.MmWriter.writeCorpus(self.config.resultFile('bow.mm'), self)
 
-
     def articleDir(self, docNo):
         """
         Return absolute normalized path on filesystem to article no. `docNo`.
@@ -220,7 +205,6 @@ class DmlCorpus(interfaces.CorpusABC):
         source = self.config.sources[sourceId]
         return os.path.join(source.baseDir, outPath)
 
-
     def getMeta(self, docNo):
         """
         Return metadata for article no. `docNo`.
@@ -228,5 +212,4 @@ class DmlCorpus(interfaces.CorpusABC):
         sourceId, uri = self.documents[docNo]
         source = self.config.sources[sourceId]
         return source.getMeta(uri)
-#endclass DmlCorpus
-
+# endclass DmlCorpus

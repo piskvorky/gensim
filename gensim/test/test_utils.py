@@ -11,9 +11,10 @@ Automated tests for checking various utils functions.
 import logging
 import unittest
 
-from gensim import utils
-from six import iteritems
 import numpy as np
+from six import iteritems
+
+from gensim import utils
 
 
 class TestIsCorpus(unittest.TestCase):
@@ -83,14 +84,15 @@ class TestUtils(unittest.TestCase):
         expected = u'It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af'
         self.assertEquals(utils.decode_htmlentities(body), expected)
 
+
 class TestSampleDict(unittest.TestCase):
     def test_sample_dict(self):
-        d = {1:2,2:3,3:4,4:5}
-        expected_dict = [(1,2),(2,3)]
-        expected_dict_random = [(k,v) for k,v in iteritems(d)]
-        sampled_dict = utils.sample_dict(d,2,False)
-        self.assertEqual(sampled_dict,expected_dict)
-        sampled_dict_random = utils.sample_dict(d,2)
+        d = {1: 2, 2: 3, 3: 4, 4: 5}
+        expected_dict = [(1, 2), (2, 3)]
+        expected_dict_random = [(k, v) for k, v in iteritems(d)]
+        sampled_dict = utils.sample_dict(d, 2, False)
+        self.assertEqual(sampled_dict, expected_dict)
+        sampled_dict_random = utils.sample_dict(d, 2)
         if sampled_dict_random in expected_dict_random:
             self.assertTrue(True)
 
@@ -178,6 +180,16 @@ class TestWindowing(unittest.TestCase):
 
         windows[2][0] = 'modified'
         self.assertEqual('test', texts[1][0])
+
+    def test_flatten_nested(self):
+        nested_list = [[[1, 2, 3], [4, 5]], 6]
+        expected = [1, 2, 3, 4, 5, 6]
+        self.assertEquals(utils.flatten(nested_list), expected)
+
+    def test_flatten_not_nested(self):
+        not_nested = [1, 2, 3, 4, 5, 6]
+        expected = [1, 2, 3, 4, 5, 6]
+        self.assertEquals(utils.flatten(not_nested), expected)
 
 
 if __name__ == '__main__':

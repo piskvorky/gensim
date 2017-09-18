@@ -151,7 +151,7 @@ def summarize_corpus(corpus, ratio=0.2):
 
     # Warns the user if there are too few documents.
     if len(corpus) < INPUT_MIN_LENGTH:
-        logger.warning("Input corpus is expected to have at least " + str(INPUT_MIN_LENGTH) + " documents.")
+        logger.warning("Input corpus is expected to have at least %d documents.", INPUT_MIN_LENGTH)
 
     graph = _build_graph(hashable_corpus)
     _set_graph_edge_weights(graph)
@@ -205,7 +205,7 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
 
     # Warns if the text is too short.
     if len(sentences) < INPUT_MIN_LENGTH:
-        logger.warning("Input text is expected to have at least " + str(INPUT_MIN_LENGTH) + " sentences.")
+        logger.warning("Input text is expected to have at least %d sentences.", INPUT_MIN_LENGTH)
 
     corpus = _build_corpus(sentences)
 

@@ -18,9 +18,13 @@ from gensim.sklearn_api.lsimodel import LsiTransformer
 from gensim.sklearn_api.ldaseqmodel import LdaSeqTransformer
 from gensim.sklearn_api.w2vmodel import W2VTransformer
 from gensim.sklearn_api.atmodel import AuthorTopicTransformer
+from gensim.sklearn_api.d2vmodel import D2VTransformer
+from gensim.sklearn_api.text2bow import Text2BowTransformer
+from gensim.sklearn_api.tfidf import TfIdfTransformer
+from gensim.sklearn_api.hdp import HdpTransformer
+from gensim.sklearn_api.phrases import PhrasesTransformer
 from gensim.corpora import mmcorpus, Dictionary
-from gensim import models
-from gensim import matutils
+from gensim import matutils, models
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -39,10 +43,19 @@ texts = [
 ]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
-author2doc = {'john': [0, 1, 2, 3, 4, 5, 6], 'jane': [2, 3, 4, 5, 6, 7, 8], 'jack': [0, 2, 4, 6, 8], 'jill': [1, 3, 5, 7]}
+author2doc = {
+    'john': [0, 1, 2, 3, 4, 5, 6],
+    'jane': [2, 3, 4, 5, 6, 7, 8],
+    'jack': [0, 2, 4, 6, 8],
+    'jill': [1, 3, 5, 7]
+}
 
 texts_new = texts[0:3]
-author2doc_new = {'jill': [0], 'bob': [0, 1], 'sally': [1, 2]}
+author2doc_new = {
+    'jill': [0],
+    'bob': [0, 1],
+    'sally': [1, 2]
+}
 dictionary_new = Dictionary(texts_new)
 corpus_new = [dictionary_new.doc2bow(text) for text in texts_new]
 
@@ -87,18 +100,52 @@ w2v_texts = [
     ['geometry', 'is', 'the', 'study', 'of', 'shape'],
     ['algebra', 'is', 'the', 'study', 'of', 'generalizations', 'of', 'arithmetic', 'operations'],
     ['differential', 'calculus', 'is', 'related', 'to', 'rates', 'of', 'change', 'and', 'slopes', 'of', 'curves'],
-    ['integral', 'calculus', 'is', 'realted', 'to', 'accumulation', 'of', 'quantities', 'and', 'the', 'areas', 'under', 'and', 'between', 'curves'],
-    ['physics', 'is', 'the', 'natural', 'science', 'that', 'involves', 'the', 'study', 'of', 'matter', 'and', 'its', 'motion', 'and', 'behavior', 'through', 'space', 'and', 'time'],
+    ['integral', 'calculus', 'is', 'realted', 'to', 'accumulation', 'of', 'quantities', 'and',
+     'the', 'areas', 'under', 'and', 'between', 'curves'],
+    ['physics', 'is', 'the', 'natural', 'science', 'that', 'involves', 'the', 'study', 'of', 'matter',
+     'and', 'its', 'motion', 'and', 'behavior', 'through', 'space', 'and', 'time'],
     ['the', 'main', 'goal', 'of', 'physics', 'is', 'to', 'understand', 'how', 'the', 'universe', 'behaves'],
-    ['physics', 'also', 'makes', 'significant', 'contributions', 'through', 'advances', 'in', 'new', 'technologies', 'that', 'arise', 'from', 'theoretical', 'breakthroughs'],
-    ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics', 'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically', 'transformed', 'modern', 'day', 'society']
+    ['physics', 'also', 'makes', 'significant', 'contributions', 'through', 'advances', 'in', 'new',
+     'technologies', 'that', 'arise', 'from', 'theoretical', 'breakthroughs'],
+    ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics',
+     'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically',
+     'transformed', 'modern', 'day', 'society']
+]
+
+d2v_sentences = [models.doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(w2v_texts)]
+
+dict_texts = [
+    'human interface computer',
+    'survey user computer system response time',
+    'eps user interface system',
+    'system human system eps',
+    'user response time',
+    'trees',
+    'graph trees',
+    'graph minors trees',
+    'graph minors survey'
+]
+
+phrases_sentences = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey'],
+    ['graph', 'minors', 'survey', 'human', 'interface']
 ]
 
 
 class TestLdaWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        self.model = LdaTransformer(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        self.model = LdaTransformer(
+            id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0)
+        )
         self.model.fit(corpus)
 
     def testTransform(self):
@@ -126,11 +173,16 @@ class TestLdaWrapper(unittest.TestCase):
 
     def testConsistencyWithGensimModel(self):
         # training an LdaTransformer with `num_topics`=10
-        self.model = LdaTransformer(id2word=dictionary, num_topics=10, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        self.model = LdaTransformer(
+            id2word=dictionary, num_topics=10, passes=100, minimum_probability=0, random_state=numpy.random.seed(0)
+        )
         self.model.fit(corpus)
 
         # training a Gensim LdaModel with the same params
-        gensim_ldamodel = models.LdaModel(corpus=corpus, id2word=dictionary, num_topics=10, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        gensim_ldamodel = models.LdaModel(
+            corpus=corpus, id2word=dictionary, num_topics=10, passes=100,
+            minimum_probability=0, random_state=numpy.random.seed(0)
+        )
 
         texts_new = ['graph', 'eulerian']
         bow = self.model.id2word.doc2bow(texts_new)
@@ -159,11 +211,11 @@ class TestLdaWrapper(unittest.TestCase):
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
             cache = pickle.loads(uncompressed_content)
         data = cache
-        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        id2word = Dictionary([x.split() for x in data.data])
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_lda = Pipeline((('features', model,), ('classifier', clf)))
+        text_lda = Pipeline([('features', model,), ('classifier', clf)])
         text_lda.fit(corpus, data.target)
         score = text_lda.score(corpus, data.target)
         self.assertGreater(score, 0.40)
@@ -207,7 +259,10 @@ class TestLdaWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        lda_wrapper = LdaTransformer(id2word=dictionary, num_topics=2, passes=100, minimum_probability=0, random_state=numpy.random.seed(0))
+        lda_wrapper = LdaTransformer(
+            id2word=dictionary, num_topics=2, passes=100,
+            minimum_probability=0, random_state=numpy.random.seed(0)
+        )
         texts_new = ['graph', 'eulerian']
         bow = lda_wrapper.id2word.doc2bow(texts_new)
         self.assertRaises(NotFittedError, lda_wrapper.transform, bow)
@@ -249,11 +304,11 @@ class TestLsiWrapper(unittest.TestCase):
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
             cache = pickle.loads(uncompressed_content)
         data = cache
-        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        id2word = Dictionary([x.split() for x in data.data])
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_lsi = Pipeline((('features', model,), ('classifier', clf)))
+        text_lsi = Pipeline([('features', model,), ('classifier', clf)])
         text_lsi.fit(corpus, data.target)
         score = text_lsi.score(corpus, data.target)
         self.assertGreater(score, 0.50)
@@ -305,14 +360,14 @@ class TestLsiWrapper(unittest.TestCase):
 
 class TestLdaSeqWrapper(unittest.TestCase):
     def setUp(self):
-        self.model = LdaSeqTransformer(id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='gensim')
+        self.model = LdaSeqTransformer(
+            id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='gensim'
+        )
         self.model.fit(corpus_ldaseq)
 
     def testTransform(self):
         # transforming two documents
-        docs = []
-        docs.append(list(corpus_ldaseq)[0])
-        docs.append(list(corpus_ldaseq)[1])
+        docs = [list(corpus_ldaseq)[0], list(corpus_ldaseq)[1]]
         transformed_vecs = self.model.transform(docs)
         self.assertEqual(transformed_vecs.shape[0], 2)
         self.assertEqual(transformed_vecs.shape[1], self.model.num_topics)
@@ -332,11 +387,11 @@ class TestLdaSeqWrapper(unittest.TestCase):
         data = cache
         test_data = data.data[0:2]
         test_target = data.target[0:2]
-        id2word = Dictionary(map(lambda x: x.split(), test_data))
+        id2word = Dictionary([x.split() for x in test_data])
         corpus = [id2word.doc2bow(i.split()) for i in test_data]
         model = LdaSeqTransformer(id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim')
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_ldaseq = Pipeline((('features', model,), ('classifier', clf)))
+        text_ldaseq = Pipeline([('features', model,), ('classifier', clf)])
         text_ldaseq.fit(corpus, test_target)
         score = text_ldaseq.score(corpus, test_target)
         self.assertGreater(score, 0.50)
@@ -381,9 +436,7 @@ class TestRpWrapper(unittest.TestCase):
 
     def testTransform(self):
         # tranform two documents
-        docs = []
-        docs.append(list(self.corpus)[0])
-        docs.append(list(self.corpus)[1])
+        docs = [list(self.corpus)[0], list(self.corpus)[1]]
         matrix = self.model.transform(docs)
         self.assertEqual(matrix.shape[0], 2)
         self.assertEqual(matrix.shape[1], self.model.num_topics)
@@ -402,11 +455,11 @@ class TestRpWrapper(unittest.TestCase):
             uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
             cache = pickle.loads(uncompressed_content)
         data = cache
-        id2word = Dictionary(map(lambda x: x.split(), data.data))
+        id2word = Dictionary([x.split() for x in data.data])
         corpus = [id2word.doc2bow(i.split()) for i in data.data]
         numpy.random.mtrand.RandomState(1)  # set seed for getting same result
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-        text_rp = Pipeline((('features', model,), ('classifier', clf)))
+        text_rp = Pipeline([('features', model,), ('classifier', clf)])
         text_rp.fit(corpus, data.target)
         score = text_rp.score(corpus, data.target)
         self.assertGreater(score, 0.40)
@@ -483,15 +536,17 @@ class TestWord2VecWrapper(unittest.TestCase):
 
         class_dict = {'mathematics': 1, 'physics': 0}
         train_data = [
-            ('calculus', 'mathematics'), ('mathematical', 'mathematics'), ('geometry', 'mathematics'), ('operations', 'mathematics'), ('curves', 'mathematics'),
-            ('natural', 'physics'), ('nuclear', 'physics'), ('science', 'physics'), ('electromagnetism', 'physics'), ('natural', 'physics')
+            ('calculus', 'mathematics'), ('mathematical', 'mathematics'),
+            ('geometry', 'mathematics'), ('operations', 'mathematics'),
+            ('curves', 'mathematics'), ('natural', 'physics'), ('nuclear', 'physics'),
+            ('science', 'physics'), ('electromagnetism', 'physics'), ('natural', 'physics')
         ]
-        train_input = list(map(lambda x: x[0], train_data))
-        train_target = list(map(lambda x: class_dict[x[1]], train_data))
+        train_input = [x[0] for x in train_data]
+        train_target = [class_dict[x[1]] for x in train_data]
 
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         clf.fit(model.transform(train_input), train_target)
-        text_w2v = Pipeline((('features', model,), ('classifier', clf)))
+        text_w2v = Pipeline([('features', model,), ('classifier', clf)])
         score = text_w2v.score(train_input, train_target)
         self.assertGreater(score, 0.40)
 
@@ -562,7 +617,7 @@ class TestAuthorTopicWrapper(unittest.TestCase):
         clstr.fit(model.transform(authors_full))
 
         # stack together the two models in a pipeline
-        text_atm = Pipeline((('features', model,), ('cluster', clstr)))
+        text_atm = Pipeline([('features', model,), ('cluster', clstr)])
         author_list = ['jane', 'jack', 'jill']
         ret_val = text_atm.predict(author_list)
         self.assertEqual(len(ret_val), len(author_list))
@@ -607,6 +662,330 @@ class TestAuthorTopicWrapper(unittest.TestCase):
         atmodel_wrapper = AuthorTopicTransformer(id2word=dictionary, author2doc=author2doc, num_topics=10, passes=100)
         author_list = ['jill', 'jack']
         self.assertRaises(NotFittedError, atmodel_wrapper.transform, author_list)
+
+
+class TestD2VTransformer(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = D2VTransformer(min_count=1)
+        self.model.fit(d2v_sentences)
+
+    def testTransform(self):
+        # tranform multiple documents
+        docs = [w2v_texts[0], w2v_texts[1], w2v_texts[2]]
+        matrix = self.model.transform(docs)
+        self.assertEqual(matrix.shape[0], 3)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+        # tranform one document
+        doc = w2v_texts[0]
+        matrix = self.model.transform(doc)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(negative=20)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["negative"], 20)
+
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(d2v_sentences)
+        self.assertEqual(getattr(self.model.gensim_model, 'negative'), 20)
+
+    def testPipeline(self):
+        numpy.random.seed(0)  # set fixed seed to get similar values everytime
+        model = D2VTransformer(min_count=1)
+        model.fit(d2v_sentences)
+
+        class_dict = {'mathematics': 1, 'physics': 0}
+        train_data = [
+            (['calculus', 'mathematical'], 'mathematics'), (['geometry', 'operations', 'curves'], 'mathematics'),
+            (['natural', 'nuclear'], 'physics'), (['science', 'electromagnetism', 'natural'], 'physics')
+        ]
+        train_input = [x[0] for x in train_data]
+        train_target = [class_dict[x[1]] for x in train_data]
+
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        clf.fit(model.transform(train_input), train_target)
+        text_w2v = Pipeline([('features', model,), ('classifier', clf)])
+        score = text_w2v.score(train_input, train_target)
+        self.assertGreater(score, 0.40)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = w2v_texts[0]
+        loaded_transformed_vecs = model_load.transform(doc)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_transformed_vecs.shape[0], 1)
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.size)
+
+        # comparing the original and loaded models
+        original_transformed_vecs = self.model.transform(doc)
+        passed = numpy.allclose(sorted(loaded_transformed_vecs), sorted(original_transformed_vecs), atol=1e-1)
+        self.assertTrue(passed)
+
+    def testConsistencyWithGensimModel(self):
+        # training a D2VTransformer
+        self.model = D2VTransformer(min_count=1)
+        self.model.fit(d2v_sentences)
+
+        # training a Gensim Doc2Vec model with the same params
+        gensim_d2vmodel = models.Doc2Vec(d2v_sentences, min_count=1)
+
+        doc = w2v_texts[0]
+        vec_transformer_api = self.model.transform(doc)  # vector returned by D2VTransformer
+        vec_gensim_model = gensim_d2vmodel[doc]  # vector returned by Doc2Vec
+        passed = numpy.allclose(vec_transformer_api, vec_gensim_model, atol=1e-1)
+        self.assertTrue(passed)
+
+    def testModelNotFitted(self):
+        d2vmodel_wrapper = D2VTransformer(min_count=1)
+        self.assertRaises(NotFittedError, d2vmodel_wrapper.transform, 1)
+
+
+class TestText2BowTransformer(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = Text2BowTransformer()
+        self.model.fit(dict_texts)
+
+    def testTransform(self):
+        # tranform one document
+        doc = ['computer system interface time computer system']
+        bow_vec = self.model.transform(doc)[0]
+        expected_values = [1, 1, 2, 2]  # comparing only the word-counts
+        values = [x[1] for x in bow_vec]
+        self.assertEqual(sorted(expected_values), sorted(values))
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(prune_at=1000000)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["prune_at"], 1000000)
+
+    def testPipeline(self):
+        with open(datapath('mini_newsgroup'), 'rb') as f:
+            compressed_content = f.read()
+            uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
+            cache = pickle.loads(uncompressed_content)
+        data = cache
+        text2bow_model = Text2BowTransformer()
+        lda_model = LdaTransformer(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
+        numpy.random.mtrand.RandomState(1)  # set seed for getting same result
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        text_lda = Pipeline([('bow_model', text2bow_model), ('ldamodel', lda_model), ('classifier', clf)])
+        text_lda.fit(data.data, data.target)
+        score = text_lda.score(data.data, data.target)
+        self.assertGreater(score, 0.40)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = dict_texts[0]
+        loaded_transformed_vecs = model_load.transform(doc)
+
+        # comparing the original and loaded models
+        original_transformed_vecs = self.model.transform(doc)
+        self.assertEqual(original_transformed_vecs, loaded_transformed_vecs)
+
+    def testModelNotFitted(self):
+        text2bow_wrapper = Text2BowTransformer()
+        self.assertRaises(NotFittedError, text2bow_wrapper.transform, dict_texts[0])
+
+
+class TestTfIdfTransformer(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = TfIdfTransformer(normalize=True)
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.model.fit(self.corpus)
+
+    def testTransform(self):
+        # tranform one document
+        doc = corpus[0]
+        transformed_doc = self.model.transform(doc)
+        expected_doc = [[(0, 0.5773502691896257), (1, 0.5773502691896257), (2, 0.5773502691896257)]]
+        self.assertTrue(numpy.allclose(transformed_doc, expected_doc))
+
+        # tranform multiple documents
+        docs = [corpus[0], corpus[1]]
+        transformed_docs = self.model.transform(docs)
+        expected_docs = [
+            [(0, 0.5773502691896257), (1, 0.5773502691896257), (2, 0.5773502691896257)],
+            [(3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.3244870206138555),
+             (6, 0.44424552527467476), (7, 0.3244870206138555), (8, 0.44424552527467476)]
+        ]
+        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(normalize=False)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["normalize"], False)
+
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(self.corpus)
+        self.assertEqual(getattr(self.model.gensim_model, 'normalize'), False)
+
+    def testPipeline(self):
+        with open(datapath('mini_newsgroup'), 'rb') as f:
+            compressed_content = f.read()
+            uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
+            cache = pickle.loads(uncompressed_content)
+        data = cache
+        id2word = Dictionary([x.split() for x in data.data])
+        corpus = [id2word.doc2bow(i.split()) for i in data.data]
+        tfidf_model = TfIdfTransformer()
+        tfidf_model.fit(corpus)
+        lda_model = LdaTransformer(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
+        numpy.random.mtrand.RandomState(1)  # set seed for getting same result
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        text_tfidf = Pipeline([('tfidf_model', tfidf_model), ('ldamodel', lda_model), ('classifier', clf)])
+        text_tfidf.fit(corpus, data.target)
+        score = text_tfidf.score(corpus, data.target)
+        self.assertGreater(score, 0.40)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = corpus[0]
+        loaded_transformed_doc = model_load.transform(doc)
+
+        # comparing the original and loaded models
+        original_transformed_doc = self.model.transform(doc)
+        self.assertEqual(original_transformed_doc, loaded_transformed_doc)
+
+    def testModelNotFitted(self):
+        tfidf_wrapper = TfIdfTransformer()
+        self.assertRaises(NotFittedError, tfidf_wrapper.transform, corpus[0])
+
+
+class TestHdpTransformer(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = HdpTransformer(id2word=dictionary, random_state=42)
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.model.fit(self.corpus)
+
+    def testTransform(self):
+        # tranform one document
+        doc = self.corpus[0]
+        transformed_doc = self.model.transform(doc)
+        expected_doc = [
+            [0.81043386270128193, 0.049357139518070477, 0.035840906753517532,
+             0.026542006926698079, 0.019925705902962578, 0.014776690981729117, 0.011068909979528148]
+        ]
+        self.assertTrue(numpy.allclose(transformed_doc, expected_doc, atol=1e-2))
+
+        # tranform multiple documents
+        docs = [self.corpus[0], self.corpus[1]]
+        transformed_docs = self.model.transform(docs)
+        expected_docs = [
+            [0.81043386270128193, 0.049357139518070477, 0.035840906753517532,
+             0.026542006926698079, 0.019925705902962578, 0.014776690981729117, 0.011068909979528148],
+            [0.03795908, 0.39542609, 0.50650585, 0.0151082, 0.01132749, 0., 0.]
+        ]
+        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0], atol=1e-2))
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1], atol=1e-2))
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(var_converge=0.05)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["var_converge"], 0.05)
+
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(self.corpus)
+        self.assertEqual(getattr(self.model.gensim_model, 'm_var_converge'), 0.05)
+
+    def testPipeline(self):
+        with open(datapath('mini_newsgroup'), 'rb') as f:
+            compressed_content = f.read()
+            uncompressed_content = codecs.decode(compressed_content, 'zlib_codec')
+            cache = pickle.loads(uncompressed_content)
+        data = cache
+        id2word = Dictionary([x.split() for x in data.data])
+        corpus = [id2word.doc2bow(i.split()) for i in data.data]
+        model = HdpTransformer(id2word=id2word)
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        text_lda = Pipeline([('features', model,), ('classifier', clf)])
+        text_lda.fit(corpus, data.target)
+        score = text_lda.score(corpus, data.target)
+        self.assertGreater(score, 0.40)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = corpus[0]
+        loaded_transformed_doc = model_load.transform(doc)
+
+        # comparing the original and loaded models
+        original_transformed_doc = self.model.transform(doc)
+        self.assertTrue(numpy.allclose(original_transformed_doc, loaded_transformed_doc))
+
+    def testModelNotFitted(self):
+        hdp_wrapper = HdpTransformer(id2word=dictionary)
+        self.assertRaises(NotFittedError, hdp_wrapper.transform, corpus[0])
+
+
+class TestPhrasesTransformer(unittest.TestCase):
+    def setUp(self):
+        numpy.random.seed(0)
+        self.model = PhrasesTransformer(min_count=1, threshold=1)
+        self.model.fit(phrases_sentences)
+
+    def testTransform(self):
+        # tranform one document
+        doc = phrases_sentences[-1]
+        phrase_tokens = self.model.transform(doc)[0]
+        expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface']
+        self.assertEqual(phrase_tokens, expected_phrase_tokens)
+
+    def testPartialFit(self):
+        new_sentences = [
+            ['world', 'peace', 'humans', 'world', 'peace', 'world', 'peace', 'people'],
+            ['world', 'peace', 'people'],
+            ['world', 'peace', 'humans']
+        ]
+        self.model.partial_fit(X=new_sentences)  # train model with new sentences
+
+        doc = ['graph', 'minors', 'survey', 'human', 'interface', 'world', 'peace']
+        phrase_tokens = self.model.transform(doc)[0]
+        expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface', u'world_peace']
+        self.assertEqual(phrase_tokens, expected_phrase_tokens)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(progress_per=5000)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["progress_per"], 5000)
+
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(phrases_sentences)
+        self.assertEqual(getattr(self.model.gensim_model, 'progress_per'), 5000)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = phrases_sentences[-1]
+        loaded_phrase_tokens = model_load.transform(doc)
+
+        # comparing the original and loaded models
+        original_phrase_tokens = self.model.transform(doc)
+        self.assertEqual(original_phrase_tokens, loaded_phrase_tokens)
+
+    def testModelNotFitted(self):
+        phrases_transformer = PhrasesTransformer()
+        self.assertRaises(NotFittedError, phrases_transformer.transform, phrases_sentences[0])
 
 
 if __name__ == '__main__':

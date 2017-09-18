@@ -138,6 +138,7 @@ Adopters
 | SiteGround Hosting     |  <img src="https://www.siteground.com/img/knox/logos/siteground.png" width="100"> | [siteground.com](https://www.siteground.com/)                                  | An ensemble search engine which uses different embeddings models and similarities, including word2vec, WMD, and LDA. |
 | Juju  | <img src="https://d5k1a84rm5hwo.cloudfront.net/img/juju_home_logo.png" width="100">   | [www.juju.com](http://www.juju.com/) | Provide non-obvious related job suggestions. |
 | NLPub | <img src="https://nlpub.org/images/thumb/a/aa/NLPub.svg/240px-NLPub.svg.png" width="100"> | [nlpub.org](https://nlpub.org/) | Distributional semantic models including word2vec. |
+|Capital One | <img src="https://s3.amazonaws.com/fjds/member/original/1245173/C1_Core_NG_RGB_R_%281%29.PNG?1456169388"  width="200"> | [www.capitalone.com](https://www.capitalone.com/) | Topic modeling for customer complaints exploration. |
 
 -------
 

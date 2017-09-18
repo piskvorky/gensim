@@ -640,7 +640,7 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
                     window_indexes[n] =  null_word_index
                 else:
                     window_indexes[n] = indexes[m]
-                n = n + 1
+                n += 1
             for m in range(2 * window):
                 memcpy(&_neu1[(doctag_len + m) * vector_size], &_word_vectors[window_indexes[m] * vector_size],
                        vector_size * cython.sizeof(REAL_t))
