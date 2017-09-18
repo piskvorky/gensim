@@ -55,10 +55,10 @@ import sys
 import argparse
 from numpy import seterr
 
-from gensim.models.word2vec import Word2Vec, LineSentence  # avoid referencing __main__ in pickle
-
 logger = logging.getLogger(__name__)
 
+from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pickle
+from gensim.corpora.textcorpus import LineSentence
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)

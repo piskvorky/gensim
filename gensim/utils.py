@@ -889,18 +889,24 @@ else:
         assert chunksize > 0
 
         if maxsize > 0:
-            q = multiprocessing.Queue(maxsize=maxsize)
-            worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
-            worker.daemon = True
-            worker.start()
+            return _buffer_and_yield(corpus, chunksize, maxsize, as_numpy)
+        else:
+            return chunkize_serial(corpus, chunksize, as_numpy=as_numpy)
+
+    def _buffer_and_yield(corpus, chunksize, maxsize, as_numpy):
+        q = multiprocessing.Queue(maxsize=maxsize)
+        worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
+        worker.daemon = True
+        worker.start()
+        try:
             while True:
                 chunk = [q.get(block=True)]
                 if chunk[0] is None:
                     break
                 yield chunk.pop()
-        else:
-            for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
-                yield chunk
+        finally:
+            worker.terminate()
+            q.close()
 
 
 def smart_extension(fname, ext):
@@ -1254,3 +1260,18 @@ def _iter_windows(document, window_size, copy=False, ignore_below_size=True):
     else:
         for doc_window in doc_windows:
             yield doc_window.copy() if copy else doc_window
+
+
+def walk_with_depth(top, topdown=True, onerror=None, followlinks=False):
+    """Wrap `os.walk` in code that analyzes the directory path of each yield to
+    determine the depth relative to `top`. Yields in the `top` directory are at
+    depth 0.
+
+    Returns:
+        generator of tuples of (depth, dirpath, dirnames, filenames).
+    """
+    path = os.path.abspath(top)
+    for dirpath, dirnames, filenames in os.walk(path, topdown, onerror, followlinks):
+        sub_path = dirpath.replace(path, '')
+        depth = sub_path.count(os.sep)
+        yield depth, dirpath, dirnames, filenames

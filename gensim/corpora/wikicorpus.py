@@ -20,16 +20,13 @@ module.
 
 import bz2
 import logging
-import multiprocessing
 import re
-import signal
 from xml.etree.cElementTree import \
     iterparse  # LXML isn't faster, so let's go with the built-in solution
 
 from gensim import utils
 # cannot import whole gensim.corpora, because that imports wikicorpus...
-from gensim.corpora.dictionary import Dictionary
-from gensim.corpora.textcorpus import TextCorpus
+from gensim.corpora import textcorpus
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +142,10 @@ def remove_template(s):
         prev_c = c
 
     # Remove all the templates
-    return ''.join([s[end + 1:start] for start, end in zip(starts + [None], [-1] + ends)])
+    return ''.join([
+        s[end + 1:start]
+        for start, end in zip(starts + [None], [-1] + ends)
+    ])
 
 
 def remove_file(s):
@@ -173,7 +173,7 @@ def tokenize(content):
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
     return [
-        utils.to_unicode(token) for token in utils.tokenize(content, lower=True, errors='ignore')
+        token for token in utils.tokenize(content, lower=True, errors='ignore')
         if 2 <= len(token) <= 15 and not token.startswith('_')
     ]
 
@@ -238,26 +238,7 @@ def extract_pages(f, filter_namespaces=False):
 _extract_pages = extract_pages  # for backward compatibility
 
 
-def process_article(args):
-    """
-    Parse a wikipedia article, returning its content as a list of tokens
-    (utf8-encoded strings).
-    """
-    text, lemmatize, title, pageid = args
-    text = filter_wiki(text)
-    if lemmatize:
-        result = utils.lemmatize(text)
-    else:
-        result = tokenize(text)
-    return result, title, pageid
-
-
-def init_to_ignore_interrupt():
-    """Should only be used when master is prepared to handle termination of child processes."""
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-
-class WikiCorpus(TextCorpus):
+class WikiCorpus(textcorpus.TextCorpus):
     """
     Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
 
@@ -273,7 +254,9 @@ class WikiCorpus(TextCorpus):
 
     """
 
-    def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None, filter_namespaces=('0',)):
+    def __init__(self, source, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
+                 filter_namespaces=('0',), metadata=False, token_filters=None, tokenizer=None,
+                 character_filters=None):
         """
         Initialize the corpus. Unless a dictionary is provided, this scans the
         corpus once, to determine its vocabulary.
@@ -284,21 +267,62 @@ class WikiCorpus(TextCorpus):
         self.metadata if set to true will ensure that serialize will write out article titles to a pickle file.
 
         """
-        self.fname = fname
         self.filter_namespaces = filter_namespaces
-        self.metadata = False
-        if processes is None:
-            processes = max(1, multiprocessing.cpu_count() - 1)
-        self.processes = processes
-        self.lemmatize = lemmatize
-        if dictionary is None:
-            self.dictionary = Dictionary(self.get_texts())
+        tokenizer = self._choose_tokenizer(lemmatize, tokenizer)
+
+        # The original `WikiCorpus` did not use deaccenting, stopword removal, etc.
+        # Passing None to the `TextCorpus` constructor would default to using these preprocessing
+        # steps, so we pass empty lists to maintain the same default historical behavior.
+        if character_filters is None:
+            character_filters = []
+        if token_filters is None:
+            token_filters = []
+
+        super(WikiCorpus, self).__init__(
+            source, dictionary, metadata, character_filters, tokenizer,
+            token_filters, processes)
+
+    @staticmethod
+    def _choose_tokenizer(lemmatize, tokenizer):
+        if tokenizer is not None:
+            if lemmatize:
+                logger.warning(
+                    "`lemmatize` set to true but custom tokenizer also passed;"
+                    " will use custom tokenizer instead of default lemmatizing tokenizer")
         else:
-            self.dictionary = dictionary
+            if lemmatize:
+                logger.info("using lemmatizing tokenizer")
+                tokenizer = utils.lemmatize
+            else:
+                logger.info("using standard tokenizer (no lemmatization)")
+                tokenizer = tokenize
+
+        return tokenizer
+
+    def getstream(self):
+        """Yield documents from the underlying plain text collection (of one or more files).
+        Each item yielded from this method will be considered a document by subsequent
+        preprocessing methods.
+        """
+        return extract_pages(bz2.BZ2File(self.source), self.filter_namespaces)
+
+    def preprocess_text(self, args):
+        """Parse a wikipedia article, returning its content as a list of tokens
+        (utf8-encoded strings).
+        """
+        title, text, pageid = args
+        text = filter_wiki(text)
+        result = super(self.__class__, self).preprocess_text(text)
+        return result, title, pageid
+
+    def should_keep_tokens(self, output):
+        tokens, title, pageid = output
+        return not (
+            len(tokens) < ARTICLE_MIN_WORDS or
+            any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES))
 
     def get_texts(self):
-        """
-        Iterate over the dump, returning text version of each article as a list
+        """Iterate over the dump, returning text version of each article as a list
         of tokens.
 
         Only articles of sufficient length are returned (short articles & redirects
@@ -310,42 +334,8 @@ class WikiCorpus(TextCorpus):
         >>> for vec in wiki_corpus:
         >>>     print(vec)
         """
-        articles, articles_all = 0, 0
-        positions, positions_all = 0, 0
-        texts = (
-            (text, self.lemmatize, title, pageid) for title, text, pageid
-            in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces)
-        )
-        pool = multiprocessing.Pool(self.processes, init_to_ignore_interrupt)
-
-        try:
-            # process the corpus in smaller chunks of docs, because multiprocessing.Pool
-            # is dumb and would load the entire input into RAM at once...
-            for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
-                for tokens, title, pageid in pool.imap(process_article, group):
-                    articles_all += 1
-                    positions_all += len(tokens)
-                    # article redirects and short stubs are pruned here
-                    if len(tokens) < ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
-                        continue
-                    articles += 1
-                    positions += len(tokens)
-                    if self.metadata:
-                        yield (tokens, (pageid, title))
-                    else:
-                        yield tokens
-        except KeyboardInterrupt:
-            logger.warn(
-                "user terminated iteration over Wikipedia corpus after %i documents with %i positions "
-                "(total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
-            )
+        doc_token_stream = self.yield_tokens()
+        if self.metadata:
+            return ((tokens, (pageid, title)) for tokens, title, pageid in doc_token_stream)
         else:
-            logger.info(
-                "finished iterating over Wikipedia corpus of %i documents with %i positions "
-                "(total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
-            )
-            self.length = articles  # cache corpus length
-        finally:
-            pool.terminate()
+            return doc_token_stream

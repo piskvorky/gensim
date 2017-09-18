@@ -45,18 +45,22 @@ class CorpusMiislita(corpora.TextCorpus):
 
         """
         for doc in self.getstream():
-            yield [word for word in utils.to_unicode(doc).lower().split()
-                    if word not in CorpusMiislita.stoplist]
+            tokens = [
+                word for word in utils.to_unicode(doc).lower().split()
+                if word not in CorpusMiislita.stoplist
+            ]
+            yield tokens
 
     def __len__(self):
         """Define this so we can use `len(corpus)`"""
-        if 'length' not in self.__dict__:
+        if self.length is None:
             logger.info("caching corpus size (calculating number of documents)")
             self.length = sum(1 for _ in self.get_texts())
         return self.length
 
 
 class TestMiislita(unittest.TestCase):
+
     def test_textcorpus(self):
         """Make sure TextCorpus can be serialized to disk. """
         # construct corpus from file

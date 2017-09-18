@@ -29,18 +29,30 @@ See the `gensim.test.test_miislita.CorpusMiislita` class for a simple example.
 
 from __future__ import with_statement
 
+import functools
+import itertools
 import logging
+import multiprocessing as mp
 import os
 import random
 import re
+import signal
 import sys
+
+try:
+    from itertools import imap
+except ImportError:  # Python 3...
+    imap = map
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
+from gensim.corpora.stateful_pool import StatefulProcessingPool, StatefulProcessor
 from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
-from gensim.utils import deaccent, simple_tokenize
+from gensim.utils import deaccent, simple_tokenize, walk_with_depth
 
 logger = logging.getLogger(__name__)
+
+MAX_WORDS_IN_BATCH = 10000
 
 
 def remove_stopwords(tokens, stopwords=STOPWORDS):
@@ -53,9 +65,8 @@ def remove_short(tokens, minsize=3):
     return [token for token in tokens if len(token) >= minsize]
 
 
-def lower_to_unicode(text, encoding='utf8', errors='strict'):
-    """Lowercase `text` and convert to unicode."""
-    return utils.to_unicode(text.lower(), encoding, errors)
+def lowercase(text):
+    return text.lower()
 
 
 def strip_multiple_whitespaces(s):
@@ -63,7 +74,76 @@ def strip_multiple_whitespaces(s):
     return RE_WHITESPACE.sub(" ", s)
 
 
-class TextCorpus(interfaces.CorpusABC):
+def init_to_ignore_interrupt():
+    """Should only be used when master is prepared to handle termination of child processes."""
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
+class TextPreprocessor(object):
+    """Mixin for classes that perform text preprocessing."""
+
+    def preprocess_text(self, text):
+        """Apply preprocessing to a single text document. This should perform tokenization
+        in addition to any other desired preprocessing steps.
+
+        Note: The `TextCorpus` class transplants its own version of this method onto a
+        dynamically created subclass that is used to spawn a multiprocessing worker.
+        So if you want to subclass it in a `TextCorpus` subclass, and you want to call
+        the super method using the `super` keyword, do it like this:
+
+            # do some preprocessing of text
+            tokens = super(self.__class__, self).preprocess_text(text)
+            # do some post-processing of tokens
+
+        Args:
+            text (str): document text read from plain-text file.
+
+        Returns:
+            iterable of str: tokens produced from `text` as a result of preprocessing.
+        """
+        for character_filter in self.character_filters:
+            text = character_filter(text)
+
+        tokens = self.tokenizer(text)
+        for token_filter in self.token_filters:
+            tokens = token_filter(tokens)
+
+        return tokens
+
+    def step_through_preprocess(self, text):
+        """Yield tuples of functions and their output for each stage of preprocessing.
+        This is useful for debugging issues with the corpus preprocessing pipeline.
+        """
+        for character_filter in self.character_filters:
+            text = character_filter(text)
+            yield (character_filter, text)
+
+        tokens = self.tokenizer(text)
+        yield (self.tokenizer, tokens)
+
+        for token_filter in self.token_filters:
+            tokens = token_filter(tokens)
+            yield (token_filter, tokens)
+
+
+class _TextPreprocessorMP(StatefulProcessor, TextPreprocessor):
+    """TextPreprocessor that can be used for multiprocessing."""
+    pass
+
+
+def without_metadata(method):
+    """Avoid yielding metadata for some particular corpus method."""
+    def wrapper(corpus, *args):
+        metadata_setting = corpus.metadata
+        corpus.metadata = False
+        try:
+            return method(corpus, *args)
+        finally:
+            corpus.metadata = metadata_setting
+    return wrapper
+
+
+class TextCorpus(interfaces.CorpusABC, TextPreprocessor):
     """Helper class to simplify the pipeline of getting bag-of-words vectors (= a
     gensim corpus) from plain text.
 
@@ -112,35 +192,57 @@ class TextCorpus(interfaces.CorpusABC):
     6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
 
     """
-    def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None, tokenizer=None, token_filters=None):
+    def __init__(self, source=None, dictionary=None, metadata=False, character_filters=None,
+                 tokenizer=None, token_filters=None, processes=-1, no_below=1, no_above=1.0,
+                 encoding='utf8', decoding_error_handling='strict'):
         """
         Args:
-            input (str): path to top-level directory to traverse for corpus documents.
+            source (str): path to corpus source file to read documents from.
             dictionary (Dictionary): if a dictionary is provided, it will not be updated
                 with the given corpus on initialization. If none is provided, a new dictionary
                 will be built for the given corpus. If no corpus is given, the dictionary will
                 remain uninitialized.
             metadata (bool): True to yield metadata with each document, else False (default).
+                By default, metadata consists only of the line number for each document. This
+                is yielded from `get_texts` as a tuple of (tokens, (line_num,)) and from __iter__
+                as a tuple of (bag_of_words, (line_num,)).
             character_filters (iterable of callable): each will be applied to the text of each
                 document in order, and should return a single string with the modified text.
-                For Python 2, the original text will not be unicode, so it may be useful to
-                convert to unicode as the first character filter. The default character filters
-                lowercase, convert to unicode (strict utf8), perform ASCII-folding, then collapse
-                multiple whitespaces.
+                The first filter will receive the text directly from the `getstream` method,
+                which reads documents from the `source` file and yields them as unicode.
+                The default character filters perform ASCII-folding, lowercase, then collapse
+                all whitespace character sequences into single spaces.
             tokenizer (callable): takes as input the document text, preprocessed by all filters
-                in `character_filters`; should return an iterable of tokens (strings).
+                in `character_filters`; should return an iterable of tokens. The tokens should
+                be in a format that can be parsed by the first callable in `token_filters`.
             token_filters (iterable of callable): each will be applied to the iterable of tokens
                 in order, and should return another iterable of tokens. These filters can add,
                 remove, or replace tokens, or do nothing at all. The default token filters
                 remove tokens less than 3 characters long and remove stopwords using the list
                 in `gensim.parsing.preprocessing.STOPWORDS`.
+            processes (int): number of processes to use for text preprocessing. The default is
+                -1, which will use (number of virtual CPUs - 1) worker processes, in addition
+                to the master process. If set to 1, no worker pool will be used; instead, all
+                preprocessing will occur in the main process.
+            no_below (int): minimum number of documents a term needs to appear in, in order
+                to keep it in the dictionary. This applies when building a new dictionary,
+                and does nothing when passing in your own pre-initialized dictionary. Set to
+                1 by default (discard no tokens).
+            no_above (float): if a term occurs in greater than this proportion of documents
+                from the source corpus, it will be discarded. This applies when building a new
+                dictionary, and does nothing when passing in your own pre-initialized dictionary.
+                Set to 1.0 by default (discard no tokens).
+            encoding (str): encoding of `source` file; used to decode bytes to unicode
+                (default is 'utf8').
+            decoding_error_handling (str): error-handling strategy for conversion from file bytes to unicode.
+                See `gensim.utils.unicode` for more info.
         """
-        self.input = input
+        self.source = source
         self.metadata = metadata
 
         self.character_filters = character_filters
         if self.character_filters is None:
-            self.character_filters = [lower_to_unicode, deaccent, strip_multiple_whitespaces]
+            self.character_filters = [deaccent, lowercase, strip_multiple_whitespaces]
 
         self.tokenizer = tokenizer
         if self.tokenizer is None:
@@ -150,6 +252,15 @@ class TextCorpus(interfaces.CorpusABC):
         if self.token_filters is None:
             self.token_filters = [remove_short, remove_stopwords]
 
+        self.processes = processes
+        if processes <= 0:
+            self.processes = max(1, mp.cpu_count() - 1)
+
+        self.encoding = encoding
+        self.decoding_error_handling = decoding_error_handling
+
+        self.no_below = no_below
+        self.no_above = no_above
         self.length = None
         self.dictionary = None
         self.init_dictionary(dictionary)
@@ -159,18 +270,25 @@ class TextCorpus(interfaces.CorpusABC):
         is an `input` for the corpus, add all documents from that `input`. If the
         `dictionary` is already initialized, simply set it as the corpus's `dictionary`.
         """
-        self.dictionary = dictionary if dictionary is not None else Dictionary()
-        if self.input is not None:
+        if self.source is not None:
             if dictionary is None:
-                logger.info("Initializing dictionary")
-                metadata_setting = self.metadata
-                self.metadata = False
-                self.dictionary.add_documents(self.get_texts())
-                self.metadata = metadata_setting
+                self.dictionary = self._build_dictionary()
             else:
+                self.dictionary = dictionary
                 logger.info("Input stream provided but dictionary already initialized")
         else:
-            logger.warning("No input document stream provided; assuming dictionary will be initialized some other way.")
+            self.dictionary = Dictionary()
+            logger.warning(
+                "No input document stream provided; assuming "
+                "dictionary will be initialized some other way.")
+
+    @without_metadata
+    def _build_dictionary(self):
+        logger.info("Initializing dictionary")
+        dictionary = Dictionary()
+        dictionary.add_documents(self.get_texts())
+        dictionary.filter_extremes(no_below=self.no_below, no_above=self.no_above, keep_n=None)
+        return dictionary
 
     def __iter__(self):
         """The function that defines a corpus.
@@ -187,68 +305,112 @@ class TextCorpus(interfaces.CorpusABC):
     def getstream(self):
         """Yield documents from the underlying plain text collection (of one or more files).
         Each item yielded from this method will be considered a document by subsequent
-        preprocessing methods.
+        preprocessing methods. Documents will be read as bytes and converted to unicode using
+        the instance attributes `encoding` and `decoding_error_handling`.
+        
+        Subclasses should override `_getstream` instead of this method. If you really want
+        to override this method, be sure to call `_decode_bytes` to convert the bytes read
+        from the source file to unicode.
         """
+        return (self._decode_bytes(line) for line in self._getstream())
+
+    def _getstream(self):
+        """Yield documents as bytes read from `source` file."""
         num_texts = 0
-        with utils.file_or_filename(self.input) as f:
+        with utils.smart_open(self.source, 'rb') as f:
             for line in f:
                 yield line
                 num_texts += 1
 
         self.length = num_texts
 
-    def preprocess_text(self, text):
-        """Apply preprocessing to a single text document. This should perform tokenization
-        in addition to any other desired preprocessing steps.
+    def _decode_bytes(self, text_bytes):
+        return utils.to_unicode(
+            text_bytes, encoding=self.encoding, errors=self.decoding_error_handling)
 
-        Args:
-            text (str): document text read from plain-text file.
+    def _create_preprocessor_pool(self):
+        state_kwargs = dict(
+            character_filters=self.character_filters,
+            tokenizer=self.tokenizer,
+            token_filters=self.token_filters
+        )
+        _TextPreprocessor = type('_TextPreprocessor', (_TextPreprocessorMP,), {})
+        func = getattr(self.__class__, 'preprocess_text')
+        if hasattr(func, '__func__'):  # get unbound method in Python 2
+            func = func.__func__
+        _TextPreprocessor.process = func
 
-        Returns:
-            iterable of str: tokens produced from `text` as a result of preprocessing.
+        return StatefulProcessingPool(
+            self.processes, init_to_ignore_interrupt,
+            processor_class=_TextPreprocessor, state_kwargs=state_kwargs)
+
+    def _get_mapper(self):
+        if self.processes > 1:
+            pool = self._create_preprocessor_pool()
+            map_preprocess = pool.imap
+        else:
+            pool = None
+            map_preprocess = functools.partial(imap, self.preprocess_text)
+
+        return pool, map_preprocess
+
+    def yield_tokens(self):
+        texts = self.getstream()
+        pool, map_preprocess = self._get_mapper()
+
+        num_texts_total, num_texts = 0, 0
+        num_positions_total, num_positions = 0, 0
+
+        try:
+            # process the corpus in smaller chunks of docs, because multiprocessing.Pool
+            # is dumb and would load the entire input into RAM at once...
+            for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
+                for output in map_preprocess(group):
+                    tokens = output[0] if isinstance(output, tuple) else output
+                    num_texts_total += 1
+                    num_positions_total += len(tokens)
+
+                    if self.should_keep_tokens(output):
+                        num_texts += 1
+                        num_positions += len(tokens)
+                        yield tokens
+        except KeyboardInterrupt:
+            logger.warning(
+                "user terminated iteration over %s after %i docs with %i positions"
+                " (total %i docs, %i positions before pruning)", self.__class__.__name__,
+                num_texts, num_positions, num_texts_total, num_positions_total)
+        else:
+            logger.info(
+                "finished iterating over %s of %i docs with %i positions"
+                " (total %i docs, %i positions before pruning)", self.__class__.__name__,
+                num_texts, num_positions, num_texts_total, num_positions_total)
+            self.length = num_texts  # cache corpus length
+        finally:
+            if pool is not None:
+                pool.terminate()
+
+    def should_keep_tokens(self, output):
+        """Output is either the list of tokens, or a tuple containing that list and some other
+        elements from the preprocessing. The default implementation assumes it is the former
+        and returns False if the list is empty.
         """
-        for character_filter in self.character_filters:
-            text = character_filter(text)
-
-        tokens = self.tokenizer(text)
-        for token_filter in self.token_filters:
-            tokens = token_filter(tokens)
-
-        return tokens
-
-    def step_through_preprocess(self, text):
-        """Yield tuples of functions and their output for each stage of preprocessing.
-        This is useful for debugging issues with the corpus preprocessing pipeline.
-        """
-        for character_filter in self.character_filters:
-            text = character_filter(text)
-            yield (character_filter, text)
-
-        tokens = self.tokenizer(text)
-        yield (self.tokenizer, tokens)
-
-        for token_filter in self.token_filters:
-            yield (token_filter, token_filter(tokens))
+        return len(output) > 0
 
     def get_texts(self):
         """Iterate over the collection, yielding one document at a time. A document
         is a sequence of words (strings) that can be fed into `Dictionary.doc2bow`.
-        Each document will be fed through `preprocess_text`. That method should be
-        overridden to provide different preprocessing steps. This method will need
-        to be overridden if the metadata you'd like to yield differs from the line
-        number.
 
-        Returns:
-            generator of lists of tokens (strings); each list corresponds to a preprocessed
-            document from the corpus `input`.
+        Override this function to match your input (parse input files, do any
+        text preprocessing, lowercasing, tokenizing etc.). There will be no further
+        preprocessing of the words coming out of this function.
         """
-        lines = self.getstream()
+        doc_token_stream = self.yield_tokens()
         if self.metadata:
-            for lineno, line in enumerate(lines):
-                yield self.preprocess_text(line), (lineno,)
+            for lineno, tokens in enumerate(doc_token_stream):
+                yield tokens, (lineno,)
         else:
-            for line in lines:
-                yield self.preprocess_text(line)
+            for tokens in doc_token_stream:
+                yield tokens
 
     def sample_texts(self, n, seed=None, length=None):
         """Yield n random documents from the corpus without replacement.
@@ -280,8 +442,8 @@ class TextCorpus(interfaces.CorpusABC):
         if not 0 <= n:
             raise ValueError("Negative sample size n {0:d}.".format(n))
 
-        i = 0
-        for i, sample in enumerate(self.getstream()):
+        # Use get_texts because some docs from getstream may be removed in preprocessing.
+        for i, sample in enumerate(self.get_texts()):
             if i == length:
                 break
 
@@ -289,10 +451,7 @@ class TextCorpus(interfaces.CorpusABC):
             chance = random_generator.randint(1, remaining_in_corpus)
             if chance <= n:
                 n -= 1
-                if self.metadata:
-                    yield self.preprocess_text(sample[0]), sample[1]
-                else:
-                    yield self.preprocess_text(sample)
+                yield sample
 
         if n != 0:
             # This means that length was set to be greater than number of items in corpus
@@ -301,9 +460,13 @@ class TextCorpus(interfaces.CorpusABC):
 
     def __len__(self):
         if self.length is None:
-            # cache the corpus length
-            self.length = sum(1 for _ in self.getstream())
+            self._cache_corpus_length()
         return self.length
+
+    def _cache_corpus_length(self):
+        # cache the corpus length
+        # Use get_texts because some docs from getstream may be removed in preprocessing.
+        self.length = sum(1 for _ in self.get_texts())
 
 
 class TextDirectoryCorpus(TextCorpus):
@@ -311,7 +474,7 @@ class TextDirectoryCorpus(TextCorpus):
     where each file (or line of each file) is interpreted as a plain text document.
     """
 
-    def __init__(self, input, dictionary=None, metadata=False, min_depth=0, max_depth=None,
+    def __init__(self, source, dictionary=None, metadata=False, min_depth=0, max_depth=None,
                  pattern=None, exclude_pattern=None, lines_are_documents=False, **kwargs):
         """
         Args:
@@ -335,7 +498,7 @@ class TextDirectoryCorpus(TextCorpus):
         self.pattern = pattern
         self.exclude_pattern = exclude_pattern
         self.lines_are_documents = lines_are_documents
-        super(TextDirectoryCorpus, self).__init__(input, dictionary, metadata, **kwargs)
+        super(TextDirectoryCorpus, self).__init__(source, dictionary, metadata, **kwargs)
 
     @property
     def lines_are_documents(self):
@@ -387,7 +550,7 @@ class TextDirectoryCorpus(TextCorpus):
         range of depths. If a filename pattern to match was given, further filter to only
         those filenames that match.
         """
-        for depth, dirpath, dirnames, filenames in walk(self.input):
+        for depth, dirpath, dirnames, filenames in walk_with_depth(self.source):
             if self.min_depth <= depth <= self.max_depth:
                 if self.pattern is not None:
                     filenames = (n for n in filenames if self.pattern.match(n) is not None)
@@ -397,7 +560,7 @@ class TextDirectoryCorpus(TextCorpus):
                 for name in filenames:
                     yield os.path.join(dirpath, name)
 
-    def getstream(self):
+    def _getstream(self):
         """Yield documents from the underlying plain text collection (of one or more files).
         Each item yielded from this method will be considered a document by subsequent
         preprocessing methods.
@@ -405,65 +568,214 @@ class TextDirectoryCorpus(TextCorpus):
         If `lines_are_documents` was set to True, items will be lines from files. Otherwise
         there will be one item per file, containing the entire contents of the file.
         """
-        num_texts = 0
         for path in self.iter_filepaths():
-            with open(path, 'rt') as f:
+            logging.debug("reading file: %s", path)
+            with utils.smart_open(path, 'rb') as f:
                 if self.lines_are_documents:
                     for line in f:
                         yield line.strip()
-                        num_texts += 1
                 else:
                     yield f.read().strip()
-                    num_texts += 1
-
-        self.length = num_texts
-
-    def __len__(self):
-        if self.length is None:
-            self._cache_corpus_length()
-        return self.length
-
-    def _cache_corpus_length(self):
-        if not self.lines_are_documents:
-            self.length = sum(1 for _ in self.iter_filepaths())
-        else:
-            self.length = sum(1 for _ in self.getstream())
 
 
-def walk(top, topdown=True, onerror=None, followlinks=False, depth=0):
-    """This is a mostly copied version of `os.walk` from the Python 2 source code.
-    The only difference is that it returns the depth in the directory tree structure
-    at which each yield is taking place.
+def unicode_and_tokenize(text):
+    return utils.to_unicode(text).split()
+
+
+class TextTokensIterator(object):
+    """Mixin for TextCorpus that changes its __iter__ to yield results of get_texts."""
+
+    def __iter__(self):
+        return self.get_texts()
+
+
+class LineSentence(TextTokensIterator, TextCorpus):
+    """Simple format: one sentence = one line.
+
+    In general, words should already be preprocessed and separated by whitespace.
+    If a line exceeds the `max_sentence_length`, it will be split into multiple
+    sentences not exceeding this amount. Additional preprocessing can be applied
+    using the `TextCorpus` preprocessing keyword arguments if needed.
     """
-    islink, join, isdir = os.path.islink, os.path.join, os.path.isdir
 
-    try:
-        # Should be O(1) since it's probably just reading your filesystem journal
-        names = os.listdir(top)
-    except OSError as err:
-        if onerror is not None:
-            onerror(err)
-        return
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None, **kwargs):
+        """
+        `source` can be either a string or a file object. Clip the file to the first
+        `limit` lines (or no clipped if limit is None, the default).
 
-    dirs, nondirs = [], []
+        Example::
 
-    # O(n) where n = number of files in the directory
-    for name in names:
-        if isdir(join(top, name)):
-            dirs.append(name)
-        else:
-            nondirs.append(name)
+            sentences = LineSentence('myfile.txt')
 
-    if topdown:
-        yield depth, top, dirs, nondirs
+        Or for compressed files::
 
-    # Again O(n), where n = number of directories in the directory
-    for name in dirs:
-        new_path = join(top, name)
-        if followlinks or not islink(new_path):
+            sentences = LineSentence('compressed_text.txt.bz2')
+            sentences = LineSentence('compressed_text.txt.gz')
 
-            # Generator so besides the recursive `walk()` call, no additional cost here.
-            for x in walk(new_path, topdown, onerror, followlinks, depth + 1):
-                yield x
-    if not topdown:
-        yield depth, top, dirs, nondirs
+        """
+        self.max_sentence_length = max_sentence_length
+        self.limit = limit
+        kwargs['tokenizer'] = kwargs.get('tokenizer', unicode_and_tokenize)
+        kwargs['character_filters'] = kwargs.get('character_filters', [])
+        kwargs['token_filters'] = kwargs.get('token_filters', [])
+        kwargs['processes'] = kwargs.get('processes', 1)
+        TextCorpus.__init__(self, source, **kwargs)
+
+    def _getstream(self):
+        with utils.smart_open(self.source, 'rb') as fin:
+            for line in itertools.islice(fin, self.limit):
+                yield line
+
+    def yield_tokens(self):
+        doc_token_stream = super(LineSentence, self).yield_tokens()
+        for tokens in doc_token_stream:
+            i = 0
+            while i < len(tokens):
+                yield tokens[i: i + self.max_sentence_length]
+                i += self.max_sentence_length
+
+
+class PathLineSentences(TextTokensIterator, TextDirectoryCorpus):
+    """Simple format: one sentence = one line.
+
+    Like LineSentence, but will process all files in a directory,
+    optionally in alphabetical order by filename.
+
+    In general, words should already be preprocessed and separated by whitespace.
+    If a line exceeds the `max_sentence_length`, it will be split into multiple
+    sentences not exceeding this amount. Additional preprocessing can be applied
+    using the `TextCorpus` preprocessing keyword arguments if needed.
+
+    """
+
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None,
+                 sort_filenames=True, **kwargs):
+        """
+        Args:
+            source (str): path to a directory where all files can be opened by the
+                `LineSentence` class. Each file will be read up to `limit` lines
+                (or all lines if `limit` is None, the default). The files in the
+                directory should be either text files, .bz2 files, or .gz files.
+            sort_filenames (bool): whether or not to sort the filenames read from
+                the directory. If True (default), all filenames will be read into
+                memory on each call to `iter_filepaths` (called by `getstream`).
+                If False, the files are read in the order they are encountered during
+                the top-down directory walk.
+
+        Example::
+
+            sentences = LineSentencePath(os.getcwd() + '\\corpus\\')
+
+        """
+        if os.path.isfile(source):
+            raise ValueError(
+                "source '%s' is file; use `corpora.textcorpus.LineSentence` instead" % source)
+
+        self.max_sentence_length = max_sentence_length
+        self.limit = limit
+        self.sort_filenames = sort_filenames
+        kwargs['lines_are_documents'] = True
+        kwargs['tokenizer'] = kwargs.get('tokenizer', unicode_and_tokenize)
+        kwargs['character_filters'] = kwargs.get('character_filters', [])
+        kwargs['token_filters'] = kwargs.get('token_filters', [])
+        kwargs['processes'] = kwargs.get('processes', 1)
+        super(PathLineSentences, self).__init__(source, **kwargs)
+
+    def _getstream(self):
+        """Yield documents from the underlying plain text collection (of one or more files).
+        Each item yielded from this method will be considered a document by subsequent
+        preprocessing methods.
+        """
+        paths = self.iter_filepaths()
+        if self.sort_filenames:
+            logger.debug("sorting filepaths")
+            paths = list(paths)
+            paths.sort(key=lambda path: os.path.basename(path))
+            logger.debug("found %d files: %r", len(paths), paths)
+
+        num_files = 0
+        for path in paths:
+            logger.debug("reading file: %s", path)
+            num_files += 1
+            with utils.smart_open(path) as fin:
+                for line in itertools.islice(fin, self.limit):
+                    yield line.strip()
+
+        logger.debug("finished reading %d files", num_files)
+
+    def yield_tokens(self):
+        doc_token_stream = super(PathLineSentences, self).yield_tokens()
+        for tokens in doc_token_stream:
+            i = 0
+            while i < len(tokens):
+                yield tokens[i: i + self.max_sentence_length]
+                i += self.max_sentence_length
+
+
+class Text8Corpus(TextTokensIterator, TextCorpus):
+    """Iterate over sentences from the "text8" corpus,
+    unzipped from http://mattmahoney.net/dc/text8.zip.
+    """
+
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, chunksize=65536, **kwargs):
+        self.max_sentence_length = max_sentence_length
+        self.chunksize = chunksize
+        kwargs['tokenizer'] = kwargs.get('tokenizer', unicode_and_tokenize)
+        kwargs['character_filters'] = kwargs.get('character_filters', [])
+        TextCorpus.__init__(self, source, **kwargs)
+
+    def _sentence_token_stream(self):
+        # Entire corpus is one gigantic line -- there are no sentence marks at all.
+        # So just split the token sequence arbitrarily into sentences of length
+        # `max_sentence_length`.
+        sentence, rest = [], b''
+        with utils.smart_open(self.source, 'rb') as fin:
+            while True:
+                text = rest + fin.read(self.chunksize)  # avoid loading the entire file (=1 line) into RAM
+                if text == rest:  # EOF
+                    words = text.split()
+                    sentence.extend(words)  # return the last chunk of words, too (may be shorter/longer)
+                    if sentence:
+                        yield sentence
+                    break
+
+                # last token may have been split in two... keep for next iteration
+                last_token = text.rfind(b' ')
+                if last_token >= 0:
+                    words = text[:last_token].split()
+                    rest = text[last_token:].strip()
+                else:
+                    words = []
+                    rest = text
+
+                sentence.extend(words)
+                while len(sentence) >= self.max_sentence_length:
+                    yield sentence[:self.max_sentence_length]
+                    sentence = sentence[self.max_sentence_length:]
+
+    def _getstream(self):
+        for sentence_tokens in self._sentence_token_stream():
+            sentence = ' '.join(sentence_tokens)
+            yield sentence
+
+
+def brown_corpus_tokenizer(text):
+    text = utils.to_unicode(text)
+    # each file line is a single sentence in the Brown corpus
+    # each token is WORD/POS_TAG
+    token_tags = [t.split('/') for t in text.split() if len(t.split('/')) == 2]
+    # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
+    return [
+        "%s/%s" % (token.lower(), tag[:2])
+        for token, tag in token_tags
+        if tag[:2].isalpha()
+    ]
+
+
+class BrownCorpus(TextTokensIterator, TextDirectoryCorpus):
+    """Iterate over sentences from the Brown corpus (part of NLTK data)."""
+
+    def __init__(self, source, dictionary=None, metadata=False, processes=-1):
+        super(self.__class__, self).__init__(
+            source, dictionary, metadata, max_depth=0, tokenizer=brown_corpus_tokenizer,
+            character_filters=[], token_filters=[], processes=processes)

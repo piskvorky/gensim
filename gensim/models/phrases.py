@@ -458,8 +458,9 @@ if __name__ == '__main__':
         sys.exit(1)
     infile = sys.argv[1]
 
-    from gensim.models import Phrases  # noqa:F811 for pickle
-    from gensim.models.word2vec import Text8Corpus
+    from gensim.models import Phrases  # for pickle
+    from gensim.corpora.textcorpus import Text8Corpus
+
     sentences = Text8Corpus(infile)
 
     # test_doc = LineSentence('test/test_data/testcorpus.txt')

@@ -7,13 +7,20 @@
 Automated tests for checking various utils functions.
 """
 
-
 import logging
+import os
+import tempfile
 import unittest
 
-from gensim import utils
-from six import iteritems
 import numpy as np
+from six import iteritems
+
+from gensim import utils
+
+
+def touch(fname):
+    with open(fname, 'a'):
+        os.utime(fname, None)
 
 
 class TestIsCorpus(unittest.TestCase):
@@ -82,6 +89,29 @@ class TestUtils(unittest.TestCase):
         body = u'It&#146;s the Year of the Horse. YES VIN DIESEL &#128588; &#128175;'
         expected = u'It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af'
         self.assertEquals(utils.decode_htmlentities(body), expected)
+
+    def test_walk_with_path_no_trailing_seperator(self):
+        dirpath = tempfile.mkdtemp()
+        self._test_walk_two_levels_from_dirpath(dirpath)
+
+    def test_walk_with_path_with_leading_separator(self):
+        dirpath = tempfile.mkdtemp() + os.sep
+        self._test_walk_two_levels_from_dirpath(dirpath)
+
+    def _test_walk_two_levels_from_dirpath(self, dirpath):
+        filename = os.path.join(dirpath, 'depth0.txt')
+        touch(filename)
+        subdirpath = os.path.join(dirpath, 'subdir')
+        os.mkdir(subdirpath)
+        sub_filename = os.path.join(subdirpath, 'depth1.txt')
+        touch(sub_filename)
+        walker = utils.walk_with_depth(dirpath)
+        first_yield = next(walker)
+        self.assertEqual((0, os.path.abspath(dirpath), ['subdir'], ['depth0.txt']), first_yield)
+        second_yield = next(walker)
+        self.assertEqual((1, subdirpath, [], ['depth1.txt']), second_yield)
+        with self.assertRaises(StopIteration):
+            next(walker)
 
 
 class TestSampleDict(unittest.TestCase):
