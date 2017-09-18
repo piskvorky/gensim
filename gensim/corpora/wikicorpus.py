@@ -259,10 +259,14 @@ def init_to_ignore_interrupt():
 
 class WikiCorpus(TextCorpus):
     """
-    Treat a wikipedia articles dump (\*articles.xml.bz2) as a (read-only) corpus.
+    Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
 
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
+
+    **Note:** "multistream" archives are *not* supported in Python 2 due to
+    `limitations in the core bz2 library
+    <https://docs.python.org/2/library/bz2.html#de-compression-of-files>`_.
 
     >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
