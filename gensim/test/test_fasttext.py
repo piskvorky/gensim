@@ -5,6 +5,7 @@ import logging
 import unittest
 import tempfile
 import os
+import struct
 
 import numpy as np
 
@@ -17,6 +18,8 @@ from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 logger = logging.getLogger(__name__)
+
+IS_WIN32 = (os.name == "nt") and (struct.calcsize('P') * 8 == 32)
 
 
 class LeeCorpus(object):
@@ -108,6 +111,7 @@ class TestFastTextModel(unittest.TestCase):
         most_common_word = max(model.wv.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(np.allclose(model[most_common_word], model2[most_common_word]))
 
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_persistence(self):
         model = FT_gensim(sentences, min_count=1)
         model.save(testfile())
@@ -120,6 +124,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
         self.assertEqual(len(wv.ngrams), len(loaded_wv.ngrams))
 
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_norm_vectors_not_saved(self):
         model = FT_gensim(sentences, min_count=1)
         model.init_sims()
@@ -433,18 +438,22 @@ class TestFastTextModel(unittest.TestCase):
         sim = model.n_similarity(['war'], ['terrorism'])
         self.assertLess(0., sim)
 
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_sg_hs_online(self):
         model = FT_gensim(sg=1, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
         self.online_sanity(model)
 
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_sg_neg_online(self):
         model = FT_gensim(sg=1, window=2, hs=0, negative=5, min_count=3, iter=1, seed=42, workers=12)
         self.online_sanity(model)
 
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_hs_online(self):
         model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
         self.online_sanity(model)
 
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_neg_online(self):
         model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=5, min_count=5, iter=1, seed=42, workers=12, sample=0)
         self.online_sanity(model)
