@@ -3,7 +3,7 @@ This package contains interfaces and functionality to compute pair-wise document
 similarities within a corpus of documents.
 """
 
-from gensim import parsing, matutils, interfaces, corpora, models, similarities, summarization, utils  # noqa:F401
+from gensim import matutils, interfaces, corpora, models, similarities, summarization, utils  # noqa:F401
 import logging
 
 __version__ = '2.3.0'

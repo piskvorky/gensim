@@ -4,8 +4,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 from gensim.summarization.syntactic_unit import SyntacticUnit
-from gensim.parsing.preprocessing import preprocess_documents
-from gensim.utils import tokenize
+from gensim.utils import tokenize, preprocess_documents
 from six.moves import xrange
 import re
 import logging

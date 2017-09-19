@@ -31,8 +31,7 @@ import unittest
 import numpy as np
 
 from gensim import corpora, models, utils, matutils
-from gensim.parsing.preprocessing import preprocess_documents, preprocess_string, DEFAULT_FILTERS
-
+from gensim.utils import DEFAULT_FILTERS, preprocess_string, preprocess_documents
 
 bg_corpus = None
 corpus = None
