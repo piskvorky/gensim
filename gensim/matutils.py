@@ -485,9 +485,9 @@ def symmetric_kl(distrib_p, distrib_q, num_features=None):
     Used to measure the divergence between two probability distributions
     """
     distrib_p, distrib_q = convert_vec(distrib_p, distrib_q, num_features= num_features)
-    return (stats.entropy(distrib_p, distrib_q) + stats.entropy(distrib_q, distrib_p))
+    return (numpy.sum([stats.entropy(p, q), stats.entropy(q, p)]))
 
-def arun_metric(min_num_topics=10, max_num_topics=50, iterations=10):
+def arun_metric(corpus, dictionary, min_topics=1, max_topics=10, iteration=1):
     """
     Implements Arun metric to estimate the optimal number of topics:
     Arun, R., V. Suresh, C. V. Madhavan, and M. N. Murthy
@@ -505,21 +505,22 @@ def arun_metric(min_num_topics=10, max_num_topics=50, iterations=10):
     Thanks to Adrien Guille for the implementation of the metric.
     
     """
-    kl_matrix = []
-    for j in xrange(iterations):
-        kl_list = []
-        l = np.array([sum(corpus.vector_for_document(doc_id)) for doc_id in xrange(corpus.size)])  # document length
-        norm = np.linalg.norm(l)
-        for i in xrange(min_num_topics, max_num_topics + 1):
-            c_m1 = np.linalg.svd(self.topic_word_matrix.todense(), compute_uv=False)
-            c_m2 = l.dot(self.document_topic_matrix.todense())
-            c_m2 += 0.0001  # we need this to prevent components equal to zero
-            c_m2 /= norm
-            kl_list.append(symmetric_kl(c_m1.tolist(), c_m2.tolist()[0]))
-        kl_matrix.append(kl_list)
-    output = np.array(kl_matrix)
-    return output.mean(axis=0)
-
+    results = []
+    for i in range(min_topics, max_topics, iteration):
+        lda = models.ldamodel.LdaModel(    # Create an LDA model instance
+            corpus=corpus,
+            id2word=dictionary,
+            num_topics=i
+        )
+    U, document_word_vector, V = np.linalg.svd(lda.expElogbeta)
+    lda_topic = lda[corpus] # Get topics
+    term_document_matrix = matutils.corpus2dense(lda_topic, lda.num_topic).transpose() # Create DTM matrix
+    corpus_length_vector = np.array([sum(frequency for _, frequency in document) for document in my_corpus])
+    document_topic_vector = corpus_length_vector.dot(term_document_matrix)
+    document_topic_norm   = np.linalg.norm(corpus_length_vector)
+    document_topic_vector = document_topic_vector / document_topic_norm
+    result.append(symmetric_kl_divergence(document_word_vector, document_topic_vector))
+    return result
 
 def kullback_leibler(vec1, vec2, num_features=None):
     """
