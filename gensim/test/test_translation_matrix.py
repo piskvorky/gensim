@@ -25,64 +25,58 @@ def temp_save_file():
 
 class TestTranslationMatrix(unittest.TestCase):
     def setUp(self):
-        self.train_file = datapath("OPUS_en_it_europarl_train_one2ten.txt")
-
         self.source_word_vec_file = datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
         self.target_word_vec_file = datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
 
-        with utils.smart_open(self.train_file, "r") as f:
-            self.word_pair = [tuple(utils.to_unicode(line).strip().split()) for line in f]
+        self.word_pairs = [("one", "uno"), ("two", "due"), ("three", "tre"),
+                           ("four", "quattro"), ("five", "cinque"), ("six", "sei"),
+                           ("seven", "sette"), ("eight", "otto"), ("nine", "nove"),
+                           ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"),
+                           ("birds", "uccelli"), ("apple", "mela"), ("orange", "arancione"),
+                           ("grape", "acino"), ("banana", "banana"), ("mango", "mango")
+        ]
+
+        self.test_word_pairs = [("ten", "dieci"), ("dog", "cane"), ("cat", "gatto")]
 
         self.source_word_vec = KeyedVectors.load_word2vec_format(self.source_word_vec_file, binary=False)
         self.target_word_vec = KeyedVectors.load_word2vec_format(self.target_word_vec_file, binary=False)
 
     def test_translation_matrix(self):
-        model = translation_matrix.TranslationMatrix(self.word_pair, self.source_word_vec, self.target_word_vec)
-        transmat = model.train(self.word_pair)
-        self.assertEqual(transmat.shape, (300, 300))
+        model = translation_matrix.TranslationMatrix(self.source_word_vec, self.target_word_vec, self.word_pairs)
+        model.train(self.word_pairs)
+        self.assertEqual(model.translation_matrix.shape, (300, 300))
 
     def testPersistence(self):
         """Test storing/loading the entire model."""
-        model = translation_matrix.TranslationMatrix(self.word_pair, self.source_word_vec, self.target_word_vec)
-        model.train(self.word_pair)
+        model = translation_matrix.TranslationMatrix(self.source_word_vec, self.target_word_vec, self.word_pairs)
+        model.train(self.word_pairs)
         model.save(temp_save_file())
 
         loaded_model = translation_matrix.TranslationMatrix.load(temp_save_file())
         self.assertTrue(np.allclose(model.translation_matrix, loaded_model.translation_matrix))
 
     def test_translate_nn(self):
-        # test the nearest neighbor retrieval method
-        model = translation_matrix.TranslationMatrix(self.word_pair, self.source_word_vec, self.target_word_vec)
-        model.train(self.word_pair)
+        # Test the nearest neighbor retrieval method
+        model = translation_matrix.TranslationMatrix(self.source_word_vec, self.target_word_vec, self.word_pairs)
+        model.train(self.word_pairs)
 
-        test_word_pair = [("one", "uno"), ("two", "due"), ("apple", "mela"), ("orange", "aranicione"), ("dog", "cane"), ("pig", "maiale"), ("cat", "gatto")]
-        test_source_word, test_target_word = zip(*test_word_pair)
-        translated_words = model.translate(test_source_word, topn=3)
+        test_source_word, test_target_word = zip(*self.test_word_pairs)
+        translated_words = model.translate(test_source_word, topn=5, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec)
 
-        self.assertTrue("uno" in translated_words["one"])
-        self.assertTrue("due" in translated_words["two"])
-        self.assertTrue("mela" in translated_words["apple"])
-        self.assertTrue("arancione" in translated_words["orange"])
-        self.assertTrue("cane" in translated_words["dog"])
-        self.assertTrue("maiale" in translated_words["pig"])
-        self.assertTrue("gatto" in translated_words["cat"])
+        for idx, item in enumerate(self.test_word_pairs):
+            print item, translated_words[item[0]]
+            self.assertTrue(item[1] in translated_words[item[0]])
 
     def test_translate_gc(self):
-        # test globally corrected neighbour retrieval method
-        model = translation_matrix.TranslationMatrix(self.word_pair, self.source_word_vec, self.target_word_vec)
-        model.train(self.word_pair)
+        # Test globally corrected neighbour retrieval method
+        model = translation_matrix.TranslationMatrix(self.source_word_vec, self.target_word_vec, self.word_pairs)
+        model.train(self.word_pairs)
 
-        test_word_pair = [("one", "uno"), ("two", "due"), ("apple", "mela"), ("orange", "aranicione"), ("dog", "cane"), ("pig", "maiale"), ("cat", "gatto")]
-        test_source_word, test_target_word = zip(*test_word_pair)
-        translated_words = model.translate(test_source_word, topn=3, gc=1, sample_num=10)
+        test_source_word, test_target_word = zip(*self.test_word_pairs)
+        translated_words = model.translate(test_source_word, topn=5, gc=1, sample_num=5, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec)
 
-        self.assertTrue("uno" in translated_words["one"])
-        self.assertTrue("due" in translated_words["two"])
-        self.assertTrue("mela" in translated_words["apple"])
-        self.assertTrue("arancione" in translated_words["orange"])
-        self.assertTrue("cane" in translated_words["dog"])
-        self.assertTrue("maiale" in translated_words["pig"])
-        self.assertTrue("gatto" in translated_words["cat"])
+        for idx, item in enumerate(self.test_word_pairs):
+            self.assertTrue(item[1] in translated_words[item[0]])
 
 
 def read_sentiment_docs(filename):
