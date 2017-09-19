@@ -25,89 +25,16 @@ Example:
 
 
 import logging
-import tempfile
-import os
-import struct
 
 import numpy as np
-from numpy import float32 as REAL, sqrt, newaxis
-from gensim import utils
-from gensim.models.keyedvectors import KeyedVectors, Vocab
-from gensim.models.word2vec import Word2Vec
+from numpy import zeros, ones, vstack, sum as np_sum, empty, float32 as REAL
 
-from six import string_types
+from gensim.models.word2vec import Word2Vec, train_sg_pair, train_cbow_pair
+from gensim.models.wrappers.fasttext import FastTextKeyedVectors
+from gensim.models.wrappers.fasttext import FastText as Ft_Wrapper, compute_ngrams, ft_hash
 
 logger = logging.getLogger(__name__)
 
-class Sent2VecKeyedVectors(KeyedVectors):
-    def __init__(self):
-        super(Sent2VecKeyedVectors, self).__init__()
-        self.syn0_all_norm = None
-        self.ngrams = {}
-
-    def save(self, *args, **kwargs):
-        # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
-        super(Sent2VecKeyedVectors, self).save(*args, **kwargs)
-
-    def word_vec(self, word, use_norm=False):
-        """
-        Accept a single word as input.
-        Returns the word's representations in vector space, as a 1D numpy array.
-        The word can be out-of-vocabulary as long as ngrams for the word are present.
-        For words with all ngrams absent, a KeyError is raised.
-        Example::
-          >>> trained_model['office']
-          array([ -1.40128313e-02, ...])
-        """
-        if word in self.vocab:
-            return super(Sent2VecKeyedVectors, self).word_vec(word, use_norm)
-        else:
-            word_vec = np.zeros(self.syn0_all.shape[1])
-            ngrams = Sent2Vec.compute_ngrams(word, self.min_n, self.max_n)
-            ngrams = [ng for ng in ngrams if ng in self.ngrams]
-            if use_norm:
-                ngram_weights = self.syn0_all_norm
-            else:
-                ngram_weights = self.syn0_all
-            for ngram in ngrams:
-                word_vec += ngram_weights[self.ngrams[ngram]]
-            if word_vec.any():
-                return word_vec / len(ngrams)
-            else: # No ngrams of the word are present in self.ngrams
-                raise KeyError('all ngrams for word %s absent from model' % word)
-
-    def init_sims(self, replace=False):
-        """
-        Precompute L2-normalized vectors.
-        If `replace` is set, forget the original vectors and only keep the normalized
-        ones = saves lots of memory!
-        Note that you **cannot continue training** after doing a replace. The model becomes
-        effectively read-only = you can only call `most_similar`, `similarity` etc.
-        """
-        super(FastTextKeyedVectors, self).init_sims(replace)
-        if getattr(self, 'syn0_all_norm', None) is None or replace:
-            logger.info("precomputing L2-norms of ngram weight vectors")
-            if replace:
-                for i in xrange(self.syn0_all.shape[0]):
-                    self.syn0_all[i, :] /= sqrt((self.syn0_all[i, :] ** 2).sum(-1))
-                self.syn0_all_norm = self.syn0_all
-            else:
-                self.syn0_all_norm = (self.syn0_all / sqrt((self.syn0_all ** 2).sum(-1))[..., newaxis]).astype(REAL)
-
-    def __contains__(self, word):
-        """
-        Check if word is present in the vocabulary, or if any word ngrams are present. A vector for the word is
-        guaranteed to exist if `__contains__` returns True.
-        """
-        if word in self.vocab:
-            return True
-        else:
-            word_ngrams = set(Sent2Vec.compute_ngrams(word, self.min_n, self.max_n))
-            if len(word_ngrams & set(self.ngrams.keys())):
-                return True
-            else:
-                return False
 
 class Sent2Vec(Word2Vec):
     """
