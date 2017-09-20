@@ -14,7 +14,7 @@ from __future__ import with_statement
 import logging
 import math
 
-from gensim import utils
+from gensim import utils, models
 
 import numpy as np
 import scipy.sparse
@@ -501,9 +501,6 @@ def arun_metric(corpus, dictionary, min_topics=1, max_topics=10, iteration=1):
     
     Returns: 
         A list of len (max_num_topics - min_num_topics) with the average symmetric KL divergence for each k
-    
-    Thanks to Adrien Guille for the implementation of the metric.
-    
     """
     results = []
     for i in range(min_topics, max_topics, iteration):
@@ -513,14 +510,14 @@ def arun_metric(corpus, dictionary, min_topics=1, max_topics=10, iteration=1):
             num_topics=i
         )
     U, document_word_vector, V = np.linalg.svd(lda.expElogbeta)
-    lda_topic = lda[corpus] # Get topics
-    term_document_matrix = matutils.corpus2dense(lda_topic, lda.num_topic).transpose() # Create DTM matrix
-    corpus_length_vector = np.array([sum(frequency for _, frequency in document) for document in my_corpus])
+    lda_topic = lda[corpus]  # Get topics
+    term_document_matrix = corpus2dense(lda_topic, lda.num_topic).transpose()  # Create DTM matrix
+    corpus_length_vector = np.array([sum(frequency for _, frequency in document) for document in corpus])
     document_topic_vector = corpus_length_vector.dot(term_document_matrix)
-    document_topic_norm   = np.linalg.norm(corpus_length_vector)
+    document_topic_norm  = np.linalg.norm(corpus_length_vector)
     document_topic_vector = document_topic_vector / document_topic_norm
-    result.append(symmetric_kl_divergence(document_word_vector, document_topic_vector))
-    return result
+    results.append(symmetric_kl(document_word_vector, document_topic_vector))
+    return results
 
 def kullback_leibler(vec1, vec2, num_features=None):
     """
