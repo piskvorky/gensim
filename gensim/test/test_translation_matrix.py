@@ -29,11 +29,9 @@ class TestTranslationMatrix(unittest.TestCase):
         self.target_word_vec_file = datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
 
         self.word_pairs = [("one", "uno"), ("two", "due"), ("three", "tre"),
-            ("four", "quattro"), ("five", "cinque"), ("six", "sei"),
-            ("seven", "sette"), ("eight", "otto"), ("nine", "nove"),
-            ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"),
-            ("birds", "uccelli"), ("apple", "mela"), ("orange", "arancione"),
-            ("grape", "acino"), ("banana", "banana"), ("mango", "mango")
+            ("four", "quattro"), ("five", "cinque"), ("seven", "sette"), ("eight", "otto"),
+            ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"), ("birds", "uccelli"),
+            ("apple", "mela"), ("orange", "arancione"), ("grape", "acino"), ("banana", "banana")
         ]
 
         self.test_word_pairs = [("ten", "dieci"), ("cat", "gatto")]
@@ -72,7 +70,7 @@ class TestTranslationMatrix(unittest.TestCase):
         model.train(self.word_pairs)
 
         test_source_word, test_target_word = zip(*self.test_word_pairs)
-        translated_words = model.translate(test_source_word, topn=5, gc=1, sample_num=5, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec)
+        translated_words = model.translate(test_source_word, topn=5, gc=1, sample_num=3, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec)
 
         for idx, item in enumerate(self.test_word_pairs):
             self.assertTrue(item[1] in translated_words[item[0]])
