@@ -29,14 +29,14 @@ class TestTranslationMatrix(unittest.TestCase):
         self.target_word_vec_file = datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
 
         self.word_pairs = [("one", "uno"), ("two", "due"), ("three", "tre"),
-                           ("four", "quattro"), ("five", "cinque"), ("six", "sei"),
-                           ("seven", "sette"), ("eight", "otto"), ("nine", "nove"),
-                           ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"),
-                           ("birds", "uccelli"), ("apple", "mela"), ("orange", "arancione"),
-                           ("grape", "acino"), ("banana", "banana"), ("mango", "mango")
+            ("four", "quattro"), ("five", "cinque"), ("six", "sei"),
+            ("seven", "sette"), ("eight", "otto"), ("nine", "nove"),
+            ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"),
+            ("birds", "uccelli"), ("apple", "mela"), ("orange", "arancione"),
+            ("grape", "acino"), ("banana", "banana"), ("mango", "mango")
         ]
 
-        self.test_word_pairs = [("ten", "dieci"), ("dog", "cane"), ("cat", "gatto")]
+        self.test_word_pairs = [("ten", "dieci"), ("cat", "gatto")]
 
         self.source_word_vec = KeyedVectors.load_word2vec_format(self.source_word_vec_file, binary=False)
         self.target_word_vec = KeyedVectors.load_word2vec_format(self.target_word_vec_file, binary=False)

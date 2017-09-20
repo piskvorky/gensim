@@ -148,24 +148,22 @@ class TranslationMatrix(utils.SaveLoad):
 
         Args:
             `word_pairs` (list): a list pair of words
-            `source_space` (Space object): source language space
-            `target_space` (Space object): target language space
 
         Returns:
             `translation matrix` that mapping from the source language to target language
         """
         self.source_word, self.target_word = zip(*word_pairs)
-        if self.translation_matrix is None:
-            self.source_space = Space.build(self.source_lang_vec, set(self.source_word))
-            self.target_space = Space.build(self.target_lang_vec, set(self.target_word))
 
-            self.source_space.normalize()
-            self.target_space.normalize()
+        self.source_space = Space.build(self.source_lang_vec, set(self.source_word))
+        self.target_space = Space.build(self.target_lang_vec, set(self.target_word))
 
-            m1 = self.source_space.mat[[self.source_space.word2index[item] for item in self.source_word], :]
-            m2 = self.target_space.mat[[self.target_space.word2index[item] for item in self.target_word], :]
+        self.source_space.normalize()
+        self.target_space.normalize()
 
-            self.translation_matrix = np.linalg.lstsq(m1, m2, -1)[0]
+        m1 = self.source_space.mat[[self.source_space.word2index[item] for item in self.source_word], :]
+        m2 = self.target_space.mat[[self.target_space.word2index[item] for item in self.target_word], :]
+
+        self.translation_matrix = np.linalg.lstsq(m1, m2, -1)[0]
 
     def save(self, *args, **kwargs):
         """
