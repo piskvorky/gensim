@@ -13,7 +13,8 @@ Produce translation matrix to translate the word from one language to another la
 standard nearest neighbour method or globally corrected neighbour retrieval method [1].
 
 This method can be used to augment the existing phrase tables with more candidate translations, or
-filter out errors from the translation tables and known dictionaries [2].
+filter out errors from the translation tables and known dictionaries [2]. What's more, It also work
+for any two sets of named-vectors where there are some paired-guideposts to learn the transformation.
 
 Initialize a model with e.g.::
 
@@ -91,7 +92,7 @@ class Space(object):
         return Space(mat, words)
 
     def normalize(self):
-        """ Normalized the word vector's matrix """
+        """ Normalize the word vector's matrix """
         self.mat = self.mat / np.sqrt(np.sum(np.multiply(self.mat, self.mat), axis=1, keepdims=True))
 
 
@@ -181,7 +182,7 @@ class TranslationMatrix(utils.SaveLoad):
 
     def apply_transmat(self, words_space):
         """
-        Mapping the source word vector to the target word vector using translation matrix
+        Map the source word vector to the target word vector using translation matrix
         Args:
             `words_space`: the `Space` object that constructed for those words to be translate
 
