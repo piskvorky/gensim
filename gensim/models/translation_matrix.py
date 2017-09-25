@@ -13,7 +13,8 @@ Produce translation matrix to translate the word from one language to another la
 standard nearest neighbour method or globally corrected neighbour retrieval method [1].
 
 This method can be used to augment the existing phrase tables with more candidate translations, or
-filter out errors from the translation tables and known dictionaries [2].
+filter out errors from the translation tables and known dictionaries [2]. What's more, It also work
+for any two sets of named-vectors where there are some paired-guideposts to learn the transformation.
 
 Initialize a model with e.g.::
 
@@ -45,7 +46,7 @@ class Space(object):
 
     Attributes:
         `mat` (ndarray): each row is the word vector of the lexicon
-        `index2word` (list): a list of lexicon
+        `index2word` (list): a list of words in the `Space` object
         `word2index` (dict): map the word to index
     """
     def __init__(self, matrix, index2word):
@@ -65,7 +66,7 @@ class Space(object):
     @classmethod
     def build(cls, lang_vec, lexicon=None):
         """
-        construct a space class for the lexicon, if it's provided.
+        Construct a space class for the lexicon, if it's provided.
         Args:
             `lang_vec`: word2vec model that extract word vector for lexicon
             `lexicon`: the default is None, if it is not provided, the lexicon
@@ -91,7 +92,7 @@ class Space(object):
         return Space(mat, words)
 
     def normalize(self):
-        """ normalized the word vector's matrix """
+        """ Normalize the word vector's matrix """
         self.mat = self.mat / np.sqrt(np.sum(np.multiply(self.mat, self.mat), axis=1, keepdims=True))
 
 
@@ -104,17 +105,17 @@ class TranslationMatrix(utils.SaveLoad):
     1. constructor,
     2. the `train` method, which initialize everything needed to build a translation matrix
     3. the `translate` method, which given new word and its vector representation,
-    we map it to the other language space by computing z = Wx, then return the
+    We map it to the other language space by computing z = Wx, then return the
     word whose representation is close to z.
 
-    the details use seen the notebook (translation_matrix.ipynb)
+    The details use seen the notebook (translation_matrix.ipynb)
 
-    >>> transmat = TranslationMatrix(word_pair, source_lang_vec, target_lang_vec)
+    >>> transmat = TranslationMatrix(source_lang_vec, target_lang_vec, word_pair)
     >>> transmat.train(word_pair)
     >>> translated_word = transmat.translate(words, topn=3)
 
     """
-    def __init__(self, word_pair, source_lang_vec, target_lang_vec, random_state=None):
+    def __init__(self, source_lang_vec, target_lang_vec, word_pairs=None, random_state=None):
         """
         Initialize the model from a list pair of `word_pair`. Each word_pair is tupe
          with source language word and target language word.
@@ -127,10 +128,8 @@ class TranslationMatrix(utils.SaveLoad):
             `target_lang_vec` (KeyedVectors): a set of word vector of target language
         """
 
-        if len(word_pair[0]) != 2:
-            raise ValueError("Each training data item must contain two different language words.")
-
-        self.source_word, self.target_word = zip(*word_pair)
+        self.source_word = None
+        self.target_word = None
         self.source_lang_vec = source_lang_vec
         self.target_lang_vec = target_lang_vec
 
@@ -139,18 +138,23 @@ class TranslationMatrix(utils.SaveLoad):
         self.source_space = None
         self.target_space = None
 
-    def train(self, word_pair):
+        if word_pairs is not None:
+            if len(word_pairs[0]) != 2:
+                raise ValueError("Each training data item must contain two different language words.")
+            self.train(word_pairs)
+
+    def train(self, word_pairs):
         """
-        build the translation matrix that mapping from source space to target space.
+        Build the translation matrix that mapping from source space to target space.
 
         Args:
-            `word_pair` (list): a list pair of words
-            `source_space` (Space object): source language space
-            `target_space` (Space object): target language space
+            `word_pairs` (list): a list pair of words
 
         Returns:
             `translation matrix` that mapping from the source language to target language
         """
+        self.source_word, self.target_word = zip(*word_pairs)
+
         self.source_space = Space.build(self.source_lang_vec, set(self.source_word))
         self.target_space = Space.build(self.target_lang_vec, set(self.target_word))
 
@@ -161,7 +165,6 @@ class TranslationMatrix(utils.SaveLoad):
         m2 = self.target_space.mat[[self.target_space.word2index[item] for item in self.target_word], :]
 
         self.translation_matrix = np.linalg.lstsq(m1, m2, -1)[0]
-        return self.translation_matrix
 
     def save(self, *args, **kwargs):
         """
@@ -173,13 +176,13 @@ class TranslationMatrix(utils.SaveLoad):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """ load the pre-trained translation matrix model"""
+        """ Load the pre-trained translation matrix model"""
         model = super(TranslationMatrix, cls).load(*args, **kwargs)
         return model
 
     def apply_transmat(self, words_space):
         """
-        mapping the source word vector to the target word vector using translation matrix
+        Map the source word vector to the target word vector using translation matrix
         Args:
             `words_space`: the `Space` object that constructed for those words to be translate
 
@@ -190,7 +193,7 @@ class TranslationMatrix(utils.SaveLoad):
 
     def translate(self, source_words, topn=5, gc=0, sample_num=None, source_lang_vec=None, target_lang_vec=None):
         """
-        translate the word from the source language to the target language, and return the topn
+        Translate the word from the source language to the target language, and return the topn
         most similar words.
          Args:
             `source_words`(str/list): single word or a list of words to be translated
@@ -214,7 +217,7 @@ class TranslationMatrix(utils.SaveLoad):
             # pass only one word to translate
             source_words = [source_words]
 
-        # if the language word vector not provided by user, use the model's
+        # If the language word vector not provided by user, use the model's
         # language word vector as default
         if source_lang_vec is None:
             warnings.warn("The parameter source_lang_vec isn't specified, use the model's source language word vector as default.")
@@ -224,7 +227,7 @@ class TranslationMatrix(utils.SaveLoad):
             warnings.warn("The parameter target_lang_vec isn't specified, use the model's target language word vector as default.")
             target_lang_vec = self.target_lang_vec
 
-        # if additional is provided, bootstrapping vocabulary from the source language word vector model.
+        # If additional is provided, bootstrapping vocabulary from the source language word vector model.
         if gc:
             if sample_num is None:
                 raise RuntimeError("When using the globally corrected neighbour retrieval method, the `sample_num` parameter(i.e. the number of words sampled from source space) must be provided.")
@@ -236,28 +239,28 @@ class TranslationMatrix(utils.SaveLoad):
             source_space = Space.build(source_lang_vec, source_words)
         target_space = Space.build(target_lang_vec, )
 
-        # normalize the source vector and target vector
+        # Normalize the source vector and target vector
         source_space.normalize()
         target_space.normalize()
 
-        # map the source language to the target language
+        # Map the source language to the target language
         mapped_source_space = self.apply_transmat(source_space)
 
-        # use the cosine similarity metric
+        # Use the cosine similarity metric
         sim_matrix = -np.dot(target_space.mat, mapped_source_space.mat.T)
 
-        # if `gc=1`, using corrected retrieval method
+        # If `gc=1`, using corrected retrieval method
         if gc:
             srtd_idx = np.argsort(np.argsort(sim_matrix, axis=1), axis=1)
             sim_matrix_idx = np.argsort(srtd_idx + sim_matrix, axis=0)
         else:
             sim_matrix_idx = np.argsort(sim_matrix, axis=0)
 
-        # translate the words and for each word return the `topn` similar words
+        # Translate the words and for each word return the `topn` similar words
         translated_word = OrderedDict()
         for idx, word in enumerate(source_words):
             translated_target_word = []
-            # search the most `topn` similar words
+            # Search the most `topn` similar words
             for j in range(topn):
                 map_space_id = sim_matrix_idx[j, source_space.word2index[word]]
                 translated_target_word.append(target_space.index2word[map_space_id])
@@ -292,7 +295,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         Examples: [("one", "uno"), ("two", "due")]
 
         Args:
-            `tagged_docs` (list): a list tagged document
+            `tagged_docs` (list): a list of tagged document
             `source_lang_vec` (Doc2vec): provide the document vector
             `target_lang_vec` (Doc2vec): provide the document vector
         """
@@ -306,7 +309,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
 
     def train(self, tagged_docs):
         """
-        build the translation matrix that mapping from the source model's vector to target model's vector
+        Build the translation matrix that mapping from the source model's vector to target model's vector
 
         Returns:
             `translation matrix` that mapping from the source model's vector to target model's vector
@@ -320,7 +323,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
 
     def infer_vector(self, target_doc_vec):
         """
-        translate the target model's document vector to the source model's document vector
+        Translate the target model's document vector to the source model's document vector
 
         Returns:
             `infered_vec` the tagged_doc's document vector in the source model
