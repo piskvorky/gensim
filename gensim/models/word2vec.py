@@ -643,32 +643,28 @@ class Word2Vec(utils.SaveLoad):
         min_reduce = 1
         vocab = defaultdict(int)
         checked_string_types = 0
+
         for sentence_no, sentence in enumerate(sentences):
             if not checked_string_types:
                 if isinstance(sentence, string_types):
                     logger.warning(
-                        "Each 'sentences' item should be a list of words (usually unicode strings). "
-                        "First item here is instead plain %s.",
-                        type(sentence)
+                        "Each 'sentences' item should be a list of words (usually unicode strings)."
+                        "First item here is instead plain %s.", type(sentence)
                     )
                 checked_string_types += 1
             if sentence_no % progress_per == 0:
-                logger.info(
-                    "PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
-                    sentence_no, sum(itervalues(vocab)) + total_words, len(vocab)
-                )
+                logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
+                            sentence_no, total_words, len(vocab))
+
             for word in sentence:
                 vocab[word] += 1
+                total_words += 1
 
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+                utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
-        total_words += sum(itervalues(vocab))
-        logger.info(
-            "collected %i word types from a corpus of %i raw words and %i sentences",
-            len(vocab), total_words, sentence_no + 1
-        )
+        logger.info("collected %i word types from a corpus of %i raw words and %i sentences", len(vocab), total_words, sentence_no + 1)
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
 
@@ -1755,5 +1751,3 @@ if __name__ == "__main__":
         model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)
-
-
