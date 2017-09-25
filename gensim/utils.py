@@ -10,6 +10,7 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
+import collections
 import logging
 import warnings
 
@@ -106,12 +107,12 @@ def synchronous(tlockname):
         @wraps(func)
         def _synchronizer(self, *args, **kwargs):
             tlock = getattr(self, tlockname)
-            logger.debug("acquiring lock %r for %s" % (tlockname, func.__name__))
+            logger.debug("acquiring lock %r for %s", tlockname, func.__name__)
 
             with tlock:  # use lock as a context manager to perform safe acquire/release pairs
-                logger.debug("acquired lock %r for %s" % (tlockname, func.__name__))
+                logger.debug("acquired lock %r for %s", tlockname, func.__name__)
                 result = func(self, *args, **kwargs)
-                logger.debug("releasing lock %r for %s" % (tlockname, func.__name__))
+                logger.debug("releasing lock %r for %s", tlockname, func.__name__)
                 return result
         return _synchronizer
     return _synched
@@ -181,8 +182,7 @@ def copytree_hardlink(source, dest):
         shutil.copy2 = copy2
 
 
-def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict", to_lower=False,
-             lower=False):
+def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict", to_lower=False, lower=False):
     """
     Iteratively yield tokens as unicode strings, removing accent marks
     and optionally lowercasing the unidoce string by assigning True
@@ -275,7 +275,7 @@ class SaveLoad(object):
         is encountered.
 
         """
-        logger.info("loading %s object from %s" % (cls.__name__, fname))
+        logger.info("loading %s object from %s", cls.__name__, fname)
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
@@ -292,17 +292,16 @@ class SaveLoad(object):
         """
         mmap_error = lambda x, y: IOError(
             'Cannot mmap compressed object %s in file %s. ' % (x, y) +
-            'Use `load(fname, mmap=None)` or uncompress files manually.')
+            'Use `load(fname, mmap=None)` or uncompress files manually.'
+        )
 
         for attrib in getattr(self, '__recursive_saveloads', []):
             cfname = '.'.join((fname, attrib))
-            logger.info("loading %s recursively from %s.* with mmap=%s" % (
-                attrib, cfname, mmap))
+            logger.info("loading %s recursively from %s.* with mmap=%s", attrib, cfname, mmap)
             getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
 
         for attrib in getattr(self, '__numpys', []):
-            logger.info("loading %s from %s with mmap=%s" % (
-                attrib, subname(fname, attrib), mmap))
+            logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
 
             if compress:
                 if mmap:
@@ -315,8 +314,7 @@ class SaveLoad(object):
             setattr(self, attrib, val)
 
         for attrib in getattr(self, '__scipys', []):
-            logger.info("loading %s from %s with mmap=%s" % (
-                attrib, subname(fname, attrib), mmap))
+            logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
             sparse = unpickle(subname(fname, attrib))
             if compress:
                 if mmap:
@@ -334,7 +332,7 @@ class SaveLoad(object):
             setattr(self, attrib, sparse)
 
         for attrib in getattr(self, '__ignoreds', []):
-            logger.info("setting ignored attribute %s to None" % (attrib))
+            logger.info("setting ignored attribute %s to None", attrib)
             setattr(self, attrib, None)
 
     @staticmethod
@@ -346,10 +344,9 @@ class SaveLoad(object):
         else:
             compress = False
             subname = lambda *args: '.'.join(list(args) + ['npy'])
-        return (compress, subname)
+        return compress, subname
 
-    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2,
-                    ignore=frozenset(), pickle_protocol=2):
+    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
         """
         Save the object to file (also see `load`).
 
@@ -370,9 +367,7 @@ class SaveLoad(object):
         in both Python 2 and 3.
 
         """
-        logger.info(
-            "saving %s object under %s, separately %s" % (
-                self.__class__.__name__, fname, separately))
+        logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
@@ -419,17 +414,14 @@ class SaveLoad(object):
             if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
                 cfname = '.'.join((fname, attrib))
-                restores.extend(val._save_specials(
-                    cfname, None, sep_limit, ignore,
-                    pickle_protocol, compress, subname))
+                restores.extend(val._save_specials(cfname, None, sep_limit, ignore, pickle_protocol, compress, subname))
 
         try:
             numpys, scipys, ignoreds = [], [], []
             for attrib, val in iteritems(asides):
                 if isinstance(val, np.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
-                    logger.info("storing np array '%s' to %s" % (
-                        attrib, subname(fname, attrib)))
+                    logger.info("storing np array '%s' to %s", attrib, subname(fname, attrib))
 
                     if compress:
                         np.savez_compressed(subname(fname, attrib), val=np.ascontiguousarray(val))
@@ -438,15 +430,15 @@ class SaveLoad(object):
 
                 elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
                     scipys.append(attrib)
-                    logger.info("storing scipy.sparse array '%s' under %s" % (
-                        attrib, subname(fname, attrib)))
+                    logger.info("storing scipy.sparse array '%s' under %s", attrib, subname(fname, attrib))
 
                     if compress:
                         np.savez_compressed(
                             subname(fname, attrib, 'sparse'),
                             data=val.data,
                             indptr=val.indptr,
-                            indices=val.indices)
+                            indices=val.indices
+                        )
                     else:
                         np.save(subname(fname, attrib, 'data'), val.data)
                         np.save(subname(fname, attrib, 'indptr'), val.indptr)
@@ -461,7 +453,7 @@ class SaveLoad(object):
                     finally:
                         val.data, val.indptr, val.indices = data, indptr, indices
                 else:
-                    logger.info("not storing attribute %s" % (attrib))
+                    logger.info("not storing attribute %s", attrib)
                     ignoreds.append(attrib)
 
             self.__dict__['__numpys'] = numpys
@@ -475,8 +467,7 @@ class SaveLoad(object):
             raise
         return restores + [(self, asides)]
 
-    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
-             ignore=frozenset(), pickle_protocol=2):
+    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
         """
         Save the object to file (also see `load`).
 
@@ -504,11 +495,10 @@ class SaveLoad(object):
         """
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
-            logger.info("saved %s object" % self.__class__.__name__)
+            logger.info("saved %s object", self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
             self._smart_save(fname_or_handle, separately, sep_limit, ignore,
                              pickle_protocol=pickle_protocol)
-# endclass SaveLoad
 
 
 def identity(p):
@@ -864,10 +854,8 @@ class InputQueue(multiprocessing.Process):
                 qsize = self.q.qsize()
             except NotImplementedError:
                 qsize = '?'
-            logger.debug("prepared another chunk of %i documents (qsize=%s)" %
-                        (len(wrapped_chunk[0]), qsize))
+            logger.debug("prepared another chunk of %i documents (qsize=%s)", len(wrapped_chunk[0]), qsize)
             self.q.put(wrapped_chunk.pop(), block=True)
-# endclass InputQueue
 
 
 if os.name == 'nt':
@@ -957,7 +945,7 @@ def revdict(d):
     result (which one is kept is arbitrary).
 
     """
-    return dict((v, k) for (k, v) in iteritems(dict(d)))
+    return {v: k for (k, v) in iteritems(dict(d))}
 
 
 def toptexts(query, texts, index, n=10):
@@ -974,10 +962,7 @@ def toptexts(query, texts, index, n=10):
     sims = index[query]  # perform a similarity query against the corpus
     sims = sorted(enumerate(sims), key=lambda item: -item[1])
 
-    result = []
-    for topid, topcosine in sims[:n]:  # only consider top-n most similar docs
-        result.append((topid, topcosine, texts[topid]))
-    return result
+    return [(topid, topcosine, texts[topid]) for topid, topcosine in sims[:n]]  # only consider top-n most similar docs
 
 
 def randfname(prefix='gensim'):
@@ -997,7 +982,7 @@ def upload_chunked(server, docs, chunksize=1000, preprocess=None):
     start = 0
     for chunk in grouper(docs, chunksize):
         end = start + len(chunk)
-        logger.info("uploading documents %i-%i" % (start, end - 1))
+        logger.info("uploading documents %i-%i", start, end - 1)
         if preprocess is not None:
             pchunk = []
             for doc in chunk:
@@ -1039,7 +1024,7 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None
             uri = daemon.register(obj, name)
             ns.remove(name)
             ns.register(name, uri)
-            logger.info("%s registered with nameserver (URI '%s')" % (name, uri))
+            logger.info("%s registered with nameserver (URI '%s')", name, uri)
             daemon.requestLoop()
 
 
@@ -1054,8 +1039,7 @@ def has_pattern():
         return False
 
 
-def lemmatize(
-        content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
+def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
         stopwords=frozenset(), min_length=2, max_length=15):
     """
     This function is only available when the optional 'pattern' package is installed.
@@ -1109,9 +1093,7 @@ def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
 
     """
     nnz = np.random.uniform(size=(dim,))
-    data = [(i, float(np.random.poisson(lam=lam) + 1.0))
-            for i in xrange(dim) if nnz[i] < prob_nnz]
-    return data
+    return [(i, float(np.random.poisson(lam=lam) + 1.0)) for i in xrange(dim) if nnz[i] < prob_nnz]
 
 
 def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
@@ -1120,9 +1102,7 @@ def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
     to be used as a mock corpus.
 
     """
-    data = [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam)
-            for _ in xrange(n_items)]
-    return data
+    return [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam) for _ in xrange(n_items)]
 
 
 def prune_vocab(vocab, min_reduce, trim_rule=None):
@@ -1138,8 +1118,7 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
         if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
-    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
-                old_len - len(vocab), min_reduce, old_len, len(vocab))
+    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)", old_len - len(vocab), min_reduce, old_len, len(vocab))
     return result
 
 
@@ -1276,3 +1255,26 @@ def _iter_windows(document, window_size, copy=False, ignore_below_size=True):
     else:
         for doc_window in doc_windows:
             yield doc_window.copy() if copy else doc_window
+
+
+def flatten(nested_list):
+    """Recursively flatten out a nested list.
+
+    Args:
+        nested_list (list): possibly nested list.
+
+    Returns:
+        list: flattened version of input, where any list elements have been unpacked into the
+            top-level list in a recursive fashion.
+    """
+    return list(lazy_flatten(nested_list))
+
+
+def lazy_flatten(nested_list):
+    """Lazy version of `flatten`."""
+    for el in nested_list:
+        if isinstance(el, collections.Iterable) and not isinstance(el, string_types):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el
