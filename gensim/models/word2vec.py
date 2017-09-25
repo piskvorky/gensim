@@ -612,7 +612,6 @@ class Word2Vec(utils.SaveLoad):
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
-
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
@@ -623,7 +622,6 @@ class Word2Vec(utils.SaveLoad):
 
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
-
         """
         Build vocabulary from a dictionary of word frequencies
         """
@@ -1757,4 +1755,5 @@ if __name__ == "__main__":
         model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)
+
 
