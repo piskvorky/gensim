@@ -42,8 +42,7 @@ RUN curl -fSsL -O https://bootstrap.pypa.io/get-pip.py && \
 RUN pip3 --no-cache-dir install \
         matplotlib==2.0.2 \
         numpy==1.13.1 \
-        scipy==0.19.1 \
-        sklearn 
+        scipy==0.19.1 
 
 # Set up Bazel.
 
@@ -56,7 +55,7 @@ RUN echo "startup --batch" >>/etc/bazel.bazelrc
 RUN echo "build --spawn_strategy=standalone --genrule_strategy=standalone" \
     >>/etc/bazel.bazelrc
 # Install the most recent bazel release.
-ENV BAZEL_VERSION 0.5.0
+ENV BAZEL_VERSION 0.5.4
 WORKDIR /
 RUN mkdir /bazel && \
     cd /bazel && \
@@ -76,9 +75,9 @@ WORKDIR /tensorflow
 
 ENV CI_BUILD_PYTHON python3
 
+RUN sed -i '\@https://github.com/google/protobuf/archive/0b059a3d8a8f8aa40dde7bea55edca4ec5dfea66.tar.gz@d' tensorflow/workspace.bzl
 RUN tensorflow/tools/ci_build/builds/configured CPU \
     bazel build -c opt --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-        --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-mfpmath=both --copt=-msse4.1 --copt=-msse4.2 \
         tensorflow/tools/pip_package:build_pip_package && \
     bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/pip3 && \
     pip --no-cache-dir install --upgrade /tmp/pip3/tensorflow-*.whl && \
