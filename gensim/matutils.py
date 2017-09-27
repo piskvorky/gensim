@@ -504,7 +504,7 @@ def arun_metric(corpus, dictionary, min_topics=1, max_topics=10, iteration=1):
     """
     results = []
     for i in range(min_topics, max_topics, iteration):
-        lda = models.ldamodel.LdaModel(    # Create an LDA model instance
+        lda = models.ldamulticore.LdaMulticore(    # Create an LDA model instance
             corpus=corpus,
             id2word=dictionary,
             num_topics=i
@@ -514,7 +514,7 @@ def arun_metric(corpus, dictionary, min_topics=1, max_topics=10, iteration=1):
     term_document_matrix = corpus2dense(lda_topic, lda.num_topic).transpose()  # Create DTM matrix
     corpus_length_vector = np.array([sum(frequency for _, frequency in document) for document in corpus])
     document_topic_vector = corpus_length_vector.dot(term_document_matrix)
-    document_topic_norm  = np.linalg.norm(corpus_length_vector)
+    document_topic_norm = np.linalg.norm(corpus_length_vector)
     document_topic_vector = document_topic_vector / document_topic_norm
     results.append(symmetric_kl(document_word_vector, document_topic_vector))
     return results
