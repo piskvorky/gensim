@@ -12,6 +12,7 @@ from gensim.summarization.bm25 import get_bm25_weights as _bm25_weights
 from gensim.corpora import Dictionary
 from math import log10 as _log10
 from six.moves import xrange
+import re
 
 
 INPUT_MIN_LENGTH = 10
@@ -192,6 +193,10 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
         If both parameters are provided, the ratio will be ignored.
 
     """
+    # _clean_text_by_sentences cannot handle newlines properly; so we remove them
+    text = re.sub(r'\n|\r|\t', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
+
     # Gets a list of processed sentences.
     sentences = _clean_text_by_sentences(text)
 
