@@ -13,6 +13,7 @@ import unittest
 
 from gensim.topic_coherence import aggregation
 
+
 class TestAggregation(unittest.TestCase):
     def setUp(self):
         self.confirmed_measures = [1.1, 2.2, 3.3, 4.4]
@@ -22,6 +23,7 @@ class TestAggregation(unittest.TestCase):
         obtained = aggregation.arithmetic_mean(self.confirmed_measures)
         expected = 2.75
         self.assertEqual(obtained, expected)
+
 
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)

@@ -107,9 +107,9 @@ class Phrases(interfaces.TransformationABC):
     and `phrases[corpus]` syntax.
 
     """
-    def __init__(self, sentences=None, min_count=5, threshold=10.0,
-                 max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
-                 scoring='default'):
+
+    def __init__(self, sentences=None, min_count=5, threshold=10.0, max_vocab_size=40000000,
+                 delimiter=b'_', progress_per=10000, scoring='default'):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -178,7 +178,8 @@ class Phrases(interfaces.TransformationABC):
         """Get short string representation of this phrase detector."""
         return "%s<%i vocab, min_count=%s, threshold=%s, max_vocab_size=%s>" % (
             self.__class__.__name__, len(self.vocab), self.min_count,
-            self.threshold, self.max_vocab_size)
+            self.threshold, self.max_vocab_size
+        )
 
     @staticmethod
     def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
@@ -190,8 +191,10 @@ class Phrases(interfaces.TransformationABC):
         min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
-                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
-                            (sentence_no, total_words, len(vocab)))
+                logger.info(
+                    "PROGRESS: at sentence #%i, processed %i words and %i word types",
+                    sentence_no, total_words, len(vocab)
+                )
             sentence = [utils.any2utf8(w) for w in sentence]
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
@@ -207,8 +210,10 @@ class Phrases(interfaces.TransformationABC):
                 utils.prune_vocab(vocab, min_reduce)
                 min_reduce += 1
 
-        logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
-                    (len(vocab), total_words, sentence_no + 1))
+        logger.info(
+            "collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences",
+            len(vocab), total_words, sentence_no + 1
+        )
         return min_reduce, vocab, total_words
 
     def add_vocab(self, sentences):
@@ -261,11 +266,9 @@ class Phrases(interfaces.TransformationABC):
         corpus_word_count = self.corpus_word_count
 
         if scoring == 'default':
-            scoring_function = \
-            partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
+            scoring_function = partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
         elif scoring == 'npmi':
-            scoring_function = \
-            partial(self.npmi_scorer, corpus_word_count=corpus_word_count)
+            scoring_function = partial(self.npmi_scorer, corpus_word_count=corpus_word_count)
         # no else here to catch unknown scoring function, check is done in Phrases.__init__
 
         for sentence in sentences:
@@ -281,10 +284,6 @@ class Phrases(interfaces.TransformationABC):
                         count_b = float(vocab[word_b])
                         count_ab = float(vocab[bigram_word])
                         score = scoring_function(count_a, count_b, count_ab)
-                        # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
-                        #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
-                        # added mincount check because if the scorer doesn't contain min_count
-                        # it would not be enforced otherwise
                         if score > threshold and count_ab >= min_count:
                             if as_tuples:
                                 yield ((word_a, word_b), score)
@@ -335,8 +334,6 @@ class Phrases(interfaces.TransformationABC):
                     pb = float(vocab[word_b])
                     pab = float(vocab[bigram_word])
                     score = (pab - min_count) / pa / pb * len(vocab)
-                    # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
-                    #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
                     if score > threshold:
                         new_s.append(bigram_word)
                         last_bigram = True
@@ -390,6 +387,7 @@ class Phraser(interfaces.TransformationABC):
     other values.)
 
     """
+
     def __init__(self, phrases_model):
         self.threshold = phrases_model.threshold
         self.min_count = phrases_model.min_count
@@ -451,7 +449,7 @@ class Phraser(interfaces.TransformationABC):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.info("running %s" % " ".join(sys.argv))
+    logging.info("running %s", " ".join(sys.argv))
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
@@ -460,7 +458,7 @@ if __name__ == '__main__':
         sys.exit(1)
     infile = sys.argv[1]
 
-    from gensim.models import Phrases  # for pickle
+    from gensim.models import Phrases  # noqa:F811 for pickle
     from gensim.models.word2vec import Text8Corpus
     sentences = Text8Corpus(infile)
 
