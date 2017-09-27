@@ -8043,7 +8043,7 @@ static PyObject *__pyx_pf_6gensim_6models_13doc2vec_inner_4train_document_dm_con
  *                     window_indexes[n] =  null_word_index
  *                 else:
  *                     window_indexes[n] = indexes[m]             # <<<<<<<<<<<<<<
- *                 n = n + 1
+ *                 n += 1
  *             for m in range(2 * window):
  */
             /*else*/ {
@@ -8054,7 +8054,7 @@ static PyObject *__pyx_pf_6gensim_6models_13doc2vec_inner_4train_document_dm_con
             /* "gensim/models/doc2vec_inner.pyx":643
  *                 else:
  *                     window_indexes[n] = indexes[m]
- *                 n = n + 1             # <<<<<<<<<<<<<<
+ *                 n += 1             # <<<<<<<<<<<<<<
  *             for m in range(2 * window):
  *                 memcpy(&_neu1[(doctag_len + m) * vector_size], &_word_vectors[window_indexes[m] * vector_size],
  */
@@ -8064,7 +8064,7 @@ static PyObject *__pyx_pf_6gensim_6models_13doc2vec_inner_4train_document_dm_con
 
           /* "gensim/models/doc2vec_inner.pyx":644
  *                     window_indexes[n] = indexes[m]
- *                 n = n + 1
+ *                 n += 1
  *             for m in range(2 * window):             # <<<<<<<<<<<<<<
  *                 memcpy(&_neu1[(doctag_len + m) * vector_size], &_word_vectors[window_indexes[m] * vector_size],
  *                        vector_size * cython.sizeof(REAL_t))
@@ -8074,7 +8074,7 @@ static PyObject *__pyx_pf_6gensim_6models_13doc2vec_inner_4train_document_dm_con
             __pyx_v_m = __pyx_t_16;
 
             /* "gensim/models/doc2vec_inner.pyx":645
- *                 n = n + 1
+ *                 n += 1
  *             for m in range(2 * window):
  *                 memcpy(&_neu1[(doctag_len + m) * vector_size], &_word_vectors[window_indexes[m] * vector_size],             # <<<<<<<<<<<<<<
  *                        vector_size * cython.sizeof(REAL_t))
