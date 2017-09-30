@@ -1,5 +1,5 @@
 """
-This package contains implementations of various streaming corpus I/O format.
+This package contains implementations of various streaming corpus I/O formats.
 """
 
 # bring corpus classes directly into package namespace, to save some typing
