@@ -260,8 +260,8 @@ def process_article(args, tokenizer_func=utils.tokenize, token_min_len=TOKEN_MIN
     tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower).
     """
     text, lemmatize, title, pageid, fields = args
-    text_content = filter_wiki(text) if (fields is None) or ('desc' in fields) else ""
-    text_content = f"{title}. {text_content}" if ('title' in fields) else text_content
+    text_content = filter_wiki(text) if (fields is None) or ('text' in fields) else ""
+    text_content = f"{title} . {text_content}" if ('title' in fields) else text_content
     text_content = text_content.strip()
     if lemmatize:
         result = utils.lemmatize(text_content)
