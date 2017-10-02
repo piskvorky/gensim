@@ -627,7 +627,10 @@ class Word2Vec(utils.SaveLoad):
         sentence_no = -1
         total_words = 0
         min_reduce = 1
-        vocab = defaultdict(int)
+        if not hasattr(self, 'raw_vocab'):
+            vocab = defaultdict(int)
+        else:
+            vocab = self.raw_vocab
         checked_string_types = 0
         for sentence_no, sentence in enumerate(sentences):
             if not checked_string_types:
