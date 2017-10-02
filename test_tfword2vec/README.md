@@ -11,8 +11,22 @@ unzip -p source-archive.zip  word2vec/trunk/questions-words.txt > questions-word
 rm source-archive.zip
 ```
 
-Run testing:
+Add dir for saving models after training:
 
 ```
-docker-compose up
+mkdir models
 ```
+
+Building:
+
+```
+docker-compose build
+```
+
+Run Jupyter Notebook, go to localhost:8888 and open Test_TfWord2Vec.ipynb:
+
+```
+jupyter notebook
+```
+
+
