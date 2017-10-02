@@ -16,6 +16,7 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 from gensim.models.keyedvectors import KeyedVectors
+from gensim.models.word2vec import Vocab
 from gensim.scripts.glove2word2vec import glove2word2vec
 from gensim.utils import keep_vocab_item
 import time
@@ -43,9 +44,6 @@ class TfWord2Vec(KeyedVectors):
             alpha: learning rate
             train_epochs: Number of epochs to train, each epoch processes the training data once.
         """
-        if train_data is None:
-            raise ValueError("Train_data must be specified")
-
         self.train_data = train_data
         self.eval_data = eval_data
         self.vector_size = int(size)
@@ -66,36 +64,37 @@ class TfWord2Vec(KeyedVectors):
         self.valid_window = 100  # Only pick dev samples in the head of the distribution.
         self.valid_examples = np.random.choice(self.valid_window, self.valid_size, replace=False)
 
-        self.build_dataset(train_data)
-        ps_hosts = self.FLAGS.ps_hosts.split(',')
-        worker_hosts = self.FLAGS.worker_hosts.split(',')
+        if FLAGS is not None:
+            ps_hosts = self.FLAGS.ps_hosts.split(',')
+            worker_hosts = self.FLAGS.worker_hosts.split(',')
 
-        # Create a cluster from the parameter server and worker hosts.
-        self.cluster = tf.train.ClusterSpec({'ps': ps_hosts, 'worker': worker_hosts})
-        self.num_workers = len(worker_hosts)
-        self.data_size = len(self.data) // self.num_workers
-        self.data_index = self.FLAGS.task_index * self.data_size
-        self.max_index = self.data_index + self.data_size
-        self.start_index = self.data_index
-
-        self.train()
+            # Create a cluster from the parameter server and worker hosts.
+            self.cluster = tf.train.ClusterSpec({'ps': ps_hosts, 'worker': worker_hosts})
+            self.num_workers = len(worker_hosts)
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
         super(TfWord2Vec, self).save(*args, **kwargs)
 
-    def build_dataset(self, words):
+    def build_dataset(self):
         """Build the dictionary"""
-        vocab = collections.Counter()
+        # Check train data
+        if self.train_data is None:
+            raise ValueError("Train_data must be specified")
+        words = self.train_data
+        full_vocab = collections.Counter()
         for word in words:
-            vocab[word] += 1
-        self.vocab = vocab.most_common()
-        self.dict = dict()
+            full_vocab[word] += 1
+        self.full_vocab = full_vocab.most_common()
+        self.dict = {}
+        self.vocab = {}
         rare_words = 0
-        for word, count in self.vocab:
+        for word, count in self.full_vocab:
             if keep_vocab_item(word, count, self.min_count):
-                self.dict[word] = len(self.dict)
+                idx = len(self.dict)
+                self.dict[word] = idx
+                self.vocab[word] = Vocab(index=idx)
             else:
                 rare_words += 1
         self.vocab_size = len(self.dict)
@@ -104,8 +103,14 @@ class TfWord2Vec(KeyedVectors):
             if word in self.dict:
                 index = self.dict[word]
             self.data.append(index)
+        self.index2word = [w for w in self.dict.keys()]
         self.reversed_dict = dict(zip(self.dict.values(), self.dict.keys()))
         print("Count of vocabulary: {}. Count of rare words: {}. Data contains {} words.".format(self.vocab_size, rare_words, len(words)))
+
+        self.data_size = len(self.data) // self.num_workers
+        self.data_index = self.FLAGS.task_index * self.data_size
+        self.max_index = self.data_index + self.data_size
+        self.start_index = self.data_index
 
     def read_analogies(self):
         """Reads through the analogy question file.
@@ -241,25 +246,26 @@ class TfWord2Vec(KeyedVectors):
                         if step % 500 == 0 and step > 0:
                             average_loss /= 500
                             # The average loss is an estimate of the loss over the last batches.
-                            print('Task: {}. Average loss at step {}: {}. Data index: {}. Time: {}'.format(
-                                   self.FLAGS.task_index, step, average_loss, self.data_index, time.time() - start_time))
+                            print('Epoch: {}. Task: {}. Average loss at step {}: {}. Data index: {}. Time: {}'.format(epoch, self.FLAGS.task_index,
+                                                                  step, average_loss, self.data_index, time.time() - start_time))
                             average_loss = 0
 
-                    sim = similarity.eval()
-                    for i in xrange(self.valid_size):
-                        valid_word = self.reversed_dict[self.valid_examples[i]]
-                        top_k = 8  # number of nearest neighbors
-                        nearest = (-sim[i, :]).argsort()[1:top_k + 1]
-                        log_str = 'Nearest to %s:' % valid_word
-                        for k in xrange(top_k):
-                            close_word = self.reversed_dict[nearest[k]]
-                            log_str = '%s %s,' % (log_str, close_word)
-                        print(log_str)
-
-                    self.syn0norm = normalized_embeddings.eval()
-                    self.syn0 = embeddings.eval()
                     self.data_index = self.start_index
                     self.max_index = self.data_index + self.data_size
+
+                sim = similarity.eval()
+                for i in xrange(self.valid_size):
+                    valid_word = self.reversed_dict[self.valid_examples[i]]
+                    top_k = 8  # number of nearest neighbors
+                    nearest = (-sim[i, :]).argsort()[1:top_k + 1]
+                    log_str = 'Nearest to %s:' % valid_word
+                    for k in xrange(top_k):
+                        close_word = self.reversed_dict[nearest[k]]
+                        log_str = '%s %s,' % (log_str, close_word)
+                    print(log_str)
+
+                self.syn0norm = normalized_embeddings.eval()
+                self.syn0 = embeddings.eval()
 
     @classmethod
     def load_tf_model(cls, model_file):
