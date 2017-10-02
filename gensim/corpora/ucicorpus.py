@@ -192,7 +192,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         return dictionary
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None, progress_cnt=10000, metadata=False):
+    def __save_corpus(fname, corpus, id2word=None, progress_cnt=10000, metadata=False):
         """
         Save a corpus in the UCI Bag-of-Words format.
 
