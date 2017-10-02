@@ -660,6 +660,13 @@ class Word2Vec(utils.SaveLoad):
         )
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
+        
+    def reset_raw_vocab(self):
+        """
+        After building vocabulary, Delete the raw vocabulary to free up RAM
+        """
+        if hasattr(self, 'raw_vocab'):
+            self.raw_vocab = defaultdict(int)
 
     def scale_vocab(self, min_count=None, sample=None, dry_run=False,
                     keep_raw_vocab=False, trim_rule=None, update=False):
