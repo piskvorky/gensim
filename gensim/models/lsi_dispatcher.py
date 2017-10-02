@@ -175,7 +175,6 @@ class Dispatcher(object):
             worker.exit()
         logger.info("terminating dispatcher")
         os._exit(0)  # exit the whole process (not just this thread ala sys.exit())
-# endclass Dispatcher
 
 
 def main():
