@@ -663,7 +663,8 @@ class Word2Vec(utils.SaveLoad):
         
     def reset_raw_vocab(self):
         """
-        After building vocabulary, Delete the raw vocabulary to free up RAM
+        Delete the raw vocabulary to free up RAM after building vocabulary completely
+        if `keep_raw_vocab` is set.
         """
         if hasattr(self, 'raw_vocab'):
             self.raw_vocab = defaultdict(int)
