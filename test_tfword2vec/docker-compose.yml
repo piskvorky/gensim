@@ -13,6 +13,7 @@ services:
     image: gensim_test:latest
     ports:
      - "8001:2223"
+    volumes: ["./models:/models"]
     command: python3 test_distributed_tf.py --ps_hosts=ps1:2222 --worker_hosts=worker1:2223,worker2:2224,worker3:2225 --job_name=worker --task_index=0
     tty: true
 
