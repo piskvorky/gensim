@@ -5,10 +5,6 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 import logging
-import numbers
-import os
-from random import sample
-
 import numpy as np
 import six
 from scipy.special import gammaln, psi  # gamma function utils
@@ -17,7 +13,6 @@ from six.moves import xrange
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
-from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jensen_shannon
 from gensim.models import basemodel, CoherenceModel
 
 # log(sum(exp(x))) that tries to avoid overflow
@@ -41,13 +36,13 @@ def dirichlet_expectation(alpha):
 
 def get_lambda(self):
         return self.eta + self.sstats
-    
+
 def get_Elogbeta(self):
         return dirichlet_expectation(self.get_lambda())
 
 class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    
-    def __init__(self, corpus=None, n_topics=100, alpha='symmetric', beta, mu, nu, nu2, 
+
+    def __init__(self, corpus=None, n_topics=100, alpha='symmetric', beta, mu, nu, nu2,
                  sigma2, iterations = 100, report_iter=10, seed=None):
     """
     Supervised latent Dirichlet allocation, using collapsed Gibbs
@@ -82,7 +77,7 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.iterations = iterations
         self.report_iter = n_report_iter
         self.seed = seed
-        
+
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """
         Args:
@@ -132,21 +127,35 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Args:
             topn (int): Only return 2-tuples for the topn most probable words
                 (ignore the rest).
-
         Returns:
             list: of `(word, probability)` 2-tuples for the most probable
             words in topic `topicid`.
         """
         return [(self.id2word[id], value) for id, value in self.get_topic_terms(topicid, topn)]
 
-    def get_topics(self):
-        """
-        Returns:
-            np.ndarray: `num_topics` x `vocabulary_size` array of floats which represents
-            the term topic matrix learned during inference.
-        """
-        topics = self.state.get_lambda()
-        return topics / topics.sum(axis=1)[:, None]
+    def do_estep(self, chunk, state=None):
+        
+        if state is None:
+            state = self.state
+        gamma, sstats = self.inference(chunk, collect_sstats=True)
+        state.sstats += sstats
+        state.numdocs += gamma.shape[0]  # avoids calling len(chunk) on a generator
+        return gamma
+    
+    def do_mstep(self, rho, other, extra_pass=False):
+        diff = np.log(self.expElogbeta)
+        self.state.blend(rho, other)
+        diff -= self.state.get_Elogbeta()
+        self.sync_state()
+
+        self.print_topics(5)
+        logger.info("topic diff=%f, rho=%f", np.mean(np.abs(diff)), rho)
+
+        if self.optimize_eta:
+            self.update_eta(self.state.get_lambda(), rho)
+
+        if not extra_pass:
+            self.num_updates += other.numdocs
     
     def save(self, fname, ignore=['state', 'dispatcher'], separately=None, *args, **kwargs):
         """
@@ -178,3 +187,37 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         else:
             separately = separately_explicit
         super(sLdaModel, self).save(fname, ignore=ignore, separately=separately, *args, **kwargs)
+        
+    def accuracy(self, goldlabel):
+        right = 0
+        for d in range(0, self._D):
+            if (self._predictions[d] == goldlabel[d]):
+                right = right + 1
+        accuracy = float(right) / float(self._D)
+        return accuracy
+    
+    def save_parameters(self):
+        np.savetxt("lambda-%d.txt" %self._iterations, self._lambda)
+        np.savetxt("mu-%d.txt" %self._iterations, self._mu)
+    
+    def calculate_mu(self, phi, expmu, cts, label):
+        gra_mu = n.zeros(expmu.shape)
+        nphi = (phi.T * cts).T
+        avephi = n.average(nphi, axis = 0)
+        gra_mu[label,:] = avephi
+        N = float(n.sum(cts))
+        #sf_aux = n.zeros((self._C, len(cts)))
+        #sf_aux_prod = n.ones(self._C)
+        sf_aux = np.dot(expmu, phi.T)
+        sf_aux_power = np.power(sf_aux, cts)
+ 
+        sf_aux_prod = np.prod(sf_aux_power, axis = 1) +1e-100
+        kappa_1 = 1.0 / np.sum(sf_aux_prod)
+       
+        sf_pra = np.zeros((self._C, self._K))
+        
+        temp = (sf_aux_prod[:,np.newaxis] / sf_aux)
+        for c in range (0, self._C):
+            temp1 = np.outer(temp[c,:], (1.0/N) * expmu[c,:])
+            temp1 = temp1 * nphi
+            sf_pra[c,:] = np.sum(temp1, axis = 0)
