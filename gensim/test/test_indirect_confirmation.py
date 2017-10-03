@@ -10,12 +10,9 @@ Automated tests for indirect confirmation measures in the indirect_confirmation_
 
 import logging
 import unittest
-
 import numpy as np
-
+import gensim.models.coherence_utils
 from gensim.corpora.dictionary import Dictionary
-from gensim.topic_coherence import indirect_confirmation_measure
-from gensim.topic_coherence import text_analysis
 
 
 class TestIndirectConfirmation(unittest.TestCase):
@@ -33,10 +30,10 @@ class TestIndirectConfirmation(unittest.TestCase):
 
     def testCosineSimilarity(self):
         """Test cosine_similarity()"""
-        accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, self.dictionary)
+        accumulator = gensim.models.coherence_utils.InvertedIndexAccumulator({1, 2}, self.dictionary)
         accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
         accumulator._num_docs = 5
-        obtained = indirect_confirmation_measure.cosine_similarity(
+        obtained = gensim.models.coherence_utils.cosine_similarity(
             self.segmentation, accumulator, self.topics, self.measure, self.gamma)
 
         # The steps involved in this calculation are as follows:
@@ -49,7 +46,7 @@ class TestIndirectConfirmation(unittest.TestCase):
         expected = (0.6230 + 0.6230) / 2.  # To account for EPSILON approximation
         self.assertAlmostEqual(expected, obtained[0], 4)
 
-        mean, std = indirect_confirmation_measure.cosine_similarity(
+        mean, std = gensim.models.coherence_utils.cosine_similarity(
             self.segmentation, accumulator, self.topics, self.measure, self.gamma,
             with_std=True)[0]
         self.assertAlmostEqual(expected, mean, 4)
@@ -57,13 +54,13 @@ class TestIndirectConfirmation(unittest.TestCase):
 
     def testWord2VecSimilarity(self):
         """Sanity check word2vec_similarity."""
-        accumulator = text_analysis.WordVectorsAccumulator({1, 2}, self.dictionary)
+        accumulator = gensim.models.coherence_utils.WordVectorsAccumulator({1, 2}, self.dictionary)
         accumulator.accumulate([
             ['fake', 'tokens'],
             ['tokens', 'fake']
         ], 5)
 
-        mean, std = indirect_confirmation_measure.word2vec_similarity(
+        mean, std = gensim.models.coherence_utils.word2vec_similarity(
             self.segmentation, accumulator, with_std=True)[0]
         self.assertNotEqual(0.0, mean)
         self.assertNotEqual(0.0, std)

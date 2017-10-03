@@ -10,8 +10,7 @@ Automated tests for checking transformation algorithms (the models package).
 
 import logging
 import unittest
-
-from gensim.topic_coherence import aggregation
+import gensim.models.coherence_utils
 
 
 class TestAggregation(unittest.TestCase):
@@ -20,7 +19,7 @@ class TestAggregation(unittest.TestCase):
 
     def testArithmeticMean(self):
         """Test arithmetic_mean()"""
-        obtained = aggregation.arithmetic_mean(self.confirmed_measures)
+        obtained = gensim.models.coherence_utils.arithmetic_mean(self.confirmed_measures)
         expected = 2.75
         self.assertEqual(obtained, expected)
 

@@ -10,10 +10,9 @@ Automated tests for probability estimation algorithms in the probability_estimat
 
 import logging
 import unittest
-
+import gensim.models.coherence_utils
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.hashdictionary import HashDictionary
-from gensim.topic_coherence import probability_estimation
 
 
 class BaseTestCases(object):
@@ -63,7 +62,7 @@ class BaseTestCases(object):
 
         def testPBooleanDocument(self):
             """Test p_boolean_document()"""
-            accumulator = probability_estimation.p_boolean_document(
+            accumulator = gensim.models.coherence_utils.p_boolean_document(
                 self.corpus, self.segmented_topics)
             obtained = accumulator.index_to_dict()
             expected = {
@@ -77,7 +76,7 @@ class BaseTestCases(object):
         def testPBooleanSlidingWindow(self):
             """Test p_boolean_sliding_window()"""
             # Test with window size as 2. window_id is zero indexed.
-            accumulator = probability_estimation.p_boolean_sliding_window(
+            accumulator = gensim.models.coherence_utils.p_boolean_sliding_window(
                 self.texts, self.segmented_topics, self.dictionary, 2)
             self.assertEqual(1, accumulator[self.computer_id])
             self.assertEqual(3, accumulator[self.user_id])

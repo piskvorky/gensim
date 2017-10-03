@@ -1,10 +1,8 @@
 import logging
 import unittest
-
 from gensim.corpora.dictionary import Dictionary
-from gensim.topic_coherence.text_analysis import (
-    InvertedIndexAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator,
-    CorpusAccumulator)
+from gensim.models.coherence_utils import CorpusAccumulator, InvertedIndexAccumulator, WordOccurrenceAccumulator, \
+    ParallelWordOccurrenceAccumulator
 
 
 class BaseTestCases(object):
