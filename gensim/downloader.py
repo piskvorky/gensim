@@ -22,6 +22,7 @@ base_dir = os.path.join(user_dir, 'gensim-data')
 data_log_file_path = os.path.join(base_dir, 'data.json')
 logger = logging.getLogger('gensim.api')
 
+
 def get_data_list():
     """Function getting the list of all datasets/models.
 
@@ -43,7 +44,7 @@ def get_data_list():
 
 
 def get_data_name(data_):
-    """Returns a name for the dataset/model as to download a dataset/model user can alternate names too. 
+    """Returns a name for the dataset/model as to download a dataset/model user can alternate names too.
 
     Args:
         data_(string): Name of the corpus/model.
@@ -77,12 +78,12 @@ def initialize_data_log_file():
         json_object = {"name": model, "status": "None"}
         json_list.append(json_object)
 
-    with open(data_log_file_path,'w') as f:    
+    with open(data_log_file_path, 'w') as f:
         f.write(json.dumps(json_list))
-        
+
 
 def create_files():
-    """Function for creating the directory for storing corpora and models, and to create a json log file. 
+    """Function for creating the directory for storing corpora and models, and to create a json log file.
     """
     if not os.path.isdir(base_dir):
         try:
@@ -119,7 +120,7 @@ def update_data_log_file(data_, status):
         data_(string): Name of the corpus/model.
         status(string): Status to be updates to i.e downloaded or installed.
     """
-    with open(data_log_file_path, 'r') as f:    
+    with open(data_log_file_path, 'r') as f:
         jdata = json.load(f)
         for json_object in jdata:
             if json_object["name"] == data_:
@@ -128,8 +129,7 @@ def update_data_log_file(data_, status):
         f.write(json.dumps(jdata))
 
 
-
-def get_data_status(data_): 
+def get_data_status(data_):
     """Function for finding the status of the data_.
 
     Args:
@@ -163,7 +163,7 @@ def calculate_md5_checksum(folder_dir):
     return hash_md5.hexdigest()
 
 
-def info(data_=None): 
+def info(data_=None):
     """Function for retrieving the list of corpora/models, if data name is not provided. If data name
     is provided, then it gives detailed information about the data.
 
@@ -211,7 +211,6 @@ def get_checksum(data_):
         return data['corpus'][data_]["checksum"]
     elif data_ in models:
         return data['model'][data_]["checksum"]
-
 
 
 def _download(data_):
@@ -293,7 +292,7 @@ def load(data_, return_path=False):
     Returns:
         string: Returns the path to the model/corpus, if return_path is True.
     """
-    data_ = get_data_name(data_) 
+    data_ = get_data_name(data_)
     create_files()
     file_name = get_filename(data_)
     if file_name is None:
