@@ -618,19 +618,28 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
-    
+
     def most_similar_to_given(self, w1, word_list):
-        """
-        Return the word from word_list most similar to w1.
-        
+        """Return the word from word_list most similar to w1.
+
+        Args:
+            w1 (str): a word
+            word_list (list): list of words containing a word most similar to w1
+
+        Returns:
+            the word in word_list with the highest similarity to w1
+
+        Raises:
+            KeyError: If w1 or any word in word_list is not in the vocabulary
+
         Example::
-            
+
           >>> trained_model.most_similar_to_given('music', ['water', 'sound', 'backpack', 'mouse'])
           'sound'
-          
+
           >>> trained_model.most_similar_to_given('snake', ['food', 'pencil', 'animal', 'phone'])
           'animal'
-          
+
         """
         return word_list[argmax([self.similarity(w1, word) for word in word_list])]
         
