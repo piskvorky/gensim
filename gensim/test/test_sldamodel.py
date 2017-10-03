@@ -53,3 +53,57 @@ def testRandomState():
     testcases = [np.random.seed(0), None, np.random.RandomState(0), 0]
     for testcase in testcases:
         assert(isinstance(utils.get_random_state(testcase), np.random.RandomState))
+     
+ def testAlpha(self):
+        kwargs = dict(
+            id2word=dictionary,
+            num_topics=2,
+            alpha=None
+        )
+        expected_shape = (2,)
+
+        # should not raise anything
+        self.class_(**kwargs)
+
+        kwargs['alpha'] = 'symmetric'
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(all(model.alpha == np.array([0.5, 0.5])))
+
+        kwargs['alpha'] = 'asymmetric'
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(np.allclose(model.alpha, [0.630602, 0.369398]))
+
+        kwargs['alpha'] = 0.3
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(all(model.alpha == np.array([0.3, 0.3])))
+
+        kwargs['alpha'] = 3
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(all(model.alpha == np.array([3, 3])))
+
+        kwargs['alpha'] = [0.3, 0.3]
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(all(model.alpha == np.array([0.3, 0.3])))
+
+        kwargs['alpha'] = np.array([0.3, 0.3])
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(all(model.alpha == np.array([0.3, 0.3])))
+
+        # all should raise an exception for being wrong shape
+        kwargs['alpha'] = [0.3, 0.3, 0.3]
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
+        kwargs['alpha'] = [[0.3], [0.3]]
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
+        kwargs['alpha'] = [0.3]
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
+        kwargs['alpha'] = "gensim is cool"
+        self.assertRaises(ValueError, self.class_, **kwargs)
