@@ -96,13 +96,23 @@ class Wordrank(KeyedVectors):
         cooccurrence_shuf_file = os.path.join(meta_dir, 'wiki.toy')
         meta_file = os.path.join(meta_dir, 'meta')
 
-        cmd_vocab_count = [os.path.join(wr_path, 'glove', 'vocab_count'), '-min-count', str(min_count), '-max-vocab', str(max_vocab_size)]
-        cmd_cooccurence_count = [os.path.join(wr_path, 'glove', 'cooccur'), '-memory', str(memory), '-vocab-file', temp_vocab_file, '-window-size', str(window), '-symmetric', str(symmetric)]
+        cmd_vocab_count = [
+            os.path.join(wr_path, 'glove', 'vocab_count'),
+            '-min-count', str(min_count), '-max-vocab', str(max_vocab_size)
+        ]
+        cmd_cooccurence_count = [
+            os.path.join(wr_path, 'glove', 'cooccur'), '-memory', str(memory),
+            '-vocab-file', temp_vocab_file, '-window-size', str(window), '-symmetric', str(symmetric)
+        ]
         cmd_shuffle_cooccurences = [os.path.join(wr_path, 'glove', 'shuffle'), '-memory', str(memory)]
         cmd_del_vocab_freq = ['cut', '-d', " ", '-f', '1', temp_vocab_file]
 
         commands = [cmd_vocab_count, cmd_cooccurence_count, cmd_shuffle_cooccurences]
-        input_fnames = [os.path.join(meta_dir, os.path.split(corpus_file)[-1]), os.path.join(meta_dir, os.path.split(corpus_file)[-1]), cooccurrence_file]
+        input_fnames = [
+            os.path.join(meta_dir, os.path.split(corpus_file)[-1]),
+            os.path.join(meta_dir, os.path.split(corpus_file)[-1]),
+            cooccurrence_file
+        ]
         output_fnames = [temp_vocab_file, cooccurrence_file, cooccurrence_shuf_file]
 
         logger.info("Prepare training data (%s) using glove code", ", ".join(input_fnames))
@@ -116,22 +126,24 @@ class Wordrank(KeyedVectors):
             utils.check_output(w, args=cmd_del_vocab_freq)
 
         with smart_open(vocab_file, 'rb') as f:
-            numwords = sum(1 for line in f)
+            numwords = sum(1 for _ in f)
         with smart_open(cooccurrence_shuf_file, 'rb') as f:
-            numlines = sum(1 for line in f)
+            numlines = sum(1 for _ in f)
         with smart_open(meta_file, 'wb') as f:
-            meta_info = "{0} {1}\n{2} {3}\n{4} {5}".format(numwords, numwords, numlines, cooccurrence_shuf_file.split('/')[-1], numwords, vocab_file.split('/')[-1])
+            meta_info = "{0} {1}\n{2} {3}\n{4} {5}".format(
+                numwords, numwords, numlines, cooccurrence_shuf_file.split('/')[-1],
+                numwords, vocab_file.split('/')[-1]
+            )
             f.write(meta_info.encode('utf-8'))
 
         if iter % dump_period == 0:
             iter += 1
         else:
             logger.warning(
-                'Resultant embedding will be from %d iterations rather than the input %d iterations, '
-                'as wordrank dumps the embedding only at dump_period intervals. '
-                'Input an appropriate combination of parameters (iter, dump_period) such that '
-                '"iter mod dump_period" is zero.', iter - (iter % dump_period), iter
-                )
+                "Resultant embedding will be from %d iterations rather than the input %d iterations, as wordrank dumps the embedding only at dump_period intervals. "
+                "Input an appropriate combination of parameters (iter, dump_period) such that \"iter mod dump_period\" is zero.",
+                iter - (iter % dump_period), iter
+            )
 
         wr_args = {
             'path': meta_dir,
@@ -151,20 +163,21 @@ class Wordrank(KeyedVectors):
         }
 
         # run wordrank executable with wr_args
-        cmd = ['mpirun', '-np']
-        cmd.append(str(np))
-        cmd.append(os.path.join(wr_path, 'wordrank'))
+        cmd = ['mpirun', '-np', str(np), os.path.join(wr_path, 'wordrank')]
         for option, value in wr_args.items():
             cmd.append('--%s' % option)
             cmd.append(str(value))
         logger.info("Running wordrank binary")
-        output = utils.check_output(args=cmd)  # noqa:F841
+        utils.check_output(args=cmd)
 
         # use embeddings from max. iteration's dump
         max_iter_dump = iter - (iter % dump_period)
         os.rename('model_word_%d.txt' % max_iter_dump, os.path.join(model_dir, 'wordrank.words'))
         os.rename('model_context_%d.txt' % max_iter_dump, os.path.join(model_dir, 'wordrank.contexts'))
-        model = cls.load_wordrank_model(os.path.join(model_dir, 'wordrank.words'), vocab_file, os.path.join(model_dir, 'wordrank.contexts'), sorted_vocab, ensemble)
+        model = cls.load_wordrank_model(
+            os.path.join(model_dir, 'wordrank.words'), vocab_file,
+            os.path.join(model_dir, 'wordrank.contexts'), sorted_vocab, ensemble
+        )
 
         if cleanup_files:
             rmtree(model_dir)

@@ -24,20 +24,19 @@ from collections import namedtuple
 
 import numpy as np
 
-from gensim import interfaces
-from gensim.matutils import argsort
+from gensim import interfaces, matutils
+from gensim import utils
 from gensim.topic_coherence import (segmentation, probability_estimation,
                                     direct_confirmation_measure, indirect_confirmation_measure,
                                     aggregation)
 from gensim.topic_coherence.probability_estimation import unique_ids_from_segments
-from gensim.utils import is_corpus, FakeDict
 
 logger = logging.getLogger(__name__)
 
-boolean_document_based = {'u_mass'}
-sliding_window_based = {'c_v', 'c_uci', 'c_npmi'}
-_make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
+BOOLEAN_DOCUMENT_BASED = {'u_mass'}
+SLIDING_WINDOW_BASED = {'c_v', 'c_uci', 'c_npmi', 'c_w2v'}
 
+_make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
 COHERENCE_MEASURES = {
     'u_mass': _make_pipeline(
         segmentation.s_one_pre,
@@ -49,6 +48,12 @@ COHERENCE_MEASURES = {
         segmentation.s_one_set,
         probability_estimation.p_boolean_sliding_window,
         indirect_confirmation_measure.cosine_similarity,
+        aggregation.arithmetic_mean
+    ),
+    'c_w2v': _make_pipeline(
+        segmentation.s_one_set,
+        probability_estimation.p_word2vec,
+        indirect_confirmation_measure.word2vec_similarity,
         aggregation.arithmetic_mean
     ),
     'c_uci': _make_pipeline(
@@ -67,8 +72,10 @@ COHERENCE_MEASURES = {
 
 SLIDING_WINDOW_SIZES = {
     'c_v': 110,
+    'c_w2v': 5,
     'c_uci': 10,
-    'c_npmi': 10
+    'c_npmi': 10,
+    'u_mass': None
 }
 
 
@@ -110,7 +117,7 @@ class CoherenceModel(interfaces.TransformationABC):
     """
 
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
-                 window_size=None, coherence='c_v', topn=10, processes=-1):
+                 window_size=None, keyed_vectors=None, coherence='c_v', topn=20, processes=-1):
         """
         Args:
             model : Pre-trained topic model. Should be provided if topics is not provided.
@@ -152,20 +159,21 @@ class CoherenceModel(interfaces.TransformationABC):
                 to corpus using the dictionary. For 'c_v', 'c_uci' and 'c_npmi' texts should be provided.
                 Corpus is not needed.
             topn : Integer corresponding to the number of top words to be extracted from each topic.
-            processes : number of processes to use for probability estimation phase; any value less than 1 will be
-                interpreted to mean num_cpus - 1; default is -1.
+            processes : number of processes to use for probability estimation phase; any value
+                less than 1 will be interpreted to mean num_cpus - 1; default is -1.
         """
         if model is None and topics is None:
             raise ValueError("One of model or topics has to be provided.")
         elif topics is not None and dictionary is None:
             raise ValueError("dictionary has to be provided if topics are to be used.")
 
-        if texts is None and corpus is None:
+        self.keyed_vectors = keyed_vectors
+        if keyed_vectors is None and texts is None and corpus is None:
             raise ValueError("One of texts or corpus has to be provided.")
 
         # Check if associated dictionary is provided.
         if dictionary is None:
-            if isinstance(model.id2word, FakeDict):
+            if isinstance(model.id2word, utils.FakeDict):
                 raise ValueError(
                     "The associated dictionary should be provided with the corpus or 'id2word'"
                     " for topic model should be set as the associated dictionary.")
@@ -176,36 +184,93 @@ class CoherenceModel(interfaces.TransformationABC):
 
         # Check for correct inputs for u_mass coherence measure.
         self.coherence = coherence
-        if coherence in boolean_document_based:
-            if is_corpus(corpus)[0]:
+        self.window_size = window_size
+        if self.window_size is None:
+            self.window_size = SLIDING_WINDOW_SIZES[self.coherence]
+        self.texts = texts
+        self.corpus = corpus
+
+        if coherence in BOOLEAN_DOCUMENT_BASED:
+            if utils.is_corpus(corpus)[0]:
                 self.corpus = corpus
-            elif texts is not None:
-                self.texts = texts
+            elif self.texts is not None:
                 self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
             else:
                 raise ValueError(
                     "Either 'corpus' with 'dictionary' or 'texts' should "
                     "be provided for %s coherence.", coherence)
 
-        # Check for correct inputs for c_v coherence measure.
-        elif coherence in sliding_window_based:
-            self.window_size = window_size
-            if self.window_size is None:
-                self.window_size = SLIDING_WINDOW_SIZES[self.coherence]
-            if texts is None:
+        # Check for correct inputs for sliding window coherence measure.
+        elif coherence == 'c_w2v' and keyed_vectors is not None:
+            pass
+        elif coherence in SLIDING_WINDOW_BASED:
+            if self.texts is None:
                 raise ValueError("'texts' should be provided for %s coherence.", coherence)
-            else:
-                self.texts = texts
         else:
             raise ValueError("%s coherence is not currently supported.", coherence)
 
-        self.topn = topn
+        self._topn = topn
         self._model = model
         self._accumulator = None
         self._topics = None
         self.topics = topics
 
         self.processes = processes if processes > 1 else max(1, mp.cpu_count() - 1)
+
+    @classmethod
+    def for_models(cls, models, dictionary, topn=20, **kwargs):
+        """Initialize a CoherenceModel with estimated probabilities for all of the given models.
+
+        Args:
+            models (list): List of models to evalaute coherence of; the only requirement is
+                that each has a `get_topics` methods.
+        """
+        topics = [cls.top_topics_as_word_lists(model, dictionary, topn) for model in models]
+        kwargs['dictionary'] = dictionary
+        kwargs['topn'] = topn
+        return cls.for_topics(topics, **kwargs)
+
+    @staticmethod
+    def top_topics_as_word_lists(model, dictionary, topn=20):
+        if not dictionary.id2token:
+            dictionary.id2token = {v: k for k, v in dictionary.token2id.items()}
+
+        str_topics = []
+        for topic in model.get_topics():
+            bestn = matutils.argsort(topic, topn=topn, reverse=True)
+            beststr = [dictionary.id2token[_id] for _id in bestn]
+            str_topics.append(beststr)
+        return str_topics
+
+    @classmethod
+    def for_topics(cls, topics_as_topn_terms, **kwargs):
+        """Initialize a CoherenceModel with estimated probabilities for all of the given topics.
+
+        Args:
+            topics_as_topn_terms (list of lists): Each element in the top-level list should be
+                the list of topics for a model. The topics for the model should be a list of
+                top-N words, one per topic.
+        """
+        if not topics_as_topn_terms:
+            raise ValueError("len(topics) must be > 0.")
+        if any(len(topic_lists) == 0 for topic_lists in topics_as_topn_terms):
+            raise ValueError("found empty topic listing in `topics`")
+
+        topn = 0
+        for topic_list in topics_as_topn_terms:
+            for topic in topic_list:
+                topn = max(topn, len(topic))
+
+        topn = min(kwargs.pop('topn', topn), topn)
+        super_topic = utils.flatten(topics_as_topn_terms)
+
+        logging.info(
+            "Number of relevant terms for all %d models: %d",
+            len(topics_as_topn_terms), len(super_topic))
+        cm = CoherenceModel(topics=[super_topic], topn=len(super_topic), **kwargs)
+        cm.estimate_probabilities()
+        cm.topn = topn
+        return cm
 
     def __str__(self):
         return str(self.measure)
@@ -223,30 +288,61 @@ class CoherenceModel(interfaces.TransformationABC):
             self._topics = new_topics
 
     @property
+    def topn(self):
+        return self._topn
+
+    @topn.setter
+    def topn(self, topn):
+        current_topic_length = len(self._topics[0])
+        requires_expansion = current_topic_length < topn
+
+        if self.model is not None:
+            self._topn = topn
+            if requires_expansion:
+                self.model = self._model  # trigger topic expansion from model
+        else:
+            if requires_expansion:
+                raise ValueError("Model unavailable and topic sizes are less than topn=%d" % topn)
+            self._topn = topn  # topics will be truncated in getter
+
+    @property
     def measure(self):
         return COHERENCE_MEASURES[self.coherence]
 
     @property
     def topics(self):
-        return self._topics
+        if len(self._topics[0]) > self._topn:
+            return [topic[:self._topn] for topic in self._topics]
+        else:
+            return self._topics
 
     @topics.setter
     def topics(self, topics):
-        new_topics = None
-        if self.model is not None:
-            new_topics = self._get_topics()
-            if topics is not None:
-                logger.warning(
-                    "Ignoring topics you are attempting to set in favor of model's topics: %s",
-                    self.model)
-        elif topics is not None:
+        if topics is not None:
             new_topics = []
             for topic in topics:
-                topic_token_ids = np.array([self.dictionary.token2id[token] for token in topic])
+                topic_token_ids = self._ensure_elements_are_ids(topic)
                 new_topics.append(topic_token_ids)
+
+            if self.model is not None:
+                logger.warning(
+                    "The currently set model '%s' may be inconsistent with the newly set topics",
+                    self.model)
+        elif self.model is not None:
+            new_topics = self._get_topics()
+            logger.debug("Setting topics to those of the model: %s", self.model)
+        else:
+            new_topics = None
 
         self._update_accumulator(new_topics)
         self._topics = new_topics
+
+    def _ensure_elements_are_ids(self, topic):
+        try:
+            return np.array([self.dictionary.token2id[token] for token in topic])
+        except KeyError:  # might be a list of token ids already, but let's verify all in dict
+            topic = [self.dictionary.id2token[_id] for _id in topic]
+            return np.array([self.dictionary.token2id[token] for token in topic])
 
     def _update_accumulator(self, new_topics):
         if self._relevant_ids_will_differ(new_topics):
@@ -267,10 +363,15 @@ class CoherenceModel(interfaces.TransformationABC):
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""
+        return self._get_topics_from_model(self.model, self.topn)
+
+    @staticmethod
+    def _get_topics_from_model(model, topn):
+        """Internal helper function to return topics from a trained topic model."""
         try:
             return [
-                argsort(topic, topn=self.topn, reverse=True) for topic in
-                self.model.get_topics()
+                matutils.argsort(topic, topn=topn, reverse=True) for topic in
+                model.get_topics()
             ]
         except AttributeError:
             raise ValueError(
@@ -288,17 +389,21 @@ class CoherenceModel(interfaces.TransformationABC):
         if segmented_topics is None:
             segmented_topics = self.segment_topics()
 
-        if self.coherence in boolean_document_based:
+        if self.coherence in BOOLEAN_DOCUMENT_BASED:
             self._accumulator = self.measure.prob(self.corpus, segmented_topics)
         else:
-            self._accumulator = self.measure.prob(
+            kwargs = dict(
                 texts=self.texts, segmented_topics=segmented_topics,
                 dictionary=self.dictionary, window_size=self.window_size,
                 processes=self.processes)
+            if self.coherence == 'c_w2v':
+                kwargs['model'] = self.keyed_vectors
+
+            self._accumulator = self.measure.prob(**kwargs)
 
         return self._accumulator
 
-    def get_coherence_per_topic(self, segmented_topics=None):
+    def get_coherence_per_topic(self, segmented_topics=None, with_std=False, with_support=False):
         """Return list of coherence values for each topic based on pipeline parameters."""
         measure = self.measure
         if segmented_topics is None:
@@ -306,12 +411,15 @@ class CoherenceModel(interfaces.TransformationABC):
         if self._accumulator is None:
             self.estimate_probabilities(segmented_topics)
 
-        if self.coherence in boolean_document_based:
-            kwargs = {}
+        kwargs = dict(with_std=with_std, with_support=with_support)
+        if self.coherence in BOOLEAN_DOCUMENT_BASED or self.coherence == 'c_w2v':
+            pass
         elif self.coherence == 'c_v':
-            kwargs = dict(topics=self.topics, measure='nlr', gamma=1)
+            kwargs['topics'] = self.topics
+            kwargs['measure'] = 'nlr'
+            kwargs['gamma'] = 1
         else:
-            kwargs = dict(normalize=(self.coherence == 'c_npmi'))
+            kwargs['normalize'] = (self.coherence == 'c_npmi')
 
         return measure.conf(segmented_topics, self._accumulator, **kwargs)
 
@@ -325,3 +433,66 @@ class CoherenceModel(interfaces.TransformationABC):
         """Return coherence value based on pipeline parameters."""
         confirmed_measures = self.get_coherence_per_topic()
         return self.aggregate_measures(confirmed_measures)
+
+    def compare_models(self, models):
+        model_topics = [self._get_topics_from_model(model, self.topn) for model in models]
+        return self.compare_model_topics(model_topics)
+
+    def compare_model_topics(self, model_topics):
+        """Perform the coherence evaluation for each of the models.
+
+        This first precomputes the probabilities once, then evaluates coherence for
+        each model.
+
+        Since we have already precomputed the probabilities, this simply
+        involves using the accumulated stats in the `CoherenceModel` to
+        perform the evaluations, which should be pretty quick.
+
+        Args:
+            model_topics (list): of lists of top-N words for the model trained with that
+                number of topics.
+
+        Returns:
+            list: of `(avg_topic_coherences, avg_coherence)`.
+                These are the coherence values per topic and the overall model coherence.
+        """
+        orig_topics = self._topics
+        orig_topn = self.topn
+
+        try:
+            coherences = self._compare_model_topics(model_topics)
+        finally:
+            self.topics = orig_topics
+            self.topn = orig_topn
+
+        return coherences
+
+    def _compare_model_topics(self, model_topics):
+        coherences = []
+        last_topn_value = min(self.topn - 1, 4)
+        topn_grid = list(range(self.topn, last_topn_value, -5))
+
+        for model_num, topics in enumerate(model_topics):
+            self.topics = topics
+
+            # We evaluate at various values of N and average them. This is a more robust,
+            # according to: http://people.eng.unimelb.edu.au/tbaldwin/pubs/naacl2016.pdf
+            coherence_at_n = {}
+            for n in topn_grid:
+                self.topn = n
+                topic_coherences = self.get_coherence_per_topic()
+
+                # Let's record the coherences for each topic, as well as the aggregated
+                # coherence across all of the topics.
+                # Some of them may be nan (if all words were OOV), so do mean value imputation.
+                filled_coherences = np.array(topic_coherences)
+                filled_coherences[np.isnan(filled_coherences)] = np.nanmean(filled_coherences)
+                coherence_at_n[n] = (topic_coherences, self.aggregate_measures(filled_coherences))
+
+            topic_coherences, avg_coherences = zip(*coherence_at_n.values())
+            avg_topic_coherences = np.vstack(topic_coherences).mean(0)
+            model_coherence = np.mean(avg_coherences)
+            logging.info("Avg coherence for model %d: %.5f" % (model_num, model_coherence))
+            coherences.append((avg_topic_coherences, model_coherence))
+
+        return coherences

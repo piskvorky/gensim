@@ -140,14 +140,18 @@ class TestWord2VecModel(unittest.TestCase):
 
     def test_cbow_hs_online(self):
         """Test CBOW w/ hierarchical softmax"""
-        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
-                                  min_count=3, iter=10, seed=42, workers=2)
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
+            min_count=3, iter=10, seed=42, workers=2
+        )
         self.onlineSanity(model)
 
     def test_cbow_neg_online(self):
         """Test CBOW w/ negative sampling"""
-        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
-                                  min_count=5, iter=10, seed=42, workers=2, sample=0)
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+            min_count=5, iter=10, seed=42, workers=2, sample=0
+        )
         self.onlineSanity(model)
 
     def testPersistence(self):
@@ -241,7 +245,9 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(model.wv.syn0norm[model.wv.vocab['human'].index], norm_only_model['human']))
         limited_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True, limit=3)
         self.assertEquals(len(limited_model_kv.syn0), 3)
-        half_precision_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True, datatype=np.float16)
+        half_precision_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(
+            testfile(), binary=True, datatype=np.float16
+        )
         self.assertEquals(binary_model_kv.syn0.nbytes, half_precision_model_kv.syn0.nbytes * 2)
 
     def testNoTrainingCFormat(self):
@@ -284,7 +290,9 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=False)
         norm_only_model.init_sims(True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human'], atol=1e-6))
-        self.assertTrue(np.allclose(model.wv.syn0norm[model.wv.vocab['human'].index], norm_only_model['human'], atol=1e-4))
+        self.assertTrue(np.allclose(
+            model.wv.syn0norm[model.wv.vocab['human'].index], norm_only_model['human'], atol=1e-4
+        ))
 
     def testPersistenceWord2VecFormatWithVocab(self):
         """Test storing/loading the entire model and vocabulary in word2vec format."""
@@ -450,14 +458,18 @@ class TestWord2VecModel(unittest.TestCase):
 
     def test_cbow_hs(self):
         """Test CBOW w/ hierarchical softmax"""
-        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=8, hs=1, negative=0,
-                                  min_count=5, iter=10, workers=2, batch_words=1000)
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.05, window=8, hs=1, negative=0,
+            min_count=5, iter=10, workers=2, batch_words=1000
+        )
         self.model_sanity(model)
 
     def test_cbow_neg(self):
         """Test CBOW w/ negative sampling"""
-        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
-                                  min_count=5, iter=10, workers=2, sample=0)
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+            min_count=5, iter=10, workers=2, sample=0
+        )
         self.model_sanity(model)
 
     def test_cosmul(self):
@@ -654,8 +666,10 @@ class TestWord2VecModel(unittest.TestCase):
     @log_capture()
     def testTrainWarning(self, l):
         """Test if warning is raised if alpha rises during subsequent calls to train()"""
-        sentences = [['human'],
-                     ['graph', 'trees']]
+        sentences = [
+            ['human'],
+            ['graph', 'trees']
+        ]
         model = word2vec.Word2Vec(min_count=1)
         model.build_vocab(sentences)
         for epoch in range(10):
@@ -814,6 +828,7 @@ if not hasattr(TestWord2VecModel, 'assertLess'):
 if __name__ == '__main__':
     logging.basicConfig(
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
-        level=logging.DEBUG)
+        level=logging.DEBUG
+    )
     logging.info("using optimization %s", word2vec.FAST_VERSION)
     unittest.main()

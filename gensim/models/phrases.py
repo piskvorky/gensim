@@ -109,9 +109,8 @@ class Phrases(interfaces.TransformationABC):
 
     """
 
-    def __init__(self, sentences=None, min_count=5, threshold=10.0,
-                 max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
-                 scoring='default'):
+    def __init__(self, sentences=None, min_count=5, threshold=10.0, max_vocab_size=40000000,
+                 delimiter=b'_', progress_per=10000, scoring='default'):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -219,7 +218,8 @@ class Phrases(interfaces.TransformationABC):
         """Get short string representation of this phrase detector."""
         return "%s<%i vocab, min_count=%s, threshold=%s, max_vocab_size=%s>" % (
             self.__class__.__name__, len(self.vocab), self.min_count,
-            self.threshold, self.max_vocab_size)
+            self.threshold, self.max_vocab_size
+        )
 
     @staticmethod
     def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
@@ -231,8 +231,10 @@ class Phrases(interfaces.TransformationABC):
         min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
-                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
-                            (sentence_no, total_words, len(vocab)))
+                logger.info(
+                    "PROGRESS: at sentence #%i, processed %i words and %i word types",
+                    sentence_no, total_words, len(vocab)
+                )
             sentence = [utils.any2utf8(w) for w in sentence]
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
@@ -248,8 +250,10 @@ class Phrases(interfaces.TransformationABC):
                 utils.prune_vocab(vocab, min_reduce)
                 min_reduce += 1
 
-        logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
-                    (len(vocab), total_words, sentence_no + 1))
+        logger.info(
+            "collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences",
+            len(vocab), total_words, sentence_no + 1
+        )
         return min_reduce, vocab, total_words
 
     def add_vocab(self, sentences):
@@ -302,8 +306,6 @@ class Phrases(interfaces.TransformationABC):
         len_vocab = float(len(vocab))
         scorer_min_count = float(min_count)
         corpus_word_count = float(self.corpus_word_count)
-
-
 
         for sentence in sentences:
             s = [utils.any2utf8(w) for w in sentence]
@@ -535,7 +537,7 @@ class Phraser(interfaces.TransformationABC):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.info("running %s" % " ".join(sys.argv))
+    logging.info("running %s", " ".join(sys.argv))
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])

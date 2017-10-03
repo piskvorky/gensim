@@ -22,22 +22,24 @@ import numpy as np
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import ldamodel, ldamulticore
 from gensim import matutils, utils
-from gensim.test import basetests
+from gensim.test import basetmtests
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+texts = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey']
+]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
@@ -54,7 +56,7 @@ def testRandomState():
         assert(isinstance(utils.get_random_state(testcase), np.random.RandomState))
 
 
-class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
+class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamodel.LdaModel
@@ -79,8 +81,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
             if passed:
                 break
-            logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
-                            (i, sorted(vec), sorted(expected)))
+            logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)", i, sorted(vec), sorted(expected))
         self.assertTrue(passed)
 
     def testAlphaAuto(self):
@@ -231,7 +232,9 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testGetDocumentTopics(self):
 
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
+        model = self.class_(
+            self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0)
+        )
 
         doc_topics = model.get_document_topics(self.corpus)
 
@@ -264,7 +267,9 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         doc_topic_count_na = 0
         word_phi_count_na = 0
 
-        all_topics = model.get_document_topics(self.corpus, minimum_probability=0.8, minimum_phi_value=1.0, per_word_topics=True)
+        all_topics = model.get_document_topics(
+            self.corpus, minimum_probability=0.8, minimum_phi_value=1.0, per_word_topics=True
+        )
 
         self.assertEqual(model.state.numdocs, len(corpus))
 
@@ -313,7 +318,9 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
     def testTermTopics(self):
 
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0))
+        model = self.class_(
+            self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0)
+        )
 
         # check with word_type
         result = model.get_term_topics(2)
@@ -355,7 +362,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
             for test_rhot in test_rhots:
                 model.update(self.corpus)
 
-                msg = ", ".join(map(str, [passes, model.num_updates, model.state.numdocs]))
+                msg = ", ".join(str(x) for x in [passes, model.num_updates, model.state.numdocs])
                 self.assertAlmostEqual(final_rhot(), test_rhot, msg=msg)
 
             self.assertEqual(model.state.numdocs, len(corpus) * len(test_rhots))
@@ -379,7 +386,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
     #             model = self.class_(id2word=dictionary, num_topics=2, passes=200, eta=eta)
     #             model.update(self.corpus)
 
-    #             topics = [dict((word, p) for p, word in model.show_topic(j, topn=None)) for j in range(2)]
+    #             topics = [{word: p for p, word in model.show_topic(j, topn=None)} for j in range(2)]
 
     #             # check that the word 'system' in the topic we seeded got a high weight,
     #             # and the word 'trees' (the main word in the other topic) a low weight --
@@ -413,8 +420,8 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
         tstvec = []
         self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec]))  # try projecting an empty vector
-        id2word_2_7 = dict((k, v) for k, v in model_2_7.id2word.iteritems())
-        id2word_3_5 = dict((k, v) for k, v in model_3_5.id2word.iteritems())
+        id2word_2_7 = dict(model_2_7.id2word.iteritems())
+        id2word_3_5 = dict(model_3_5.id2word.iteritems())
         self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
 
     def testPersistenceIgnore(self):
