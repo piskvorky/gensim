@@ -40,8 +40,9 @@ def main(_):
     filename = maybe_download('text8.zip', 31344016)
     vocabulary = read_data(filename)
     tfw2v = gensim.models.TfWord2Vec(vocabulary, train_epochs=3, batch_size=1000,
-                                     num_skips=2, window=1, size=128, negative=64,
-                                     alpha=1, eval_data='questions-words.txt', FLAGS=FLAGS)
+                                     num_skips=2, window=1, size=100, negative=50,
+                                     min_count=5, alpha=1.0, FLAGS=FLAGS,
+                                     eval_data='questions-words.txt')
     tfw2v.build_dataset()
     start = time.time()
     tfw2v.train()

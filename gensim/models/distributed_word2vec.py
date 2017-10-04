@@ -102,9 +102,9 @@ class TfWord2Vec(KeyedVectors):
         for word in words:
             if word in self.dict:
                 index = self.dict[word]
-            self.data.append(index)
-        self.index2word = [w for w in self.dict.keys()]
-        self.reversed_dict = dict(zip(self.dict.values(), self.dict.keys()))
+                self.data.append(index)
+        reversed_dict = dict(zip(self.dict.values(), self.dict.keys()))
+        self.index2word = [w for w in reversed_dict.values()]
         print("Count of vocabulary: {}. Count of rare words: {}. Data contains {} words.".format(self.vocab_size, rare_words, len(words)))
 
         self.data_size = len(self.data) // self.num_workers
@@ -209,7 +209,7 @@ class TfWord2Vec(KeyedVectors):
                                                 num_classes=self.vocab_size))
 
                 # Construct the SGD optimizer using a learning rate.
-                optimizer = tf.train.GradientDescentOptimizer(self.alpha).minimize(loss)
+                optimizer = tf.train.AdagradOptimizer(self.alpha).minimize(loss)
 
                 norm = tf.sqrt(
                     tf.reduce_sum(tf.square(embeddings), 1, keep_dims=True))
@@ -255,12 +255,12 @@ class TfWord2Vec(KeyedVectors):
 
                 sim = similarity.eval()
                 for i in xrange(self.valid_size):
-                    valid_word = self.reversed_dict[self.valid_examples[i]]
+                    valid_word = self.index2word[self.valid_examples[i]]
                     top_k = 8  # number of nearest neighbors
                     nearest = (-sim[i, :]).argsort()[1:top_k + 1]
                     log_str = 'Nearest to %s:' % valid_word
                     for k in xrange(top_k):
-                        close_word = self.reversed_dict[nearest[k]]
+                        close_word = self.index2word[nearest[k]]
                         log_str = '%s %s,' % (log_str, close_word)
                     print(log_str)
 
