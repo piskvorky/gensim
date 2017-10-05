@@ -145,19 +145,24 @@ def get_data_status(data_):
             return json_object["status"]
 
 
-def calculate_md5_checksum(folder_dir):
-    """Function for calculating checksum of a downloaded model/corpus.
+def calculate_md5_checksum(folder_dir, tar_file=None):
+    """Function for calculating checksum of a downloaded or installed model/corpus.
 
     Args:
-        folder_dir(string): Path to the downloaded model.
+        folder_dir(string): Path to the model/corpus folder.(contains model/corpus if proxied)
+        tar_file(string): Path to the dowloaded tar file. Tar file contains __init__.py file and the model/corpus(if it is stored in github releases)
 
     Returns:
-        string: It returns the value for the checksum for folder_dir directory
+        string: It returns the value for the checksum for folder_dir directory and the tar file.
     """
     hash_md5 = hashlib.md5()
     for filename in os.listdir(folder_dir):
         file_dir = os.path.join(folder_dir, filename)
         with open(file_dir, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+    if tar_file is not None:
+        with open(tar_file, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_md5.update(chunk)
     return hash_md5.hexdigest()
@@ -195,7 +200,7 @@ def info(data_=None):
         return data
 
 
-def get_checksum(data_):
+def get_checksum(data_, status):
     """Function for retrieving the checksum of a corpus/model
 
     Args:
@@ -204,13 +209,14 @@ def get_checksum(data_):
     Returns:
         string: It returns the checksum for corresponding the corpus/model.
     """
+    key = "checksum_after_" + status
     data = info()
     corpora = data['corpus']
     models = data['model']
     if data_ in corpora:
-        return data['corpus'][data_]["checksum"]
+        return data['corpus'][data_][key]
     elif data_ in models:
-        return data['model'][data_]["checksum"]
+        return data['model'][data_][key]
 
 
 def _download(data_):
@@ -249,18 +255,23 @@ def _download(data_):
             index = data_url.rfind("/")
             data_dir = os.path.join(data_folder_dir, data_url[index + 1:])
             urllib.urlretrieve(data_url, data_dir)
-        logger.info("%s downloaded", data_)
-        update_data_log_file(data_, status="downloaded")
+        if calculate_md5_checksum(data_folder_dir, compressed_folder_dir) == get_checksum(data_, "download"):
+            logger.info("%s downloaded", data_)
+            update_data_log_file(data_, status="downloaded")
+        else:
+            logger.error("There was a problem in downloading the data. Retrying.")
+            _download(data_)
+
     if get_data_status(data_) != "installed":
             tar = tarfile.open(compressed_folder_dir)
             logger.info("Extracting files from %s", data_folder_dir)
             tar.extractall(data_folder_dir)
             tar.close()
-            if calculate_md5_checksum(data_folder_dir) == get_checksum(data_):
+            if calculate_md5_checksum(data_folder_dir) == get_checksum(data_, "installation"):
                 update_data_log_file(data_, status="installed")
                 logger.info("%s installed", data_)
             else:
-                logger.error("There was a problem in installing the file. Retrying.")
+                logger.error("There was a problem in installing the dataset/model. Retrying.")
                 _download(data_)
 
 
@@ -303,6 +314,7 @@ def load(data_, return_path=False):
     file_dir = os.path.join(folder_dir, file_name)
     if not os.path.exists(folder_dir) or get_data_status(data_) != "installed":
         _download(data_)
+
     if return_path:
         return file_dir
     else:
@@ -330,7 +342,7 @@ def data_links(data_):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s :%(name)s :%(levelname)s : %(message)s', stream=sys.stdout, level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s :%(name)s :%(levelname)s :%(message)s', stream=sys.stdout, level=logging.INFO)
     parser = argparse.ArgumentParser(description="Gensim console API", usage="python -m gensim.api.downloader  [-h] [-d data__name | -i data__name | -c]")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-d", "--download", metavar="data__name", nargs=1, help="To download a corpus/model : python -m gensim -d corpus/model name")
