@@ -78,7 +78,7 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
             logger.warning(
                 "%d terms for topic %d are not in word2vec model vocabulary",
                 num_oov, topic_index)
-        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std,with_support))
+        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std, with_support))
 
     if total_oov > 0:
         logger.warning("%d terms for are not in word2vec model vocabulary", total_oov)
