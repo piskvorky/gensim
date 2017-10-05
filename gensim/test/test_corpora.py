@@ -109,7 +109,7 @@ class CorpusTestCase(unittest.TestCase):
         corpus = self.TEST_CORPUS
 
         # make sure the corpus can be saved
-        self.corpus_class.__save_corpus(testfile(), corpus)
+        self.corpus_class.save_corpus(testfile(), corpus)
 
         # and loaded back, resulting in exactly the same corpus
         corpus2 = list(self.corpus_class(testfile()))
@@ -253,7 +253,7 @@ class TestBleiCorpus(CorpusTestCase):
     def test_save_format_for_dtm(self):
         corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
         test_file = testfile()
-        self.corpus_class.__save_corpus(test_file, corpus)
+        self.corpus_class.save_corpus(test_file, corpus)
         with open(test_file) as f:
             for line in f:
                 # unique_word_count index1:count1 index2:count2 ... indexn:counnt

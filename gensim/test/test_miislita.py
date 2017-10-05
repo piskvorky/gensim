@@ -64,7 +64,7 @@ class TestMiislita(unittest.TestCase):
 
         # make sure serializing works
         ftmp = get_tmpfile('test_textcorpus.mm')
-        corpora.MmCorpus.__save_corpus(ftmp, miislita)
+        corpora.MmCorpus.save_corpus(ftmp, miislita)
         self.assertTrue(os.path.exists(ftmp))
 
         # make sure deserializing gives the same result

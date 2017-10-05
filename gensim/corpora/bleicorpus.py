@@ -5,7 +5,9 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Blei's LDA-C format."""
+"""
+Blei's LDA-C format.
+"""
 
 from __future__ import with_statement
 
@@ -39,9 +41,8 @@ class BleiCorpus(IndexedCorpus):
         """
         Initialize the corpus from a file.
 
-        Args:
-            fname (str): serialized corpus's filename
-            fname_vocab (str): vocabulary file; takes precedence over fname.vocab
+        `fname_vocab` is the file with vocabulary; if not specified, it defaults to
+        `fname.vocab`.
         """
         IndexedCorpus.__init__(self, fname)
         logger.info("loading corpus from %s", fname)
@@ -84,7 +85,7 @@ class BleiCorpus(IndexedCorpus):
         return doc
 
     @staticmethod
-    def __save_corpus(fname, corpus, id2word=None, metadata=False):
+    def save_corpus(fname, corpus, id2word=None, metadata=False):
         """
         Save a corpus in the LDA-C format.
 
@@ -93,9 +94,6 @@ class BleiCorpus(IndexedCorpus):
 
         This function is automatically called by `BleiCorpus.serialize`; don't
         call it directly, call `serialize` instead.
-
-        Args:
-
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")

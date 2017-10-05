@@ -79,7 +79,7 @@ class SvmLightCorpus(IndexedCorpus):
         self.length = lineno + 1
 
     @staticmethod
-    def __save_corpus(fname, corpus, id2word=None, labels=False, metadata=False):
+    def save_corpus(fname, corpus, id2word=None, labels=False, metadata=False):
         """
         Save a corpus in the SVMlight format.
 
