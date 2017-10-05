@@ -4,7 +4,7 @@
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
+r"""
 This module contains functions to compute confirmation on a pair of words or word subsets.
 
 The advantage of indirect confirmation measure is that it computes similarity of words in W' and
@@ -16,14 +16,15 @@ Thus, indirect confirmation measures may capture semantic support that direct me
 
 The formula used to compute indirect confirmation measure is
 
-m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
+    m_{sim}_{(m, \gamma)}(W', W*) =
+        s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
 
 where s_sim can be cosine, dice or jaccard similarity and
 
-\vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
+    \vec{V}^{\,}_{m,\gamma}(W') =
+        \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
 Here 'm' is the direct confirmation measure used.
-
 """
 
 import itertools
@@ -77,7 +78,7 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
             logger.warning(
                 "%d terms for topic %d are not in word2vec model vocabulary",
                 num_oov, topic_index)
-        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std, with_support))
+        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std,with_support))
 
     if total_oov > 0:
         logger.warning("%d terms for are not in word2vec model vocabulary", total_oov)
@@ -87,7 +88,7 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
 def cosine_similarity(
         segmented_topics, accumulator, topics, measure='nlr', gamma=1,
         with_std=False, with_support=False):
-    """
+    r"""
     This function calculates the indirect cosine measure.
 
     Given context vectors u = V(W') and w = V(W*) for the
@@ -96,20 +97,29 @@ def cosine_similarity(
 
     The formula used is
 
-        m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
+        m_{sim}_{(m, \gamma)}(W', W*) =
+            s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
 
     where each vector
 
-        \vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
+        \vec{V}^{\,}_{m,\gamma}(W') =
+            \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
     Args:
-        segmented_topics: Output from the segmentation module of the segmented topics. Is a list of list of tuples.
-        accumulator: Output from the probability_estimation module. Is an accumulator of word occurrences (see text_analysis module).
+        segmented_topics: Output from the segmentation module of the
+            segmented topics. Is a list of list of tuples.
+        accumulator: Output from the probability_estimation module. Is an
+            accumulator of word occurrences (see text_analysis module).
         topics: Topics obtained from the trained topic model.
-        measure (str): Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
+        measure (str): Direct confirmation measure to be used. Supported
+            values are "nlr" (normalized log ratio).
         gamma: Gamma value for computing W', W* vectors; default is 1.
-        with_std (bool): True to also include standard deviation across topic segment sets in addition to the mean coherence for each topic; default is False.
-        with_support (bool): True to also include support across topic segments. The support is defined as the number of pairwise similarity comparisons were used to compute the overall topic coherence.
+        with_std (bool): True to also include standard deviation across topic
+            segment sets in addition to the mean coherence for each topic;
+            default is False.
+        with_support (bool): True to also include support across topic segments.
+            The support is defined as the number of pairwise similarity
+            comparisons were used to compute the overall topic coherence.
 
     Returns:
         list: of indirect cosine similarity measure for each topic.
