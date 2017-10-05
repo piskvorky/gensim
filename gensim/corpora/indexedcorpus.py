@@ -85,14 +85,14 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         if progress_cnt is not None:
             if labels is not None:
-                offsets = serializer._save_corpus(fname, corpus, id2word, labels=labels, progress_cnt=progress_cnt, metadata=metadata)
+                offsets = serializer.__save_corpus(fname, corpus, id2word, labels=labels, progress_cnt=progress_cnt, metadata=metadata)
             else:
-                offsets = serializer._save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt, metadata=metadata)
+                offsets = serializer.__save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt, metadata=metadata)
         else:
             if labels is not None:
-                offsets = serializer._save_corpus(fname, corpus, id2word, labels=labels, metadata=metadata)
+                offsets = serializer.__save_corpus(fname, corpus, id2word, labels=labels, metadata=metadata)
             else:
-                offsets = serializer._save_corpus(fname, corpus, id2word, metadata=metadata)
+                offsets = serializer.__save_corpus(fname, corpus, id2word, metadata=metadata)
 
         if offsets is None:
             raise NotImplementedError("called serialize on class %s which doesn't support indexing!" % serializer.__name__)

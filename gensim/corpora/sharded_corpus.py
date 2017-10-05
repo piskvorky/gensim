@@ -764,7 +764,7 @@ class ShardedCorpus(IndexedCorpus):
         return super(ShardedCorpus, cls).load(fname, mmap)
 
     @staticmethod
-    def _save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False, **kwargs):
+    def __save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False, **kwargs):
         """
         Implement a serialization interface. Do not call directly;
         use the `serialize` method instead.
@@ -799,4 +799,4 @@ class ShardedCorpus(IndexedCorpus):
         Ignore the parameters id2word, index_fname, progress_cnt, labels
         and metadata. They currently do nothing and are here only to
         provide a compatible method signature with superclass."""
-        serializer._save_corpus(fname, corpus, id2word=id2word, progress_cnt=progress_cnt, metadata=metadata, **kwargs)
+        serializer.__save_corpus(fname, corpus, id2word=id2word, progress_cnt=progress_cnt, metadata=metadata, **kwargs)

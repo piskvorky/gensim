@@ -109,7 +109,7 @@ class CorpusTestCase(unittest.TestCase):
         corpus = self.TEST_CORPUS
 
         # make sure the corpus can be saved
-        self.corpus_class._save_corpus(testfile(), corpus)
+        self.corpus_class.__save_corpus(testfile(), corpus)
 
         # and loaded back, resulting in exactly the same corpus
         corpus2 = list(self.corpus_class(testfile()))
