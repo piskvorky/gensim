@@ -1641,7 +1641,7 @@ class PathLineSentences(object):
 
         Example::
 
-            sentences = LineSentencePath(os.getcwd() + '\\corpus\\')
+            sentences = PathLineSentences(os.getcwd() + '\\corpus\\')
 
         The files in the directory should be either text files, .bz2 files, or .gz files.
 

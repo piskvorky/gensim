@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 def remove_stopwords(tokens, stopwords=STOPWORDS):
-    """Remove stopwords using list from `gensim.utils.STOPWORDS."""
+    """Remove stopwords using list from `gensim.utils.STOPWORDS`."""
     return [token for token in tokens if token not in stopwords]
 
 

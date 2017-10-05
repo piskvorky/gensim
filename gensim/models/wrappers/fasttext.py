@@ -31,7 +31,6 @@ import logging
 import tempfile
 import os
 import struct
-from six.moves import xrange
 
 import numpy as np
 from numpy import float32 as REAL, sqrt, newaxis

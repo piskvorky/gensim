@@ -167,6 +167,7 @@ class TestSummarizationTest(unittest.TestCase):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
         self.assertEquals(summarize(text, split=True), [])
 
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
