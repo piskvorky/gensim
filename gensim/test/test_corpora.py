@@ -253,7 +253,7 @@ class TestBleiCorpus(CorpusTestCase):
     def test_save_format_for_dtm(self):
         corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
         test_file = testfile()
-        self.corpus_class._save_corpus(test_file, corpus)
+        self.corpus_class.__save_corpus(test_file, corpus)
         with open(test_file) as f:
             for line in f:
                 # unique_word_count index1:count1 index2:count2 ... indexn:counnt
