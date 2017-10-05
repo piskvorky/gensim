@@ -193,7 +193,6 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
     WordVectorsAccumulator.
 
     Args:
-    Args:
         segmented_topics (list): Output from the segmentation module of the segmented
             topics. Is a list of list of tuples.
         accumulator: word occurrence accumulator from probability_estimation.
@@ -205,6 +204,7 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
 
     Returns:
         list : of word2vec cosine similarities per topic.
+
     """
     topic_coherences = []
     total_oov = 0
@@ -235,42 +235,35 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
     return topic_coherences
 
 
-def cosine_similarity(
-        segmented_topics, accumulator, topics, measure='nlr', gamma=1,
-        with_std=False, with_support=False):
-    """
-    This function calculates the indirect cosine measure. Given context vectors
-    u = V(W') and w = V(W*) for the word sets of a pair S_i = (W', W*) indirect
-    cosine measure is computed as the cosine similarity between u and w.
-
-    The formula used is:
-
-        m_{sim}_{(m, \gamma)}(W', W*) =
-            s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
-
-    where each vector:
-
-        \vec{V}^{\,}_{m,\gamma}(W') =
-            \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
+def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamma=1,
+                      with_std=False, with_support=False):
+    r"""
+    This function calculates the indirect cosine measure.
+    Given context vectors u = V(W') and w = V(W*) for the
+    word sets of a pair S_i = (W', W*) indirect cosine measure
+    is computed as the cosine similarity between u and w.
+    The formula used is
+    m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
+    where each vector
+    \vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
     Args:
-        segmented_topics : Output from the segmentation module of the segmented topics.
-            Is a list of list of tuples.
-        accumulator : Output from the probability_estimation module. Is an accumulator
-            of word occurrences (see text_analysis module).
-        topics : Topics obtained from the trained topic model.
-        measure (str): Direct confirmation measure to be used. Supported values are
-            "nlr" (normalized log ratio).
-        gamma : Gamma value for computing W', W* vectors; default is 1.
-        with_std (bool): True to also include standard deviation across topic segment
-            sets in addition to the mean coherence for each topic; default is False.
-        with_support (bool): True to also include support across topic segments. The
-            support is defined as the number of pairwise similarity comparisons were
-            used to compute the overall topic coherence.
-
+        segmented_topics: Output from the segmentation module of the
+            segmented topics. Is a list of list of tuples.
+        accumulator: Output from the probability_estimation module. Is an
+            accumulator of word occurrences (see text_analysis module).
+        topics: Topics obtained from the trained topic model.
+        measure (str): Direct confirmation measure to be used. Supported
+            values are "nlr" (normalized log ratio).
+        gamma: Gamma value for computing W', W* vectors; default is 1.
+        with_std (bool): True to also include standard deviation across topic
+            segment sets in addition to the mean coherence for each topic;
+            default is False.
+        with_support (bool): True to also include support across topic segments.
+            The support is defined as the number of pairwise similarity
+            comparisons were used to compute the overall topic coherence.
     Returns:
-        list : of indirect cosine similarity measure for each topic.
-
+        list: of indirect cosine similarity measure for each topic.
     """
     context_vectors = ContextVectorComputer(measure, topics, accumulator, gamma)
 
