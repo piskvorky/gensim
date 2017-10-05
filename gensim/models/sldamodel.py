@@ -6,25 +6,19 @@
 
 import logging
 import numpy as np
-import six
+from six import string_types
+from six.moves import xrange
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
-from six.moves import xrange
+from scipy.misc import logsumexp
+
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
-from gensim.models import basemodel, CoherenceModel
-
-# log(sum(exp(x))) that tries to avoid overflow
-try:
-    # try importing from here if older scipy is installed
-    from scipy.maxentropy import logsumexp
-except ImportError:
-    # maxentropy has been removed in recent releases, logsumexp now in misc
-    from scipy.misc import logsumexp
 
 
 logger = logging.getLogger('gensim.models.sldamodel')
+
 
 def dirichlet_expectation(alpha):
     """
@@ -34,20 +28,23 @@ def dirichlet_expectation(alpha):
         return(psi(alpha) - psi(n.sum(alpha)))
     return(psi(alpha) - psi(n.sum(alpha, 1))[:, n.newaxis])
 
+
 def get_lambda(self):
-        return self.eta + self.sstats
+    return self.eta + self.sstats
+
 
 def get_Elogbeta(self):
-        return dirichlet_expectation(self.get_lambda())
+    return dirichlet_expectation(self.get_lambda())
 
-class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
+
+class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def __init__(self, corpus=None, n_topics=100, alpha='symmetric', beta, mu, nu, nu2,
-                 sigma2, iterations = 100, report_iter=10, seed=None):
+                 sigma2, iterations=100, report_iter=10, seed=None):
     """
     Supervised latent Dirichlet allocation, using collapsed Gibbs
     sampling.
-    Args
+    Args:
         n_topics : int
             Number of topics
         alpha : array-like, shape = (n_topics,)
@@ -95,15 +92,18 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         if num_topics < 0 or num_topics >= self.num_topics:
             num_topics = self.num_topics
-            chosen_topics = range(num_topics)
+            chosen_topics = xrange(num_topics)
         else:
             num_topics = min(num_topics, self.num_topics)
 
-            # add a little random jitter, to randomize results around the same alpha
-            sort_alpha = self.alpha + 0.0001 * self.random_state.rand(len(self.alpha))
+            # add a little random jitter, to randomize results around the same
+            # alpha
+            sort_alpha = self.alpha + 0.0001 * \
+                self.random_state.rand(len(self.alpha))
 
             sorted_topics = list(matutils.argsort(sort_alpha))
-            chosen_topics = sorted_topics[:num_topics // 2] + sorted_topics[-num_topics // 2:]
+            chosen_topics = sorted_topics[:num_topics //
+                                          2] + sorted_topics[-num_topics // 2:]
 
         shown = []
 
@@ -131,17 +131,19 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             list: of `(word, probability)` 2-tuples for the most probable
             words in topic `topicid`.
         """
-        return [(self.id2word[id], value) for id, value in self.get_topic_terms(topicid, topn)]
+        return [(self.id2word[id], value)
+                for id, value in self.get_topic_terms(topicid, topn)]
 
     def do_estep(self, chunk, state=None):
-        
+
         if state is None:
             state = self.state
         gamma, sstats = self.inference(chunk, collect_sstats=True)
         state.sstats += sstats
-        state.numdocs += gamma.shape[0]  # avoids calling len(chunk) on a generator
+        # avoids calling len(chunk) on a generator
+        state.numdocs += gamma.shape[0]
         return gamma
-    
+
     def do_mstep(self, rho, other, extra_pass=False):
         diff = np.log(self.expElogbeta)
         self.state.blend(rho, other)
@@ -156,68 +158,35 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if not extra_pass:
             self.num_updates += other.numdocs
-    
-    def save(self, fname, ignore=['state', 'dispatcher'], separately=None, *args, **kwargs):
-        """
-        Save the model to file.
-        """
-        if self.state is not None:
-            self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
-        if 'id2word' not in ignore:
-            utils.pickle(self.id2word, utils.smart_extension(fname, '.id2word'))
 
-        if ignore is not None and ignore:
-            if isinstance(ignore, six.string_types):
-                ignore = [ignore]
-            ignore = [e for e in ignore if e]
-            ignore = list(set(['state', 'dispatcher', 'id2word']) | set(ignore))
-        else:
-            ignore = ['state', 'dispatcher', 'id2word']
-
-        separately_explicit = ['expElogbeta', 'sstats']
-        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
-            separately_explicit.append('alpha')
-        if (isinstance(self.eta, six.string_types) and self.mu == 'auto') or (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
-            separately_explicit.append('eta')
-        if separately:
-            if isinstance(separately, six.string_types):
-                separately = [separately]
-            separately = [e for e in separately if e]  # make sure None and '' are not in the list
-            separately = list(set(separately_explicit) | set(separately))
-        else:
-            separately = separately_explicit
-        super(sLdaModel, self).save(fname, ignore=ignore, separately=separately, *args, **kwargs)
-        
     def accuracy(self, goldlabel):
         right = 0
-        for d in range(0, self._D):
+        for d in xrange(0, self._D):
             if (self._predictions[d] == goldlabel[d]):
                 right = right + 1
         accuracy = float(right) / float(self._D)
         return accuracy
-    
+
     def save_parameters(self):
-        np.savetxt("lambda-%d.txt" %self._iterations, self._lambda)
-        np.savetxt("mu-%d.txt" %self._iterations, self._mu)
-    
+        np.savetxt("lambda-%d.txt" % self._iterations, self._lambda)
+        np.savetxt("mu-%d.txt" % self._iterations, self._mu)
+
     def calculate_mu(self, phi, expmu, cts, label):
         gra_mu = n.zeros(expmu.shape)
         nphi = (phi.T * cts).T
-        avephi = n.average(nphi, axis = 0)
-        gra_mu[label,:] = avephi
+        avephi = n.average(nphi, axis=0)
+        gra_mu[label, :] = avephi
         N = float(n.sum(cts))
-        #sf_aux = n.zeros((self._C, len(cts)))
-        #sf_aux_prod = n.ones(self._C)
         sf_aux = np.dot(expmu, phi.T)
         sf_aux_power = np.power(sf_aux, cts)
- 
-        sf_aux_prod = np.prod(sf_aux_power, axis = 1) +1e-100
+
+        sf_aux_prod = np.prod(sf_aux_power, axis=1) + 1e-100
         kappa_1 = 1.0 / np.sum(sf_aux_prod)
-       
+
         sf_pra = np.zeros((self._C, self._K))
-        
-        temp = (sf_aux_prod[:,np.newaxis] / sf_aux)
-        for c in range (0, self._C):
-            temp1 = np.outer(temp[c,:], (1.0/N) * expmu[c,:])
+
+        temp = (sf_aux_prod[:, np.newaxis] / sf_aux)
+        for c in xrange(0, self._C):
+            temp1 = np.outer(temp[c, :], (1.0 / N) * expmu[c, :])
             temp1 = temp1 * nphi
-            sf_pra[c,:] = np.sum(temp1, axis = 0)
+            sf_pra[c, :] = np.sum(temp1, axis=0)
