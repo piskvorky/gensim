@@ -7,13 +7,16 @@
 
 """
 USAGE: $ python -m gensim.scripts.word2vec2tensor --input <Word2Vec model file> --output <TSV tensor filename prefix> [--binary] <Word2Vec binary flag>
+
 Where:
-    <Word2Vec model file>: Input Word2Vec model
-    <TSV tensor filename prefix>: 2D tensor TSV output file name prefix
+    <Word2Vec model file>: Input Word2Vec model.
+    <TSV tensor filename prefix>: 2D tensor TSV output file name prefix.
     <Word2Vec binary flag>: Set True if Word2Vec model is binary. Defaults to False.
+
 Output:
     The script will create two TSV files. A 2d tensor format file, and a Word Embedding metadata file. Both files will
     us the --output file name as prefix
+
 This script is used to convert the word2vec format to Tensorflow 2D tensor and metadata formats for Embedding Visualization
 To use the generated TSV 2D tensor and metadata file in the Projector Visualizer, please
 1) Open http://projector.tensorflow.org/.
@@ -37,12 +40,13 @@ logger = logging.getLogger(__name__)
 
 
 def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
-    """
-    Convert Word2Vec mode to 2D tensor TSV file and metadata file
+    """Convert Word2Vec mode to 2D tensor TSV file and metadata file
+
     Args:
-        word2vec_model_path (str): word2vec model file path
-        tensor_filename (str): filename prefix
-        binary (bool): set True to use a binary Word2Vec model, defaults to False
+        word2vec_model_path (str): word2vec model file path.
+        tensor_filename (str): filename prefix.
+        binary (bool): set True to use a binary Word2Vec model, defaults to False.
+
     """
     model = gensim.models.KeyedVectors.load_word2vec_format(word2vec_model_path, binary=binary)
     outfiletsv = tensor_filename + '_tensor.tsv'
