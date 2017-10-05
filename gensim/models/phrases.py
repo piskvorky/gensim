@@ -125,7 +125,7 @@ class Phrases(interfaces.TransformationABC):
 
         `threshold` represents a score threshold for forming the phrases (higher means
         fewer phrases). A phrase of words `a` followed by `b` is accepted if the score of the
-        phrase is greater than threshold. see the `scoring` setting
+        phrase is greater than threshold. see the `scoring' setting
 
         `max_vocab_size` is the maximum size of the vocabulary. Used to control
         pruning of less common words, to keep memory under control. The default
@@ -137,17 +137,16 @@ class Phrases(interfaces.TransformationABC):
 
         `scoring` specifies how potential phrases are scored for comparison to the `threshold`
         setting. two settings are available:
-
         'default': from "Efficient Estimaton of Word Representations in Vector Space" by
             Mikolov, et. al.:
             (count(worda followed by wordb) - min_count) * N /
-            (count(worda) * count(wordb)) > `threshold`, where `N` is the total vocabulary size.
+            (count(worda) * count(wordb)) > threshold`, where `N` is the total vocabulary size.
         'npmi': normalized pointwise mutual information, from "Normalized (Pointwise) Mutual
             Information in Colocation Extraction" by Gerlof Bouma:
             ln(prop(worda followed by wordb) / (prop(worda)*prop(wordb))) /
             - ln(prop(worda followed by wordb)
             where prop(n) is the count of n / the count of everything in the entire corpus
-            'npmi' is more robust when dealing with common words that form part of common bigrams, and
+        'npmi' is more robust when dealing with common words that form part of common bigrams, and
             ranges from -1 to 1, but is slower to calculate than the default
 
         """

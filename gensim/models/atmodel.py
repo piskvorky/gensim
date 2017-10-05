@@ -13,13 +13,13 @@ This module trains the author-topic model on documents and corresponding author-
 dictionaries. The training is online and is constant in memory w.r.t. the number of
 documents. The model is *not* constant in memory w.r.t. the number of authors.
 
-The model can be updated with additional documents after training has been completed. It is
+The model can be updated with additional documents after taining has been completed. It is
 also possible to continue training on the existing data.
 
 The model is closely related to Latent Dirichlet Allocation. The AuthorTopicModel class
 inherits the LdaModel class, and its usage is thus similar.
 
-Distributed computation and multiprocessing is not implemented at the moment, but may be
+Distributed compuation and multiprocessing is not implemented at the moment, but may be
 coming in the future.
 
 The model was introduced by Rosen-Zvi and co-authors in 2004 (https://mimno.infosci.cornell.edu/info6150/readings/398.pdf).

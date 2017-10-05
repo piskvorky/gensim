@@ -23,7 +23,8 @@ logger = logging.getLogger('gensim.corpora.bleicorpus')
 
 
 class BleiCorpus(IndexedCorpus):
-    """Corpus in Blei's LDA-C format.
+    """
+    Corpus in Blei's LDA-C format.
 
     The corpus is represented as two files: one describing the documents, and another
     describing the mapping between words and their ids.
@@ -37,7 +38,8 @@ class BleiCorpus(IndexedCorpus):
     """
 
     def __init__(self, fname, fname_vocab=None):
-        """Initialize the corpus from a file.
+        """
+        Initialize the corpus from a file.
 
         Args:
             fname (str): serialized corpus's filename
@@ -68,7 +70,9 @@ class BleiCorpus(IndexedCorpus):
         self.id2word = dict(enumerate(words))
 
     def __iter__(self):
-        """Iterate over the corpus, returning one sparse vector at a time."""
+        """
+        Iterate over the corpus, returning one sparse vector at a time.
+        """
         lineno = -1
         with utils.smart_open(self.fname) as fin:
             for lineno, line in enumerate(fin):
@@ -76,21 +80,14 @@ class BleiCorpus(IndexedCorpus):
         self.length = lineno + 1
 
     def line2doc(self, line):
-        """Make document from a line
-        Args
-        ----------
-        line : str
-            Document's string representation
-
-        Returns
-        -------
-        document: list of (int, float)
-            Document's list representation
-
-        Raises
-        ------
-        ValueError
-            If `line` is not a proper document's representation
+        """
+        Args:
+            line (str): document's string representation
+        Returns:
+            :obj:`list` of (:obj:`int`, :obj:`float`):
+                document's list representation
+        Raises:
+            ValueError: If format is invalid
         """
         parts = utils.to_unicode(line).split()
         if int(parts[0]) != len(parts) - 1:
@@ -101,25 +98,20 @@ class BleiCorpus(IndexedCorpus):
 
     @staticmethod
     def _save_corpus(fname, corpus, id2word=None, metadata=False):
-        """Save a corpus in the LDA-C format.
+        """
+        Save a corpus in the LDA-C format.
 
         There are actually two files saved: `fname` and `fname.vocab`, where
         `fname.vocab` is the vocabulary file.
 
-        Args
-        ----
-        fname : str
-            filename
-        corpus : iterable
-            yields documents
-        id2word : (dict of (str, str), optional)
-            transforms id to word
-        metadata : bool
-            any additional info
-
-        Returns
-        -------
-        offsets : list of int
+        Args:
+            fname (str): filename
+            corpus : yields documents
+            id2word (:obj:`dict` of (:obj:`str`, :obj:`str`), optional):
+                transforms id to word
+            metadata (bool): any additional info
+        Returns:
+            :obj:`list` of :obj:`int`: fields' offsets
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
@@ -147,17 +139,13 @@ class BleiCorpus(IndexedCorpus):
         return offsets
 
     def docbyoffset(self, offset):
-        """Return document corresponding to `offset`.
+        """
+        Return document corresponding to `offset`.
 
-        Args
-        ----
-        offset : int
-            position of the document in the file
-
-        Returns
-        -------
-        document : list of (int, float)
-            document's list representation
+        Args:
+            offset (int): position of the document in the file
+        Returns:
+            :obj:`list` of (:obj:`int`, :obj:`float`): document's list representation
         """
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
