@@ -45,9 +45,9 @@ class Space(object):
     An auxiliary class for storing the the words space
 
     Attributes:
-        `mat` (ndarray): each row is the word vector of the lexicon
-        `index2word` (list): a list of words in the `Space` object
-        `word2index` (dict): map the word to index
+    `mat` (ndarray): each row is the word vector of the lexicon
+    `index2word` (list): a list of words in the `Space` object
+    `word2index` (dict): map the word to index
     """
     def __init__(self, matrix, index2word):
         """
@@ -69,8 +69,7 @@ class Space(object):
         Construct a space class for the lexicon, if it's provided.
         Args:
             `lang_vec`: word2vec model that extract word vector for lexicon
-            `lexicon`: the default is None, if it is not provided, the lexicon
-                    is all the lang_vec's word, i.e. lang_vec.vocab.keys()
+            `lexicon`: the default is None, if it is not provided, the lexicon is all the lang_vec's word, i.e. lang_vec.vocab.keys()
         Returns:
             `Space` object for the lexicon
         """
@@ -100,11 +99,12 @@ class TranslationMatrix(utils.SaveLoad):
     """
     Objects of this class realize the translation matrix which map the source language
     to the target language.
-     The main methods are:
+    The main methods are:
 
     1. constructor,
     2. the `train` method, which initialize everything needed to build a translation matrix
-    3. the `translate` method, which given new word and its vector representation,
+    3. the `translate` method, which given new word and its vector representation.
+
     We map it to the other language space by computing z = Wx, then return the
     word whose representation is close to z.
 
@@ -195,7 +195,7 @@ class TranslationMatrix(utils.SaveLoad):
         """
         Translate the word from the source language to the target language, and return the topn
         most similar words.
-         Args:
+        Args:
             `source_words`(str/list): single word or a list of words to be translated
             `topn`: return the top N similar words. By default (`topn=5`)
             `gc`: defines the training algorithm. By default (`gc=0`), use standard NN retrieval.
@@ -272,12 +272,13 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
     """
         Objects of this class realize the BackMapping translation matrix which map the
         source model's document vector to the target model's document vector(old model).
-         The main methods are:
+        The main methods are:
 
         1. constructor, initializing
         2. the `train` method, which build a translation matrix
-        2. the `infer_vector` method, which given the target model's document vector
-        we map it to the other language space by computing z = Wx, then return the
+        3. the `infer_vector` method, which given the target model's document vector
+
+        We map it to the other language space by computing z = Wx, then return the
         word whose representation is close to z.
 
         the details use seen the notebook (translation matrix revist.ipynb)

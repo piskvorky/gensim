@@ -153,3 +153,6 @@ else
         jupyter nbconvert --to script --stdout ${fname} | flake8 - --show-source --ignore=E501,E731,E12,W503,E402 --builtins=get_ipython || true
     done
 fi
+
+echo "Build documentation"
+pip install .[docs] && cd docs/src && make clean html
