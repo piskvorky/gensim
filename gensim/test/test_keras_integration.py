@@ -66,7 +66,7 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         keras_w2v_model = self.model_cos_sim
         keras_w2v_model_wv = keras_w2v_model.wv
 
-        embedding_layer = keras_w2v_model_wv.get_embedding_layer()
+        embedding_layer = keras_w2v_model_wv.get_keras_embedding()
 
         input_a = Input(shape=(1,), dtype='int32', name='input_a')
         input_b = Input(shape=(1,), dtype='int32', name='input_b')
@@ -135,7 +135,7 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         keras_w2v.build_vocab(texts_w2v)
         keras_w2v.train(texts, total_examples=keras_w2v.corpus_count, epochs=keras_w2v.iter)
         keras_w2v_wv = keras_w2v.wv
-        embedding_layer = keras_w2v_wv.get_embedding_layer()
+        embedding_layer = keras_w2v_wv.get_keras_embedding()
 
         # create a 1D convnet to solve our classification task
         sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
