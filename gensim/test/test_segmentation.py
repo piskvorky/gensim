@@ -11,11 +11,9 @@ Automated tests for segmentation algorithms in the segmentation module.
 
 import logging
 import unittest
-
 import numpy as np
-
-from gensim.topic_coherence import segmentation
 from numpy import array
+import gensim.models.coherence_utils
 
 
 class TestSegmentation(unittest.TestCase):
@@ -28,7 +26,7 @@ class TestSegmentation(unittest.TestCase):
 
     def testSOnePre(self):
         """Test s_one_pre segmentation."""
-        actual = segmentation.s_one_pre(self.topics)
+        actual = gensim.models.coherence_utils.s_one_pre(self.topics)
         expected = [
             [(4, 9), (6, 9), (6, 4)],
             [(10, 9), (7, 9), (7, 10)],
@@ -38,7 +36,7 @@ class TestSegmentation(unittest.TestCase):
 
     def testSOneOne(self):
         """Test s_one_one segmentation."""
-        actual = segmentation.s_one_one(self.topics)
+        actual = gensim.models.coherence_utils.s_one_one(self.topics)
         expected = [
             [(9, 4), (9, 6), (4, 9), (4, 6), (6, 9), (6, 4)],
             [(9, 10), (9, 7), (10, 9), (10, 7), (7, 9), (7, 10)],
@@ -48,7 +46,7 @@ class TestSegmentation(unittest.TestCase):
 
     def testSOneSet(self):
         """Test s_one_set segmentation."""
-        actual = segmentation.s_one_set(self.topics)
+        actual = gensim.models.coherence_utils.s_one_set(self.topics)
         expected = [
             [(9, array([9, 4, 6])), (4, array([9, 4, 6])), (6, array([9, 4, 6]))],
             [(9, array([9, 10, 7])), (10, array([9, 10, 7])), (7, array([9, 10, 7]))],

@@ -21,15 +21,9 @@ coherence measure of his/her choice by choosing a method in each of the pipeline
 import logging
 import multiprocessing as mp
 from collections import namedtuple
-
 import numpy as np
-
-from gensim import interfaces, matutils
-from gensim import utils
-from gensim.topic_coherence import (segmentation, probability_estimation,
-                                    direct_confirmation_measure, indirect_confirmation_measure,
-                                    aggregation)
-from gensim.topic_coherence.probability_estimation import unique_ids_from_segments
+from gensim.models import coherence_utils
+from gensim import interfaces, matutils, utils
 
 logger = logging.getLogger(__name__)
 
@@ -39,34 +33,34 @@ SLIDING_WINDOW_BASED = {'c_v', 'c_uci', 'c_npmi', 'c_w2v'}
 _make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
 COHERENCE_MEASURES = {
     'u_mass': _make_pipeline(
-        segmentation.s_one_pre,
-        probability_estimation.p_boolean_document,
-        direct_confirmation_measure.log_conditional_probability,
-        aggregation.arithmetic_mean
+        coherence_utils.s_one_pre,
+        coherence_utils.p_boolean_document,
+        coherence_utils.log_conditional_probability,
+        coherence_utils.arithmetic_mean
     ),
     'c_v': _make_pipeline(
-        segmentation.s_one_set,
-        probability_estimation.p_boolean_sliding_window,
-        indirect_confirmation_measure.cosine_similarity,
-        aggregation.arithmetic_mean
+        coherence_utils.s_one_set,
+        coherence_utils.p_boolean_sliding_window,
+        coherence_utils.cosine_similarity,
+        coherence_utils.arithmetic_mean
     ),
     'c_w2v': _make_pipeline(
-        segmentation.s_one_set,
-        probability_estimation.p_word2vec,
-        indirect_confirmation_measure.word2vec_similarity,
-        aggregation.arithmetic_mean
+        coherence_utils.s_one_set,
+        coherence_utils.p_word2vec,
+        coherence_utils.word2vec_similarity,
+        coherence_utils.arithmetic_mean
     ),
     'c_uci': _make_pipeline(
-        segmentation.s_one_one,
-        probability_estimation.p_boolean_sliding_window,
-        direct_confirmation_measure.log_ratio_measure,
-        aggregation.arithmetic_mean
+        coherence_utils.s_one_one,
+        coherence_utils.p_boolean_sliding_window,
+        coherence_utils.log_ratio_measure,
+        coherence_utils.arithmetic_mean
     ),
     'c_npmi': _make_pipeline(
-        segmentation.s_one_one,
-        probability_estimation.p_boolean_sliding_window,
-        direct_confirmation_measure.log_ratio_measure,
-        aggregation.arithmetic_mean
+        coherence_utils.s_one_one,
+        coherence_utils.p_boolean_sliding_window,
+        coherence_utils.log_ratio_measure,
+        coherence_utils.arithmetic_mean
     ),
 }
 
@@ -353,7 +347,7 @@ class CoherenceModel(interfaces.TransformationABC):
         if self._accumulator is None or not self._topics_differ(new_topics):
             return False
 
-        new_set = unique_ids_from_segments(self.measure.seg(new_topics))
+        new_set = coherence_utils.unique_ids_from_segments(self.measure.seg(new_topics))
         return not self._accumulator.relevant_ids.issuperset(new_set)
 
     def _topics_differ(self, new_topics):
