@@ -16,10 +16,7 @@ import sys
 
 import numpy as np
 
-if sys.version_info < (2, 7):
-    import unittest2 as unittest
-else:
-    import unittest
+import unittest
 
 from gensim.models.wrappers import varembed
 
@@ -62,6 +59,7 @@ class TestVarembed(unittest.TestCase):
         self.model_sanity(model_with_morphemes)
         # Check syn0 is different for both models.
         self.assertFalse(np.allclose(model.syn0, model_with_morphemes.syn0))
+
     def testLookup(self):
         """Test lookup of vector for a particular word and list"""
         model = varembed.VarEmbed.load_varembed_format(vectors=varembed_model_vector_file)

@@ -50,7 +50,6 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # Install the build and runtime dependencies of the project.
-    # Install the build and runtime dependencies of the project.
   - "%CMD_IN_ENV% pip install --timeout=60 --trusted-host 28daf2247a33ed269873-7b1aad3fab3cc330e1fd9d109892382a.r6.cf2.rackcdn.com -r continuous_integration/appveyor/requirements.txt"
   - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
   - ps: "ls dist"
@@ -66,7 +65,7 @@ test_script:
   # installed library.
   - "mkdir empty_folder"
   - "cd empty_folder"
-  - "pip install pyemd testfixtures unittest2 sklearn Morfessor==2.0.2a4"
+  - "pip install pyemd testfixtures sklearn Morfessor==2.0.2a4"
   - "pip freeze"
   - "python -c \"import nose; nose.main()\" -s -v gensim"
   # Move back to the project folder

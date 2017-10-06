@@ -1,5 +1,98 @@
 Changes
 ===========
+## 3.0.0, 2017-09-27
+
+
+:star2: New features:
+* Add unsupervised FastText to Gensim (@chinmayapancholi13, [#1525](https://github.com/RaRe-Technologies/gensim/pull/1525))
+* Add sklearn API for gensim models (@chinmayapancholi13, [#1462](https://github.com/RaRe-Technologies/gensim/pull/1462))
+* Add callback metrics for LdaModel and integration with Visdom (@parulsethi, [#1399](https://github.com/RaRe-Technologies/gensim/pull/1399))
+* Add TranslationMatrix model (@robotcator, [#1434](https://github.com/RaRe-Technologies/gensim/pull/1434))
+* Add word2vec-based coherence. Fix #1380 (@macks22, [#1530](https://github.com/RaRe-Technologies/gensim/pull/1530))
+
+
+:+1: Improvements:
+* Add 'diagonal' parameter for LdaModel.diff (@parulsethi, [#1448](https://github.com/RaRe-Technologies/gensim/pull/1448))
+* Add 'score' function for SklLdaModel (@chinmayapancholi13, [#1445](https://github.com/RaRe-Technologies/gensim/pull/1445))
+* Update sklearn API for gensim models (@chinmayapancholi13, [#1473](https://github.com/RaRe-Technologies/gensim/pull/1473)) [:warning: breaks backward compatibility]
+* Add CoherenceModel to LdaModel.top_topics. Fix #1128 (@macks22, [#1427](https://github.com/RaRe-Technologies/gensim/pull/1427))
+* Add dendrogram viz for topics and JS metric (@parulsethi, [#1484](https://github.com/RaRe-Technologies/gensim/pull/1484))
+* Add topic network viz (@parulsethi, [#1536](https://github.com/RaRe-Technologies/gensim/pull/1536))
+* Replace viewitems to iteritems. Fix #1495 (@HodorTheCoder, [#1508](https://github.com/RaRe-Technologies/gensim/pull/1508))
+* Fix Travis config and add style-checking for Ipython Notebooks. Fix #1518, #1520 (@menshikh-iv, [#1522](https://github.com/RaRe-Technologies/gensim/pull/1522))
+* Remove mutable args from definitions. Fix #1561 (@zsef123, [#1562](https://github.com/RaRe-Technologies/gensim/pull/1562))
+* Add Appveyour for all PRs. Fix #1565 (@menshikh-iv, [#1565](https://github.com/RaRe-Technologies/gensim/pull/1565))
+* Refactor code by PEP8. Partially fix #1521 (@zsef123, [#1550](https://github.com/RaRe-Technologies/gensim/pull/1550))
+* Refactor code by PEP8 with additional limitations. Fix #1521 (@menshikh-iv, [#1569](https://github.com/RaRe-Technologies/gensim/pull/1569))
+* Update FastTextKeyedVectors.\_\_contains\_\_ (@ELind77, [#1499](https://github.com/RaRe-Technologies/gensim/pull/1499))
+* Update WikiCorpus tokenization. Fix #1534 (@roopalgarg, [#1537](https://github.com/RaRe-Technologies/gensim/pull/1537))
+
+
+:red_circle: Bug fixes:
+* Remove round in LdaSeqModel.print_topic. Fix #1480 (@menshikh-iv, [#1547](https://github.com/RaRe-Technologies/gensim/pull/1547))
+* Fix TextCorpus.samle_text (@menshikh-iv, [#1548](https://github.com/RaRe-Technologies/gensim/pull/1548))
+* Fix Mallet wrapper and tests for HDPTransform (@menshikh-iv, [#1555](https://github.com/RaRe-Technologies/gensim/pull/1555))
+* Fix incorrect initialization ShardedCorpus with a generator. Fix #1511 (@karkkainenk1, [#1512](https://github.com/RaRe-Technologies/gensim/pull/1512))
+* Add verification when summarize_corpus returns null. Fix #1531 (@fbarrios, [#1570](https://github.com/RaRe-Technologies/gensim/pull/1570))
+* Fix doctag unicode problem. Fix 1543 (@englhardt, [#1544](https://github.com/RaRe-Technologies/gensim/pull/1544))
+* Fix Translation Matrix (@robotcator, [#1594](https://github.com/RaRe-Technologies/gensim/pull/1594))
+* Add trainable flag to KeyedVectors.get_embedding_layer. Fix #1557 (@zsef123, [#1558](https://github.com/RaRe-Technologies/gensim/pull/1558))
+
+
+:books: Tutorial and doc improvements:
+* Update exception text in TextCorpus.samle_text. Partial fix #308 (@vlejd, [#1444](https://github.com/RaRe-Technologies/gensim/pull/1444))
+* Remove extra filter_token from tutorial (@VorontsovIE, [#1502](https://github.com/RaRe-Technologies/gensim/pull/1502))
+* Update Doc2Vec-IMDB notebook (@pahdo, [#1476](https://github.com/RaRe-Technologies/gensim/pull/1476))
+* Add Google Tag Manager for site (@yardos, [#1556](https://github.com/RaRe-Technologies/gensim/pull/1556))
+* Update docstring explaining lack of multistream support in WikiCopus. Fix #1496 (@polm and @menshikh-iv, [#1515](https://github.com/RaRe-Technologies/gensim/pull/1515))
+* Fix PathLineSentences docstring (@gojomo)
+* Fix typos from Translation Matrix notebook (@robotcator, [#1598](https://github.com/RaRe-Technologies/gensim/pull/1598))
+
+
+## 2.3.0, 2017-07-25
+
+
+:star2: New features:
+* Add Dockerfile for gensim with external wrappers (@parulsethi, [#1368](https://github.com/RaRe-Technologies/gensim/pull/1368))
+* Add sklearn wrapper for Word2Vec (@chinmayapancholi13, [#1437](https://github.com/RaRe-Technologies/gensim/pull/1437))
+* Add loss function for Word2Vec. Fix #999 (@chinmayapancholi13, [#1201](https://github.com/RaRe-Technologies/gensim/pull/1201))
+* Add sklearn wrapper for AuthorTopic model (@chinmayapancholi13, [#1403](https://github.com/RaRe-Technologies/gensim/pull/1403))
+
+
+:+1: Improvements:
+* Remove unittest2 (@souravsingh, [#1490](https://github.com/RaRe-Technologies/gensim/pull/1490))
+* Add multiple scoring methods for Phrases. Partial fix #1363 (@michaelwsherman, [#1464](https://github.com/RaRe-Technologies/gensim/pull/1464))
+* Add WordRank wrapper to Dockerfile (@parulsethi, [#1460](https://github.com/RaRe-Technologies/gensim/pull/1460))
+* Add PathLineSentences. Fix #1364 (@michaelwsherman, [#1423](https://github.com/RaRe-Technologies/gensim/pull/1423))
+* Add TextDirectoryCorpus and refactor TextCorpus. Fix #1387 (@macks22, [#1459](https://github.com/RaRe-Technologies/gensim/pull/1459))
+* Add sparse input support with topn parameter in any2sparse. Fix #1294 (@manneshiva, [#1321](https://github.com/RaRe-Technologies/gensim/pull/1321))
+* Add seed and length for sample_text. Partial fix #308 (@vlejd, [#1422](https://github.com/RaRe-Technologies/gensim/pull/1422))
+* Add word_ngram parameter to FastText (@fsonntag, [#1432](https://github.com/RaRe-Technologies/gensim/pull/1432))
+
+
+:red_circle: Bug fixes:
+* Fix fastText loading from .bin file. Fix #1236 (@prakhar2b, [#1341](https://github.com/RaRe-Technologies/gensim/pull/1341))
+* Fix paths in WordRank and running gensim version in Dockerfile (@parulsethi, [#1503](https://github.com/RaRe-Technologies/gensim/pull/1503))
+* Fix commit version for gensim in Dockerfile (@parulsethi, [#1491](https://github.com/RaRe-Technologies/gensim/pull/1491))
+* Fix encoding problems with tests on windows. Fix #1441 (@menshikh-iv, [#1469](https://github.com/RaRe-Technologies/gensim/pull/1469))
+* Fix parameters in score_cbow_pair (@jmhessel, [#1468](https://github.com/RaRe-Technologies/gensim/pull/1468))
+* Fix parameters in score_sentence_cbow (@jmhessel, [#1467](https://github.com/RaRe-Technologies/gensim/pull/1467))
+* Fix TextDirectoryCorpus on windows (@macks22, [#1463](https://github.com/RaRe-Technologies/gensim/pull/1463))
+* Fix gensim version in Dockerfile (@parulsethi, [#1456](https://github.com/RaRe-Technologies/gensim/pull/1456))
+* Fix WordOccurenceAccumulator on windows. Fix #1441 (@macks22, [#1449](https://github.com/RaRe-Technologies/gensim/pull/1449))
+* Fix scipy/numpy requirements (downgrade). Fix #1450 (@menshikh-iv, [#1450](https://github.com/RaRe-Technologies/gensim/pull/1450))
+
+
+:books: Tutorial and doc improvements:
+* Fix links and spaces in quick start guide (@iamsanten, [#1500](https://github.com/RaRe-Technologies/gensim/pull/1500))
+* Fix error of ConcatedDoc2Vec in doc2vec-imdb notebook (@robocator, [#1377](https://github.com/RaRe-Technologies/gensim/pull/1377))
+* Fix Sphinx warnings. Fix #1192 (@prerna135, [#1442](https://github.com/RaRe-Technologies/gensim/pull/1442))
+* Fix typo in LdaModel.diff method (@parulsethi, [#1461](https://github.com/RaRe-Technologies/gensim/pull/1461))
+* Add Tensorboard visualization for LDA (@parulsethi, [#1396](https://github.com/RaRe-Technologies/gensim/pull/1396))
+* Update old and add new notebook with CoherenceModel (@macks22, [#1431](https://github.com/RaRe-Technologies/gensim/pull/1431))
+
+
+
 ## 2.2.0, 2017-06-21
 
 

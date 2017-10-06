@@ -43,7 +43,8 @@ class TestDictionary(unittest.TestCase):
                 ['trees'],
                 ['graph', 'trees'],
                 ['graph', 'minors', 'trees'],
-                ['graph', 'minors', 'survey']]
+                ['graph', 'minors', 'survey']
+        ]
 
     def testDocFreqOneDoc(self):
         texts = [['human', 'interface', 'computer']]
@@ -102,9 +103,10 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(sorted(d.dfs.keys()), expected_keys)
         self.assertEqual(sorted(d.dfs.values()), expected_values)
 
-        expected_keys = sorted(['computer', 'eps', 'graph', 'human',
-                                'interface', 'minors', 'response', 'survey',
-                                'system', 'time', 'trees', 'user'])
+        expected_keys = sorted([
+            'computer', 'eps', 'graph', 'human', 'interface',
+            'minors', 'response', 'survey', 'system', 'time', 'trees', 'user'
+        ])
         expected_values = list(range(12))
         self.assertEqual(sorted(d.token2id.keys()), expected_keys)
         self.assertEqual(sorted(d.token2id.values()), expected_values)
@@ -127,21 +129,21 @@ class TestDictionary(unittest.TestCase):
         # provide keep_tokens argument, keep the tokens given
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=3, no_above=1.0, keep_tokens=['human', 'survey'])
-        expected = set(['graph', 'trees', 'human', 'system', 'user', 'survey'])
+        expected = {'graph', 'trees', 'human', 'system', 'user', 'survey'}
         self.assertEqual(set(d.token2id.keys()), expected)
 
     def testFilterKeepTokens_unchangedFunctionality(self):
         # do not provide keep_tokens argument, filter_extremes functionality is unchanged
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=3, no_above=1.0)
-        expected = set(['graph', 'trees', 'system', 'user'])
+        expected = {'graph', 'trees', 'system', 'user'}
         self.assertEqual(set(d.token2id.keys()), expected)
 
     def testFilterKeepTokens_unseenToken(self):
         # do provide keep_tokens argument with unseen tokens, filter_extremes functionality is unchanged
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=3, no_above=1.0, keep_tokens=['unknown_token'])
-        expected = set(['graph', 'trees', 'system', 'user'])
+        expected = {'graph', 'trees', 'system', 'user'}
         self.assertEqual(set(d.token2id.keys()), expected)
 
     def testFilterMostFrequent(self):
@@ -160,7 +162,8 @@ class TestDictionary(unittest.TestCase):
         expected = {
             'computer': 0, 'eps': 8, 'graph': 10, 'human': 1,
             'interface': 2, 'minors': 11, 'response': 3, 'survey': 4,
-            'system': 5, 'time': 6, 'trees': 9, 'user': 7}
+            'system': 5, 'time': 6, 'trees': 9, 'user': 7
+        }
         del expected[removed_word]
         self.assertEqual(sorted(d.token2id.keys()), sorted(expected.keys()))
 
@@ -186,7 +189,8 @@ class TestDictionary(unittest.TestCase):
         small_text = [
             ["prvé", "slovo"],
             ["slovo", "druhé"],
-            ["druhé", "slovo"]]
+            ["druhé", "slovo"]
+        ]
 
         d = Dictionary(small_text)
 
@@ -264,7 +268,8 @@ class TestDictionary(unittest.TestCase):
             "The generation of random binary unordered trees",
             "The intersection graph of paths in trees",
             "Graph minors IV Widths of trees and well quasi ordering",
-            "Graph minors A survey"]
+            "Graph minors A survey"
+        ]
         stoplist = set('for a of the and to in'.split())
         texts = [
             [word for word in document.lower().split() if word not in stoplist]
