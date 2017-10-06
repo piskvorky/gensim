@@ -51,7 +51,7 @@ def segment_and_print_all_articles(file_path, output_file):
     article_title<tab>section_heading<tab>section_content<tab>section_heading<tab>section_content
 
     """
-    with open(output_file, 'wb') as outfile:
+    with smart_open(output_file, 'wb') as outfile:
         for idx, (article_title, article_sections) in enumerate(segment_all_articles(file_path)):
             printed_components = [json.dumps(article_title)]
             for section_heading, section_content in article_sections:
