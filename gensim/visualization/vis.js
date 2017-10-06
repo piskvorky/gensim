@@ -633,6 +633,440 @@ var TopicModelVis = function(to_select, data_or_file_name) {
         }
 
 
+        //////////////////////////////////////////////////////////////////////////////
+
+        // function to update topic/word plot when a doc is selected
+        // the circle argument should be the appropriate circle element
+        function doc_on(circle) {
+            if (circle == null) return null;
+
+            // grab data bound to this element
+            var d = circle.__data__;
+            var docs = d.docs;
+
+            // change opacity and fill of the selected circle
+            circle.style.opacity = highlight_opacity;
+            circle.style.fill = color2;
+
+
+            // word interactions
+
+            // grab the word-plot data for this doc only:
+            var dat1 = doc_word_info.filter(function(d) {
+                return d.Doc == docs;
+            });
+
+            var w = dat1.length; // number of words for this doc
+
+            // freq depicted using color intensity rather than radius  (T = total vocab)
+            var word_radius = [];
+            for (var i = 0; i < W; ++i) {
+                word_radius[i] = 0;
+            }
+            for (i = 0; i < w; i++) {
+                word_radius[dat1[i].Word] = dat1[i].Freq;
+            }
+
+            var size = [];
+            for (var i = 0; i < W; ++i) {
+                size[i] = 0;
+            }
+            for (i = 0; i < w; i++) {
+                // If we want to also re-size the topic number labels, do it here
+                // 11 is the default, so leaving this as 11 won't change anything.
+                size[dat1[i].Word] = 11;
+            }
+
+            // var rScaleCond = d3.scale.sqrt()
+            //         .domain([0, 1]).range([0, rMax]);
+
+            // Change color of bubbles according to the doc's distribution over words
+            d3.selectAll(to_select + " .worddot")
+                .data(word_radius)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleCond(d));
+                    return (Math.sqrt(d*mdswidth*mdsheight*word_prop/Math.PI));
+                });
+
+            // re-bind mdsData so we can handle multiple selection
+            d3.selectAll(to_select + " .worddot")
+                .data(wordMdsData);
+
+            // // Change sizes of word numbers:
+            // d3.selectAll(to_select + " .word_txt")
+            //     .data(size)
+            //     .transition()
+            //     .style("font-size", function(d) {
+            //         return +d;
+            //     });
+
+
+            // topic interactions
+
+            var dat2 = doc_topic_info.filter(function(d) {
+                return d.Doc == docs;
+            });
+
+            var t = dat2.length; // number of topics for this doc
+
+            var topic_radius = [];
+            for (var i = 0; i < T; ++i) {
+                topic_radius[i] = 0;
+            }
+            for (i = 0; i < t; i++) {
+                topic_radius[dat2[i].Topic] = dat2[i].Freq;
+            }
+
+            var size2 = [];
+            for (var i = 0; i < T; ++i) {
+                size2[i] = 0;
+            }
+            for (i = 0; i < t; i++) {
+                // If we want to also re-size the topic number labels, do it here
+                // 11 is the default, so leaving this as 11 won't change anything.
+                size2[dat2[i].Topic] = 11;
+            }
+
+            // Change color of bubbles according to the doc's distribution over topics
+            d3.selectAll(to_select + " .topicdot")
+                .data(topic_radius)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleCond(d));
+                    return (Math.sqrt(d*mdswidth*mdsheight*word_prop/Math.PI));
+                });
+
+            // re-bind mdsData so we can handle multiple selection
+            d3.selectAll(to_select + " .topicdot")
+                .data(topicMdsData);
+
+            // // Change sizes of topic numbers:
+            // d3.selectAll(to_select + " .topic_txt")
+            //     .data(size2)
+            //     .transition()
+            //     .style("font-size", function(d) {
+            //         return +d;
+            //     });
+        }
+
+        // function to update doc/word plot when a topic is selected
+        // the circle argument should be the appropriate circle element
+        function topic_on(circle) {
+            if (circle == null) return null;
+
+            // grab data bound to this element
+            var d = circle.__data__;
+            var topics = d.topics;
+
+            // change opacity and fill of the selected circle
+            circle.style.opacity = highlight_opacity;
+            circle.style.fill = color2;
+
+            // doc interactions
+
+            // grab the doc-plot data for this topic only:
+            var dat1 = topic_doc_info.filter(function(d) {
+                return d.Topic == topics;
+            });
+
+            var dd = dat1.length; // number of docs for this topic
+
+            // freq depicted using color intensity rather than radius  (T = total vocab)
+            var doc_radius = [];
+            for (var i = 0; i < D; ++i) {
+                doc_radius[i] = 0;
+            }
+            for (i = 0; i < dd; i++) {
+                doc_radius[dat1[i].Doc] = dat1[i].Freq;
+            }
+
+            var size = [];
+            for (var i = 0; i < D; ++i) {
+                size[i] = 0;
+            }
+            for (i = 0; i < dd; i++) {
+                // If we want to also re-size the topic number labels, do it here
+                // 11 is the default, so leaving this as 11 won't change anything.
+                size[dat1[i].Doc] = 11;
+            }
+
+            // var rScaleCond = d3.scale.sqrt()
+            //         .domain([0, 1]).range([0, rMax]);
+
+            // Change color of bubbles according to the doc's distribution over words
+            d3.selectAll(to_select + " .docdot")
+                .data(doc_radius)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleCond(d));
+                    return (Math.sqrt(d*mdswidth*mdsheight*word_prop/Math.PI));
+                });
+
+            // re-bind mdsData so we can handle multiple selection
+            d3.selectAll(to_select + " .docdot")
+                .data(docMdsData);
+
+            // // Change sizes of word numbers:
+            // d3.selectAll(to_select + " .word_txt")
+            //     .data(size)
+            //     .transition()
+            //     .style("font-size", function(d) {
+            //         return +d;
+            //     });
+
+
+            // word interactions
+
+            var dat2 = topic_word_info.filter(function(d) {
+                return d.Topic == topics;
+            });
+
+            var w = dat2.length; // number of words for this topic
+
+            var word_radius = [];
+            for (var i = 0; i < T; ++i) {
+                word_radius[i] = 0;
+            }
+            for (i = 0; i < w; i++) {
+                word_radius[dat2[i].Word] = dat2[i].Freq;
+            }
+
+            var size2 = [];
+            for (var i = 0; i < W; ++i) {
+                size2[i] = 0;
+            }
+            for (i = 0; i < w; i++) {
+                // If we want to also re-size the topic number labels, do it here
+                // 11 is the default, so leaving this as 11 won't change anything.
+                size2[dat2[i].Word] = 11;
+            }
+
+            // Change color of bubbles according to the topic's distribution over word
+            d3.selectAll(to_select + " .worddot")
+                .data(word_radius)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleCond(d));
+                    return (Math.sqrt(d*mdswidth*mdsheight*word_prop/Math.PI));
+                });
+
+            // re-bind mdsData so we can handle multiple selection
+            d3.selectAll(to_select + " .worddot")
+                .data(wordMdsData);
+
+            // // Change sizes of topic numbers:
+            // d3.selectAll(to_select + " .topic_txt")
+            //     .data(size2)
+            //     .transition()
+            //     .style("font-size", function(d) {
+            //         return +d;
+            //     });
+        }
+
+        // function to update doc/topic plot when a word is selected
+        // the circle argument should be the appropriate circle element
+        function word_on(circle) {
+            if (circle == null) return null;
+
+            // grab data bound to this element
+            var d = circle.__data__;
+            var vocab = d.vocab;
+
+            // change opacity and fill of the selected circle
+            circle.style.opacity = highlight_opacity;
+            circle.style.fill = color2;
+
+            // doc interactions
+
+            // grab the doc-plot data for this word only:
+            var dat1 = word_doc_info.filter(function(d) {
+                return d.Word == vocab;
+            });
+
+            var dd = dat1.length; // number of docs for this word
+
+            // freq depicted using color intensity rather than radius  (T = total vocab)
+            var doc_radius = [];
+            for (var i = 0; i < D; ++i) {
+                doc_radius[i] = 0;
+            }
+            for (i = 0; i < dd; i++) {
+                doc_radius[dat1[i].Doc] = dat1[i].Freq;
+            }
+
+            var size = [];
+            for (var i = 0; i < D; ++i) {
+                size[i] = 0;
+            }
+            for (i = 0; i < dd; i++) {
+                // If we want to also re-size the topic number labels, do it here
+                // 11 is the default, so leaving this as 11 won't change anything.
+                size[dat1[i].Doc] = 11;
+            }
+            console.log("radiusssss", doc_radius)
+
+            // var rScaleCond = d3.scale.sqrt()
+            //         .domain([0, 1]).range([0, rMax]);
+
+            // Change color of bubbles according to the word's distribution over docs
+            d3.selectAll(to_select + " .docdot")
+                .data(doc_radius)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleCond(d));
+                    return (Math.sqrt(d*mdswidth*mdsheight*word_prop/Math.PI));
+                });
+
+            // re-bind mdsData so we can handle multiple selection
+            d3.selectAll(to_select + " .docdot")
+                .data(docMdsData);
+
+            // // Change sizes of word numbers:
+            // d3.selectAll(to_select + " .word_txt")
+            //     .data(size)
+            //     .transition()
+            //     .style("font-size", function(d) {
+            //         return +d;
+            //     });
+
+
+            // topic interactions
+            // grab the topic-plot data for this word only:
+            var dat2 = word_topic_info.filter(function(d) {
+                return d.Word == vocab;
+            });
+
+            var t = dat2.length; // number of topics for this word
+
+            var topic_radius = [];
+            for (var i = 0; i < T; ++i) {
+                topic_radius[i] = 0;
+            }
+            for (i = 0; i < t; i++) {
+                topic_radius[dat2[i].Topic] = dat2[i].Freq;
+            }
+
+            var size2 = [];
+            for (var i = 0; i < T; ++i) {
+                size2[i] = 0;
+            }
+            for (i = 0; i < t; i++) {
+                // If we want to also re-size the topic number labels, do it here
+                // 11 is the default, so leaving this as 11 won't change anything.
+                size2[dat2[i].Topic] = 11;
+            }
+
+            // Change color of bubbles according to the doc's distribution over topics
+            d3.selectAll(to_select + " .topicdot")
+                .data(topic_radius)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleCond(d));
+                    return (Math.sqrt(d*mdswidth*mdsheight*word_prop/Math.PI));
+                });
+
+            // re-bind mdsData so we can handle multiple selection
+            d3.selectAll(to_select + " .topicdot")
+                .data(topicMdsData);
+
+            // // Change sizes of topic numbers:
+            // d3.selectAll(to_select + " .topic_txt")
+            //     .data(size2)
+            //     .transition()
+            //     .style("font-size", function(d) {
+            //         return +d;
+            //     });
+        }
+
+        function doc_off(circle) {
+            if (circle == null) return circle;
+            // go back to original opacity/fill
+            circle.style.opacity = base_opacity;
+            circle.style.fill = color1;
+
+            d3.selectAll(to_select + " .topicdot")
+                .data(topicMdsData)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleMargin(+d.Freq));
+                    return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                });
+
+            d3.selectAll(to_select + " .worddot")
+                .data(wordMdsData)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleMargin(+d.Freq));
+                    return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                });
+
+            // // Change sizes of topic numbers:
+            // d3.selectAll(to_select + " .txt")
+            //     .transition()
+            //     .style("font-size", "11px");
+
+        }
+
+        function topic_off(circle) {
+            if (circle == null) return circle;
+            // go back to original opacity/fill
+            circle.style.opacity = base_opacity;
+            circle.style.fill = color1;
+
+            d3.selectAll(to_select + " .docdot")
+                .data(docMdsData)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleMargin(+d.Freq));
+                    return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                });
+
+            d3.selectAll(to_select + " .worddot")
+                .data(wordMdsData)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleMargin(+d.Freq));
+                    return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                });
+
+            // // Change sizes of topic numbers:
+            // d3.selectAll(to_select + " .txt")
+            //     .transition()
+            //     .style("font-size", "11px");
+
+        }
+
+        function word_off(circle) {
+            if (circle == null) return circle;
+            // go back to original opacity/fill
+            circle.style.opacity = base_opacity;
+            circle.style.fill = color1;
+
+            d3.selectAll(to_select + " .docdot")
+                .data(docMdsData)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleMargin(+d.Freq));
+                    return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                });
+
+            d3.selectAll(to_select + " .topicdot")
+                .data(topicMdsData)
+                .transition()
+                .attr("r", function(d) {
+                    //return (rScaleMargin(+d.Freq));
+                    return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                });
+
+            // // Change sizes of topic numbers:
+            // d3.selectAll(to_select + " .txt")
+            //     .transition()
+            //     .style("font-size", "11px");
+
+        }
+
+
         // serialize the visualization state using fragment identifiers -- http://en.wikipedia.org/wiki/Fragment_identifier
         // location.hash holds the address information
 
