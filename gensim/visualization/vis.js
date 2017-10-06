@@ -184,6 +184,91 @@ var TopicModelVis = function(to_select, data_or_file_name) {
         }
 
 
+        // Create the doc/topic/word input forms
+        init_forms(docID, topicID, wordID);
+
+        d3.select("#" + docID)
+            .on("keyup", function() {
+                // remove topic selection if it exists (from a saved URL)
+                var topicElem = document.getElementById(topicID + vis_state.topic);
+                if (topicElem !== undefined) topic_off(topicElem);
+                vis_state.topic = "";
+                // remove word selection if it exists (from a saved URL)
+                var wordElem = document.getElementById(wordID + vis_state.word);
+                if (wordElem !== undefined) word_off(wordElem);
+                vis_state.word = "";
+                doc_off(document.getElementById(docID + vis_state.doc));
+                var value_new = document.getElementById(docID).value;
+                if (!isNaN(value_new) && value_new > 0) {
+                    value_new = Math.min(D, Math.max(1, value_new));
+                    doc_on(document.getElementById(docID + value_new));
+                    vis_state.doc = value_new;
+                    state_save(true);
+                    document.getElementById(docID).value = vis_state.doc;
+                }
+            });
+
+        d3.select("#" + docClear)
+            .on("click", function() {
+                state_reset();
+                state_save(true);
+            });
+
+        d3.select("#" + topicID)
+            .on("keyup", function() {
+                // remove doc selection if it exists (from a saved URL)
+                var docElem = document.getElementById(docID + vis_state.doc);
+                if (docElem !== undefined) doc_off(docElem);
+                vis_state.doc = "";
+                // remove word selection if it exists (from a saved URL)
+                var wordElem = document.getElementById(wordID + vis_state.word);
+                if (wordElem !== undefined) word_off(wordElem);
+                vis_state.word = "";
+                topic_off(document.getElementById(topicID + vis_state.topic));
+                var value_new = document.getElementById(topicID).value;
+                if (!isNaN(value_new) && value_new > 0) {
+                    value_new = Math.min(T, Math.max(1, value_new));
+                    topic_on(document.getElementById(topicID + value_new));
+                    vis_state.topic = value_new;
+                    state_save(true);
+                    document.getElementById(topicID).value = vis_state.topic;
+                }
+            });
+
+        d3.select("#" + topicClear)
+            .on("click", function() {
+                state_reset();
+                state_save(true);
+            });
+
+        d3.select("#" + wordID)
+            .on("keyup", function() {
+                // remove doc selection if it exists (from a saved URL)
+                var docElem = document.getElementById(docID + vis_state.doc);
+                if (docElem !== undefined) doc_off(docElem);
+                vis_state.doc = "";
+                // remove topic selection if it exists (from a saved URL)
+                var topicElem = document.getElementById(topicID + vis_state.topic);
+                if (topicElem !== undefined) topic_off(topicElem);
+                vis_state.topic = "";
+                word_off(document.getElementById(wordID + vis_state.word));
+                var value_new = document.getElementById(wordID).value;
+                if (!isNaN(value_new) && value_new > 0) {
+                    value_new = Math.min(W, Math.max(1, value_new));
+                    word_on(document.getElementById(wordID + value_new));
+                    vis_state.word = value_new;
+                    state_save(true);
+                    document.getElementById(wordID).value = vis_state.word;
+                }
+            });
+
+        d3.select("#" + wordClear)
+            .on("click", function() {
+                state_reset();
+                state_save(true);
+            });
+
+
         // Create new svg element (that will contain everything):
         var svg = d3.select(to_select).append("svg")
                 .attr("width", 3 * (mdswidth + margin.left) + margin.right)
@@ -453,6 +538,99 @@ var TopicModelVis = function(to_select, data_or_file_name) {
                 if (vis_state.word != d.vocab) word_off(this);
                 if (vis_state.word > 0) word_on(document.getElementById(wordID + vis_state.word));
             });
+
+
+        // dynamically create the doc/topic/word input forms at the top of the page
+        function init_forms(docID, topicID, wordID) {
+
+            // create container div for topic and lambda input:
+            var inputDiv = document.createElement("div");
+            inputDiv.setAttribute("id", topID);
+            inputDiv.setAttribute("style", "width: 1210px"); // to match the width of the main svg element
+            document.getElementById(visID).appendChild(inputDiv);
+
+            // doc input container:
+            var docDiv = document.createElement("div");
+            docDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: 50px; float: left");
+            inputDiv.appendChild(docDiv);
+
+            var docLabel = document.createElement("label");
+            docLabel.setAttribute("for", docID);
+            docLabel.setAttribute("style", "font-family: sans-serif; font-size: 14px");
+            docLabel.innerHTML = "Document: <span id='" + docID + "-value'></span>";
+            docDiv.appendChild(docLabel);
+
+            var docInput = document.createElement("input");
+            docInput.setAttribute("style", "width: 50px");
+            docInput.type = "text";
+            docInput.min = "0";
+            docInput.max = D; // assumes the data has already been read in
+            docInput.step = "1";
+            docInput.value = "0"; // a value of 0 indicates no topic is selected
+            docInput.id = docID;
+            docDiv.appendChild(docInput);
+
+            var clear = document.createElement("button");
+            clear.setAttribute("id", docClear);
+            clear.setAttribute("style", "margin-left: 5px");
+            clear.innerHTML = "Clear Document";
+            docDiv.appendChild(clear);
+
+            // topic input container:
+            var topicDiv = document.createElement("div");
+            topicDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: 50px; float: left; margin-left: 450px");
+            inputDiv.appendChild(topicDiv);
+
+            var topicLabel = document.createElement("label");
+            topicLabel.setAttribute("for", topicID);
+            topicLabel.setAttribute("style", "font-family: sans-serif; font-size: 14px");
+            topicLabel.innerHTML = "Topic: <span id='" + topicID + "-value'></span>";
+            topicDiv.appendChild(topicLabel);
+
+            var topicInput = document.createElement("input");
+            topicInput.setAttribute("style", "width: 50px");
+            topicInput.type = "text";
+            topicInput.min = "0";
+            topicInput.max = T; // assumes the data has already been read in
+            topicInput.step = "1";
+            topicInput.value = "0"; // a value of 0 indicates no topic is selected
+            topicInput.id = topicID;
+            topicDiv.appendChild(topicInput);
+
+            var clear = document.createElement("button");
+            clear.setAttribute("id", topicClear);
+            clear.setAttribute("style", "margin-left: 5px");
+            clear.innerHTML = "Clear Topic";
+            topicDiv.appendChild(clear);
+
+            // word input container:
+            var wordDiv = document.createElement("div");
+            wordDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: 50px; float: right; margin-right: 30px");
+            inputDiv.appendChild(wordDiv);
+
+            var wordLabel = document.createElement("label");
+            wordLabel.setAttribute("for", wordID);
+            wordLabel.setAttribute("style", "font-family: sans-serif; font-size: 14px");
+            wordLabel.innerHTML = "Word: <span id='" + wordID + "-value'></span>";
+            wordDiv.appendChild(wordLabel);
+
+            var wordInput = document.createElement("input");
+            wordInput.setAttribute("style", "width: 50px");
+            wordInput.type = "text";
+            wordInput.min = "0";
+            wordInput.max = W; // assumes the data has already been read in
+            wordInput.step = "1";
+            wordInput.value = "0"; // a value of 0 indicates no word is selected
+            wordInput.id = wordID;
+            wordDiv.appendChild(wordInput);
+
+            var clear = document.createElement("button");
+            clear.setAttribute("id", wordClear);
+            clear.setAttribute("style", "margin-left: 5px");
+            clear.innerHTML = "Clear Word";
+            wordDiv.appendChild(clear);
+
+        }
 
 
         // serialize the visualization state using fragment identifiers -- http://en.wikipedia.org/wiki/Fragment_identifier
