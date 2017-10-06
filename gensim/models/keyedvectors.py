@@ -828,7 +828,7 @@ class KeyedVectors(utils.SaveLoad):
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
-    def get_embedding_layer(self, train_embeddings=False):
+    def get_keras_embedding(self, train_embeddings=False):
         """
         Return a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings
         """
