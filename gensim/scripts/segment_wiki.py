@@ -17,7 +17,6 @@ import argparse
 import json
 import logging
 import multiprocessing
-import os
 import re
 import sys
 from xml.etree import cElementTree
@@ -25,6 +24,9 @@ from xml.etree import cElementTree
 from gensim.corpora.wikicorpus import ARTICLE_MIN_WORDS, IGNORED_NAMESPACES, WikiCorpus, \
     filter_wiki, get_namespace, tokenize, utils
 from smart_open import smart_open
+
+
+logger = logging.getLogger(__name__)
 
 
 def segment_all_articles(file_path):
@@ -43,21 +45,23 @@ def segment_all_articles(file_path):
             yield article_title, article_sections
 
 
-def segment_and_print_all_articles(file_path):
+def segment_and_print_all_articles(file_path, output_file):
     """
     Prints article title and sections to stdout, tab-separated
     article_title<tab>section_heading<tab>section_content<tab>section_heading<tab>section_content
 
     """
-    for article_title, article_sections in segment_all_articles(file_path):
-        printed_components = [json.dumps(article_title)]
-        for section_heading, section_content in article_sections:
-            printed_components.append(json.dumps(section_heading))
-            printed_components.append(json.dumps(section_content))
-        os.write(sys.stdout.fileno(), u"\t".join(printed_components).encode('utf-8') + b"\n")
+    with open(output_file, 'wb') as outfile:
+        for idx, (article_title, article_sections) in enumerate(segment_all_articles(file_path)):
+            printed_components = [json.dumps(article_title)]
+            for section_heading, section_content in article_sections:
+                printed_components.append(json.dumps(section_heading))
+                printed_components.append(json.dumps(section_content))
+            if (idx + 1) % 100000 == 0:
+                logger.info("Processed #%d articles", idx + 1)
+            outfile.write(u"\t".join(printed_components).encode('utf-8') + "\n")
 
 
-# noinspection PyUnresolvedReferences
 def extract_page_xmls(f):
     """
     Extract pages from a MediaWiki database dump = open file-like object `f`.
@@ -85,7 +89,6 @@ def extract_page_xmls(f):
             elem.clear()
 
 
-# noinspection PyUnresolvedReferences
 def segment(page_xml):
     """
     Parse the content inside a page tag, returning its content as a list of tokens
@@ -125,7 +128,6 @@ def segment(page_xml):
     return title, sections
 
 
-# noinspection PyUnresolvedReferences,PyMissingConstructor,PyAttributeOutsideInit,PyAbstractClass,PyUnusedLocal
 class WikiSectionsCorpus(WikiCorpus):
     """
     Treat a wikipedia articles dump (\*articles.xml.bz2) as a (read-only) corpus.
@@ -137,7 +139,7 @@ class WikiSectionsCorpus(WikiCorpus):
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
-    def __init__(self, fileobj, processes=None, lemmatize=utils.has_pattern(), dictionary=None, filter_namespaces=('0',)):
+    def __init__(self, fileobj, processes=None, lemmatize=utils.has_pattern(), filter_namespaces=('0',)):
         """
         Initialize the corpus. Unless a dictionary is provided, this scans the
         corpus once, to determine its vocabulary.
@@ -189,26 +191,16 @@ class WikiSectionsCorpus(WikiCorpus):
                 yield (article_title, sections)
         pool.terminate()
         self.length = articles  # cache corpus length
-# endclass WikiSectionsCorpus
 
-
-logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    logging_format = '%(asctime)s : %(processName)s : %(levelname)s : %(message)s'
-    logging_level = logging.INFO
-    logging.basicConfig(format=logging_format, level=logging_level)
+    logging.basicConfig(format='%(asctime)s : %(processName)s : %(levelname)s : %(message)s', level=logging.INFO)
     logger.info("running %s", " ".join(sys.argv))
 
-    program = os.path.basename(sys.argv[0])
-    parser = argparse.ArgumentParser(
-        prog=program,
-        formatter_class=argparse.RawTextHelpFormatter,
-        description=globals()['__doc__'])
-    parser.add_argument(
-        '-f', '--file',
-        help='path to mediawiki database dump')
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=globals()['__doc__'])
+    parser.add_argument('-f', '--file', help='path to mediawiki database dump', required=True)
+    parser.add_argument('-o', '--output', help='path to output file', required=True)
     args = parser.parse_args()
-    segment_and_print_all_articles(args.file)
+    segment_and_print_all_articles(args.file, args.output)
 
-    logger.info("finished running %s", program)
+    logger.info("finished running %s", sys.argv[0])
