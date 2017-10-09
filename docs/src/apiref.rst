@@ -73,11 +73,7 @@ Modules:
     topic_coherence/segmentation
     topic_coherence/text_analysis
     scripts/glove2word2vec
-    scripts/make_wikicorpus
-    scripts/word2vec_standalone
-    scripts/make_wiki_online
-    scripts/make_wiki_online_lemma
-    scripts/make_wiki_online_nodebug
+    scripts/make_wiki
     scripts/word2vec2tensor
     parsing/porter
     parsing/preprocessing

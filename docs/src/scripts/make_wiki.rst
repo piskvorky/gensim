@@ -1,7 +1,7 @@
-:mod:`scripts.make_wikicorpus` -- Convert articles from a Wikipedia dump to vectors. 
+:mod:`scripts.make_wiki` -- Convert articles from a Wikipedia dump to vectors.
 ====================================================================================
 
-.. automodule:: gensim.scripts.make_wikicorpus
+.. automodule:: gensim.scripts.make_wiki
     :synopsis: Convert articles from a Wikipedia dump to vectors. 
     :members:
     :inherited-members:
