@@ -407,7 +407,6 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self.docs_processed += doc_no
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
-            assert self.onepass, "distributed two-pass algo not supported yet"
             update = Projection(
                 self.num_terms, self.num_topics, corpus.tocsc(), extra_dims=self.extra_samples,
                 power_iters=self.power_iters
