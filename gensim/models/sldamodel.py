@@ -41,30 +41,30 @@ class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def __init__(self, corpus=None, n_topics=100, alpha='symmetric', beta, mu, nu, nu2,
                  sigma2, iterations=100, report_iter=10, seed=None):
-    """
-    Supervised latent Dirichlet allocation, using collapsed Gibbs
-    sampling.
-    Args:
-        n_topics : int
-            Number of topics
-        alpha : array-like, shape = (n_topics,)
-            Dirichlet distribution parameter for each document's topic
-            distribution.
-        beta : array-like, shape = (n_terms,)
-            Dirichlet distribution parameter for each topic's term distribution.
-        mu : float
-            Mean of regression coefficients (eta).
-        nu2 : float
-            Variance of regression coefficients (eta).
-        sigma2 : float
-            Variance of response (y).
-        n_iter : int, default=100
-            Number of iterations of Gibbs sampler
-        n_report_iter : int, default=10
-            Number of iterations of Gibbs sampler between progress reports.
-        seed : int, optional
-            Seed for random number generator
-    """
+        """
+        Supervised latent Dirichlet allocation, using collapsed Gibbs
+        sampling.
+        Args:
+            n_topics : int
+                Number of topics
+            alpha : array-like, shape = (n_topics,)
+                Dirichlet distribution parameter for each document's topic
+                distribution.
+            beta : array-like, shape = (n_terms,)
+                Dirichlet distribution parameter for each topic's term distribution.
+            mu : float
+                Mean of regression coefficients (eta).
+            nu2 : float
+                Variance of regression coefficients (eta).
+            sigma2 : float
+                Variance of response (y).
+            n_iter : int, default=100
+                Number of iterations of Gibbs sampler
+            n_report_iter : int, default=10
+                Number of iterations of Gibbs sampler between progress reports.
+            seed : int, optional
+                Seed for random number generator
+        """
         self.n_topics = n_topics
         self.alpha = alpha
         self.beta = beta
