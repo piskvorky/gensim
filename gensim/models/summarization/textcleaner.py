@@ -7,7 +7,7 @@ import logging
 import re
 
 from gensim.models.summarization.syntactic_unit import SyntacticUnit
-from gensim.parsing.preprocessing import preprocess_documents
+from gensim.utils.text_utils import preprocess_documents
 from gensim.utils import tokenize
 from six.moves import xrange
 

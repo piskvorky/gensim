@@ -37,14 +37,14 @@ import sys
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
-from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
+from gensim.utils.text_utils import STOPWORDS, RE_WHITESPACE
 from gensim.utils import deaccent, simple_tokenize
 
 logger = logging.getLogger(__name__)
 
 
 def remove_stopwords(tokens, stopwords=STOPWORDS):
-    """Remove stopwords using list from `gensim.parsing.preprocessing.STOPWORDS`."""
+    """Remove stopwords using list from `gensim.utils.text_utils.STOPWORDS`."""
     return [token for token in tokens if token not in stopwords]
 
 
@@ -109,7 +109,7 @@ class TextCorpus(interfaces.CorpusABC):
     3.  collapse multiple whitespaces into a single one
     4.  tokenize by splitting on whitespace
     5.  remove words less than 3 characters long
-    6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
+    6.  remove stopwords; see `gensim.utils.text_utils.STOPWORDS` for the list of stopwords
 
     """
     def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None, tokenizer=None, token_filters=None):
@@ -133,7 +133,7 @@ class TextCorpus(interfaces.CorpusABC):
                 in order, and should return another iterable of tokens. These filters can add,
                 remove, or replace tokens, or do nothing at all. The default token filters
                 remove tokens less than 3 characters long and remove stopwords using the list
-                in `gensim.parsing.preprocessing.STOPWORDS`.
+                in `gensim.utils.text_utils.STOPWORDS`.
         """
         self.input = input
         self.metadata = metadata

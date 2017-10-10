@@ -9,7 +9,8 @@ Modules:
     :maxdepth: 0
 
     interfaces
-    utils
+    utils/utils
+    utils/text_utils
     matutils
     corpora/bleicorpus
     corpora/csvcorpus
@@ -83,5 +84,3 @@ Modules:
     scripts/glove2word2vec
     scripts/make_wiki
     scripts/word2vec2tensor
-    parsing/porter
-    parsing/preprocessing
