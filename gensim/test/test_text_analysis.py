@@ -2,7 +2,7 @@ import logging
 import unittest
 
 from gensim.corpora.dictionary import Dictionary
-from gensim.topic_coherence.text_analysis import (
+from gensim.models._coherence.text_analysis import (
     InvertedIndexAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator,
     CorpusAccumulator)
 

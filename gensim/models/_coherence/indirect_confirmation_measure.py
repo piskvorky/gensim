@@ -32,9 +32,7 @@ import logging
 
 import numpy as np
 import scipy.sparse as sps
-
-from gensim.topic_coherence.direct_confirmation_measure import (
-    aggregate_segment_sims, log_ratio_measure)
+from gensim.models._coherence.direct_confirmation_measure import aggregate_segment_sims, log_ratio_measure
 
 logger = logging.getLogger(__name__)
 

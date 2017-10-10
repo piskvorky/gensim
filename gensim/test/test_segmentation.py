@@ -8,13 +8,11 @@
 Automated tests for segmentation algorithms in the segmentation module.
 """
 
-
 import logging
 import unittest
 
 import numpy as np
-
-from gensim.topic_coherence import segmentation
+from gensim.models._coherence import segmentation
 from numpy import array
 
 

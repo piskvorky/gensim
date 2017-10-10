@@ -45,6 +45,12 @@ Modules:
     models/fasttext
     models/phrases
     models/coherencemodel
+    models/_coherence/aggregation
+    models/_coherence/direct_confirmation_measure
+    models/_coherence/indirect_confirmation_measure
+    models/_coherence/probability_estimation
+    models/_coherence/segmentation
+    models/_coherence/text_analysis
     models/basemodel
     models/callbacks
     models/wrappers/ldamallet
@@ -66,12 +72,6 @@ Modules:
     sklearn_api/text2bow
     sklearn_api/tfidf
     sklearn_api/w2vmodel
-    topic_coherence/aggregation
-    topic_coherence/direct_confirmation_measure
-    topic_coherence/indirect_confirmation_measure
-    topic_coherence/probability_estimation
-    topic_coherence/segmentation
-    topic_coherence/text_analysis
     scripts/glove2word2vec
     scripts/make_wiki
     scripts/word2vec2tensor

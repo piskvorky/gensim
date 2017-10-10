@@ -12,10 +12,8 @@ import logging
 import unittest
 
 import numpy as np
-
 from gensim.corpora.dictionary import Dictionary
-from gensim.topic_coherence import indirect_confirmation_measure
-from gensim.topic_coherence import text_analysis
+from gensim.models._coherence import indirect_confirmation_measure, text_analysis
 
 
 class TestIndirectConfirmation(unittest.TestCase):

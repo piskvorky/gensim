@@ -31,7 +31,7 @@ def _ids_to_words(ids, dictionary):
 
     Args:
         ids: list of list of tuples, where each tuple contains (token_id, iterable of token_ids).
-            This is the format returned by the topic_coherence.segmentation functions.
+            This is the format returned by the models._coherence.segmentation functions.
     """
     if not dictionary.id2token:  # may not be initialized in the standard gensim.corpora.Dictionary
         setattr(dictionary, 'id2token', {v: k for k, v in dictionary.token2id.items()})

@@ -11,7 +11,7 @@ Automated tests for checking transformation algorithms (the models package).
 import logging
 import unittest
 
-from gensim.topic_coherence import aggregation
+from gensim.models._coherence import aggregation
 
 
 class TestAggregation(unittest.TestCase):

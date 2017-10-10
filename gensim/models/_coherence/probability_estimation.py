@@ -11,9 +11,9 @@ This module contains functions to perform segmentation on a list of topics.
 import itertools
 import logging
 
-from gensim.topic_coherence.text_analysis import (
-    CorpusAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator,
-    WordVectorsAccumulator)
+from gensim.models._coherence.text_analysis import (
+    CorpusAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator, WordVectorsAccumulator
+)
 
 logger = logging.getLogger(__name__)
 

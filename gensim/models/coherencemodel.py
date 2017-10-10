@@ -23,13 +23,11 @@ import multiprocessing as mp
 from collections import namedtuple
 
 import numpy as np
-
-from gensim import interfaces, matutils
-from gensim import utils
-from gensim.topic_coherence import (segmentation, probability_estimation,
-                                    direct_confirmation_measure, indirect_confirmation_measure,
-                                    aggregation)
-from gensim.topic_coherence.probability_estimation import unique_ids_from_segments
+from gensim.models._coherence import (
+    segmentation, probability_estimation, direct_confirmation_measure, indirect_confirmation_measure, aggregation
+)
+from gensim.models._coherence.probability_estimation import unique_ids_from_segments
+from gensim import interfaces, matutils, utils
 
 logger = logging.getLogger(__name__)
 
