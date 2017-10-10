@@ -342,6 +342,11 @@ class Sparse2Corpus(object):
     def __len__(self):
         return self.sparse.shape[1]
 
+    def __getitem__(self, item):
+        indprev = self.sparse.indptr[item]
+        indnow = self.sparse.indptr[item+1]
+        return list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
+
 
 def veclen(vec):
     if len(vec) == 0:
