@@ -7,7 +7,7 @@
 import re
 import string
 
-from gensim import utils
+from gensim.utils import utils
 from six.moves import xrange
 
 
