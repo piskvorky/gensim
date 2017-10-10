@@ -4,10 +4,6 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Automated tests for checking transformation algorithms (the models package).
-"""
-
 
 import logging
 import unittest
@@ -20,8 +16,6 @@ import six
 import numpy as np
 import scipy.linalg
 
-from gensim.corpora import mmcorpus, Dictionary
-from gensim.models import ldamodel, ldamulticore
 from gensim import matutils, utils
 from gensim.test import basetests
 
@@ -107,3 +101,7 @@ def testRandomState():
 
         kwargs['alpha'] = "gensim is cool"
         self.assertRaises(ValueError, self.class_, **kwargs)
+        
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    unittest.main()
