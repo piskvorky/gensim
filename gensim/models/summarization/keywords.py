@@ -3,17 +3,17 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-from gensim.summarization.pagerank_weighted import pagerank_weighted as _pagerank
-from gensim.summarization.textcleaner import clean_text_by_word as _clean_text_by_word
-from gensim.summarization.textcleaner import tokenize_by_word as _tokenize_by_word
-from gensim.summarization.commons import build_graph as _build_graph
-from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
-from gensim.utils import to_unicode
 from itertools import combinations as _combinations
-from six.moves.queue import Queue as _Queue
-from six.moves import xrange
-from six import iteritems
 
+from gensim.models.summarization.commons import build_graph as _build_graph
+from gensim.models.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
+from gensim.models.summarization.pagerank_weighted import pagerank_weighted as _pagerank
+from gensim.models.summarization.textcleaner import clean_text_by_word as _clean_text_by_word
+from gensim.models.summarization.textcleaner import tokenize_by_word as _tokenize_by_word
+from gensim.utils import to_unicode
+from six import iteritems
+from six.moves import xrange
+from six.moves.queue import Queue as _Queue
 
 WINDOW_SIZE = 2
 

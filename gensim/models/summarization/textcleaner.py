@@ -3,12 +3,13 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-from gensim.summarization.syntactic_unit import SyntacticUnit
+import logging
+import re
+
+from gensim.models.summarization.syntactic_unit import SyntacticUnit
 from gensim.parsing.preprocessing import preprocess_documents
 from gensim.utils import tokenize
 from six.moves import xrange
-import re
-import logging
 
 logger = logging.getLogger('summa.preprocessing.cleaner')
 

@@ -3,7 +3,7 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-from gensim.summarization.graph import Graph
+from gensim.models.summarization.graph import Graph
 
 
 def build_graph(sequence):

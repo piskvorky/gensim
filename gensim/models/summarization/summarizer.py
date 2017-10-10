@@ -4,15 +4,15 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 import logging
-from gensim.summarization.pagerank_weighted import pagerank_weighted as _pagerank
-from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
-from gensim.summarization.commons import build_graph as _build_graph
-from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
-from gensim.summarization.bm25 import get_bm25_weights as _bm25_weights
-from gensim.corpora import Dictionary
 from math import log10 as _log10
-from six.moves import xrange
 
+from gensim.corpora import Dictionary
+from gensim.models.summarization.commons import build_graph as _build_graph
+from gensim.models.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
+from gensim.models.summarization.bm25 import get_bm25_weights as _bm25_weights
+from gensim.models.summarization.pagerank_weighted import pagerank_weighted as _pagerank
+from gensim.models.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
+from six.moves import xrange
 
 INPUT_MIN_LENGTH = 10
 

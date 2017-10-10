@@ -51,6 +51,14 @@ Modules:
     models/_coherence/probability_estimation
     models/_coherence/segmentation
     models/_coherence/text_analysis
+    models/summarization/bm25
+    models/summarization/commons
+    models/summarization/graph
+    models/summarization/keywords
+    models/summarization/pagerank_weighted
+    models/summarization/summariser
+    models/summarization/syntactic_unit
+    models/summarization/textcleaner
     models/basemodel
     models/callbacks
     models/wrappers/ldamallet
@@ -77,11 +85,3 @@ Modules:
     scripts/word2vec2tensor
     parsing/porter
     parsing/preprocessing
-    summarization/bm25
-    summarization/commons
-    summarization/graph
-    summarization/keywords
-    summarization/pagerank_weighted
-    summarization/summariser
-    summarization/syntactic_unit
-    summarization/textcleaner
