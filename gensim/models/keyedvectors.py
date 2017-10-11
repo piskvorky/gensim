@@ -633,7 +633,7 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         if not(len(ws1) and len(ws2)):
-            raise ZeroDivisionError('Atleast one of the passed list is empty.')
+            raise ZeroDivisionError('At least one of the passed list is empty.')
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
