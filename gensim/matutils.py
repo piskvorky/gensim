@@ -342,9 +342,12 @@ class Sparse2Corpus(object):
     def __len__(self):
         return self.sparse.shape[1]
 
-    def __getitem__(self, item):
-        indprev = self.sparse.indptr[item]
-        indnow = self.sparse.indptr[item + 1]
+    def __getitem__(self, document_index):
+        """
+        Return a single document in the corpus by its index (between 0 and `len(self)-1`).
+        """
+        indprev = self.sparse.indptr[document_index]
+        indnow = self.sparse.indptr[document_index + 1]
         return list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
 
 
