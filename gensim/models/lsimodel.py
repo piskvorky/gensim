@@ -380,7 +380,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     # construct the job as a sparse matrix, to minimize memory overhead
                     # definitely avoid materializing it as a dense matrix!
                     logger.debug("converting corpus to csc format")
-                    job = matutils.corpus2csc(chunk, num_docs=len(chunk), num_terms=self.num_terms, num_nnz=nnz)
+                    job = matutils.corpus2csc(
+                        chunk, num_docs=len(chunk), num_terms=self.num_terms, num_nnz=nnz, dtype=self.dtype)
                     del chunk
                     doc_no += job.shape[1]
                     if self.dispatcher:
