@@ -288,7 +288,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 onepass = True
         self.onepass = onepass
         self.extra_samples, self.power_iters = extra_samples, power_iters
-        self.dtype=dtype
+        self.dtype = dtype
 
         if corpus is None and self.id2word is None:
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
@@ -302,8 +302,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.docs_processed = 0
         self.projection = Projection(
-            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples,
-            dtype=dtype
+            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples, dtype=dtype
         )
 
         self.numworkers = 1
@@ -365,8 +364,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 update.u, update.s = stochastic_svd(
                     corpus, self.num_topics,
                     num_terms=self.num_terms, chunksize=chunksize,
-                    extra_dims=self.extra_samples, power_iters=self.power_iters,
-                    dtype=self.dtype
+                    extra_dims=self.extra_samples, power_iters=self.power_iters, dtype=self.dtype
                 )
                 self.projection.merge(update, decay=decay)
                 self.docs_processed += len(corpus) if hasattr(corpus, '__len__') else 0
