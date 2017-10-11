@@ -344,7 +344,7 @@ class Sparse2Corpus(object):
 
     def __getitem__(self, item):
         indprev = self.sparse.indptr[item]
-        indnow = self.sparse.indptr[item+1]
+        indnow = self.sparse.indptr[item + 1]
         return list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
 
 
