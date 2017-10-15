@@ -78,11 +78,6 @@ from gensim.corpora.dictionary import Dictionary
 from six import string_types, iteritems
 from six.moves import xrange
 from scipy import stats
-try:
-    from keras.layers import Embedding
-    KERAS_INSTALLED = True
-except ImportError:
-    KERAS_INSTALLED = False
 
 
 logger = logging.getLogger(__name__)
@@ -638,7 +633,7 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         if not(len(ws1) and len(ws2)):
-            raise ZeroDivisionError('Atleast one of the passed list is empty.')
+            raise ZeroDivisionError('At least one of the passed list is empty.')
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
@@ -833,11 +828,13 @@ class KeyedVectors(utils.SaveLoad):
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
-    def get_embedding_layer(self, train_embeddings=False):
+    def get_keras_embedding(self, train_embeddings=False):
         """
         Return a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings
         """
-        if not KERAS_INSTALLED:
+        try:
+            from keras.layers import Embedding
+        except ImportError:
             raise ImportError("Please install Keras to use this function")
         weights = self.syn0
 

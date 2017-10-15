@@ -4,7 +4,6 @@ import os
 import unittest
 import tempfile
 import numpy as np
-import gensim
 import math
 
 from scipy.spatial.distance import cosine
@@ -79,9 +78,9 @@ class TestTranslationMatrix(unittest.TestCase):
 def read_sentiment_docs(filename):
     sentiment_document = namedtuple('SentimentDocument', 'words tags')
     alldocs = []  # will hold all docs in original order
-    with gensim.utils.smart_open(filename, encoding='utf-8') as alldata:
+    with utils.smart_open(filename, encoding='utf-8') as alldata:
         for line_no, line in enumerate(alldata):
-            tokens = gensim.utils.to_unicode(line).split()
+            tokens = utils.to_unicode(line).split()
             words = tokens
             tags = str(line_no)
             alldocs.append(sentiment_document(words, tags))

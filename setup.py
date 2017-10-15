@@ -237,7 +237,7 @@ test_env = [
 
 setup(
     name='gensim',
-    version='2.3.0',
+    version='3.0.1',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -294,8 +294,8 @@ setup(
     tests_require=test_env,
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
-        'wmd': ['pyemd >= 0.2.0'],
         'test': test_env,
+        'docs': test_env + ['Pyro4 >= 4.27', 'sphinx', 'sphinxcontrib-napoleon', 'annoy'],
     },
 
     include_package_data=True,
