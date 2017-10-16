@@ -642,7 +642,6 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         return word_list[argmax([self.similarity(w1, word) for word in word_list])]
-        
 
     def n_similarity(self, ws1, ws2):
         """
