@@ -14,7 +14,7 @@ from __future__ import with_statement
 import logging
 import math
 
-from gensim import utils
+from gensim import utils, models
 
 import numpy as np
 import scipy.sparse
@@ -475,6 +475,45 @@ def isbow(vec):
         return False
     return True
 
+def symmetric_kl(distrib_p, distrib_q, num_features=None):
+    """
+    A symmetric variation of Kullback-Leibler divergence. 
+    Used to measure the divergence between two probability distributions
+    """
+    distrib_p, distrib_q = convert_vec(distrib_p, distrib_q, num_features= num_features)
+    return (numpy.sum([stats.entropy(p, q), stats.entropy(q, p)]))
+
+def arun_metric(corpus, dictionary, min_topics=1, max_topics=10, iteration=1):
+    """
+    Implements Arun metric to estimate the optimal number of topics:
+    Arun, R., V. Suresh, C. V. Madhavan, and M. N. Murthy
+    On finding the natural number of topics with latent dirichlet allocation: Some observations.
+    In PAKDD (2010), pp. 391–402.
+    
+    Args:
+        min_num_topics: Minimum number of topics to test
+        max_num_topics: Maximum number of topics to test
+        iterations: Number of iterations per value of k
+    
+    Returns: 
+        A list of len (max_num_topics - min_num_topics) with the average symmetric KL divergence for each k
+    """
+    results = []
+    for i in range(min_topics, max_topics, iteration):
+        lda = models.ldamulticore.LdaMulticore(    # Create an LDA model instance
+            corpus=corpus,
+            id2word=dictionary,
+            num_topics=i
+        )
+    U, document_word_vector, V = np.linalg.svd(lda.expElogbeta)
+    lda_topic = lda[corpus]  # Get topics
+    term_document_matrix = corpus2dense(lda_topic, lda.num_topic).transpose()  # Create DTM matrix
+    corpus_length_vector = np.array([sum(frequency for _, frequency in document) for document in corpus])
+    document_topic_vector = corpus_length_vector.dot(term_document_matrix)
+    document_topic_norm = np.linalg.norm(corpus_length_vector)
+    document_topic_vector = document_topic_vector / document_topic_norm
+    results.append(symmetric_kl(document_word_vector, document_topic_vector))
+    return results
 
 def convert_vec(vec1, vec2, num_features=None):
     """
