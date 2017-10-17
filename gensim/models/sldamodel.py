@@ -14,6 +14,35 @@ from scipy.misc import logsumexp
 
 from gensim import interfaces, utils, matutils
 
+def sampling_from_dist(prob):
+    """ 
+    Sample index from a list of unnormalised probability distribution
+    same as np.random.multinomial(1, prob/np.sum(prob)).argmax()
+    
+    Parameters
+    ----------
+    prob: ndarray
+        array of unnormalised probability distribution
+    
+    Returns
+    -------
+    new_topic: return a sampled index
+    """
+    
+    thr = prob.sum() * np.random.rand()
+    new_topic = 0
+    tmp = prob[new_topic]
+    while tmp < thr:
+        new_topic += 1
+        tmp += prob[new_topic]
+    return new_topic
+
+def get_top_words(topic_word_matrix, vocab, topic, n_words=20):
+    if not isinstance(vocab, np.ndarray):
+        vocab = np.array(vocab)
+    top_words = vocab[topic_word_matrix[topic].argsort()[::-1][:n_words]]
+    return top_words
+
 
 class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
