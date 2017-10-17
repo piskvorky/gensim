@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import argparse
-import json
 import os
+import json
 import tarfile
 import logging
 import sys
@@ -21,26 +21,10 @@ except ImportError:
 
 user_dir = os.path.expanduser('~')
 base_dir = os.path.join(user_dir, 'gensim-data')
-data_log_file_path = os.path.join(base_dir, 'data.json')
 logger = logging.getLogger('gensim.api')
 
 
-def _initialize_data_log_file():
-    data = info()
-    corpora = data['corpora']
-    models = data['models']
-    json_list = []
-    for corpus in corpora:
-        json_object = {"name": corpus, "status": "None"}
-        json_list.append(json_object)
-    for model in models:
-        json_object = {"name": model, "status": "None"}
-        json_list.append(json_object)
-    with open(data_log_file_path, 'w') as f:
-        f.write(json.dumps(json_list))
-
-
-def _create_files():
+def _create_base_dir():
     if not os.path.isdir(base_dir):
         try:
             logger.info("Creating %s", base_dir)
@@ -55,36 +39,6 @@ def _create_files():
                     "Can't create {}. Make sure you have the read/write permissions "
                     "to the directory or you can try creating the folder manually"
                     .format(base_dir))
-
-    if not os.path.isfile(data_log_file_path):
-        try:
-            logger.warning("Creating %s", data_log_file_path)
-            with open(data_log_file_path, 'w+'):
-                pass
-            _initialize_data_log_file()
-        except:
-            raise Exception(
-                "Can't create {}. Make sure you have the read/write permissions "
-                "to the directory or you can try creating the file manually"
-                .format(data_log_file_path))
-
-
-def _update_data_log_file(name):
-    with open(data_log_file_path, 'r') as f:
-        jdata = json.load(f)
-        for json_object in jdata:
-            if json_object["name"] == name:
-                json_object["status"] = "downloaded"
-    with open(data_log_file_path, 'w+') as f:
-        f.write(json.dumps(jdata))
-
-
-def _get_data_status(name):
-    with open(data_log_file_path, 'r') as f:
-        jdata = json.load(f)
-    for json_object in jdata:
-        if json_object["name"] == name:
-            return json_object["status"]
 
 
 def _calculate_md5_checksum(tar_file):
@@ -132,19 +86,6 @@ def _download(name):
     url_load_file = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/__init__.py".format(f=name)
     data_folder_dir = os.path.join(base_dir, name)
     compressed_folder_name = "{f}.tar.gz".format(f=name)
-    if os.path.exists(data_folder_dir):
-        logger.info("%s already exists. Deleting it.", data_folder_dir)
-        rmtree(data_folder_dir)
-    logger.info("Creating %s", data_folder_dir)
-    os.makedirs(data_folder_dir)
-    if os.path.exists(data_folder_dir):
-        logger.info("Creation of %s successful.", data_folder_dir)
-    else:
-        raise Exception(
-            "Not able to create {a}. Make sure you have the correct read/"
-            "write permissions for {b} or you can try creating it manually".
-            format(a=data_folder_dir, b=base_dir))
-
     tmp_dir = tempfile.mkdtemp()
     tmp_data_folder_dir = os.path.join(tmp_dir, name)
     os.makedirs(tmp_data_folder_dir)
@@ -152,13 +93,11 @@ def _download(name):
         raise Exception(
             "Not able to create data folder in {a}. Make sure you have the correct"
             " read/write permissions for {a}".format(a=os.path.dirname(tmp_dir)))
-
     tmp_load_file = os.path.join(tmp_data_folder_dir, "__init__.py")
     urllib.urlretrieve(url_load_file, tmp_load_file)
     logger.info("Downloading %s", name)
     tmp_data_file = os.path.join(tmp_dir, compressed_folder_name)
     urllib.urlretrieve(url_data, tmp_data_file)
-
     if _calculate_md5_checksum(tmp_data_file) == _get_checksum(name):
         logger.info("%s downloaded", name)
     else:
@@ -170,7 +109,6 @@ def _download(name):
     os.remove(tmp_data_file)
     os.rename(tmp_data_folder_dir, data_folder_dir)
     os.rmdir(tmp_dir)
-    _update_data_log_file(name)
 
 
 def _get_filename(name):
@@ -184,7 +122,7 @@ def _get_filename(name):
 
 
 def load(name, return_path=False):
-    _create_files()
+    _create_base_dir()
     file_name = _get_filename(name)
     if file_name is None:
         raise Exception(
@@ -192,7 +130,7 @@ def load(name, return_path=False):
             "\n {}".format(json.dumps(info(), indent=4)))
     folder_dir = os.path.join(base_dir, name)
     data_dir = os.path.join(folder_dir, file_name)
-    if not os.path.exists(folder_dir) or _get_data_status(name) != "downloaded":
+    if not os.path.exists(folder_dir):
         _download(name)
 
     if return_path:
