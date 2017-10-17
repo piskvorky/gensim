@@ -693,7 +693,7 @@ class Word2Vec(utils.SaveLoad):
             len(vocab), total_words, sentence_no + 1
         )
         self.corpus_count = sentence_no + 1
-        self.raw_vocab = vocab                
+        self.raw_vocab = vocab
 
     def scale_vocab(self, min_count=None, sample=None, dry_run=False,
                     keep_raw_vocab=False, trim_rule=None, update=False):
