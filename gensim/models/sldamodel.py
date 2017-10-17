@@ -12,26 +12,7 @@ from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
 from scipy.misc import logsumexp
 
-
 from gensim import interfaces, utils, matutils
-from gensim.matutils import dirichlet_expectation
-
-
-def dirichlet_expectation(alpha):
-    """
-    For a vector theta ~ Dir(alpha), computes E[log(theta)] given alpha.
-    """
-    if (len(alpha.shape) == 1):
-        return(psi(alpha) - psi(n.sum(alpha)))
-    return(psi(alpha) - psi(n.sum(alpha, 1))[:, n.newaxis])
-
-
-def get_lambda(self):
-    return self.eta + self.sstats
-
-
-def get_Elogbeta(self):
-    return dirichlet_expectation(self.get_lambda())
 
 
 class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
