@@ -19,20 +19,23 @@ import scipy.linalg
 from gensim import matutils, utils
 from gensim.test import basetests
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+# needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)
+
+
+def datapath(fname): return os.path.join(module_path, 'test_data', fname)
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+         ['survey', 'user', 'computer', 'system', 'response', 'time'],
+         ['eps', 'user', 'interface', 'system'],
+         ['system', 'human', 'system', 'eps'],
+         ['user', 'response', 'time'],
+         ['trees'],
+         ['graph', 'trees'],
+         ['graph', 'minors', 'trees'],
+         ['graph', 'minors', 'survey']]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
@@ -46,10 +49,14 @@ def testfile(test_fname=''):
 def testRandomState():
     testcases = [np.random.seed(0), None, np.random.RandomState(0), 0]
     for testcase in testcases:
-        assert(isinstance(utils.get_random_state(testcase), np.random.RandomState))
-     
+        assert(
+            isinstance(
+                utils.get_random_state(testcase),
+                np.random.RandomState))
+
+
 def testAlpha(self):
-    kwargs = dict(id2word=dictionary,num_topics=2,alpha=None)
+    kwargs = dict(id2word=dictionary, num_topics=2, alpha=None)
     expected_shape = (2,)
 
     # should not raise anything
@@ -75,10 +82,10 @@ def testAlpha(self):
     self.assertEqual(model.alpha.shape, expected_shape)
     self.assertTrue(all(model.alpha == np.array([3, 3])))
 
-        
     kwargs['alpha'] = "gensim is cool"
     self.assertRaises(ValueError, self.class_, **kwargs)
-        
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
