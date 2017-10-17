@@ -17,9 +17,6 @@ from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 
 
-logger = logging.getLogger('gensim.models.sldamodel')
-
-
 def dirichlet_expectation(alpha):
     """
     For a vector theta ~ Dir(alpha), computes E[log(theta)] given alpha.
@@ -65,128 +62,124 @@ class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             seed : int, optional
                 Seed for random number generator
         """
-        self.n_topics = n_topics
-        self.alpha = alpha
-        self.beta = beta
-        self.mu = mu
-        self.nu2 = nu2
-        self.sigma2 = sigma2
-        self.iterations = iterations
-        self.report_iter = n_report_iter
-        self.seed = seed
-
-    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
+        super(SLdaModel, self).__init__(n_doc=n_doc, n_voca=n_voca, n_topic=n_topic, alpha=alpha, beta=beta,
+                                                 **kwargs)
+        self.eta = np.random.normal(scale=5, size=self.n_topic)
+        self.sigma = sigma
+        
+    
+    def random_init(self, docs):
         """
-        Args:
-            num_topics (int): show results for first `num_topics` topics.
-                Unlike LSA, there is no natural ordering between the topics in sLDA.
-                The returned `num_topics <= self.num_topics` subset of all topics is
-                therefore arbitrary and may change between two sLDA training runs.
-            num_words (int): include top `num_words` with highest probabilities in topic.
-            log (bool): If True, log output in addition to returning it.
-            formatted (bool): If True, format topics as strings, otherwise return them as
-                `(word, probability) 2-tuples.
-        Returns:
-            list: `num_words` most significant words for `num_topics` number of topics
-            (10 words for top 10 topics, by default).
+        Random initialization of topics
         """
-        if num_topics < 0 or num_topics >= self.num_topics:
-            num_topics = self.num_topics
-            chosen_topics = xrange(num_topics)
-        else:
-            num_topics = min(num_topics, self.num_topics)
+        for di in xrange(len(docs)):
+            doc = docs[di]
+            topics = np.random.randint(self.n_topic, size=len(doc))
+            self.topic_assignment.append(topics)
 
-            # add a little random jitter, to randomize results around the same
-            # alpha
-            sort_alpha = self.alpha + 0.0001 * \
-                self.random_state.rand(len(self.alpha))
-
-            sorted_topics = list(matutils.argsort(sort_alpha))
-            chosen_topics = sorted_topics[:num_topics //
-                                          2] + sorted_topics[-num_topics // 2:]
-
-        shown = []
-
-        topic = self.state.get_lambda()
-        for i in chosen_topics:
-            topic_ = topic[i]
-            topic_ = topic_ / topic_.sum()  # normalize to probability distribution
-            bestn = matutils.argsort(topic_, num_words, reverse=True)
-            topic_ = [(self.id2word[id], topic_[id]) for id in bestn]
-            if formatted:
-                topic_ = ' + '.join(['%.3f*"%s"' % (v, k) for k, v in topic_])
-
-            shown.append((i, topic_))
-            if log:
-                logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic_)
-
-        return shown
-
-    def show_topic(self, topicid, topn=10):
+            for wi in xrange(len(doc)):
+                topic = topics[wi]
+                word = doc[wi]
+                self.TW[topic, word] += 1
+                self.sum_T[topic] += 1
+                self.DT[di, topic] += 1
+                
+    def log_likelihood(self, docs, responses):
         """
-        Args:
-            topn (int): Only return 2-tuples for the topn most probable words
-                (ignore the rest).
-        Returns:
-            list: of `(word, probability)` 2-tuples for the most probable
-            words in topic `topicid`.
+        Calculate log-likelihood function
         """
-        return [(self.id2word[id], value)
-                for id, value in self.get_topic_terms(topicid, topn)]
+        l1 = 0
 
-    def do_estep(self, chunk, state=None):
+        l1 += len(docs) * gammaln(self.alpha * self.n_topic)
+        l1 -= len(docs) * self.n_topic * gammaln(self.alpha)
+        l1 += self.n_topic * gammaln(self.beta * self.n_voca)
+        l1 -= self.n_topic * self.n_voca * gammaln(self.beta)
 
-        if state is None:
-            state = self.state
-        gamma, sstats = self.inference(chunk, collect_sstats=True)
-        state.sstats += sstats
-        # avoids calling len(chunk) on a generator
-        state.numdocs += gamma.shape[0]
-        return gamma
+        for di in xrange(self.n_doc):
+            l1 += gammaln(self.DT[di, :]).sum() - gammaln(self.DT[di, :].sum())
+            z_bar = self.DT[di] / np.sum(self.DT[di])
+            mean = np.dot(z_bar, self.eta)
+            l1 += norm.logpdf(responses[di], mean, np.sqrt(self.sigma))
+        for ki in xrange(self.n_topic):
+            l1 += gammaln(self.TW[ki, :]).sum() - gammaln(self.TW[ki, :].sum())
 
-    def do_mstep(self, rho, other, extra_pass=False):
-        diff = np.log(self.expElogbeta)
-        self.state.blend(rho, other)
-        diff -= self.state.get_Elogbeta()
-        self.sync_state()
+        return l1
+    
+    def sample_heldout_doc(self, max_iter, heldout_docs):
+        """
+        Calculate Topic sum on heldout docs. 
+        """
+        h_doc_topics = list()
+        h_doc_topic_sum = np.zeros([len(heldout_docs), self.n_topic]) + self.alpha
 
-        self.print_topics(5)
-        logger.info("topic diff=%f, rho=%f", np.mean(np.abs(diff)), rho)
+        # random init
+        for di in xrange(len(heldout_docs)):
+            doc = heldout_docs[di]
+            topics = np.random.randint(self.n_topic, size=len(doc))
+            h_doc_topics.append(topics)
 
-        if self.optimize_eta:
-            self.update_eta(self.state.get_lambda(), rho)
+            for wi in xrange(len(doc)):
+                topic = topics[wi]
+                h_doc_topic_sum[di, topic] += 1
 
-        if not extra_pass:
-            self.num_updates += other.numdocs
+        for iter in xrange(max_iter):
+            for di in xrange(len(heldout_docs)):
+                doc = heldout_docs[di]
+                for wi in xrange(len(doc)):
+                    word = doc[wi]
+                    old_topic = h_doc_topics[di][wi]
 
-    def accuracy(self, goldlabel):
-        right = 0
-        for d in xrange(0, self._D):
-            if (self._predictions[d] == goldlabel[d]):
-                right = right + 1
-        accuracy = float(right) / float(self._D)
-        return accuracy
+                    h_doc_topic_sum[di, old_topic] -= 1
 
-    def save_parameters(self):
-        np.savetxt("lambda-%d.txt" % self._iterations, self._lambda)
-        np.savetxt("mu-%d.txt" % self._iterations, self._mu)
+                    # update
+                    prob = (self.TW[:, word] / self.sum_T) * (self.DT[di, :])
 
-    def calculate_mu(self, phi, expmu, cts, label):
-        gra_mu = n.zeros(expmu.shape)
-        nphi = (phi.T * cts).T
-        avephi = n.average(nphi, axis=0)
-        gra_mu[label, :] = avephi
-        N = float(n.sum(cts))
-        sf_aux = np.dot(expmu, phi.T)
-        sf_aux_power = np.power(sf_aux, cts)
+                    new_topic = sampling_from_dist(prob)
 
-        sf_aux_prod = np.prod(sf_aux_power, axis=1) + 1e-100
-        kappa_1 = 1.0 / np.sum(sf_aux_prod)
+                    h_doc_topics[di][wi] = new_topic
+                    h_doc_topic_sum[di, new_topic] += 1
 
-        sf_pra = np.zeros((self._C, self._K))
+        return h_doc_topic_sum
+    
+    
+    def fit(self, docs, responses, max_iter=100):
+        """ 
+        Fit sLDA model using Stochastic Expectation Maximisation.
+        """
+        self.random_init(docs)
+        for iteration in xrange(max_iter):
 
-        temp = (sf_aux_prod[:, np.newaxis] / sf_aux)
-        for c in xrange(0, self._C):
-            temp1 = np.outer(temp[c, :], (1.0 / N) * expmu[c, :])
-            temp1 = temp1 * nphi
-            sf_pra[c, :] = np.sum(temp1, axis=0)
+            for di in xrange(len(docs)):
+                doc = docs[di]
+                for wi in xrange(len(doc)):
+                    word = doc[wi]
+                    old_topic = self.topic_assignment[di][wi]
+
+                    self.TW[old_topic, word] -= 1
+                    self.sum_T[old_topic] -= 1
+                    self.DT[di, old_topic] -= 1
+                    
+                    # Calculate z-bar 
+                    z_bar = np.zeros([self.n_topic, self.n_topic]) + self.DT[di, :] + np.identity(self.n_topic)
+                    z_bar /= self.DT[di, :].sum() + 1
+
+                    # update
+                    prob = (self.TW[:, word]) / (self.sum_T) * (self.DT[di, :]) * np.exp(
+                        np.negative((responses[di] - np.dot(z_bar, self.eta)) ** 2) / 2 / self.sigma)
+
+                    new_topic = sampling_from_dist(prob)
+
+                    self.topic_assignment[di][wi] = new_topic
+                    self.TW[new_topic, word] += 1
+                    self.sum_T[new_topic] += 1
+                    self.DT[di, new_topic] += 1
+
+            # estimate parameters
+            z_bar = self.DT / self.DT.sum(1)[:, np.newaxis]  # DxK
+            self.eta = solve(np.dot(z_bar.T, z_bar), np.dot(z_bar.T, responses))
+
+            # compute mean absolute error
+            mae = np.mean(np.abs(responses - np.dot(z_bar, self.eta)))
+            if self.verbose:
+                logger.info('[ITER] %d,\tMAE:%.2f,\tlog_likelihood:%.2f', iteration, mae,
+                            self.log_likelihood(docs, responses))
