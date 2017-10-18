@@ -14,11 +14,13 @@ logger = logging.getLogger(__name__)
 # TODO: add logger statements instead of print statements
 # TODO: add docstrings and tests
 
+
 class Entry():
     def __init__(self, word=None, count=0, subwords=[]):
         self.word = word
         self.count = 0
         self.subwords = subwords
+
 
 class Dictionary():
     def __init__(self, t, bucket, minn, maxn, max_vocab_size=30000000, max_line_size=1024):
@@ -85,7 +87,7 @@ class Dictionary():
             h = self.find(entry.word)
             self.word2int[h] = self.size
             self.size += 1
-        
+
     def initTableDiscard(self):
         for i in range(self.size):
             f = self.words[i].count / self.ntokens
@@ -97,7 +99,7 @@ class Dictionary():
             word = self.words[i].word
             for j in range(len(word)):
                 ngram = ""
-                for k, n in zip(range(j, len(word)), range(1, self.maxn+1)):
+                for k, n in zip(range(j, len(word)), range(1, self.maxn + 1)):
                     ngram += word[k]
                     k += 1
                     while k < len(word):
@@ -121,7 +123,7 @@ class Dictionary():
             if discard[i] is True:
                 continue
             h = line[i]
-            for j in range(i+1, line_size):
+            for j in range(i + 1, line_size):
                 if j >= i + n or discard[j] is True:
                     break
                 h = h * 116049371 + line[j]
@@ -133,7 +135,7 @@ class Dictionary():
         line_size = len(context)
         for i in range(line_size):
             h = line[i]
-            for j in range(i+1, line_size):
+            for j in range(i + 1, line_size):
                 if j >= i + n:
                     break
                 h = h * 116049371 + line[j]
@@ -157,6 +159,7 @@ class Dictionary():
                 break
         return ntokens, hashes, words
 
+
 class Model():
     def __init__(self, dict_size, vector_size, neg, bucket):
         self.wi = np.random.uniform((-1 / vector_size), ((-1 / vector_size) + 1), (dict_size + bucket, vector_size))
@@ -173,7 +176,7 @@ class Model():
 
     def negative_sampling(self, target, lr):
         loss = 0.0
-        self.grad = np.zeros(vector_size)
+        self.grad = np.zeros(self.vector_size)
         for i in range(self.neg + 1):
             if i == 0:
                 loss += self.binary_logistic(target, True, lr)
@@ -226,6 +229,7 @@ class Model():
         self.grad *= (1.0 / len(input_))
         for i in input_:
             self.wi[i] += self.grad
+
 
 class Sent2Vec():
     def __init__(self, vector_size=100, lr=0.2, lr_update_rate=100, epochs=5,
