@@ -59,7 +59,7 @@ class Dictionary():
             self.words[self.word2int[h]].count += 1
 
     def read(self, sentences, min_count):
-        minThreshold = -1
+        minThreshold = 1
         for sentence in sentences:
             for word in sentence:
                 self.add(word)
@@ -78,7 +78,6 @@ class Dictionary():
             sys.exit()
 
     def threshold(self, t):
-        self.words.sort(key=lambda x: x.count)
         self.words = [entry for entry in self.words if entry.count > t]
         self.size = 0
         self.word2int = [-1] * self.max_vocab_size
@@ -98,13 +97,13 @@ class Dictionary():
             word = self.words[i].word
             for j in range(len(word)):
                 ngram = ""
-                for k,n in zip(range(j,len(word)), range(1,self.maxn)):
+                for k, n in zip(range(j, len(word)), range(1, self.maxn+1)):
                     ngram += word[k]
                     k += 1
                     while k < len(word):
                         ngram += word[k]
                         k += 1
-                    if n >= self.minn and ((n == 1 and (j == 0 or k == len(word))) == False):
+                    if n >= self.minn and ((n == 1 and (j == 0 or k == len(word))) is False):
                         h = self.hash_(ngram) % self.bucket
                         self.words[i].subwords.append(self.size + h)
 
@@ -114,17 +113,17 @@ class Dictionary():
         line_size = len(line)
         discard = [False] * line_size
         while num_discarded < k and line_size - num_discarded > 2:
-            token_to_discard = randint(0,line_size-1)
-            if discard[token_to_discard] == False:
+            token_to_discard = randint(0, line_size - 1)
+            if discard[token_to_discard] is False:
                 discard[token_to_discard] = True
                 num_discarded += 1
         for i in range(line_size):
-            if discard[i] == True:
+            if discard[i] is True:
                 continue
             h = line[i]
-            for j in range(line_size):
-                if j >= i + n or discard[j] == True:
-                    break;
+            for j in range(i+1, line_size):
+                if j >= i + n or discard[j] is True:
+                    break
                 h = h * 116049371 + line[j]
                 line.append(self.size + (h % self.bucket))
         return line
@@ -134,7 +133,7 @@ class Dictionary():
         line_size = len(context)
         for i in range(line_size):
             h = line[i]
-            for j in range(line_size):
+            for j in range(i+1, line_size):
                 if j >= i + n:
                     break
                 h = h * 116049371 + line[j]
@@ -155,13 +154,13 @@ class Dictionary():
             words.append(wid)
             hashes.append(self.hash_(word))
             if ntokens > self.max_line_size:
-                break                   
+                break
         return ntokens, hashes, words
 
 class Model():
     def __init__(self, dict_size, vector_size, neg, bucket):
-        self.wi = np.random.uniform((-1/vector_size), ((-1/vector_size)+1), (dict_size+bucket,vector_size))
-        self.wo = np.zeros((dict_size,vector_size))
+        self.wi = np.random.uniform((-1 / vector_size), ((-1 / vector_size) + 1), (dict_size + bucket, vector_size))
+        self.wo = np.zeros((dict_size, vector_size))
         self.negpos = 1
         self.loss = 0.0
         self.nexamples = 1
@@ -170,11 +169,11 @@ class Model():
         self.neg = neg
         self.negative_table_size = 10000000
         self.negatives = []
-        self.grad = np.zeros(vector_size)
         self.vector_size = vector_size
 
     def negative_sampling(self, target, lr):
         loss = 0.0
+        self.grad = np.zeros(vector_size)
         for i in range(self.neg + 1):
             if i == 0:
                 loss += self.binary_logistic(target, True, lr)
@@ -190,7 +189,7 @@ class Model():
         alpha = lr * (float(label) - score)
         self.grad += self.wo[target] * alpha
         self.wo[target] += self.hidden * alpha
-        if label == True:
+        if label is True:
             return -np.log(score)
         else:
             return -np.log(1.0 - score)
@@ -201,7 +200,7 @@ class Model():
             z += counts[i] ** 0.5
         for i in range(len(counts)):
             c = counts[i] ** 0.5
-            for j in range(int(c * self.negative_table_size / z)+1):
+            for j in range(int(c * self.negative_table_size / z) + 1):
                 self.negatives.append(i)
         random.shuffle(self.negatives)
 
@@ -225,7 +224,8 @@ class Model():
         self.loss += self.negative_sampling(target, lr)
         self.nexamples += 1
         self.grad *= (1.0 / len(input_))
-        self.wi += self.grad
+        for i in input_:
+            self.wi[i] += self.grad
 
 class Sent2Vec():
     def __init__(self, vector_size=100, lr=0.2, lr_update_rate=100, epochs=5,
@@ -266,23 +266,20 @@ class Sent2Vec():
                 lr = self.lr * (1.0 - progress)
                 ntokens_temp, hashes, words = self.dict.get_line(sentence)
                 local_token_count += ntokens_temp
-
-                # sent2vec(model, lr, line) equivalent
                 if len(words) > 1:
                     for i in range(len(words)):
-                        if random.uniform(0,1) > self.dict.pdiscard[words[i]]:
+                        if random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
                             continue
                         context = list(words)
                         context[i] = 0
                         context = self.dict.add_ngrams_train(context=context, n=self.word_ngrams, k=self.dropoutk)
                         self.model.update(input_=context, target=words[i], lr=lr)
-            
                 if local_token_count > self.lr_update_rate:
                     self.token_count += local_token_count
                     local_token_count = 0
                     print "Progress: ", progress, " lr: ", lr, " loss: ", self.model.loss
 
-    def sentence_vectors(sentence):
+    def sentence_vectors(self, sentence):
         ntokens_temp, hashes, words = self.dict.get_line(sentence)
         sent_vec = np.zeros(self.vector_size)
         line = self.dict.add_ngrams(context=words, n=self.word_ngrams)
