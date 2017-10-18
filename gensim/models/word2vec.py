@@ -1075,10 +1075,10 @@ class Word2Vec(utils.SaveLoad):
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
 
-        See the article by [taddy]_ and the gensim demo at [deepir]_ for examples of how to use such scores in document classification.
+        See the article by [#taddy]_ and the gensim demo at [#deepir]_ for examples of how to use such scores in document classification.
 
-        .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
-        .. [deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
+        .. [#taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
+        .. [#deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
 
         """
         if FAST_VERSION < 0:

@@ -7,7 +7,7 @@
 
 """
 Deep learning via the distributed memory and distributed bag of words models from
-[1]_, using either hierarchical softmax or negative sampling [2]_ [3]_. See [tutorial]_
+[1]_, using either hierarchical softmax or negative sampling [2]_ [3]_. See [#tutorial]_
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled)
 doc2vec training** (70x speedup [blog]_).
@@ -35,7 +35,7 @@ to trim unneeded model memory = use (much) less RAM.
        In Proceedings of NIPS, 2013.
 .. [blog] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
 
-.. [tutorial] Doc2vec in gensim tutorial, https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
+.. [#tutorial] Doc2vec in gensim tutorial, https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
 
 
 

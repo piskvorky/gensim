@@ -9,20 +9,22 @@
 USAGE: $ python -m gensim.scripts.word2vec2tensor --input <Word2Vec model file> --output <TSV tensor filename prefix> [--binary] <Word2Vec binary flag>
 
 Where:
-    <Word2Vec model file>: Input Word2Vec model.
-    <TSV tensor filename prefix>: 2D tensor TSV output file name prefix.
-    <Word2Vec binary flag>: Set True if Word2Vec model is binary. Defaults to False.
+
+* <Word2Vec model file>: Input Word2Vec model.
+* <TSV tensor filename prefix>: 2D tensor TSV output file name prefix.
+* <Word2Vec binary flag>: Set True if Word2Vec model is binary. Defaults to False.
 
 Output:
     The script will create two TSV files. A 2d tensor format file, and a Word Embedding metadata file. Both files will
-    us the --output file name as prefix
+    use the --output file name as prefix.
 
 This script is used to convert the word2vec format to Tensorflow 2D tensor and metadata formats for Embedding Visualization
 To use the generated TSV 2D tensor and metadata file in the Projector Visualizer, please
+
 1) Open http://projector.tensorflow.org/.
 2) Choose "Load Data" from the left menu.
-3) Select "Choose file" in "Load a TSV file of vectors." and choose you local "_tensor.tsv" file
-4) Select "Choose file" in "Load a TSV file of metadata." and choose you local "_metadata.tsv" file
+3) Select "Choose file" in "Load a TSV file of vectors." and choose you local "_tensor.tsv" file.
+4) Select "Choose file" in "Load a TSV file of metadata." and choose you local "_metadata.tsv" file.
 
 For more information about TensorBoard TSV format please visit:
 https://www.tensorflow.org/versions/master/how_tos/embedding_viz/
