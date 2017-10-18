@@ -87,7 +87,7 @@ class TestWord2VecModel(unittest.TestCase):
     def testBuildVocabFromFreq(self):
         """Test that the algorithm is able to build vocabulary from given
         frequency table"""
-        freq_dict={
+        freq_dict = {
         'minors': 2, 'graph': 3, 'system': 4,
         'trees': 3, 'eps': 2, 'computer': 2,
         'survey': 2, 'user': 3, 'human': 2,
@@ -123,9 +123,9 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(model_neg.wv.vocab['time'].count, 2)
         self.assertEqual(model_neg.wv.vocab['interface'].count, 2)
         self.assertEqual(model_neg.wv.vocab['response'].count, 2)
-        new_freq_dict={'computer': 1, 'artificial': 4, 'human': 1, 'graph': 1, 'intelligence': 4, 'system': 1, 'trees': 1}
-        model_hs.build_vocab_from_freq(new_freq_dict,update=True)
-        model_neg.build_vocab_from_freq(new_freq_dict,update=True)
+        new_freq_dict = {'computer': 1, 'artificial': 4, 'human': 1, 'graph': 1, 'intelligence': 4, 'system': 1, 'trees': 1}
+        model_hs.build_vocab_from_freq(new_freq_dict, update=True)
+        model_neg.build_vocab_from_freq(new_freq_dict, update=True)
         self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
         self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
         self.assertEqual(len(model_hs.wv.vocab), 14)
