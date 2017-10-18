@@ -9,6 +9,7 @@ from gensim import matutils
 from random import randint
 import sys
 import random
+import pickle
 
 logger = logging.getLogger(__name__)
 # TODO: add logger statements instead of print statements
@@ -263,10 +264,13 @@ class Sent2Vec():
         ntokens = self.dict.ntokens
         local_token_count = 0
         print "Training..."
-        while self.token_count < self.epochs * ntokens:
-            print "Begin new epoch..."
+        progress = 0
+        for i in range(self.epochs):
+            print "Begin epoch", i, ":"
             for sentence in sentences:
                 progress = self.token_count / (self.epochs * ntokens)
+                if progress >= 1:
+                    break
                 lr = self.lr * (1.0 - progress)
                 ntokens_temp, hashes, words = self.dict.get_line(sentence)
                 local_token_count += ntokens_temp
@@ -281,17 +285,19 @@ class Sent2Vec():
                 if local_token_count > self.lr_update_rate:
                     self.token_count += local_token_count
                     local_token_count = 0
-                    print "Progress: ", progress, " lr: ", lr, " loss: ", self.model.loss
+                if self.token_count >= self.epochs * ntokens:
+                    break
+            print "Progress: ", progress, " lr: ", lr, " loss: ", self.model.loss / self.model.nexamples
 
     def sentence_vectors(self, sentence):
         ntokens_temp, hashes, words = self.dict.get_line(sentence)
         sent_vec = np.zeros(self.vector_size)
         line = self.dict.add_ngrams(context=words, n=self.word_ngrams)
         for word_vec in line:
-            sent_vec += np.array(word_vec)
+            sent_vec += self.model.wi[word_vec]
         sent_vec *= (1.0 / len(line))
         return sent_vec
 
     def similarity(self, sent1, sent2):
         # cosine similarity between two sentences
-        return dot(matutils.unitvec(self.sent_vec(sent1)), matutils.unitvec(self.sent_vec(sent2)))
+        return dot(matutils.unitvec(self.sentence_vectors(sent1)), matutils.unitvec(self.sentence_vectors(sent2)))
