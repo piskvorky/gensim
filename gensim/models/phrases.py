@@ -114,7 +114,7 @@ def _is_single(obj):
         return False, obj_iter
 
 
-class SentenceAnalyzer:
+class SentenceAnalyzer(object):
 
     def analyze_sentence(self, sentence, threshold, common_terms, scoring):
         """Analyze a sentence
