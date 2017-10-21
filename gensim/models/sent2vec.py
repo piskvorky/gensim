@@ -9,7 +9,8 @@ from gensim import matutils
 from random import randint
 import sys
 import random
-import pickle
+from gensim.utils import SaveLoad, tokenize
+import time
 
 logger = logging.getLogger(__name__)
 # TODO: add logger statements instead of print statements
@@ -232,7 +233,7 @@ class Model():
             self.wi[i] += self.grad
 
 
-class Sent2Vec():
+class Sent2Vec(SaveLoad):
     def __init__(self, vector_size=100, lr=0.2, lr_update_rate=100, epochs=5,
             min_count=5, neg=10, word_ngrams=2, loss='ns', bucket=2000000, t=0.0001,
             minn=3, maxn=6, dropoutk=2):
@@ -265,6 +266,7 @@ class Sent2Vec():
         local_token_count = 0
         print "Training..."
         progress = 0
+        start_time = time.time()
         for i in range(self.epochs):
             print "Begin epoch", i, ":"
             for sentence in sentences:
@@ -287,9 +289,11 @@ class Sent2Vec():
                     local_token_count = 0
                 if self.token_count >= self.epochs * ntokens:
                     break
-            print "Progress: ", progress, " lr: ", lr, " loss: ", self.model.loss / self.model.nexamples
+            print "Progress: ", progress * 100, "% lr: ", lr, " loss: ", self.model.loss / self.model.nexamples
+        print "\n\nTotal training time: %s seconds" % (time.time() - start_time)
 
-    def sentence_vectors(self, sentence):
+    def sentence_vectors(self, sentence_string):
+        sentence = tokenize(sentence_string)
         ntokens_temp, hashes, words = self.dict.get_line(sentence)
         sent_vec = np.zeros(self.vector_size)
         line = self.dict.add_ngrams(context=words, n=self.word_ngrams)
