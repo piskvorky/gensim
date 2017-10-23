@@ -23,8 +23,9 @@ import csv
 import logging
 import os
 
-import numpy as np
-from numpy import float32 as REAL, sqrt, newaxis, random
+from autograd import numpy as np
+from autograd import grad
+from numpy import random
 from smart_open import smart_open
 
 from gensim import utils
@@ -91,7 +92,9 @@ class PoincareModel(utils.SaveLoad):
         self.epsilon = epsilon
         self.burn_in = burn_in
         self.seed = seed
+        self.random_state = random.RandomState(seed)
         self.init_range = (-0.001, 0.001)
+        self.loss_grad = grad(PoincareModel.loss_fn)
 
         self.load_relations()
         self.init_embeddings()
@@ -100,7 +103,7 @@ class PoincareModel(utils.SaveLoad):
         """Load relations from the train file and build vocab"""
         vocab = {}
         index2word = []
-        relations = set()
+        relations = []
 
         with smart_open(self.train_file, 'r', encoding=self.encoding) as f:
             reader = csv.reader(f, delimiter='\t')
@@ -112,7 +115,7 @@ class PoincareModel(utils.SaveLoad):
                     else:
                         vocab[item] = Vocab(count=1, index=len(index2word))
                         index2word.append(item)
-                relations.add(tuple(row))
+                relations.append(tuple(row))
         self.wv.vocab = vocab
         self.wv.index2word = index2word
         self.relations = relations
@@ -120,5 +123,63 @@ class PoincareModel(utils.SaveLoad):
     def init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab"""
         shape = (len(self.wv.index2word), self.size)
-        state = random.RandomState(self.seed)
-        self.wv.syn0 = state.uniform(self.init_range[0], self.init_range[1], shape)
+        self.wv.syn0 = self.random_state.uniform(self.init_range[0], self.init_range[1], shape)
+
+
+    def sample_negatives(self, _node_1):
+        """Return a sample of negative examples for the given positive example"""
+        # TODO: make sure returned nodes aren't positive relations for `_node_1`
+        return list(self.random_state.choice(list(self.wv.vocab.keys()), self.negative))
+
+    @staticmethod
+    def loss_fn(matrix):
+        """Given vectors for u, v and negative samples, computes loss value"""
+        vector_u = matrix[0]
+        vector_v = matrix[1]
+        vectors_negative = matrix[2:]
+        positive_distance = PoincareKeyedVectors.poincare_dist(vector_u, vector_v)
+        negative_distances = np.array([
+            PoincareKeyedVectors.poincare_dist(vector_u, vector_negative)
+            for vector_negative in vectors_negative
+        ])
+        exp_negative_distances = np.exp(-negative_distances)
+        exp_positive_distance = np.exp(-positive_distance)
+        return -np.log(exp_positive_distance / (exp_positive_distance + exp_negative_distances.sum()))
+
+    def compute_gradients(self, relation, negatives):
+        """Computes gradients for vectors of positively related nodes and negatively sampled nodes"""
+        u, v = relation
+        vector_u = self.wv.word_vec(u)
+        vector_v = self.wv.word_vec(v)
+        vectors_negative = self.wv[negatives]
+        matrix = np.vstack((vector_u, vector_v, vectors_negative))
+        loss = self.loss_fn(matrix)
+        print('Loss: %.2f' % loss)
+        gradients = self.loss_grad(matrix)
+        return gradients
+
+    def train_on_example(self, relation):
+        """Performs training for a single training example"""
+        u, v = relation
+        negatives = self.sample_negatives(u)
+        gradients = self.compute_gradients(relation, negatives)
+        vector_indices = [self.wv.vocab[u].index, self.wv.vocab[v].index]
+        for negative in negatives:
+            vector_indices.append(self.wv.vocab[negative].index)
+        for vector_index, gradient in zip(vector_indices, gradients):
+            vector = self.wv.syn0[vector_index]
+            norm_squared = np.linalg.norm(vector) ** 2
+            self.wv.syn0 -= self.alpha * ((1.0 - norm_squared) ** 2)/4.0 * gradient
+
+    def train(self):
+        """Trains Poincare embeddings using loaded relations"""
+        if self.workers > 1:
+            raise NotImplementedError("Multi-threaded version not implemented yet")
+        for epoch in range(1, self.iter + 1):
+            indices = list(range(len(self.relations)))
+            self.random_state.shuffle(indices)
+            for i, idx in enumerate(indices, start=1):
+                relation = self.relations[idx]
+                print('Training on example #%d %s' % (i, relation))
+                self.train_on_example(relation)
+
