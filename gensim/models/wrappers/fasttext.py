@@ -292,8 +292,10 @@ class FastText(Word2Vec):
         self.sample = t
 
     def load_dict(self, file_handle, encoding='utf8'):
-        vocab_size, nwords, _ = self.struct_unpack(file_handle, '@3i')
+        vocab_size, nwords, nlabels = self.struct_unpack(file_handle, '@3i')
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+        if nlabels > 0:
+            raise NotImplementedError("Supervised fastText models are not supported")
         logger.info("loading %s words for fastText model from %s", vocab_size, self.file_name)
 
         self.struct_unpack(file_handle, '@1q')  # number of tokens
@@ -308,16 +310,6 @@ class FastText(Word2Vec):
                 char_byte = file_handle.read(1)
             word = word_bytes.decode(encoding)
             count, _ = self.struct_unpack(file_handle, '@qb')
-
-            if i == nwords and i < vocab_size:
-                # To handle the error in pretrained vector wiki.fr (French).
-                # For more info : https://github.com/facebookresearch/fastText/issues/218
-
-                assert word == "__label__", (
-                    'mismatched vocab_size ({}) and nwords ({}), extra word "{}"'
-                    .format(vocab_size, nwords, word)
-                )
-                continue   # don't add word to vocab
 
             self.wv.vocab[word] = Vocab(index=i, count=count)
             self.wv.index2word.append(word)
