@@ -224,6 +224,11 @@ class TestFastText(unittest.TestCase):
         self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new')))
         self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new.bin')))
 
+    def testLoadModelSupervised(self):
+        """Test loading model with supervised learning labels"""
+        with self.assertRaises(NotImplementedError):
+            fasttext.FastText.load_fasttext_format(datapath('pang_lee_polarity_fasttext'))
+
     def testLoadModelWithNonAsciiVocab(self):
         """Test loading model with non-ascii words in vocab"""
         model = fasttext.FastText.load_fasttext_format(datapath('non_ascii_fasttext'))

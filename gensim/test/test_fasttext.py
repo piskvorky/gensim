@@ -246,6 +246,10 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(new_model.wv.syn0.shape, (len(new_model.wv.vocab), new_model.vector_size))
         self.assertEqual(new_model.wv.syn0_ngrams.shape, (new_model.num_ngram_vectors, new_model.vector_size))
 
+    def test_load_model_supervised(self):
+        with self.assertRaises(NotImplementedError):
+            FT_gensim.load_fasttext_format(datapath('pang_lee_polarity_fasttext'))
+
     def test_load_model_with_non_ascii_vocab(self):
         model = FT_gensim.load_fasttext_format(datapath('non_ascii_fasttext'))
         self.assertTrue(u'který' in model)
