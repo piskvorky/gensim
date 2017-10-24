@@ -988,5 +988,66 @@ class TestPhrasesTransformer(unittest.TestCase):
         self.assertRaises(NotFittedError, phrases_transformer.transform, phrases_sentences[0])
 
 
+# specifically test pluggable scoring in Phrases, because possible pickling issues with function parameter
+
+# this is intentionally in main rather than a class method to support pickling
+# all scores will be 1
+def dumb_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
+    return 1
+
+
+class TestPhrasesTransformerCustomScorer(unittest.TestCase):
+
+    def setUp(self):
+        numpy.random.seed(0)
+
+        self.model = PhrasesTransformer(min_count=1, threshold=.9, scoring=dumb_scorer)
+        self.model.fit(phrases_sentences)
+
+    def testTransform(self):
+        # tranform one document
+        doc = phrases_sentences[-1]
+        phrase_tokens = self.model.transform(doc)[0]
+        expected_phrase_tokens = [u'graph_minors', u'survey_human', u'interface']
+        self.assertEqual(phrase_tokens, expected_phrase_tokens)
+
+    def testPartialFit(self):
+        new_sentences = [
+            ['world', 'peace', 'humans', 'world', 'peace', 'world', 'peace', 'people'],
+            ['world', 'peace', 'people'],
+            ['world', 'peace', 'humans']
+        ]
+        self.model.partial_fit(X=new_sentences)  # train model with new sentences
+
+        doc = ['graph', 'minors', 'survey', 'human', 'interface', 'world', 'peace']
+        phrase_tokens = self.model.transform(doc)[0]
+        expected_phrase_tokens = [u'graph_minors', u'survey_human', u'interface', u'world_peace']
+        self.assertEqual(phrase_tokens, expected_phrase_tokens)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(progress_per=5000)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["progress_per"], 5000)
+
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(phrases_sentences)
+        self.assertEqual(getattr(self.model.gensim_model, 'progress_per'), 5000)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        doc = phrases_sentences[-1]
+        loaded_phrase_tokens = model_load.transform(doc)
+
+        # comparing the original and loaded models
+        original_phrase_tokens = self.model.transform(doc)
+        self.assertEqual(original_phrase_tokens, loaded_phrase_tokens)
+
+    def testModelNotFitted(self):
+        phrases_transformer = PhrasesTransformer()
+        self.assertRaises(NotFittedError, phrases_transformer.transform, phrases_sentences[0])
+
 if __name__ == '__main__':
     unittest.main()

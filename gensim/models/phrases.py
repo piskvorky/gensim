@@ -64,15 +64,16 @@ import logging
 import warnings
 from collections import defaultdict
 import itertools as it
-from functools import partial
 from math import log
+from inspect import getargspec
+import pickle
+import six
 
 from six import iteritems, string_types, next
 
 from gensim import utils, interfaces
 
 logger = logging.getLogger(__name__)
-
 
 def _is_single(obj):
     """
@@ -136,19 +137,36 @@ class Phrases(interfaces.TransformationABC):
         should be a byte string (e.g. b'_').
 
         `scoring` specifies how potential phrases are scored for comparison to the `threshold`
-        setting. two settings are available:
+        setting. `scoring` can be set with either a string that refers to a built-in scoring function,
+        or with a function with the expected parameter names. Two built-in scoring functions are available
+        by setting `scoring` to a string:
 
         'default': from "Efficient Estimaton of Word Representations in Vector Space" by
-            Mikolov, et. al.:
-            (count(worda followed by wordb) - min_count) * N /
-            (count(worda) * count(wordb)) > `threshold`, where `N` is the total vocabulary size.
+                   Mikolov, et. al.:
+                   (count(worda followed by wordb) - min_count) * N /
+                   (count(worda) * count(wordb)) > threshold`, where `N` is the total vocabulary size.
         'npmi': normalized pointwise mutual information, from "Normalized (Pointwise) Mutual
-            Information in Colocation Extraction" by Gerlof Bouma:
-            ln(prop(worda followed by wordb) / (prop(worda)*prop(wordb))) /
-            - ln(prop(worda followed by wordb)
-            where prop(n) is the count of n / the count of everything in the entire corpus
-            'npmi' is more robust when dealing with common words that form part of common bigrams, and
-            ranges from -1 to 1, but is slower to calculate than the default
+                Information in Colocation Extraction" by Gerlof Bouma:
+                ln(prop(worda followed by wordb) / (prop(worda)*prop(wordb))) /
+                - ln(prop(worda followed by wordb)
+                where prop(n) is the count of n / the count of everything in the entire corpus
+
+        'npmi' is more robust when dealing with common words that form part of common bigrams, and
+        ranges from -1 to 1, but is slower to calculate than the default
+
+        To use a custom scoring function, create a function with the following parameters and set the `scoring`
+        parameter to the custom function. You must use all the parameters in your function call, even if the
+        function does not require all the parameters.
+
+            worda_count: number of occurrances in `sentences` of the first token in the phrase being scored
+            wordb_count: number of occurrances in `sentences` of the second token in the phrase being scored
+            bigram_count: number of occurrances in `sentences` of the phrase being scored
+            len_vocab: the number of unique tokens in `sentences`
+            min_count: the `min_count` setting of the Phrases class
+            corpus_word_count: the total number of (non-unique) tokens in `sentences`
+
+        A scoring function without any of these parameters (even if the parameters are not used) will
+        raise a ValueError on initialization of the Phrases class. The scoring function must be picklable.
 
         """
         if min_count <= 0:
@@ -159,8 +177,24 @@ class Phrases(interfaces.TransformationABC):
         if scoring == 'npmi' and (threshold < -1 or threshold > 1):
             raise ValueError("threshold should be between -1 and 1 for npmi scoring")
 
-        if not (scoring == 'default' or scoring == 'npmi'):
-            raise ValueError('unknown scoring function "' + scoring + '" specified')
+        # set scoring based on string
+        # intentially override the value of the scoring parameter rather than set self.scoring here,
+        # to still run the check of scoring function parameters in the next code block
+
+        if isinstance(scoring, six.string_types):
+            if scoring == 'default':
+                scoring = original_scorer
+            elif scoring == 'npmi':
+                scoring = npmi_scorer
+            else:
+                raise ValueError('unknown scoring method string %s specified' % (scoring))
+
+        scoring_parameters = ['worda_count', 'wordb_count', 'bigram_count', 'len_vocab', 'min_count', 'corpus_word_count']
+        if callable(scoring):
+            if all(parameter in getargspec(scoring)[0] for parameter in scoring_parameters):
+                self.scoring = scoring
+            else:
+                raise ValueError('scoring function missing expected parameters')
 
         self.min_count = min_count
         self.threshold = threshold
@@ -169,8 +203,17 @@ class Phrases(interfaces.TransformationABC):
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
         self.progress_per = progress_per
-        self.scoring = scoring
         self.corpus_word_count = 0
+
+        # ensure picklability of custom scorer
+        try:
+            test_pickle = pickle.dumps(self.scoring)
+            load_pickle = pickle.loads(test_pickle)
+        except pickle.PickleError:
+            raise pickle.PickleError('unable to pickle custom Phrases scoring function')
+        finally:
+            del(test_pickle)
+            del(load_pickle)
 
         if sentences is not None:
             self.add_vocab(sentences)
@@ -227,8 +270,7 @@ class Phrases(interfaces.TransformationABC):
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab, total_words = \
-        self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
+        min_reduce, vocab, total_words = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
 
         self.corpus_word_count += total_words
         if len(self.vocab) > 0:
@@ -263,14 +305,11 @@ class Phrases(interfaces.TransformationABC):
         threshold = self.threshold
         delimiter = self.delimiter  # delimiter used for lookup
         min_count = self.min_count
-        scoring = self.scoring
-        corpus_word_count = self.corpus_word_count
-
-        if scoring == 'default':
-            scoring_function = partial(self.original_scorer, len_vocab=float(len(vocab)), min_count=float(min_count))
-        elif scoring == 'npmi':
-            scoring_function = partial(self.npmi_scorer, corpus_word_count=corpus_word_count)
-        # no else here to catch unknown scoring function, check is done in Phrases.__init__
+        scorer = self.scoring
+        # made floats for scoring function
+        len_vocab = float(len(vocab))
+        scorer_min_count = float(min_count)
+        corpus_word_count = float(self.corpus_word_count)
 
         for sentence in sentences:
             s = [utils.any2utf8(w) for w in sentence]
@@ -284,7 +323,10 @@ class Phrases(interfaces.TransformationABC):
                         count_a = float(vocab[word_a])
                         count_b = float(vocab[word_b])
                         count_ab = float(vocab[bigram_word])
-                        score = scoring_function(count_a, count_b, count_ab)
+                        # scoring MUST have all these parameters, even if they are not used
+                        score = scorer(worda_count=count_a, wordb_count=count_b, bigram_count=count_ab, len_vocab=len_vocab, min_count=scorer_min_count, corpus_word_count=corpus_word_count)
+                        # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
+                        #     bigram_word, count_ab, scorer_min_count, count_a, count_ab, len_vocab, score)
                         if score > threshold and count_ab >= min_count:
                             if as_tuples:
                                 yield ((word_a, word_b), score)
@@ -315,6 +357,16 @@ class Phrases(interfaces.TransformationABC):
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
 
+        vocab = self.vocab
+        threshold = self.threshold
+        delimiter = self.delimiter  # delimiter used for lookup
+        min_count = self.min_count
+        scorer = self.scoring
+        # made floats for scoring function
+        len_vocab = float(len(vocab))
+        scorer_min_count = float(min_count)
+        corpus_word_count = float(self.corpus_word_count)
+
         is_single, sentence = _is_single(sentence)
         if not is_single:
             # if the input is an entire corpus (rather than a single sentence),
@@ -324,18 +376,20 @@ class Phrases(interfaces.TransformationABC):
         s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
         vocab = self.vocab
-        threshold = self.threshold
-        delimiter = self.delimiter
-        min_count = self.min_count
+
         for word_a, word_b in zip(s, s[1:]):
-            if word_a in vocab and word_b in vocab:
+            # last bigram check was moved here to save a few CPU cycles
+            if word_a in vocab and word_b in vocab and not last_bigram:
                 bigram_word = delimiter.join((word_a, word_b))
-                if bigram_word in vocab and not last_bigram:
-                    pa = float(vocab[word_a])
-                    pb = float(vocab[word_b])
-                    pab = float(vocab[bigram_word])
-                    score = (pab - min_count) / pa / pb * len(vocab)
-                    if score > threshold:
+                if bigram_word in vocab:
+                    count_a = float(vocab[word_a])
+                    count_b = float(vocab[word_b])
+                    count_ab = float(vocab[bigram_word])
+                    # scoring MUST have all these parameters, even if they are not used
+                    score = scorer(worda_count=count_a, wordb_count=count_b, bigram_count=count_ab, len_vocab=len_vocab, min_count=scorer_min_count, corpus_word_count=corpus_word_count)
+                    # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
+                    #     bigram_word, count_ab, scorer_min_count, count_a, count_ab, len_vocab, score)
+                    if score > threshold and count_ab >= min_count:
                         new_s.append(bigram_word)
                         last_bigram = True
                         continue
@@ -351,19 +405,56 @@ class Phrases(interfaces.TransformationABC):
 
         return [utils.to_unicode(w) for w in new_s]
 
-    # calculation of score based on original mikolov word2vec paper
-    # len_vocab and min_count set so functools.partial works
-    @staticmethod
-    def original_scorer(worda_count, wordb_count, bigram_count, len_vocab=0.0, min_count=0.0):
-        return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """
+        Load a previously saved Phrases class. Handles backwards compatibility from older Phrases versions which did not support
+            pluggable scoring functions. Otherwise, relies on utils.load
+        """
 
-    # normalized PMI, requires corpus size
-    @staticmethod
-    def npmi_scorer(worda_count, wordb_count, bigram_count, corpus_word_count=0.0):
-        pa = worda_count / corpus_word_count
-        pb = wordb_count / corpus_word_count
-        pab = bigram_count / corpus_word_count
-        return log(pab / (pa * pb)) / -log(pab)
+        # for python 2 and 3 compatibility. basestring is used to check if model.scoring is a string
+        try:
+            basestring
+        except NameError:
+            basestring = str
+
+        model = super(Phrases, cls).load(*args, **kwargs)
+        # update older models
+        # if no scoring parameter, use default scoring
+        if not hasattr(model, 'scoring'):
+            logger.info('older version of Phrases loaded without scoring function')
+            logger.info('setting pluggable scoring method to original_scorer for compatibility')
+            model.scoring = original_scorer
+        # if there is a scoring parameter, and it's a text value, load the proper scoring function
+        if hasattr(model, 'scoring'):
+            if isinstance(model.scoring, basestring):
+                if model.scoring == 'default':
+                    logger.info('older version of Phrases loaded with "default" scoring parameter')
+                    logger.info('setting scoring method to original_scorer pluggable scoring method for compatibility')
+                    model.scoring = original_scorer
+                elif model.scoring == 'npmi':
+                    logger.info('older version of Phrases loaded with "npmi" scoring parameter')
+                    logger.info('setting scoring method to npmi_scorer pluggable scoring method for compatibility')
+                    model.scoring = npmi_scorer
+                else:
+                    raise ValueError('failed to load Phrases model with unknown scoring setting %s' % (model.scoring))
+        return model
+
+
+# these two built-in scoring methods don't cast everything to float because the casting is done in the call
+# to the scoring method in __getitem__ and export_phrases.
+
+# calculation of score based on original mikolov word2vec paper
+def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
+    return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
+
+
+# normalized PMI, requires corpus size
+def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
+    pa = worda_count / corpus_word_count
+    pb = wordb_count / corpus_word_count
+    pab = bigram_count / corpus_word_count
+    return log(pab / (pa * pb)) / -log(pab)
 
 
 def pseudocorpus(source_vocab, sep):
