@@ -5,7 +5,7 @@ services:
     image: gensim_test:latest
     ports:
      - "8000:2222"
-    command: python3 test_distributed_tf.py --ps_hosts=ps1:2222 --worker_hosts=worker1:2223,worker2:2224,worker3:2225 --job_name=ps --task_index=0
+    command: python3 word2vec.py --train_data=text8   --eval_data=questions-words.txt   --save_path=/tmp/ --ps_hosts=ps1:2222 --worker_hosts=worker1:2223,worker2:2224 --job_name=ps --task_index=0 #test_distributed_tf.py --ps_hosts=ps1:2222 --worker_hosts=worker1:2223,worker2:2224,worker3:2225 --job_name=ps --task_index=0
     tty: true
 
   worker1:
@@ -14,7 +14,7 @@ services:
     ports:
      - "8001:2223"
     volumes: ["./models:/models"]
-    command: python3 test_distributed_tf.py --ps_hosts=ps1:2222 --worker_hosts=worker1:2223,worker2:2224,worker3:2225 --job_name=worker --task_index=0
+    command: python3 word2vec.py --train_data=text8   --eval_data=questions-words.txt   --save_path=/tmp/ --ps_hosts=ps1:2222 --worker_hosts=worker1:2223,worker2:2224 --job_name=worker --task_index=0
     tty: true
 
 
@@ -23,14 +23,5 @@ services:
     image: gensim_test:latest
     ports:
      - "8002:2224"
-    command: python3 test_distributed_tf.py --ps_hosts=ps1:2222 --worker_hosts=worker1:2223,worker2:2224,worker3:2225 --job_name=worker --task_index=1
+    command: python3 word2vec.py --train_data=text8   --eval_data=questions-words.txt   --save_path=/tmp/ --ps_hosts=ps1:2222 --worker_hosts=worker1:2223,worker2:2224 --job_name=worker --task_index=1
     tty: true
-
-  worker3:
-    build: .
-    image: gensim_test:latest
-    ports:
-     - "8003:2225"
-    command: python3 test_distributed_tf.py --ps_hosts=ps1:2222 --worker_hosts=worker1:2223,worker2:2224,worker3:2225 --job_name=worker --task_index=2
-    tty: true
-

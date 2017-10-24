@@ -6,8 +6,8 @@ MAINTAINER Irina Saparina <irisaparina@gmail.com>
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential=12.1ubuntu2 \
-        curl=7.47.0-1ubuntu2.2 \
-        git=1:2.7.4-0ubuntu1.2 \
+        curl \
+        git \
         libcurl3-dev \
         libfreetype6-dev=2.6.1-0.1ubuntu2.3 \
         libpng12-dev=1.2.54-1ubuntu1 \
@@ -99,5 +99,6 @@ RUN cd /gensim-distributed_tfw2v \
 
 #Prepare for testing
 RUN mkdir test_tfw2v
-COPY questions-words.txt test_distributed_tf.py text8.zip /test_tfw2v/
+COPY questions-words.txt word2vec.py word2vec_ops.cc word2vec_kernels.cc test_distributed_tf.py text8.zip /test_tfw2v/
 WORKDIR ./test_tfw2v
+RUN TF_INC=$(python -c 'import tensorflow as tf; print(tf.sysconfig.get_include())') && g++ -std=c++11 -shared word2vec_ops.cc word2vec_kernels.cc -o word2vec_ops.so -fPIC -I $TF_INC -O2 -D_GLIBCXX_USE_CXX11_ABI=0 && unzip text8.zip
