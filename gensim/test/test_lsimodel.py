@@ -91,7 +91,6 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         expected = np.array([-0.6594664, 0.142115444])  # scaled LSI version
         self.assertTrue(np.allclose(abs(vec), abs(expected), atol=1.e-5))  # transformed entries must be equal up to sign
 
-
     def testCorpusTransform(self):
         """Test lsi[corpus] transformation."""
         model = self.model
