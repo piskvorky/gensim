@@ -21,13 +21,13 @@ except ImportError:
     HAS_PATTERN = False
 
 
-SEPARATOR = r"@"
-RE_SENTENCE = re.compile('(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)  # backup (\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)
-AB_SENIOR = re.compile("([A-Z][a-z]{1,2}\.)\s(\w)", re.UNICODE)
-AB_ACRONYM = re.compile("(\.[a-zA-Z]\.)\s(\w)", re.UNICODE)
-AB_ACRONYM_LETTERS = re.compile("([a-zA-Z])\.([a-zA-Z])\.", re.UNICODE)
-UNDO_AB_SENIOR = re.compile("([A-Z][a-z]{1,2}\.)" + SEPARATOR + "(\w)", re.UNICODE)
-UNDO_AB_ACRONYM = re.compile("(\.[a-zA-Z]\.)" + SEPARATOR + "(\w)", re.UNICODE)
+SEPARATOR = r'@'
+RE_SENTENCE = re.compile(r'(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)  # backup (\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)
+AB_SENIOR = re.compile(r'([A-Z][a-z]{1,2}\.)\s(\w)', re.UNICODE)
+AB_ACRONYM = re.compile(r'(\.[a-zA-Z]\.)\s(\w)', re.UNICODE)
+AB_ACRONYM_LETTERS = re.compile(r'([a-zA-Z])\.([a-zA-Z])\.', re.UNICODE)
+UNDO_AB_SENIOR = re.compile(r'([A-Z][a-z]{1,2}\.)' + SEPARATOR + '(\w)', re.UNICODE)
+UNDO_AB_ACRONYM = re.compile(r'(\.[a-zA-Z]\.)' + SEPARATOR + '(\w)', re.UNICODE)
 
 
 def split_sentences(text):
