@@ -12,8 +12,7 @@ import logging
 import unittest
 from collections import namedtuple
 
-from gensim.topic_coherence import direct_confirmation_measure
-from gensim.topic_coherence import text_analysis
+from gensim.models._coherence import text_analysis, direct_confirmation_measure
 
 
 class TestDirectConfirmationMeasure(unittest.TestCase):

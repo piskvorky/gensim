@@ -12,13 +12,13 @@ in this test.
 
 """
 
-import os.path
 import logging
+import os.path
 import unittest
 
 from gensim import utils
 from gensim.corpora import Dictionary
-from gensim.summarization import summarize, summarize_corpus, keywords
+from gensim.models.summarization import summarize, summarize_corpus, keywords
 
 
 class TestSummarizationTest(unittest.TestCase):

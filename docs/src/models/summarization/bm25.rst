@@ -1,0 +1,9 @@
+:mod:`models.summarization.bm25` -- BM25 ranking function
+=========================================================
+
+.. automodule:: gensim.models.summarization.bm25
+    :synopsis: BM25 ranking function
+    :members:
+    :inherited-members:
+    :undoc-members:
+    :show-inheritance:

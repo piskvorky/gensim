@@ -13,7 +13,7 @@ import unittest
 
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.hashdictionary import HashDictionary
-from gensim.topic_coherence import probability_estimation
+from gensim.models._coherence import probability_estimation
 
 
 class BaseTestCases(object):

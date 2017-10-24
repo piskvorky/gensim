@@ -8,8 +8,8 @@ Automated tests for the parsing module.
 import logging
 import unittest
 import numpy as np
-from gensim.parsing.preprocessing import remove_stopwords, strip_punctuation2, strip_tags, strip_short, strip_numeric, strip_non_alphanum, strip_multiple_whitespaces, split_alphanum, stem_text
-
+from gensim.utils.text_utils import remove_stopwords, strip_punctuation2, strip_tags, strip_short, strip_numeric, \
+    strip_non_alphanum, strip_multiple_whitespaces, split_alphanum, stem_text
 
 # several documents
 doc1 = """C'est un trou de verdure où chante une rivière,

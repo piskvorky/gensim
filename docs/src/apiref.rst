@@ -9,7 +9,8 @@ Modules:
     :maxdepth: 0
 
     interfaces
-    utils
+    utils/utils
+    utils/text_utils
     matutils
     corpora/bleicorpus
     corpora/csvcorpus
@@ -45,6 +46,20 @@ Modules:
     models/fasttext
     models/phrases
     models/coherencemodel
+    models/_coherence/aggregation
+    models/_coherence/direct_confirmation_measure
+    models/_coherence/indirect_confirmation_measure
+    models/_coherence/probability_estimation
+    models/_coherence/segmentation
+    models/_coherence/text_analysis
+    models/summarization/bm25
+    models/summarization/commons
+    models/summarization/graph
+    models/summarization/keywords
+    models/summarization/pagerank_weighted
+    models/summarization/summariser
+    models/summarization/syntactic_unit
+    models/summarization/textcleaner
     models/basemodel
     models/callbacks
     models/wrappers/ldamallet
@@ -66,26 +81,6 @@ Modules:
     sklearn_api/text2bow
     sklearn_api/tfidf
     sklearn_api/w2vmodel
-    topic_coherence/aggregation
-    topic_coherence/direct_confirmation_measure
-    topic_coherence/indirect_confirmation_measure
-    topic_coherence/probability_estimation
-    topic_coherence/segmentation
-    topic_coherence/text_analysis
     scripts/glove2word2vec
-    scripts/make_wikicorpus
-    scripts/word2vec_standalone
-    scripts/make_wiki_online
-    scripts/make_wiki_online_lemma
-    scripts/make_wiki_online_nodebug
+    scripts/make_wiki
     scripts/word2vec2tensor
-    parsing/porter
-    parsing/preprocessing
-    summarization/bm25
-    summarization/commons
-    summarization/graph
-    summarization/keywords
-    summarization/pagerank_weighted
-    summarization/summariser
-    summarization/syntactic_unit
-    summarization/textcleaner

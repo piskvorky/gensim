@@ -12,12 +12,12 @@ in this test.
 
 """
 
-import os.path
 import logging
+import os.path
 import unittest
 
 from gensim import utils
-from gensim.summarization import keywords
+from gensim.models.summarization import keywords
 
 
 class TestKeywordsTest(unittest.TestCase):
