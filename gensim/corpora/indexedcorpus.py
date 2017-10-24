@@ -6,15 +6,7 @@
 
 
 """
-Indexed corpus is a mechanism for random-accessing corpora.
-
-While the standard corpus interface in gensim allows iterating over corpus with
-`for doc in corpus: pass`, indexed corpus allows accessing the documents with
-`corpus[docno]` (in O(1) look-up time).
-
-This functionality is achieved by storing an extra file (by default named the same
-as the corpus file plus '.index' suffix) that stores the byte offset of the beginning
-of each document.
+Base Indexed Corpus class
 """
 
 import logging
@@ -30,11 +22,25 @@ logger = logging.getLogger('gensim.corpora.indexedcorpus')
 class IndexedCorpus(interfaces.CorpusABC):
     def __init__(self, fname, index_fname=None):
         """
-        Initialize this abstract base class, by loading a previously saved index
-        from `index_fname` (or `fname.index` if `index_fname` is not set).
-        This index will allow subclasses to support the `corpus[docno]` syntax
-        (random access to document #`docno` in O(1)).
+        Indexed corpus is a mechanism for random-accessing corpora.
 
+        While the standard corpus interface in gensim allows iterating over
+        corpus with `for doc in corpus: pass`, indexed corpus allows accessing
+        the documents with `corpus[docno]` (in O(1) look-up time).
+
+        This functionality is achieved by storing an extra file (by default
+        named the same as the '{corpus name}.index') that stores the byte
+        offset of the beginning of each document.
+
+        Parameters
+        ----------
+        fname : string
+            Corpus filename
+        index_fname : string or None
+            Index filename, or None for loading `fname`.index
+
+        Examples
+        --------
         >>> # save corpus in SvmLightCorpus format with an index
         >>> corpus = [[(1, 0.5)], [(0, 1.0), (1, 2.0)]]
         >>> gensim.corpora.SvmLightCorpus.serialize('testfile.svmlight', corpus)
@@ -56,23 +62,49 @@ class IndexedCorpus(interfaces.CorpusABC):
         self.length = None
 
     @classmethod
-    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None, metadata=False):
+    def serialize(
+            serializer,
+            fname,
+            corpus,
+            id2word=None,
+            index_fname=None,
+            progress_cnt=None,
+            labels=None,
+            metadata=False
+    ):
         """
-        Iterate through the document stream `corpus`, saving the documents to `fname`
-        and recording byte offset of each document. Save the resulting index
-        structure to file `index_fname` (or `fname`.index is not set).
+        Iterate through the document stream `corpus`, saving the documents to
+        `fname` and recording byte offset of each document.
+
+        Save the resulting index structure to file `index_fname` (or
+        `fname`.index is not set).
 
         This relies on the underlying corpus class `serializer` providing (in
         addition to standard iteration):
 
         * `save_corpus` method that returns a sequence of byte offsets, one for
-           each saved document,
+           each saved document
         * the `docbyoffset(offset)` method, which returns a document
-          positioned at `offset` bytes within the persistent storage (file).
-        * metadata if set to true will ensure that serialize will write out article titles to a pickle file.
+          positioned at `offset` bytes within the persistent storage (file)
+        * metadata if set to true will ensure that serialize will write out
+        article titles to a pickle file.
 
-        Example:
+        Parameters
+        ----------
+        fname : str
+            Filename
+        corpus : iterable
+            Iterable of documents
+        id2word : dict of (str, str), optional
+            Transforms id to word
+        index_fname : str
+        progress_cnt : int
+        labels :
+        metadata : bool
+            Any additional info
 
+        Examples
+        --------
         >>> MmCorpus.serialize('test.mm', corpus)
         >>> mm = MmCorpus('test.mm') # `mm` document stream now has random access
         >>> print(mm[42]) # retrieve document no. 42, etc.
@@ -107,8 +139,10 @@ class IndexedCorpus(interfaces.CorpusABC):
 
     def __len__(self):
         """
-        Return the index length if the corpus is indexed. Otherwise, make a pass
-        over self to calculate the corpus length and cache this number.
+        Return the index length.
+
+        If the corpus is not indexed, also count corpus length and cache this
+        value.
         """
         if self.index is not None:
             return len(self.index)
