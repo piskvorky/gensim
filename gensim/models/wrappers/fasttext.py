@@ -90,7 +90,7 @@ class FastTextKeyedVectors(KeyedVectors):
         if word in self.vocab:
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
         else:
-            word_vec = np.zeros(self.syn0_ngrams.shape[1])
+            word_vec = np.zeros(self.syn0_ngrams.shape[1], dtype=np.float32)
             ngrams = compute_ngrams(word, self.min_n, self.max_n)
             ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:

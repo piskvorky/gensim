@@ -337,6 +337,17 @@ class TestFastText(unittest.TestCase):
         ft_hash = fasttext.ft_hash('word')
         self.assertEqual(ft_hash, 1788406269)
 
+    def testConsistentDtype(self):
+        """Test that the same dtype is returned for OOV words as for words in the vocabulary"""
+        vocab_word = 'night'
+        oov_word = 'wordnotpresentinvocabulary'
+        self.assertIn(vocab_word, self.test_model.wv.vocab)
+        self.assertNotIn(oov_word, self.test_model.wv.vocab)
+
+        vocab_embedding = self.test_model[vocab_word]
+        oov_embedding = self.test_model[oov_word]
+        self.assertEqual(vocab_embedding.dtype, oov_embedding.dtype)
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
