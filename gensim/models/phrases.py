@@ -126,7 +126,7 @@ class Phrases(interfaces.TransformationABC):
 
         `threshold` represents a score threshold for forming the phrases (higher means
         fewer phrases). A phrase of words `a` followed by `b` is accepted if the score of the
-        phrase is greater than threshold. see the `scoring' setting
+        phrase is greater than threshold. see the `scoring` setting
 
         `max_vocab_size` is the maximum size of the vocabulary. Used to control
         pruning of less common words, to keep memory under control. The default
@@ -149,6 +149,7 @@ class Phrases(interfaces.TransformationABC):
                 ln(prop(worda followed by wordb) / (prop(worda)*prop(wordb))) /
                 - ln(prop(worda followed by wordb)
                 where prop(n) is the count of n / the count of everything in the entire corpus
+
             'npmi' is more robust when dealing with common words that form part of common bigrams, and
             ranges from -1 to 1, but is slower to calculate than the default
         To use a custom scoring function, create a function with the following parameters and set the `scoring`

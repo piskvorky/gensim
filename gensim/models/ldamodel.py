@@ -807,7 +807,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             num_words (int): include top `num_words` with highest probabilities in topic.
             log (bool): If True, log output in addition to returning it.
             formatted (bool): If True, format topics as strings, otherwise return them as
-                `(word, probability) 2-tuples.
+                `(word, probability)` 2-tuples.
         Returns:
             list: `num_words` most significant words for `num_topics` number of topics
             (10 words for top 10 topics, by default).
