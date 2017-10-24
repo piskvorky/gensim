@@ -459,7 +459,7 @@ class TestTextDirectoryCorpus(unittest.TestCase):
         corpus = textcorpus.TextDirectoryCorpus(dirpath, pattern="test.*\.log")
         filenames = list(corpus.iter_filepaths())
         expected = [os.path.join(dirpath, name) for name in ('test1.log', 'test2.log')]
-        self.assertEqual(expected, filenames)
+        self.assertEqual(sorted(expected), sorted(filenames))
 
         corpus.pattern = ".*.txt"
         filenames = list(corpus.iter_filepaths())
