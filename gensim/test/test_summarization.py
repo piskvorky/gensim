@@ -39,6 +39,22 @@ class TestSummarizationTest(unittest.TestCase):
 
         self.assertEqual(generated_summary, summary)
 
+    def test_text_summarization_multiline(self):
+        """This tests that the newlines don't affect the result of the summarization."""
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau_multiline.txt"), mode="r") as f:
+            text = f.read()
+
+        # Makes a summary of the text.
+        generated_summary = summarize(text)
+
+        # To be compared to the method reference.
+        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau_multiline.summ.txt"), mode="r") as f:
+            summary = f.read()
+
+        self.assertEqual(generated_summary, summary)
+
     def test_corpus_summarization(self):
         text = self._get_text_from_test_data("mihalcea_tarau.txt")
 
