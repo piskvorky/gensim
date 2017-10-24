@@ -195,11 +195,11 @@ class Word2Vec(object):
                 if line.startswith(b":"):  # Skip comments.
                     continue
                 words = line.strip().lower().split(b" ")
-            ids = [self._word2id.get(w.strip()) for w in words]
-            if None in ids or len(ids) != 4:
-                questions_skipped += 1
-            else:
-                questions.append(np.array(ids))
+                ids = [self._word2id.get(w.strip()) for w in words]
+                if None in ids or len(ids) != 4:
+                    questions_skipped += 1
+                else:
+                    questions.append(np.array(ids))
         print("Eval analogy file: ", self._options.eval_data)
         print("Questions: ", len(questions))
         print("Skipped: ", questions_skipped)
