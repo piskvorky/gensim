@@ -36,6 +36,7 @@ from gensim.models.word2vec import Word2Vec
 logger = logging.getLogger(__name__)
 
 
+
 class PoincareKeyedVectors(KeyedVectors):
     """
     Class to contain vectors and vocab for the PoincareModel training class,
@@ -48,11 +49,14 @@ class PoincareKeyedVectors(KeyedVectors):
         norm_1 = np.linalg.norm(vector_1)
         norm_2 = np.linalg.norm(vector_2)
         euclidean_dist = np.linalg.norm(vector_1 - vector_2)
-        return np.arccosh(
-            1 + 2 * (
-                (euclidean_dist ** 2) / ((1 - norm_1 ** 2) * (1 - norm_2 ** 2))
+        if euclidean_dist == 0.0:
+            return 0
+        else:
+            return np.arccosh(
+                1 + 2 * (
+                    (euclidean_dist ** 2) / ((1 - norm_1 ** 2) * (1 - norm_2 ** 2))
+                )
             )
-        )
 
 
 class PoincareModel(utils.SaveLoad):
