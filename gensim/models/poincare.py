@@ -22,10 +22,11 @@ a transitive closure.
 import csv
 import logging
 import os
+import random
 
 from autograd import numpy as np
 from autograd import grad
-from numpy import random
+from numpy import random as np_random
 from smart_open import smart_open
 
 from gensim import utils
@@ -92,7 +93,8 @@ class PoincareModel(utils.SaveLoad):
         self.epsilon = epsilon
         self.burn_in = burn_in
         self.seed = seed
-        self.random_state = random.RandomState(seed)
+        self.random = random.Random(seed)
+        self.np_random = np_random.RandomState(seed)
         self.init_range = (-0.001, 0.001)
         self.loss_grad = grad(PoincareModel.loss_fn)
 
@@ -123,13 +125,13 @@ class PoincareModel(utils.SaveLoad):
     def init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab"""
         shape = (len(self.wv.index2word), self.size)
-        self.wv.syn0 = self.random_state.uniform(self.init_range[0], self.init_range[1], shape)
-
+        self.wv.syn0 = self.np_random.uniform(self.init_range[0], self.init_range[1], shape)
 
     def sample_negatives(self, _node_1):
         """Return a sample of negative examples for the given positive example"""
         # TODO: make sure returned nodes aren't positive relations for `_node_1`
-        return list(self.random_state.choice(list(self.wv.vocab.keys()), self.negative))
+        indices = self.random.sample(range(len(self.wv.index2word)), self.negative)
+        return [self.wv.index2word[index] for index in indices]
 
     @staticmethod
     def loss_fn(matrix):
@@ -169,7 +171,7 @@ class PoincareModel(utils.SaveLoad):
         for vector_index, gradient in zip(vector_indices, gradients):
             vector = self.wv.syn0[vector_index]
             norm_squared = np.linalg.norm(vector) ** 2
-            self.wv.syn0 -= self.alpha * ((1.0 - norm_squared) ** 2)/4.0 * gradient
+            self.wv.syn0[vector_index] -= self.alpha * ((1.0 - norm_squared) ** 2)/4.0 * gradient
 
     def train(self):
         """Trains Poincare embeddings using loaded relations"""
@@ -177,7 +179,7 @@ class PoincareModel(utils.SaveLoad):
             raise NotImplementedError("Multi-threaded version not implemented yet")
         for epoch in range(1, self.iter + 1):
             indices = list(range(len(self.relations)))
-            self.random_state.shuffle(indices)
+            self.np_random.shuffle(indices)
             for i, idx in enumerate(indices, start=1):
                 relation = self.relations[idx]
                 print('Training on example #%d %s' % (i, relation))
