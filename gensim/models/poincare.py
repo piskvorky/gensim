@@ -47,7 +47,8 @@ class PoincareKeyedVectors(KeyedVectors):
     @staticmethod
     def poincare_dist_batch(vectors_u, vectors_all):
         """Return poincare distance between two vector batches"""
-        euclidean_dists = np.linalg.norm(vectors_u[:, :, np.newaxis] - vectors_all, axis=1) + 1
+        vectors_all = vectors_all.swapaxes(0, 2)
+        euclidean_dists = np.linalg.norm(vectors_u[:, :, np.newaxis] - vectors_all, axis=1)
         norms_u = np.linalg.norm(vectors_u, axis=1)
         norms_all = np.linalg.norm(vectors_all, axis=1)
         poincare_dists = np.arccosh(
@@ -195,7 +196,7 @@ class PoincareModel(utils.SaveLoad):
     @staticmethod
     def loss_fn_batch(matrix):
         """Given vectors for a batch, computes loss value"""
-        vectors_u = matrix[:, :, 0]
+        vectors_u = matrix[0, :, :].T
         all_distances = PoincareKeyedVectors.poincare_dist_batch(vectors_u, matrix)
         exp_negative_distances = np.exp(-all_distances)
         return (-np.log(exp_negative_distances[:, 0] / exp_negative_distances.sum(axis=1))).sum()
@@ -207,7 +208,7 @@ class PoincareModel(utils.SaveLoad):
             u, v = relation
             vectors = self.wv[[u, v] + negatives]
             all_vectors.append(vectors)
-        matrix = np.dstack(tuple(all_vectors)).swapaxes(0, 2)
+        matrix = np.dstack(tuple(all_vectors))
         loss = self.loss_fn_batch(matrix)
         print('Loss: %.2f' % loss)
         gradients = self.batch_loss_grad(matrix)
