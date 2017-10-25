@@ -1625,7 +1625,7 @@ class LineSentence(object):
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
         """
         `source` can be either a string or a file object. Clip the file to the first
-        `limit` lines (or no clipped if limit is None, the default).
+        `limit` lines (or not clipped if limit is None, the default).
 
         Example::
 
@@ -1724,9 +1724,10 @@ if __name__ == "__main__":
     import argparse
     logging.basicConfig(
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
-        level=logging.INFO)
-    logging.info("running %s", " ".join(sys.argv))
-    logging.info("using optimization %s", FAST_VERSION)
+        level=logging.INFO
+    )
+    logger.info("running %s", " ".join(sys.argv))
+    logger.info("using optimization %s", FAST_VERSION)
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
