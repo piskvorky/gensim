@@ -45,10 +45,10 @@ def progress(chunks_downloaded, chunk_size, total_size):
     """
     bar_len = 50
     size_downloaded = float(chunks_downloaded * chunk_size)
-    filled_len = int(math.floor((bar_len*size_downloaded)/total_size))
-    percent_downloaded = round((size_downloaded * 100)/total_size, 1)
-    bar = '=' * filled_len + '-' * (bar_len-filled_len)
-    sys.stdout.write('[%s] %s%s %s/%sMB downloaded\r' % (bar, percent_downloaded, "%", round(size_downloaded/(1024*1024), 1), round(float(total_size)/(1024*1024), 1)))
+    filled_len = int(math.floor((bar_len * size_downloaded) / total_size))
+    percent_downloaded = round((size_downloaded * 100) / total_size, 1)
+    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+    sys.stdout.write('[%s] %s%s %s/%sMB downloaded\r' % (bar, percent_downloaded, "%", round(size_downloaded / (1024 * 1024), 1), round(float(total_size) / (1024 * 1024), 1)))
     sys.stdout.flush()
 
 
