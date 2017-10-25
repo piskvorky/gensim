@@ -1,3 +1,4 @@
+"""This module is an API for downloading, getting information and loading datasets/models."""
 from __future__ import absolute_import
 import argparse
 import os
@@ -7,6 +8,7 @@ import logging
 import sys
 import errno
 import hashlib
+import math
 from shutil import rmtree
 import tempfile
 try:
@@ -24,7 +26,41 @@ base_dir = os.path.join(user_dir, 'gensim-data')
 logger = logging.getLogger('gensim.api')
 
 
+def progress(chunks_downloaded, chunk_size, total_size):
+    r"""Create and update the progress bar.
+
+    Parameters
+    ----------
+    chunks_downloaded : int
+        Number of chunks of data that have been downloaded
+    chunks_size : int
+        Size of each chunk of data.
+    total_size : int
+        Total size of the dataset/model
+
+    References
+    ----------
+    [1] https://gist.github.com/vladignatyev/06860ec2040cb497f0f3
+
+    """
+    bar_len = 50
+    size_downloaded = float(chunks_downloaded * chunk_size)
+    filled_len = int(math.floor((bar_len*size_downloaded)/total_size))
+    percent_downloaded = round((size_downloaded * 100)/total_size, 1)
+    bar = '=' * filled_len + '-' * (bar_len-filled_len)
+    sys.stdout.write('[%s] %s%s %s/%sMB downloaded\r' % (bar, percent_downloaded, "%", round(size_downloaded/(1024*1024), 1), round(float(total_size)/(1024*1024), 1)))
+    sys.stdout.flush()
+
+
 def _create_base_dir():
+    r"""Create the gensim-data directory in home directory, if it has not been already created.
+    Raises
+    ------
+    File Exists Error
+        Give this exception when a file gensim-data already exists in the home directory.
+    Exception
+        An exception is raised when read/write permissions are not available
+    """
     if not os.path.isdir(base_dir):
         try:
             logger.info("Creating %s", base_dir)
@@ -42,6 +78,18 @@ def _create_base_dir():
 
 
 def _calculate_md5_checksum(tar_file):
+    r"""Calculate the checksum of the given tar.gz file.
+    Parameters
+    ----------
+    tar_file : str
+        Path to the tar.gz file that contains the downloaded dataset/model.
+
+    Returns
+    -------
+    str
+        Return the calculated checksum of the tsr.gz file.
+
+    """
     hash_md5 = hashlib.md5()
     with open(tar_file, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -50,6 +98,25 @@ def _calculate_md5_checksum(tar_file):
 
 
 def info(name=None):
+    r"""Return the information related to model/dataset.
+
+    If name is supplied, then information related to the given dataset/model will be returned. Otherwise detailed information of all model/datasets will be returned.
+
+    Parameters
+    ----------
+    name : {None, data name}, optional
+
+    Returns
+    -------
+    dict
+        Return detailed information about all models/datasets if name is not provided. Otherwise return detailed informtiona of the specific model/dataset
+
+    Raises
+    ------
+    Exception
+        If name that has been passed is incorrect, an exception is raised.
+
+    """
     url = "https://raw.githubusercontent.com/chaitaliSaini/gensim-data/master/list.json"
     response = urlopen(url)
     data = response.read().decode("utf-8")
@@ -72,6 +139,20 @@ def info(name=None):
 
 
 def _get_checksum(name):
+    r"""Retrieve the checksum of the model/dataset.
+    This is compared to the checksum of the downloaded model/dataset in _download function.
+
+    Parameters
+    ----------
+    name: str
+        dataset/model name
+
+    Returns
+    -------
+    str
+        retrieved checksum of dataset/model
+
+    """
     data = info()
     corpora = data['corpora']
     models = data['models']
@@ -82,36 +163,53 @@ def _get_checksum(name):
 
 
 def _download(name):
+    r"""Download and extract the dataset/model
+
+    Parameters
+    ----------
+    name: str
+        dataset/model name which has to be downloaded
+
+    Raises
+    ------
+    Exception
+        If checksum of dowloaded data does not match the retrieved checksum, then downloaded has not been donw properly.
+    """
     url_data = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/{f}.tar.gz".format(f=name)
     url_load_file = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/__init__.py".format(f=name)
     data_folder_dir = os.path.join(base_dir, name)
     compressed_folder_name = "{f}.tar.gz".format(f=name)
     tmp_dir = tempfile.mkdtemp()
-    tmp_data_folder_dir = os.path.join(tmp_dir, name)
-    os.makedirs(tmp_data_folder_dir)
-    if not os.path.exists(tmp_data_folder_dir):
-        raise Exception(
-            "Not able to create data folder in {a}. Make sure you have the correct"
-            " read/write permissions for {a}".format(a=os.path.dirname(tmp_dir)))
-    tmp_load_file = os.path.join(tmp_data_folder_dir, "__init__.py")
+    tmp_load_file = os.path.join(tmp_dir, "__init__.py")
     urllib.urlretrieve(url_load_file, tmp_load_file)
     logger.info("Downloading %s", name)
     tmp_data_file = os.path.join(tmp_dir, compressed_folder_name)
-    urllib.urlretrieve(url_data, tmp_data_file)
+    urllib.urlretrieve(url_data, tmp_data_file, reporthook=progress)
     if _calculate_md5_checksum(tmp_data_file) == _get_checksum(name):
         logger.info("%s downloaded", name)
     else:
         rmtree(tmp_dir)
         raise Exception("There was a problem in downloading the data. We recommend you to re-try.")
-    tar = tarfile.open(tmp_data_file)
-    tar.extractall(tmp_data_folder_dir)
-    tar.close()
+    with tarfile.open(tmp_data_file, 'r') as tar:
+        tar.extractall(tmp_dir)
     os.remove(tmp_data_file)
-    os.rename(tmp_data_folder_dir, data_folder_dir)
-    os.rmdir(tmp_dir)
+    os.rename(tmp_dir, data_folder_dir)
 
 
 def _get_filename(name):
+    r"""Retrive the filename(or foldername, in case of some datasets) of the dataset/model.
+
+    Parameters
+    ----------
+    name: str
+        dataset/model of which filename is retrieved.
+
+    Returns
+    -------
+    str:
+        filename(or foldername, in case of some datasets) of the dataset/model.
+
+    """
     data = info()
     corpora = data['corpora']
     models = data['models']
@@ -122,6 +220,22 @@ def _get_filename(name):
 
 
 def load(name, return_path=False):
+    r"""For models, if return_path is False, then load model to memory. Otherwise, return the path to the model.
+    For datasets, return path to the dataset in both cases.
+
+    Parameters
+    ----------
+    name: str
+        name of the model/dataset
+    return_path:{False, True}, optional
+
+    Returns
+    -------
+    data:
+        load model to memory
+    data_dir: str
+        return path of dataset/model.
+    """
     _create_base_dir()
     file_name = _get_filename(name)
     if file_name is None:
