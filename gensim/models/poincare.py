@@ -43,6 +43,20 @@ class PoincareKeyedVectors(KeyedVectors):
     can be used to perform operations on the vectors such as vector lookup, distance etc.
 
     """
+
+    @staticmethod
+    def poincare_dist_batch(vectors_u, vectors_all):
+        """Return poincare distance between two vector batches"""
+        euclidean_dists = np.linalg.norm(vectors_u[:, :, np.newaxis] - vectors_all, axis=1) + 1
+        norms_u = np.linalg.norm(vectors_u, axis=1)
+        norms_all = np.linalg.norm(vectors_all, axis=1)
+        poincare_dists = np.arccosh(
+            1 + 2 * (
+                (euclidean_dists ** 2) / ((1 - norms_u[:, np.newaxis] ** 2) * (1 - norms_all ** 2))
+            )
+        )
+        return poincare_dists
+
     @staticmethod
     def poincare_dist(vector_1, vector_2):
         """Return poincare distance between two vectors"""
@@ -101,6 +115,7 @@ class PoincareModel(utils.SaveLoad):
         self.np_random = np_random.RandomState(seed)
         self.init_range = (-0.001, 0.001)
         self.loss_grad = grad(PoincareModel.loss_fn)
+        self.batch_loss_grad = grad(PoincareModel.loss_fn_batch)
 
         self.load_relations()
         self.init_embeddings()
@@ -177,15 +192,58 @@ class PoincareModel(utils.SaveLoad):
             norm_squared = np.linalg.norm(vector) ** 2
             self.wv.syn0[vector_index] -= self.alpha * ((1.0 - norm_squared) ** 2)/4.0 * gradient
 
-    def train(self):
+    @staticmethod
+    def loss_fn_batch(matrix):
+        """Given vectors for a batch, computes loss value"""
+        vectors_u = matrix[:, :, 0]
+        all_distances = PoincareKeyedVectors.poincare_dist_batch(vectors_u, matrix)
+        exp_negative_distances = np.exp(-all_distances)
+        return (-np.log(exp_negative_distances[:, 0] / exp_negative_distances.sum(axis=1))).sum()
+
+    def compute_gradients_batch(self, relations, all_negatives):
+        """Computes gradients for vectors of positively related nodes and negatively sampled nodes"""
+        all_vectors = []
+        for relation, negatives in zip(relations, all_negatives):
+            u, v = relation
+            vectors = self.wv[[u, v] + negatives]
+            all_vectors.append(vectors)
+        matrix = np.dstack(tuple(all_vectors)).swapaxes(0, 2)
+        loss = self.loss_fn_batch(matrix)
+        print('Loss: %.2f' % loss)
+        gradients = self.batch_loss_grad(matrix)
+        return gradients
+
+    def sample_negatives_batch(self, _nodes):
+        """Return a sample of negative examples for the given positive example"""
+        # TODO: make sure returned nodes aren't positive relations for `_node_1`
+        all_indices = [
+            self.random.sample(range(len(self.wv.index2word)), self.negative)
+            for _node in _nodes
+        ]
+        return [
+            [self.wv.index2word[index] for index in indices]
+            for indices in all_indices
+        ]
+
+    def train_on_batch(self, relations):
+        """Performs training for a single training batch"""
+        all_negatives = self.sample_negatives_batch([relation[0] for relation in relations])
+        gradients = self.compute_gradients_batch(relations, all_negatives)
+        # TODO: use gradients to perform updates
+
+    def train(self, num_examples=100, batch_size=2):
         """Trains Poincare embeddings using loaded relations"""
+        self.batch_size = batch_size
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
         for epoch in range(1, self.iter + 1):
             indices = list(range(len(self.relations)))
             self.np_random.shuffle(indices)
-            for i, idx in enumerate(indices, start=1):
-                relation = self.relations[idx]
-                print('Training on example #%d %s' % (i, relation))
-                self.train_on_example(relation)
+            for i in range(0, len(indices), batch_size):
+                batch_indices = indices[i:i+batch_size]
+                relations = [self.relations[idx] for idx in batch_indices]
+                print('Training on example #%d-%d' % (i, i+batch_size))
+                self.train_on_batch(relations)
+                if i >= num_examples:
+                    return
 
