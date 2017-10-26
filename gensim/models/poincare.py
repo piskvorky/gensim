@@ -135,13 +135,13 @@ class PoincareDistance(object):
         """Compute and store partial derivatives of d(u, v) w.r.t u and all v"""
         if self.distance_gradients_computed:
             return
-        u_coeffs = ((self.euclidean_dists + self.alpha) / self.alpha)[:, np.newaxis]
+        u_coeffs = ((self.euclidean_dists ** 2 + self.alpha) / self.alpha)[:, np.newaxis]
         distance_gradients_u = u_coeffs * self.vector_u - self.vectors_v
         distance_gradients_u *= (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis]
         np.nan_to_num(distance_gradients_u, copy=False)
         self.distance_gradients_u = distance_gradients_u
 
-        v_coeffs = ((self.euclidean_dists + self.beta) / self.beta)[:, np.newaxis]
+        v_coeffs = ((self.euclidean_dists ** 2 + self.beta) / self.beta)[:, np.newaxis]
         distance_gradients_v = v_coeffs * self.vectors_v - self.vector_u
         distance_gradients_v *= (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis]
         np.nan_to_num(distance_gradients_v, copy=False)
@@ -169,7 +169,7 @@ class PoincareKeyedVectors(KeyedVectors):
         norm_2 = np.linalg.norm(vector_2)
         euclidean_dist = np.linalg.norm(vector_1 - vector_2)
         if euclidean_dist == 0.0:
-            return 0
+            return 0.0
         else:
             return np.arccosh(
                 1 + 2 * (
