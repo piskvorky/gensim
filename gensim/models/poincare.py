@@ -24,8 +24,7 @@ import logging
 import os
 import random
 
-from autograd import numpy as np
-from autograd import grad
+import numpy as np
 from numpy import random as np_random
 from smart_open import smart_open
 
@@ -36,6 +35,126 @@ from gensim.models.word2vec import Word2Vec
 logger = logging.getLogger(__name__)
 
 
+class PoincareDistance(object):
+    """
+    Class for computing Poincare distances between sets of vectors, and storing intermediate
+    state to avoid recomputing multiple times
+    """
+    def __init__(self, vector_u, vectors_v):
+        """Initialize instance with sets of vectors for which distances are to be computed
+
+        Args:
+            vectors_u (numpy array): expected shape (dim,)
+            vectors_v (numpy array): expected shape (1 + neg_size, dim)
+        """
+        self.vector_u = vector_u[np.newaxis, :]  # (1, dim)
+        self.vectors_v = vectors_v  # (1 + neg_size, dim)
+
+        self.poincare_dists = None
+        self.euclidean_dists = None
+
+        self.norm_u = None
+        self.norms_v = None
+        self.alpha = None
+        self.beta = None
+        self.gamma = None
+
+        self.gradients_u = None
+        self.distance_gradients_u = None
+        self.gradients_v = None
+        self.distance_gradients_v = None
+
+        self.loss = None
+
+        self.distances_computed = False
+        self.gradients_computed = False
+        self.distance_gradients_computed = False
+        self.loss_computed = False
+
+    def compute_all(self):
+        self.compute_distances()
+        self.compute_distance_gradients()
+        self.compute_gradients()
+        self.compute_loss()
+
+    def compute_distances(self):
+        """Compute and store norms, euclidean distances and poincare distances between input vectors"""
+        if self.distances_computed:
+            return
+
+        euclidean_dists = np.linalg.norm(self.vector_u - self.vectors_v, axis=1)  # (1 + neg_size,)
+        norm_u = np.linalg.norm(self.vector_u, axis=1)  # (1,)
+        norms_v = np.linalg.norm(self.vectors_v, axis=1)  # (1 + neg_size,)
+        alpha = 1 - norm_u ** 2
+        beta = 1 - norms_v ** 2
+        gamma = 1 + 2 * (
+                (euclidean_dists ** 2) / (alpha * beta)
+            )  # (1 + neg_size,)
+        poincare_dists = np.arccosh(gamma)  # (1 + neg_size,)
+
+        self.euclidean_dists = euclidean_dists
+        self.poincare_dists = poincare_dists
+        self.gamma = gamma
+        self.norm_u = norm_u
+        self.alpha = alpha
+        self.norms_v = norms_v
+        self.beta = beta
+
+        self.distances_computed = True
+
+    def compute_gradients(self):
+        """Compute and store gradients of poincare distance for all input vectors"""
+        if self.gradients_computed:
+            return
+        self.compute_distances()
+        self.compute_distance_gradients()
+
+        exp_negative_distances = np.exp(-self.poincare_dists)
+        Z = exp_negative_distances.sum()
+
+        gradients_v = -exp_negative_distances[:, np.newaxis] * self.distance_gradients_v
+        gradients_v /= Z
+        gradients_v[0] += self.distance_gradients_v[0]
+
+        gradients_u = -exp_negative_distances[:, np.newaxis] * self.distance_gradients_u
+        gradients_u /= Z
+        gradients_u = gradients_u.sum(axis=0)
+        gradients_u += self.distance_gradients_u[0]
+
+        assert(not np.isnan(gradients_u).any())
+        assert(not np.isnan(gradients_v).any())
+
+        self.exp_negative_distances = exp_negative_distances
+        self.Z = Z
+        self.gradients_u = gradients_u
+        self.gradients_v = gradients_v
+
+        self.gradients_computed = True
+
+    def compute_distance_gradients(self):
+        """Compute and store partial derivatives of d(u, v) w.r.t u and all v"""
+        if self.distance_gradients_computed:
+            return
+        u_coeffs = ((self.euclidean_dists + self.alpha) / self.alpha)[:, np.newaxis]
+        distance_gradients_u = u_coeffs * self.vector_u - self.vectors_v
+        distance_gradients_u *= (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis]
+        np.nan_to_num(distance_gradients_u, copy=False)
+        self.distance_gradients_u = distance_gradients_u
+
+        v_coeffs = ((self.euclidean_dists + self.beta) / self.beta)[:, np.newaxis]
+        distance_gradients_v = v_coeffs * self.vectors_v - self.vector_u
+        distance_gradients_v *= (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis]
+        np.nan_to_num(distance_gradients_v, copy=False)
+        self.distance_gradients_v = distance_gradients_v
+
+        self.distance_gradients_computed = True
+
+    def compute_loss(self):
+        if self.loss_computed:
+            return
+        self.loss = -np.log(self.exp_negative_distances[0] / self.Z)
+        self.loss_computed = True
+
 
 class PoincareKeyedVectors(KeyedVectors):
     """
@@ -43,21 +162,6 @@ class PoincareKeyedVectors(KeyedVectors):
     can be used to perform operations on the vectors such as vector lookup, distance etc.
 
     """
-
-    @staticmethod
-    def poincare_dist_batch(vectors_u, vectors_all):
-        """Return poincare distance between two vector batches"""
-        vectors_all = vectors_all.swapaxes(0, 2)
-        euclidean_dists = np.linalg.norm(vectors_u[:, :, np.newaxis] - vectors_all, axis=1)
-        norms_u = np.linalg.norm(vectors_u, axis=1)
-        norms_all = np.linalg.norm(vectors_all, axis=1)
-        poincare_dists = np.arccosh(
-            1 + 2 * (
-                (euclidean_dists ** 2) / ((1 - norms_u[:, np.newaxis] ** 2) * (1 - norms_all ** 2))
-            )
-        )
-        return poincare_dists
-
     @staticmethod
     def poincare_dist(vector_1, vector_2):
         """Return poincare distance between two vectors"""
@@ -115,8 +219,6 @@ class PoincareModel(utils.SaveLoad):
         self.random = random.Random(seed)
         self.np_random = np_random.RandomState(seed)
         self.init_range = (-0.001, 0.001)
-        self.loss_grad = grad(PoincareModel.loss_fn)
-        self.batch_loss_grad = grad(PoincareModel.loss_fn_batch)
 
         self.load_relations()
         self.init_embeddings()
@@ -174,24 +276,47 @@ class PoincareModel(utils.SaveLoad):
         vector_u = self.wv.word_vec(u)
         vector_v = self.wv.word_vec(v)
         vectors_negative = self.wv[negatives]
-        matrix = np.vstack((vector_u, vector_v, vectors_negative))
-        loss = self.loss_fn(matrix)
-        print('Loss: %.2f' % loss)
-        gradients = self.loss_grad(matrix)
-        return gradients
+        vectors_v = np.vstack((vector_v, vectors_negative))
+        # TODO: better naming, some refactoring
+        distances = PoincareDistance(vector_u, vectors_v)
+        distances.compute_all()
+        return distances
 
     def train_on_example(self, relation):
         """Performs training for a single training example"""
         u, v = relation
         negatives = self.sample_negatives(u)
-        gradients = self.compute_gradients(relation, negatives)
-        vector_indices = [self.wv.vocab[u].index, self.wv.vocab[v].index]
+        distances = self.compute_gradients(relation, negatives)
+        grad_u, grad_v = distances.gradients_u, distances.gradients_v
+        u_index = self.wv.vocab[u].index
+        v_indices = [self.wv.vocab[v].index]
         for negative in negatives:
-            vector_indices.append(self.wv.vocab[negative].index)
-        for vector_index, gradient in zip(vector_indices, gradients):
-            vector = self.wv.syn0[vector_index]
-            norm_squared = np.linalg.norm(vector) ** 2
-            self.wv.syn0[vector_index] -= self.alpha * ((1.0 - norm_squared) ** 2)/4.0 * gradient
+            v_indices.append(self.wv.vocab[negative].index)
+        self.wv.syn0[u_index] -= self.alpha * (distances.alpha ** 2) / 4 * grad_u
+        # self.clip_vectors(self.wv.syn0[u_index], self.epsilon)
+        v_vector_updates = self.alpha * (distances.beta ** 2)[:, np.newaxis] / 4 * grad_v
+        self.wv.syn0[v_indices] -= v_vector_updates
+        # self.clip_vectors(self.wv.syn0[v_indices], self.epsilon)
+        print('Loss: %.2f' % distances.loss)
+
+
+    @staticmethod
+    def clip_vectors(vectors, epsilon):
+        """Clip vectors to have a norm of less than one"""
+        # TODO: correct implementation
+        one_d = len(vectors.shape) == 1
+        if one_d:
+            norm = np.linalg.norm(vectors)
+            if norm < 1:
+                return vectors
+        else:
+            norms = np.linalg.norm(vectors, axis=1)
+            if (norms < 1).all():
+                return vectors
+        if norm >= 1:
+            return vector / norm - epsilon
+        else:
+            return vector
 
     @staticmethod
     def loss_fn_batch(matrix):
@@ -232,7 +357,21 @@ class PoincareModel(utils.SaveLoad):
         gradients = self.compute_gradients_batch(relations, all_negatives)
         # TODO: use gradients to perform updates
 
-    def train(self, num_examples=100, batch_size=2):
+    def train_examplewise(self, num_examples=None):
+        """Trains Poincare embeddings using loaded relations"""
+        if self.workers > 1:
+            raise NotImplementedError("Multi-threaded version not implemented yet")
+        for epoch in range(1, self.iter + 1):
+            indices = list(range(len(self.relations)))
+            self.np_random.shuffle(indices)
+            for i, idx in enumerate(indices, start=1):
+                relation = self.relations[idx]
+                print('Training on example #%d %s' % (i, relation))
+                self.train_on_example(relation)
+                if num_examples and i >= num_examples:
+                    return
+
+    def train_batchwise(self, num_examples=100, batch_size=2):
         """Trains Poincare embeddings using loaded relations"""
         self.batch_size = batch_size
         if self.workers > 1:
