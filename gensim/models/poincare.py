@@ -292,11 +292,12 @@ class PoincareModel(utils.SaveLoad):
         v_indices = [self.wv.vocab[v].index]
         for negative in negatives:
             v_indices.append(self.wv.vocab[negative].index)
+
         self.wv.syn0[u_index] -= self.alpha * (distances.alpha ** 2) / 4 * grad_u
-        # self.clip_vectors(self.wv.syn0[u_index], self.epsilon)
-        v_vector_updates = self.alpha * (distances.beta ** 2)[:, np.newaxis] / 4 * grad_v
-        self.wv.syn0[v_indices] -= v_vector_updates
-        # self.clip_vectors(self.wv.syn0[v_indices], self.epsilon)
+        self.wv.syn0[u_index] = self.clip_vectors(self.wv.syn0[u_index], self.epsilon)
+
+        self.wv.syn0[v_indices] -= self.alpha * (distances.beta ** 2)[:, np.newaxis] / 4 * grad_v
+        self.wv.syn0[v_indices] = self.clip_vectors(self.wv.syn0[v_indices], self.epsilon)
         print('Loss: %.2f' % distances.loss)
 
 
@@ -309,14 +310,12 @@ class PoincareModel(utils.SaveLoad):
             norm = np.linalg.norm(vectors)
             if norm < 1:
                 return vectors
+            else:
+                return vector / norm - epsilon
         else:
             norms = np.linalg.norm(vectors, axis=1)
             if (norms < 1).all():
                 return vectors
-        if norm >= 1:
-            return vector / norm - epsilon
-        else:
-            return vector
 
     @staticmethod
     def loss_fn_batch(matrix):
