@@ -23,6 +23,7 @@ import csv
 import logging
 import os
 import random
+import time
 
 import numpy as np
 from numpy import random as np_random
@@ -298,7 +299,7 @@ class PoincareModel(utils.SaveLoad):
 
         self.wv.syn0[v_indices] -= self.alpha * (distances.beta ** 2)[:, np.newaxis] / 4 * grad_v
         self.wv.syn0[v_indices] = self.clip_vectors(self.wv.syn0[v_indices], self.epsilon)
-        print('Loss: %.2f' % distances.loss)
+        return distances
 
 
     @staticmethod
@@ -356,17 +357,27 @@ class PoincareModel(utils.SaveLoad):
         gradients = self.compute_gradients_batch(relations, all_negatives)
         # TODO: use gradients to perform updates
 
-    def train_examplewise(self, num_examples=None):
+    def train_examplewise(self, num_examples=None, print_every=10000):
         """Trains Poincare embeddings using loaded relations"""
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
+        last_time = time.time()
         for epoch in range(1, self.iter + 1):
             indices = list(range(len(self.relations)))
             self.np_random.shuffle(indices)
             for i, idx in enumerate(indices, start=1):
                 relation = self.relations[idx]
-                print('Training on example #%d %s' % (i, relation))
-                self.train_on_example(relation)
+                result = self.train_on_example(relation)
+                if not (i % print_every):
+                    time_taken = time.time() - last_time
+                    speed = print_every / time_taken
+                    print(
+                        'Training on epoch %d, example #%d %s, loss: %.2f'
+                        % (epoch, i, relation, result.loss))
+                    print(
+                        'Time taken for %d examples: %.2f s, %.2f examples / s'
+                        % (print_every, time_taken, speed))
+                    last_time = time.time()
                 if num_examples and i >= num_examples:
                     return
 
