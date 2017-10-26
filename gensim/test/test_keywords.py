@@ -89,6 +89,12 @@ class TestKeywordsTest(unittest.TestCase):
 
         self.assertAlmostEqual(float(len(selected_docs_21)) / len(selected_docs_12), float(21) / 12, places=1)
 
+    def test_text_keywords_with_small_graph(self):
+        # regression test, we get graph 2x2 on this text
+        text = 'IT: Utilities A look at five utilities to make your PCs more, efficient, effective, and efficacious'
+        kwds = keywords(text, words=1, split=True)
+        self.assertTrue(len(kwds))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
