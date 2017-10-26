@@ -44,7 +44,7 @@ def remove_stopwords(s):
     return " ".join(w for w in s.split() if w not in STOPWORDS)
 
 
-RE_PUNCT = re.compile('([%s])+' % re.escape(string.punctuation), re.UNICODE)
+RE_PUNCT = re.compile(r'([%s])+' % re.escape(string.punctuation), re.UNICODE)
 
 
 def strip_punctuation(s):

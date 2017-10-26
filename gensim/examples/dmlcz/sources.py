@@ -28,7 +28,7 @@ import sys
 if sys.version_info[0] >= 3:
     unicode = str
 
-PAT_TAG = re.compile('<(.*?)>(.*)</.*?>')
+PAT_TAG = re.compile(r'<(.*?)>(.*)</.*?>')
 logger = logging.getLogger('gensim.corpora.sources')
 
 
