@@ -606,6 +606,12 @@ def dirichlet_expectation(alpha):
         result = psi(alpha) - psi(np.sum(alpha))
     else:
         result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
+
+    # if it doesn't keep precision during calculations,
+    # then float32 everywhere is useless cause it would be converted back and forth to float64
+    assert result.dtype == alpha.dtype
+    return result
+    # If it keeps - this makes unnecessary copy
     return result.astype(alpha.dtype)  # keep the same precision as input
 
 

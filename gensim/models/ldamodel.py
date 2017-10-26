@@ -87,10 +87,11 @@ class LdaState(utils.SaveLoad):
 
     """
 
-    def __init__(self, eta, shape):
-        self.eta = eta
-        self.sstats = np.zeros(shape)
+    def __init__(self, eta, shape, dtype=np.float64):
+        self.eta = eta.astype(dtype, copy=False)
+        self.sstats = np.zeros(shape, dtype)
         self.numdocs = 0
+        self.dtype = dtype
 
     def reset(self):
         """
@@ -191,7 +192,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf=None, minimum_phi_value=0.01,
-                 per_word_topics=False, callbacks=None):
+                 per_word_topics=False, callbacks=None, dtype=np.float32):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -233,9 +234,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         `minimum_probability` controls filtering the topics returned for a document (bow).
 
-        `random_state` can be a np.random.RandomState object or the seed for one
+        `random_state` can be a np.random.RandomState object or the seed for one.
 
-        `callbacks` a list of metric callbacks to log/visualize evaluation metrics of topic model during training
+        `callbacks` a list of metric callbacks to log/visualize evaluation metrics of topic model during training.
+
+        `dtype` is data-type to use during calculations inside model. All inputs are also converted to this dtype.
 
         Example:
 
@@ -247,6 +250,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> lda = LdaModel(corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
+        self.dtype=dtype
 
         # store user-supplied parameters
         self.id2word = id2word
@@ -330,9 +334,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
 
         # Initialize the variational distribution q(beta|lambda)
-        self.state = LdaState(self.eta, (self.num_topics, self.num_terms))
-        self.state.sstats = self.random_state.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
+        self.state = LdaState(self.eta, (self.num_topics, self.num_terms), dtype=self.dtype)
+        self.state.sstats[...] = self.random_state.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
         self.expElogbeta = np.exp(dirichlet_expectation(self.state.sstats))
+
+        assert self.eta.dtype == self.dtype
+        assert self.expElogbeta.dtype == self.dtype
 
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
@@ -354,25 +361,25 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if isinstance(prior, six.string_types):
             if prior == 'symmetric':
-                logger.info("using symmetric %s at %s", name, 1.0 / prior_shape)
-                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)])
+                logger.info("using symmetric %s at %s", name, 1.0 / prior_shape) #TODO: prior_shape?
+                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)], dtype=self.dtype)
             elif prior == 'asymmetric':
-                init_prior = np.asarray([1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)])
+                init_prior = np.asarray([1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)], dtype=self.dtype)
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
                 is_auto = True
-                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)])
+                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)], dtype=self.dtype)
                 if name == 'alpha':
                     logger.info("using autotuned %s, starting with %s", name, list(init_prior))
             else:
                 raise ValueError("Unable to determine proper %s value given '%s'" % (name, prior))
         elif isinstance(prior, list):
-            init_prior = np.asarray(prior)
+            init_prior = np.asarray(prior, dtype=self.dtype)
         elif isinstance(prior, np.ndarray):
-            init_prior = prior
-        elif isinstance(prior, np.number) or isinstance(prior, numbers.Real):
-            init_prior = np.asarray([prior] * prior_shape)
+            init_prior = prior.astype(self.dtype, copy=False)
+        elif isinstance(prior, np.number) or isinstance(prior, numbers.Real): #TODO: write test
+            init_prior = np.asarray([prior] * prior_shape, dtype=self.dtype)
         else:
             raise ValueError("%s must be either a np array of scalars, list of scalars, or scalar" % name)
 
@@ -385,6 +392,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def sync_state(self):
         self.expElogbeta = np.exp(self.state.get_Elogbeta())
+        assert self.expElogbeta.dtype == self.dtype
 
     def clear(self):
         """Clear model state (free up some memory). Used in the distributed algo."""
@@ -418,11 +426,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             logger.debug("performing inference on a chunk of %i documents", len(chunk))
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
-        gamma = self.random_state.gamma(100., 1. / 100., (len(chunk), self.num_topics))
+        gamma = self.random_state.gamma(100., 1. / 100., (len(chunk), self.num_topics)).astype(self.dtype, copy=False)
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = np.exp(Elogtheta)
+        assert expElogtheta.dtype == self.dtype
+
         if collect_sstats:
-            sstats = np.zeros_like(self.expElogbeta)
+            sstats = np.zeros_like(self.expElogbeta, dtype=self.dtype)
         else:
             sstats = None
         converged = 0
@@ -478,6 +488,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # sstats[k, w] = \sum_d n_{dw} * phi_{dwk}
             # = \sum_d n_{dw} * exp{Elogtheta_{dk} + Elogbeta_{kw}} / phinorm_{dw}.
             sstats *= self.expElogbeta
+            assert sstats.dtype == self.dtype
+
+        assert gamma.dtype == self.dtype
         return gamma, sstats
 
     def do_estep(self, chunk, state=None):
@@ -500,9 +513,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         N = float(len(gammat))
         logphat = sum(dirichlet_expectation(gamma) for gamma in gammat) / N
+        assert logphat.dtype == self.dtype
 
         self.alpha = update_dir_prior(self.alpha, N, logphat, rho)
         logger.info("optimized alpha %s", list(self.alpha))
+
+        assert self.alpha.dtype == self.dtype
 
         return self.alpha
 
@@ -513,8 +529,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         N = float(lambdat.shape[0])
         logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
+        assert logphat.dtype == self.dtype
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
+
+        assert self.eta.dtype == self.dtype
 
         return self.eta
 
@@ -647,7 +666,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 logger.info('initializing %s workers', self.numworkers)
                 self.dispatcher.reset(self.state)
             else:
-                other = LdaState(self.eta, self.state.sstats.shape)
+                other = LdaState(self.eta, self.state.sstats.shape, self.dtype)
             dirty = False
 
             reallen = 0
@@ -671,6 +690,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         pass_, chunk_no * chunksize + len(chunk), lencorpus
                     )
                     gammat = self.do_estep(chunk, other)
+                    assert gammat.dtype == self.dtype
 
                     if self.optimize_alpha:
                         self.update_alpha(gammat, rho())
@@ -691,7 +711,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         logger.info('initializing workers')
                         self.dispatcher.reset(self.state)
                     else:
-                        other = LdaState(self.eta, self.state.sstats.shape)
+                        other = LdaState(self.eta, self.state.sstats.shape, self.dtype)
                     dirty = False
             # endfor single corpus iteration
 
@@ -723,6 +743,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         logger.debug("updating topics")
+        #assert rho.dtype == self.dtype Note: rho is just float
+        assert other.dtype == self.dtype
         # update self with the new blend; also keep track of how much did
         # the topics change through this update, to assess convergence
         diff = np.log(self.expElogbeta)
@@ -772,6 +794,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 gammad = gamma[d]
             Elogthetad = dirichlet_expectation(gammad)
 
+            assert gammad.dtype == self.dtype
+            assert Elogthetad.dtype == self.dtype
+
             # E[log p(doc | theta, beta)]
             score += np.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, int(id)]) for id, cnt in doc)
 
@@ -792,6 +817,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             sum_eta = self.eta * self.num_terms
         else:
             sum_eta = np.sum(self.eta)
+
+        assert sum_eta.dtype == self.dtype
 
         score += np.sum(gammaln(sum_eta) - gammaln(np.sum(_lambda, 1)))
 
@@ -820,6 +847,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             # add a little random jitter, to randomize results around the same alpha
             sort_alpha = self.alpha + 0.0001 * self.random_state.rand(len(self.alpha))
+            # random_state.rand returns float64, but converting back to dtype won't speed up anything
 
             sorted_topics = list(matutils.argsort(sort_alpha))
             chosen_topics = sorted_topics[:num_topics // 2] + sorted_topics[-num_topics // 2:]
@@ -856,11 +884,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def get_topics(self):
         """
         Returns:
-            np.ndarray: `num_topics` x `vocabulary_size` array of floats which represents
+            np.ndarray: `num_topics` x `vocabulary_size` array of floats (self.dtype) which represents
             the term topic matrix learned during inference.
         """
         topics = self.state.get_lambda()
-        return topics / topics.sum(axis=1)[:, None]
+        tmp = topics / topics.sum(axis=1)[:, None]
+        assert tmp.dtype == self.dtype
+        return tmp
 
     def get_topic_terms(self, topicid, topn=10):
         """
@@ -1030,6 +1060,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
 
+        # Note: I think this shouldn't coerce everything to self.dtype cause other model could have other dtype
+
         distances = {
             "kullback_leibler": kullback_leibler,
             "hellinger": hellinger,
@@ -1103,6 +1135,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             `(topic_id, topic_probability)` 2-tuples.
         """
         return self.get_document_topics(bow, eps, self.minimum_phi_value, self.per_word_topics)
+
+    #TODO: Don't know how save/load will work with dtype, and for now don't know if I should handle it at all
 
     def save(self, fname, ignore=('state', 'dispatcher'), separately=None, *args, **kwargs):
         """
