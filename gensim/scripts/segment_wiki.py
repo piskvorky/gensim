@@ -6,6 +6,7 @@
 
 """
 Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump and extract sections of pages from it
+and save to json-line format.
 
 If you have the `pattern` package installed, this module will use a fancy
 lemmatization to get a lemma of each token (instead of plain alphabetic
@@ -35,7 +36,7 @@ def segment_all_articles(file_path):
     Parameters
     ----------
     file_path : str
-        Path to mediawiki dump, typical filename is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
+        Path to MediaWiki dump, typical filename is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
         or <LANG>wiki-latest-pages-articles.xml.bz2.
 
     Yields
@@ -54,27 +55,31 @@ def segment_all_articles(file_path):
 
 def segment_and_print_all_articles(file_path, output_file):
     """Write article title and sections to output_file,
-    tab-separated article_title<tab>section_heading<tab>section_content<tab>section_heading<tab>section_content.
+    output_file is json-line file with 3 fields::
+
+        'tl' - title of article,
+        'st' - list of titles of sections,
+        'sc' - list of content from sections.
 
     Parameters
     ----------
     file_path : str
-        Path to mediawiki dump, typical filename is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
+        Path to MediaWiki dump, typical filename is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
         or <LANG>wiki-latest-pages-articles.xml.bz2.
 
     output_file : str
         Path to output file.
 
     """
-    with smart_open(output_file, 'wb') as outfile:
+    with smart_open(output_file, 'w') as outfile:
         for idx, (article_title, article_sections) in enumerate(segment_all_articles(file_path)):
-            printed_components = [json.dumps(article_title)]
+            output_data = {"tl": article_title, "st": [], "sc": []}
             for section_heading, section_content in article_sections:
-                printed_components.append(json.dumps(section_heading))
-                printed_components.append(json.dumps(section_content))
+                output_data["st"].append(section_heading)
+                output_data["sc"].append(section_content)
             if (idx + 1) % 100000 == 0:
                 logger.info("Processed #%d articles", idx + 1)
-            outfile.write(u"\t".join(printed_components).encode('utf-8') + "\n")
+            outfile.write(json.dumps(output_data) + "\n")
 
 
 def extract_page_xmls(f):
@@ -233,7 +238,7 @@ if __name__ == "__main__":
     logger.info("running %s", " ".join(sys.argv))
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=globals()['__doc__'])
-    parser.add_argument('-f', '--file', help='Path to mediawiki database dump', required=True)
+    parser.add_argument('-f', '--file', help='Path to MediaWiki database dump', required=True)
     parser.add_argument('-o', '--output', help='Path to output file', required=True)
     args = parser.parse_args()
     segment_and_print_all_articles(args.file, args.output)
