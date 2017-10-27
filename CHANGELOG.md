@@ -1,5 +1,38 @@
 Changes
 ===========
+## 3.0.1, 2017-10-12
+
+
+:red_circle: Bug fixes:
+* Fix Keras import, speedup importing time. Fix #1614 (@menshikh-v, [#1615](https://github.com/RaRe-Technologies/gensim/pull/1615))
+* Fix Sphinx warnings and retreive all missing .rst (@anotherbugmaster and @menshikh-iv, [#1612](https://github.com/RaRe-Technologies/gensim/pull/1612))
+* Fix logger message in lsi_dispatcher (@lorosanu, [#1603](https://github.com/RaRe-Technologies/gensim/pull/1603))
+
+
+:books: Tutorial and doc improvements:
+* Fix spelling (@jberkel, [#1625](https://github.com/RaRe-Technologies/gensim/pull/1625))
+
+:warning: Deprecation part (will come into force in the next release)
+* Remove
+	- `gensim.examples`
+	- `gensim.nosy`
+	- `gensim.scripts.word2vec_standalone`
+	- `gensim.scripts.make_wiki_lemma`
+	- `gensim.scripts.make_wiki_online`
+	- `gensim.scripts.make_wiki_online_lemma`
+	- `gensim.scripts.make_wiki_online_nodebug`
+	- `gensim.scripts.make_wiki`
+
+* Move
+	- `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+	- `gensim.summarization` ➡ `gensim.models.summarization`
+	- `gensim.topic_coherence` ➡ `gensim.models._coherence`
+	- `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+	- `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
+Also, we'll create `experimental` subpackage for unstable models. Specific lists will be available in the next release.
+
+
 ## 3.0.0, 2017-09-27
 
 

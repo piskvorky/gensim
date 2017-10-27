@@ -41,23 +41,23 @@ TOKEN_MIN_LEN = 2
 TOKEN_MAX_LEN = 15
 
 
-RE_P0 = re.compile('<!--.*?-->', re.DOTALL | re.UNICODE)  # comments
-RE_P1 = re.compile('<ref([> ].*?)(</ref>|/>)', re.DOTALL | re.UNICODE)  # footnotes
-RE_P2 = re.compile("(\n\[\[[a-z][a-z][\w-]*:[^:\]]+\]\])+$", re.UNICODE)  # links to languages
-RE_P3 = re.compile("{{([^}{]*)}}", re.DOTALL | re.UNICODE)  # template
-RE_P4 = re.compile("{{([^}]*)}}", re.DOTALL | re.UNICODE)  # template
-RE_P5 = re.compile('\[(\w+):\/\/(.*?)(( (.*?))|())\]', re.UNICODE)  # remove URL, keep description
-RE_P6 = re.compile("\[([^][]*)\|([^][]*)\]", re.DOTALL | re.UNICODE)  # simplify links, keep description
-RE_P7 = re.compile('\n\[\[[iI]mage(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)  # keep description of images
-RE_P8 = re.compile('\n\[\[[fF]ile(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)  # keep description of files
-RE_P9 = re.compile('<nowiki([> ].*?)(</nowiki>|/>)', re.DOTALL | re.UNICODE)  # outside links
-RE_P10 = re.compile('<math([> ].*?)(</math>|/>)', re.DOTALL | re.UNICODE)  # math content
-RE_P11 = re.compile('<(.*?)>', re.DOTALL | re.UNICODE)  # all other tags
-RE_P12 = re.compile('\n(({\|)|(\|-)|(\|}))(.*?)(?=\n)', re.UNICODE)  # table formatting
-RE_P13 = re.compile('\n(\||\!)(.*?\|)*([^|]*?)', re.UNICODE)  # table cell formatting
-RE_P14 = re.compile('\[\[Category:[^][]*\]\]', re.UNICODE)  # categories
+RE_P0 = re.compile(r'<!--.*?-->', re.DOTALL | re.UNICODE)  # comments
+RE_P1 = re.compile(r'<ref([> ].*?)(</ref>|/>)', re.DOTALL | re.UNICODE)  # footnotes
+RE_P2 = re.compile(r'(\n\[\[[a-z][a-z][\w-]*:[^:\]]+\]\])+$', re.UNICODE)  # links to languages
+RE_P3 = re.compile(r'{{([^}{]*)}}', re.DOTALL | re.UNICODE)  # template
+RE_P4 = re.compile(r'{{([^}]*)}}', re.DOTALL | re.UNICODE)  # template
+RE_P5 = re.compile(r'\[(\w+):\/\/(.*?)(( (.*?))|())\]', re.UNICODE)  # remove URL, keep description
+RE_P6 = re.compile(r'\[([^][]*)\|([^][]*)\]', re.DOTALL | re.UNICODE)  # simplify links, keep description
+RE_P7 = re.compile(r'\n\[\[[iI]mage(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)  # keep description of images
+RE_P8 = re.compile(r'\n\[\[[fF]ile(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)  # keep description of files
+RE_P9 = re.compile(r'<nowiki([> ].*?)(</nowiki>|/>)', re.DOTALL | re.UNICODE)  # outside links
+RE_P10 = re.compile(r'<math([> ].*?)(</math>|/>)', re.DOTALL | re.UNICODE)  # math content
+RE_P11 = re.compile(r'<(.*?)>', re.DOTALL | re.UNICODE)  # all other tags
+RE_P12 = re.compile(r'\n(({\|)|(\|-)|(\|}))(.*?)(?=\n)', re.UNICODE)  # table formatting
+RE_P13 = re.compile(r'\n(\||\!)(.*?\|)*([^|]*?)', re.UNICODE)  # table cell formatting
+RE_P14 = re.compile(r'\[\[Category:[^][]*\]\]', re.UNICODE)  # categories
 # Remove File and Image template
-RE_P15 = re.compile('\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
+RE_P15 = re.compile(r'\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
 
 # MediaWiki namespaces (https://www.mediawiki.org/wiki/Manual:Namespace) that
 # ought to be ignored
@@ -81,7 +81,7 @@ def filter_wiki(raw):
 
 
 def remove_markup(text):
-    text = re.sub(RE_P2, "", text)  # remove the last list (=languages)
+    text = re.sub(RE_P2, '', text)  # remove the last list (=languages)
     # the wiki markup is recursive (markup inside markup etc)
     # instead of writing a recursive grammar, here we deal with that by removing
     # markup in a loop, starting with inner-most expressions and working outwards,
@@ -91,11 +91,11 @@ def remove_markup(text):
     iters = 0
     while True:
         old, iters = text, iters + 1
-        text = re.sub(RE_P0, "", text)  # remove comments
+        text = re.sub(RE_P0, '', text)  # remove comments
         text = re.sub(RE_P1, '', text)  # remove footnotes
-        text = re.sub(RE_P9, "", text)  # remove outside links
-        text = re.sub(RE_P10, "", text)  # remove math content
-        text = re.sub(RE_P11, "", text)  # remove all remaining tags
+        text = re.sub(RE_P9, '', text)  # remove outside links
+        text = re.sub(RE_P10, '', text)  # remove math content
+        text = re.sub(RE_P11, '', text)  # remove all remaining tags
         text = re.sub(RE_P14, '', text)  # remove categories
         text = re.sub(RE_P5, '\\3', text)  # remove urls, keep description
         text = re.sub(RE_P6, '\\2', text)  # simplify links, keep description only

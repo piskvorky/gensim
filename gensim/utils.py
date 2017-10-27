@@ -79,7 +79,7 @@ except ImportError:
         return open(fname, mode)
 
 
-PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
+PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
@@ -1039,7 +1039,7 @@ def has_pattern():
         return False
 
 
-def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
+def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
         stopwords=frozenset(), min_length=2, max_length=15):
     """
     This function is only available when the optional 'pattern' package is installed.

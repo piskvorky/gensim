@@ -224,6 +224,11 @@ class TestFastText(unittest.TestCase):
         self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new')))
         self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new.bin')))
 
+    def testLoadModelSupervised(self):
+        """Test loading model with supervised learning labels"""
+        with self.assertRaises(NotImplementedError):
+            fasttext.FastText.load_fasttext_format(datapath('pang_lee_polarity_fasttext'))
+
     def testLoadModelWithNonAsciiVocab(self):
         """Test loading model with non-ascii words in vocab"""
         model = fasttext.FastText.load_fasttext_format(datapath('non_ascii_fasttext'))
@@ -336,6 +341,17 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(ft_hash, 2949673445)
         ft_hash = fasttext.ft_hash('word')
         self.assertEqual(ft_hash, 1788406269)
+
+    def testConsistentDtype(self):
+        """Test that the same dtype is returned for OOV words as for words in the vocabulary"""
+        vocab_word = 'night'
+        oov_word = 'wordnotpresentinvocabulary'
+        self.assertIn(vocab_word, self.test_model.wv.vocab)
+        self.assertNotIn(oov_word, self.test_model.wv.vocab)
+
+        vocab_embedding = self.test_model[vocab_word]
+        oov_embedding = self.test_model[oov_word]
+        self.assertEqual(vocab_embedding.dtype, oov_embedding.dtype)
 
 
 if __name__ == '__main__':
