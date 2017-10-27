@@ -40,7 +40,7 @@ def segment_all_articles(file_path):
 
     Yields
     ------
-    tuple(str, list of tuple(str, str))
+    (str, list of (str, str))
         Structure contains (title, [(section_heading, section_content), ...]).
 
     """
@@ -121,7 +121,7 @@ def segment(page_xml):
 
     Returns
     -------
-    tuple(str, list of tuple(str, str))
+    (str, list of (str, str))
         Structure contains (title, [(section_heading, section_content)]).
 
     """
@@ -163,12 +163,7 @@ class WikiSectionsCorpus(WikiCorpus):
 
     """
     def __init__(self, fileobj, processes=None, lemmatize=utils.has_pattern(), filter_namespaces=('0',)):
-        """Initialize the corpus. Unless a dictionary is provided, this scans the
-        corpus once, to determine its vocabulary.
-
-        . You can override
-        this automatic logic by forcing the `lemmatize` parameter explicitly.
-
+        """
         Parameters
         ----------
         fileobj : file
@@ -178,7 +173,7 @@ class WikiSectionsCorpus(WikiCorpus):
         lemmatize : bool
             If `pattern` package is installed, use fancier shallow parsing to get token lemmas.
             Otherwise, use simple regexp tokenization.
-        filter_namespaces : tuple(int)
+        filter_namespaces : tuple of int
             Enumeration of namespaces that will be ignored.
 
         """
@@ -206,7 +201,7 @@ class WikiSectionsCorpus(WikiCorpus):
 
         Yields
         ------
-        tuple(str, list of tuple(str, str))
+        (str, list of (str, str))
             Structure contains (title, [(section_heading, section_content), ...]).
 
         """
