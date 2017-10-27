@@ -36,10 +36,11 @@ from gensim.models.word2vec import Word2Vec
 logger = logging.getLogger(__name__)
 
 
-class PoincareDistance(object):
+
+class PoincareExample(object):
     """
-    Class for computing Poincare distances between sets of vectors, and storing intermediate
-    state to avoid recomputing multiple times
+    Class for computing Poincare distances and gradients for a training example,
+    and storing intermediate state to avoid recomputing multiple times
     """
     def __init__(self, vector_u, vectors_v):
         """Initialize instance with sets of vectors for which distances are to be computed
@@ -73,6 +74,7 @@ class PoincareDistance(object):
         self.loss_computed = False
 
     def compute_all(self):
+        """Convenience method to perform all computations"""
         self.compute_distances()
         self.compute_distance_gradients()
         self.compute_gradients()
@@ -136,6 +138,8 @@ class PoincareDistance(object):
         """Compute and store partial derivatives of d(u, v) w.r.t u and all v"""
         if self.distance_gradients_computed:
             return
+        self.compute_distances()
+
         u_coeffs = ((self.euclidean_dists ** 2 + self.alpha) / self.alpha)[:, np.newaxis]
         distance_gradients_u = u_coeffs * self.vector_u - self.vectors_v
         distance_gradients_u *= (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis]
@@ -271,41 +275,42 @@ class PoincareModel(utils.SaveLoad):
         exp_positive_distance = np.exp(-positive_distance)
         return -np.log(exp_positive_distance / (exp_positive_distance + exp_negative_distances.sum()))
 
-    def compute_gradients(self, relation, negatives):
+    def compute_gradients(self, relation, negatives, check_gradients=False):
         """Computes gradients for vectors of positively related nodes and negatively sampled nodes"""
         u, v = relation
         vector_u = self.wv.word_vec(u)
         vector_v = self.wv.word_vec(v)
         vectors_negative = self.wv[negatives]
         vectors_v = np.vstack((vector_v, vectors_negative))
-        # TODO: better naming, some refactoring
-        distances = PoincareDistance(vector_u, vectors_v)
-        distances.compute_all()
-        return distances
+        example = PoincareExample(vector_u, vectors_v)
+        example.compute_all()
+        return example
 
-    def train_on_example(self, relation):
+    def train_on_example(self, relation, check_gradients=False):
         """Performs training for a single training example"""
         u, v = relation
         negatives = self.sample_negatives(u)
-        distances = self.compute_gradients(relation, negatives)
-        grad_u, grad_v = distances.gradients_u, distances.gradients_v
+        example = self.compute_gradients(relation, negatives, check_gradients)
         u_index = self.wv.vocab[u].index
         v_indices = [self.wv.vocab[v].index]
         for negative in negatives:
             v_indices.append(self.wv.vocab[negative].index)
+        self.update_vectors(example, u_index, v_indices)
+        return example
 
-        self.wv.syn0[u_index] -= self.alpha * (distances.alpha ** 2) / 4 * grad_u
+    def update_vectors(self, example, u_index, v_indices):
+        grad_u, grad_v = example.gradients_u, example.gradients_v
+
+        self.wv.syn0[u_index] -= self.alpha * (example.alpha ** 2) / 4 * grad_u
         self.wv.syn0[u_index] = self.clip_vectors(self.wv.syn0[u_index], self.epsilon)
 
-        self.wv.syn0[v_indices] -= self.alpha * (distances.beta ** 2)[:, np.newaxis] / 4 * grad_v
+        self.wv.syn0[v_indices] -= self.alpha * (example.beta ** 2)[:, np.newaxis] / 4 * grad_v
         self.wv.syn0[v_indices] = self.clip_vectors(self.wv.syn0[v_indices], self.epsilon)
-        return distances
 
 
     @staticmethod
     def clip_vectors(vectors, epsilon):
         """Clip vectors to have a norm of less than one"""
-        # TODO: correct implementation
         one_d = len(vectors.shape) == 1
         if one_d:
             norm = np.linalg.norm(vectors)
