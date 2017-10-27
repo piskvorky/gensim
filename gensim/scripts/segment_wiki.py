@@ -30,11 +30,18 @@ logger = logging.getLogger(__name__)
 
 
 def segment_all_articles(file_path):
-    """
-    Extract article titles and sections from a MediaWiki bz2 database dump.
+    """Extract article titles and sections from a MediaWiki bz2 database dump.
 
-    Return an iterable over (str, list) which generates
-    (title, [(section_heading, section_content)]) 2-tuples.
+    Parameters
+    ----------
+    file_path : str
+        Path to mediawiki dump, typical filename is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
+        or <LANG>wiki-latest-pages-articles.xml.bz2.
+
+    Yields
+    ------
+    tuple(str, list of tuple(str, str))
+        Structure contains (title, [(section_heading, section_content), ...]).
 
     """
     with smart_open(file_path, 'rb') as xml_fileobj:
@@ -46,9 +53,17 @@ def segment_all_articles(file_path):
 
 
 def segment_and_print_all_articles(file_path, output_file):
-    """
-    Prints article title and sections to stdout, tab-separated
-    article_title<tab>section_heading<tab>section_content<tab>section_heading<tab>section_content
+    """Write article title and sections to output_file,
+    tab-separated article_title<tab>section_heading<tab>section_content<tab>section_heading<tab>section_content.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to mediawiki dump, typical filename is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
+        or <LANG>wiki-latest-pages-articles.xml.bz2.
+
+    output_file : str
+        Path to output file.
 
     """
     with smart_open(output_file, 'wb') as outfile:
@@ -63,10 +78,17 @@ def segment_and_print_all_articles(file_path, output_file):
 
 
 def extract_page_xmls(f):
-    """
-    Extract pages from a MediaWiki database dump = open file-like object `f`.
+    """Extract pages from a MediaWiki database dump.
 
-    Return an iterable which generates xml strings for page tags.
+    Parameters
+    ----------
+    f : file
+        File descriptor of MediaWiki dump.
+
+    Yields
+    ------
+    str
+        XML strings for page tags.
 
     """
     elems = (elem for _, elem in cElementTree.iterparse(f, events=("end",)))
@@ -90,12 +112,17 @@ def extract_page_xmls(f):
 
 
 def segment(page_xml):
-    """
-    Parse the content inside a page tag, returning its content as a list of tokens
-    (utf8-encoded strings).
+    """Parse the content inside a page tag
 
-    Returns a 2-tuple (str, list) -
-    (title, [(section_heading, section_content)])
+    Parameters
+    ----------
+    page_xml : str
+        Content from page tag.
+
+    Returns
+    -------
+    tuple(str, list of tuple(str, str))
+        Structure contains (title, [(section_heading, section_content)]).
 
     """
     elem = cElementTree.fromstring(page_xml)
@@ -118,7 +145,7 @@ def segment(page_xml):
     if text is not None:
         section_contents = re.split(top_level_heading_regex, text)
         section_headings = [lead_section_heading] + re.findall(top_level_heading_regex_capture, text)
-        assert(len(section_contents) == len(section_headings))
+        assert len(section_contents) == len(section_headings)
     else:
         section_contents = []
         section_headings = []
@@ -129,24 +156,30 @@ def segment(page_xml):
 
 
 class WikiSectionsCorpus(WikiCorpus):
-    """
-    Treat a wikipedia articles dump (\*articles.xml.bz2) as a (read-only) corpus.
+    """Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
+    or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
 
-    The documents are extracted on-the-fly, so that the whole (massive) dump
-    can stay compressed on disk.
-
-    >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
-    >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
+    The documents are extracted on-the-fly, so that the whole (massive) dump can stay compressed on disk.
 
     """
     def __init__(self, fileobj, processes=None, lemmatize=utils.has_pattern(), filter_namespaces=('0',)):
-        """
-        Initialize the corpus. Unless a dictionary is provided, this scans the
+        """Initialize the corpus. Unless a dictionary is provided, this scans the
         corpus once, to determine its vocabulary.
 
-        If `pattern` package is installed, use fancier shallow parsing to get
-        token lemmas. Otherwise, use simple regexp tokenization. You can override
+        . You can override
         this automatic logic by forcing the `lemmatize` parameter explicitly.
+
+        Parameters
+        ----------
+        fileobj : file
+            File descriptor of MediaWiki dump.
+        processes : int
+            Number of processes, max(1, multiprocessing.cpu_count() - 1) if None.
+        lemmatize : bool
+            If `pattern` package is installed, use fancier shallow parsing to get token lemmas.
+            Otherwise, use simple regexp tokenization.
+        filter_namespaces : tuple(int)
+            Enumeration of namespaces that will be ignored.
 
         """
         self.fileobj = fileobj
@@ -158,10 +191,10 @@ class WikiSectionsCorpus(WikiCorpus):
         self.lemmatize = lemmatize
 
     def get_texts_with_sections(self):
-        """
-        Iterate over the dump, returning titles and text versions of all sections of articles as a list
-        of 2-tuples [(article_title, [(section_heading, section_content)]].
+        """Iterate over the dump, returning titles and text versions of all sections of articles.
 
+        Notes
+        -----
         Only articles of sufficient length are returned (short articles & redirects
         etc are ignored).
 
@@ -170,6 +203,12 @@ class WikiSectionsCorpus(WikiCorpus):
 
         >>> for vec in wiki_corpus:
         >>>     print(vec)
+
+        Yields
+        ------
+        tuple(str, list of tuple(str, str))
+            Structure contains (title, [(section_heading, section_content), ...]).
+
         """
         articles = 0
         page_xmls = extract_page_xmls(self.fileobj)
@@ -185,7 +224,8 @@ class WikiSectionsCorpus(WikiCorpus):
                         num_total_tokens += len(utils.lemmatize(section_content))
                     else:
                         num_total_tokens += len(tokenize(section_content))
-                if num_total_tokens < ARTICLE_MIN_WORDS or any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
+                if num_total_tokens < ARTICLE_MIN_WORDS or \
+                        any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
                     continue
                 articles += 1
                 yield (article_title, sections)
@@ -198,8 +238,8 @@ if __name__ == "__main__":
     logger.info("running %s", " ".join(sys.argv))
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=globals()['__doc__'])
-    parser.add_argument('-f', '--file', help='path to mediawiki database dump', required=True)
-    parser.add_argument('-o', '--output', help='path to output file', required=True)
+    parser.add_argument('-f', '--file', help='Path to mediawiki database dump', required=True)
+    parser.add_argument('-o', '--output', help='Path to output file', required=True)
     args = parser.parse_args()
     segment_and_print_all_articles(args.file, args.output)
 
