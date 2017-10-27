@@ -145,13 +145,15 @@ class PoincareExample(object):
         u_coeffs = ((euclidean_dists_squared + self.alpha) / self.alpha)[:, np.newaxis]
         distance_gradients_u = u_coeffs * self.vector_u - self.vectors_v
         distance_gradients_u *= c
-        np.nan_to_num(distance_gradients_u, copy=False)
+        if (self.gamma == 1).any():
+            np.nan_to_num(distance_gradients_u, copy=False)
         self.distance_gradients_u = distance_gradients_u
 
         v_coeffs = ((euclidean_dists_squared + self.beta) / self.beta)[:, np.newaxis]
         distance_gradients_v = v_coeffs * self.vectors_v - self.vector_u
         distance_gradients_v *= c
-        np.nan_to_num(distance_gradients_v, copy=False)
+        if (self.gamma == 1).any():
+            np.nan_to_num(distance_gradients_v, copy=False)
         self.distance_gradients_v = distance_gradients_v
 
         self.distance_gradients_computed = True
