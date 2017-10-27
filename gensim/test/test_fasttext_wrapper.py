@@ -158,14 +158,14 @@ class TestFastText(unittest.TestCase):
         ]
         self.assertTrue(numpy.allclose(model["rejection"], expected_vec_oov, atol=1e-4))
 
-        self.assertEquals(model.min_count, 5)
-        self.assertEquals(model.window, 5)
-        self.assertEquals(model.iter, 5)
-        self.assertEquals(model.negative, 5)
-        self.assertEquals(model.sample, 0.0001)
-        self.assertEquals(model.bucket, 1000)
-        self.assertEquals(model.wv.max_n, 6)
-        self.assertEquals(model.wv.min_n, 3)
+        self.assertEqual(model.min_count, 5)
+        self.assertEqual(model.window, 5)
+        self.assertEqual(model.iter, 5)
+        self.assertEqual(model.negative, 5)
+        self.assertEqual(model.sample, 0.0001)
+        self.assertEqual(model.bucket, 1000)
+        self.assertEqual(model.wv.max_n, 6)
+        self.assertEqual(model.wv.min_n, 3)
         self.model_sanity(model)
 
     def testLoadFastTextNewFormat(self):
@@ -209,14 +209,14 @@ class TestFastText(unittest.TestCase):
         ]
         self.assertTrue(numpy.allclose(new_model["rejection"], expected_vec_oov, atol=1e-4))
 
-        self.assertEquals(new_model.min_count, 5)
-        self.assertEquals(new_model.window, 5)
-        self.assertEquals(new_model.iter, 5)
-        self.assertEquals(new_model.negative, 5)
-        self.assertEquals(new_model.sample, 0.0001)
-        self.assertEquals(new_model.bucket, 1000)
-        self.assertEquals(new_model.wv.max_n, 6)
-        self.assertEquals(new_model.wv.min_n, 3)
+        self.assertEqual(new_model.min_count, 5)
+        self.assertEqual(new_model.window, 5)
+        self.assertEqual(new_model.iter, 5)
+        self.assertEqual(new_model.negative, 5)
+        self.assertEqual(new_model.sample, 0.0001)
+        self.assertEqual(new_model.bucket, 1000)
+        self.assertEqual(new_model.wv.max_n, 6)
+        self.assertEqual(new_model.wv.min_n, 3)
         self.model_sanity(new_model)
 
     def testLoadFileName(self):
