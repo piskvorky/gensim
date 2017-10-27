@@ -281,9 +281,8 @@ class PoincareModel(utils.SaveLoad):
         """Computes gradients for vectors of positively related nodes and negatively sampled nodes"""
         u, v = relation
         vector_u = self.wv.word_vec(u)
-        vector_v = self.wv.word_vec(v)
-        vectors_negative = self.wv[negatives]
-        vectors_v = np.vstack((vector_v, vectors_negative))
+        v_indices = [self.wv.vocab[v].index] + [self.wv.vocab[neg].index for neg in negatives]
+        vectors_v = self.wv.syn0[v_indices]
         example = PoincareExample(vector_u, vectors_v)
         example.compute_all()
         if check_gradients:
