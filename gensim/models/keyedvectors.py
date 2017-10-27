@@ -71,18 +71,14 @@ except ImportError:
 
 from numpy import dot, zeros, dtype, float32 as REAL,\
     double, array, vstack, fromstring, sqrt, newaxis,\
-    ndarray, sum as np_sum, prod, ascontiguousarray
+    ndarray, sum as np_sum, prod, ascontiguousarray,\
+    argmax
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from six import string_types, iteritems
 from six.moves import xrange
 from scipy import stats
-try:
-    from keras.layers import Embedding
-    KERAS_INSTALLED = True
-except ImportError:
-    KERAS_INSTALLED = False
 
 
 logger = logging.getLogger(__name__)
@@ -621,6 +617,30 @@ class KeyedVectors(utils.SaveLoad):
         """
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
 
+    def most_similar_to_given(self, w1, word_list):
+        """Return the word from word_list most similar to w1.
+
+        Args:
+            w1 (str): a word
+            word_list (list): list of words containing a word most similar to w1
+
+        Returns:
+            the word in word_list with the highest similarity to w1
+
+        Raises:
+            KeyError: If w1 or any word in word_list is not in the vocabulary
+
+        Example::
+
+          >>> trained_model.most_similar_to_given('music', ['water', 'sound', 'backpack', 'mouse'])
+          'sound'
+
+          >>> trained_model.most_similar_to_given('snake', ['food', 'pencil', 'animal', 'phone'])
+          'animal'
+
+        """
+        return word_list[argmax([self.similarity(w1, word) for word in word_list])]
+
     def n_similarity(self, ws1, ws2):
         """
         Compute cosine similarity between two sets of words.
@@ -638,7 +658,7 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         if not(len(ws1) and len(ws2)):
-            raise ZeroDivisionError('Atleast one of the passed list is empty.')
+            raise ZeroDivisionError('At least one of the passed list is empty.')
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
@@ -833,11 +853,13 @@ class KeyedVectors(utils.SaveLoad):
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
-    def get_embedding_layer(self, train_embeddings=False):
+    def get_keras_embedding(self, train_embeddings=False):
         """
         Return a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings
         """
-        if not KERAS_INSTALLED:
+        try:
+            from keras.layers import Embedding
+        except ImportError:
             raise ImportError("Please install Keras to use this function")
         weights = self.syn0
 

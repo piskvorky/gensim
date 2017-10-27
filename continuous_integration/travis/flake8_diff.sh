@@ -20,6 +20,7 @@ set -o pipefail
 
 PROJECT=RaRe-Technologies/gensim
 PROJECT_URL=https://github.com/${PROJECT}.git
+FLAKE_CONFIG_FILE=setup.cfg
 
 # Find the remote with the project name (upstream in most cases)
 REMOTE=$(git remote -v | grep ${PROJECT} | cut -f1 | head -1 || echo '')
@@ -133,14 +134,14 @@ check_files() {
     if [ -n "$files" ]; then
         # Conservative approach: diff without context (--unified=0) so that code
         # that was not changed does not create failures
-        git diff --unified=0 ${COMMIT_RANGE} -- ${files} | flake8 --diff --show-source ${options}
+        git diff --unified=0 ${COMMIT_RANGE} -- ${files} | flake8 --config ${FLAKE_CONFIG_FILE} --diff --show-source ${options}
     fi
 }
 
 if [[ "$MODIFIED_PY_FILES" == "no_match" ]]; then
     echo "No .py files has been modified"
 else
-    check_files "$(echo "$MODIFIED_PY_FILES" )" "--ignore=E501,E731,E12,W503"
+    check_files "$(echo "$MODIFIED_PY_FILES" )"
 fi
 echo -e "No problem detected by flake8\n"
 
@@ -150,6 +151,9 @@ else
     for fname in ${MODIFIED_IPYNB_FILES}
     do
         echo "File: $fname"
-        jupyter nbconvert --to script --stdout ${fname} | flake8 - --show-source --ignore=E501,E731,E12,W503,E402 --builtins=get_ipython || true
+        jupyter nbconvert --to script --stdout ${fname} | flake8 --config ${FLAKE_CONFIG_FILE} --show-source --builtins=get_ipython || true
     done
 fi
+
+echo "Build documentation"
+pip install .[docs] && cd docs/src && make clean html

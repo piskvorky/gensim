@@ -105,7 +105,7 @@ def ascarray(a, name=''):
 
 
 class Projection(utils.SaveLoad):
-    def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS, extra_dims=P2_EXTRA_DIMS):
+    def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS, extra_dims=P2_EXTRA_DIMS, dtype=np.float64):
         """
         Construct the (U, S) projection from a corpus `docs`. The projection can
         be later updated by merging it with another Projection via `self.merge()`.
@@ -124,7 +124,7 @@ class Projection(utils.SaveLoad):
                 u, s = stochastic_svd(
                     docs, k, chunksize=sys.maxsize,
                     num_terms=m, power_iters=self.power_iters,
-                    extra_dims=self.extra_dims)
+                    extra_dims=self.extra_dims, dtype=dtype)
             else:
                 try:
                     import sparsesvd
@@ -245,7 +245,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
                  decay=1.0, distributed=False, onepass=True,
-                 power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS):
+                 power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS, dtype=np.float64):
         """
         `num_topics` is the number of requested factors (latent dimensions).
 
@@ -288,6 +288,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 onepass = True
         self.onepass = onepass
         self.extra_samples, self.power_iters = extra_samples, power_iters
+        self.dtype = dtype
 
         if corpus is None and self.id2word is None:
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
@@ -301,7 +302,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.docs_processed = 0
         self.projection = Projection(
-            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples
+            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples, dtype=dtype
         )
 
         self.numworkers = 1
@@ -359,11 +360,11 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if not scipy.sparse.issparse(corpus):
             if not self.onepass:
                 # we are allowed multiple passes over the input => use a faster, randomized two-pass algo
-                update = Projection(self.num_terms, self.num_topics, None)
+                update = Projection(self.num_terms, self.num_topics, None, dtype=self.dtype)
                 update.u, update.s = stochastic_svd(
                     corpus, self.num_topics,
                     num_terms=self.num_terms, chunksize=chunksize,
-                    extra_dims=self.extra_samples, power_iters=self.power_iters
+                    extra_dims=self.extra_samples, power_iters=self.power_iters, dtype=self.dtype
                 )
                 self.projection.merge(update, decay=decay)
                 self.docs_processed += len(corpus) if hasattr(corpus, '__len__') else 0
@@ -379,7 +380,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     # construct the job as a sparse matrix, to minimize memory overhead
                     # definitely avoid materializing it as a dense matrix!
                     logger.debug("converting corpus to csc format")
-                    job = matutils.corpus2csc(chunk, num_docs=len(chunk), num_terms=self.num_terms, num_nnz=nnz)
+                    job = matutils.corpus2csc(
+                        chunk, num_docs=len(chunk), num_terms=self.num_terms, num_nnz=nnz, dtype=self.dtype)
                     del chunk
                     doc_no += job.shape[1]
                     if self.dispatcher:
@@ -392,7 +394,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         # serial version, there is only one "worker" (myself) => process the job directly
                         update = Projection(
                             self.num_terms, self.num_topics, job, extra_dims=self.extra_samples,
-                            power_iters=self.power_iters
+                            power_iters=self.power_iters, dtype=self.dtype
                         )
                         del job
                         self.projection.merge(update, decay=decay)
@@ -407,10 +409,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self.docs_processed += doc_no
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
-            assert self.onepass, "distributed two-pass algo not supported yet"
             update = Projection(
                 self.num_terms, self.num_topics, corpus.tocsc(), extra_dims=self.extra_samples,
-                power_iters=self.power_iters
+                power_iters=self.power_iters, dtype=self.dtype
             )
             self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents", corpus.shape[1])
@@ -741,7 +742,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         # second phase: construct the covariance matrix X = B * B.T, where B = Q.T * A
         # again, construct X incrementally, in chunks of `chunksize` documents from the streaming
         # input corpus A, to avoid using O(number of documents) memory
-        x = np.zeros(shape=(qt.shape[0], qt.shape[0]), dtype=np.float64)
+        x = np.zeros(shape=(qt.shape[0], qt.shape[0]), dtype=dtype)
         logger.info("2nd phase: constructing %s covariance matrix", str(x.shape))
         for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
             logger.info('PROGRESS: at document #%i/%i', chunk_no * chunksize, num_docs)

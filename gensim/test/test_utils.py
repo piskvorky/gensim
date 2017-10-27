@@ -11,9 +11,10 @@ Automated tests for checking various utils functions.
 import logging
 import unittest
 
-from gensim import utils
-from six import iteritems
 import numpy as np
+from six import iteritems
+
+from gensim import utils
 
 
 class TestIsCorpus(unittest.TestCase):
@@ -179,6 +180,16 @@ class TestWindowing(unittest.TestCase):
 
         windows[2][0] = 'modified'
         self.assertEqual('test', texts[1][0])
+
+    def test_flatten_nested(self):
+        nested_list = [[[1, 2, 3], [4, 5]], 6]
+        expected = [1, 2, 3, 4, 5, 6]
+        self.assertEquals(utils.flatten(nested_list), expected)
+
+    def test_flatten_not_nested(self):
+        not_nested = [1, 2, 3, 4, 5, 6]
+        expected = [1, 2, 3, 4, 5, 6]
+        self.assertEquals(utils.flatten(not_nested), expected)
 
 
 if __name__ == '__main__':

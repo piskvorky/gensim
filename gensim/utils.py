@@ -10,6 +10,7 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
+import collections
 import logging
 import warnings
 
@@ -78,7 +79,7 @@ except ImportError:
         return open(fname, mode)
 
 
-PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
+PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
@@ -1038,7 +1039,7 @@ def has_pattern():
         return False
 
 
-def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
+def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
         stopwords=frozenset(), min_length=2, max_length=15):
     """
     This function is only available when the optional 'pattern' package is installed.
@@ -1254,3 +1255,26 @@ def _iter_windows(document, window_size, copy=False, ignore_below_size=True):
     else:
         for doc_window in doc_windows:
             yield doc_window.copy() if copy else doc_window
+
+
+def flatten(nested_list):
+    """Recursively flatten out a nested list.
+
+    Args:
+        nested_list (list): possibly nested list.
+
+    Returns:
+        list: flattened version of input, where any list elements have been unpacked into the
+            top-level list in a recursive fashion.
+    """
+    return list(lazy_flatten(nested_list))
+
+
+def lazy_flatten(nested_list):
+    """Lazy version of `flatten`."""
+    for el in nested_list:
+        if isinstance(el, collections.Iterable) and not isinstance(el, string_types):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el

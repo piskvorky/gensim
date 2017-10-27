@@ -254,18 +254,32 @@ except ImportError:
 
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
-                  context_vectors=None, context_locks=None, compute_loss=False):
+                  context_vectors=None, context_locks=None, compute_loss=False, is_ft=False):
     if context_vectors is None:
-        context_vectors = model.wv.syn0
+        if is_ft:
+            context_vectors_vocab = model.wv.syn0_vocab
+            context_vectors_ngrams = model.wv.syn0_ngrams
+        else:
+            context_vectors = model.wv.syn0
     if context_locks is None:
-        context_locks = model.syn0_lockf
+        if is_ft:
+            context_locks_vocab = model.syn0_vocab_lockf
+            context_locks_ngrams = model.syn0_ngrams_lockf
+        else:
+            context_locks = model.syn0_lockf
 
     if word not in model.wv.vocab:
         return
     predict_word = model.wv.vocab[word]  # target word (NN output)
 
-    l1 = context_vectors[context_index]  # input word (NN input/projection layer)
-    lock_factor = context_locks[context_index]
+    if is_ft:
+        l1_vocab = context_vectors_vocab[context_index[0]]
+        l1_ngrams = np_sum(context_vectors_ngrams[context_index[1:]], axis=0)
+        if context_index:
+            l1 = np_sum([l1_vocab, l1_ngrams], axis=0) / len(context_index)
+    else:
+        l1 = context_vectors[context_index]  # input word (NN input/projection layer)
+        lock_factor = context_locks[context_index]
 
     neu1e = zeros(l1.shape)
 
@@ -306,11 +320,30 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             model.running_training_loss -= log(expit(prod_term[0]))  # for the output word
 
     if learn_vectors:
-        l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
+        if is_ft:
+            model.wv.syn0_vocab[context_index[0]] += neu1e * context_locks_vocab[context_index[0]]
+            for i in context_index[1:]:
+                model.wv.syn0_ngrams[i] += neu1e * context_locks_ngrams[i]
+        else:
+            l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
     return neu1e
 
 
-def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True, compute_loss=False):
+def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True, compute_loss=False,
+                    context_vectors=None, context_locks=None, is_ft=False):
+    if context_vectors is None:
+        if is_ft:
+            context_vectors_vocab = model.wv.syn0_vocab
+            context_vectors_ngrams = model.wv.syn0_ngrams
+        else:
+            context_vectors = model.wv.syn0
+    if context_locks is None:
+        if is_ft:
+            context_locks_vocab = model.syn0_vocab_lockf
+            context_locks_ngrams = model.syn0_ngrams_lockf
+        else:
+            context_locks = model.syn0_lockf
+
     neu1e = zeros(l1.shape)
 
     if model.hs:
@@ -349,10 +382,18 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
 
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
-        if not model.cbow_mean and input_word_indices:
-            neu1e /= len(input_word_indices)
-        for i in input_word_indices:
-            model.wv.syn0[i] += neu1e * model.syn0_lockf[i]
+        if is_ft:
+            if not model.cbow_mean and input_word_indices:
+                neu1e /= (len(input_word_indices[0]) + len(input_word_indices[1]))
+            for i in input_word_indices[0]:
+                context_vectors_vocab[i] += neu1e * context_locks_vocab[i]
+            for i in input_word_indices[1]:
+                context_vectors_ngrams[i] += neu1e * context_locks_ngrams[i]
+        else:
+            if not model.cbow_mean and input_word_indices:
+                neu1e /= len(input_word_indices)
+            for i in input_word_indices:
+                context_vectors[i] += neu1e * context_locks[i]
 
     return neu1e
 
@@ -574,9 +615,46 @@ class Word2Vec(utils.SaveLoad):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
-
         """
         self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
+        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
+        self.finalize_vocab(update=update)  # build tables & arrays
+
+    def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
+        """
+        Build vocabulary from a dictionary of word frequencies.
+        Build model vocabulary from a passed dictionary that contains (word,word count).
+        Words must be of type unicode strings.
+
+        Parameters
+        ----------
+        `word_freq` : dict
+            Word,Word_Count dictionary.
+        `keep_raw_vocab` : bool
+            If not true, delete the raw vocabulary after the scaling is done and free up RAM.
+        `corpus_count`: int
+            Even if no corpus is provided, this argument can set corpus_count explicitly.
+        `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
+        in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
+        Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+        returns either `utils.RULE_DISCARD`, `utils.RULE_KEEP` or `utils.RULE_DEFAULT`.
+        `update`: bool
+            If true, the new provided words in `word_freq` dict will be added to model's vocab.
+
+        Returns
+        --------
+        None
+
+        Examples
+        --------
+        >>> build_vocab_from_freq({"Word1":15,"Word2":20}, update=True)
+        """
+        logger.info("Processing provided word frequencies")
+        vocab = defaultdict(int, word_freq)
+
+        self.corpus_count = corpus_count if corpus_count else 0
+        self.raw_vocab = vocab
+
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
         self.finalize_vocab(update=update)  # build tables & arrays
 
@@ -600,16 +678,16 @@ class Word2Vec(utils.SaveLoad):
             if sentence_no % progress_per == 0:
                 logger.info(
                     "PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
-                    sentence_no, sum(itervalues(vocab)) + total_words, len(vocab)
+                    sentence_no, total_words, len(vocab)
                 )
             for word in sentence:
                 vocab[word] += 1
+                total_words += 1
 
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+                utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
-        total_words += sum(itervalues(vocab))
         logger.info(
             "collected %i word types from a corpus of %i raw words and %i sentences",
             len(vocab), total_words, sentence_no + 1
@@ -1034,10 +1112,10 @@ class Word2Vec(utils.SaveLoad):
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
 
-        See the article by [taddy]_ and the gensim demo at [deepir]_ for examples of how to use such scores in document classification.
+        See the article by [#taddy]_ and the gensim demo at [#deepir]_ for examples of how to use such scores in document classification.
 
-        .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
-        .. [deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
+        .. [#taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
+        .. [#deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
 
         """
         if FAST_VERSION < 0:
@@ -1547,7 +1625,7 @@ class LineSentence(object):
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
         """
         `source` can be either a string or a file object. Clip the file to the first
-        `limit` lines (or no clipped if limit is None, the default).
+        `limit` lines (or not clipped if limit is None, the default).
 
         Example::
 
@@ -1588,19 +1666,24 @@ class LineSentence(object):
 
 class PathLineSentences(object):
     """
-    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
-    Like LineSentence, but will process all files in a directory in alphabetical order by filename
+
+    Works like word2vec.LineSentence, but will process all files in a directory in alphabetical order by filename.
+    The directory can only contain files that can be read by LineSentence: .bz2, .gz, and text files. Any file not ending
+    with .bz2 or .gz is assumed to be a text file. Does not work with subdirectories.
+
+    The format of files (either text, or compressed text files) in the path is one sentence = one line, with words already
+    preprocessed and separated by whitespace.
+
     """
 
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
         """
         `source` should be a path to a directory (as a string) where all files can be opened by the
-        LineSentence class. Each file will be read up to
-        `limit` lines (or no clipped if limit is None, the default).
+        LineSentence class. Each file will be read up to `limit` lines (or not clipped if limit is None, the default).
 
         Example::
 
-            sentences = LineSentencePath(os.getcwd() + '\\corpus\\')
+            sentences = PathLineSentences(os.getcwd() + '\\corpus\\')
 
         The files in the directory should be either text files, .bz2 files, or .gz files.
 
@@ -1610,23 +1693,23 @@ class PathLineSentences(object):
         self.limit = limit
 
         if os.path.isfile(self.source):
-            logging.warning('single file read, better to use models.word2vec.LineSentence')
+            logger.debug('single file given as source, rather than a directory of files')
+            logger.debug('consider using models.word2vec.LineSentence for a single file')
             self.input_files = [self.source]  # force code compatibility with list of files
         elif os.path.isdir(self.source):
             self.source = os.path.join(self.source, '')  # ensures os-specific slash at end of path
-            logging.debug('reading directory %s', self.source)
+            logger.info('reading directory %s', self.source)
             self.input_files = os.listdir(self.source)
-            self.input_files = [self.source + file for file in self.input_files]  # make full paths
+            self.input_files = [self.source + filename for filename in self.input_files]  # make full paths
             self.input_files.sort()  # makes sure it happens in filename order
         else:  # not a file or a directory, then we can't do anything with it
             raise ValueError('input is neither a file nor a path')
-
-        logging.info('files read into PathLineSentences:%s', '\n'.join(self.input_files))
+        logger.info('files read into PathLineSentences:%s', '\n'.join(self.input_files))
 
     def __iter__(self):
         """iterate through the files"""
         for file_name in self.input_files:
-            logging.info('reading file %s', file_name)
+            logger.info('reading file %s', file_name)
             with utils.smart_open(file_name) as fin:
                 for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
@@ -1641,9 +1724,10 @@ if __name__ == "__main__":
     import argparse
     logging.basicConfig(
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
-        level=logging.INFO)
-    logging.info("running %s", " ".join(sys.argv))
-    logging.info("using optimization %s", FAST_VERSION)
+        level=logging.INFO
+    )
+    logger.info("running %s", " ".join(sys.argv))
+    logger.info("using optimization %s", FAST_VERSION)
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])

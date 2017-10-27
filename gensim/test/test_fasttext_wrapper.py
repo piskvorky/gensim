@@ -36,18 +36,18 @@ class TestFastText(unittest.TestCase):
         self.test_model_file = datapath('lee_fasttext')
         self.test_new_model_file = datapath('lee_fasttext_new')
         # Load pre-trained model to perform tests in case FastText binary isn't available in test environment
-        self.test_model = fasttext.FastText.load(self.test_model_file)
+        self.test_model = fasttext.FastText.load_fasttext_format(self.test_model_file)
 
     def model_sanity(self, model):
         """Even tiny models trained on any corpus should pass these sanity checks"""
         self.assertEqual(model.wv.syn0.shape, (len(model.wv.vocab), model.vector_size))
-        self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model.vector_size))
+        self.assertEqual(model.wv.syn0_ngrams.shape, (model.num_ngram_vectors, model.vector_size))
 
     def models_equal(self, model1, model2):
         self.assertEqual(len(model1.wv.vocab), len(model2.wv.vocab))
         self.assertEqual(set(model1.wv.vocab.keys()), set(model2.wv.vocab.keys()))
         self.assertTrue(numpy.allclose(model1.wv.syn0, model2.wv.syn0))
-        self.assertTrue(numpy.allclose(model1.wv.syn0_all, model2.wv.syn0_all))
+        self.assertTrue(numpy.allclose(model1.wv.syn0_ngrams, model2.wv.syn0_ngrams))
 
     def testTraining(self):
         """Test self.test_model successfully trained, parameters and weights correctly loaded"""
@@ -61,7 +61,7 @@ class TestFastText(unittest.TestCase):
 
         self.assertEqual(trained_model.wv.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(trained_model.wv.vocab), vocab_size)
-        self.assertEqual(trained_model.wv.syn0_all.shape[1], model_size)
+        self.assertEqual(trained_model.wv.syn0_ngrams.shape[1], model_size)
         self.model_sanity(trained_model)
 
         # Tests temporary training files deleted
@@ -92,7 +92,7 @@ class TestFastText(unittest.TestCase):
         )
         self.assertEqual(test_model_size_20.vector_size, 20)
         self.assertEqual(test_model_size_20.wv.syn0.shape[1], 20)
-        self.assertEqual(test_model_size_20.wv.syn0_all.shape[1], 20)
+        self.assertEqual(test_model_size_20.wv.syn0_ngrams.shape[1], 20)
 
     def testPersistence(self):
         """Test storing/loading the entire model."""
@@ -104,18 +104,18 @@ class TestFastText(unittest.TestCase):
         self.models_equal(self.test_model, fasttext.FastText.load(testfile()))
 
     def testNormalizedVectorsNotSaved(self):
-        """Test syn0norm/syn0_all_norm aren't saved in model file"""
+        """Test syn0norm/syn0_ngrams_norm aren't saved in model file"""
         self.test_model.init_sims()
         self.test_model.save(testfile())
         loaded = fasttext.FastText.load(testfile())
         self.assertTrue(loaded.wv.syn0norm is None)
-        self.assertTrue(loaded.wv.syn0_all_norm is None)
+        self.assertTrue(loaded.wv.syn0_ngrams_norm is None)
 
         wv = self.test_model.wv
         wv.save(testfile())
         loaded_kv = keyedvectors.KeyedVectors.load(testfile())
         self.assertTrue(loaded_kv.syn0norm is None)
-        self.assertTrue(loaded_kv.syn0_all_norm is None)
+        self.assertTrue(loaded_kv.syn0_ngrams_norm is None)
 
     def testLoadFastTextFormat(self):
         """Test model successfully loaded from fastText .bin file"""
@@ -126,7 +126,7 @@ class TestFastText(unittest.TestCase):
         vocab_size, model_size = 1762, 10
         self.assertEqual(model.wv.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(model.wv.vocab), vocab_size, model_size)
-        self.assertEqual(model.wv.syn0_all.shape, (model.num_ngram_vectors, model_size))
+        self.assertEqual(model.wv.syn0_ngrams.shape, (model.num_ngram_vectors, model_size))
 
         expected_vec = [
             -0.57144,
@@ -177,7 +177,7 @@ class TestFastText(unittest.TestCase):
         vocab_size, model_size = 1763, 10
         self.assertEqual(new_model.wv.syn0.shape, (vocab_size, model_size))
         self.assertEqual(len(new_model.wv.vocab), vocab_size, model_size)
-        self.assertEqual(new_model.wv.syn0_all.shape, (new_model.num_ngram_vectors, model_size))
+        self.assertEqual(new_model.wv.syn0_ngrams.shape, (new_model.num_ngram_vectors, model_size))
 
         expected_vec = [
             -0.025627,
@@ -223,6 +223,11 @@ class TestFastText(unittest.TestCase):
         """ Test model accepts input as both `/path/to/model` or `/path/to/model.bin` """
         self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new')))
         self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new.bin')))
+
+    def testLoadModelSupervised(self):
+        """Test loading model with supervised learning labels"""
+        with self.assertRaises(NotImplementedError):
+            fasttext.FastText.load_fasttext_format(datapath('pang_lee_polarity_fasttext'))
 
     def testLoadModelWithNonAsciiVocab(self):
         """Test loading model with non-ascii words in vocab"""
@@ -332,10 +337,21 @@ class TestFastText(unittest.TestCase):
 
     def testHash(self):
         # Tests FastText.ft_hash method return values to those obtained from original C implementation
-        ft_hash = fasttext.FastText.ft_hash('test')
+        ft_hash = fasttext.ft_hash('test')
         self.assertEqual(ft_hash, 2949673445)
-        ft_hash = fasttext.FastText.ft_hash('word')
+        ft_hash = fasttext.ft_hash('word')
         self.assertEqual(ft_hash, 1788406269)
+
+    def testConsistentDtype(self):
+        """Test that the same dtype is returned for OOV words as for words in the vocabulary"""
+        vocab_word = 'night'
+        oov_word = 'wordnotpresentinvocabulary'
+        self.assertIn(vocab_word, self.test_model.wv.vocab)
+        self.assertNotIn(oov_word, self.test_model.wv.vocab)
+
+        vocab_embedding = self.test_model[vocab_word]
+        oov_embedding = self.test_model[oov_word]
+        self.assertEqual(vocab_embedding.dtype, oov_embedding.dtype)
 
 
 if __name__ == '__main__':

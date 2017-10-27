@@ -73,6 +73,24 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # expected = np.array([-0.1973928, 0.05591352])  # non-scaled LSI version
         self.assertTrue(np.allclose(abs(vec), abs(expected)))  # transformed entries must be equal up to sign
 
+    def testTransformFloat32(self):
+        """Test lsi[vector] transformation."""
+        # create the transformation model
+        model = lsimodel.LsiModel(self.corpus, num_topics=2, dtype=np.float32)
+
+        # make sure the decomposition is enough accurate
+        u, s, vt = scipy.linalg.svd(matutils.corpus2dense(self.corpus, self.corpus.num_terms), full_matrices=False)
+        self.assertTrue(np.allclose(s[:2], model.projection.s))  # singular values must match
+        self.assertEquals(model.projection.u.dtype, np.float32)
+        self.assertEquals(model.projection.s.dtype, np.float32)
+
+        # transform one document
+        doc = list(self.corpus)[0]
+        transformed = model[doc]
+        vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
+        expected = np.array([-0.6594664, 0.142115444])  # scaled LSI version
+        self.assertTrue(np.allclose(abs(vec), abs(expected), atol=1.e-5))  # transformed entries must be equal up to sign
+
     def testCorpusTransform(self):
         """Test lsi[corpus] transformation."""
         model = self.model

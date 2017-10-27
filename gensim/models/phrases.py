@@ -79,9 +79,12 @@ import os
 import logging
 import warnings
 from collections import defaultdict
+import functools as ft
 import itertools as it
-from functools import partial
 from math import log
+from inspect import getargspec
+import pickle
+import six
 
 from six import iteritems, string_types, next
 
@@ -116,7 +119,18 @@ def _is_single(obj):
 
 class SentenceAnalyzer(object):
 
-    def analyze_sentence(self, sentence, threshold, common_terms, scoring):
+    def score_item(self, worda, wordb, components, scorer):
+        vocab = self.vocab
+        if worda in vocab and wordb in vocab:
+            bigram = self.delimiter.join(components)
+            return scorer(
+                worda_count=float(vocab[worda]),
+                wordb_count=float(vocab[wordb]),
+                bigram_count=float(vocab[bigram]))
+        else:
+            return -1
+
+    def analyze_sentence(self, sentence, threshold, common_terms, scorer):
         """Analyze a sentence
 
         `sentence` a token list representing the sentence to be analyzed.
@@ -125,9 +139,7 @@ class SentenceAnalyzer(object):
 
         `common_terms` the list of common terms, they have a special treatment
 
-        `scoring` a scoring function
-          taking as parameters a first word, a second, the components of an eventual bigram
-          and returning the score.
+        `scorer` the scorer function, as given to Phrases
         """
         s = [utils.any2utf8(w) for w in sentence]
         last_uncommon = None
@@ -139,7 +151,12 @@ class SentenceAnalyzer(object):
             if not is_common and last_uncommon:
                 chain = [last_uncommon] + in_between + [word]
                 # test between last_uncommon
-                score = scoring(last_uncommon, word, chain)
+                score = self.score_item(
+                    worda=last_uncommon,
+                    wordb=word,
+                    components=chain,
+                    scorer=scorer,
+                )
                 if score > threshold:
                     yield (chain, score)
                     last_uncommon = None
@@ -188,7 +205,7 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
 
         `threshold` represents a score threshold for forming the phrases (higher means
         fewer phrases). A phrase of words `a` followed by `b` is accepted if the score of the
-        phrase is greater than threshold. see the `scoring' setting
+        phrase is greater than threshold. see the `scoring` setting.
 
         `max_vocab_size` is the maximum size of the vocabulary. Used to control
         pruning of less common words, to keep memory under control. The default
@@ -199,18 +216,36 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
         should be a byte string (e.g. b'_').
 
         `scoring` specifies how potential phrases are scored for comparison to the `threshold`
-        setting. two settings are available:
+        setting. `scoring` can be set with either a string that refers to a built-in scoring function,
+        or with a function with the expected parameter names. Two built-in scoring functions are available
+        by setting `scoring` to a string:
+
         'default': from "Efficient Estimaton of Word Representations in Vector Space" by
-            Mikolov, et. al.:
-            (count(worda followed by wordb) - min_count) * N /
-            (count(worda) * count(wordb)) > threshold`, where `N` is the total vocabulary size.
+                   Mikolov, et. al.:
+                   (count(worda followed by wordb) - min_count) * N /
+                   (count(worda) * count(wordb)) > threshold`, where `N` is the total vocabulary size.
         'npmi': normalized pointwise mutual information, from "Normalized (Pointwise) Mutual
-            Information in Colocation Extraction" by Gerlof Bouma:
-            ln(prop(worda followed by wordb) / (prop(worda)*prop(wordb))) /
-            - ln(prop(worda followed by wordb)
-            where prop(n) is the count of n / the count of everything in the entire corpus
+                Information in Colocation Extraction" by Gerlof Bouma:
+                ln(prop(worda followed by wordb) / (prop(worda)*prop(wordb))) /
+                - ln(prop(worda followed by wordb)
+                where prop(n) is the count of n / the count of everything in the entire corpus.
+
         'npmi' is more robust when dealing with common words that form part of common bigrams, and
-            ranges from -1 to 1, but is slower to calculate than the default
+        ranges from -1 to 1, but is slower to calculate than the default.
+
+        To use a custom scoring function, create a function with the following parameters and set the `scoring`
+        parameter to the custom function. You must use all the parameters in your function call, even if the
+        function does not require all the parameters.
+
+            worda_count: number of occurrances in `sentences` of the first token in the phrase being scored
+            wordb_count: number of occurrances in `sentences` of the second token in the phrase being scored
+            bigram_count: number of occurrances in `sentences` of the phrase being scored
+            len_vocab: the number of unique tokens in `sentences`
+            min_count: the `min_count` setting of the Phrases class
+            corpus_word_count: the total number of (non-unique) tokens in `sentences`
+
+        A scoring function without any of these parameters (even if the parameters are not used) will
+        raise a ValueError on initialization of the Phrases class. The scoring function must be picklable.
 
         `common_terms` is an optionnal list of "stop words" that won't affect frequency count
         of expressions containing them.
@@ -223,8 +258,24 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
         if scoring == 'npmi' and (threshold < -1 or threshold > 1):
             raise ValueError("threshold should be between -1 and 1 for npmi scoring")
 
-        if not (scoring == 'default' or scoring == 'npmi'):
-            raise ValueError('unknown scoring function "' + scoring + '" specified')
+        # set scoring based on string
+        # intentially override the value of the scoring parameter rather than set self.scoring here,
+        # to still run the check of scoring function parameters in the next code block
+
+        if isinstance(scoring, six.string_types):
+            if scoring == 'default':
+                scoring = original_scorer
+            elif scoring == 'npmi':
+                scoring = npmi_scorer
+            else:
+                raise ValueError('unknown scoring method string %s specified' % (scoring))
+
+        scoring_parameters = ['worda_count', 'wordb_count', 'bigram_count', 'len_vocab', 'min_count', 'corpus_word_count']
+        if callable(scoring):
+            if all(parameter in getargspec(scoring)[0] for parameter in scoring_parameters):
+                self.scoring = scoring
+            else:
+                raise ValueError('scoring function missing expected parameters')
 
         self.min_count = min_count
         self.threshold = threshold
@@ -233,9 +284,18 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
         self.progress_per = progress_per
-        self.scoring = scoring
         self.corpus_word_count = 0
         self.common_terms = frozenset(utils.any2utf8(w) for w in common_terms)
+
+        # ensure picklability of custom scorer
+        try:
+            test_pickle = pickle.dumps(self.scoring)
+            load_pickle = pickle.loads(test_pickle)
+        except pickle.PickleError:
+            raise pickle.PickleError('unable to pickle custom Phrases scoring function')
+        finally:
+            del(test_pickle)
+            del(load_pickle)
 
         if sentences is not None:
             self.add_vocab(sentences)
@@ -315,56 +375,6 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
             logger.info("using %i counts as vocab in %s", len(vocab), self)
             self.vocab = vocab
 
-    @staticmethod
-    def original_scorer(word_a, word_b, components,
-                        vocab, delimiter, len_vocab=0.0, min_count=0.0):
-        """Compute score for a bigram, following original mikolov word2vec paper
-
-        all parameters but the first three should be fixed (thanks to `functools.partial`)
-        before using it as a score function to `analyze_sentence`
-        """
-        if word_a in vocab and word_b in vocab:
-            bigram = delimiter.join(components)
-            pa = float(vocab[word_a])
-            pb = float(vocab[word_b])
-            pab = float(vocab[bigram])
-            return (pab - min_count) / pa / pb * len_vocab
-        else:
-            return -1
-
-    @staticmethod
-    def npmi_scorer(word_a, word_b, components,
-                    vocab, delimiter, corpus_word_count=0.0):
-        """normalized PMI
-
-        all parameters but the first three should be fixed (thanks to `functools.partial`)
-        before using it as a score function to `analyze_sentence`
-        """
-        if word_a in vocab and word_b in vocab:
-            bigram = delimiter.join(components)
-            pa = float(vocab[word_a]) / corpus_word_count
-            pb = float(vocab[word_b]) / corpus_word_count
-            pab = float(vocab[bigram]) / corpus_word_count
-            return log(pab / (pa * pb)) / -log(pab)
-        else:
-            return -1
-
-    def get_scoring_function(self):
-        if self.scoring == 'default':
-            scoring_function = partial(
-                self.original_scorer,
-                vocab=self.vocab,
-                delimiter=self.delimiter,
-                len_vocab=float(len(self.vocab)),
-                min_count=float(self.min_count))
-        elif self.scoring == 'npmi':
-            scoring_function = partial(
-                self.npmi_scorer,
-                vocab=self.vocab,
-                delimiter=self.delimiter,
-                corpus_word_count=self.corpus_word_count)
-        return scoring_function
-
     def export_phrases(self, sentences, out_delimiter=b' ', as_tuples=False):
         """
         Generate an iterator that contains all phrases in given 'sentences'
@@ -378,11 +388,16 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
 
             then you can debug the threshold with generated tsv
         """
-        analyze_sentence = partial(
+        analyze_sentence = ft.partial(
             self.analyze_sentence,
             threshold=self.threshold,
             common_terms=self.common_terms,
-            scoring=self.get_scoring_function()
+            scorer=ft.partial(
+                self.scoring,
+                len_vocab=float(len(self.vocab)),
+                min_count=float(self.min_count),
+                corpus_word_count=float(self.corpus_word_count),
+            ),
         )
         for sentence in sentences:
             bigrams = analyze_sentence(sentence)
@@ -415,6 +430,8 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
 
+        delimiter = self.delimiter  # delimiter used for lookup
+
         is_single, sentence = _is_single(sentence)
         if not is_single:
             # if the input is an entire corpus (rather than a single sentence),
@@ -426,7 +443,12 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
             sentence,
             threshold=self.threshold,
             common_terms=self.common_terms,
-            scoring=self.get_scoring_function()
+            scorer=ft.partial(
+                self.scoring,
+                len_vocab=float(len(self.vocab)),
+                min_count=float(self.min_count),
+                corpus_word_count=float(self.corpus_word_count),
+            ),
         )
         new_s = []
         for words, score in bigrams:
@@ -435,6 +457,57 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
             new_s.append(words)
 
         return [utils.to_unicode(w) for w in new_s]
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """
+        Load a previously saved Phrases class. Handles backwards compatibility from older Phrases versions which did not support
+            pluggable scoring functions. Otherwise, relies on utils.load
+        """
+
+        # for python 2 and 3 compatibility. basestring is used to check if model.scoring is a string
+        try:
+            basestring
+        except NameError:
+            basestring = str
+
+        model = super(Phrases, cls).load(*args, **kwargs)
+        # update older models
+        # if no scoring parameter, use default scoring
+        if not hasattr(model, 'scoring'):
+            logger.info('older version of Phrases loaded without scoring function')
+            logger.info('setting pluggable scoring method to original_scorer for compatibility')
+            model.scoring = original_scorer
+        # if there is a scoring parameter, and it's a text value, load the proper scoring function
+        if hasattr(model, 'scoring'):
+            if isinstance(model.scoring, basestring):
+                if model.scoring == 'default':
+                    logger.info('older version of Phrases loaded with "default" scoring parameter')
+                    logger.info('setting scoring method to original_scorer pluggable scoring method for compatibility')
+                    model.scoring = original_scorer
+                elif model.scoring == 'npmi':
+                    logger.info('older version of Phrases loaded with "npmi" scoring parameter')
+                    logger.info('setting scoring method to npmi_scorer pluggable scoring method for compatibility')
+                    model.scoring = npmi_scorer
+                else:
+                    raise ValueError('failed to load Phrases model with unknown scoring setting %s' % (model.scoring))
+        return model
+
+
+# these two built-in scoring methods don't cast everything to float because the casting is done in the call
+# to the scoring method in __getitem__ and export_phrases.
+
+# calculation of score based on original mikolov word2vec paper
+def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
+    return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
+
+
+# normalized PMI, requires corpus size
+def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
+    pa = worda_count / corpus_word_count
+    pb = wordb_count / corpus_word_count
+    pab = bigram_count / corpus_word_count
+    return log(pab / (pa * pb)) / -log(pab)
 
 
 def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
@@ -490,12 +563,11 @@ class Phraser(SentenceAnalyzer, interfaces.TransformationABC):
         return pseudocorpus(phrases_model.vocab, phrases_model.delimiter,
                             phrases_model.common_terms)
 
-    @staticmethod
-    def scorer(word_a, word_b, components, vocab):
+    def score_item(self, worda, wordb, components, scorer):
         """score is retained from original dataset
         """
         try:
-            return vocab[tuple(components)][1]
+            return self.phrasegrams[tuple(components)][1]
         except KeyError:
             return -1
 
@@ -517,12 +589,11 @@ class Phraser(SentenceAnalyzer, interfaces.TransformationABC):
             return self._apply(sentence)
 
         delimiter = self.delimiter
-        scoring_function = partial(self.scorer, vocab=self.phrasegrams)
         bigrams = self.analyze_sentence(
             sentence,
             threshold=self.threshold,
             common_terms=self.common_terms,
-            scoring=scoring_function)
+            scorer=None)  # we will use our score_item function redefinition
         new_s = []
         for words, score in bigrams:
             if score is not None:
