@@ -25,7 +25,7 @@ import os
 import random
 import time
 
-import numpy as np
+from autograd import numpy as np, grad
 from numpy import random as np_random
 from smart_open import smart_open
 
@@ -224,7 +224,7 @@ class PoincareModel(utils.SaveLoad):
         self.random = random.Random(seed)
         self.np_random = np_random.RandomState(seed)
         self.init_range = (-0.001, 0.001)
-
+        self.loss_grad = grad(PoincareModel.loss_fn)
         self.load_relations()
         self.init_embeddings()
 
@@ -284,6 +284,12 @@ class PoincareModel(utils.SaveLoad):
         vectors_v = np.vstack((vector_v, vectors_negative))
         example = PoincareExample(vector_u, vectors_v)
         example.compute_all()
+        if check_gradients:
+            auto_gradients = self.loss_grad(np.vstack((vector_u, vectors_v)))
+            computed_gradients = np.vstack((example.gradients_u, example.gradients_v))
+            max_diff = np.abs(auto_gradients - computed_gradients).max()
+            print('Max difference between gradients: %.10f' % max_diff)
+            assert max_diff < 1e-10, 'Max difference greater than tolerance'
         return example
 
     def train_on_example(self, relation, check_gradients=False):
@@ -372,8 +378,9 @@ class PoincareModel(utils.SaveLoad):
             self.np_random.shuffle(indices)
             for i, idx in enumerate(indices, start=1):
                 relation = self.relations[idx]
-                result = self.train_on_example(relation)
-                if not (i % print_every):
+                print_check = not (i % print_every)
+                result = self.train_on_example(relation, check_gradients=print_check)
+                if print_check:
                     time_taken = time.time() - last_time
                     speed = print_every / time_taken
                     print(
