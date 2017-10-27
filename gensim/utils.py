@@ -33,7 +33,6 @@ from functools import wraps  # for `synchronous` function lock
 import multiprocessing
 import shutil
 import sys
-from contextlib import contextmanager
 import subprocess
 
 import numpy as np
@@ -135,7 +134,6 @@ class NoCM(object):
 nocm = NoCM()
 
 
-@contextmanager
 def file_or_filename(input):
     """
     Return a file-like object ready to be read from the beginning. `input` is either
@@ -144,11 +142,11 @@ def file_or_filename(input):
     """
     if isinstance(input, string_types):
         # input was a filename: open as file
-        yield smart_open(input)
+        return smart_open(input)
     else:
         # input already a file-like object; just reset to the beginning
         input.seek(0)
-        yield input
+        return input
 
 
 def deaccent(text):
