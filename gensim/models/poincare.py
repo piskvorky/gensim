@@ -20,6 +20,7 @@ a transitive closure.
 
 
 import csv
+import itertools
 import logging
 import os
 import random
@@ -34,7 +35,6 @@ from gensim.models.keyedvectors import KeyedVectors, Vocab
 from gensim.models.word2vec import Word2Vec
 
 logger = logging.getLogger(__name__)
-
 
 
 class PoincareExample(object):
@@ -163,6 +163,139 @@ class PoincareExample(object):
         if self.loss_computed:
             return
         self.loss = -np.log(self.exp_negative_distances[0] / self.Z)
+        self.loss_computed = True
+
+
+class PoincareBatch(object):
+    # TODO: cleanup to reduce repeated code in this class,
+    # `train_batchwise` and other batch-related methods in PoincareModel
+    """
+    Class for computing Poincare distances and gradients for a training batch,
+    and storing intermediate state to avoid recomputing multiple times
+    """
+    def __init__(self, vectors_u, vectors_v):
+        """Initialize instance with sets of vectors for which distances are to be computed
+
+        Args:
+            vectors_u (numpy array): expected shape (dim, batch_size)
+            vectors_v (numpy array): expected shape (1 + neg_size, dim, batch_size)
+        """
+        self.vectors_u = vectors_u[np.newaxis, :, :]  # (1, dim, batch_size)
+        self.vectors_v = vectors_v  # (1 + neg_size, dim, batch_size)
+
+        self.poincare_dists = None
+        self.euclidean_dists = None
+
+        self.norms_u = None
+        self.norms_v = None
+        self.alpha = None
+        self.beta = None
+        self.gamma = None
+
+        self.gradients_u = None
+        self.distance_gradients_u = None
+        self.gradients_v = None
+        self.distance_gradients_v = None
+
+        self.loss = None
+
+        self.distances_computed = False
+        self.gradients_computed = False
+        self.distance_gradients_computed = False
+        self.loss_computed = False
+
+    def compute_all(self):
+        """Convenience method to perform all computations"""
+        self.compute_distances()
+        self.compute_distance_gradients()
+        self.compute_gradients()
+        self.compute_loss()
+
+    def compute_distances(self):
+        """Compute and store norms, euclidean distances and poincare distances between input vectors"""
+        if self.distances_computed:
+            return
+        euclidean_dists = np.linalg.norm(self.vectors_u - self.vectors_v, axis=1)  # (1 + neg_size,)
+        norms_u = np.linalg.norm(self.vectors_u, axis=1)  # (1,)
+        norms_v = np.linalg.norm(self.vectors_v, axis=1)  # (1 + neg_size,)
+        alpha = 1 - norms_u ** 2
+        beta = 1 - norms_v ** 2
+        gamma = 1 + 2 * (
+                (euclidean_dists ** 2) / (alpha * beta)
+            )  # (1 + neg_size,)
+        poincare_dists = np.arccosh(gamma)  # (1 + neg_size,)
+
+        example = PoincareExample(self.vectors_u[0, :, 0], self.vectors_v[:, :, 0])
+        example.compute_all()
+
+        self.example = example
+        self.euclidean_dists = euclidean_dists
+        self.poincare_dists = poincare_dists
+        self.gamma = gamma
+        self.norms_u = norms_u
+        self.norms_v = norms_v
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
+
+        self.distances_computed = True
+
+    def compute_gradients(self):
+        """Compute and store gradients of poincare distance for all input vectors"""
+        if self.gradients_computed:
+            return
+        self.compute_distances()
+        self.compute_distance_gradients()
+
+        exp_negative_distances = np.exp(-self.poincare_dists)
+        Z = exp_negative_distances.sum(axis=0)
+        gradients_v = -exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_v
+        gradients_v /= Z
+        gradients_v[0] += self.distance_gradients_v[0]
+
+        gradients_u = -exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_u
+        gradients_u /= Z
+        gradients_u = gradients_u.sum(axis=0)
+        gradients_u += self.distance_gradients_u[0]
+
+        assert(not np.isnan(gradients_u).any())
+        assert(not np.isnan(gradients_v).any())
+        self.exp_negative_distances = exp_negative_distances
+        self.Z = Z
+        self.gradients_u = gradients_u
+        self.gradients_v = gradients_v
+
+        self.gradients_computed = True
+
+    def compute_distance_gradients(self):
+        """Compute and store partial derivatives of d(u, v) w.r.t u and all v"""
+        if self.distance_gradients_computed:
+            return
+        self.compute_distances()
+
+        euclidean_dists_squared = self.euclidean_dists ** 2
+        c_ = (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis, :]
+        u_coeffs = ((euclidean_dists_squared + self.alpha) / self.alpha)[:, np.newaxis, :]
+        distance_gradients_u = u_coeffs * self.vectors_u - self.vectors_v
+        distance_gradients_u *= c_
+        nan_gradients = self.gamma == 1
+        if nan_gradients.any():
+            distance_gradients_u[nan_gradients] = 0
+        self.distance_gradients_u = distance_gradients_u
+
+        v_coeffs = ((euclidean_dists_squared + self.beta) / self.beta)[:, np.newaxis, :]
+        distance_gradients_v = v_coeffs * self.vectors_v - self.vectors_u
+        distance_gradients_v *= c_
+        if nan_gradients.any():
+            distance_gradients_v[nan_gradients] = 0
+        self.distance_gradients_v = distance_gradients_v
+
+        self.distance_gradients_computed = True
+
+    def compute_loss(self):
+        if self.loss_computed:
+            return
+        self.loss = -np.log(self.exp_negative_distances[0] / self.Z).sum()
         self.loss_computed = True
 
 
@@ -332,6 +465,10 @@ class PoincareModel(utils.SaveLoad):
             norms = np.linalg.norm(vectors, axis=1)
             if (norms < 1).all():
                 return vectors
+            else:
+                vectors[norms >= 1] /= norms[norms >= 1][:, np.newaxis]
+                vectors[norms >= 1] -= epsilon
+                return vectors
 
     @staticmethod
     def loss_fn_batch(matrix):
@@ -344,15 +481,20 @@ class PoincareModel(utils.SaveLoad):
     def compute_gradients_batch(self, relations, all_negatives):
         """Computes gradients for vectors of positively related nodes and negatively sampled nodes"""
         all_vectors = []
+        u_indices, v_indices = [], []
         for relation, negatives in zip(relations, all_negatives):
             u, v = relation
-            vectors = self.wv[[u, v] + negatives]
-            all_vectors.append(vectors)
-        matrix = np.dstack(tuple(all_vectors))
-        loss = self.loss_fn_batch(matrix)
-        print('Loss: %.2f' % loss)
-        gradients = self.batch_loss_grad(matrix)
-        return gradients
+            u_indices.append(self.wv.vocab[u].index)
+            v_indices.append(
+                [self.wv.vocab[v].index] +
+                [self.wv.vocab[negative].index for negative in negatives]
+            )
+        v_indices = list(itertools.chain.from_iterable(v_indices))
+        vectors_u = self.wv.syn0[u_indices].T
+        vectors_v = self.wv.syn0[v_indices].reshape(1 + self.negative, self.size, self.batch_size)
+        batch = PoincareBatch(vectors_u, vectors_v)
+        batch.compute_all()
+        return u_indices, v_indices, batch
 
     def sample_negatives_batch(self, _nodes):
         """Return a sample of negative examples for the given positive example"""
@@ -369,8 +511,23 @@ class PoincareModel(utils.SaveLoad):
     def train_on_batch(self, relations):
         """Performs training for a single training batch"""
         all_negatives = self.sample_negatives_batch([relation[0] for relation in relations])
-        gradients = self.compute_gradients_batch(relations, all_negatives)
-        # TODO: use gradients to perform updates
+        u_indices, v_indices, batch = self.compute_gradients_batch(relations, all_negatives)
+        self.update_vectors_batch(batch, u_indices, v_indices)
+        return batch
+
+    def update_vectors_batch(self, batch, u_indices, v_indices):
+        grad_u, grad_v = batch.gradients_u, batch.gradients_v
+
+        self.wv.syn0[u_indices] -= (self.alpha * (batch.alpha ** 2) / 4 * grad_u).T
+        self.wv.syn0[u_indices] = self.clip_vectors(self.wv.syn0[u_indices], self.epsilon)
+
+        v_updates = self.alpha * (batch.beta ** 2)[:, np.newaxis] / 4 * grad_v
+        v_updates = v_updates.reshape(((1 + self.negative) * self.batch_size, self.size))
+        self.wv.syn0[v_indices] -= v_updates
+        self.wv.syn0[v_indices] = self.clip_vectors(self.wv.syn0[v_indices], self.epsilon)
+        if np.isnan(self.wv.syn0[v_indices]).any() or np.isnan(self.wv.syn0[u_indices]).any():
+            import ipdb
+            ipdb.set_trace()
 
     def train_examplewise(self, num_examples=None, print_every=10000):
         """Trains Poincare embeddings using loaded relations"""
@@ -397,19 +554,30 @@ class PoincareModel(utils.SaveLoad):
                 if num_examples and i >= num_examples:
                     return
 
-    def train_batchwise(self, num_examples=100, batch_size=2):
+    def train_batchwise(self, num_examples=None, batch_size=2, print_every=1000):
         """Trains Poincare embeddings using loaded relations"""
         self.batch_size = batch_size
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
+        last_time = time.time()
         for epoch in range(1, self.iter + 1):
             indices = list(range(len(self.relations)))
             self.np_random.shuffle(indices)
-            for i in range(0, len(indices), batch_size):
+            for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
+                print_check = not (batch_num % print_every)
                 batch_indices = indices[i:i+batch_size]
                 relations = [self.relations[idx] for idx in batch_indices]
-                print('Training on example #%d-%d' % (i, i+batch_size))
-                self.train_on_batch(relations)
-                if i >= num_examples:
+                result = self.train_on_batch(relations)
+                if print_check:
+                    time_taken = time.time() - last_time
+                    speed = print_every * batch_size / time_taken
+                    print(
+                        'Training on epoch %d, examples #%d-#%d, loss: %.2f'
+                        % (epoch, i, i + batch_size, result.loss))
+                    print(
+                        'Time taken for %d examples: %.2f s, %.2f examples / s'
+                        % (print_every * batch_size, time_taken, speed))
+                    last_time = time.time()
+                if num_examples and i >= num_examples:
                     return
 
