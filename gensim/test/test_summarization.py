@@ -157,15 +157,15 @@ class TestSummarizationTest(unittest.TestCase):
         dictionary = Dictionary(tokens)
         corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
 
-        self.assertEquals(summarize_corpus(corpus), [])
+        self.assertEqual(summarize_corpus(corpus), [])
 
     def test_low_distinct_words_summarization_is_empty_string(self):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
-        self.assertEquals(summarize(text), u"")
+        self.assertEqual(summarize(text), u"")
 
     def test_low_distinct_words_summarization_with_split_is_empty_list(self):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
-        self.assertEquals(summarize(text, split=True), [])
+        self.assertEqual(summarize(text, split=True), [])
 
 
 if __name__ == '__main__':
