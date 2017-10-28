@@ -81,8 +81,8 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # make sure the decomposition is enough accurate
         u, s, vt = scipy.linalg.svd(matutils.corpus2dense(self.corpus, self.corpus.num_terms), full_matrices=False)
         self.assertTrue(np.allclose(s[:2], model.projection.s))  # singular values must match
-        self.assertEquals(model.projection.u.dtype, np.float32)
-        self.assertEquals(model.projection.s.dtype, np.float32)
+        self.assertEqual(model.projection.u.dtype, np.float32)
+        self.assertEqual(model.projection.s.dtype, np.float32)
 
         # transform one document
         doc = list(self.corpus)[0]
