@@ -278,11 +278,12 @@ class KeyedVectors(utils.SaveLoad):
         """
         if word in self.vocab:
             if use_norm:
-                return self.syn0norm[self.vocab[word].index]
+                result = self.syn0norm[self.vocab[word].index]
             else:
-                return self.syn0[self.vocab[word].index]
-        else:
-            raise KeyError("word '%s' not in vocabulary" % word)
+                result = self.syn0[self.vocab[word].index]
+
+            result.setflag(write=False)
+            return result
 
     def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
         """
