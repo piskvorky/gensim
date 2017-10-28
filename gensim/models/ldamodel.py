@@ -87,7 +87,7 @@ class LdaState(utils.SaveLoad):
 
     """
 
-    def __init__(self, eta, shape, dtype=np.float64):
+    def __init__(self, eta, shape, dtype=np.float32):
         self.eta = eta.astype(dtype, copy=False)
         self.sstats = np.zeros(shape, dtype)
         self.numdocs = 0
@@ -204,7 +204,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf=None, minimum_phi_value=0.01,
-                 per_word_topics=False, callbacks=None, dtype=np.float64):
+                 per_word_topics=False, callbacks=None, dtype=np.float32):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -262,7 +262,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> lda = LdaModel(corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
-        self.dtype=dtype
+        self.dtype = dtype
 
         # store user-supplied parameters
         self.id2word = id2word
@@ -390,7 +390,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             init_prior = np.asarray(prior, dtype=self.dtype)
         elif isinstance(prior, np.ndarray):
             init_prior = prior.astype(self.dtype, copy=False)
-        elif isinstance(prior, np.number) or isinstance(prior, numbers.Real): #TODO: write test
+        elif isinstance(prior, np.number) or isinstance(prior, numbers.Real):
             init_prior = np.asarray([prior] * prior_shape, dtype=self.dtype)
         else:
             raise ValueError("%s must be either a np array of scalars, list of scalars, or scalar" % name)
@@ -1070,9 +1070,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> print(mdiff) # get matrix with difference for each topic pair from `m1` and `m2`
         >>> print(annotation) # get array with positive/negative words for each topic pair from `m1` and `m2`
 
+        Note: this ignores difference in model dtypes
         """
-
-        # Note: I think this shouldn't coerce everything to self.dtype cause other model could have other dtype
 
         distances = {
             "kullback_leibler": kullback_leibler,
