@@ -291,11 +291,11 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
         self.assertTrue(np.allclose(model.wv.syn0norm[model.wv.vocab['human'].index], norm_only_model['human']))
         limited_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True, limit=3)
-        self.assertEquals(len(limited_model_kv.syn0), 3)
+        self.assertEqual(len(limited_model_kv.syn0), 3)
         half_precision_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(
             testfile(), binary=True, datatype=np.float16
         )
-        self.assertEquals(binary_model_kv.syn0.nbytes, half_precision_model_kv.syn0.nbytes * 2)
+        self.assertEqual(binary_model_kv.syn0.nbytes, half_precision_model_kv.syn0.nbytes * 2)
 
     def testNoTrainingCFormat(self):
         model = word2vec.Word2Vec(sentences, min_count=1)

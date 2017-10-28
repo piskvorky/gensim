@@ -36,14 +36,14 @@ class TestLdaDiff(unittest.TestCase):
         mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms)
 
         self.assertEqual(mdiff.shape, (self.num_topics, self.num_topics))
-        self.assertEquals(len(annotation), self.num_topics)
-        self.assertEquals(len(annotation[0]), self.num_topics)
+        self.assertEqual(len(annotation), self.num_topics)
+        self.assertEqual(len(annotation[0]), self.num_topics)
 
         # test for diagonal case
         mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms, diagonal=True)
 
         self.assertEqual(mdiff.shape, (self.num_topics,))
-        self.assertEquals(len(annotation), self.num_topics)
+        self.assertEqual(len(annotation), self.num_topics)
 
     def testIdentity(self):
         for dist_name in ["hellinger", "kullback_leibler", "jaccard"]:
@@ -52,8 +52,8 @@ class TestLdaDiff(unittest.TestCase):
 
             for row in annotation:
                 for (int_tokens, diff_tokens) in row:
-                    self.assertEquals(diff_tokens, [])
-                    self.assertEquals(len(int_tokens), self.n_ann_terms)
+                    self.assertEqual(diff_tokens, [])
+                    self.assertEqual(len(int_tokens), self.n_ann_terms)
 
             self.assertTrue(np.allclose(np.diag(mdiff), np.zeros(mdiff.shape[0], dtype=mdiff.dtype)))
 
@@ -64,8 +64,8 @@ class TestLdaDiff(unittest.TestCase):
             mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms, distance=dist_name, diagonal=True)
 
             for (int_tokens, diff_tokens) in annotation:
-                self.assertEquals(diff_tokens, [])
-                self.assertEquals(len(int_tokens), self.n_ann_terms)
+                self.assertEqual(diff_tokens, [])
+                self.assertEqual(len(int_tokens), self.n_ann_terms)
 
             self.assertTrue(np.allclose(mdiff, np.zeros(mdiff.shape, dtype=mdiff.dtype)))
 

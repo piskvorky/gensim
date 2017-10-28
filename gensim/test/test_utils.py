@@ -82,7 +82,7 @@ class TestUtils(unittest.TestCase):
         # create a string that fails to decode with unichr on narrow python builds
         body = u'It&#146;s the Year of the Horse. YES VIN DIESEL &#128588; &#128175;'
         expected = u'It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af'
-        self.assertEquals(utils.decode_htmlentities(body), expected)
+        self.assertEqual(utils.decode_htmlentities(body), expected)
 
 
 class TestSampleDict(unittest.TestCase):
@@ -184,12 +184,12 @@ class TestWindowing(unittest.TestCase):
     def test_flatten_nested(self):
         nested_list = [[[1, 2, 3], [4, 5]], 6]
         expected = [1, 2, 3, 4, 5, 6]
-        self.assertEquals(utils.flatten(nested_list), expected)
+        self.assertEqual(utils.flatten(nested_list), expected)
 
     def test_flatten_not_nested(self):
         not_nested = [1, 2, 3, 4, 5, 6]
         expected = [1, 2, 3, 4, 5, 6]
-        self.assertEquals(utils.flatten(not_nested), expected)
+        self.assertEqual(utils.flatten(not_nested), expected)
 
 
 if __name__ == '__main__':
