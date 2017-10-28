@@ -166,6 +166,18 @@ class LdaState(utils.SaveLoad):
 
     def get_Elogbeta(self):
         return dirichlet_expectation(self.get_lambda())
+
+    @classmethod
+    def load(cls, fname, *args, **kwargs):
+        result = super(LdaState, cls).load(fname, *args, **kwargs)
+
+        # Check if `dtype` is set after main pickle load
+        # if not, then it's an old model and we should set it to default `np.float64`
+        if not hasattr(result, 'dtype'):
+            result.dtype = np.float64  # float64 was used before as default in numpy
+            logging.warning("dtype was not set in LdaState, so using np.float64")
+
+        return result
 # endclass LdaState
 
 
@@ -192,7 +204,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf=None, minimum_phi_value=0.01,
-                 per_word_topics=False, callbacks=None, dtype=np.float32):
+                 per_word_topics=False, callbacks=None, dtype=np.float64):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -1136,8 +1148,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         return self.get_document_topics(bow, eps, self.minimum_phi_value, self.per_word_topics)
 
-    #TODO: Don't know how save/load will work with dtype, and for now don't know if I should handle it at all
-
     def save(self, fname, ignore=('state', 'dispatcher'), separately=None, *args, **kwargs):
         """
         Save the model to file.
@@ -1220,9 +1230,14 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             result.random_state = utils.get_random_state(None)  # using default value `get_random_state(None)`
             logging.warning("random_state not set so using default value")
 
+        # the same goes for dtype (except it was added later)
+        if not hasattr(result, 'dtype'):
+            result.dtype = np.float64 # float64 was used before as default in numpy
+            logging.warning("dtype was not set, so using np.float64")
+
         state_fname = utils.smart_extension(fname, '.state')
         try:
-            result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
+            result.state = LdaState.load(state_fname, *args, **kwargs)
         except Exception as e:
             logging.warning("failed to load state from %s: %s", state_fname, e)
 
