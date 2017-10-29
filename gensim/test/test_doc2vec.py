@@ -386,7 +386,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.model_sanity(model, keep_training=False)
         self.assertTrue(hasattr(model, 'syn1neg'))
 
-    def test_word_vec(self):
+    def test_word_vec_non_writeable(self):
         model = keyedvectors.KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'))
         vector = model['says']
         with self.assertRaises(ValueError):
