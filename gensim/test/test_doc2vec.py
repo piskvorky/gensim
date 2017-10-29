@@ -392,9 +392,6 @@ class TestDoc2VecModel(unittest.TestCase):
         with self.assertRaises(ValueError):
             vector *= 0
 
-
-
-
     @log_capture()
     def testBuildVocabWarning(self, l):
         """Test if logger warning is raised on non-ideal input to a doc2vec model"""
