@@ -282,7 +282,7 @@ class KeyedVectors(utils.SaveLoad):
             else:
                 result = self.syn0[self.vocab[word].index]
 
-            result.setflag(write=False)
+            result.setflags(write=False)
             return result
 
     def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
