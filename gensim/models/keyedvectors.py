@@ -284,6 +284,8 @@ class KeyedVectors(utils.SaveLoad):
 
             result.setflags(write=False)
             return result
+        else:
+            raise KeyError("word '%s' not in vocabulary" % word)
 
     def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
         """

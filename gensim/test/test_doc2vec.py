@@ -386,6 +386,15 @@ class TestDoc2VecModel(unittest.TestCase):
         self.model_sanity(model, keep_training=False)
         self.assertTrue(hasattr(model, 'syn1neg'))
 
+    def test_word_vec(self):
+        model = keyedvectors.KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'))
+        vector = model['says']
+        with self.assertRaises(ValueError):
+            vector *= 0
+
+
+
+
     @log_capture()
     def testBuildVocabWarning(self, l):
         """Test if logger warning is raised on non-ideal input to a doc2vec model"""
