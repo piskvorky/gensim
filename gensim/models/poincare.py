@@ -460,7 +460,7 @@ class PoincareModel(utils.SaveLoad):
             if norm < 1:
                 return vectors
             else:
-                return vector / norm - (np.sign(vector) * epsilon)
+                return vectors / norm - (np.sign(vectors) * epsilon)
         else:
             norms = np.linalg.norm(vectors, axis=1)
             if (norms < 1).all():
