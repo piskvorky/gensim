@@ -373,7 +373,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if isinstance(prior, six.string_types):
             if prior == 'symmetric':
-                logger.info("using symmetric %s at %s", name, 1.0 / prior_shape) #TODO: prior_shape?
+                logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
                 init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)], dtype=self.dtype)
             elif prior == 'asymmetric':
                 init_prior = np.asarray([1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)], dtype=self.dtype)
