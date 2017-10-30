@@ -197,12 +197,11 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
 
     # If no sentence could be identified, the function ends.
     if len(sentences) == 0:
-        logger.warning("Input text is empty.")
-        return [] if split else u""
+        raise ValueError("No sentences could be identified, maybe input text is empty")
 
     # If only one sentence is present, the function raises an error (Avoids ZeroDivisionError).
     if len(sentences) == 1:
-        raise ValueError("input must have more than one sentence")
+        raise ValueError("Input text must have more than one sentence")
 
     # Warns if the text is too short.
     if len(sentences) < INPUT_MIN_LENGTH:
