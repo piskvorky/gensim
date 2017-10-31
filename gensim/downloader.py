@@ -26,8 +26,8 @@ base_dir = os.path.join(user_dir, 'gensim-data')
 logger = logging.getLogger('gensim.api')
 
 
-def progress(chunks_downloaded, chunk_size, total_size):
-    r"""Create and update the progress bar.
+def _progress(chunks_downloaded, chunk_size, total_size):
+    """Create and update the _progress bar.
 
     Parameters
     ----------
@@ -46,20 +46,24 @@ def progress(chunks_downloaded, chunk_size, total_size):
     bar_len = 50
     size_downloaded = float(chunks_downloaded * chunk_size)
     filled_len = int(math.floor((bar_len * size_downloaded) / total_size))
-    percent_downloaded = round((size_downloaded * 100) / total_size, 1)
+    percent_downloaded = round(((size_downloaded * 100) / total_size), 1) 
     bar = '=' * filled_len + '-' * (bar_len - filled_len)
-    sys.stdout.write('[%s] %s%s %s/%sMB downloaded\r' % (bar, percent_downloaded, "%", round(size_downloaded / (1024 * 1024), 1), round(float(total_size) / (1024 * 1024), 1)))
+    sys.stdout.write(
+        '[%s] %s%s %s/%sMB downloaded\r' % (bar, percent_downloaded, "%",
+        round(size_downloaded / (1024 * 1024), 1),
+        round(float(total_size) / (1024 * 1024), 1)))
     sys.stdout.flush()
 
 
 def _create_base_dir():
-    r"""Create the gensim-data directory in home directory, if it has not been already created.
+    """Create the gensim-data directory in home directory, if it has not been already created.
     Raises
     ------
     File Exists Error
         Give this exception when a file gensim-data already exists in the home directory.
     Exception
         An exception is raised when read/write permissions are not available
+
     """
     if not os.path.isdir(base_dir):
         try:
@@ -78,7 +82,7 @@ def _create_base_dir():
 
 
 def _calculate_md5_checksum(tar_file):
-    r"""Calculate the checksum of the given tar.gz file.
+    """Calculate the checksum of the given tar.gz file.
     Parameters
     ----------
     tar_file : str
@@ -98,18 +102,20 @@ def _calculate_md5_checksum(tar_file):
 
 
 def info(name=None):
-    r"""Return the information related to model/dataset.
+    """Return the information related to model/dataset.
 
-    If name is supplied, then information related to the given dataset/model will be returned. Otherwise detailed information of all model/datasets will be returned.
+    If name is supplied, then information related to the given dataset/model will
+    be returned. Otherwise detailed information of all model/datasets will be returned.
 
     Parameters
     ----------
-    name : {None, data name}, optional
-
+    name : str or None, optional
+        str stores the data name.
     Returns
     -------
     dict
-        Return detailed information about all models/datasets if name is not provided. Otherwise return detailed informtiona of the specific model/dataset
+        Return detailed information about all models/datasets if name is not
+        provided. Otherwise return detailed informtiona of the specific model/dataset
 
     Raises
     ------
@@ -139,18 +145,18 @@ def info(name=None):
 
 
 def _get_checksum(name):
-    r"""Retrieve the checksum of the model/dataset.
+    """Retrieve the checksum of the model/dataset.
     This is compared to the checksum of the downloaded model/dataset in _download function.
 
     Parameters
     ----------
     name: str
-        dataset/model name
+        Dataset/model name
 
     Returns
     -------
     str
-        retrieved checksum of dataset/model
+        Retrieved checksum of dataset/model
 
     """
     data = info()
@@ -163,17 +169,19 @@ def _get_checksum(name):
 
 
 def _download(name):
-    r"""Download and extract the dataset/model
+    """Download and extract the dataset/model
 
     Parameters
     ----------
     name: str
-        dataset/model name which has to be downloaded
+        Dataset/model name which has to be downloaded
 
     Raises
     ------
     Exception
-        If checksum of dowloaded data does not match the retrieved checksum, then downloaded has not been donw properly.
+        If checksum of dowloaded data does not match the retrieved checksum,
+        then downloaded has not been donw properly.
+
     """
     url_data = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/{f}.tar.gz".format(f=name)
     url_load_file = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/__init__.py".format(f=name)
@@ -184,7 +192,7 @@ def _download(name):
     urllib.urlretrieve(url_load_file, tmp_load_file)
     logger.info("Downloading %s", name)
     tmp_data_file = os.path.join(tmp_dir, compressed_folder_name)
-    urllib.urlretrieve(url_data, tmp_data_file, reporthook=progress)
+    urllib.urlretrieve(url_data, tmp_data_file, reporthook=_progress)
     if _calculate_md5_checksum(tmp_data_file) == _get_checksum(name):
         logger.info("%s downloaded", name)
     else:
@@ -197,17 +205,17 @@ def _download(name):
 
 
 def _get_filename(name):
-    r"""Retrive the filename(or foldername, in case of some datasets) of the dataset/model.
+    """Retrive the filename(or foldername, in case of some datasets) of the dataset/model.
 
     Parameters
     ----------
     name: str
-        dataset/model of which filename is retrieved.
+        Dataset/model of which filename is retrieved.
 
     Returns
     -------
     str:
-        filename(or foldername, in case of some datasets) of the dataset/model.
+        Filename(or foldername, in case of some datasets) of the dataset/model.
 
     """
     data = info()
@@ -220,21 +228,22 @@ def _get_filename(name):
 
 
 def load(name, return_path=False):
-    r"""For models, if return_path is False, then load model to memory. Otherwise, return the path to the model.
+    """For models, if return_path is False, then load model to memory. Otherwise, return the path to the model.
     For datasets, return path to the dataset in both cases.
 
     Parameters
     ----------
     name: str
-        name of the model/dataset
-    return_path:{False, True}, optional
+        Name of the model/dataset
+    return_path: False or True, optional
 
     Returns
     -------
     data:
-        load model to memory
+        Load model to memory
     data_dir: str
-        return path of dataset/model.
+        Return path of dataset/model.
+
     """
     _create_base_dir()
     file_name = _get_filename(name)
@@ -258,10 +267,10 @@ def load(name, return_path=False):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s :%(name)s :%(levelname)s :%(message)s', stream=sys.stdout, level=logging.INFO)
-    parser = argparse.ArgumentParser(description="Gensim console API", usage="python -m gensim.api.downloader  [-h] [-d data__name | -i data__name | -c]")
+    parser = argparse.ArgumentParser(description="Gensim console API", usage="python -m gensim.api.downloader  [-h] [-d data_name | -i data_name | -c]")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-d", "--download", metavar="data__name", nargs=1, help="To download a corpus/model : python -m gensim.downloader -d corpus/model name")
-    group.add_argument("-i", "--info", metavar="data__name", nargs=1, help="To get information about a corpus/model : python -m gensim.downloader -i model/corpus name")
+    group.add_argument("-d", "--download", metavar="data_name", nargs=1, help="To download a corpus/model : python -m gensim.downloader -d corpus/model name")
+    group.add_argument("-i", "--info", metavar="data_name", nargs=1, help="To get information about a corpus/model : python -m gensim.downloader -i model/corpus name")
     group.add_argument("-c", "--catalogue", help="To get the list of all models/corpus stored : python -m gensim.downloader -c", action="store_true")
     args = parser.parse_args()
     if args.download is not None:
