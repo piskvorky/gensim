@@ -9,6 +9,7 @@
 import logging
 import unittest
 import os
+import sys
 import tempfile
 
 import numpy
@@ -32,7 +33,7 @@ class TestGlove2Word2Vec(unittest.TestCase):
 
     def testConversion(self):
         check_output(args=[
-            'python', '-m', 'gensim.scripts.glove2word2vec',
+            sys.executable, '-m', 'gensim.scripts.glove2word2vec',
             '--input', self.datapath, '--output', self.output_file
         ])
         # test that the converted model loads successfully
