@@ -19,33 +19,72 @@ import scipy.linalg
 from gensim import matutils, utils
 from gensim.test import basetests
 
-# needed because sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
+def gen_topics(rows):
+    topics = []
+    topic_base = np.concatenate((np.ones((1, rows)) * (1/rows),
+                                 np.zeros((rows-1, rows))), axis=0).ravel()
+    for i in range(rows):
+        topics.append(np.roll(topic_base, i * rows))
+    topic_base = np.concatenate((np.ones((rows, 1)) * (1/rows),
+                                 np.zeros((rows, rows-1))), axis=1).ravel()
+    for i in range(rows):
+        topics.append(np.roll(topic_base, i))
+    return np.array(topics)
+
+def gen_doc(seed, K, N, thetas, V, topics, D):
+    topic_assignments = np.array([np.random.choice(range(K), size=N, p=theta)
+                                  for theta in thetas])
+    word_assignments = \
+        np.array([[np.random.choice(range(V), size=1,
+                                    p=topics[topic_assignments[d, n]])[0]
+                   for n in range(N)] for d in range(D)])
+    return np.array([np.histogram(word_assignments[d], bins=V,
+                                  range=(0, V - 1))[0] for d in range(D)])
+
+ef language(document_size):
+    # Generate topics
+    rows = 3
+    V = rows * rows
+    K = rows * 2
+    N = K * K
+    D = document_size
+    seed = 42
+    topics = gen_topics(rows)
+
+    # Generate documents from topics
+    alpha = np.ones(K)
+    np.random.seed(seed)
+    thetas = gen_thetas(alpha, D)
+    doc_term_matrix = gen_doc(seed, K, N, thetas, V, topics, D)
+    return {'V': V, 'K': K, 'D': D, 'seed': seed, 'alpha': alpha,
+            'topics': topics, 'thetas': thetas,
+            'doc_term_matrix': doc_term_matrix, 'n_report_iters': 100}
 
 
-def datapath(fname): return os.path.join(module_path, 'test_data', fname)
+def assert_probablity_distribution(results):
+    assert (results >= 0).all()
+    assert results.sum(axis=1).all()
 
+def test_slda():
+    l = language(10000)
+    n_iter = 2000
+    KL_thresh = 0.001
 
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
-         ['survey', 'user', 'computer', 'system', 'response', 'time'],
-         ['eps', 'user', 'interface', 'system'],
-         ['system', 'human', 'system', 'eps'],
-         ['user', 'response', 'time'],
-         ['trees'],
-         ['graph', 'trees'],
-         ['graph', 'minors', 'trees'],
-         ['graph', 'minors', 'survey']]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
+    nu2 = l['K']
+    sigma2 = 1
+    np.random.seed(l['seed'])
+    eta = np.random.normal(scale=nu2, size=l['K'])
+    y = [np.dot(eta, l['thetas'][i]) for i in range(l['D'])] + \
+        np.random.normal(scale=sigma2, size=l['D'])
+    _beta = np.repeat(0.01, l['V'])
+    _mu = 0
+    slda = SLDA(l['K'], l['alpha'], _beta, _mu, nu2, sigma2, n_iter,
+                seed=l['seed'], n_report_iter=l['n_report_iters'])
+    slda.fit(l['doc_term_matrix'], y)
 
-
-def testfile(test_fname=''):
-    # temporary data will be stored to this file
-    fname = 'gensim_models_' + test_fname + '.tst'
-    return os.path.join(tempfile.gettempdir(), fname)
-
-
+    assert_probablity_distribution(slda.phi)
+         
+         
 def testRandomState():
     testcases = [np.random.seed(0), None, np.random.RandomState(0), 0]
     for testcase in testcases:
