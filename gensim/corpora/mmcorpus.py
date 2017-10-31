@@ -38,7 +38,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
             yield doc  # get rid of doc id, return the sparse vector only
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False):
+    def _save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False):
         """
         Save a corpus in the Matrix Market format to disk.
 
