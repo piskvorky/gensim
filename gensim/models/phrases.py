@@ -123,12 +123,12 @@ class SentenceAnalyzer(object):
         vocab = self.vocab
         if worda in vocab and wordb in vocab:
             bigram = self.delimiter.join(components)
-            return scorer(
-                worda_count=float(vocab[worda]),
-                wordb_count=float(vocab[wordb]),
-                bigram_count=float(vocab[bigram]))
-        else:
-            return -1
+            if bigram in vocab:
+                return scorer(
+                    worda_count=float(vocab[worda]),
+                    wordb_count=float(vocab[wordb]),
+                    bigram_count=float(vocab[bigram]))
+        return -1
 
     def analyze_sentence(self, sentence, threshold, common_terms, scorer):
         """Analyze a sentence
