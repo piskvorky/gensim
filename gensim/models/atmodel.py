@@ -70,7 +70,7 @@ class AuthorTopicState(LdaState):
         self.sstats = np.zeros(lambda_shape)
         self.gamma = np.zeros(gamma_shape)
         self.numdocs = 0
-        self.dtype = np.float64 # To be compatible with LdaState
+        self.dtype = np.float64  # To be compatible with LdaState
 
 
 def construct_doc2author(corpus, author2doc):

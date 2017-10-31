@@ -755,7 +755,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         logger.debug("updating topics")
-        #assert rho.dtype == self.dtype Note: rho is just float
         assert other.dtype == self.dtype
         # update self with the new blend; also keep track of how much did
         # the topics change through this update, to assess convergence
@@ -1231,7 +1230,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         # the same goes for dtype (except it was added later)
         if not hasattr(result, 'dtype'):
-            result.dtype = np.float64 # float64 was used before as default in numpy
+            result.dtype = np.float64  # float64 was used before as default in numpy
             logging.warning("dtype was not set, so using np.float64")
 
         state_fname = utils.smart_extension(fname, '.state')
