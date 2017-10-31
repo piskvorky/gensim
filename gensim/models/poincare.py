@@ -113,13 +113,13 @@ class PoincareExample(object):
         self.compute_distance_gradients()
 
         exp_negative_distances = np.exp(-self.poincare_dists)
-        Z = exp_negative_distances.sum()
+        Z = exp_negative_distances[1:].sum()
 
         gradients_v = -exp_negative_distances[:, np.newaxis] * self.distance_gradients_v
         gradients_v /= Z
-        gradients_v[0] += self.distance_gradients_v[0]
+        gradients_v[0] = self.distance_gradients_v[0]
 
-        gradients_u = -exp_negative_distances[:, np.newaxis] * self.distance_gradients_u
+        gradients_u = -exp_negative_distances[1:, np.newaxis] * self.distance_gradients_u[1:]
         gradients_u /= Z
         gradients_u = gradients_u.sum(axis=0)
         gradients_u += self.distance_gradients_u[0]
@@ -411,7 +411,7 @@ class PoincareModel(utils.SaveLoad):
         ])
         exp_negative_distances = np.exp(-negative_distances)
         exp_positive_distance = np.exp(-positive_distance)
-        return -np.log(exp_positive_distance / (exp_positive_distance + exp_negative_distances.sum()))
+        return -np.log(exp_positive_distance / (exp_negative_distances.sum()))
 
     def compute_gradients(self, relation, negatives, check_gradients=False):
         """Computes gradients for vectors of positively related nodes and negatively sampled nodes"""
@@ -426,7 +426,11 @@ class PoincareModel(utils.SaveLoad):
             computed_gradients = np.vstack((example.gradients_u, example.gradients_v))
             max_diff = np.abs(auto_gradients - computed_gradients).max()
             print('Max difference between gradients: %.10f' % max_diff)
-            assert max_diff < 1e-10, 'Max difference greater than tolerance'
+            try:
+                assert max_diff < 1e-10, 'Max difference greater than tolerance'
+            except:
+                import ipdb
+                ipdb.set_trace()
         return example
 
     def train_on_example(self, relation, check_gradients=False):
