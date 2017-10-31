@@ -600,7 +600,6 @@ def jaccard_distance(set1, set2):
 def dirichlet_expectation(alpha):
     """
     For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
-    Saves dtype of the argument.
     """
     if len(alpha.shape) == 1:
         result = psi(alpha) - psi(np.sum(alpha))
