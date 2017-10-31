@@ -458,24 +458,31 @@ class PoincareModel(utils.SaveLoad):
         self.wv.syn0[v_all] -= self.alpha * (example.beta ** 2)[:, np.newaxis] / 4 * grad_v
         self.wv.syn0[v_all] = self.clip_vectors(self.wv.syn0[v_all], self.epsilon)
 
+        # if (np.linalg.norm(self.wv.syn0, axis=1) >= 1 - self.epsilon).any():
+            # import ipdb
+            # ipdb.set_trace()
 
     @staticmethod
     def clip_vectors(vectors, epsilon):
         """Clip vectors to have a norm of less than one"""
         one_d = len(vectors.shape) == 1
+        threshold = 1 - epsilon
         if one_d:
             norm = np.linalg.norm(vectors)
-            if norm < 1:
+            if norm < threshold:
                 return vectors
             else:
                 return vectors / norm - (np.sign(vectors) * epsilon)
         else:
             norms = np.linalg.norm(vectors, axis=1)
-            if (norms < 1).all():
+            if (norms < threshold).all():
                 return vectors
             else:
-                vectors[norms >= 1] /= norms[norms >= 1][:, np.newaxis]
-                vectors[norms >= 1] -= np.sign(vectors[norms >= 1]) * epsilon
+                vectors[norms >= threshold] *= (threshold / norms[norms >= threshold])[:, np.newaxis]
+                vectors[norms >= threshold] -= np.sign(vectors[norms >= threshold]) * epsilon
+                if (np.linalg.norm(vectors[norms >= threshold], axis=1) > threshold).any():
+                    import ipdb
+                    ipdb.set_trace()
                 return vectors
 
     @staticmethod
