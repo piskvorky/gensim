@@ -48,8 +48,11 @@ RE_PUNCT = re.compile(r'([%s])+' % re.escape(string.punctuation), re.UNICODE)
 
 
 def strip_punctuation(s):
+
     s = utils.to_unicode(s)
     return RE_PUNCT.sub(" ", s)
+
+
 
 
 # unicode.translate cannot delete characters like str can
@@ -63,6 +66,26 @@ RE_TAGS = re.compile(r"<([^>]+)>", re.UNICODE)
 
 
 def strip_tags(s):
+    """Takes string and removes tags
+    Parameters
+    ----------
+    s : string
+    Returns
+    -------
+    string
+        Unicode string without tags
+
+
+    Examples
+    --------
+    >>from gensim.parsing.preprocessing import strip_tags
+
+    >>s="<i>Hello</i> <b>World</b>!"
+
+    >>strip_tags(s)
+    u'Hello World!'
+
+    """
     s = utils.to_unicode(s)
     return RE_TAGS.sub("", s)
 
