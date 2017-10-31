@@ -732,15 +732,18 @@ class SlicedCorpus(SaveLoad):
         if hasattr(self.corpus, 'index') and len(self.corpus.index) > 0:
             return (self.corpus.docbyoffset(i) for i in
                     self.corpus.index[self.slice_])
-        else:
-            return itertools.islice(self.corpus, self.slice_.start,
-                                    self.slice_.stop, self.slice_.step)
+        return itertools.islice(self.corpus, self.slice_.start,
+                                self.slice_.stop, self.slice_.step)
 
     def __len__(self):
         # check cached length, calculate if needed
         if self.length is None:
             if isinstance(self.slice_, (list, np.ndarray)):
                 self.length = len(self.slice_)
+            elif isinstance(self.slice_, slice):
+                (start, end, step) = self.slice_.indices(len(self.corpus.index))
+                diff = end - start
+                self.length = diff // step + (diff % step > 0)
             else:
                 self.length = sum(1 for x in self)
 
