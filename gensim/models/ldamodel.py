@@ -350,6 +350,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.state.sstats[...] = self.random_state.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
         self.expElogbeta = np.exp(dirichlet_expectation(self.state.sstats))
 
+        # Check that we haven't accidentally fall back to np.float64
         assert self.eta.dtype == self.dtype
         assert self.expElogbeta.dtype == self.dtype
 
@@ -441,6 +442,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         gamma = self.random_state.gamma(100., 1. / 100., (len(chunk), self.num_topics)).astype(self.dtype, copy=False)
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = np.exp(Elogtheta)
+
+        assert Elogtheta.dtype == self.dtype
         assert expElogtheta.dtype == self.dtype
 
         if collect_sstats:
@@ -459,7 +462,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 ids = [int(idx) for idx, _ in doc]
             else:
                 ids = [idx for idx, _ in doc]
-            cts = np.array([cnt for _, cnt in doc])
+            cts = np.array([cnt for _, cnt in doc], dtype=self.dtype)
             gammad = gamma[d, :]
             Elogthetad = Elogtheta[d, :]
             expElogthetad = expElogtheta[d, :]
@@ -486,6 +489,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     converged += 1
                     break
             gamma[d, :] = gammad
+            assert gammad.dtype == self.dtype
             if collect_sstats:
                 # Contribution of document d to the expected sufficient
                 # statistics for the M step.
@@ -516,6 +520,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         gamma, sstats = self.inference(chunk, collect_sstats=True)
         state.sstats += sstats
         state.numdocs += gamma.shape[0]  # avoids calling len(chunk) on a generator
+        assert gamma.dtype == self.dtype
         return gamma
 
     def update_alpha(self, gammat, rho):
@@ -531,7 +536,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         logger.info("optimized alpha %s", list(self.alpha))
 
         assert self.alpha.dtype == self.dtype
-
         return self.alpha
 
     def update_eta(self, lambdat, rho):
@@ -546,7 +550,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
 
         assert self.eta.dtype == self.dtype
-
         return self.eta
 
     def log_perplexity(self, chunk, total_docs=None):
@@ -702,7 +705,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         pass_, chunk_no * chunksize + len(chunk), lencorpus
                     )
                     gammat = self.do_estep(chunk, other)
-                    assert gammat.dtype == self.dtype
 
                     if self.optimize_alpha:
                         self.update_alpha(gammat, rho())
@@ -755,7 +757,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         logger.debug("updating topics")
-        assert other.dtype == self.dtype
         # update self with the new blend; also keep track of how much did
         # the topics change through this update, to assess convergence
         diff = np.log(self.expElogbeta)
@@ -829,8 +830,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         else:
             sum_eta = np.sum(self.eta)
 
-        assert sum_eta.dtype == self.dtype
-
         score += np.sum(gammaln(sum_eta) - gammaln(np.sum(_lambda, 1)))
 
         return score
@@ -899,9 +898,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             the term topic matrix learned during inference.
         """
         topics = self.state.get_lambda()
-        tmp = topics / topics.sum(axis=1)[:, None]
-        assert tmp.dtype == self.dtype
-        return tmp
+        return topics / topics.sum(axis=1)[:, None]
 
     def get_topic_terms(self, topicid, topn=10):
         """
