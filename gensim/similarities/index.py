@@ -3,6 +3,33 @@
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
+"""
+Intro
+-----
+This module contains integration Annoy with :class:`~gensim.models.word2vec.Word2Vec`,
+:class:`~gensim.models.doc2vec.Doc2Vec` and :class:`~gensim.models.keyedvectors.KeyedVectors`.
+
+
+What is Annoy
+-------------
+Annoy (Approximate Nearest Neighbors Oh Yeah) is a C++ library with Python bindings to search for points in space
+that are close to a given query point. It also creates large read-only file-based data structures that are mmapped
+into memory so that many processes may share the same data.
+
+
+How it works
+------------
+Using `random projections <https://en.wikipedia.org/wiki/Locality-sensitive_hashing#Random_projection>`_
+and by building up a tree. At every intermediate node in the tree, a random hyperplane is chosen,
+which divides the space into two subspaces. This hyperplane is chosen by sampling two points from the subset
+and taking the hyperplane equidistant from them.
+
+More information about Annoy: `github repository <https://github.com/spotify/annoy>`_,
+`author in twitter <https://twitter.com/fulhack>`_
+and `annoy-user maillist <https://groups.google.com/forum/#!forum/annoy-user>`_.
+
+"""
 import os
 
 from smart_open import smart_open
