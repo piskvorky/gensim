@@ -36,7 +36,7 @@ import tempfile
 import xml.etree.ElementTree as et
 import zipfile
 
-import numpy as np
+import numpy
 from smart_open import smart_open
 
 from gensim import utils, matutils
@@ -374,7 +374,7 @@ def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
         id2word=mallet_model.id2word, num_topics=mallet_model.num_topics,
         alpha=mallet_model.alpha, iterations=iterations,
         gamma_threshold=gamma_threshold,
-        dtype=np.float64  # don't loose precision when converting from MALLET
+        dtype=numpy.float64  # don't loose precision when converting from MALLET
     )
     model_gensim.expElogbeta[:] = mallet_model.wordtopics
     return model_gensim
