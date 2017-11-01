@@ -32,9 +32,9 @@ class AnnoyIndexer(object):
         """
         Parameters
         ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec` or :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
+        model : :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec` or :class:`~gensim.models.keyedvectors.KeyedVectors`, optional (default = None)
             Model, that will be used as source for index.
-        num_trees : int, optional
+        num_trees : int, optional (default = None)
             Number of trees for Annoy indexer.
 
         Examples
@@ -73,7 +73,7 @@ class AnnoyIndexer(object):
         fname : str
             Path to output file, will produce 2 files: `fname` - parameters and `fname`.d - :class:`~annoy.AnnoyIndex`.
         protocol : int
-            Protocol for pickle, optional, default is 2.
+            Protocol for pickle, optional (default = 2).
 
         Notes
         -----
