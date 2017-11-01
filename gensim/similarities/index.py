@@ -23,8 +23,33 @@ except ImportError:
 
 
 class AnnoyIndexer(object):
+    """This class allows to use `Annoy <https://github.com/spotify/annoy>`_ as indexer for ``most_similar`` method
+    from :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`
+    and :class:`~gensim.models.keyedvectors.KeyedVectors` classes.
+    """
 
     def __init__(self, model=None, num_trees=None):
+        """
+        Parameters
+        ----------
+        model : :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec` or :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
+            Model, that will be used as source for index.
+        num_trees : int, optional
+            Number of trees for Annoy indexer.
+
+        Examples
+        --------
+        >>> from gensim.similarities.index import AnnoyIndexer
+        >>> from gensim.models import Word2Vec
+        >>>
+        >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
+        >>> model = Word2Vec(sentences, min_count=1, seed=1)
+        >>>
+        >>> indexer = AnnoyIndexer(model, 2)
+        >>> model.most_similar("cat", topn=2, indexer=indexer)
+        [('cat', 1.0), ('dog', 0.32011348009109497)]
+
+        """
         self.index = None
         self.labels = None
         self.model = model
@@ -41,6 +66,20 @@ class AnnoyIndexer(object):
                 raise ValueError("Only a Word2Vec, Doc2Vec or KeyedVectors instance can be used")
 
     def save(self, fname, protocol=2):
+        """Save AnnoyIndexer instance.
+
+        Parameters
+        ----------
+        fname : str
+            Path to output file, will produce 2 files: `fname` - parameters and `fname`.d - :class:`~annoy.AnnoyIndex`.
+        protocol : int
+            Protocol for pickle, optional, default is 2.
+
+        Notes
+        -----
+        This method save **only** index (**model isn't preserved**).
+
+        """
         fname_dict = fname + '.d'
         self.index.save(fname)
         d = {'f': self.model.vector_size, 'num_trees': self.num_trees, 'labels': self.labels}
@@ -48,6 +87,31 @@ class AnnoyIndexer(object):
             _pickle.dump(d, fout, protocol=protocol)
 
     def load(self, fname):
+        """Load AnnoyIndexer instance
+
+        Parameters
+        ----------
+        fname : str
+            Path to dump with AnnoyIndexer.
+
+        Examples
+        --------
+        >>> from gensim.similarities.index import AnnoyIndexer
+        >>> from gensim.models import Word2Vec
+        >>> from tempfile import mkstemp
+        >>>
+        >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
+        >>> model = Word2Vec(sentences, min_count=1, seed=1, iter=10)
+        >>>
+        >>> indexer = AnnoyIndexer(model, 2)
+        >>> _, temp_fn = mkstemp()
+        >>> indexer.save(temp_fn)
+        >>>
+        >>> new_indexer = AnnoyIndexer()
+        >>> new_indexer.load(temp_fn)
+        >>> new_indexer.model = model
+
+        """
         fname_dict = fname + '.d'
         if not (os.path.exists(fname) and os.path.exists(fname_dict)):
             raise IOError(
@@ -92,7 +156,21 @@ class AnnoyIndexer(object):
         self.labels = labels
 
     def most_similar(self, vector, num_neighbors):
-        """Find the top-N most similar items"""
+        """Find the approximate `num_neighbors` most similar items.
+
+        Parameters
+        ----------
+        vector : numpy.array
+            Vector for word/document.
+        num_neighbors : int
+            Number of most similar items
+
+        Returns
+        -------
+        [(str, float), ...]
+            List of most similar items in format [(`item`, `cosine_distance`), ... ]
+
+        """
 
         ids, distances = self.index.get_nns_by_vector(
             vector, num_neighbors, include_distances=True)
