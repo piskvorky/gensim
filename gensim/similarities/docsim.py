@@ -5,47 +5,66 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
+Intro
+-----
+
 This module contains functions and classes for computing similarities across
 a collection of documents in the Vector Space Model.
 
-The main class is `Similarity`, which builds an index for a given set of documents.
-Once the index is built, you can perform efficient queries like "Tell me how similar
-is this query document to each document in the index?". The result is a vector
-of numbers as large as the size of the initial set of documents, that is, one float
-for each index document. Alternatively, you can also request only the top-N most
-similar index documents to the query.
+The main class is :class:`~gensim.similarities.docsim.Similarity`, which builds an index for a given set of documents.
+Once the index is built, you can perform efficient queries like "Tell me how similar is this query document
+to each document in the index?". The result is a vector of numbers as large as the size of the initial set of documents,
+that is, one float for each index document. Alternatively, you can also request only the top-N most similar
+index documents to the query.
 
-You can later add new documents to the index via `Similarity.add_documents()`.
+You can later add new documents to the index via :meth:`~gensim.similarities.docsim.Similarity.add_documents`.
 
 How It Works
 ------------
 
-The `Similarity` class splits the index into several smaller sub-indexes ("shards"),
+The :class:`~gensim.similarities.docsim.Similarity` class splits the index into several smaller sub-indexes ("shards"),
 which are disk-based. If your entire index fits in memory (~hundreds of thousands
-documents for 1GB of RAM), you can also use the `MatrixSimilarity` or `SparseMatrixSimilarity`
-classes directly. These are more simple but do not scale as well (they keep the
-entire index in RAM, no sharding).
+documents for 1GB of RAM), you can also use the :class:`~gensim.similarities.docsim.MatrixSimilarity` or
+:class:`~gensim.similarities.docsim.SparseMatrixSimilarity` classes directly. These are more simple but
+do not scale as well (they keep the entire index in RAM, no sharding).
 
 Once the index has been initialized, you can query for document similarity simply by:
 
->>> index = Similarity('/tmp/tst', corpus, num_features=12) # build the index
->>> similarities = index[query] # get similarities between the query and all index documents
+>>> import os
+>>> import gensim
+>>> from gensim.similarities import Similarity
+>>> from gensim.corpora import MmCorpus
+>>> from tempfile import mkstemp
+>>>
+>>> corpus_path = os.path.join(os.path.dirname(gensim.__file__), "test/test_data/testcorpus.mm")  # path to corpus
+>>> _, index_path = mkstemp()  # make temp file for index
+>>> corpus = MmCorpus(corpus_path)  # load corpus
+>>>
+>>> index = Similarity(index_path, corpus, num_features=12)  # build the index
+>>> query = corpus[3]
+>>> index[query]  # get similarities between the query and all index documents
+array([ 0.23570226,  0.33333334,  0.61237246,  1.        ,  0.        ,
+        0.        ,  0.        ,  0.        ,  0.        ], dtype=float32)
 
 If you have more query documents, you can submit them all at once, in a batch:
 
->>> for similarities in index[batch_of_documents]: # the batch is simply an iterable of documents (=gensim corpus)
->>>     ...
+>>> batch_of_documents = corpus[:3]  # sample batch
+>>> for similarities in index[batch_of_documents]:  # the batch is simply an iterable of documents (gensim corpus)
+...     pass
 
 The benefit of this batch (aka "chunked") querying is much better performance.
-To see the speed-up on your machine, run ``python -m gensim.test.simspeed``
+To see the speed-up on your machine, run
+
+    python -m gensim.test.simspeed
+
 (compare to my results `here <http://groups.google.com/group/gensim/msg/4f6f171a869e4fca?>`_).
 
 There is also a special syntax for when you need similarity of documents in the index
 to the index itself (i.e. queries=indexed documents themselves). This special syntax
 uses the faster, batch queries internally and **is ideal for all-vs-all pairwise similarities**:
 
->>> for similarities in index: # yield similarities of the 1st indexed document, then 2nd...
->>>     ...
+>>> for similarities in index:  # yield similarities of the 1st indexed document, then 2nd...
+...     pass
 
 """
 
@@ -67,23 +86,28 @@ logger = logging.getLogger(__name__)
 PARALLEL_SHARDS = False
 try:
     import multiprocessing
-    # by default, don't parallelize queries. uncomment the following line if you want that.
-#    PARALLEL_SHARDS = multiprocessing.cpu_count() # use #parallel processes = #CPus
+    #  by default, don't parallelize queries. uncomment the following line if you want that.
+    #  PARALLEL_SHARDS = multiprocessing.cpu_count() # use #parallel processes = #CPus
 except ImportError:
     pass
 
 
 class Shard(utils.SaveLoad):
-    """
-    A proxy class that represents a single shard instance within a Similarity
-    index.
+    """A proxy class that represents a single shard instance within a Similarity index.
 
-    Basically just wraps (Sparse)MatrixSimilarity so that it mmaps from disk on
-    request (query).
+    Basically just wraps (Sparse)MatrixSimilarity so that it mmaps from disk on request (query).
 
     """
 
     def __init__(self, fname, index):
+        """
+        Parameters
+        ----------
+        fname : str
+            Path to Shard file.
+        index : :class:`~gensim.similarities.docsim.MatrixSimilarity` or :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`
+            Instance of Similarity object.
+        """
         self.dirname, self.fname = os.path.split(fname)
         self.length = len(index)
         self.cls = index.__class__
@@ -92,12 +116,34 @@ class Shard(utils.SaveLoad):
         self.index = self.get_index()
 
     def fullname(self):
+        """
+        Returns
+        -------
+        str
+            Full filename of :class:`~gensim.similarities.docsim.Shard`.
+        """
         return os.path.join(self.dirname, self.fname)
 
     def __len__(self):
+        """
+        Returns
+        -------
+        int
+            Length of `index` (i.e. length of :class:`~gensim.similarities.docsim.MatrixSimilarity` or
+            :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`).
+
+        """
         return self.length
 
     def __getstate__(self):
+        """
+
+        Returns
+        -------
+        dict
+            :class:`~gensim.similarities.docsim.Shard` as :type:`dict` object, needed for pickle.
+
+        """
         result = self.__dict__.copy()
         # (S)MS objects must be loaded via load() because of mmap (simple pickle.load won't do)
         if 'index' in result:
@@ -105,24 +151,59 @@ class Shard(utils.SaveLoad):
         return result
 
     def __str__(self):
+        """
+
+        Returns
+        -------
+        str
+            String representation of :class:`~gensim.similarities.docsim.Shard`.
+
+        """
         return "%s Shard(%i documents in %s)" % (self.cls.__name__, len(self), self.fullname())
 
     def get_index(self):
+        """
+
+        Returns
+        -------
+        :class:`~gensim.similarities.docsim.MatrixSimilarity` or :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`
+            Load `index` (if needed) and return it.
+
+        """
         if not hasattr(self, 'index'):
             logger.debug("mmaping index from %s", self.fullname())
             self.index = self.cls.load(self.fullname(), mmap='r')
         return self.index
 
     def get_document_id(self, pos):
-        """Return index vector at position `pos`.
+        """
+        Parameters
+        ----------
+        pos : int
+            Position of document.
 
-        The vector is of the same type as the underlying index (ie., dense for
-        MatrixSimilarity and scipy.sparse for SparseMatrixSimilarity.
+        Returns
+        -------
+        numpy.array or scipy.sparse (depends on `index`)
+            Vector for document at position `pos`.
+
         """
         assert 0 <= pos < len(self), "requested position out of range"
         return self.get_index().index[pos]
 
     def __getitem__(self, query):
+        """
+        Parameters
+        ----------
+        query : [(int, int), ... ]
+            Query in bag-of-word format.
+
+        Returns
+        -------
+        numpy.array
+            Similarities between `query` and all documents in corpus.
+
+        """
         index = self.get_index()
         try:
             index.num_best = self.num_best
