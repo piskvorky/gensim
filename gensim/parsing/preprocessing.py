@@ -82,7 +82,7 @@ def strip_tags(s):
     >>>strip_tags(s)
     u'Hello World!'
     """
-    
+
     s = utils.to_unicode(s)
     return RE_TAGS.sub("", s)
 
@@ -96,6 +96,26 @@ RE_NUMERIC = re.compile(r"[0-9]+", re.UNICODE)
 
 
 def strip_numeric(s):
+
+    """Takes string and removes digits from it.
+
+    Parameters
+    ----------
+    s : str
+
+    Returns
+    -------
+    str
+        Unicode string without digits.
+
+    Examples
+    --------
+    >>> from gensim.parsing.preprocessing import strip_numeric
+    >>> s = "0text24gensim365test"
+    >>> strip_numeric(s)
+    u'textgensimtest'
+    """
+
     s = utils.to_unicode(s)
     return RE_NUMERIC.sub("", s)
 
@@ -104,6 +124,27 @@ RE_NONALPHA = re.compile(r"\W", re.UNICODE)
 
 
 def strip_non_alphanum(s):
+
+    """Takes string and removes not a word characters from it.
+    (Word characters - alphanumeric & underscore)
+
+    Parameters
+    ----------
+    s : str
+
+    Returns
+    -------
+    str
+        Unicode string without not a word characters.
+
+    Examples
+    --------
+    >>> from gensim.parsing.preprocessing import strip_non_alphanum
+    >>> s = "if-you#can%read$this&then@this#method^works"
+    >>> strip_non_alphanum(s)
+    u'if you can read this then this method works'
+    """
+
     s = utils.to_unicode(s)
     return RE_NONALPHA.sub(" ", s)
 
@@ -112,6 +153,27 @@ RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
 
 
 def strip_multiple_whitespaces(s):
+
+    """Takes string, removes repeating in a row whitespace characters (spaces, tabs, line breaks) from it
+    and turns tabs & line breaks into spaces.
+
+    Parameters
+    ----------
+    s : str
+
+    Returns
+    -------
+    str
+        Unicode string without repeating in a row whitespace characters.
+
+    Examples
+    --------
+    >>> from gensim.parsing.preprocessing import strip_multiple_whitespaces
+    >>> s = "salut" + '\r' + " les" + '\n' + "         loulous!"
+    >>> strip_multiple_whitespaces(s)
+    u'salut les loulous!'
+    """
+
     s = utils.to_unicode(s)
     return RE_WHITESPACE.sub(" ", s)
 
