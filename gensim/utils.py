@@ -495,8 +495,7 @@ class SaveLoad(object):
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object", self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
-            self._smart_save(fname_or_handle, separately, sep_limit, ignore,
-                             pickle_protocol=pickle_protocol)
+            self._smart_save(fname_or_handle, separately, sep_limit, ignore, pickle_protocol=pickle_protocol)
 
 
 def identity(p):
@@ -730,17 +729,18 @@ class SlicedCorpus(SaveLoad):
 
     def __iter__(self):
         if hasattr(self.corpus, 'index') and len(self.corpus.index) > 0:
-            return (self.corpus.docbyoffset(i) for i in
-                    self.corpus.index[self.slice_])
-        else:
-            return itertools.islice(self.corpus, self.slice_.start,
-                                    self.slice_.stop, self.slice_.step)
+            return (self.corpus.docbyoffset(i) for i in self.corpus.index[self.slice_])
+        return itertools.islice(self.corpus, self.slice_.start, self.slice_.stop, self.slice_.step)
 
     def __len__(self):
         # check cached length, calculate if needed
         if self.length is None:
             if isinstance(self.slice_, (list, np.ndarray)):
                 self.length = len(self.slice_)
+            elif isinstance(self.slice_, slice):
+                (start, end, step) = self.slice_.indices(len(self.corpus.index))
+                diff = end - start
+                self.length = diff // step + (diff % step > 0)
             else:
                 self.length = sum(1 for x in self)
 
@@ -1038,7 +1038,7 @@ def has_pattern():
 
 
 def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
-        stopwords=frozenset(), min_length=2, max_length=15):
+              stopwords=frozenset(), min_length=2, max_length=15):
     """
     This function is only available when the optional 'pattern' package is installed.
 
