@@ -385,8 +385,10 @@ class PoincareModel(utils.SaveLoad):
                         vocab[item] = Vocab(count=1, index=len(index2word))
                         index2word.append(item)
                 node_1, node_2 = row
-                term_relations[vocab[node_1].index].add(vocab[node_2].index)
-                relations.append(tuple(row))
+                node_1_index, node_2_index = vocab[node_1].index, vocab[node_2].index
+                term_relations[node_1_index].add(node_2_index)
+                relation = (node_1_index, node_2_index)
+                relations.append(relation)
         self.wv.vocab = vocab
         self.wv.index2word = index2word
         self.indices = np.array(range(len(index2word)))
@@ -400,15 +402,15 @@ class PoincareModel(utils.SaveLoad):
         shape = (len(self.wv.index2word), self.size)
         self.wv.syn0 = self.np_random.uniform(self.init_range[0], self.init_range[1], shape)
 
-    def sample_negatives(self, _node_1):
+    def sample_negatives(self, node_index):
         """Return a sample of negative examples for the given positive example"""
         # indices = self.random.sample(range(len(self.wv.index2word)), self.negative)
         indices = self.np_random.choice(self.indices, size=self.negative, p=self.probs)
-        positive_indices = self.term_relations[self.wv.vocab[_node_1].index]
+        positive_indices = self.term_relations[node_index]
         # TODO: slow, refactor/use different random number generator
         while len(set(indices) & positive_indices):
             indices = self.np_random.choice(self.indices, size=self.negative, p=self.probs)
-        return [self.wv.index2word[index] for index in indices]
+        return list(indices)
 
     @staticmethod
     def loss_fn(matrix):
@@ -428,9 +430,9 @@ class PoincareModel(utils.SaveLoad):
     def compute_gradients(self, relation, negatives, check_gradients=False):
         """Computes gradients for vectors of positively related nodes and negatively sampled nodes"""
         u, v = relation
-        vector_u = self.wv.word_vec(u)
-        v_indices = [self.wv.vocab[v].index] + [self.wv.vocab[neg].index for neg in negatives]
-        vectors_v = self.wv.syn0[v_indices]
+        v_all = [v] + negatives
+        vector_u = self.wv.syn0[u]
+        vectors_v = self.wv.syn0[v_all]
         example = PoincareExample(vector_u, vectors_v)
         example.compute_all()
         if check_gradients:
@@ -446,21 +448,18 @@ class PoincareModel(utils.SaveLoad):
         u, v = relation
         negatives = self.sample_negatives(u)
         example = self.compute_gradients(relation, negatives, check_gradients)
-        u_index = self.wv.vocab[u].index
-        v_indices = [self.wv.vocab[v].index]
-        for negative in negatives:
-            v_indices.append(self.wv.vocab[negative].index)
-        self.update_vectors(example, u_index, v_indices)
+        v_all = [v] + negatives
+        self.update_vectors(example, u, v_all)
         return example
 
-    def update_vectors(self, example, u_index, v_indices):
+    def update_vectors(self, example, u, v_all):
         grad_u, grad_v = example.gradients_u, example.gradients_v
 
-        self.wv.syn0[u_index] -= self.alpha * (example.alpha ** 2) / 4 * grad_u
-        self.wv.syn0[u_index] = self.clip_vectors(self.wv.syn0[u_index], self.epsilon)
+        self.wv.syn0[u] -= self.alpha * (example.alpha ** 2) / 4 * grad_u
+        self.wv.syn0[u] = self.clip_vectors(self.wv.syn0[u], self.epsilon)
 
-        self.wv.syn0[v_indices] -= self.alpha * (example.beta ** 2)[:, np.newaxis] / 4 * grad_v
-        self.wv.syn0[v_indices] = self.clip_vectors(self.wv.syn0[v_indices], self.epsilon)
+        self.wv.syn0[v_all] -= self.alpha * (example.beta ** 2)[:, np.newaxis] / 4 * grad_v
+        self.wv.syn0[v_all] = self.clip_vectors(self.wv.syn0[v_all], self.epsilon)
 
 
     @staticmethod
