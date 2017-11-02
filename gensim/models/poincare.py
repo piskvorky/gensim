@@ -27,6 +27,7 @@ import random
 import time
 
 from autograd import numpy as np, grad
+from collections import defaultdict
 from numpy import random as np_random
 from smart_open import smart_open
 
@@ -371,6 +372,7 @@ class PoincareModel(utils.SaveLoad):
         vocab = {}
         index2word = []
         relations = []
+        term_relations = defaultdict(set)
 
         with smart_open(self.train_file, 'r', encoding=self.encoding) as f:
             reader = csv.reader(f, delimiter='\t')
@@ -382,6 +384,8 @@ class PoincareModel(utils.SaveLoad):
                     else:
                         vocab[item] = Vocab(count=1, index=len(index2word))
                         index2word.append(item)
+                node_1, node_2 = row
+                term_relations[vocab[node_1].index].add(vocab[node_2].index)
                 relations.append(tuple(row))
         self.wv.vocab = vocab
         self.wv.index2word = index2word
@@ -389,6 +393,7 @@ class PoincareModel(utils.SaveLoad):
         counts = np.array([self.wv.vocab[index2word[i]].count for i in range(len(index2word))])
         self.probs = counts / counts.sum()
         self.relations = relations
+        self.term_relations = term_relations
 
     def init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab"""
@@ -397,9 +402,12 @@ class PoincareModel(utils.SaveLoad):
 
     def sample_negatives(self, _node_1):
         """Return a sample of negative examples for the given positive example"""
-        # TODO: make sure returned nodes aren't positive relations for `_node_1`
         # indices = self.random.sample(range(len(self.wv.index2word)), self.negative)
         indices = self.np_random.choice(self.indices, size=self.negative, p=self.probs)
+        positive_indices = self.term_relations[self.wv.vocab[_node_1].index]
+        # TODO: slow, refactor/use different random number generator
+        while len(set(indices) & positive_indices):
+            indices = self.np_random.choice(self.indices, size=self.negative, p=self.probs)
         return [self.wv.index2word[index] for index in indices]
 
     @staticmethod
