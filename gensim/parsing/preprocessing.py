@@ -63,7 +63,6 @@ RE_TAGS = re.compile(r"<([^>]+)>", re.UNICODE)
 
 
 def strip_tags(s):
-
     """Takes string and removes tags.
 
     Parameters
@@ -77,10 +76,11 @@ def strip_tags(s):
 
     Examples
     --------
-    >>>from gensim.parsing.preprocessing import strip_tags
-    >>>s="<i>Hello</i> <b>World</b>!"
-    >>>strip_tags(s)
+    >>> from gensim.parsing.preprocessing import strip_tags
+    >>> s = "<i>Hello</i> <b>World</b>!"
+    >>> strip_tags(s)
     u'Hello World!'
+
     """
 
     s = utils.to_unicode(s)
@@ -96,7 +96,6 @@ RE_NUMERIC = re.compile(r"[0-9]+", re.UNICODE)
 
 
 def strip_numeric(s):
-
     """Takes string and removes digits from it.
 
     Parameters
@@ -114,6 +113,7 @@ def strip_numeric(s):
     >>> s = "0text24gensim365test"
     >>> strip_numeric(s)
     u'textgensimtest'
+
     """
 
     s = utils.to_unicode(s)
@@ -124,7 +124,6 @@ RE_NONALPHA = re.compile(r"\W", re.UNICODE)
 
 
 def strip_non_alphanum(s):
-
     """Takes string and removes not a word characters from it.
     (Word characters - alphanumeric & underscore)
 
@@ -143,6 +142,7 @@ def strip_non_alphanum(s):
     >>> s = "if-you#can%read$this&then@this#method^works"
     >>> strip_non_alphanum(s)
     u'if you can read this then this method works'
+
     """
 
     s = utils.to_unicode(s)
@@ -153,8 +153,7 @@ RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
 
 
 def strip_multiple_whitespaces(s):
-
-    """Takes string, removes repeating in a row whitespace characters (spaces, tabs, line breaks) from it
+    r"""Takes string, removes repeating in a row whitespace characters (spaces, tabs, line breaks) from it
     and turns tabs & line breaks into spaces.
 
     Parameters
@@ -172,6 +171,7 @@ def strip_multiple_whitespaces(s):
     >>> s = "salut" + '\r' + " les" + '\n' + "         loulous!"
     >>> strip_multiple_whitespaces(s)
     u'salut les loulous!'
+
     """
 
     s = utils.to_unicode(s)
