@@ -183,15 +183,52 @@ RE_NUM_AL = re.compile(r"([0-9]+)([a-z]+)", flags=re.UNICODE)
 
 
 def split_alphanum(s):
+    """Takes string, adds spaces between digits & letters.
+
+    Parameters
+    ----------
+    s : str
+
+    Returns
+    -------
+    str
+        Unicode string with spaces between digits & letters.
+
+    Examples
+    --------
+    >>> from gensim.parsing.preprocessing import split_alphanum
+    >>> s = "24.0hours7 days365 a1b2c3"
+    >>> split_alphanum(s)
+    u'24.0 hours 7 days 365 a 1 b 2 c 3'
+
+    """
+
     s = utils.to_unicode(s)
     s = RE_AL_NUM.sub(r"\1 \2", s)
     return RE_NUM_AL.sub(r"\1 \2", s)
 
 
 def stem_text(text):
+    """Takes string, tranforms it into lowercase and (porter-)stemmed version.
+
+    Parameters
+    ----------
+    text : str
+
+    Returns
+    -------
+    str
+        Lowercase and (porter-)stemmed version of string `text`.
+
+    Examples
+    --------
+    >>> from gensim.parsing.preprocessing import stem_text
+    >>> text = "While it is quite useful to be able to search a large collection of documents almost instantly for a joint occurrence of a collection of exact words, for many searching purposes, a little fuzziness would help. "
+    >>> stem_text(text)
+    u'while it is quit us to be abl to search a larg collect of document almost instantli for a joint occurr of a collect of exact words, for mani search purposes, a littl fuzzi would help.'
+
     """
-    Return lowercase and (porter-)stemmed version of string `text`.
-    """
+
     text = utils.to_unicode(text)
     p = PorterStemmer()
     return ' '.join(p.stem(word) for word in text.split())
@@ -207,6 +244,27 @@ DEFAULT_FILTERS = [
 
 
 def preprocess_string(s, filters=DEFAULT_FILTERS):
+    """Takes string, applies chosen filters to it.
+
+    Parameters
+    ----------
+    s : str
+    filters: list
+
+    Returns
+    -------
+    list
+        List of unicode strings.
+
+    Examples
+    --------
+    >>> from gensim.parsing.preprocessing import preprocess_string
+    >>> s = "24.0Hours7 Days365 a1b2c3."
+    >>> preprocess_string(s)
+    [u'hour', u'dai', u'abc']
+
+    """
+
     s = utils.to_unicode(s)
     for f in filters:
         s = f(s)
@@ -214,6 +272,25 @@ def preprocess_string(s, filters=DEFAULT_FILTERS):
 
 
 def preprocess_documents(docs):
+    """Takes text, splits it into sentences, then applies default filters to every sentence.
+
+    Parameters
+    ----------
+    docs : str
+
+    Returns
+    -------
+    list
+        List of unicode strings.
+
+    Examples
+    --------
+    >>> from gensim.parsing.preprocessing import preprocess_documents
+    >>> s = "24.0Hours7 Days365 a1b2c3."
+    >>> preprocess_documents(s)
+    [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+
+    """
     return [preprocess_string(d) for d in docs]
 
 
