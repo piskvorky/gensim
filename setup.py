@@ -233,6 +233,7 @@ test_env = [
     'annoy',
     'tensorflow <= 1.3.0',
     'keras >= 2.0.4',
+    'nose',
 ]
 
 setup(
@@ -281,7 +282,7 @@ setup(
         'Topic :: Text Processing :: Linguistic',
     ],
 
-    test_suite="gensim.test",
+    test_suite="nose.collector",
     setup_requires=[
         'numpy >= 1.11.3'
     ],
