@@ -218,7 +218,7 @@ class TestLdaWrapper(unittest.TestCase):
         text_lda = Pipeline([('features', model,), ('classifier', clf)])
         text_lda.fit(corpus, data.target)
         score = text_lda.score(corpus, data.target)
-        self.assertGreater(score, 0.40)
+        self.assertGreaterEqual(score, 0.40)
 
     def testSetGetParams(self):
         # updating only one param
