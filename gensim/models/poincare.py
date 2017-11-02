@@ -385,6 +385,9 @@ class PoincareModel(utils.SaveLoad):
                 relations.append(tuple(row))
         self.wv.vocab = vocab
         self.wv.index2word = index2word
+        self.indices = np.array(range(len(index2word)))
+        counts = np.array([self.wv.vocab[index2word[i]].count for i in range(len(index2word))])
+        self.probs = counts / counts.sum()
         self.relations = relations
 
     def init_embeddings(self):
@@ -395,7 +398,8 @@ class PoincareModel(utils.SaveLoad):
     def sample_negatives(self, _node_1):
         """Return a sample of negative examples for the given positive example"""
         # TODO: make sure returned nodes aren't positive relations for `_node_1`
-        indices = self.random.sample(range(len(self.wv.index2word)), self.negative)
+        # indices = self.random.sample(range(len(self.wv.index2word)), self.negative)
+        indices = self.np_random.choice(self.indices, size=self.negative, p=self.probs)
         return [self.wv.index2word[index] for index in indices]
 
     @staticmethod
