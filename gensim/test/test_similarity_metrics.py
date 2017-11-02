@@ -21,7 +21,6 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import ldamodel
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [
@@ -37,6 +36,10 @@ texts = [
 ]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
+
+
+def datapath(fname):
+    return os.path.join(module_path, 'test_data', fname)
 
 
 class TestIsBow(unittest.TestCase):

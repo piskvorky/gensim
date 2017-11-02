@@ -77,21 +77,18 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
             )
 
         # The input as array of array
-        check = lambda x: [x] if isinstance(x[0], tuple) else x
-        docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
+        if isinstance(docs[0], tuple):
+            docs = [docs]
+        distribution, max_num_topics = [], 0
 
-        max_num_topics = 0
-        for k, v in enumerate(docs):
-            X[k] = self.gensim_model[v]
-            max_num_topics = max(max_num_topics, max(x[0] for x in X[k]) + 1)
+        for doc in docs:
+            topicd = self.gensim_model[doc]
+            distribution.append(topicd)
+            max_num_topics = max(max_num_topics, max(topic[0] for topic in topicd) + 1)
 
-        for k, v in enumerate(X):
-            # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
-            dense_vec = matutils.sparse2full(v, max_num_topics)
-            X[k] = dense_vec
-
-        return np.reshape(np.array(X), (len(docs), max_num_topics))
+        # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
+        distribution = [matutils.sparse2full(topicd, max_num_topics) for topicd in distribution]
+        return np.reshape(np.array(distribution), (len(docs), max_num_topics))
 
     def partial_fit(self, X):
         """

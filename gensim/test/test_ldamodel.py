@@ -25,8 +25,6 @@ from gensim import matutils, utils
 from gensim.test import basetmtests
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [
@@ -42,6 +40,10 @@ texts = [
 ]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
+
+
+def datapath(fname):
+    return os.path.join(module_path, 'test_data', fname)
 
 
 def testfile(test_fname=''):
@@ -348,22 +350,24 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # construct what we expect when passes aren't involved
         test_rhots = list()
         model = self.class_(id2word=dictionary, chunksize=1, num_topics=2)
-        final_rhot = lambda: pow(model.offset + (1 * model.num_updates) / model.chunksize, -model.decay)
+
+        def final_rhot(model):
+            return pow(model.offset + (1 * model.num_updates) / model.chunksize, -model.decay)
 
         # generate 5 updates to test rhot on
         for x in range(5):
             model.update(self.corpus)
-            test_rhots.append(final_rhot())
+            test_rhots.append(final_rhot(model))
 
         for passes in [1, 5, 10, 50, 100]:
             model = self.class_(id2word=dictionary, chunksize=1, num_topics=2, passes=passes)
-            self.assertEqual(final_rhot(), 1.0)
+            self.assertEqual(final_rhot(model), 1.0)
             # make sure the rhot matches the test after each update
             for test_rhot in test_rhots:
                 model.update(self.corpus)
 
                 msg = ", ".join(str(x) for x in [passes, model.num_updates, model.state.numdocs])
-                self.assertAlmostEqual(final_rhot(), test_rhot, msg=msg)
+                self.assertAlmostEqual(final_rhot(model), test_rhot, msg=msg)
 
             self.assertEqual(model.state.numdocs, len(corpus) * len(test_rhots))
             self.assertEqual(model.num_updates, len(corpus) * len(test_rhots))

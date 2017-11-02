@@ -24,9 +24,11 @@ from gensim import utils, corpora, models, similarities
 
 # sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
 logger = logging.getLogger('test_miislita')
+
+
+def datapath(fname):
+    return os.path.join(module_path, 'test_data', fname)
 
 
 def get_tmpfile(suffix):

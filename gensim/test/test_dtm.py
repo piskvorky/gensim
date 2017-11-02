@@ -17,7 +17,10 @@ from gensim import corpora
 
 # needed because sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+
+
+def datapath(fname):
+    return os.path.join(module_path, 'test_data', fname)
 
 
 class TestDtmModel(unittest.TestCase):

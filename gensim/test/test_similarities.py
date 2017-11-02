@@ -32,8 +32,6 @@ except ImportError:
     PYEMD_EXT = False
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [
@@ -51,6 +49,10 @@ dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
 sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(texts)]
+
+
+def datapath(fname):
+    return os.path.join(module_path, 'test_data', fname)
 
 
 def testfile():

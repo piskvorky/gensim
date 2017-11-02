@@ -17,11 +17,14 @@ from gensim.corpora.wikicorpus import WikiCorpus
 from gensim import utils
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 FILENAME = 'enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2'
 FILENAME_U = 'bgwiki-latest-pages-articles-shortened.xml.bz2'
 
 logger = logging.getLogger(__name__)
+
+
+def datapath(fname):
+    return os.path.join(module_path, 'test_data', fname)
 
 
 def custom_tokeiner(content, token_min_len=2, token_max_len=15, lower=True):

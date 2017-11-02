@@ -16,10 +16,13 @@ from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 logger = logging.getLogger(__name__)
 
 IS_WIN32 = (os.name == "nt") and (struct.calcsize('P') * 8 == 32)
+
+
+def datapath(fname):
+    return os.path.join(module_path, 'test_data', fname)
 
 
 class LeeCorpus(object):

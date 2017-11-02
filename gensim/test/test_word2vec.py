@@ -29,7 +29,10 @@ except ImportError:
     PYEMD_EXT = False
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+
+
+def datapath(fname):
+    return os.path.join(module_path, 'test_data', fname)
 
 
 class LeeCorpus(object):
@@ -234,7 +237,9 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testLambdaRule(self):
         """Test that lambda trim_rule works."""
-        rule = lambda word, count, min_count: utils.RULE_DISCARD if word == "human" else utils.RULE_DEFAULT
+        def rule(word, count, min_count):
+            return utils.RULE_DISCARD if word == "human" else utils.RULE_DEFAULT
+
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
         self.assertTrue("human" not in model.wv.vocab)
 

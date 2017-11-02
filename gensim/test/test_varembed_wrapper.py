@@ -27,7 +27,12 @@ except ImportError:
 
 # needed because sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+
+
+def datapath(fname):
+    return os.path.join(module_path, 'test_data', fname)
+
+
 varembed_model_vector_file = datapath('varembed_vectors.pkl')
 varembed_model_morfessor_file = datapath('varembed_morfessor.bin')
 

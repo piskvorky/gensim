@@ -87,12 +87,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             )
 
         # The input as array of array
-        check = lambda x: [x] if isinstance(x[0], string_types) else x
-        docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
-
-        for k, v in enumerate(docs):
-            doc_vec = self.gensim_model.infer_vector(v)
-            X[k] = doc_vec
-
-        return np.reshape(np.array(X), (len(docs), self.gensim_model.vector_size))
+        if isinstance(docs[0], string_types):
+            docs = [docs]
+        vectors = [self.gensim_model.infer_vector(doc) for doc in docs]
+        return np.reshape(np.array(vectors), (len(docs), self.gensim_model.vector_size))
