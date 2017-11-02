@@ -538,8 +538,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         The num_topics is m_T (default is 150) so as to preserve the matrice shapes when we assign alpha and beta.
         """
         alpha, beta = self.hdp_to_lda()
-        ldam = ldamodel.LdaModel(num_topics=self.m_T, alpha=alpha, id2word=self.id2word,
-                                 random_state=self.random_state, dtype=np.float64)
+        ldam = ldamodel.LdaModel(num_topics=self.m_T, alpha=alpha, id2word=self.id2word, random_state=self.random_state, dtype=np.float64)
         ldam.expElogbeta[:] = beta
         return ldam
 

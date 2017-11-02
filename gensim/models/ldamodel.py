@@ -60,7 +60,7 @@ def update_dir_prior(prior, N, logphat, rho):
     **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.**
     http://jonathan-huang.org/research/dirichlet/dirichlet.pdf
     """
-    dprior = np.copy(prior)
+    dprior = np.copy(prior)  # TODO: unused var???
     gradf = N * (psi(np.sum(prior)) - psi(prior) + logphat)
 
     c = N * polygamma(1, np.sum(prior))
@@ -89,7 +89,7 @@ class LdaState(utils.SaveLoad):
 
     def __init__(self, eta, shape, dtype=np.float32):
         self.eta = eta.astype(dtype, copy=False)
-        self.sstats = np.zeros(shape, dtype)
+        self.sstats = np.zeros(shape, dtype=dtype)
         self.numdocs = 0
         self.dtype = dtype
 
@@ -171,11 +171,10 @@ class LdaState(utils.SaveLoad):
     def load(cls, fname, *args, **kwargs):
         result = super(LdaState, cls).load(fname, *args, **kwargs)
 
-        # Check if `dtype` is set after main pickle load
-        # if not, then it's an old model and we should set it to default `np.float64`
+        # dtype could be absent in old models
         if not hasattr(result, 'dtype'):
-            result.dtype = np.float64  # float64 was used before as default in numpy
-            logging.warning("dtype was not set in LdaState, so using np.float64")
+            result.dtype = np.float64  # float64 was implicitly used before (cause it's default in numpy)
+            logging.info("dtype was not set in saved %s file %s, assuming np.float64", result.__class__.__name__, fname)
 
         return result
 # endclass LdaState
@@ -1225,10 +1224,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             result.random_state = utils.get_random_state(None)  # using default value `get_random_state(None)`
             logging.warning("random_state not set so using default value")
 
-        # the same goes for dtype (except it was added later)
+        # dtype could be absent in old models
         if not hasattr(result, 'dtype'):
-            result.dtype = np.float64  # float64 was used before as default in numpy
-            logging.warning("dtype was not set, so using np.float64")
+            result.dtype = np.float64  # float64 was implicitly used before (cause it's default in numpy)
+            logging.info("dtype was not set in saved %s file %s, assuming np.float64", result.__class__.__name__, fname)
 
         state_fname = utils.smart_extension(fname, '.state')
         try:
