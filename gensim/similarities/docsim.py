@@ -137,7 +137,6 @@ class Shard(utils.SaveLoad):
 
     def __getstate__(self):
         """
-
         Returns
         -------
         dict
@@ -222,55 +221,42 @@ def query_shard(args):
 
 
 class Similarity(interfaces.SimilarityABC):
-    """
-    Compute cosine similarity of a dynamic query against a static corpus of documents
-    ("the index").
+    """Compute cosine similarity of a dynamic query against a static corpus of documents ("the index").
 
     Scalability is achieved by sharding the index into smaller pieces, each of which
-    fits into core memory (see the `(Sparse)MatrixSimilarity` classes in this module).
+    fits into core memory (see the :class:`~gensim.similarities.docsim.MatrixSimilarity` and
+    :class:`~gensim.similarities.docsim.SparseMatrixSimilarity` classes in this module).
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
 
     """
 
     def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=256, shardsize=32768, norm='l2'):
         """
-        Construct the index from `corpus`. The index can be later extended by calling
-        the `add_documents` method. **Note**: documents are split (internally, transparently)
-        into shards of `shardsize` documents each, converted to a matrix, for faster BLAS calls.
-        Each shard is stored to disk under `output_prefix.shard_number` (=you need write
-        access to that location). If you don't specify an output prefix, a random
-        filename in temp will be used.
-
-        `shardsize` should be chosen so that a `shardsize x chunksize` matrix of floats
-        fits comfortably into main memory.
-
-        `num_features` is the number of features in the `corpus` (e.g. size of the
-        dictionary, or the number of latent topics for latent semantic models).
-
-        `norm` is the user-chosen normalization to use. Accepted values are: 'l1' and 'l2'.
-
-        If `num_best` is left unspecified, similarity queries will return a full
-        vector with one float for every document in the index:
-
-        >>> index = Similarity('/path/to/index', corpus, num_features=400) # if corpus has 7 documents...
-        >>> index[query] # ... then result will have 7 floats
-        [0.0, 0.0, 0.2, 0.13, 0.8, 0.0, 0.1]
-
-        If `num_best` is set, queries return only the `num_best` most similar documents,
-        always leaving out documents for which the similarity is 0.
-        If the input vector itself only has features with zero values (=the sparse
-        representation is empty), the returned list will always be empty.
-
-        >>> index.num_best = 3
-        >>> index[query] # return at most "num_best" of `(index_of_document, similarity)` tuples
-        [(4, 0.8), (2, 0.13), (3, 0.13)]
-
-        You can also override `num_best` dynamically, simply by setting e.g.
-        `self.num_best = 10` before doing a query.
+        Parameters
+        ----------
+        output_prefix : str
+            Prefix for output path for :class:`~gensim.similarities.docsim.Shard`. Each shard is stored to disk under
+            `output_prefix.shard_number`.
+        corpus : iterable of np.array, scipy.sparse, [(word_id, num) ... ]  # ?????
+            Corpus that will be used for index construction.
+        num_features : int
+            Number of features in the `corpus` (e.g. size of the dictionary,
+            or the number of latent topics for latent semantic models).
+        num_best : int, optional (default = None)
+            Number of most similar document returned after query, always leaving out documents
+            for which the similarity is 0. If `num_best=None`,  will return a full vector of similarities.
+            You can also override `num_best` dynamically, simply by setting e.g. `self.num_best = 10`
+            before doing a query.
+        chunksize : int
+            Number of documents in one chunk.
+        shardsize : int
+            Size of shard, should be chosen so that a `shardsize x chunksize` matrix of floats fits comfortably
+            into main memory.
+        norm : str
+            Normalization that used for search, accepted values are: 'l1' and 'l2'.
 
         """
         if output_prefix is None:
-            # undocumented feature: set output_prefix=None to create the server in temp
             self.output_prefix = utils.randfname(prefix='simserver')
         else:
             self.output_prefix = output_prefix
@@ -287,19 +273,28 @@ class Similarity(interfaces.SimilarityABC):
             self.add_documents(corpus)
 
     def __len__(self):
+        """Number of documents in `~gensim.similarities.docsim.Similarity`."""
         return len(self.fresh_docs) + sum([len(shard) for shard in self.shards])
 
     def __str__(self):
+        """String representation of `~gensim.similarities.docsim.Similarity`."""
         return "Similarity index with %i documents in %i shards (stored under %s)" % (
             len(self), len(self.shards), self.output_prefix
         )
 
     def add_documents(self, corpus):
-        """
-        Extend the index with new documents.
+        """Add new documents to index.
 
-        Internally, documents are buffered and then spilled to disk when there's
-        `self.shardsize` of them (or when a query is issued).
+        Parameters
+        ----------
+        corpus : corpus  # ?????????
+            Corpus that will be used for extending index.
+
+        Notes
+        -----
+        Internally, documents are buffered and then spilled to disk when there's `self.shardsize`
+        of them (or when a query is issued).
+
         """
         min_ratio = 1.0  # 0.5 to only reopen shards that are <50% complete
         if self.shards and len(self.shards[-1]) < min_ratio * self.shardsize:
@@ -324,19 +319,33 @@ class Similarity(interfaces.SimilarityABC):
                 logger.info("PROGRESS: fresh_shard size=%i", len(self.fresh_docs))
 
     def shardid2filename(self, shardid):
+        """Construct filename based on `shardid`.
+
+        Parameters
+        ----------
+        shardid : int
+            Id of shard.
+
+        Returns
+        -------
+        str
+            Full filename of Shard
+
+        """
         if self.output_prefix.endswith('.'):
             return "%s%s" % (self.output_prefix, shardid)
         else:
             return "%s.%s" % (self.output_prefix, shardid)
 
     def close_shard(self):
-        """
-        Force the latest shard to close (be converted to a matrix and stored
-        to disk). Do nothing if no new documents added since last call.
+        """Force the latest shard to close (be converted to a matrix and stored to disk).
+        Do nothing if no new documents added since last call.
 
-        **NOTE**: the shard is closed even if it is not full yet (its size is smaller
-        than `self.shardsize`). If documents are added later via `add_documents()`,
-        this incomplete shard will be loaded again and completed.
+        Notes
+        -----
+        The shard is closed even if it is not full yet (its size is smaller than `self.shardsize`).
+        If documents are added later via `add_documents()`, this incomplete shard will be loaded again and completed.
+
         """
         if not self.fresh_docs:
             return
@@ -357,6 +366,7 @@ class Similarity(interfaces.SimilarityABC):
         self.fresh_docs, self.fresh_nnz = [], 0
 
     def reopen_shard(self):
+        """Reopen latest shard."""
         assert self.shards
         if self.fresh_docs:
             raise ValueError("cannot reopen a shard with fresh documents in index")
