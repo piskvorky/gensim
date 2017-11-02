@@ -213,17 +213,14 @@ except ImportError:
         null_word = model.wv.vocab['\0']
         pre_pad_count = model.window
         post_pad_count = model.window
-        padded_document_indexes = (
-            (pre_pad_count * [null_word.index])  # pre-padding
-            + [word.index for word in word_vocabs if word is not None]  # elide out-of-Vocabulary words
-            + (post_pad_count * [null_word.index])  # post-padding
-        )
+        padded_document_indexes = (pre_pad_count * [null_word.index])  # pre-padding
+        padded_document_indexes.extend(word.index for word in word_vocabs if word is not None)  # elide out-of-Vocabulary words
+        padded_document_indexes.extend(post_pad_count * [null_word.index])  # post-padding
 
         for pos in range(pre_pad_count, len(padded_document_indexes) - post_pad_count):
-            word_context_indexes = (
-                padded_document_indexes[(pos - pre_pad_count): pos]  # preceding words
-                + padded_document_indexes[(pos + 1):(pos + 1 + post_pad_count)]  # following words
-            )
+            word_context_indexes = padded_document_indexes[(pos - pre_pad_count): pos]  # preceding words
+            word_context_indexes.extend(padded_document_indexes[(pos + 1):(pos + 1 + post_pad_count)])  # following words
+
             predict_word = model.wv.vocab[model.wv.index2word[padded_document_indexes[pos]]]
             # numpy advanced-indexing copies; concatenate, flatten to 1d
             l1 = concatenate((doctag_vectors[doctag_indexes], word_vectors[word_context_indexes])).ravel()
@@ -232,8 +229,8 @@ except ImportError:
 
             # filter by locks and shape for addition to source vectors
             e_locks = concatenate((doctag_locks[doctag_indexes], word_locks[word_context_indexes]))
-            neu1e_r = (neu1e.reshape(-1, model.vector_size)
-                       * np_repeat(e_locks, model.vector_size).reshape(-1, model.vector_size))
+            neu1e_r = (neu1e.reshape(-1, model.vector_size) *
+                       np_repeat(e_locks, model.vector_size).reshape(-1, model.vector_size))
 
             if learn_doctags:
                 np_add.at(doctag_vectors, doctag_indexes, neu1e_r[:doctag_len])
