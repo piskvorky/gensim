@@ -427,8 +427,8 @@ class PoincareModel(utils.SaveLoad):
         exp_positive_distance = np.exp(-positive_distance)
         return -np.log(exp_positive_distance / (exp_positive_distance + exp_negative_distances.sum()))
 
-    def compute_gradients(self, relation, negatives, check_gradients=False):
-        """Computes gradients for vectors of positively related nodes and negatively sampled nodes"""
+    def prepare_train_example(self, relation, negatives, check_gradients=False):
+        """Creates training example and computes gradients and loss"""
         u, v = relation
         v_all = [v] + negatives
         vector_u = self.wv.syn0[u]
@@ -447,12 +447,13 @@ class PoincareModel(utils.SaveLoad):
         """Performs training for a single training example"""
         u, v = relation
         negatives = self.sample_negatives(u)
-        example = self.compute_gradients(relation, negatives, check_gradients)
+        example = self.prepare_train_example(relation, negatives, check_gradients)
         v_all = [v] + negatives
         self.update_vectors(example, u, v_all)
         return example
 
     def update_vectors(self, example, u, v_all):
+        """Updates vectors for a training example"""
         grad_u, grad_v = example.gradients_u, example.gradients_v
 
         self.wv.syn0[u] -= self.alpha * (example.alpha ** 2) / 4 * grad_u
@@ -489,23 +490,20 @@ class PoincareModel(utils.SaveLoad):
         exp_negative_distances = np.exp(-all_distances)
         return (-np.log(exp_negative_distances[:, 0] / exp_negative_distances.sum(axis=1))).sum()
 
-    def compute_gradients_batch(self, relations, all_negatives):
-        """Computes gradients for vectors of positively related nodes and negatively sampled nodes"""
+    def prepare_training_batch(self, relations, all_negatives):
+        """Creates training batch and computes all gradients and loss"""
         all_vectors = []
-        u_indices, v_indices = [], []
+        u_all, v_all = [], []
         for relation, negatives in zip(relations, all_negatives):
             u, v = relation
-            u_indices.append(self.wv.vocab[u].index)
-            v_indices.append(
-                [self.wv.vocab[v].index] +
-                [self.wv.vocab[negative].index for negative in negatives]
-            )
-        v_indices = list(itertools.chain.from_iterable(v_indices))
-        vectors_u = self.wv.syn0[u_indices].T
-        vectors_v = self.wv.syn0[v_indices].reshape(1 + self.negative, self.size, self.batch_size)
+            u_all.append(u)
+            v_all.append(v)
+            v_all += negatives
+        vectors_u = self.wv.syn0[u_all].T
+        vectors_v = self.wv.syn0[v_all].reshape(1 + self.negative, self.size, self.batch_size)
         batch = PoincareBatch(vectors_u, vectors_v)
         batch.compute_all()
-        return u_indices, v_indices, batch
+        return u_all, v_all, batch
 
     def sample_negatives_batch(self, _nodes):
         """Return a sample of negative examples for the given positive example"""
@@ -514,15 +512,12 @@ class PoincareModel(utils.SaveLoad):
             self.random.sample(range(len(self.wv.index2word)), self.negative)
             for _node in _nodes
         ]
-        return [
-            [self.wv.index2word[index] for index in indices]
-            for indices in all_indices
-        ]
+        return all_indices
 
     def train_on_batch(self, relations):
         """Performs training for a single training batch"""
         all_negatives = self.sample_negatives_batch([relation[0] for relation in relations])
-        u_indices, v_indices, batch = self.compute_gradients_batch(relations, all_negatives)
+        u_indices, v_indices, batch = self.prepare_training_batch(relations, all_negatives)
         self.update_vectors_batch(batch, u_indices, v_indices)
         return batch
 
