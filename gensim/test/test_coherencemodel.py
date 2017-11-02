@@ -13,6 +13,7 @@ import os
 import tempfile
 import unittest
 from unittest import SkipTest
+import multiprocessing as mp
 
 import numpy as np
 from gensim.corpora.dictionary import Dictionary
@@ -212,6 +213,22 @@ class TestCoherenceModel(unittest.TestCase):
             ValueError, CoherenceModel, topics=self.topics1, dictionary=self.dictionary,
             coherence='u_mass'
         )
+
+    def testProcesses(self):
+        cpu = mp.cpu_count()
+        get_model = lambda p: CoherenceModel(
+            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass', processes=p,
+        )
+
+        model = CoherenceModel(
+            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass',
+        )
+        self.assertEqual(model.processes, cpu - 1)
+        for p in range(-2, 1):
+            self.assertEqual(get_model(p).processes, cpu - 1)
+
+        for p in range(1, 4):
+            self.assertEqual(get_model(p).processes, p)
 
     def testPersistence(self):
         fname = testfile()
