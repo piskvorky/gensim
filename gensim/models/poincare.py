@@ -607,21 +607,25 @@ class PoincareModel(utils.SaveLoad):
         for epoch in range(1, self.iter + 1):
             indices = list(range(len(self.relations)))
             self.np_random.shuffle(indices)
+            avg_loss = 0
             for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
                 print_check = not (batch_num % print_every)
                 batch_indices = indices[i:i+batch_size]
                 relations = [self.relations[idx] for idx in batch_indices]
                 result = self.train_on_batch(relations, check_gradients=print_check)
+                avg_loss += result.loss
                 if print_check:
+                    avg_loss /= print_every
                     time_taken = time.time() - last_time
                     speed = print_every * batch_size / time_taken
                     print(
                         'Training on epoch %d, examples #%s-#%s, loss: %.2f'
-                        % (epoch, relations[0], relations[-1], result.loss))
+                        % (epoch, relations[0], relations[-1], avg_loss))
                     print(
                         'Time taken for %d examples: %.2f s, %.2f examples / s'
                         % (print_every * batch_size, time_taken, speed))
                     last_time = time.time()
+                    avg_loss = 0
                 if num_batches and batch_num >= num_batches:
                     return
 
