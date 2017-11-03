@@ -27,7 +27,7 @@ import random
 import time
 
 from autograd import numpy as np, grad
-from collections import defaultdict
+from collections import defaultdict, Counter
 from numpy import random as np_random
 from smart_open import smart_open
 
@@ -532,15 +532,30 @@ class PoincareModel(utils.SaveLoad):
         self.update_vectors_batch(batch, u_indices, v_indices)
         return batch
 
+    def handle_duplicates(self, vector_updates, vector_indices):
+        # TODO: better naming, possibly refactor
+        counts = Counter(vector_indices)
+        for vector_index, count in counts.items():
+            if count == 1:
+                continue
+            positions = [i for i, index in enumerate(vector_indices) if index == vector_index]
+            vector_updates[positions[-1]] = vector_updates[positions].sum(axis=0)
+            vector_updates[positions[:-1]] = 0
+
     def update_vectors_batch(self, batch, u_indices, v_indices):
         batch_size = len(u_indices)
         grad_u, grad_v = batch.gradients_u, batch.gradients_v
 
-        self.wv.syn0[u_indices] -= (self.alpha * (batch.alpha ** 2) / 4 * grad_u).T
+        u_updates = (self.alpha * (batch.alpha ** 2) / 4 * grad_u).T
+        self.handle_duplicates(u_updates, u_indices)
+
+        self.wv.syn0[u_indices] -= u_updates
         self.wv.syn0[u_indices] = self.clip_vectors(self.wv.syn0[u_indices], self.epsilon)
 
         v_updates = self.alpha * (batch.beta ** 2)[:, np.newaxis] / 4 * grad_v
         v_updates = v_updates.reshape(((1 + self.negative) * batch_size, self.size))
+        self.handle_duplicates(v_updates, v_indices)
+
         self.wv.syn0[v_indices] -= v_updates
         self.wv.syn0[v_indices] = self.clip_vectors(self.wv.syn0[v_indices], self.epsilon)
         if np.isnan(self.wv.syn0[v_indices]).any() or np.isnan(self.wv.syn0[u_indices]).any():
