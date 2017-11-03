@@ -226,10 +226,6 @@ class PoincareBatch(object):
             )  # (1 + neg_size,)
         poincare_dists = np.arccosh(gamma)  # (1 + neg_size,)
 
-        example = PoincareExample(self.vectors_u[0, :, 0], self.vectors_v[:, :, 0])
-        example.compute_all()
-
-        self.example = example
         self.euclidean_dists = euclidean_dists
         self.poincare_dists = poincare_dists
         self.gamma = gamma
