@@ -51,7 +51,13 @@ class CsvCorpus(interfaces.CorpusABC):
         logger.info("sniffed CSV delimiter=%r, headers=%s", self.dialect.delimiter, self.headers)
 
     def __iter__(self):
-        """Iterate over the corpus, returning one sparse vector at a time."""
+        """Iterate over the corpus, returning one sparse vector at a time.
+
+        Yields
+        ------
+        list of (int, float)
+
+        """
         reader = csv.reader(utils.smart_open(self.fname), self.dialect)
         if self.headers:
             next(reader)    # skip the headers
