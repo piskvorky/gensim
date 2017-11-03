@@ -21,18 +21,18 @@ logger = logging.getLogger('gensim.corpora.bleicorpus')
 
 
 class BleiCorpus(IndexedCorpus):
-    """
-    Corpus in Blei's LDA-C format.
-
+    """Corpus in Blei's LDA-C format.
+    
     The corpus is represented as two files: one describing the documents, and another
     describing the mapping between words and their ids.
-
+    
     Each document is one line::
-
+    
       N fieldId1:fieldValue1 fieldId2:fieldValue2 ... fieldIdN:fieldValueN
-
+    
     The vocabulary is a file with words, one word per line; word at line K has an
     implicit ``id=K``.
+
     """
 
     def __init__(self, fname, fname_vocab=None):
@@ -83,8 +83,7 @@ class BleiCorpus(IndexedCorpus):
         self.length = lineno + 1
 
     def line2doc(self, line):
-        """
-        Convert line to document.
+        """Convert line to document.
 
         Parameters
         ----------
@@ -95,10 +94,7 @@ class BleiCorpus(IndexedCorpus):
         -------
         list of (int, float)
             document's list representation
-
-        Raises
-        ------
-            ValueError: If format is invalid
+        
         """
         parts = utils.to_unicode(line).split()
         if int(parts[0]) != len(parts) - 1:
@@ -108,10 +104,9 @@ class BleiCorpus(IndexedCorpus):
         return doc
 
     @staticmethod
-    def _save_corpus(fname, corpus, id2word=None, metadata=False):
-        """
-        Save a corpus in the LDA-C format.
-
+    def save_corpus(fname, corpus, id2word=None, metadata=False):
+        """Save a corpus in the LDA-C format.
+        
         There are actually two files saved: `fname` and `fname.vocab`, where
         `fname.vocab` is the vocabulary file.
 
@@ -122,14 +117,14 @@ class BleiCorpus(IndexedCorpus):
         corpus : iterable
             Iterable of documents
         id2word : dict of (str, str), optional
-            Transforms id to word
+            Transforms id to word (Default value = None)
         metadata : bool
-            Any additional info
+            Any additional info (Default value = False)
 
         Returns
         -------
-        list of int
-            Fields' offsets
+            
+        
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
@@ -157,8 +152,7 @@ class BleiCorpus(IndexedCorpus):
         return offsets
 
     def docbyoffset(self, offset):
-        """
-        Return document corresponding to `offset`.
+        """Return document corresponding to `offset`.
 
         Parameters
         ----------
@@ -167,8 +161,8 @@ class BleiCorpus(IndexedCorpus):
 
         Returns
         -------
-        list of (int, float)
-            Document's list representation
+            list of (int, float)
+        
         """
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
