@@ -561,6 +561,7 @@ class PoincareModel(utils.SaveLoad):
         self.wv.syn0[u_indices] = self.clip_vectors(self.wv.syn0[u_indices], self.epsilon)
 
         v_updates = self.alpha * (batch.beta ** 2)[:, np.newaxis] / 4 * grad_v
+        v_updates = v_updates.swapaxes(1, 2).swapaxes(0, 1)
         v_updates = v_updates.reshape(((1 + self.negative) * batch_size, self.size))
         self.handle_duplicates(v_updates, v_indices)
 
