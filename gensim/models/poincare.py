@@ -178,10 +178,10 @@ class PoincareBatch(object):
         """Initialize instance with sets of vectors for which distances are to be computed
 
         Args:
-            vectors_u (numpy array): expected shape (dim, batch_size)
+            vectors_u (numpy array): expected shape (batch_size, dim)
             vectors_v (numpy array): expected shape (1 + neg_size, dim, batch_size)
         """
-        self.vectors_u = vectors_u[np.newaxis, :, :]  # (1, dim, batch_size)
+        self.vectors_u = vectors_u.T[np.newaxis, :, :]  # (1, dim, batch_size)
         self.vectors_v = vectors_v  # (1 + neg_size, dim, batch_size)
 
         self.poincare_dists = None
@@ -499,8 +499,8 @@ class PoincareModel(utils.SaveLoad):
             u_all.append(u)
             v_all.append(v)
             v_all += negatives
-        vectors_u = self.wv.syn0[u_all].T
-        vectors_v = self.wv.syn0[v_all].reshape(1 + self.negative, self.size, self.batch_size)
+        vectors_u = self.wv.syn0[u_all]
+        vectors_v = self.wv.syn0[v_all].reshape(1 + self.negative, self.size, batch_size)
         batch = PoincareBatch(vectors_u, vectors_v)
         batch.compute_all()
         return u_all, v_all, batch
