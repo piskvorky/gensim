@@ -344,7 +344,8 @@ class Similarity(interfaces.SimilarityABC):
         Notes
         -----
         The shard is closed even if it is not full yet (its size is smaller than `self.shardsize`).
-        If documents are added later via `add_documents()`, this incomplete shard will be loaded again and completed.
+        If documents are added later via :meth:`~gensim.similarities.docsim.Similarity.add_documents`,
+        this incomplete shard will be loaded again and completed.
 
         """
         if not self.fresh_docs:
@@ -380,12 +381,21 @@ class Similarity(interfaces.SimilarityABC):
         logger.debug("reopen complete")
 
     def query_shards(self, query):
-        """
-        Return the result of applying shard[query] for each shard in self.shards,
-        as a sequence.
+        """Result of applying shard[query] for each shard in self.shards, as a sequence.
 
-        If PARALLEL_SHARDS is set, the shards are queried in parallel, using
-        the multiprocessing module.
+        Parameters
+        ----------
+        query : query  # ?????????
+            Query that will be used for search.
+
+        Notes
+        -----
+        If PARALLEL_SHARDS is set, the shards are queried in parallel, using the multiprocessing module.
+
+        Returns
+        -------
+        pool, result  # ?????
+
         """
         args = zip([query] * len(self.shards), self.shards)
         if PARALLEL_SHARDS and PARALLEL_SHARDS > 1:
@@ -401,11 +411,20 @@ class Similarity(interfaces.SimilarityABC):
     def __getitem__(self, query):
         """Get similarities of document `query` to all documents in the corpus.
 
-        **or**
+        Parameters
+        ----------
+        query : query  # ???????????
 
-        If `query` is a corpus (iterable of documents), return a matrix of similarities
-        of all query documents vs. all corpus document. This batch query is more
-        efficient than computing the similarities one document after another.
+        Notes
+        -----
+        If `query` is a corpus (iterable of documents), return a matrix of similarities of all query documents
+        vs. all corpus document. This batch query is more efficient than computing the similarities
+        one document after another.
+
+        Returns
+        -------
+        result  # ???????????//
+
         """
         self.close_shard()  # no-op if no documents added to index since last query
 
@@ -452,8 +471,17 @@ class Similarity(interfaces.SimilarityABC):
         return result
 
     def vector_by_id(self, docpos):
-        """
-        Return indexed vector corresponding to the document at position `docpos`.
+        """Get indexed vector corresponding to the document at position `docpos`.
+
+        Parameters
+        ----------
+        docpos : int
+            Position of document in index.
+
+        Returns
+        -------
+        result  # ??????????//
+
         """
         self.close_shard()  # no-op if no documents added to index since last query
         pos = 0
@@ -467,9 +495,13 @@ class Similarity(interfaces.SimilarityABC):
         return result
 
     def similarity_by_id(self, docpos):
-        """
-        Return similarity of the given document only. `docpos` is the position
-        of the query document within index.
+        """Get similarity of the given document only.
+
+        Parameters
+        ----------
+        docpos : int
+            Position of the query document within index.
+
         """
         query = self.vector_by_id(docpos)
         norm, self.norm = self.norm, False
@@ -478,9 +510,12 @@ class Similarity(interfaces.SimilarityABC):
         return result
 
     def __iter__(self):
-        """
-        For each index document, compute cosine similarity against all other
-        documents in the index and yield the result.
+        """For each index document, compute cosine similarity against all other documents in the index.
+
+        Yields
+        ------
+        sim  # ???????????/
+
         """
         # turn off query normalization (vectors in the index are already normalized, save some CPU)
         norm, self.norm = self.norm, False
@@ -495,12 +530,23 @@ class Similarity(interfaces.SimilarityABC):
         self.norm = norm  # restore normalization
 
     def iter_chunks(self, chunksize=None):
-        """
-        Iteratively yield the index as chunks of documents, each of size <= chunksize.
+        """Iteratively yield the index as chunks of documents, each of size <= chunksize.
 
-        The chunk is returned in its raw form (matrix or sparse matrix slice).
-        The size of the chunk may be smaller than requested; it is up to the caller
-        to check the result for real length, using `chunk.shape[0]`.
+        Parameters
+        ----------
+        chunksize : int
+            Size of yielded chunk.
+
+        Notes
+        -----
+        The size of the chunk may be smaller than requested; it is up to the caller to check the result for real length,
+        using `chunk.shape[0]`.
+
+        Yields
+        ------
+        chunk  # ?????
+            The chunk is returned in its raw form (matrix or sparse matrix slice).
+
         """
         self.close_shard()
 
@@ -519,19 +565,21 @@ class Similarity(interfaces.SimilarityABC):
                 yield chunk
 
     def check_moved(self):
-        """
-        Update shard locations, in case the server directory has moved on filesystem.
-        """
+        """Update shard locations, in case the server directory has moved on filesystem."""
         dirname = os.path.dirname(self.output_prefix)
         for shard in self.shards:
             shard.dirname = dirname
 
     def save(self, fname=None, *args, **kwargs):
-        """
-        Save the object via pickling (also see load) under filename specified in
-        the constructor.
+        """Save the object via pickling (also see :meth:`~gensim.similarities.docsim.Similarity.load`).
 
-        Calls `close_shard` internally to spill any unfinished shards to disk first.
+        Parameters
+        ----------
+        fname : str, optional (default = None)
+            Path to output file. If `fname=None`, use `self.output_prefix` as output filename.
+        Warnings
+        --------
+        Calls :meth:`~gensim.similarities.docsim.Similarity.close_shard` internally to spill any unfinished shards to disk first.
 
         """
         self.close_shard()
@@ -540,9 +588,11 @@ class Similarity(interfaces.SimilarityABC):
         super(Similarity, self).save(fname, *args, **kwargs)
 
     def destroy(self):
-        """
-        Delete all files under self.output_prefix. Object is not usable after calling
-        this method anymore. Use with care!
+        """Delete all files under self.output_prefix.
+
+        Warnings
+        --------
+        Object is not usable after calling this method anymore. Use with care!
 
         """
         import glob
@@ -552,29 +602,43 @@ class Similarity(interfaces.SimilarityABC):
 
 
 class MatrixSimilarity(interfaces.SimilarityABC):
-    """
-    Compute similarity against a corpus of documents by storing the index matrix
-    in memory. The similarity measure used is cosine between two vectors.
+    """Compute similarity against a corpus of documents by storing the index matrix in memory.
+    The similarity measure used is cosine between two vectors.
 
-    Use this if your input corpus contains dense vectors (such as documents in LSI
-    space) and fits into RAM.
+    Notes
+    -----
+    Use this if your input corpus contains dense vectors (such as documents in LSI space) and fits into RAM.
+    The matrix is internally stored as a *dense* numpy array.
+    Unless the entire matrix fits into main memory, use :class:`~gensim.similarities.docsim.Similarity` instead.
 
-    The matrix is internally stored as a *dense* numpy array. Unless the entire matrix
-    fits into main memory, use `Similarity` instead.
-
-    See also `Similarity` and `SparseMatrixSimilarity` in this module.
+    See also  :class:`~gensim.similarities.docsim.Similarity`, and
+    :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`.
 
     """
 
     def __init__(self, corpus, num_best=None, dtype=numpy.float32, num_features=None, chunksize=256, corpus_len=None):
         """
-        `num_features` is the number of features in the corpus (will be determined
-        automatically by scanning the corpus if not specified). See `Similarity`
-        class for description of the other parameters.
+        Parameters
+        ----------
+        corpus : corpus  # ???????
+            Nope
+        num_best : int, optional (default = None)
+            Number of most similar document returned after query, always leaving out documents
+            for which the similarity is 0. If `num_best=None`,  will return a full vector of similarities.
+        dtype : np.float32, np.float64 and so on, optional (default = np.float32)
+            Data type of index.
+        num_features : int, optional (default = None)
+            Number of features in the corpus (will be determined automatically by scanning the corpus if not specified).
+        chunksize : int
+            Number of documents in one chunk.
+        corpus_len : int, optional (default = None)
+            Size of corpus.
 
         """
         if num_features is None:
-            logger.warning("scanning corpus to determine the number of features (consider setting `num_features` explicitly)")
+            logger.warning(
+                "scanning corpus to determine the number of features (consider setting `num_features` explicitly)"
+            )
             num_features = 1 + utils.get_max_id(corpus)
 
         self.num_features = num_features
@@ -610,18 +674,30 @@ class MatrixSimilarity(interfaces.SimilarityABC):
                 self.index[docno] = vector
 
     def __len__(self):
+        """Size of index."""
         return self.index.shape[0]
 
     def get_similarities(self, query):
-        """
-        Return similarity of sparse vector `query` to all documents in the corpus,
-        as a numpy array.
+        """Get similarity of sparse vector `query` to all documents in the corpus.
 
+        Parameters
+        ----------
+        query : query  # ??????????????
+
+        Notes
+        -----
         If `query` is a collection of documents, return a 2D array of similarities
         of each document in `query` to all documents in the corpus (=batch query,
         faster than processing each document in turn).
 
-        **Do not use this function directly; use the self[query] syntax instead.**
+        Warnings
+        --------
+        Do not use this function directly; use the self[query] syntax instead.
+
+        Returns
+        -------
+        np.array
+            Similarities between `query` and all docs in index.
 
         """
         is_corpus, query = utils.is_corpus(query)
@@ -646,40 +722,47 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         return result  # XXX: removed casting the result from array to list; does anyone care?
 
     def __str__(self):
+        """String representation of instance."""
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.index.shape[1])
 
 
 class WmdSimilarity(interfaces.SimilarityABC):
     """
-    Document similarity (like MatrixSimilarity) that uses the negative of WMD
-    as a similarity measure. See gensim.models.word2vec.wmdistance for more
-    information.
+    Document similarity (like MatrixSimilarity) that uses the negative of WMD as a similarity measure.
+    See :class:`~gensim.models.word2vec.wmdistance` for more information.
 
-    When a `num_best` value is provided, only the most similar documents are
-    retrieved.
-
-    When using this code, please consider citing the following papers:
-
+    References
+    ----------
     .. Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
     .. Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
     .. Matt Kusner et al. "From Word Embeddings To Document Distances".
 
-    Example:
-        # See Tutorial Notebook for more examples https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb
-        >>> # Given a document collection "corpus", train word2vec model.
-        >>> model = word2vec(corpus)
-        >>> instance = WmdSimilarity(corpus, model, num_best=10)
-        >>> # Make query.
-        >>> query = 'Very good, you should seat outdoor.'
-        >>> sims = instance[query]
+    Examples
+    --------
+    >>> # Given a document collection "corpus", train word2vec model.
+    >>> model = word2vec(corpus)
+    >>> instance = WmdSimilarity(corpus, model, num_best=10)
+    >>> # Make query.
+    >>> query = 'Very good, you should seat outdoor.'
+    >>> sims = instance[query]
+
     """
 
     def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v_and_replace=True, chunksize=256):
         """
-        corpus:                         List of lists of strings, as in gensim.models.word2vec.
-        w2v_model:                      A trained word2vec model.
-        num_best:                       Number of results to retrieve.
-        normalize_w2v_and_replace:      Whether or not to normalize the word2vec vectors to length 1.
+        Parameters
+        ----------
+        corpus : ?????/
+            List of lists of strings, as in gensim.models.word2vec.
+        w2v_model: :class:`gensim.models.word2vec.Word2Vec`
+            Trained word2vec model.
+        num_best : int, optional (default = None)
+            Number of results to retrieve.
+        normalize_w2v_and_replace : bool, optional (default = True)
+            If True - normalize w2v vectors, otherwise - do nothing.
+        chunksize : int
+            Size of chunk.
+
         """
         self.corpus = corpus
         self.w2v_model = w2v_model
@@ -697,11 +780,31 @@ class WmdSimilarity(interfaces.SimilarityABC):
             w2v_model.init_sims(replace=True)
 
     def __len__(self):
+        """Size of index."""
         return len(self.corpus)
 
     def get_similarities(self, query):
-        """
-        **Do not use this function directly; use the self[query] syntax instead.**
+        """Get similarity of sparse vector `query` to all documents in the corpus.
+
+        Parameters
+        ----------
+        query : query  # ??????????????
+
+        Notes
+        -----
+        If `query` is a collection of documents, return a 2D array of similarities
+        of each document in `query` to all documents in the corpus (=batch query,
+        faster than processing each document in turn).
+
+        Warnings
+        --------
+        Do not use this function directly; use the self[query] syntax instead.
+
+        Returns
+        -------
+        np.array
+            Similarities between `query` and all docs in index.
+
         """
         if isinstance(query, numpy.ndarray):
             # Convert document indexes to actual documents.
@@ -730,13 +833,14 @@ class WmdSimilarity(interfaces.SimilarityABC):
         return result
 
     def __str__(self):
+        """String representation of instance."""
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.wv.syn0.shape[1])
 
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
     """
-    Compute similarity against a corpus of documents by storing the sparse index
-    matrix in memory. The similarity measure used is cosine between two vectors.
+    Compute similarity against a corpus of documents by storing the sparse index matrix in memory.
+    The similarity measure used is cosine between two vectors.
 
     Use this if your input corpus contains sparse vectors (such as documents in
     bag-of-words format) and fits into RAM.
@@ -789,18 +893,30 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
             logger.info("created %r", self.index)
 
     def __len__(self):
+        """Size of index."""
         return self.index.shape[0]
 
     def get_similarities(self, query):
-        """
-        Return similarity of sparse vector `query` to all documents in the corpus,
-        as a numpy array.
+        """Get similarity of sparse vector `query` to all documents in the corpus.
 
+        Parameters
+        ----------
+        query : query  # ??????????????
+
+        Notes
+        -----
         If `query` is a collection of documents, return a 2D array of similarities
         of each document in `query` to all documents in the corpus (=batch query,
         faster than processing each document in turn).
 
-        **Do not use this function directly; use the self[query] syntax instead.**
+        Warnings
+        --------
+        Do not use this function directly; use the self[query] syntax instead.
+
+        Returns
+        -------
+        np.array
+            Similarities between `query` and all docs in index.
 
         """
         is_corpus, query = utils.is_corpus(query)
