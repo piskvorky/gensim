@@ -490,7 +490,7 @@ class PoincareModel(utils.SaveLoad):
         exp_negative_distances = np.exp(-all_distances)
         return (-np.log(exp_negative_distances[:, 0] / exp_negative_distances.sum(axis=1))).sum()
 
-    def prepare_training_batch(self, relations, all_negatives):
+    def prepare_training_batch(self, relations, all_negatives, check_gradients=True):
         """Creates training batch and computes all gradients and loss"""
         batch_size = len(relations)
         all_vectors = []
@@ -504,6 +504,19 @@ class PoincareModel(utils.SaveLoad):
         vectors_v = self.wv.syn0[v_all].reshape(1 + self.negative, self.size, batch_size)
         batch = PoincareBatch(vectors_u, vectors_v)
         batch.compute_all()
+
+        if check_gradients:
+            max_diff = 0.0
+            for i in range(batch_size):
+                example = PoincareExample(vectors_u[i], vectors_v[:, :, i])
+                example.compute_all()
+                grad_u_diff = np.abs(example.gradients_u - batch.gradients_u[:, i]).max()
+                grad_v_diff = np.abs(example.gradients_v - batch.gradients_v[:, :, i]).max()
+                diff = max(grad_u_diff, grad_v_diff)
+                if diff > max_diff:
+                    max_diff = diff
+            print('Max difference between gradients: %.10f' % max_diff)
+            assert max_diff < 1e-10, 'Max difference greater than tolerance'
         return u_all, v_all, batch
 
     def sample_negatives_batch(self, nodes):
