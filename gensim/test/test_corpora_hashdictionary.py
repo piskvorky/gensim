@@ -9,20 +9,12 @@ Unit tests for the `corpora.HashDictionary` class.
 
 
 import logging
-import tempfile
 import unittest
 import os
 import zlib
 
 from gensim.corpora.hashdictionary import HashDictionary
-
-
-# sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
-
-
-def get_tmpfile(suffix):
-    return os.path.join(tempfile.gettempdir(), suffix)
+from gensim.test.utils import get_tmpfile
 
 
 class TestHashDictionary(unittest.TestCase):

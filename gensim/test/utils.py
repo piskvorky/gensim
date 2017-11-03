@@ -19,3 +19,7 @@ def testfile(test_fname=''):
     # temporary data will be stored to this file
     fname = 'gensim_models_' + test_fname + '.tst'
     return os.path.join(tempfile.gettempdir(), fname)
+
+
+def get_tmpfile(suffix):
+    return os.path.join(tempfile.gettempdir(), suffix)
