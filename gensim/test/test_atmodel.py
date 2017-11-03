@@ -24,7 +24,7 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import atmodel
 from gensim import matutils
 from gensim.test import basetmtests
-from gensim.test.utils import (datapath, testfile)
+from gensim.test.utils import (datapath, get_tmpfile)
 
 # TODO:
 # Test that computing the bound on new unseen documents works as expected (this is somewhat different
@@ -489,7 +489,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertEqual(model.num_updates, len(corpus) * len(test_rhots))
 
     def testPersistence(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_atmodel.tst')
         model = self.model
         model.save(fname)
         model2 = self.class_.load(fname)
@@ -498,7 +498,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model.state.gamma, model2.state.gamma))
 
     def testPersistenceIgnore(self):
-        fname = testfile('testPersistenceIgnore')
+        fname = get_tmpfile('gensim_models_atmodel_testPersistenceIgnore.tst')
         model = atmodel.AuthorTopicModel(corpus, author2doc=author2doc, num_topics=2)
         model.save(fname, ignore='id2word')
         model2 = atmodel.AuthorTopicModel.load(fname)
@@ -509,7 +509,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(model2.id2word is None)
 
     def testPersistenceCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_atmodel.tst.gz')
         model = self.model
         model.save(fname)
         model2 = self.class_.load(fname, mmap=None)
@@ -524,7 +524,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(jill_topics, jill_topics2))
 
     def testLargeMmap(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_atmodel.tst')
         model = self.model
 
         # simulate storing large arrays separately
@@ -544,7 +544,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(jill_topics, jill_topics2))
 
     def testLargeMmapCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_atmodel.tst.gz')
         model = self.model
 
         # simulate storing large arrays separately

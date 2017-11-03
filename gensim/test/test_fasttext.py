@@ -3,7 +3,6 @@
 
 import logging
 import unittest
-import tempfile
 import os
 import struct
 
@@ -14,7 +13,7 @@ from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as FT_wrapper
-from gensim.test.utils import datapath
+from gensim.test.utils import (datapath, get_tmpfile)
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +49,6 @@ new_sentences = [
     ['intelligence'],
     ['artificial', 'intelligence', 'system']
 ]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_fasttext.tst')
 
 
 class TestFastTextModel(unittest.TestCase):
@@ -112,29 +106,31 @@ class TestFastTextModel(unittest.TestCase):
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_persistence(self):
+        tmpf = get_tmpfile('gensim_fasttext.tst')
         model = FT_gensim(sentences, min_count=1)
-        model.save(testfile())
-        self.models_equal(model, FT_gensim.load(testfile()))
+        model.save(tmpf)
+        self.models_equal(model, FT_gensim.load(tmpf))
         #  test persistence of the KeyedVectors of a model
         wv = model.wv
-        wv.save(testfile())
-        loaded_wv = FastTextKeyedVectors.load(testfile())
+        wv.save(tmpf)
+        loaded_wv = FastTextKeyedVectors.load(tmpf)
         self.assertTrue(np.allclose(wv.syn0_ngrams, loaded_wv.syn0_ngrams))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
         self.assertEqual(len(wv.ngrams), len(loaded_wv.ngrams))
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_norm_vectors_not_saved(self):
+        tmpf = get_tmpfile('gensim_fasttext.tst')
         model = FT_gensim(sentences, min_count=1)
         model.init_sims()
-        model.save(testfile())
-        loaded_model = FT_gensim.load(testfile())
+        model.save(tmpf)
+        loaded_model = FT_gensim.load(tmpf)
         self.assertTrue(loaded_model.wv.syn0norm is None)
         self.assertTrue(loaded_model.wv.syn0_ngrams_norm is None)
 
         wv = model.wv
-        wv.save(testfile())
-        loaded_kv = FastTextKeyedVectors.load(testfile())
+        wv.save(tmpf)
+        loaded_kv = FastTextKeyedVectors.load(tmpf)
         self.assertTrue(loaded_kv.syn0norm is None)
         self.assertTrue(loaded_kv.syn0_ngrams_norm is None)
 
@@ -361,8 +357,9 @@ class TestFastTextModel(unittest.TestCase):
             logger.info("FT_HOME env variable not set, skipping test")
             return
 
+        tmpf = get_tmpfile('gensim_fasttext.tst')
         model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=datapath('lee_background.cor'),
-            output_file=testfile(), model='cbow', size=50, alpha=0.05, window=5, min_count=5, word_ngrams=1,
+            output_file=tmpf, model='cbow', size=50, alpha=0.05, window=5, min_count=5, word_ngrams=1,
             loss='hs', sample=1e-3, negative=0, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12)
 
         model_gensim = FT_gensim(size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
@@ -381,8 +378,9 @@ class TestFastTextModel(unittest.TestCase):
             logger.info("FT_HOME env variable not set, skipping test")
             return
 
+        tmpf = get_tmpfile('gensim_fasttext.tst')
         model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=datapath('lee_background.cor'),
-            output_file=testfile(), model='skipgram', size=50, alpha=0.025, window=5, min_count=5, word_ngrams=1,
+            output_file=tmpf, model='skipgram', size=50, alpha=0.025, window=5, min_count=5, word_ngrams=1,
             loss='hs', sample=1e-3, negative=0, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12)
 
         model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
@@ -410,9 +408,10 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue('tif' in model_hs.wv.ngrams)  # ngram added because of the word `artificial`
 
     def test_online_learning_after_save(self):
+        tmpf = get_tmpfile('gensim_fasttext.tst')
         model_neg = FT_gensim(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
-        model_neg.save(testfile())
-        model_neg = FT_gensim.load(testfile())
+        model_neg.save(tmpf)
+        model_neg = FT_gensim.load(tmpf)
         self.assertTrue(len(model_neg.wv.vocab), 12)
         self.assertTrue(len(model_neg.wv.ngrams), 202)
         model_neg.build_vocab(new_sentences, update=True)  # update vocab

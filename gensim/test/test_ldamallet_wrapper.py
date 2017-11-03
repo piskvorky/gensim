@@ -13,7 +13,6 @@ import logging
 import unittest
 import os
 import os.path
-import tempfile
 
 import numpy as np
 
@@ -22,7 +21,7 @@ from gensim.models.wrappers import ldamallet
 from gensim import matutils
 from gensim.models import ldamodel
 from gensim.test import basetmtests
-from gensim.test.utils import datapath
+from gensim.test.utils import (datapath, get_tmpfile)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [
@@ -39,11 +38,6 @@ texts = [
 
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
 class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
@@ -123,7 +117,7 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def testPersistence(self):
         if not self.mallet_path:
             return
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_lda_mallet.tst')
         model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname)
@@ -135,7 +129,7 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def testPersistenceCompressed(self):
         if not self.mallet_path:
             return
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_lda_mallet.tst.gz')
         model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname, mmap=None)
@@ -147,7 +141,7 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def testLargeMmap(self):
         if not self.mallet_path:
             return
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_lda_mallet.tst')
         model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
 
         # simulate storing large arrays separately
@@ -164,7 +158,7 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def testLargeMmapCompressed(self):
         if not self.mallet_path:
             return
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_lda_mallet.tst.gz')
         model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
 
         # simulate storing large arrays separately

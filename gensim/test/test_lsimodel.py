@@ -10,9 +10,6 @@ Automated tests for checking transformation algorithms (the models package).
 
 
 import logging
-import os
-import os.path
-import tempfile
 import unittest
 
 import numpy as np
@@ -22,7 +19,7 @@ from gensim import matutils
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import lsimodel
 from gensim.test import basetmtests
-from gensim.test.utils import datapath
+from gensim.test.utils import (datapath, get_tmpfile)
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
@@ -39,11 +36,6 @@ texts = [
 ]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
 class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
@@ -138,7 +130,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(abs(vec1), abs(vec2), atol=1e-5))  # the two LSI representations must equal up to sign
 
     def testPersistence(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_lsi.tst')
         model = self.model
         model.save(fname)
         model2 = lsimodel.LsiModel.load(fname)
@@ -149,7 +141,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testPersistenceCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_lsi.tst.gz')
         model = self.model
         model.save(fname)
         model2 = lsimodel.LsiModel.load(fname, mmap=None)
@@ -160,7 +152,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testLargeMmap(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_lsi.tst')
         model = self.model
 
         # test storing the internal arrays into separate files
@@ -177,7 +169,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testLargeMmapCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_lsi.tst.gz')
         model = self.model
 
         # test storing the internal arrays into separate files

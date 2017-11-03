@@ -11,9 +11,6 @@ Automated tests for checking transformation algorithms (the models package).
 
 import logging
 import unittest
-import os
-import os.path
-import tempfile
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import hdpmodel
@@ -21,8 +18,6 @@ from gensim.test import basetmtests
 from gensim.test.utils import datapath
 
 import numpy as np
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [
@@ -38,11 +33,6 @@ texts = [
 ]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
 class TestHdpModel(unittest.TestCase, basetmtests.TestBaseTopicModel):

@@ -10,7 +10,6 @@ Automated tests for checking transformation algorithms (the models package).
 
 import logging
 import os
-import tempfile
 import unittest
 from unittest import SkipTest
 import multiprocessing as mp
@@ -23,11 +22,7 @@ from gensim.models.coherencemodel import CoherenceModel, BOOLEAN_DOCUMENT_BASED
 from gensim.models.ldamodel import LdaModel
 from gensim.models.wrappers import LdaMallet
 from gensim.models.wrappers import LdaVowpalWabbit
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
+from gensim.test.utils import get_tmpfile
 
 
 class TestCoherenceModel(unittest.TestCase):
@@ -229,7 +224,7 @@ class TestCoherenceModel(unittest.TestCase):
             self.assertEqual(get_model(processes=p).processes, p)
 
     def testPersistence(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_coherence.tst')
         model = CoherenceModel(
             topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass'
         )
@@ -238,7 +233,7 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertTrue(model.get_coherence() == model2.get_coherence())
 
     def testPersistenceCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_coherence.tst.gz')
         model = CoherenceModel(
             topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass'
         )
@@ -247,7 +242,7 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertTrue(model.get_coherence() == model2.get_coherence())
 
     def testPersistenceAfterProbabilityEstimationUsingCorpus(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         model = CoherenceModel(
             topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass'
         )
@@ -258,7 +253,7 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertTrue(model.get_coherence() == model2.get_coherence())
 
     def testPersistenceAfterProbabilityEstimationUsingTexts(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         model = CoherenceModel(
             topics=self.topics1, texts=self.texts, dictionary=self.dictionary, coherence='c_v'
         )

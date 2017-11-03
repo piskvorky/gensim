@@ -12,7 +12,6 @@ Automated tests for similarity algorithms (the similarities package).
 import logging
 import unittest
 import os
-import tempfile
 
 import numpy
 import scipy
@@ -24,7 +23,7 @@ from gensim.models import KeyedVectors
 from gensim.models.wrappers import fasttext
 from gensim import matutils, similarities
 from gensim.models import Word2Vec
-from gensim.test.utils import datapath
+from gensim.test.utils import (datapath, get_tmpfile)
 
 try:
     from pyemd import emd  # noqa:F401
@@ -48,11 +47,6 @@ dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
 sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(texts)]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_similarities.tst.pkl')
 
 
 class _TestSimilarityABC(object):
@@ -175,7 +169,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -200,7 +194,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -225,7 +219,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -252,7 +246,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -279,7 +273,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -307,7 +301,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -542,7 +536,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def assertIndexSaved(self, index):
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         index.save(fname)
         self.assertTrue(os.path.exists(fname))
         self.assertTrue(os.path.exists(fname + '.d'))
@@ -550,7 +544,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
     def assertLoadedIndexEqual(self, index, model):
         from gensim.similarities.index import AnnoyIndexer
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         index.save(fname)
 
         index2 = AnnoyIndexer()
@@ -595,7 +589,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def testSave(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         self.index.save(fname)
         self.assertTrue(os.path.exists(fname))
         self.assertTrue(os.path.exists(fname + '.d'))
@@ -609,7 +603,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
     def testSaveLoad(self):
         from gensim.similarities.index import AnnoyIndexer
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         self.index.save(fname)
 
         self.index2 = AnnoyIndexer()

@@ -23,12 +23,7 @@ from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
 from gensim.interfaces import TransformedCorpus
 from gensim.utils import to_unicode
-from gensim.test.utils import datapath
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_corpus.tst')
+from gensim.test.utils import (datapath, get_tmpfile)
 
 
 class DummyTransformer(object):
@@ -55,7 +50,7 @@ class CorpusTestCase(unittest.TestCase):
 
     def tearDown(self):
         # remove all temporary test files
-        fname = testfile()
+        fname = get_tmpfile('gensim_corpus.tst')
         extensions = ['', '', '.bz2', '.gz', '.index', '.vocab']
         for ext in itertools.permutations(extensions, 2):
             try:
@@ -87,13 +82,14 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEqual(len(corpus), 9)
 
     def test_empty_input(self):
-        with open(testfile(), 'w') as f:
+        tmpf = get_tmpfile('gensim_corpus.tst')
+        with open(tmpf, 'w') as f:
             f.write('')
 
-        with open(testfile() + '.vocab', 'w') as f:
+        with open(tmpf + '.vocab', 'w') as f:
             f.write('')
 
-        corpus = self.corpus_class(testfile())
+        corpus = self.corpus_class(tmpf)
         self.assertEqual(len(corpus), 0)
 
         docs = list(corpus)
@@ -101,22 +97,24 @@ class CorpusTestCase(unittest.TestCase):
 
     def test_save(self):
         corpus = self.TEST_CORPUS
+        tmpf = get_tmpfile('gensim_corpus.tst')
 
         # make sure the corpus can be saved
-        self.corpus_class.save_corpus(testfile(), corpus)
+        self.corpus_class.save_corpus(tmpf, corpus)
 
         # and loaded back, resulting in exactly the same corpus
-        corpus2 = list(self.corpus_class(testfile()))
+        corpus2 = list(self.corpus_class(tmpf))
         self.assertEqual(corpus, corpus2)
 
     def test_serialize(self):
         corpus = self.TEST_CORPUS
+        tmpf = get_tmpfile('gensim_corpus.tst')
 
         # make sure the corpus can be saved
-        self.corpus_class.serialize(testfile(), corpus)
+        self.corpus_class.serialize(tmpf, corpus)
 
         # and loaded back, resulting in exactly the same corpus
-        corpus2 = self.corpus_class(testfile())
+        corpus2 = self.corpus_class(tmpf)
         self.assertEqual(corpus, list(corpus2))
 
         # make sure the indexing corpus[i] works
@@ -131,9 +129,10 @@ class CorpusTestCase(unittest.TestCase):
 
     def test_serialize_compressed(self):
         corpus = self.TEST_CORPUS
+        tmpf = get_tmpfile('gensim_corpus.tst')
 
         for extension in ['.gz', '.bz2']:
-            fname = testfile() + extension
+            fname = tmpf + extension
             # make sure the corpus can be saved
             self.corpus_class.serialize(fname, corpus)
 
@@ -246,7 +245,7 @@ class TestBleiCorpus(CorpusTestCase):
 
     def test_save_format_for_dtm(self):
         corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
-        test_file = testfile()
+        test_file = get_tmpfile('gensim_corpus.tst')
         self.corpus_class.save_corpus(test_file, corpus)
         with open(test_file) as f:
             for line in f:

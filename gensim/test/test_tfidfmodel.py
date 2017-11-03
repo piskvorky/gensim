@@ -11,15 +11,12 @@ Automated tests for checking transformation algorithms (the models package).
 
 import logging
 import unittest
-import os
-import os.path
-import tempfile
 
 import numpy as np
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import tfidfmodel
-from gensim.test.utils import datapath
+from gensim.test.utils import (datapath, get_tmpfile)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [
@@ -35,11 +32,6 @@ texts = [
 ]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
 class TestTfidfModel(unittest.TestCase):
@@ -72,7 +64,7 @@ class TestTfidfModel(unittest.TestCase):
         self.assertEqual(model1.idfs, model2.idfs)
 
     def testPersistence(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models.tst')
         model = tfidfmodel.TfidfModel(self.corpus, normalize=True)
         model.save(fname)
         model2 = tfidfmodel.TfidfModel.load(fname)
@@ -81,7 +73,7 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testPersistenceCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models.tst.gz')
         model = tfidfmodel.TfidfModel(self.corpus, normalize=True)
         model.save(fname)
         model2 = tfidfmodel.TfidfModel.load(fname, mmap=None)

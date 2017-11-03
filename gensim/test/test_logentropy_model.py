@@ -11,15 +11,11 @@ Automated tests for checking transformation algorithms (the models package).
 
 import logging
 import unittest
-import os
-import os.path
-import tempfile
-
 import numpy as np
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import logentropy_model
-from gensim.test.utils import datapath
+from gensim.test.utils import (datapath, get_tmpfile)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [
@@ -35,11 +31,6 @@ texts = [
 ]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
 class TestLogEntropyModel(unittest.TestCase):
@@ -63,7 +54,7 @@ class TestLogEntropyModel(unittest.TestCase):
         self.assertTrue(np.allclose(transformed, expected))
 
     def testPersistence(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_logentry.tst')
         model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=True)
         model.save(fname)
         model2 = logentropy_model.LogEntropyModel.load(fname)
@@ -72,7 +63,7 @@ class TestLogEntropyModel(unittest.TestCase):
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))
 
     def testPersistenceCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_logentry.tst.gz')
         model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=True)
         model.save(fname)
         model2 = logentropy_model.LogEntropyModel.load(fname, mmap=None)

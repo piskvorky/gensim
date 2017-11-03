@@ -12,7 +12,6 @@ Automated tests for checking transformation algorithms (the models package).
 import logging
 import unittest
 import os
-import tempfile
 import bz2
 import sys
 
@@ -20,7 +19,7 @@ import numpy as np
 
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
-from gensim.test.utils import datapath
+from gensim.test.utils import (datapath, get_tmpfile)
 from testfixtures import log_capture
 
 try:
@@ -61,11 +60,6 @@ new_sentences = [
 ]
 
 
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
-
-
 def _rule(word, count, min_count):
     if word == "human":
         return utils.RULE_DISCARD  # throw out
@@ -75,10 +69,11 @@ def _rule(word, count, min_count):
 
 def load_on_instance():
     # Save and load a Word2Vec Model on instance for test
+    tmpf = get_tmpfile('gensim_word2vec.tst')
     model = word2vec.Word2Vec(sentences, min_count=1)
-    model.save(testfile())
+    model.save(tmpf)
     model = word2vec.Word2Vec()  # should fail at this point
-    return model.load(testfile())
+    return model.load(tmpf)
 
 
 class TestWord2VecModel(unittest.TestCase):
@@ -146,9 +141,10 @@ class TestWord2VecModel(unittest.TestCase):
     def testOnlineLearningAfterSave(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model_neg = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
-        model_neg.save(testfile())
-        model_neg = word2vec.Word2Vec.load(testfile())
+        model_neg.save(tmpf)
+        model_neg = word2vec.Word2Vec.load(tmpf)
         self.assertTrue(len(model_neg.wv.vocab), 12)
         model_neg.build_vocab(new_sentences, update=True)
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
@@ -201,21 +197,23 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testPersistence(self):
         """Test storing/loading the entire model."""
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.save(testfile())
-        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+        model.save(tmpf)
+        self.models_equal(model, word2vec.Word2Vec.load(tmpf))
         #  test persistence of the KeyedVectors of a model
         wv = model.wv
-        wv.save(testfile())
-        loaded_wv = keyedvectors.KeyedVectors.load(testfile())
+        wv.save(tmpf)
+        loaded_wv = keyedvectors.KeyedVectors.load(tmpf)
         self.assertTrue(np.allclose(wv.syn0, loaded_wv.syn0))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
     def testPersistenceWithConstructorRule(self):
         """Test storing/loading the entire model with a vocab trimming rule passed in the constructor."""
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=_rule)
-        model.save(testfile())
-        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+        model.save(tmpf)
+        self.models_equal(model, word2vec.Word2Vec.load(tmpf))
 
     def testRuleWithMinCount(self):
         """Test that returning RULE_DEFAULT from trim_rule triggers min_count."""
@@ -240,15 +238,16 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testSyn0NormNotSaved(self):
         """Test syn0norm isn't saved in model file"""
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        model.save(testfile())
-        loaded_model = word2vec.Word2Vec.load(testfile())
+        model.save(tmpf)
+        loaded_model = word2vec.Word2Vec.load(tmpf)
         self.assertTrue(loaded_model.wv.syn0norm is None)
 
         wv = model.wv
-        wv.save(testfile())
-        loaded_kv = keyedvectors.KeyedVectors.load(testfile())
+        wv.save(tmpf)
+        loaded_kv = keyedvectors.KeyedVectors.load(tmpf)
         self.assertTrue(loaded_kv.syn0norm is None)
 
     def testLoadPreKeyedVectorModel(self):
@@ -280,34 +279,36 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        model.wv.save_word2vec_format(testfile(), binary=True)
-        binary_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        model.wv.save_word2vec_format(tmpf, binary=True)
+        binary_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
         binary_model_kv.init_sims(replace=False)
         self.assertTrue(np.allclose(model['human'], binary_model_kv['human']))
-        norm_only_model = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        norm_only_model = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
         norm_only_model.init_sims(replace=True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
         self.assertTrue(np.allclose(model.wv.syn0norm[model.wv.vocab['human'].index], norm_only_model['human']))
-        limited_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True, limit=3)
+        limited_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True, limit=3)
         self.assertEqual(len(limited_model_kv.syn0), 3)
         half_precision_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(
-            testfile(), binary=True, datatype=np.float16
+            tmpf, binary=True, datatype=np.float16
         )
         self.assertEqual(binary_model_kv.syn0.nbytes, half_precision_model_kv.syn0.nbytes * 2)
 
     def testNoTrainingCFormat(self):
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        model.wv.save_word2vec_format(testfile(), binary=True)
-        kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        model.wv.save_word2vec_format(tmpf, binary=True)
+        kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
         binary_model = word2vec.Word2Vec()
         binary_model.wv = kv
         self.assertRaises(ValueError, binary_model.train, sentences)
 
     def testTooShortBinaryWord2VecFormat(self):
-        tfile = testfile()
+        tfile = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
         model.wv.save_word2vec_format(tfile, binary=True)
@@ -317,7 +318,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertRaises(EOFError, keyedvectors.KeyedVectors.load_word2vec_format, tfile, binary=True)
 
     def testTooShortTextWord2VecFormat(self):
-        tfile = testfile()
+        tfile = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
         model.wv.save_word2vec_format(tfile, binary=False)
@@ -328,13 +329,14 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testPersistenceWord2VecFormatNonBinary(self):
         """Test storing/loading the entire model in word2vec non-binary format."""
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        model.wv.save_word2vec_format(testfile(), binary=False)
-        text_model = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=False)
+        model.wv.save_word2vec_format(tmpf, binary=False)
+        text_model = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=False)
         text_model.init_sims(False)
         self.assertTrue(np.allclose(model['human'], text_model['human'], atol=1e-6))
-        norm_only_model = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=False)
+        norm_only_model = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=False)
         norm_only_model.init_sims(True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human'], atol=1e-6))
         self.assertTrue(np.allclose(
@@ -343,44 +345,48 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testPersistenceWord2VecFormatWithVocab(self):
         """Test storing/loading the entire model and vocabulary in word2vec format."""
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
-        model.wv.save_word2vec_format(testfile(), testvocab, binary=True)
-        binary_model_with_vocab_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), testvocab, binary=True)
+        testvocab = get_tmpfile('gensim_word2vec.vocab')
+        model.wv.save_word2vec_format(tmpf, testvocab, binary=True)
+        binary_model_with_vocab_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, testvocab, binary=True)
         self.assertEqual(model.wv.vocab['human'].count, binary_model_with_vocab_kv.vocab['human'].count)
 
     def testPersistenceKeyedVectorsFormatWithVocab(self):
         """Test storing/loading the entire model and vocabulary in word2vec format."""
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
-        model.wv.save_word2vec_format(testfile(), testvocab, binary=True)
-        kv_binary_model_with_vocab = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), testvocab, binary=True)
+        testvocab = get_tmpfile('gensim_word2vec.vocab')
+        model.wv.save_word2vec_format(tmpf, testvocab, binary=True)
+        kv_binary_model_with_vocab = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, testvocab, binary=True)
         self.assertEqual(model.wv.vocab['human'].count, kv_binary_model_with_vocab.vocab['human'].count)
 
     def testPersistenceWord2VecFormatCombinationWithStandardPersistence(self):
         """Test storing/loading the entire model and vocabulary in word2vec format chained with
          saving and loading via `save` and `load` methods`.
          It was possible prior to 1.0.0 release, now raises Exception"""
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
-        testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
-        model.wv.save_word2vec_format(testfile(), testvocab, binary=True)
-        binary_model_with_vocab_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), testvocab, binary=True)
-        binary_model_with_vocab_kv.save(testfile())
-        self.assertRaises(AttributeError, word2vec.Word2Vec.load, testfile())
+        testvocab = get_tmpfile('gensim_word2vec.vocab')
+        model.wv.save_word2vec_format(tmpf, testvocab, binary=True)
+        binary_model_with_vocab_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, testvocab, binary=True)
+        binary_model_with_vocab_kv.save(tmpf)
+        self.assertRaises(AttributeError, word2vec.Word2Vec.load, tmpf)
 
     def testLargeMmap(self):
         """Test storing/loading the entire model."""
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
 
         # test storing the internal arrays into separate files
-        model.save(testfile(), sep_limit=0)
-        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+        model.save(tmpf, sep_limit=0)
+        self.models_equal(model, word2vec.Word2Vec.load(tmpf))
 
         # make sure mmaping the arrays back works, too
-        self.models_equal(model, word2vec.Word2Vec.load(testfile(), mmap='r'))
+        self.models_equal(model, word2vec.Word2Vec.load(tmpf, mmap='r'))
 
     def testVocab(self):
         """Test word2vec vocabulary building."""
@@ -672,9 +678,10 @@ class TestWord2VecModel(unittest.TestCase):
                 self.assertTrue(not hasattr(model, 'syn0_lockf'))
 
     def testNormalizeAfterTrainingData(self):
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.save(testfile())
-        norm_only_model = word2vec.Word2Vec.load(testfile())
+        model.save(tmpf)
+        norm_only_model = word2vec.Word2Vec.load(tmpf)
         norm_only_model.delete_temporary_training_data(replace_word_vectors_with_normalized=True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
 
@@ -690,9 +697,10 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(predictions_out_of_vocab, None)
 
         # when required model parameters have been deleted
+        tmpf = get_tmpfile('gensim_word2vec.tst')
         model_with_neg.init_sims()
-        model_with_neg.wv.save_word2vec_format(testfile(), binary=True)
-        kv_model_with_neg = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True)
+        model_with_neg.wv.save_word2vec_format(tmpf, binary=True)
+        kv_model_with_neg = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
         binary_model_with_neg = word2vec.Word2Vec()
         binary_model_with_neg.wv = kv_model_with_neg
         self.assertRaises(RuntimeError, binary_model_with_neg.predict_output_word, ['system', 'human'])
