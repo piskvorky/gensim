@@ -455,7 +455,9 @@ class PoincareModel(utils.SaveLoad):
         self.wv.syn0[u] -= self.alpha * (example.alpha ** 2) / 4 * grad_u
         self.wv.syn0[u] = self.clip_vectors(self.wv.syn0[u], self.epsilon)
 
-        self.wv.syn0[v_all] -= self.alpha * (example.beta ** 2)[:, np.newaxis] / 4 * grad_v
+        v_updates = self.alpha * (example.beta ** 2)[:, np.newaxis] / 4 * grad_v
+        self.handle_duplicates(v_updates, v_all)
+        self.wv.syn0[v_all] -= v_updates
         self.wv.syn0[v_all] = self.clip_vectors(self.wv.syn0[v_all], self.epsilon)
 
         # if (np.linalg.norm(self.wv.syn0, axis=1) >= 1 - self.epsilon).any():
