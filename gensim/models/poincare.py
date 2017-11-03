@@ -492,6 +492,7 @@ class PoincareModel(utils.SaveLoad):
 
     def prepare_training_batch(self, relations, all_negatives):
         """Creates training batch and computes all gradients and loss"""
+        batch_size = len(relations)
         all_vectors = []
         u_all, v_all = [], []
         for relation, negatives in zip(relations, all_negatives):
@@ -522,13 +523,14 @@ class PoincareModel(utils.SaveLoad):
         return batch
 
     def update_vectors_batch(self, batch, u_indices, v_indices):
+        batch_size = len(u_indices)
         grad_u, grad_v = batch.gradients_u, batch.gradients_v
 
         self.wv.syn0[u_indices] -= (self.alpha * (batch.alpha ** 2) / 4 * grad_u).T
         self.wv.syn0[u_indices] = self.clip_vectors(self.wv.syn0[u_indices], self.epsilon)
 
         v_updates = self.alpha * (batch.beta ** 2)[:, np.newaxis] / 4 * grad_v
-        v_updates = v_updates.reshape(((1 + self.negative) * self.batch_size, self.size))
+        v_updates = v_updates.reshape(((1 + self.negative) * batch_size, self.size))
         self.wv.syn0[v_indices] -= v_updates
         self.wv.syn0[v_indices] = self.clip_vectors(self.wv.syn0[v_indices], self.epsilon)
         if np.isnan(self.wv.syn0[v_indices]).any() or np.isnan(self.wv.syn0[u_indices]).any():
@@ -564,9 +566,8 @@ class PoincareModel(utils.SaveLoad):
                 if num_examples and i >= num_examples:
                     return
 
-    def train_batchwise(self, num_examples=None, batch_size=2, print_every=1000):
+    def train_batchwise(self, num_batches=None, batch_size=2, print_every=5000):
         """Trains Poincare embeddings using loaded relations"""
-        self.batch_size = batch_size
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
         last_time = time.time()
@@ -588,6 +589,6 @@ class PoincareModel(utils.SaveLoad):
                         'Time taken for %d examples: %.2f s, %.2f examples / s'
                         % (print_every * batch_size, time_taken, speed))
                     last_time = time.time()
-                if num_examples and i >= num_examples:
+                if num_batches and batch_num >= num_batches:
                     return
 
