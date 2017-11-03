@@ -490,7 +490,7 @@ class PoincareModel(utils.SaveLoad):
         exp_negative_distances = np.exp(-all_distances)
         return (-np.log(exp_negative_distances[:, 0] / exp_negative_distances.sum(axis=1))).sum()
 
-    def prepare_training_batch(self, relations, all_negatives, check_gradients=True):
+    def prepare_training_batch(self, relations, all_negatives, check_gradients=False):
         """Creates training batch and computes all gradients and loss"""
         batch_size = len(relations)
         all_vectors = []
@@ -525,10 +525,10 @@ class PoincareModel(utils.SaveLoad):
         all_indices = [self.sample_negatives(node) for node in nodes]
         return all_indices
 
-    def train_on_batch(self, relations):
+    def train_on_batch(self, relations, check_gradients=False):
         """Performs training for a single training batch"""
         all_negatives = self.sample_negatives_batch([relation[0] for relation in relations])
-        u_indices, v_indices, batch = self.prepare_training_batch(relations, all_negatives)
+        u_indices, v_indices, batch = self.prepare_training_batch(relations, all_negatives, check_gradients)
         self.update_vectors_batch(batch, u_indices, v_indices)
         return batch
 
@@ -588,13 +588,13 @@ class PoincareModel(utils.SaveLoad):
                 print_check = not (batch_num % print_every)
                 batch_indices = indices[i:i+batch_size]
                 relations = [self.relations[idx] for idx in batch_indices]
-                result = self.train_on_batch(relations)
+                result = self.train_on_batch(relations, check_gradients=print_check)
                 if print_check:
                     time_taken = time.time() - last_time
                     speed = print_every * batch_size / time_taken
                     print(
-                        'Training on epoch %d, examples #%d-#%d, loss: %.2f'
-                        % (epoch, i, i + batch_size, result.loss))
+                        'Training on epoch %d, examples #%s-#%s, loss: %.2f'
+                        % (epoch, relations[0], relations[-1], result.loss))
                     print(
                         'Time taken for %d examples: %.2f s, %.2f examples / s'
                         % (print_every * batch_size, time_taken, speed))
