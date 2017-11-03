@@ -277,14 +277,14 @@ class PoincareBatch(object):
         distance_gradients_u *= c_
         nan_gradients = self.gamma == 1
         if nan_gradients.any():
-            distance_gradients_u[nan_gradients] = 0
+            distance_gradients_u.swapaxes(1, 2)[nan_gradients] = 0
         self.distance_gradients_u = distance_gradients_u
 
         v_coeffs = ((euclidean_dists_squared + self.beta) / self.beta)[:, np.newaxis, :]
         distance_gradients_v = v_coeffs * self.vectors_v - self.vectors_u
         distance_gradients_v *= c_
         if nan_gradients.any():
-            distance_gradients_v[nan_gradients] = 0
+            distance_gradients_v.swapaxes(1, 2)[nan_gradients] = 0
         self.distance_gradients_v = distance_gradients_v
 
         self.distance_gradients_computed = True
@@ -503,15 +503,18 @@ class PoincareModel(utils.SaveLoad):
             u_all.append(u)
             v_all.append(v)
             v_all += negatives
+
         vectors_u = self.wv.syn0[u_all]
-        vectors_v = self.wv.syn0[v_all].reshape(1 + self.negative, self.size, batch_size)
+        vectors_v = self.wv.syn0[v_all].reshape((batch_size, 1 + self.negative, self.size))
+        vectors_v = vectors_v.swapaxes(0,1).swapaxes(1,2)
         batch = PoincareBatch(vectors_u, vectors_v)
         batch.compute_all()
 
         if check_gradients:
             max_diff = 0.0
-            for i in range(batch_size):
-                example = PoincareExample(vectors_u[i], vectors_v[:, :, i])
+            for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
+                u, v = relation
+                example = PoincareExample(self.wv.syn0[u], self.wv.syn0[[v] + negatives])
                 example.compute_all()
                 grad_u_diff = np.abs(example.gradients_u - batch.gradients_u[:, i]).max()
                 grad_v_diff = np.abs(example.gradients_v - batch.gradients_v[:, :, i]).max()
