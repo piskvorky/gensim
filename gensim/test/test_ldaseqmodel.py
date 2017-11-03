@@ -3,20 +3,13 @@
 Tests to check DTM math functions and Topic-Word, Doc-Topic proportions.
 
 """
+import unittest
+import logging
 
 import numpy as np  # for arrays, array broadcasting etc.
 from gensim.models import ldaseqmodel
 from gensim.corpora import Dictionary
-import os.path
-import unittest
-import logging
-
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data/DTM', fname)
+from gensim.test.utils import datapath
 
 
 class TestLdaSeq(unittest.TestCase):
@@ -206,7 +199,7 @@ class TestLdaSeq(unittest.TestCase):
             ['bank', 'loan', 'sell']
         ]
         # initializing using own LDA sufficient statistics so that we get same results each time.
-        sstats = np.loadtxt(datapath('sstats_test.txt'))
+        sstats = np.loadtxt(datapath('DTM/sstats_test.txt'))
         dictionary = Dictionary(texts)
         corpus = [dictionary.doc2bow(text) for text in texts]
         self.ldaseq = ldaseqmodel.LdaSeqModel(

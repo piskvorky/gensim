@@ -1,6 +1,5 @@
 import unittest
 import numpy
-import os
 import codecs
 import pickle
 
@@ -25,8 +24,7 @@ from gensim.sklearn_api.hdp import HdpTransformer
 from gensim.sklearn_api.phrases import PhrasesTransformer
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils, models
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
+from gensim.test.utils import datapath
 
 texts = [
     ['complier', 'system', 'computer'],
@@ -136,10 +134,6 @@ phrases_sentences = [
     ['graph', 'minors', 'survey'],
     ['graph', 'minors', 'survey', 'human', 'interface']
 ]
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
 
 
 class TestLdaWrapper(unittest.TestCase):

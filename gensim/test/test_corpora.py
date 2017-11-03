@@ -23,13 +23,7 @@ from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
 from gensim.interfaces import TransformedCorpus
 from gensim.utils import to_unicode
-
-# needed because sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import datapath
 
 
 def testfile():

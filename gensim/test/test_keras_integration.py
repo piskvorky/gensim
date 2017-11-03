@@ -1,5 +1,4 @@
 import unittest
-import os
 import numpy as np
 from gensim.models import word2vec
 
@@ -32,12 +31,6 @@ sentences = [
     ['graph', 'minors', 'trees'],
     ['graph', 'minors', 'survey']
 ]
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
 
 
 class TestKerasWord2VecWrapper(unittest.TestCase):

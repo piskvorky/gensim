@@ -17,12 +17,7 @@ import tempfile
 import numpy
 
 from gensim.models.wrappers import wordrank
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import datapath
 
 
 def testfile():

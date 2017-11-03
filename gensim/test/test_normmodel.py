@@ -21,12 +21,7 @@ from scipy.sparse import issparse
 
 from gensim.corpora import mmcorpus
 from gensim.models import normmodel
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import datapath
 
 
 def testfile():

@@ -24,14 +24,13 @@ from gensim.models import KeyedVectors
 from gensim.models.wrappers import fasttext
 from gensim import matutils, similarities
 from gensim.models import Word2Vec
+from gensim.test.utils import datapath
 
 try:
     from pyemd import emd  # noqa:F401
     PYEMD_EXT = True
 except ImportError:
     PYEMD_EXT = False
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [
@@ -49,10 +48,6 @@ dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
 sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(texts)]
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
 
 
 def testfile():

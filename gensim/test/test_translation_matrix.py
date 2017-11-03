@@ -12,12 +12,7 @@ from gensim.models.doc2vec import Doc2Vec
 from gensim import utils
 from gensim.models import translation_matrix
 from gensim.models import KeyedVectors
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import datapath
 
 
 def temp_save_file():

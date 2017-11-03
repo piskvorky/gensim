@@ -17,13 +17,9 @@ import numpy
 
 from gensim.models.wrappers import fasttext
 from gensim.models import keyedvectors
+from gensim.test.utils import datapath
 
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 logger = logging.getLogger(__name__)
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
 
 
 def testfile():

@@ -19,12 +19,6 @@ from gensim.models.phrases import SentenceAnalyzer, Phrases, Phraser, pseudocorp
 if sys.version_info[0] >= 3:
     unicode = str
 
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
-
 
 class TestUtils(unittest.TestCase):
 

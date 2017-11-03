@@ -14,9 +14,6 @@ needed are thus quite similar.
 
 import logging
 import unittest
-import os
-import os.path
-import tempfile
 import numbers
 from os import remove
 
@@ -27,6 +24,7 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import atmodel
 from gensim import matutils
 from gensim.test import basetmtests
+from gensim.test.utils import (datapath, testfile)
 
 # TODO:
 # Test that computing the bound on new unseen documents works as expected (this is somewhat different
@@ -35,12 +33,6 @@ from gensim.test import basetmtests
 # sense. This is not tested in LDA either. Tests can also be made to check that automatic prior learning
 # increases the bound.
 # Test that models are compatiple across versions, as done in LdaModel.
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [
@@ -83,12 +75,6 @@ texts_new = texts[0:3]
 author2doc_new = {'jill': [0], 'bob': [0, 1], 'sally': [1, 2]}
 dictionary_new = Dictionary(texts_new)
 corpus_new = [dictionary_new.doc2bow(text) for text in texts_new]
-
-
-def testfile(test_fname=''):
-    # temporary data will be stored to this file
-    fname = 'gensim_models_' + test_fname + '.tst'
-    return os.path.join(tempfile.gettempdir(), fname)
 
 
 class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):

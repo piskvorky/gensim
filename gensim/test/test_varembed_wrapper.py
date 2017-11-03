@@ -11,7 +11,6 @@ Automated tests for VarEmbed wrapper.
 """
 
 import logging
-import os
 import sys
 
 import numpy as np
@@ -19,18 +18,12 @@ import numpy as np
 import unittest
 
 from gensim.models.wrappers import varembed
+from gensim.test.utils import datapath
 
 try:
     import morfessor  # noqa: F401
 except ImportError:
     raise unittest.SkipTest("Test requires Morfessor to be installed, which is not available")
-
-# needed because sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
 
 
 varembed_model_vector_file = datapath('varembed_vectors.pkl')

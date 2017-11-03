@@ -18,14 +18,11 @@ import tempfile
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import hdpmodel
 from gensim.test import basetmtests
+from gensim.test.utils import datapath
 
 import numpy as np
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [

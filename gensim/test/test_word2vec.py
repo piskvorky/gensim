@@ -20,6 +20,7 @@ import numpy as np
 
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
+from gensim.test.utils import datapath
 from testfixtures import log_capture
 
 try:
@@ -27,12 +28,6 @@ try:
     PYEMD_EXT = True
 except ImportError:
     PYEMD_EXT = False
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
 
 
 class LeeCorpus(object):

@@ -22,13 +22,7 @@ from gensim.models.wrappers import ldamallet
 from gensim import matutils
 from gensim.models import ldamodel
 from gensim.test import basetmtests
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
-
+from gensim.test.utils import datapath
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [

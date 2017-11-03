@@ -19,13 +19,7 @@ import numpy as np
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import tfidfmodel
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
-
+from gensim.test.utils import datapath
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [
