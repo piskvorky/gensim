@@ -123,7 +123,7 @@ class BleiCorpus(IndexedCorpus):
 
         Returns
         -------
-            list of int
+        list of int
 
         """
         if id2word is None:
@@ -161,7 +161,7 @@ class BleiCorpus(IndexedCorpus):
 
         Returns
         -------
-            list of (int, float)
+        list of (int, float)
         
         """
         with utils.smart_open(self.fname) as f:
