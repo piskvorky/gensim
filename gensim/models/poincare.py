@@ -506,13 +506,10 @@ class PoincareModel(utils.SaveLoad):
         batch.compute_all()
         return u_all, v_all, batch
 
-    def sample_negatives_batch(self, _nodes):
+    def sample_negatives_batch(self, nodes):
         """Return a sample of negative examples for the given positive example"""
         # TODO: make sure returned nodes aren't positive relations for `_node_1`
-        all_indices = [
-            self.random.sample(range(len(self.wv.index2word)), self.negative)
-            for _node in _nodes
-        ]
+        all_indices = [self.sample_negatives(node) for node in nodes]
         return all_indices
 
     def train_on_batch(self, relations):
