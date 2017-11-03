@@ -387,9 +387,11 @@ class PoincareModel(utils.SaveLoad):
                 relations.append(relation)
         self.wv.vocab = vocab
         self.wv.index2word = index2word
-        self.indices = np.array(range(len(index2word)))
+        self.indices = set((range(len(index2word))))
         counts = np.array([self.wv.vocab[index2word[i]].count for i in range(len(index2word))])
         self.probs = counts / counts.sum()
+        self.valid_negatives = {}
+        self.valid_negative_probs = {}
         self.relations = relations
         self.term_relations = term_relations
 
@@ -401,11 +403,21 @@ class PoincareModel(utils.SaveLoad):
     def sample_negatives(self, node_index):
         """Return a sample of negative examples for the given positive example"""
         # indices = self.random.sample(range(len(self.wv.index2word)), self.negative)
-        indices = self.np_random.choice(self.indices, size=self.negative, p=self.probs)
-        positive_indices = self.term_relations[node_index]
+        # TODO: memory-intensive, but fast - possibly implement differently
+        if node_index in self.valid_negatives:
+            population = self.valid_negatives[node_index]
+            probs = self.valid_negative_probs[node_index]
+        else:
+            positive_indices = self.term_relations[node_index]
+            population = np.array(list(self.indices - positive_indices))
+            probs = self.probs[population]
+            probs /= probs.sum()
+            self.valid_negatives[node_index] = population
+            self.valid_negatives[node_index] = population
+            self.valid_negative_probs[node_index] = probs
+
+        indices = self.np_random.choice(population, size=self.negative, p=probs)
         # TODO: slow, refactor/use different random number generator
-        while len(set(indices) & positive_indices):
-            indices = self.np_random.choice(self.indices, size=self.negative, p=self.probs)
         return list(indices)
 
     @staticmethod
