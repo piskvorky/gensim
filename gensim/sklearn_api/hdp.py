@@ -87,7 +87,7 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
             max_num_topics = max(max_num_topics, max(topic[0] for topic in topicd) + 1)
 
         # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
-        distribution = [matutils.sparse2full(topicd, max_num_topics) for topicd in distribution]
+        distribution = [matutils.sparse2full(t, max_num_topics) for t in distribution]
         return np.reshape(np.array(distribution), (len(docs), max_num_topics))
 
     def partial_fit(self, X):

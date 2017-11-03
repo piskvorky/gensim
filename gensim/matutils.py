@@ -31,6 +31,7 @@ from six.moves import xrange, zip as izip
 def blas(name, ndarray):
     return scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
+
 logger = logging.getLogger(__name__)
 
 
