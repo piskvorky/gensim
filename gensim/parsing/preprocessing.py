@@ -40,6 +40,26 @@ STOPWORDS = frozenset(w for w in STOPWORDS.split() if w)
 
 
 def remove_stopwords(s):
+    """Takes string, removes all words those are among stopwords.
+
+    Parameters
+    ----------
+    s : str
+
+    Returns
+    -------
+    str
+        Unicode string without stopwords.
+
+    Examples
+    --------
+    >>> from gensim.parsing.preprocessing import remove_stopwords
+    >>> s = "Better late than never, but better never late."
+    >>> remove_stopwords(s)
+    u'Better late never, better late.'
+
+    """
+
     s = utils.to_unicode(s)
     return " ".join(w for w in s.split() if w not in STOPWORDS)
 
@@ -48,12 +68,36 @@ RE_PUNCT = re.compile(r'([%s])+' % re.escape(string.punctuation), re.UNICODE)
 
 
 def strip_punctuation(s):
+    """Takes string, replaces all punctuation characters with spaces.
+
+    Parameters
+    ----------
+    s : str
+
+    Returns
+    -------
+    str
+        Unicode string without punctuation characters.
+
+    Examples
+    --------
+    >>> from gensim.parsing.preprocessing import strip_punctuation
+    >>> s = "A semicolon is a stronger break than a comma, but not as much as a full stop!"
+    >>> strip_punctuation(s)
+    u'A semicolon is a stronger break than a comma  but not as much as a full stop '
+
+    """
+
     s = utils.to_unicode(s)
     return RE_PUNCT.sub(" ", s)
 
 
 # unicode.translate cannot delete characters like str can
 strip_punctuation2 = strip_punctuation
+"""
+Same as strip_punctuation
+"""
+
 # def strip_punctuation2(s):
 #     s = utils.to_unicode(s)
 #     return s.translate(None, string.punctuation)
@@ -88,6 +132,33 @@ def strip_tags(s):
 
 
 def strip_short(s, minsize=3):
+    """Takes string and removes words with length lesser than minsize (default = 3).
+
+    Parameters
+    ----------
+    s : str
+    minsize : int, optional
+
+    Returns
+    -------
+    str
+        Unicode string without words with length lesser than minsize.
+
+
+    Examples
+    --------
+    >>> from gensim.parsing.preprocessing import strip_short
+    >>> s = "salut les amis du 59"
+    >>> strip_short(s)
+    u'salut les amis'
+
+    >>> from gensim.parsing.preprocessing import strip_short
+    >>> s = "one two three four five six seven eight nine ten"
+    >>> strip_short(s,5)
+    u'three seven eight'
+
+    """
+
     s = utils.to_unicode(s)
     return " ".join(e for e in s.split() if len(e) >= minsize)
 
@@ -236,6 +307,8 @@ def stem_text(text):
 
 stem = stem_text
 
+
+
 DEFAULT_FILTERS = [
     lambda x: x.lower(), strip_tags, strip_punctuation,
     strip_multiple_whitespaces, strip_numeric,
@@ -244,12 +317,12 @@ DEFAULT_FILTERS = [
 
 
 def preprocess_string(s, filters=DEFAULT_FILTERS):
-    """Takes string, applies chosen filters to it.
+    """Takes string, applies list of chosen filters to it, where filters are methods from this module. Default list of filters consists of: strip_tags, strip_punctuation, strip_multiple_whitespaces, strip_numeric, remove_stopwords, strip_short, stem_text. <function <lambda>> in signature means that we use lambda function for applying methods to filters.
 
     Parameters
     ----------
     s : str
-    filters: list
+    filters: list, optional
 
     Returns
     -------
@@ -259,9 +332,15 @@ def preprocess_string(s, filters=DEFAULT_FILTERS):
     Examples
     --------
     >>> from gensim.parsing.preprocessing import preprocess_string
-    >>> s = "24.0Hours7 Days365 a1b2c3."
+    >>> s = "<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?"
     >>> preprocess_string(s)
-    [u'hour', u'dai', u'abc']
+    [u'hel', u'rld', u'weather', u'todai', u'isn']
+
+    >>> from gensim.parsing.preprocessing import preprocess_string, strip_tags, strip_punctuation
+    >>> s = "<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?"
+    >>> CUSTOM_FILTERS = [lambda x: x.lower(), strip_tags, strip_punctuation]
+    >>> preprocess_string(s,CUSTOM_FILTERS)
+    [u'hel', u'9lo', u'wo9', u'rld', u'th3', u'weather', u'is', u'really', u'g00d', u'today', u'isn', u't', u'it']
 
     """
 
@@ -272,11 +351,35 @@ def preprocess_string(s, filters=DEFAULT_FILTERS):
 
 
 def preprocess_documents(docs):
-    """Takes text, splits it into sentences, then applies default filters to every sentence.
+    """Takes list of strings, splits it into sentences, then applies default filters to every sentence.
 
     Parameters
     ----------
-    docs : str
+    docs : list
+
+    Returns
+    -------
+    list
+        List of lists, filled by unicode strings.
+
+    Examples
+    --------
+    >>> from gensim.parsing.preprocessing import preprocess_documents
+    >>> s = ["<i>Hel 9lo</i> <b>Wo9 rld</b>!", "Th3     weather_is really g00d today, isn't it?"]
+    >>> preprocess_documents(s)
+    [[u'hel', u'rld'], [u'weather', u'todai', u'isn']]
+
+    """
+
+    return [preprocess_string(d) for d in docs]
+
+
+def read_file(path):
+    r"""Reads file in specified directory.
+
+    Parameters
+    ----------
+    path : str
 
     Returns
     -------
@@ -285,16 +388,13 @@ def preprocess_documents(docs):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import preprocess_documents
-    >>> s = "24.0Hours7 Days365 a1b2c3."
-    >>> preprocess_documents(s)
-    [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+    >>> from gensim.parsing.preprocessing import read_file
+    >>> path = "/media/work/october_2017/gensim/gensim/test/test_data/mihalcea_tarau.summ.txt"
+    >>> read_file(path)
+    "Hurricane Gilbert swept toward the Dominican Republic Sunday, and the Civil Defense alerted its heavily populated south coast to prepare for high winds, heavy rains and high seas.\nThe National Hurricane Center in Miami reported its position at 2 a.m. Sunday at latitude 16.1 north, longitude 67.5 west, about 140 miles south of Ponce, Puerto Rico, and 200 miles southeast of Santo Domingo.\nThe National Weather Service in San Juan, Puerto Rico, said Gilbert was moving westward at 15 mph with a ``broad area of cloudiness and heavy weather'' rotating around the center of the storm.\nStrong winds associated with the Gilbert brought coastal flooding, strong southeast winds and up to 12 feet feet to Puerto Rico's south coast."
 
     """
-    return [preprocess_string(d) for d in docs]
 
-
-def read_file(path):
     with utils.smart_open(path) as fin:
         return fin.read()
 
