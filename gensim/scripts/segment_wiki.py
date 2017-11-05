@@ -5,12 +5,14 @@
 # Copyright (C) 2016 RaRe Technologies
 
 """
-Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump and extract sections of pages from it
-and save to json-line format.
+Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump (typical filename
+is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2),
+extract titles, section names, section content and save to json-line format,
+that contains 3 fields ::
 
-If you have the `pattern` package installed, this module will use a fancy
-lemmatization to get a lemma of each token (instead of plain alphabetic
-tokenizer). The package is available at https://github.com/clips/pattern .
+    'title' (str) - title of article,
+    'section_titles' (list) - list of titles of sections,
+    'section_texts' (list) - list of content from sections.
 
 """
 
@@ -22,8 +24,7 @@ import re
 import sys
 from xml.etree import cElementTree
 
-from gensim.corpora.wikicorpus import ARTICLE_MIN_WORDS, IGNORED_NAMESPACES, WikiCorpus, \
-    filter_wiki, get_namespace, tokenize, utils
+from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, get_namespace, utils
 from smart_open import smart_open
 
 
@@ -46,20 +47,20 @@ def segment_all_articles(file_path):
 
     """
     with smart_open(file_path, 'rb') as xml_fileobj:
-        wiki_sections_corpus = WikiSectionsCorpus(xml_fileobj)
+        wiki_sections_corpus = _WikiSectionsCorpus(xml_fileobj)
         wiki_sections_corpus.metadata = True
         wiki_sections_text = wiki_sections_corpus.get_texts_with_sections()
         for article_title, article_sections in wiki_sections_text:
             yield article_title, article_sections
 
 
-def segment_and_print_all_articles(file_path, output_file):
+def segment_and_write_all_articles(file_path, output_file):
     """Write article title and sections to output_file,
     output_file is json-line file with 3 fields::
 
-        'tl' - title of article,
-        'st' - list of titles of sections,
-        'sc' - list of content from sections.
+        'title' - title of article,
+        'section_titles' - list of titles of sections,
+        'section_texts' - list of content from sections.
 
     Parameters
     ----------
@@ -68,18 +69,25 @@ def segment_and_print_all_articles(file_path, output_file):
         or <LANG>wiki-latest-pages-articles.xml.bz2.
 
     output_file : str
-        Path to output file.
+        Path to output file in json-lines format.
 
     """
-    with smart_open(output_file, 'w') as outfile:
+    if output_file is None:
+        outfile = sys.stdout
+    else:
+        outfile = smart_open(output_file, 'wb')
+
+    try:
         for idx, (article_title, article_sections) in enumerate(segment_all_articles(file_path)):
-            output_data = {"tl": article_title, "st": [], "sc": []}
+            output_data = {"title": article_title, "section_titles": [], "section_texts": []}
             for section_heading, section_content in article_sections:
-                output_data["st"].append(section_heading)
-                output_data["sc"].append(section_content)
+                output_data["section_titles"].append(section_heading)
+                output_data["section_texts"].append(section_content)
             if (idx + 1) % 100000 == 0:
                 logger.info("Processed #%d articles", idx + 1)
             outfile.write(json.dumps(output_data) + "\n")
+    finally:
+        outfile.close()
 
 
 def extract_page_xmls(f):
@@ -160,7 +168,7 @@ def segment(page_xml):
     return title, sections
 
 
-class WikiSectionsCorpus(WikiCorpus):
+class _WikiSectionsCorpus(WikiCorpus):
     """Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
     or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
 
@@ -217,15 +225,8 @@ class WikiSectionsCorpus(WikiCorpus):
         # is dumb and would load the entire input into RAM at once...
         for group in utils.chunkize(page_xmls, chunksize=10 * self.processes, maxsize=1):
             for article_title, sections in pool.imap(segment, group):  # chunksize=10):
-                # article redirects and short stubs are pruned here
-                num_total_tokens = 0
-                for section_title, section_content in sections:
-                    if self.lemmatize:
-                        num_total_tokens += len(utils.lemmatize(section_content))
-                    else:
-                        num_total_tokens += len(tokenize(section_content))
-                if num_total_tokens < ARTICLE_MIN_WORDS or \
-                        any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
+                # article redirects are pruned here
+                if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
                     continue
                 articles += 1
                 yield (article_title, sections)
@@ -239,8 +240,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=globals()['__doc__'])
     parser.add_argument('-f', '--file', help='Path to MediaWiki database dump', required=True)
-    parser.add_argument('-o', '--output', help='Path to output file', required=True)
+    parser.add_argument('-o', '--output', help='Path to output file (stdout if not specified)')
     args = parser.parse_args()
-    segment_and_print_all_articles(args.file, args.output)
+    segment_and_write_all_articles(args.file, args.output)
 
     logger.info("finished running %s", sys.argv[0])
