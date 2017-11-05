@@ -15,7 +15,27 @@ that contains 3 fields ::
     'section_texts' (list) - list of content from sections.
 
 English Wikipedia dump available
-`here <https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2>`_.
+`here <https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2>`_. Approximate size
+of english dumps is 5600000 (October 2017),
+
+Examples
+--------
+
+Convert wiki to json-lines format:
+`python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 | gzip > enwiki-latest.json.gz`
+
+Read json-lines dump
+
+>>> # iterate over the plain text file we just created
+>>> for line in smart_open('enwiki-latest.json.gz'):
+>>>    # decode JSON into a Python object
+>>>    article = json.loads(line)
+>>>
+>>>    # each article has a "title", "section_titles" and "section_texts" fields
+>>>    print("Article title: %s" % article['title'])
+>>>    for section_title, section_text in zip(article['section_titles'], article['section_texts']):
+>>>        print("Section title: %s" % section_title)
+>>>        print("Section text: %s" % section_text)
 
 """
 
@@ -229,7 +249,8 @@ class _WikiSectionsCorpus(WikiCorpus):
         for group in utils.chunkize(page_xmls, chunksize=10 * self.processes, maxsize=1):
             for article_title, sections in pool.imap(segment, group):  # chunksize=10):
                 # article redirects are pruned here
-                if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
+                if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES) \
+                        or sections[0][1].strip().startswith("#REDIRECT"):
                     continue
                 articles += 1
                 yield (article_title, sections)
