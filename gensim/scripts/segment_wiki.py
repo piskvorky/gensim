@@ -250,7 +250,7 @@ class _WikiSectionsCorpus(WikiCorpus):
             for article_title, sections in pool.imap(segment, group):  # chunksize=10):
                 # article redirects are pruned here
                 if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES) \
-                        or sections[0][1].strip().startswith("#REDIRECT"):
+                        or sections[0][1].lstrip().startswith("#REDIRECT"):
                     continue
                 articles += 1
                 yield (article_title, sections)
