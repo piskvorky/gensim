@@ -14,6 +14,9 @@ that contains 3 fields ::
     'section_titles' (list) - list of titles of sections,
     'section_texts' (list) - list of content from sections.
 
+English Wikipedia dump available
+`here <https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2>`_.
+
 """
 
 import argparse
