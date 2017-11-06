@@ -54,7 +54,7 @@ from smart_open import smart_open
 logger = logging.getLogger(__name__)
 
 
-def segment_all_articles(file_path):
+def segment_all_articles(file_path, min_article_character=200):
     """Extract article titles and sections from a MediaWiki bz2 database dump.
 
     Parameters
@@ -63,6 +63,9 @@ def segment_all_articles(file_path):
         Path to MediaWiki dump, typical filename is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
         or <LANG>wiki-latest-pages-articles.xml.bz2.
 
+    min_article_character : int, optional
+        Minimal number of character for article (except titles and leading gaps).
+
     Yields
     ------
     (str, list of (str, str))
@@ -70,14 +73,14 @@ def segment_all_articles(file_path):
 
     """
     with smart_open(file_path, 'rb') as xml_fileobj:
-        wiki_sections_corpus = _WikiSectionsCorpus(xml_fileobj)
+        wiki_sections_corpus = _WikiSectionsCorpus(xml_fileobj, min_article_character=min_article_character)
         wiki_sections_corpus.metadata = True
         wiki_sections_text = wiki_sections_corpus.get_texts_with_sections()
         for article_title, article_sections in wiki_sections_text:
             yield article_title, article_sections
 
 
-def segment_and_write_all_articles(file_path, output_file):
+def segment_and_write_all_articles(file_path, output_file, min_article_character=200):
     """Write article title and sections to output_file,
     output_file is json-line file with 3 fields::
 
@@ -94,6 +97,9 @@ def segment_and_write_all_articles(file_path, output_file):
     output_file : str
         Path to output file in json-lines format.
 
+    min_article_character : int, optional
+        Minimal number of character for article (except titles and leading gaps).
+
     """
     if output_file is None:
         outfile = sys.stdout
@@ -101,7 +107,7 @@ def segment_and_write_all_articles(file_path, output_file):
         outfile = smart_open(output_file, 'wb')
 
     try:
-        for idx, (article_title, article_sections) in enumerate(segment_all_articles(file_path)):
+        for idx, (article_title, article_sections) in enumerate(segment_all_articles(file_path, min_article_character)):
             output_data = {"title": article_title, "section_titles": [], "section_texts": []}
             for section_heading, section_content in article_sections:
                 output_data["section_titles"].append(section_heading)
@@ -198,18 +204,21 @@ class _WikiSectionsCorpus(WikiCorpus):
     The documents are extracted on-the-fly, so that the whole (massive) dump can stay compressed on disk.
 
     """
-    def __init__(self, fileobj, processes=None, lemmatize=utils.has_pattern(), filter_namespaces=('0',)):
+    def __init__(self, fileobj, min_article_character=200, processes=None,
+                 lemmatize=utils.has_pattern(), filter_namespaces=('0',)):
         """
         Parameters
         ----------
         fileobj : file
             File descriptor of MediaWiki dump.
-        processes : int
+        min_article_character : int, optional
+            Minimal number of character for article (except titles and leading gaps).
+        processes : int, optional
             Number of processes, max(1, multiprocessing.cpu_count() - 1) if None.
-        lemmatize : bool
+        lemmatize : bool, optional
             If `pattern` package is installed, use fancier shallow parsing to get token lemmas.
             Otherwise, use simple regexp tokenization.
-        filter_namespaces : tuple of int
+        filter_namespaces : tuple of int, optional
             Enumeration of namespaces that will be ignored.
 
         """
@@ -220,6 +229,7 @@ class _WikiSectionsCorpus(WikiCorpus):
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
         self.lemmatize = lemmatize
+        self.min_article_character = min_article_character
 
     def get_texts_with_sections(self):
         """Iterate over the dump, returning titles and text versions of all sections of articles.
@@ -251,9 +261,10 @@ class _WikiSectionsCorpus(WikiCorpus):
                 # article redirects are pruned here
                 if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):  # filter non-articles
                     continue
-                if len(sections) == 0 or sections[0][1].lstrip().lower().startswith("#redirect"):  # filter redirect
+                if not sections or sections[0][1].lstrip().lower().startswith("#redirect"):  # filter redirect
                     continue
-                if sum(len(body.strip()) for (_, body) in sections) < 250:  # filter very short articles (thrash)
+                if sum(len(body.strip()) for (_, body) in sections) < self.min_article_character:
+                    # filter very short articles (trash)
                     continue
 
                 articles += 1
@@ -269,7 +280,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=globals()['__doc__'])
     parser.add_argument('-f', '--file', help='Path to MediaWiki database dump', required=True)
     parser.add_argument('-o', '--output', help='Path to output file (stdout if not specified)')
+    parser.add_argument(
+        '-m', '--min-article-character',
+        help="Minimal number of character for article (except titles and leading gaps), "
+             "if article contains less characters that this value, "
+             "article will be filtered (will not be in the output file), default: %(default)s",
+        default=200
+    )
     args = parser.parse_args()
-    segment_and_write_all_articles(args.file, args.output)
+    segment_and_write_all_articles(args.file, args.output, args.min_article_character)
 
     logger.info("finished running %s", sys.argv[0])
