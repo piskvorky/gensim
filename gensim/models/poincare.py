@@ -44,15 +44,22 @@ class PoincareBatch(object):
     and storing intermediate state to avoid recomputing multiple times
     """
     def __init__(self, vectors_u, vectors_v):
-        """Initialize instance with sets of vectors for which distances are to be computed
+        """
+        Initialize instance with sets of vectors for which distances are to be computed
 
-        Args:
-            vectors_u (numpy array): expected shape (batch_size, dim)
-                vectors of all nodes `u` in the batch
-            vectors_v (numpy array): expected shape (1 + neg_size, dim, batch_size)
-                vectors of all hypernym nodes `v` and negatively sampled nodes `v'`,
-                for each node `u` in the batch
+        Parameters
+        ----------
+        vectors_u : numpy array
+            expected shape (batch_size, dim).
+            vectors of all nodes `u` in the batch.
+        vectors_v : numpy array
+            expected shape (1 + neg_size, dim, batch_size).
+            vectors of all hypernym nodes `v` and negatively sampled nodes `v'`,
+            for each node `u` in the batch.
 
+        Returns
+        -------
+            PoincareBatch instance.
         """
         self.vectors_u = vectors_u.T[np.newaxis, :, :]  # (1, dim, batch_size)
         self.vectors_v = vectors_v  # (1 + neg_size, dim, batch_size)
@@ -79,14 +86,14 @@ class PoincareBatch(object):
         self.loss_computed = False
 
     def compute_all(self):
-        """Convenience method to perform all computations"""
+        """Convenience method to perform all computations."""
         self.compute_distances()
         self.compute_distance_gradients()
         self.compute_gradients()
         self.compute_loss()
 
     def compute_distances(self):
-        """Compute and store norms, euclidean distances and poincare distances between input vectors"""
+        """Compute and store norms, euclidean distances and poincare distances between input vectors."""
         if self.distances_computed:
             return
         euclidean_dists = np.linalg.norm(self.vectors_u - self.vectors_v, axis=1)  # (1 + neg_size, batch_size)
@@ -115,7 +122,7 @@ class PoincareBatch(object):
         self.distances_computed = True
 
     def compute_gradients(self):
-        """Compute and store gradients of loss function for all input vectors"""
+        """Compute and store gradients of loss function for all input vectors."""
         if self.gradients_computed:
             return
         self.compute_distances()
@@ -138,7 +145,7 @@ class PoincareBatch(object):
         self.gradients_computed = True
 
     def compute_distance_gradients(self):
-        """Compute and store partial derivatives of poincare distance d(u, v) w.r.t all u and all v"""
+        """Compute and store partial derivatives of poincare distance d(u, v) w.r.t all u and all v."""
         if self.distance_gradients_computed:
             return
         self.compute_distances()
@@ -165,6 +172,7 @@ class PoincareBatch(object):
         self.distance_gradients_computed = True
 
     def compute_loss(self):
+        """Compute and store loss value for the given batch of examples."""
         if self.loss_computed:
             return
         self.compute_distances()
@@ -181,7 +189,7 @@ class PoincareKeyedVectors(KeyedVectors):
     """
     @staticmethod
     def poincare_dist(vector_1, vector_2):
-        """Return poincare distance between two vectors"""
+        """Return poincare distance between two vectors."""
         norm_1 = np.linalg.norm(vector_1)
         norm_2 = np.linalg.norm(vector_2)
         euclidean_dist = np.linalg.norm(vector_1 - vector_2)
@@ -208,48 +216,65 @@ class PoincareModel(utils.SaveLoad):
 
     """
     def __init__(
-        self, train_file, size, alpha, min_alpha, negative,
-        iter, workers, epsilon, burn_in, encoding='utf8', seed=0):
+        self, train_file, size=50, alpha=0.1, negative=10, iter=50,
+        workers=1, epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, encoding='utf8', seed=0):
         """
         Initialize and train a Poincare embedding model from a file of transitive closure relations.
 
-        Args:
-            train_file (str): Path to tsv file containing relation pairs
-            size (int): Number of dimensions of the trained model
-            alpha (float): initial learning rate, decreases linearly to `min_alpha`
-            negative (int): Number of negative samples to use
-            iter (int): Number of iterations (epochs) over the corpus
-            workers (int): Number of threads to use for training the model
-            epsilon (float): Constant used for clipping embeddings below a norm of one
-            burn_in (int): Number of epochs to use for burn-in initialization (0 means no burn-in)
-            encoding (str): encoding of training file
-            seed (int): seed for random to ensure reproducibility
+        Parameters
+        ----------
+        train_file : str
+            Path to tsv file containing relation pairs.
+        size : int
+            Number of dimensions of the trained model.
+        alpha : float
+            learning rate for training.
+        negative : int
+            Number of negative samples to use.
+        iter : int
+            Number of iterations (epochs) over the corpus.
+        workers : int
+            Number of threads to use for training the model.
+        epsilon : float
+            Constant used for clipping embeddings below a norm of one.
+        burn_in : int
+            Number of epochs to use for burn-in initialization (0 means no burn-in).
+        burn_in_alpha : float
+            learning rate for burn-in initialization.
+        encoding : str
+            encoding of training file.
+        seed : int
+            seed for random to ensure reproducibility.
+
+        Returns
+        --------
+        PoincareModel instance.
+
         """
         self.train_file = train_file
         self.encoding = encoding
         self.wv = KeyedVectors()
         self.size = size
         self.alpha = alpha
-        self.min_alpha = min_alpha
         self.negative = negative
         self.iter = iter
         self.workers = workers
         self.epsilon = epsilon
         self.burn_in = burn_in
         self.seed = seed
-        self.random = random.Random(seed)
-        self.np_random = np_random.RandomState(seed)
+        self.random = random.Random(seed)  # For reproducibility
+        self.np_random = np_random.RandomState(seed)  # For reproducibility
         self.init_range = (-0.001, 0.001)
         self.loss_grad = grad(PoincareModel.loss_fn)
         self.load_relations()
         self.init_embeddings()
 
     def load_relations(self):
-        """Load relations from the train file and build vocab"""
+        """Load relations from the train file and build vocab."""
         vocab = {}
         index2word = []
-        all_relations = []
-        term_relations = defaultdict(set)
+        all_relations = []  # List of all relation pairs
+        term_relations = defaultdict(set)  # Mapping from node index to its related node indices
 
         with smart_open(self.train_file, 'r', encoding=self.encoding) as f:
             reader = csv.reader(f, delimiter='\t')
@@ -266,26 +291,37 @@ class PoincareModel(utils.SaveLoad):
                 term_relations[node_1_index].add(node_2_index)
                 relation = (node_1_index, node_2_index)
                 all_relations.append(relation)
+
         self.wv.vocab = vocab
         self.wv.index2word = index2word
-        self.indices_set = set((range(len(index2word))))
-        self.indices_array = np.array(range(len(index2word)))
+        self.indices_set = set((range(len(index2word))))  # Set of all node indices
+        self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
         counts = np.array([self.wv.vocab[index2word[i]].count for i in range(len(index2word))])
-        self.probs = counts / counts.sum()
+        self.node_probabilities = counts / counts.sum()
         self.all_relations = all_relations
         self.term_relations = term_relations
-        self.negatives_buffer = []
-        self.negatives_buffer_index = 0
+        self.negatives_buffer = []  # Buffer to store negative samples, to reduce calls to sampling method
+        self.negatives_buffer_index = 0  # Position in buffer till which samples have been consumed
         self.negatives_buffer_size = 2000
 
     def init_embeddings(self):
-        """Randomly initialize vectors for the items in the vocab"""
+        """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.wv.index2word), self.size)
         self.wv.syn0 = self.np_random.uniform(self.init_range[0], self.init_range[1], shape)
 
     def get_candidate_negatives(self):
+        """
+        Returns candidate negatives of size `self.negative` from the negative examples buffer.
+
+        Returns
+        --------
+        numpy array
+            numpy array of shape (`self.negative`,) containing indices of negative nodes.
+        """
+
         if self.negatives_buffer_index >= len(self.negatives_buffer):
-            self.negatives_buffer = self.np_random.choice(self.indices_array, size=self.negatives_buffer_size, p=self.probs)
+            # Note: np.random.choice much slower than random.sample for large populations, possible bottleneck
+            self.negatives_buffer = self.np_random.choice(self.indices_array, size=self.negatives_buffer_size, p=self.node_probabilities)
             self.negatives_buffer_index = 0
         start_index = self.negatives_buffer_index
         end_index = start_index + self.negative
@@ -294,8 +330,19 @@ class PoincareModel(utils.SaveLoad):
         return candidate_negatives
 
     def sample_negatives(self, node_index):
-        """Return a sample of negative examples for the given positive example"""
-        # Note: np.random.choice much slower than random.sample for large samples, possible bottleneck
+        """
+        Return a sample of negatives for the given node.
+
+        Parameters
+        ----------
+        node_index : int
+            index of the positive node for which negative samples are to be returned.
+
+        Returns
+        --------
+        numpy array
+            numpy array of shape (self.negative,) containing indices of negative nodes for the given node index.
+        """
         node_relations = self.term_relations[node_index]
         positive_fraction = len(node_relations) / len(self.term_relations)
         if positive_fraction < 0.01:
@@ -306,12 +353,12 @@ class PoincareModel(utils.SaveLoad):
             while len(set(indices) & node_relations):
                 times_sampled += 1
                 indices = self.get_candidate_negatives()
-            # print('Sampled %d times, fraction positive %.5f' % (times_sampled, positive_fraction))
+            logger.debug('Sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
         else:
             # If number of positive relations is a significant fraction of total nodes
             # subtract positively connected nodes from set of choices and sample from the remaining
             valid_negatives = np.array(list(self.indices_set - node_relations))
-            probs = self.probs[valid_negatives]
+            probs = self.node_probabilities[valid_negatives]
             probs /= probs.sum()
             indices = self.np_random.choice(valid_negatives, size=self.negative, p=probs)
 
@@ -319,7 +366,23 @@ class PoincareModel(utils.SaveLoad):
 
     @staticmethod
     def loss_fn(matrix):
-        """Given vectors for u, v and negative samples, computes loss value"""
+        """
+        Given a numpy array with vectors for u, v and negative samples, computes loss value.
+
+        Parameters
+        ----------
+        matrix : numpy array
+            numpy array containing vectors for u, v and negative samples, of shape (2 + negative_size, dim).
+
+        Returns
+        -------
+        float
+            computed loss value.
+
+        Notes
+        -----
+        Only used for autograd gradients, since autograd requires a specific function signature.
+        """
         vector_u = matrix[0]
         vector_v = matrix[1]
         vectors_negative = matrix[2:]
@@ -334,7 +397,22 @@ class PoincareModel(utils.SaveLoad):
 
     @staticmethod
     def clip_vectors(vectors, epsilon):
-        """Clip vectors to have a norm of less than one"""
+        """
+        Clip vectors to have a norm of less than one.
+
+        Parameters
+        ----------
+        vectors : numpy array
+            can be 1-D,or 2-D (in which case the norm for each row is checked).
+        epsilon : float
+            parameter for numerical stability, each dimension of the vector is reduced by `epsilon`
+            if the norm of the vector is greater than or equal to 1.
+        Returns
+        -------
+        numpy array
+            numpy array with norms clipped below 1
+
+        """
         one_d = len(vectors.shape) == 1
         threshold = 1 - epsilon
         if one_d:
