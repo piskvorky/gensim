@@ -1,5 +1,103 @@
 Changes
 ===========
+## 3.1.0, 2017-11-06
+
+
+:star2: New features:
+* Massive optimizations to LSI model training (__[@isamaru](https://github.com/isamaru)__, [#1620](https://github.com/RaRe-Technologies/gensim/pull/1620) & [#1622](https://github.com/RaRe-Technologies/gensim/pull/1622))
+  - LSI model allows use of single precision (float32), to consume  *40% less memory* while being *40% faster*.
+  - LSI model can now also accept CSC matrix as input, for further memory and speed boost.
+  - Overall, if your entire corpus fits in RAM: 3x faster LSI training (SVD) in 4x less memory!
+    ```python
+    # just an example; the corpus stream is up to you
+    streaming_corpus = gensim.corpora.MmCorpus("my_tfidf_corpus.mm.gz")
+
+    # convert your corpus to a CSC sparse matrix (assumes the entire corpus fits in RAM)
+    in_memory_csc_matrix = gensim.matutils.corpus2csc(streaming_corpus, dtype=np.float32)
+
+    # then pass the CSC to LsiModel directly
+    model = LsiModel(corpus=in_memory_csc_matrix, num_topics=500, dtype=np.float32)
+    ```
+  - Even if you continue to use streaming corpora (your training dataset is too large for RAM), you should see significantly faster processing times and a lower memory footprint. In our experiments with a very large LSI model, we saw a drop from 29 GB peak RAM and 38 minutes (before) to 19 GB peak RAM and 26 minutes (now):
+    ```python
+    model = LsiModel(corpus=streaming_corpus, num_topics=500, dtype=np.float32)
+    ```
+* Add common terms to Phrases. Fix #1258 (__[@alexgarel](https://github.com/alexgarel)__, [#1568](https://github.com/RaRe-Technologies/gensim/pull/1568))
+  - Phrases allows to use common terms in bigrams. Before, if you are searching to reveal ngrams like `car_with_driver` and `car_without_driver`, you can either remove stop words before processing, but you will only find `car_driver`, or you won't find any of those forms (because they have three words, but also because high frequency of with will avoid them to be scored correctly), inspired by [ES common grams token filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-common-grams-tokenfilter.html).
+    ```python
+    phr_old = Phrases(corpus)
+    phr_new = Phrases(corpus, common_terms=stopwords.words('en'))
+
+    print(phr_old[["we", "provide", "car", "with", "driver"]])  # ["we", "provide", "car_with", "driver"]
+    print(phr_new[["we", "provide", "car", "with", "driver"]])  # ["we", "provide", "car_with_driver"]
+    ```
+* New [segment_wiki.py](https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/scripts/segment_wiki.py) script (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1483](https://github.com/RaRe-Technologies/gensim/pull/1483) & [#1694](https://github.com/RaRe-Technologies/gensim/pull/1694))
+  - CLI script for processing a raw Wikipedia dump (the xml.bz2 format provided by WikiMedia) to extract its articles in a plain text format. It extracts each article's title, section names and section content and saves them as json-line:
+    ```bash
+    python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 | gzip > enwiki-latest-pages-articles.json.gz
+    ```
+       Processing the entire English Wikipedia dump (13.5 GB, link [here](https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2)) takes about 2.5 hours (i7-6700HQ, SSD).
+
+       The output format is one article per line, serialized into JSON:
+       ```python
+          for line in smart_open('enwiki-latest-pages-articles.json.gz'):  # read the file we just created
+              article = json.loads(line)
+              print("Article title: %s" % article['title'])
+              for section_title, section_text in zip(article['section_titles'], article['section_texts']):
+                  print("Section title: %s" % section_title)
+                  print("Section text: %s" % section_text)
+        ```
+
+:+1: Improvements:
+* Speedup FastText tests (__[@horpto](https://github.com/horpto)__, [#1686](https://github.com/RaRe-Technologies/gensim/pull/1686))
+* Add optimization for `SlicedCorpus.__len__` (__[@horpto](https://github.com/horpto)__, [#1679](https://github.com/RaRe-Technologies/gensim/pull/1679))
+* Make `word_vec` return immutable vector. Fix #1651 (__[@CLearERR](https://github.com/CLearERR)__, [#1662](https://github.com/RaRe-Technologies/gensim/pull/1662))
+* Drop Win x32 support & add rolling builds (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1652](https://github.com/RaRe-Technologies/gensim/pull/1652))
+* Fix scoring function in Phrases. Fix #1533, #1635 (__[@michaelwsherman](https://github.com/michaelwsherman)__, [#1573](https://github.com/RaRe-Technologies/gensim/pull/1573))
+* Add configuration for flake8 to setup.cfg (__[@mcobzarenco](https://github.com/mcobzarenco)__, [#1636](https://github.com/RaRe-Technologies/gensim/pull/1636))
+* Add `build_vocab_from_freq` to Word2Vec, speedup scan\_vocab (__[@jodevak](https://github.com/jodevak)__, [#1599](https://github.com/RaRe-Technologies/gensim/pull/1599))
+* Add `most_similar_to_given` method for KeyedVectors (__[@TheMathMajor](https://github.com/TheMathMajor)__, [#1582](https://github.com/RaRe-Technologies/gensim/pull/1582))
+* Add `__getitem__` method to Sparse2Corpus to allow direct queries (__[@isamaru](https://github.com/isamaru)__, [#1621](https://github.com/RaRe-Technologies/gensim/pull/1621))
+
+:red_circle: Bug fixes:
+* Add single core mode to CoherenceModel. Fix #1683 (__[@horpto](https://github.com/horpto)__, [#1685](https://github.com/RaRe-Technologies/gensim/pull/1685))
+* Fix ResourceWarnings in tests. Partially fix #1519 (__[@horpto](https://github.com/horpto)__, [#1660](https://github.com/RaRe-Technologies/gensim/pull/1660))
+* Fix DeprecationWarnings generated by deprecated assertEquals. Partial fix #1519 (__[@poornagurram](https://github.com/poornagurram)__, [#1658](https://github.com/RaRe-Technologies/gensim/pull/1658))
+* Fix DeprecationWarnings for regex string literals. Fix #1646 (__[@franklsf95](https://github.com/franklsf95)__, [#1649](https://github.com/RaRe-Technologies/gensim/pull/1649))
+* Fix pagerank algorithm. Fix #805 (__[@xelez](https://github.com/xelez)__, [#1653](https://github.com/RaRe-Technologies/gensim/pull/1653))
+* Fix FastText inconsistent dtype. Fix #1637 (__[@mcobzarenco](https://github.com/mcobzarenco)__, [#1638](https://github.com/RaRe-Technologies/gensim/pull/1638))
+* Fix `test_filename_filtering` test (__[@nehaljwani](https://github.com/nehaljwani)__, [#1647](https://github.com/RaRe-Technologies/gensim/pull/1647))
+
+:books: Tutorial and doc improvements:
+* Fix code/docstring style (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1650](https://github.com/RaRe-Technologies/gensim/pull/1650))
+* Update error message for supervised FastText. Fix #1498 (__[@ElSaico](https://github.com/ElSaico)__, [#1645](https://github.com/RaRe-Technologies/gensim/pull/1645))
+* Add "DOI badge" to README. Fix #1610 (__[@dphov](https://github.com/dphov)__, [#1639](https://github.com/RaRe-Technologies/gensim/pull/1639))
+* Remove duplicate annoy notebook. Fix #1415 (__[@Karamax](https://github.com/Karamax)__, [#1640](https://github.com/RaRe-Technologies/gensim/pull/1640))
+* Fix duplication and wrong markup in docs (__[@horpto](https://github.com/horpto)__, [#1633](https://github.com/RaRe-Technologies/gensim/pull/1633))
+* Refactor dendrogram & topic network notebooks (__[@parulsethi](https://github.com/parulsethi)__, [#1571](https://github.com/RaRe-Technologies/gensim/pull/1571))
+* Fix release badge (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1631](https://github.com/RaRe-Technologies/gensim/pull/1631))
+
+:warning: Deprecation part (will come into force in the next major release)
+* Remove
+	- `gensim.examples`
+	- `gensim.nosy`
+	- `gensim.scripts.word2vec_standalone`
+	- `gensim.scripts.make_wiki_lemma`
+	- `gensim.scripts.make_wiki_online`
+	- `gensim.scripts.make_wiki_online_lemma`
+	- `gensim.scripts.make_wiki_online_nodebug`
+	- `gensim.scripts.make_wiki`
+
+* Move
+	- `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+	- `gensim.summarization` ➡ `gensim.models.summarization`
+	- `gensim.topic_coherence` ➡ `gensim.models._coherence`
+	- `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+	- `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
+Also, we'll create `experimental` subpackage for unstable models. Specific lists will be available in the next major release.
+
+
 ## 3.0.1, 2017-10-12
 
 

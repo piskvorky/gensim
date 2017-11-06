@@ -133,7 +133,7 @@ class CorpusTestCase(unittest.TestCase):
         # after deserialisation
         if isinstance(corpus, indexedcorpus.IndexedCorpus):
             idx = [1, 3, 5, 7]
-            self.assertEquals(corpus[idx], corpus2[idx])
+            self.assertEqual(corpus[idx], corpus2[idx])
 
     def test_serialize_compressed(self):
         corpus = self.TEST_CORPUS
@@ -202,10 +202,10 @@ class CorpusTestCase(unittest.TestCase):
 
         # check sliced corpora that use fancy indexing
         c = corpus[[1, 3, 4]]
-        self.assertEquals([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
-        self.assertEquals([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
-        self.assertEquals(len(corpus[[0, 1, -1]]), 3)
-        self.assertEquals(len(corpus[np.asarray([0, 1, -1])]), 3)
+        self.assertEqual([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
+        self.assertEqual([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
+        self.assertEqual(len(corpus[[0, 1, -1]]), 3)
+        self.assertEqual(len(corpus[np.asarray([0, 1, -1])]), 3)
 
         # check that TransformedCorpus supports indexing when the underlying
         # corpus does, and throws an error otherwise
@@ -214,7 +214,7 @@ class CorpusTestCase(unittest.TestCase):
             self.assertEqual(corpus_[0][0][1], docs[0][0][1] + 1)
             self.assertRaises(ValueError, _get_slice, corpus_, {1})
             transformed_docs = [val + 1 for i, d in enumerate(docs) for _, val in d if i in [1, 3, 4]]
-            self.assertEquals(transformed_docs, list(v for doc in corpus_[[1, 3, 4]] for _, v in doc))
+            self.assertEqual(transformed_docs, list(v for doc in corpus_[[1, 3, 4]] for _, v in doc))
             self.assertEqual(3, len(corpus_[[1, 3, 4]]))
         else:
             self.assertRaises(RuntimeError, _get_slice, corpus_, [1, 3, 4])
@@ -459,7 +459,7 @@ class TestTextDirectoryCorpus(unittest.TestCase):
         corpus = textcorpus.TextDirectoryCorpus(dirpath, pattern="test.*\.log")
         filenames = list(corpus.iter_filepaths())
         expected = [os.path.join(dirpath, name) for name in ('test1.log', 'test2.log')]
-        self.assertEqual(expected, filenames)
+        self.assertEqual(sorted(expected), sorted(filenames))
 
         corpus.pattern = ".*.txt"
         filenames = list(corpus.iter_filepaths())

@@ -71,7 +71,8 @@ except ImportError:
 
 from numpy import dot, zeros, dtype, float32 as REAL,\
     double, array, vstack, fromstring, sqrt, newaxis,\
-    ndarray, sum as np_sum, prod, ascontiguousarray
+    ndarray, sum as np_sum, prod, ascontiguousarray,\
+    argmax
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -277,9 +278,12 @@ class KeyedVectors(utils.SaveLoad):
         """
         if word in self.vocab:
             if use_norm:
-                return self.syn0norm[self.vocab[word].index]
+                result = self.syn0norm[self.vocab[word].index]
             else:
-                return self.syn0[self.vocab[word].index]
+                result = self.syn0[self.vocab[word].index]
+
+            result.setflags(write=False)
+            return result
         else:
             raise KeyError("word '%s' not in vocabulary" % word)
 
@@ -615,6 +619,30 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
+
+    def most_similar_to_given(self, w1, word_list):
+        """Return the word from word_list most similar to w1.
+
+        Args:
+            w1 (str): a word
+            word_list (list): list of words containing a word most similar to w1
+
+        Returns:
+            the word in word_list with the highest similarity to w1
+
+        Raises:
+            KeyError: If w1 or any word in word_list is not in the vocabulary
+
+        Example::
+
+          >>> trained_model.most_similar_to_given('music', ['water', 'sound', 'backpack', 'mouse'])
+          'sound'
+
+          >>> trained_model.most_similar_to_given('snake', ['food', 'pencil', 'animal', 'phone'])
+          'animal'
+
+        """
+        return word_list[argmax([self.similarity(w1, word) for word in word_list])]
 
     def n_similarity(self, ws1, ws2):
         """

@@ -84,6 +84,53 @@ def load_on_instance():
 
 
 class TestWord2VecModel(unittest.TestCase):
+    def testBuildVocabFromFreq(self):
+        """Test that the algorithm is able to build vocabulary from given
+        frequency table"""
+        freq_dict = {
+        'minors': 2, 'graph': 3, 'system': 4,
+        'trees': 3, 'eps': 2, 'computer': 2,
+        'survey': 2, 'user': 3, 'human': 2,
+        'time': 2, 'interface': 2, 'response': 2
+        }
+        model_hs = word2vec.Word2Vec(size=10, min_count=0, seed=42, hs=1, negative=0)
+        model_neg = word2vec.Word2Vec(size=10, min_count=0, seed=42, hs=0, negative=5)
+        model_hs.build_vocab_from_freq(freq_dict)
+        model_neg.build_vocab_from_freq(freq_dict)
+        self.assertTrue(len(model_hs.wv.vocab), 12)
+        self.assertTrue(len(model_neg.wv.vocab), 12)
+        self.assertEqual(model_hs.wv.vocab['minors'].count, 2)
+        self.assertEqual(model_hs.wv.vocab['graph'].count, 3)
+        self.assertEqual(model_hs.wv.vocab['system'].count, 4)
+        self.assertEqual(model_hs.wv.vocab['trees'].count, 3)
+        self.assertEqual(model_hs.wv.vocab['eps'].count, 2)
+        self.assertEqual(model_hs.wv.vocab['computer'].count, 2)
+        self.assertEqual(model_hs.wv.vocab['survey'].count, 2)
+        self.assertEqual(model_hs.wv.vocab['user'].count, 3)
+        self.assertEqual(model_hs.wv.vocab['human'].count, 2)
+        self.assertEqual(model_hs.wv.vocab['time'].count, 2)
+        self.assertEqual(model_hs.wv.vocab['interface'].count, 2)
+        self.assertEqual(model_hs.wv.vocab['response'].count, 2)
+        self.assertEqual(model_neg.wv.vocab['minors'].count, 2)
+        self.assertEqual(model_neg.wv.vocab['graph'].count, 3)
+        self.assertEqual(model_neg.wv.vocab['system'].count, 4)
+        self.assertEqual(model_neg.wv.vocab['trees'].count, 3)
+        self.assertEqual(model_neg.wv.vocab['eps'].count, 2)
+        self.assertEqual(model_neg.wv.vocab['computer'].count, 2)
+        self.assertEqual(model_neg.wv.vocab['survey'].count, 2)
+        self.assertEqual(model_neg.wv.vocab['user'].count, 3)
+        self.assertEqual(model_neg.wv.vocab['human'].count, 2)
+        self.assertEqual(model_neg.wv.vocab['time'].count, 2)
+        self.assertEqual(model_neg.wv.vocab['interface'].count, 2)
+        self.assertEqual(model_neg.wv.vocab['response'].count, 2)
+        new_freq_dict = {'computer': 1, 'artificial': 4, 'human': 1, 'graph': 1, 'intelligence': 4, 'system': 1, 'trees': 1}
+        model_hs.build_vocab_from_freq(new_freq_dict, update=True)
+        model_neg.build_vocab_from_freq(new_freq_dict, update=True)
+        self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
+        self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
+        self.assertEqual(len(model_hs.wv.vocab), 14)
+        self.assertEqual(len(model_neg.wv.vocab), 14)
+
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
@@ -244,11 +291,11 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
         self.assertTrue(np.allclose(model.wv.syn0norm[model.wv.vocab['human'].index], norm_only_model['human']))
         limited_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(testfile(), binary=True, limit=3)
-        self.assertEquals(len(limited_model_kv.syn0), 3)
+        self.assertEqual(len(limited_model_kv.syn0), 3)
         half_precision_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(
             testfile(), binary=True, datatype=np.float16
         )
-        self.assertEquals(binary_model_kv.syn0.nbytes, half_precision_model_kv.syn0.nbytes * 2)
+        self.assertEqual(binary_model_kv.syn0.nbytes, half_precision_model_kv.syn0.nbytes * 2)
 
     def testNoTrainingCFormat(self):
         model = word2vec.Word2Vec(sentences, min_count=1)

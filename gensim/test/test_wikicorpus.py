@@ -73,8 +73,8 @@ class TestWikiCorpus(unittest.TestCase):
         set the parameter lower to True and check that upper case 'Anarchism' token doesnt exist
         """
         wc = WikiCorpus(datapath(FILENAME), processes=1, lower=True, lemmatize=False)
-        l = wc.get_texts()
-        list_tokens = next(l)
+        row = wc.get_texts()
+        list_tokens = next(row)
         self.assertTrue(u'Anarchism' not in list_tokens)
         self.assertTrue(u'anarchism' in list_tokens)
 
@@ -83,8 +83,8 @@ class TestWikiCorpus(unittest.TestCase):
         set the parameter lower to False and check that upper case Anarchism' token exist
         """
         wc = WikiCorpus(datapath(FILENAME), processes=1, lower=False, lemmatize=False)
-        l = wc.get_texts()
-        list_tokens = next(l)
+        row = wc.get_texts()
+        list_tokens = next(row)
         self.assertTrue(u'Anarchism' in list_tokens)
         self.assertTrue(u'anarchism' in list_tokens)
 
@@ -94,16 +94,14 @@ class TestWikiCorpus(unittest.TestCase):
         default token_min_len=2
         """
         wc = WikiCorpus(datapath(FILENAME), processes=1, lemmatize=False)
-        l = wc.get_texts()
-        self.assertTrue(u'a' not in next(l))
+        self.assertTrue(u'a' not in next(wc.get_texts()))
 
     def test_min_token_len_set(self):
         """
         set the parameter token_min_len to 1 and check that 'a' as a token exists
         """
         wc = WikiCorpus(datapath(FILENAME), processes=1, token_min_len=1, lemmatize=False)
-        l = wc.get_texts()
-        self.assertTrue(u'a' in next(l))
+        self.assertTrue(u'a' in next(wc.get_texts()))
 
     def test_max_token_len_not_set(self):
         """
@@ -111,16 +109,14 @@ class TestWikiCorpus(unittest.TestCase):
         default token_max_len=15
         """
         wc = WikiCorpus(datapath(FILENAME), processes=1, lemmatize=False)
-        l = wc.get_texts()
-        self.assertTrue(u'collectivization' not in next(l))
+        self.assertTrue(u'collectivization' not in next(wc.get_texts()))
 
     def test_max_token_len_set(self):
         """
         set the parameter token_max_len to 16 and check that 'collectivisation' as a token exists
         """
         wc = WikiCorpus(datapath(FILENAME), processes=1, token_max_len=16, lemmatize=False)
-        l = wc.get_texts()
-        self.assertTrue(u'collectivization' in next(l))
+        self.assertTrue(u'collectivization' in next(wc.get_texts()))
 
     def test_custom_tokenizer(self):
         """
@@ -128,8 +124,8 @@ class TestWikiCorpus(unittest.TestCase):
         """
         wc = WikiCorpus(datapath(FILENAME), processes=1, lemmatize=False, tokenizer_func=custom_tokeiner,
                         token_max_len=16, token_min_len=1, lower=False)
-        l = wc.get_texts()
-        list_tokens = next(l)
+        row = wc.get_texts()
+        list_tokens = next(row)
         self.assertTrue(u'Anarchism' in list_tokens)
         self.assertTrue(u'collectivization' in list_tokens)
         self.assertTrue(u'a' in list_tokens)

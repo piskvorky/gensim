@@ -158,14 +158,14 @@ class TestFastText(unittest.TestCase):
         ]
         self.assertTrue(numpy.allclose(model["rejection"], expected_vec_oov, atol=1e-4))
 
-        self.assertEquals(model.min_count, 5)
-        self.assertEquals(model.window, 5)
-        self.assertEquals(model.iter, 5)
-        self.assertEquals(model.negative, 5)
-        self.assertEquals(model.sample, 0.0001)
-        self.assertEquals(model.bucket, 1000)
-        self.assertEquals(model.wv.max_n, 6)
-        self.assertEquals(model.wv.min_n, 3)
+        self.assertEqual(model.min_count, 5)
+        self.assertEqual(model.window, 5)
+        self.assertEqual(model.iter, 5)
+        self.assertEqual(model.negative, 5)
+        self.assertEqual(model.sample, 0.0001)
+        self.assertEqual(model.bucket, 1000)
+        self.assertEqual(model.wv.max_n, 6)
+        self.assertEqual(model.wv.min_n, 3)
         self.model_sanity(model)
 
     def testLoadFastTextNewFormat(self):
@@ -209,20 +209,25 @@ class TestFastText(unittest.TestCase):
         ]
         self.assertTrue(numpy.allclose(new_model["rejection"], expected_vec_oov, atol=1e-4))
 
-        self.assertEquals(new_model.min_count, 5)
-        self.assertEquals(new_model.window, 5)
-        self.assertEquals(new_model.iter, 5)
-        self.assertEquals(new_model.negative, 5)
-        self.assertEquals(new_model.sample, 0.0001)
-        self.assertEquals(new_model.bucket, 1000)
-        self.assertEquals(new_model.wv.max_n, 6)
-        self.assertEquals(new_model.wv.min_n, 3)
+        self.assertEqual(new_model.min_count, 5)
+        self.assertEqual(new_model.window, 5)
+        self.assertEqual(new_model.iter, 5)
+        self.assertEqual(new_model.negative, 5)
+        self.assertEqual(new_model.sample, 0.0001)
+        self.assertEqual(new_model.bucket, 1000)
+        self.assertEqual(new_model.wv.max_n, 6)
+        self.assertEqual(new_model.wv.min_n, 3)
         self.model_sanity(new_model)
 
     def testLoadFileName(self):
         """ Test model accepts input as both `/path/to/model` or `/path/to/model.bin` """
         self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new')))
         self.assertTrue(fasttext.FastText.load_fasttext_format(datapath('lee_fasttext_new.bin')))
+
+    def testLoadModelSupervised(self):
+        """Test loading model with supervised learning labels"""
+        with self.assertRaises(NotImplementedError):
+            fasttext.FastText.load_fasttext_format(datapath('pang_lee_polarity_fasttext'))
 
     def testLoadModelWithNonAsciiVocab(self):
         """Test loading model with non-ascii words in vocab"""
@@ -336,6 +341,17 @@ class TestFastText(unittest.TestCase):
         self.assertEqual(ft_hash, 2949673445)
         ft_hash = fasttext.ft_hash('word')
         self.assertEqual(ft_hash, 1788406269)
+
+    def testConsistentDtype(self):
+        """Test that the same dtype is returned for OOV words as for words in the vocabulary"""
+        vocab_word = 'night'
+        oov_word = 'wordnotpresentinvocabulary'
+        self.assertIn(vocab_word, self.test_model.wv.vocab)
+        self.assertNotIn(oov_word, self.test_model.wv.vocab)
+
+        vocab_embedding = self.test_model[vocab_word]
+        oov_embedding = self.test_model[oov_word]
+        self.assertEqual(vocab_embedding.dtype, oov_embedding.dtype)
 
 
 if __name__ == '__main__':

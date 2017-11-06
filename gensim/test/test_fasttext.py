@@ -184,14 +184,14 @@ class TestFastTextModel(unittest.TestCase):
         ]
         self.assertTrue(np.allclose(model["rejection"], expected_vec_oov, atol=1e-4))
 
-        self.assertEquals(model.min_count, 5)
-        self.assertEquals(model.window, 5)
-        self.assertEquals(model.iter, 5)
-        self.assertEquals(model.negative, 5)
-        self.assertEquals(model.sample, 0.0001)
-        self.assertEquals(model.bucket, 1000)
-        self.assertEquals(model.wv.max_n, 6)
-        self.assertEquals(model.wv.min_n, 3)
+        self.assertEqual(model.min_count, 5)
+        self.assertEqual(model.window, 5)
+        self.assertEqual(model.iter, 5)
+        self.assertEqual(model.negative, 5)
+        self.assertEqual(model.sample, 0.0001)
+        self.assertEqual(model.bucket, 1000)
+        self.assertEqual(model.wv.max_n, 6)
+        self.assertEqual(model.wv.min_n, 3)
         self.assertEqual(model.wv.syn0.shape, (len(model.wv.vocab), model.vector_size))
         self.assertEqual(model.wv.syn0_ngrams.shape, (model.num_ngram_vectors, model.vector_size))
 
@@ -235,16 +235,20 @@ class TestFastTextModel(unittest.TestCase):
         ]
         self.assertTrue(np.allclose(new_model["rejection"], expected_vec_oov, atol=1e-4))
 
-        self.assertEquals(new_model.min_count, 5)
-        self.assertEquals(new_model.window, 5)
-        self.assertEquals(new_model.iter, 5)
-        self.assertEquals(new_model.negative, 5)
-        self.assertEquals(new_model.sample, 0.0001)
-        self.assertEquals(new_model.bucket, 1000)
-        self.assertEquals(new_model.wv.max_n, 6)
-        self.assertEquals(new_model.wv.min_n, 3)
+        self.assertEqual(new_model.min_count, 5)
+        self.assertEqual(new_model.window, 5)
+        self.assertEqual(new_model.iter, 5)
+        self.assertEqual(new_model.negative, 5)
+        self.assertEqual(new_model.sample, 0.0001)
+        self.assertEqual(new_model.bucket, 1000)
+        self.assertEqual(new_model.wv.max_n, 6)
+        self.assertEqual(new_model.wv.min_n, 3)
         self.assertEqual(new_model.wv.syn0.shape, (len(new_model.wv.vocab), new_model.vector_size))
         self.assertEqual(new_model.wv.syn0_ngrams.shape, (new_model.num_ngram_vectors, new_model.vector_size))
+
+    def test_load_model_supervised(self):
+        with self.assertRaises(NotImplementedError):
+            FT_gensim.load_fasttext_format(datapath('pang_lee_polarity_fasttext'))
 
     def test_load_model_with_non_ascii_vocab(self):
         model = FT_gensim.load_fasttext_format(datapath('non_ascii_fasttext'))
@@ -364,7 +368,7 @@ class TestFastTextModel(unittest.TestCase):
 
         model_gensim = FT_gensim(size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=12, min_alpha=0.0)
+            sorted_vocab=1, workers=1, min_alpha=0.0)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -384,7 +388,7 @@ class TestFastTextModel(unittest.TestCase):
 
         model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=12, min_alpha=0.0)
+            sorted_vocab=1, workers=1, min_alpha=0.0)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -440,22 +444,22 @@ class TestFastTextModel(unittest.TestCase):
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_sg_hs_online(self):
-        model = FT_gensim(sg=1, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
+        model = FT_gensim(sg=1, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1)
         self.online_sanity(model)
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_sg_neg_online(self):
-        model = FT_gensim(sg=1, window=2, hs=0, negative=5, min_count=3, iter=1, seed=42, workers=12)
+        model = FT_gensim(sg=1, window=2, hs=0, negative=5, min_count=3, iter=1, seed=42, workers=1)
         self.online_sanity(model)
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_hs_online(self):
-        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=12)
+        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1)
         self.online_sanity(model)
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_neg_online(self):
-        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=5, min_count=5, iter=1, seed=42, workers=12, sample=0)
+        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=5, min_count=5, iter=1, seed=42, workers=1, sample=0)
         self.online_sanity(model)
 
 

@@ -342,6 +342,14 @@ class Sparse2Corpus(object):
     def __len__(self):
         return self.sparse.shape[1]
 
+    def __getitem__(self, document_index):
+        """
+        Return a single document in the corpus by its index (between 0 and `len(self)-1`).
+        """
+        indprev = self.sparse.indptr[document_index]
+        indnow = self.sparse.indptr[document_index + 1]
+        return list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
+
 
 def veclen(vec):
     if len(vec) == 0:
@@ -781,7 +789,7 @@ class MmReader(object):
         to be rows of the matrix (and document features are columns).
 
         `input` is either a string (file path) or a file-like object that supports
-        `seek()` (e.g. gzip.GzipFile, bz2.BZ2File).
+        `seek()` (e.g. gzip.GzipFile, bz2.BZ2File). File-like objects are not closed automatically.
         """
         logger.info("initializing corpus reader from %s", input)
         self.input, self.transposed = input, transposed
@@ -873,9 +881,9 @@ class MmReader(object):
         if offset == -1:
             return []
         if isinstance(self.input, string_types):
-            fin = utils.smart_open(self.input)
+            fin, close_fin = utils.smart_open(self.input), True
         else:
-            fin = self.input
+            fin, close_fin = self.input, False
 
         fin.seek(offset)  # works for gzip/bz2 input, too
         previd, document = -1, []
@@ -887,8 +895,11 @@ class MmReader(object):
             assert previd <= docid, "matrix columns must come in ascending order"
             if docid != previd:
                 if previd >= 0:
-                    return document
+                    break
                 previd = docid
 
             document.append((termid, val,))  # add another field to the current document
+
+        if close_fin:
+            fin.close()
         return document
