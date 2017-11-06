@@ -21,6 +21,7 @@ import numpy as np
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
 from testfixtures import log_capture
+from six import itervalues
 
 try:
     from pyemd import emd  # noqa:F401
@@ -156,6 +157,12 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(model.wv.vocab['graph'].count, 3)
         self.assertEqual(model.wv.vocab['minors'].count, 3)
         self.assertEqual(model.wv.vocab['system'].count, 4)
+
+    def testTotalWordCount(self):
+        model = word2vec.Word2Vec(size=10, min_count=0, seed=42)
+        model.build_vocab(sentences, keep_raw_vocab=True)
+        total_words = sum(itervalues(model.raw_vocab))
+        self.assertEqual(total_words, 29)
 
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
