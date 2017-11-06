@@ -131,6 +131,32 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(len(model_hs.wv.vocab), 14)
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
+    def testPruneVocab(self):
+        """Test Prune vocab while scanning sentences"""
+        sentences = [
+            ["graph", "system"],
+            ["graph", "system"],
+            ["system", "eps"],
+            ["graph", "system"]
+        ]
+        model = word2vec.Word2Vec(sentences, size=10, min_count=0, max_vocab_size=2, seed=42, hs=1, negative=0)
+        self.assertTrue(len(model.wv.vocab), 2)
+        self.assertEqual(model.wv.vocab['graph'].count, 3)
+        self.assertEqual(model.wv.vocab['system'].count, 4)
+
+        sentences = [
+            ["graph", "system"],
+            ["graph", "system"],
+            ["system", "eps"],
+            ["graph", "system"],
+            ["minors", "survey", "minors", "survey", "minors"]
+        ]
+        model = word2vec.Word2Vec(sentences, size=10, min_count=0, max_vocab_size=2, seed=42, hs=1, negative=0)
+        self.assertTrue(len(model.wv.vocab), 3)
+        self.assertEqual(model.wv.vocab['graph'].count, 3)
+        self.assertEqual(model.wv.vocab['minors'].count, 3)
+        self.assertEqual(model.wv.vocab['system'].count, 4)
+
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""

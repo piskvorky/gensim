@@ -647,13 +647,17 @@ class Word2Vec(utils.SaveLoad):
 
         Examples
         --------
-        >>> build_vocab_from_freq({"Word1":15,"Word2":20}, update=True)
+        >>> model.build_vocab_from_freq({"Word1":15,"Word2":20}, update=True)
         """
         logger.info("Processing provided word frequencies")
-        vocab = defaultdict(int, word_freq)
+        raw_vocab = word_freq #Instead of scanning text, this will assign provided word frequencies dictionary(word_freq) to be directly the raw vocab
+        logger.info(
+            "collected %i different raw word, with total frequency of %i",
+            len(raw_vocab), sum(itervalues(raw_vocab))
+        )
 
-        self.corpus_count = corpus_count if corpus_count else 0
-        self.raw_vocab = vocab
+        self.corpus_count = corpus_count if corpus_count else 0 #Since no sentences are provided, this is to control the corpus_count
+        self.raw_vocab = raw_vocab
 
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
         self.finalize_vocab(update=update)  # build tables & arrays
@@ -675,14 +679,14 @@ class Word2Vec(utils.SaveLoad):
                         type(sentence)
                     )
                 checked_string_types += 1
-            if sentence_no % progress_per == 0:
+            if sentence_no % progress_per == 0 and sentence_no != 0:
                 logger.info(
                     "PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
                     sentence_no, total_words, len(vocab)
                 )
             for word in sentence:
                 vocab[word] += 1
-                total_words += 1
+            total_words += len(sentence)
 
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
                 utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
