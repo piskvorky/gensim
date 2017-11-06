@@ -44,14 +44,46 @@ class PorterStemmer(object):
 
         Note that only lower case sequences are stemmed. Forcing to lower case
         should be done before stem(...) is called.
-        """
 
+        Examples
+        --------
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> print "b = ", p.b," ,k = ", p.k, " ,j = ", p.j
+        b =    ,k =  0  ,j =  0
+
+        """
         self.b = ""  # buffer for word to be stemmed
         self.k = 0
         self.j = 0   # j is a general offset into the string
 
     def _cons(self, i):
-        """True <=> b[i] is a consonant."""
+        """Take b[i], check if it is a consonant.
+
+        Parameters
+        ----------
+        i : int
+
+        Returns
+        -------
+        bool
+            True, if b[i] is a consonant, otherwise - False.
+
+        Examples
+        --------
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> p.b = "hi"
+        >>> p._cons(1)
+        False
+
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> p.b = "meow"
+        >>> p._cons(3)
+        True
+
+        """
         ch = self.b[i]
         if ch in "aeiou":
             return False
@@ -60,7 +92,7 @@ class PorterStemmer(object):
         return True
 
     def _m(self):
-        """Returns the number of consonant sequences between 0 and j.
+        """Return the number of consonant sequences between 0 and j.
 
         If c is a consonant sequence and v a vowel sequence, and <..>
         indicates arbitrary presence,
@@ -69,7 +101,21 @@ class PorterStemmer(object):
            <c>vc<v>     gives 1
            <c>vcvc<v>   gives 2
            <c>vcvcvc<v> gives 3
-           ....
+
+        Returns
+        -------
+        int
+            The number of consonant sequences between 0 and j.
+
+        Examples
+        --------
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> p.b = "<bm>aobm<ao>"
+        >>> p.j = 11
+        >>> p._m()
+        2
+
         """
         i = 0
         while True:
@@ -98,27 +144,130 @@ class PorterStemmer(object):
             i += 1
 
     def _vowelinstem(self):
-        """True <=> 0,...j contains a vowel"""
+        """Check if b[i] (i = 0,...j) contains a vowel.
+
+        Returns
+        -------
+        bool
+            True, if b contains a vowel, otherwise - False.
+
+        Examples
+        --------
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> p.b = "gnsm"
+        >>> p.j = 3
+        >>> p._vowelinstem()
+        False
+
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> p.b = "gensim"
+        >>> p.j = 5
+        >>> p._vowelinstem()
+        True
+
+        """
         return not all(self._cons(i) for i in xrange(self.j + 1))
 
     def _doublec(self, j):
-        """True <=> j,(j-1) contain a double consonant."""
+        """Check if b[j],b[j-1] contain a double consonant.
+
+        Parameters
+        ----------
+        j : int
+
+        Returns
+        -------
+        bool
+            True, if b[j],b[j-1] contain a double consonant , otherwise - False.
+
+        Examples
+        --------
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> p.b = "real"
+        >>> p.j = 3
+        >>> p._doublec(3)
+        False
+
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> p.b = "really"
+        >>> p.j = 5
+        >>> p._doublec(4)
+        True
+
+        """
         return j > 0 and self.b[j] == self.b[j - 1] and self._cons(j)
 
     def _cvc(self, i):
-        """True <=> i-2,i-1,i has the form consonant - vowel - consonant
+        """Check if b[i-2],b[i-1],b[i] have the form consonant - vowel - consonant
         and also if the second c is not w,x or y. This is used when trying to
         restore an e at the end of a short word, e.g.
+        cav(e), lov(e), hop(e), crim(e), but
+        snow, box, tray.
 
-           cav(e), lov(e), hop(e), crim(e), but
-           snow, box, tray.
+        Parameters
+        ----------
+        i : int
+
+        Returns
+        -------
+        bool
+            True, if b[i-2],b[i-1],b[i] have the form consonant - vowel - consonant , otherwise - False.
+
+        Examples
+        --------
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> p.b = "lib"
+        >>> p.j = 2
+        >>> p._cvc(2)
+        True
+
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> p.b = "dll"
+        >>> p.j = 2
+        >>> p._cvc(2)
+        False
+
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> p.b = "wow"
+        >>> p.j = 2
+        >>> p._cvc(2)
+        False
+
         """
         if i < 2 or not self._cons(i) or self._cons(i - 1) or not self._cons(i - 2):
             return False
         return self.b[i] not in "wxy"
 
     def _ends(self, s):
-        """True <=> 0,...k ends with the string s."""
+        """Check if b[0],...b[k] ends with the string s.
+
+        Parameters
+        ----------
+        s : str
+
+        Returns
+        -------
+        int
+            1, if b[0],...b[k] ends with the string s, otherwise - 0.
+
+        Examples
+        --------
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> p.b = "cowboy"
+        >>> p.j = 5
+        >>> p.k = 2
+        >>> p._ends("cow")
+        1
+
+        """
         if s[-1] != self.b[self.k]:  # tiny speed-up
             return 0
         length = len(s)
@@ -130,7 +279,13 @@ class PorterStemmer(object):
         return 1
 
     def _setto(self, s):
-        """Set (j+1),...k to the characters in the string s, adjusting k."""
+        """Set (j+1),...k to the characters in the string s, adjusting k.
+
+        Parameters
+        ----------
+        s : str
+
+        """
         self.b = self.b[:self.j + 1] + s
         self.k = len(self.b) - 1
 
@@ -340,7 +495,26 @@ class PorterStemmer(object):
             self.k -= 1
 
     def stem(self, w):
-        """Stem the word w, return the stemmed form."""
+        """Stem the word w, return the stemmed form.
+
+        Parameters
+        ----------
+        w : str
+
+        Returns
+        -------
+        str
+            Stemmed version of  w.
+
+        Examples
+        --------
+        >>> from gensim.parsing.porter import PorterStemmer
+        >>> p = PorterStemmer()
+        >>> text = "Matting ponies"
+        >>> p.stem(text)
+        'matting poni'
+
+        """
         w = w.lower()
         k = len(w) - 1
         if k <= 1:

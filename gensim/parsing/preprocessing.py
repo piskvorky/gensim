@@ -38,9 +38,23 @@ your yours yourself yourselves
 """
 STOPWORDS = frozenset(w for w in STOPWORDS.split() if w)
 
+RE_PUNCT = re.compile(r'([%s])+' % re.escape(string.punctuation), re.UNICODE)
+
+RE_TAGS = re.compile(r"<([^>]+)>", re.UNICODE)
+
+RE_NUMERIC = re.compile(r"[0-9]+", re.UNICODE)
+
+RE_NONALPHA = re.compile(r"\W", re.UNICODE)
+
+RE_AL_NUM = re.compile(r"([a-z]+)([0-9]+)", flags=re.UNICODE)
+
+RE_NUM_AL = re.compile(r"([0-9]+)([a-z]+)", flags=re.UNICODE)
+
+RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
+
 
 def remove_stopwords(s):
-    """Takes string, removes all words those are among stopwords.
+    """Take string, remove all words those are among stopwords.
 
     Parameters
     ----------
@@ -59,16 +73,12 @@ def remove_stopwords(s):
     u'Better late never, better late.'
 
     """
-
     s = utils.to_unicode(s)
     return " ".join(w for w in s.split() if w not in STOPWORDS)
 
 
-RE_PUNCT = re.compile(r'([%s])+' % re.escape(string.punctuation), re.UNICODE)
-
-
 def strip_punctuation(s):
-    """Takes string, replaces all punctuation characters with spaces.
+    """Take string, replace all punctuation characters with spaces.
 
     Parameters
     ----------
@@ -87,27 +97,20 @@ def strip_punctuation(s):
     u'A semicolon is a stronger break than a comma  but not as much as a full stop '
 
     """
-
     s = utils.to_unicode(s)
     return RE_PUNCT.sub(" ", s)
 
 
 # unicode.translate cannot delete characters like str can
 strip_punctuation2 = strip_punctuation
-"""
-Same as strip_punctuation
-"""
 
 # def strip_punctuation2(s):
 #     s = utils.to_unicode(s)
 #     return s.translate(None, string.punctuation)
 
 
-RE_TAGS = re.compile(r"<([^>]+)>", re.UNICODE)
-
-
 def strip_tags(s):
-    """Takes string and removes tags.
+    """Take string and remove tags.
 
     Parameters
     ----------
@@ -126,13 +129,12 @@ def strip_tags(s):
     u'Hello World!'
 
     """
-
     s = utils.to_unicode(s)
     return RE_TAGS.sub("", s)
 
 
 def strip_short(s, minsize=3):
-    """Takes string and removes words with length lesser than minsize (default = 3).
+    """Take string and remove words with length lesser than minsize (default = 3).
 
     Parameters
     ----------
@@ -158,16 +160,12 @@ def strip_short(s, minsize=3):
     u'three seven eight'
 
     """
-
     s = utils.to_unicode(s)
     return " ".join(e for e in s.split() if len(e) >= minsize)
 
 
-RE_NUMERIC = re.compile(r"[0-9]+", re.UNICODE)
-
-
 def strip_numeric(s):
-    """Takes string and removes digits from it.
+    """Take string and remove digits from it.
 
     Parameters
     ----------
@@ -186,16 +184,12 @@ def strip_numeric(s):
     u'textgensimtest'
 
     """
-
     s = utils.to_unicode(s)
     return RE_NUMERIC.sub("", s)
 
 
-RE_NONALPHA = re.compile(r"\W", re.UNICODE)
-
-
 def strip_non_alphanum(s):
-    """Takes string and removes not a word characters from it.
+    """Take string and remove not a word characters from it.
     (Word characters - alphanumeric & underscore)
 
     Parameters
@@ -215,16 +209,12 @@ def strip_non_alphanum(s):
     u'if you can read this then this method works'
 
     """
-
     s = utils.to_unicode(s)
     return RE_NONALPHA.sub(" ", s)
 
 
-RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
-
-
 def strip_multiple_whitespaces(s):
-    r"""Takes string, removes repeating in a row whitespace characters (spaces, tabs, line breaks) from it
+    r"""Take string, remove repeating in a row whitespace characters (spaces, tabs, line breaks) from it
     and turns tabs & line breaks into spaces.
 
     Parameters
@@ -244,17 +234,12 @@ def strip_multiple_whitespaces(s):
     u'salut les loulous!'
 
     """
-
     s = utils.to_unicode(s)
     return RE_WHITESPACE.sub(" ", s)
 
 
-RE_AL_NUM = re.compile(r"([a-z]+)([0-9]+)", flags=re.UNICODE)
-RE_NUM_AL = re.compile(r"([0-9]+)([a-z]+)", flags=re.UNICODE)
-
-
 def split_alphanum(s):
-    """Takes string, adds spaces between digits & letters.
+    """Take string, add spaces between digits & letters.
 
     Parameters
     ----------
@@ -273,14 +258,13 @@ def split_alphanum(s):
     u'24.0 hours 7 days 365 a 1 b 2 c 3'
 
     """
-
     s = utils.to_unicode(s)
     s = RE_AL_NUM.sub(r"\1 \2", s)
     return RE_NUM_AL.sub(r"\1 \2", s)
 
 
 def stem_text(text):
-    """Takes string, tranforms it into lowercase and (porter-)stemmed version.
+    """Take string, tranform it into lowercase and (porter-)stemmed version.
 
     Parameters
     ----------
@@ -299,14 +283,12 @@ def stem_text(text):
     u'while it is quit us to be abl to search a larg collect of document almost instantli for a joint occurr of a collect of exact words, for mani search purposes, a littl fuzzi would help.'
 
     """
-
     text = utils.to_unicode(text)
     p = PorterStemmer()
     return ' '.join(p.stem(word) for word in text.split())
 
 
 stem = stem_text
-
 
 
 DEFAULT_FILTERS = [
@@ -317,7 +299,10 @@ DEFAULT_FILTERS = [
 
 
 def preprocess_string(s, filters=DEFAULT_FILTERS):
-    """Takes string, applies list of chosen filters to it, where filters are methods from this module. Default list of filters consists of: strip_tags, strip_punctuation, strip_multiple_whitespaces, strip_numeric, remove_stopwords, strip_short, stem_text. <function <lambda>> in signature means that we use lambda function for applying methods to filters.
+    """Take string, apply list of chosen filters to it, where filters are methods from this module.
+    Default list of filters consists of: strip_tags, strip_punctuation, strip_multiple_whitespaces,
+    strip_numeric, remove_stopwords, strip_short, stem_text. <function <lambda>> in signature means
+    that we use lambda function for applying methods to filters.
 
     Parameters
     ----------
@@ -339,11 +324,10 @@ def preprocess_string(s, filters=DEFAULT_FILTERS):
     >>> from gensim.parsing.preprocessing import preprocess_string, strip_tags, strip_punctuation
     >>> s = "<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?"
     >>> CUSTOM_FILTERS = [lambda x: x.lower(), strip_tags, strip_punctuation]
-    >>> preprocess_string(s,CUSTOM_FILTERS)
+    >>> preprocess_string(s, CUSTOM_FILTERS)
     [u'hel', u'9lo', u'wo9', u'rld', u'th3', u'weather', u'is', u'really', u'g00d', u'today', u'isn', u't', u'it']
 
     """
-
     s = utils.to_unicode(s)
     for f in filters:
         s = f(s)
@@ -351,7 +335,7 @@ def preprocess_string(s, filters=DEFAULT_FILTERS):
 
 
 def preprocess_documents(docs):
-    """Takes list of strings, splits it into sentences, then applies default filters to every sentence.
+    """Take list of strings, then apply default filters to every string.
 
     Parameters
     ----------
@@ -370,31 +354,10 @@ def preprocess_documents(docs):
     [[u'hel', u'rld'], [u'weather', u'todai', u'isn']]
 
     """
-
     return [preprocess_string(d) for d in docs]
 
 
 def read_file(path):
-    r"""Reads file in specified directory.
-
-    Parameters
-    ----------
-    path : str
-
-    Returns
-    -------
-    list
-        List of unicode strings.
-
-    Examples
-    --------
-    >>> from gensim.parsing.preprocessing import read_file
-    >>> path = "/media/work/october_2017/gensim/gensim/test/test_data/mihalcea_tarau.summ.txt"
-    >>> read_file(path)
-    "Hurricane Gilbert swept toward the Dominican Republic Sunday, and the Civil Defense alerted its heavily populated south coast to prepare for high winds, heavy rains and high seas.\nThe National Hurricane Center in Miami reported its position at 2 a.m. Sunday at latitude 16.1 north, longitude 67.5 west, about 140 miles south of Ponce, Puerto Rico, and 200 miles southeast of Santo Domingo.\nThe National Weather Service in San Juan, Puerto Rico, said Gilbert was moving westward at 15 mph with a ``broad area of cloudiness and heavy weather'' rotating around the center of the storm.\nStrong winds associated with the Gilbert brought coastal flooding, strong southeast winds and up to 12 feet feet to Puerto Rico's south coast."
-
-    """
-
     with utils.smart_open(path) as fin:
         return fin.read()
 
