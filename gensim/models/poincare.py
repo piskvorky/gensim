@@ -43,7 +43,7 @@ class PoincareBatch(object):
     Class for computing Poincare distances, gradients and loss for a training batch,
     and storing intermediate state to avoid recomputing multiple times
     """
-    def __init__(self, vectors_u, vectors_v):
+    def __init__(self, vectors_u, vectors_v, indices_u, indices_v):
         """
         Initialize instance with sets of vectors for which distances are to be computed
 
@@ -56,6 +56,11 @@ class PoincareBatch(object):
             expected shape (1 + neg_size, dim, batch_size).
             vectors of all hypernym nodes `v` and negatively sampled nodes `v'`,
             for each node `u` in the batch.
+        indices_u : list
+            list of node indices for each of the vectors in `vectors_u`
+        indices_v : list
+            nested list of lists, each of which is a  list of node indices
+            for each of the vectors in `vectors_v` for a specific node `u`
 
         Returns
         -------
@@ -63,6 +68,8 @@ class PoincareBatch(object):
         """
         self.vectors_u = vectors_u.T[np.newaxis, :, :]  # (1, dim, batch_size)
         self.vectors_v = vectors_v  # (1 + neg_size, dim, batch_size)
+        self.indices_u = indices_u
+        self.indices_v = indices_v
 
         self.poincare_dists = None
         self.euclidean_dists = None
@@ -434,17 +441,18 @@ class PoincareModel(utils.SaveLoad):
         """Creates training batch and computes all gradients and loss"""
         batch_size = len(relations)
         all_vectors = []
-        u_all, v_all = [], []
+        indices_u, indices_v = [], []
         for relation, negatives in zip(relations, all_negatives):
             u, v = relation
-            u_all.append(u)
-            v_all.append(v)
-            v_all += negatives
+            indices_u.append(u)
+            indices_v.append(v)
+            for negative in negatives:
+                indices_v.append(negative)
 
-        vectors_u = self.wv.syn0[u_all]
-        vectors_v = self.wv.syn0[v_all].reshape((batch_size, 1 + self.negative, self.size))
+        vectors_u = self.wv.syn0[indices_u]
+        vectors_v = self.wv.syn0[indices_v].reshape((batch_size, 1 + self.negative, self.size))
         vectors_v = vectors_v.swapaxes(0,1).swapaxes(1,2)
-        batch = PoincareBatch(vectors_u, vectors_v)
+        batch = PoincareBatch(vectors_u, vectors_v, indices_u, indices_v)
         batch.compute_all()
 
         if check_gradients:
@@ -458,7 +466,7 @@ class PoincareModel(utils.SaveLoad):
                     max_diff = diff
             print('Max difference between gradients: %.10f' % max_diff)
             assert max_diff < 1e-8, 'Max difference greater than tolerance'
-        return u_all, v_all, batch
+        return batch
 
     def sample_negatives_batch(self, nodes):
         """Return a sample of negative examples for the given positive example"""
@@ -469,8 +477,8 @@ class PoincareModel(utils.SaveLoad):
     def train_on_batch(self, relations, check_gradients=False):
         """Performs training for a single training batch"""
         all_negatives = self.sample_negatives_batch([relation[0] for relation in relations])
-        u_indices, v_indices, batch = self.prepare_training_batch(relations, all_negatives, check_gradients)
-        self.update_vectors_batch(batch, u_indices, v_indices)
+        batch = self.prepare_training_batch(relations, all_negatives, check_gradients)
+        self.update_vectors_batch(batch)
         return batch
 
     def handle_duplicates(self, vector_updates, vector_indices):
@@ -483,23 +491,24 @@ class PoincareModel(utils.SaveLoad):
             vector_updates[positions[-1]] = vector_updates[positions].sum(axis=0)
             vector_updates[positions[:-1]] = 0
 
-    def update_vectors_batch(self, batch, u_indices, v_indices):
-        batch_size = len(u_indices)
+    def update_vectors_batch(self, batch):
         grad_u, grad_v = batch.gradients_u, batch.gradients_v
+        indices_u, indices_v = batch.indices_u, batch.indices_v
+        batch_size = len(indices_u)
 
         u_updates = (self.alpha * (batch.alpha ** 2) / 4 * grad_u).T
-        self.handle_duplicates(u_updates, u_indices)
+        self.handle_duplicates(u_updates, indices_u)
 
-        self.wv.syn0[u_indices] -= u_updates
-        self.wv.syn0[u_indices] = self.clip_vectors(self.wv.syn0[u_indices], self.epsilon)
+        self.wv.syn0[indices_u] -= u_updates
+        self.wv.syn0[indices_u] = self.clip_vectors(self.wv.syn0[indices_u], self.epsilon)
 
         v_updates = self.alpha * (batch.beta ** 2)[:, np.newaxis] / 4 * grad_v
         v_updates = v_updates.swapaxes(1, 2).swapaxes(0, 1)
         v_updates = v_updates.reshape(((1 + self.negative) * batch_size, self.size))
-        self.handle_duplicates(v_updates, v_indices)
+        self.handle_duplicates(v_updates, indices_v)
 
-        self.wv.syn0[v_indices] -= v_updates
-        self.wv.syn0[v_indices] = self.clip_vectors(self.wv.syn0[v_indices], self.epsilon)
+        self.wv.syn0[indices_v] -= v_updates
+        self.wv.syn0[indices_v] = self.clip_vectors(self.wv.syn0[indices_v], self.epsilon)
 
     def train_batchwise(self, num_batches=None, batch_size=2, print_every=5000):
         """Trains Poincare embeddings using loaded relations"""
