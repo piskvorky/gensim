@@ -483,8 +483,11 @@ class PoincareModel(utils.SaveLoad):
                 diff = np.abs(auto_gradients - computed_gradients).max()
                 if diff > max_diff:
                     max_diff = diff
-            print('Max difference between gradients: %.10f' % max_diff)
-            assert max_diff < 1e-8, 'Max difference greater than tolerance'
+            logger.info('Max difference between gradients: %.10f', max_diff)
+            if max_diff > 1e-8:
+                logger.warning(
+                    'Max difference between computed gradients and autograd gradients %.10f, '
+                    'greater than tolerance %.10f', max_diff, 1e-8)
         return batch
 
     def sample_negatives_batch(self, nodes):
@@ -606,13 +609,13 @@ class PoincareModel(utils.SaveLoad):
         """
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
-        last_time = time.time()
         if epochs is None:
             epochs = self.iter
         for epoch in range(1, epochs + 1):
             indices = list(range(len(self.all_relations)))
             self.np_random.shuffle(indices)
-            avg_loss = 0
+            avg_loss = 0.0
+            last_time = time.time()
             for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
                 print_check = not (batch_num % print_every)
                 batch_indices = indices[i:i+batch_size]
@@ -624,11 +627,11 @@ class PoincareModel(utils.SaveLoad):
                     time_taken = time.time() - last_time
                     speed = print_every * batch_size / time_taken
                     logger.info(
-                        'Training on epoch %d, examples #%s-#%s, loss: %.2f'
-                        % (epoch, relations[0], relations[-1], avg_loss))
+                        'Training on epoch %d, examples #%d-#%d, loss: %.2f'
+                        % (epoch, i, i + batch_size, avg_loss))
                     logger.info(
                         'Time taken for %d examples: %.2f s, %.2f examples / s'
                         % (print_every * batch_size, time_taken, speed))
                     last_time = time.time()
-                    avg_loss = 0
+                    avg_loss = 0.0
 
