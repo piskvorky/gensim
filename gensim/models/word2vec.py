@@ -659,8 +659,7 @@ class Word2Vec(utils.SaveLoad):
         self.corpus_count = corpus_count if corpus_count else 0  # Since no sentences are provided, this is to control the corpus_count
         self.raw_vocab = raw_vocab
 
-        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
-                         update=update)  # trim by min_count & precalculate downsampling
+        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,update=update)  # trim by min_count & precalculate downsampling
         self.finalize_vocab(update=update)  # build tables & arrays
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
