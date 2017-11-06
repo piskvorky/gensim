@@ -249,10 +249,13 @@ class _WikiSectionsCorpus(WikiCorpus):
         for group in utils.chunkize(page_xmls, chunksize=10 * self.processes, maxsize=1):
             for article_title, sections in pool.imap(segment, group):  # chunksize=10):
                 # article redirects are pruned here
-                if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES) \
-                        or len(sections) == 0 \
-                        or sections[0][1].lstrip().startswith("#REDIRECT"):
+                if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):  # filter non-articles
                     continue
+                if len(sections) == 0 or sections[0][1].lstrip().lower().startswith("#redirect"):  # filter redirect
+                    continue
+                if sum(len(body.strip()) for (_, body) in sections) < 500:  # filter very short articles (thrash)
+                    continue
+
                 articles += 1
                 yield (article_title, sections)
         pool.terminate()
