@@ -14,29 +14,14 @@ import unittest
 
 import numpy as np
 
-from gensim.corpora import mmcorpus, Dictionary
+from gensim.corpora.mmcorpus import MmCorpus
 from gensim.models import tfidfmodel
-from gensim.test.utils import datapath, get_tmpfile
-
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
+from gensim.test.utils import datapath, get_tmpfile, common_dictionary, common_corpus
 
 
 class TestTfidfModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.corpus = MmCorpus(datapath('testcorpus.mm'))
 
     def testTransform(self):
         # create the transformation model
@@ -52,15 +37,16 @@ class TestTfidfModel(unittest.TestCase):
     def testInit(self):
         # create the transformation model by analyzing a corpus
         # uses the global `corpus`!
-        model1 = tfidfmodel.TfidfModel(corpus)
+        model1 = tfidfmodel.TfidfModel(common_corpus)
+        dfs = common_dictionary.dfs
 
         # make sure the dfs<->idfs transformation works
-        self.assertEqual(model1.dfs, dictionary.dfs)
-        self.assertEqual(model1.idfs, tfidfmodel.precompute_idfs(model1.wglobal, dictionary.dfs, len(corpus)))
+        self.assertEqual(model1.dfs, dfs)
+        self.assertEqual(model1.idfs, tfidfmodel.precompute_idfs(model1.wglobal, dfs, len(common_corpus)))
 
         # create the transformation model by directly supplying a term->docfreq
         # mapping from the global var `dictionary`.
-        model2 = tfidfmodel.TfidfModel(dictionary=dictionary)
+        model2 = tfidfmodel.TfidfModel(dictionary=common_dictionary)
         self.assertEqual(model1.idfs, model2.idfs)
 
     def testPersistence(self):

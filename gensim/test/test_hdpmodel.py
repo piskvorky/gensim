@@ -15,24 +15,12 @@ import unittest
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import hdpmodel
 from gensim.test import basetmtests
-from gensim.test.utils import datapath
+from gensim.test.utils import datapath, common_texts
 
 import numpy as np
 
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
+dictionary = Dictionary(common_texts)
+corpus = [dictionary.doc2bow(text) for text in common_texts]
 
 
 class TestHdpModel(unittest.TestCase, basetmtests.TestBaseTopicModel):

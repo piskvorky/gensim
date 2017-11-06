@@ -14,22 +14,12 @@ import os
 import zlib
 
 from gensim.corpora.hashdictionary import HashDictionary
-from gensim.test.utils import get_tmpfile
+from gensim.test.utils import get_tmpfile, common_texts
 
 
 class TestHashDictionary(unittest.TestCase):
     def setUp(self):
-        self.texts = [
-                ['human', 'interface', 'computer'],
-                ['survey', 'user', 'computer', 'system', 'response', 'time'],
-                ['eps', 'user', 'interface', 'system'],
-                ['system', 'human', 'system', 'eps'],
-                ['user', 'response', 'time'],
-                ['trees'],
-                ['graph', 'trees'],
-                ['graph', 'minors', 'trees'],
-                ['graph', 'minors', 'survey']
-        ]
+        self.texts = common_texts
 
     def testDocFreqOneDoc(self):
         texts = [['human', 'interface', 'computer']]

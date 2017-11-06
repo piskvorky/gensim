@@ -19,24 +19,14 @@ import scipy
 import gensim
 from gensim.corpora import Dictionary
 from gensim.utils import to_utf8
-from gensim.test.utils import get_tmpfile
+from gensim.test.utils import get_tmpfile, common_texts
 from six import PY3
 from six.moves import zip
 
 
 class TestDictionary(unittest.TestCase):
     def setUp(self):
-        self.texts = [
-                ['human', 'interface', 'computer'],
-                ['survey', 'user', 'computer', 'system', 'response', 'time'],
-                ['eps', 'user', 'interface', 'system'],
-                ['system', 'human', 'system', 'eps'],
-                ['user', 'response', 'time'],
-                ['trees'],
-                ['graph', 'trees'],
-                ['graph', 'minors', 'trees'],
-                ['graph', 'minors', 'survey']
-        ]
+        self.texts = common_texts
 
     def testDocFreqOneDoc(self):
         texts = [['human', 'interface', 'computer']]

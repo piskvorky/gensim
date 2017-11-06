@@ -14,30 +14,15 @@ import unittest
 
 import numpy as np
 
-from gensim.corpora import mmcorpus, Dictionary
+from gensim.corpora.mmcorpus import MmCorpus
 from gensim.models import rpmodel
 from gensim import matutils
 from gensim.test.utils import datapath, get_tmpfile
 
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
-
 
 class TestRpModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.corpus = MmCorpus(datapath('testcorpus.mm'))
 
     def testTransform(self):
         # create the transformation model

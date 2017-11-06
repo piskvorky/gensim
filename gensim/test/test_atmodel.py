@@ -24,7 +24,8 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import atmodel
 from gensim import matutils
 from gensim.test import basetmtests
-from gensim.test.utils import datapath, get_tmpfile
+from gensim.test.utils import (datapath,
+    get_tmpfile, common_texts, common_dictionary as dictionary, common_corpus as corpus)
 
 # TODO:
 # Test that computing the bound on new unseen documents works as expected (this is somewhat different
@@ -34,20 +35,6 @@ from gensim.test.utils import datapath, get_tmpfile
 # increases the bound.
 # Test that models are compatiple across versions, as done in LdaModel.
 
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
 
 # Assign some authors randomly to the documents above.
 author2doc = {
@@ -56,6 +43,7 @@ author2doc = {
     'jack': [0, 2, 4, 6, 8],
     'jill': [1, 3, 5, 7]
 }
+
 doc2author = {
     0: ['john', 'jack'],
     1: ['john', 'jill'],
@@ -71,7 +59,7 @@ doc2author = {
 # More data with new and old authors (to test update method).
 # Although the text is just a subset of the previous, the model
 # just sees it as completely new data.
-texts_new = texts[0:3]
+texts_new = common_texts[0:3]
 author2doc_new = {'jill': [0], 'bob': [0, 1], 'sally': [1, 2]}
 dictionary_new = Dictionary(texts_new)
 corpus_new = [dictionary_new.doc2bow(text) for text in texts_new]

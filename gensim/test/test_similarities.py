@@ -16,35 +16,20 @@ import os
 import numpy
 import scipy
 
-from gensim.corpora import Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
 from gensim.models import KeyedVectors
 from gensim.models.wrappers import fasttext
 from gensim import matutils, similarities
 from gensim.models import Word2Vec
-from gensim.test.utils import datapath, get_tmpfile
+from gensim.test.utils import (datapath, get_tmpfile,
+    common_texts as texts, common_dictionary as dictionary, common_corpus as corpus)
 
 try:
     from pyemd import emd  # noqa:F401
     PYEMD_EXT = True
 except ImportError:
     PYEMD_EXT = False
-
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
 
 sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(texts)]
 

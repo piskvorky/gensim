@@ -13,30 +13,15 @@ import logging
 import unittest
 import numpy as np
 
-from gensim.corpora import mmcorpus, Dictionary
+from gensim.corpora.mmcorpus import MmCorpus
 from gensim.models import logentropy_model
 from gensim.test.utils import datapath, get_tmpfile
-
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
 
 
 class TestLogEntropyModel(unittest.TestCase):
     def setUp(self):
-        self.corpus_small = mmcorpus.MmCorpus(datapath('test_corpus_small.mm'))
-        self.corpus_ok = mmcorpus.MmCorpus(datapath('test_corpus_ok.mm'))
+        self.corpus_small = MmCorpus(datapath('test_corpus_small.mm'))
+        self.corpus_ok = MmCorpus(datapath('test_corpus_ok.mm'))
 
     def testTransform(self):
         # create the transformation model

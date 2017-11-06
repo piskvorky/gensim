@@ -24,7 +24,7 @@ from gensim.sklearn_api.hdp import HdpTransformer
 from gensim.sklearn_api.phrases import PhrasesTransformer
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils, models
-from gensim.test.utils import datapath
+from gensim.test.utils import datapath, common_texts
 
 texts = [
     ['complier', 'system', 'computer'],
@@ -110,28 +110,9 @@ w2v_texts = [
 
 d2v_sentences = [models.doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(w2v_texts)]
 
-dict_texts = [
-    'human interface computer',
-    'survey user computer system response time',
-    'eps user interface system',
-    'system human system eps',
-    'user response time',
-    'trees',
-    'graph trees',
-    'graph minors trees',
-    'graph minors survey'
-]
+dict_texts = [' '.join(text) for text in common_texts]
 
-phrases_sentences = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey'],
+phrases_sentences = common_texts + [
     ['graph', 'minors', 'survey', 'human', 'interface']
 ]
 

@@ -16,31 +16,15 @@ import numpy as np
 import scipy.linalg
 
 from gensim import matutils
-from gensim.corpora import mmcorpus, Dictionary
+from gensim.corpora.mmcorpus import MmCorpus
 from gensim.models import lsimodel
 from gensim.test import basetmtests
 from gensim.test.utils import datapath, get_tmpfile
 
 
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
-
-
 class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.corpus = MmCorpus(datapath('testcorpus.mm'))
         self.model = lsimodel.LsiModel(self.corpus, num_topics=2)
 
     def testTransform(self):

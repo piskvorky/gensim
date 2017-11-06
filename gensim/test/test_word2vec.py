@@ -19,7 +19,7 @@ import numpy as np
 
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
-from gensim.test.utils import datapath, get_tmpfile
+from gensim.test.utils import datapath, get_tmpfile, common_texts as sentences
 from testfixtures import log_capture
 
 try:
@@ -37,18 +37,6 @@ class LeeCorpus(object):
 
 
 list_corpus = list(LeeCorpus())
-
-sentences = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
 
 new_sentences = [
     ['computer', 'artificial', 'intelligence'],

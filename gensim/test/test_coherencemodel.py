@@ -16,34 +16,20 @@ import multiprocessing as mp
 from functools import partial
 
 import numpy as np
-from gensim.corpora.dictionary import Dictionary
 from gensim.matutils import argsort
 from gensim.models.coherencemodel import CoherenceModel, BOOLEAN_DOCUMENT_BASED
 from gensim.models.ldamodel import LdaModel
 from gensim.models.wrappers import LdaMallet
 from gensim.models.wrappers import LdaVowpalWabbit
-from gensim.test.utils import get_tmpfile
+from gensim.test.utils import get_tmpfile, common_texts, common_dictionary, common_corpus
 
 
 class TestCoherenceModel(unittest.TestCase):
 
     # set up vars used in testing ("Deerwester" from the web tutorial)
-    texts = [
-        ['human', 'interface', 'computer'],
-        ['survey', 'user', 'computer', 'system', 'response', 'time'],
-        ['eps', 'user', 'interface', 'system'],
-        ['system', 'human', 'system', 'eps'],
-        ['user', 'response', 'time'],
-        ['trees'],
-        ['graph', 'trees'],
-        ['graph', 'minors', 'trees'],
-        ['graph', 'minors', 'survey']
-    ]
-    dictionary = Dictionary(texts)
-
-    @classmethod
-    def setUpClass(cls):
-        cls.corpus = [cls.dictionary.doc2bow(text) for text in cls.texts]
+    texts = common_texts
+    dictionary = common_dictionary
+    corpus = common_corpus
 
     def setUp(self):
         # Suppose given below are the topics which two different LdaModels come up with.

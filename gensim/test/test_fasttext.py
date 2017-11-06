@@ -13,7 +13,7 @@ from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as FT_wrapper
-from gensim.test.utils import datapath, get_tmpfile
+from gensim.test.utils import datapath, get_tmpfile, common_texts as sentences
 
 logger = logging.getLogger(__name__)
 
@@ -28,18 +28,6 @@ class LeeCorpus(object):
 
 
 list_corpus = list(LeeCorpus())
-
-sentences = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
 
 new_sentences = [
     ['computer', 'artificial', 'intelligence'],

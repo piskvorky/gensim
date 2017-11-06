@@ -15,6 +15,7 @@ import sys
 
 from gensim import utils
 from gensim.models.phrases import SentenceAnalyzer, Phrases, Phraser, pseudocorpus
+from gensim.test.utils import common_texts
 
 if sys.version_info[0] >= 3:
     unicode = str
@@ -134,17 +135,8 @@ class TestPhraseAnalysis(unittest.TestCase):
 
 
 class PhrasesData:
-    sentences = [
-        ['human', 'interface', 'computer'],
-        ['survey', 'user', 'computer', 'system', 'response', 'time'],
-        ['eps', 'user', 'interface', 'system'],
-        ['system', 'human', 'system', 'eps'],
-        ['user', 'response', 'time'],
-        ['trees'],
-        ['graph', 'trees'],
-        ['graph', 'minors', 'trees'],
-        ['graph', 'minors', 'survey'],
-        ['graph', 'minors', 'survey', 'human', 'interface']  # test bigrams within same sentence
+    sentences = common_texts + [
+        ['graph', 'minors', 'survey', 'human', 'interface']
     ]
     unicode_sentences = [[utils.to_unicode(w) for w in sentence] for sentence in sentences]
     common_terms = frozenset()
