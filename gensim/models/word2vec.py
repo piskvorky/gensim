@@ -647,7 +647,9 @@ class Word2Vec(utils.SaveLoad):
 
         Examples
         --------
-        >>> model.build_vocab_from_freq({"Word1":15,"Word2":20}, update=True)
+        >>> from gensim.models.word2vec import Word2Vec
+        >>> model=Word2Vec()
+        >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
         """
         logger.info("Processing provided word frequencies")
         raw_vocab = word_freq  # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq) to be directly the raw vocab
@@ -659,7 +661,7 @@ class Word2Vec(utils.SaveLoad):
         self.corpus_count = corpus_count if corpus_count else 0  # Since no sentences are provided, this is to control the corpus_count
         self.raw_vocab = raw_vocab
 
-        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,update=update)  # trim by min_count & precalculate downsampling
+        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
         self.finalize_vocab(update=update)  # build tables & arrays
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
