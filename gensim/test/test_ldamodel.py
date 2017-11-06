@@ -495,6 +495,21 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(i[0], int))
             self.assertTrue(isinstance(i[1], six.string_types))
 
+    def testDtypeBackwardCompatibility(self):
+        lda_3_0_1_fname = datapath('lda_3_0_1_model')
+        test_doc = [(0, 1), (1, 1), (2, 1)]
+        expected_topics = [(0, 0.87005886977475178), (1, 0.12994113022524822)]
+
+        # save model to use in test
+        # self.model.save(lda_3_0_1_fname)
+
+        # load a model saved using a 3.0.1 version of Gensim
+        model = self.class_.load(lda_3_0_1_fname)
+
+        # and test it on a predefined document
+        topics = model[test_doc]
+        self.assertTrue(np.allclose(expected_topics, topics))
+
 # endclass TestLdaModel
 
 
