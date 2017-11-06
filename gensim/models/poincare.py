@@ -262,7 +262,9 @@ class PoincareModel(utils.SaveLoad):
         self.encoding = encoding
         self.wv = KeyedVectors()
         self.size = size
-        self.alpha = alpha
+        self.train_alpha = alpha  # Learning rate for training
+        self.burn_in_alpha = burn_in_alpha  # Learning rate for burn-in
+        self.alpha = alpha  # Current learning rate
         self.negative = negative
         self.iter = iter
         self.workers = workers
@@ -581,14 +583,22 @@ class PoincareModel(utils.SaveLoad):
         self.wv.syn0[indices_v] -= v_updates
         self.wv.syn0[indices_v] = self.clip_vectors(self.wv.syn0[indices_v], self.epsilon)
 
-    def train_batchwise(self, num_batches=None, batch_size=10, print_every=1000):
+    def train(self):
+        """Trains Poincare embeddings using loaded data and model parameters."""
+        if self.burn_in > 0:
+            self.alpha = self.burn_in_alpha
+            self.train_batchwise(epochs=self.burn_in)
+        self.alpha = self.train_alpha
+        self.train_batchwise()
+
+    def train_batchwise(self, epochs=None, batch_size=10, print_every=1000):
         """
-        Trains Poincare embeddings using loaded relations.
+        Trains Poincare embeddings using specified parameters.
 
         Parameters
         ----------
-        num_batches : int or None, optional
-            Number of batches after which training ends, if `None`, runs for `self.iter` epochs, default `None`.
+        epochs : int or None, optional
+            Number of epochs after which training ends, if `None`, runs for `self.iter` epochs, default `None`.
         batch_size : int, optional
             Number of examples to train on in a single batch, defaults to 10.
         print_every : int or None, optional
@@ -597,7 +607,9 @@ class PoincareModel(utils.SaveLoad):
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
         last_time = time.time()
-        for epoch in range(1, self.iter + 1):
+        if epochs is None:
+            epochs = self.iter
+        for epoch in range(1, epochs + 1):
             indices = list(range(len(self.all_relations)))
             self.np_random.shuffle(indices)
             avg_loss = 0
@@ -611,14 +623,12 @@ class PoincareModel(utils.SaveLoad):
                     avg_loss /= print_every
                     time_taken = time.time() - last_time
                     speed = print_every * batch_size / time_taken
-                    print(
+                    logger.info(
                         'Training on epoch %d, examples #%s-#%s, loss: %.2f'
                         % (epoch, relations[0], relations[-1], avg_loss))
-                    print(
+                    logger.info(
                         'Time taken for %d examples: %.2f s, %.2f examples / s'
                         % (print_every * batch_size, time_taken, speed))
                     last_time = time.time()
                     avg_loss = 0
-                if num_batches and batch_num >= num_batches:
-                    return
 
