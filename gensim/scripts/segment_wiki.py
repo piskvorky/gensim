@@ -15,8 +15,8 @@ that contains 3 fields ::
     'section_texts' (list) - list of content from sections.
 
 English Wikipedia dump available
-`here <https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2>`_. Approximate size
-of english dumps is 5600000 (October 2017),
+`here <https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2>`_. Approximate time
+for processing is 2.5 hours (i7-6700HQ, SSD).
 
 Examples
 --------
@@ -250,6 +250,7 @@ class _WikiSectionsCorpus(WikiCorpus):
             for article_title, sections in pool.imap(segment, group):  # chunksize=10):
                 # article redirects are pruned here
                 if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES) \
+                        or len(sections) == 0 \
                         or sections[0][1].lstrip().startswith("#REDIRECT"):
                     continue
                 articles += 1
