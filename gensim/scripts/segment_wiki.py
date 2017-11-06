@@ -253,7 +253,7 @@ class _WikiSectionsCorpus(WikiCorpus):
                     continue
                 if len(sections) == 0 or sections[0][1].lstrip().lower().startswith("#redirect"):  # filter redirect
                     continue
-                if sum(len(body.strip()) for (_, body) in sections) < 500:  # filter very short articles (thrash)
+                if sum(len(body.strip()) for (_, body) in sections) < 250:  # filter very short articles (thrash)
                     continue
 
                 articles += 1
