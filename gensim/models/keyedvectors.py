@@ -200,6 +200,7 @@ class KeyedVectors(utils.SaveLoad):
 
         logger.info("loading projection weights from %s", fname)
         result = cls()
+
         def add_word(word, weights):
             word_id = len(result.vocab)
             if word in result.vocab:
@@ -227,7 +228,7 @@ class KeyedVectors(utils.SaveLoad):
             result.syn0 = zeros((vocab_size, vector_size), dtype=datatype)
 
             if binary:
-                binary_len = dtype(datatype).itemsize * vector_size
+                binary_len = dtype(REAL).itemsize * vector_size
                 for _ in xrange(vocab_size):
                     # mixed text and binary: read text first, then binary
                     word = []
