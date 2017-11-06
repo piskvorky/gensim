@@ -403,7 +403,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
 
     def testPersistenceIgnore(self):
-        fname = get_tmpfile('gensim_models_lda_testPersistenceIgnore.tst')
+        fname = get_tmpfile('gensim_models_lda.tst')
         model = ldamodel.LdaModel(self.corpus, num_topics=2)
         model.save(fname, ignore='id2word')
         model2 = ldamodel.LdaModel.load(fname)

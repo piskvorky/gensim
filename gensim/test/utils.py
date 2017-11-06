@@ -14,10 +14,16 @@ module_path = os.path.dirname(__file__)  # needed because sample data files are 
 
 
 def datapath(fname):
+    """Return full path to the pre created file with test data (basically corpus)."""
     return os.path.join(module_path, 'test_data', fname)
 
 
 def get_tmpfile(suffix):
+    """
+    Return full path to temporary file with required suffix.
+
+    Function doesn't create file. Double calling with the same suffix can return different paths.
+    """
     return os.path.join(tempfile.gettempdir(), suffix)
 
 
