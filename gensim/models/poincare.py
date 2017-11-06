@@ -393,25 +393,38 @@ class PoincareModel(utils.SaveLoad):
         self.probs = counts / counts.sum()
         self.all_relations = all_relations
         self.term_relations = term_relations
+        self.negatives_buffer = []
+        self.negatives_buffer_index = 0
+        self.negatives_buffer_size = 2000
 
     def init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab"""
         shape = (len(self.wv.index2word), self.size)
         self.wv.syn0 = self.np_random.uniform(self.init_range[0], self.init_range[1], shape)
 
+    def get_candidate_negatives(self):
+        if self.negatives_buffer_index >= len(self.negatives_buffer):
+            self.negatives_buffer = self.np_random.choice(self.indices_array, size=self.negatives_buffer_size, p=self.probs)
+            self.negatives_buffer_index = 0
+        start_index = self.negatives_buffer_index
+        end_index = start_index + self.negative
+        candidate_negatives = self.negatives_buffer[start_index:end_index]
+        self.negatives_buffer_index += self.negative
+        return candidate_negatives
+
     def sample_negatives(self, node_index):
         """Return a sample of negative examples for the given positive example"""
         # Note: np.random.choice much slower than random.sample for large samples, possible bottleneck
         node_relations = self.term_relations[node_index]
         positive_fraction = len(node_relations) / len(self.term_relations)
-        if False:#positive_fraction < 0.005:
+        if positive_fraction < 0.01:
             # If number of positive relations is a small fraction of total nodes
             # re-sample till no positively connected nodes are chosen
-            indices = self.np_random.choice(self.indices_array, size=self.negative, p=self.probs)
+            indices = self.get_candidate_negatives()
             times_sampled = 1
             while len(set(indices) & node_relations):
                 times_sampled += 1
-                indices = self.np_random.choice(self.indices_array, size=self.negative, p=self.probs)
+                indices = self.get_candidate_negatives()
             # print('Sampled %d times, fraction positive %.5f' % (times_sampled, positive_fraction))
         else:
             # If number of positive relations is a significant fraction of total nodes
