@@ -648,7 +648,7 @@ class Word2Vec(utils.SaveLoad):
         Examples
         --------
         >>> from gensim.models.word2vec import Word2Vec
-        >>> model=Word2Vec()
+        >>> model= Word2Vec()
         >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
         """
         logger.info("Processing provided word frequencies")
