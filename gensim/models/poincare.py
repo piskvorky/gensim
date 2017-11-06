@@ -41,11 +41,11 @@ logger = logging.getLogger(__name__)
 class PoincareBatch(object):
     """
     Class for computing Poincare distances, gradients and loss for a training batch,
-    and storing intermediate state to avoid recomputing multiple times
+    and storing intermediate state to avoid recomputing multiple times.
     """
     def __init__(self, vectors_u, vectors_v, indices_u, indices_v):
         """
-        Initialize instance with sets of vectors for which distances are to be computed
+        Initialize instance with sets of vectors for which distances are to be computed.
 
         Parameters
         ----------
@@ -57,14 +57,14 @@ class PoincareBatch(object):
             vectors of all hypernym nodes `v` and negatively sampled nodes `v'`,
             for each node `u` in the batch.
         indices_u : list
-            list of node indices for each of the vectors in `vectors_u`
+            list of node indices for each of the vectors in `vectors_u`.
         indices_v : list
             nested list of lists, each of which is a  list of node indices
-            for each of the vectors in `vectors_v` for a specific node `u`
+            for each of the vectors in `vectors_v` for a specific node `u`.
 
         Returns
         -------
-            PoincareBatch instance.
+        PoincareBatch instance
         """
         self.vectors_u = vectors_u.T[np.newaxis, :, :]  # (1, dim, batch_size)
         self.vectors_v = vectors_v  # (1 + neg_size, dim, batch_size)
@@ -232,30 +232,30 @@ class PoincareModel(utils.SaveLoad):
         ----------
         train_file : str
             Path to tsv file containing relation pairs.
-        size : int
-            Number of dimensions of the trained model.
-        alpha : float
-            learning rate for training.
-        negative : int
-            Number of negative samples to use.
-        iter : int
-            Number of iterations (epochs) over the corpus.
-        workers : int
-            Number of threads to use for training the model.
-        epsilon : float
-            Constant used for clipping embeddings below a norm of one.
-        burn_in : int
-            Number of epochs to use for burn-in initialization (0 means no burn-in).
-        burn_in_alpha : float
-            learning rate for burn-in initialization.
-        encoding : str
-            encoding of training file.
-        seed : int
-            seed for random to ensure reproducibility.
+        size : int, optional
+            Number of dimensions of the trained model, defaults to 50.
+        alpha : float, optional
+            learning rate for training, defaults to 0.1.
+        negative : int, optional
+            Number of negative samples to use, defaults to 10.
+        iter : int, optional
+            Number of iterations (epochs) over the corpus, defaults to 50.
+        workers : int, optional
+            Number of threads to use for training the model, defaults to 1.
+        epsilon : float, optional
+            Constant used for clipping embeddings below a norm of one, defaults to 1e-5.
+        burn_in : int, optional
+            Number of epochs to use for burn-in initialization (0 means no burn-in), defaults to 0.
+        burn_in_alpha : float, optional
+            learning rate for burn-in initialization, defaults to 0.01, ignored if `burn_in` is 0.
+        encoding : str, optional
+            encoding of training file, defaults to utf8.
+        seed : int, optional
+            seed for random to ensure reproducibility, defaults to 0.
 
         Returns
         --------
-        PoincareModel instance.
+        PoincareModel instance
 
         """
         self.train_file = train_file
@@ -269,8 +269,8 @@ class PoincareModel(utils.SaveLoad):
         self.epsilon = epsilon
         self.burn_in = burn_in
         self.seed = seed
-        self.random = random.Random(seed)  # For reproducibility
-        self.np_random = np_random.RandomState(seed)  # For reproducibility
+        self.random = random.Random(seed)
+        self.np_random = np_random.RandomState(seed)
         self.init_range = (-0.001, 0.001)
         self.loss_grad = grad(PoincareModel.loss_fn)
         self.load_relations()
@@ -417,7 +417,7 @@ class PoincareModel(utils.SaveLoad):
         Returns
         -------
         numpy array
-            numpy array with norms clipped below 1
+            numpy array with norms clipped below 1.
 
         """
         one_d = len(vectors.shape) == 1
@@ -438,7 +438,24 @@ class PoincareModel(utils.SaveLoad):
                 return vectors
 
     def prepare_training_batch(self, relations, all_negatives, check_gradients=False):
-        """Creates training batch and computes all gradients and loss"""
+        """
+        Creates training batch and computes gradients and loss for the batch.
+
+        Parameters
+        ----------
+
+        relations : list of tuples
+            list of tuples of positive examples of the form (node_1_index, node_2_index).
+        all_negatives : list of lists
+            list of lists of negative samples for each node_1 in the positive examples.
+        check_gradients : bool, optional
+            whether to compare the computed gradients to autograd gradients for this batch, defaults to False.
+
+        Returns
+        -------
+        PoincareBatch instance
+            contains node indices, computed gradients and loss for the batch.
+        """
         batch_size = len(relations)
         all_vectors = []
         indices_u, indices_v = [], []
@@ -469,29 +486,83 @@ class PoincareModel(utils.SaveLoad):
         return batch
 
     def sample_negatives_batch(self, nodes):
-        """Return a sample of negative examples for the given positive example"""
-        # TODO: make sure returned nodes aren't positive relations for `_node_1`
+        """
+        Return negative examples for each node in the given nodes.
+
+        Parameters
+        ----------
+        nodes : list
+            list of node indices for which negative samples are to be returned.
+
+        Returns
+        -------
+        list of lists
+            each inner list is a list of negative sample for a single node in the input list.
+        """
         all_indices = [self.sample_negatives(node) for node in nodes]
         return all_indices
 
     def train_on_batch(self, relations, check_gradients=False):
-        """Performs training for a single training batch"""
+        """
+        Performs training for a single training batch.
+
+        Parameters
+        ----------
+        relations : list of tuples
+            list of tuples of positive examples of the form (node_1_index, node_2_index).
+        check_gradients : bool, optional
+            whether to compare the computed gradients to autograd gradients for this batch, defaults to False.
+
+        Returns
+        -------
+        PoincareBatch instance
+            the batch that was just trained on, contains computed loss for the batch.
+        """
         all_negatives = self.sample_negatives_batch([relation[0] for relation in relations])
         batch = self.prepare_training_batch(relations, all_negatives, check_gradients)
         self.update_vectors_batch(batch)
         return batch
 
-    def handle_duplicates(self, vector_updates, vector_indices):
-        # TODO: better naming, possibly refactor
-        counts = Counter(vector_indices)
-        for vector_index, count in counts.items():
+    def handle_duplicates(self, vector_updates, node_indices):
+        """
+        Handles occurrences of multiple updates to the same node in a batch of vector updates.
+
+        Parameters
+        ----------
+        vector_updates : numpy array
+            array with each row containing updates to be performed on a certain node.
+        node_indices : list
+            node indices on which the above updates are to be performed on.
+
+        Notes
+        -----
+        Mutates the `vector_updates` array.
+
+        Required because array[[2, 1, 2]] += np.array([-0.5, 1.0, 0.5]) performs only the last update
+        on the row at index 2.
+        """
+        counts = Counter(node_indices)
+        for node_index, count in counts.items():
             if count == 1:
                 continue
-            positions = [i for i, index in enumerate(vector_indices) if index == vector_index]
+            positions = [i for i, index in enumerate(node_indices) if index == node_index]
+            # Move all updates to the same node to the last such update, zeroing all the others
             vector_updates[positions[-1]] = vector_updates[positions].sum(axis=0)
             vector_updates[positions[:-1]] = 0
 
     def update_vectors_batch(self, batch):
+        """
+        Updates vectors for nodes in the given batch.
+
+        Parameters
+        ----------
+        batch : PoincareBatch instance
+            batch containing computed gradients and node indices of the batch for which updates are to be done.
+
+        Notes
+        -----
+        Mutates the `syn0` array.
+        """
         grad_u, grad_v = batch.gradients_u, batch.gradients_v
         indices_u, indices_v = batch.indices_u, batch.indices_v
         batch_size = len(indices_u)
@@ -510,8 +581,19 @@ class PoincareModel(utils.SaveLoad):
         self.wv.syn0[indices_v] -= v_updates
         self.wv.syn0[indices_v] = self.clip_vectors(self.wv.syn0[indices_v], self.epsilon)
 
-    def train_batchwise(self, num_batches=None, batch_size=2, print_every=5000):
-        """Trains Poincare embeddings using loaded relations"""
+    def train_batchwise(self, num_batches=None, batch_size=10, print_every=1000):
+        """
+        Trains Poincare embeddings using loaded relations.
+
+        Parameters
+        ----------
+        num_batches : int or None, optional
+            Number of batches after which training ends, if `None`, runs for `self.iter` epochs, default `None`.
+        batch_size : int, optional
+            Number of examples to train on in a single batch, defaults to 10.
+        print_every : int or None, optional
+            Prints progress and average loss after every `print_every` batches, defaults to 1000.
+        """
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
         last_time = time.time()
