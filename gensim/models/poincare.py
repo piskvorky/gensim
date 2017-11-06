@@ -39,10 +39,8 @@ logger = logging.getLogger(__name__)
 
 
 class PoincareBatch(object):
-    # TODO: cleanup to reduce repeated code in this class,
-    # `train_batchwise` and other batch-related methods in PoincareModel
     """
-    Class for computing Poincare distances and gradients for a training batch,
+    Class for computing Poincare distances, gradients and loss for a training batch,
     and storing intermediate state to avoid recomputing multiple times
     """
     def __init__(self, vectors_u, vectors_v):
@@ -50,7 +48,11 @@ class PoincareBatch(object):
 
         Args:
             vectors_u (numpy array): expected shape (batch_size, dim)
+                vectors of all nodes `u` in the batch
             vectors_v (numpy array): expected shape (1 + neg_size, dim, batch_size)
+                vectors of all hypernym nodes `v` and negatively sampled nodes `v'`,
+                for each node `u` in the batch
+
         """
         self.vectors_u = vectors_u.T[np.newaxis, :, :]  # (1, dim, batch_size)
         self.vectors_v = vectors_v  # (1 + neg_size, dim, batch_size)
@@ -87,18 +89,22 @@ class PoincareBatch(object):
         """Compute and store norms, euclidean distances and poincare distances between input vectors"""
         if self.distances_computed:
             return
-        euclidean_dists = np.linalg.norm(self.vectors_u - self.vectors_v, axis=1)  # (1 + neg_size,)
-        norms_u = np.linalg.norm(self.vectors_u, axis=1)  # (1,)
-        norms_v = np.linalg.norm(self.vectors_v, axis=1)  # (1 + neg_size,)
-        alpha = 1 - norms_u ** 2
-        beta = 1 - norms_v ** 2
+        euclidean_dists = np.linalg.norm(self.vectors_u - self.vectors_v, axis=1)  # (1 + neg_size, batch_size)
+        norms_u = np.linalg.norm(self.vectors_u, axis=1)  # (1, batch_size)
+        norms_v = np.linalg.norm(self.vectors_v, axis=1)  # (1 + neg_size, batch_size)
+        alpha = 1 - norms_u ** 2  # (1, batch_size)
+        beta = 1 - norms_v ** 2  # (1 + neg_size, batch_size)
         gamma = 1 + 2 * (
                 (euclidean_dists ** 2) / (alpha * beta)
-            )  # (1 + neg_size,)
-        poincare_dists = np.arccosh(gamma)  # (1 + neg_size,)
+            )  # (1 + neg_size, batch_size)
+        poincare_dists = np.arccosh(gamma)  # (1 + neg_size, batch_size)
+        exp_negative_distances = np.exp(-poincare_dists)  # (1 + neg_size, batch_size)
+        Z = exp_negative_distances.sum(axis=0)  # (batch_size)
 
         self.euclidean_dists = euclidean_dists
         self.poincare_dists = poincare_dists
+        self.exp_negative_distances = exp_negative_distances
+        self.Z = Z
         self.gamma = gamma
         self.norms_u = norms_u
         self.norms_v = norms_v
@@ -109,51 +115,49 @@ class PoincareBatch(object):
         self.distances_computed = True
 
     def compute_gradients(self):
-        """Compute and store gradients of poincare distance for all input vectors"""
+        """Compute and store gradients of loss function for all input vectors"""
         if self.gradients_computed:
             return
         self.compute_distances()
         self.compute_distance_gradients()
 
-        exp_negative_distances = np.exp(-self.poincare_dists)
-        Z = exp_negative_distances.sum(axis=0)
-        gradients_v = -exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_v
-        gradients_v /= Z
+        gradients_v = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_v  # (1 + neg_size, dim, batch_size)
+        gradients_v /= self.Z  # (1 + neg_size, dim, batch_size)
         gradients_v[0] += self.distance_gradients_v[0]
 
-        gradients_u = -exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_u
-        gradients_u /= Z
-        gradients_u = gradients_u.sum(axis=0)
+        gradients_u = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_u  # (1 + neg_size, dim, batch_size)
+        gradients_u /= self.Z  # (1 + neg_size, dim, batch_size)
+        gradients_u = gradients_u.sum(axis=0)  # (dim, batch_size)
         gradients_u += self.distance_gradients_u[0]
 
         assert(not np.isnan(gradients_u).any())
         assert(not np.isnan(gradients_v).any())
-        self.exp_negative_distances = exp_negative_distances
-        self.Z = Z
         self.gradients_u = gradients_u
         self.gradients_v = gradients_v
 
         self.gradients_computed = True
 
     def compute_distance_gradients(self):
-        """Compute and store partial derivatives of d(u, v) w.r.t u and all v"""
+        """Compute and store partial derivatives of poincare distance d(u, v) w.r.t all u and all v"""
         if self.distance_gradients_computed:
             return
         self.compute_distances()
 
-        euclidean_dists_squared = self.euclidean_dists ** 2
-        c_ = (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis, :]
-        u_coeffs = ((euclidean_dists_squared + self.alpha) / self.alpha)[:, np.newaxis, :]
-        distance_gradients_u = u_coeffs * self.vectors_u - self.vectors_v
-        distance_gradients_u *= c_
-        nan_gradients = self.gamma == 1
+        euclidean_dists_squared = self.euclidean_dists ** 2  # (1 + neg_size, batch_size)
+        c_ = (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis, :]  # (1 + neg_size, 1, batch_size)
+        u_coeffs = ((euclidean_dists_squared + self.alpha) / self.alpha)[:, np.newaxis, :]  # (1 + neg_size, 1, batch_size)
+        distance_gradients_u = u_coeffs * self.vectors_u - self.vectors_v  # (1 + neg_size, dim, batch_size)
+        distance_gradients_u *= c_  # (1 + neg_size, dim, batch_size)
+
+        nan_gradients = self.gamma == 1  # (1 + neg_size, batch_size)
         if nan_gradients.any():
             distance_gradients_u.swapaxes(1, 2)[nan_gradients] = 0
         self.distance_gradients_u = distance_gradients_u
 
-        v_coeffs = ((euclidean_dists_squared + self.beta) / self.beta)[:, np.newaxis, :]
-        distance_gradients_v = v_coeffs * self.vectors_v - self.vectors_u
-        distance_gradients_v *= c_
+        v_coeffs = ((euclidean_dists_squared + self.beta) / self.beta)[:, np.newaxis, :]  # (1 + neg_size, 1, batch_size)
+        distance_gradients_v = v_coeffs * self.vectors_v - self.vectors_u  # (1 + neg_size, dim, batch_size)
+        distance_gradients_v *= c_  # (1 + neg_size, dim, batch_size)
+
         if nan_gradients.any():
             distance_gradients_v.swapaxes(1, 2)[nan_gradients] = 0
         self.distance_gradients_v = distance_gradients_v
@@ -163,7 +167,9 @@ class PoincareBatch(object):
     def compute_loss(self):
         if self.loss_computed:
             return
-        self.loss = -np.log(self.exp_negative_distances[0] / self.Z).sum()
+        self.compute_distances()
+
+        self.loss = -np.log(self.exp_negative_distances[0] / self.Z).sum()  # scalar
         self.loss_computed = True
 
 
@@ -187,6 +193,7 @@ class PoincareKeyedVectors(KeyedVectors):
                     (euclidean_dist ** 2) / ((1 - norm_1 ** 2) * (1 - norm_2 ** 2))
                 )
             )
+    # TODO: Add other KeyedVector supported methods - most_similar, etc.
 
 
 class PoincareModel(utils.SaveLoad):
@@ -195,6 +202,9 @@ class PoincareModel(utils.SaveLoad):
 
     The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in the word2vec
     format via `wv.save_word2vec_format()` and `KeyedVectors.load_word2vec_format()`.
+
+    Note that training cannot be resumed from a model loaded via `load_word2vec_format`, if you wish to train further,
+    use `save()` and `load()` methods instead.
 
     """
     def __init__(
