@@ -1049,5 +1049,6 @@ class TestPhrasesTransformerCustomScorer(unittest.TestCase):
         phrases_transformer = PhrasesTransformer()
         self.assertRaises(NotFittedError, phrases_transformer.transform, phrases_sentences[0])
 
+
 if __name__ == '__main__':
     unittest.main()
