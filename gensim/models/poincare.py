@@ -367,7 +367,7 @@ class PoincareModel(utils.SaveLoad):
         """Load relations from the train file and build vocab"""
         vocab = {}
         index2word = []
-        relations = []
+        all_relations = []
         term_relations = defaultdict(set)
 
         with smart_open(self.train_file, 'r', encoding=self.encoding) as f:
@@ -384,15 +384,14 @@ class PoincareModel(utils.SaveLoad):
                 node_1_index, node_2_index = vocab[node_1].index, vocab[node_2].index
                 term_relations[node_1_index].add(node_2_index)
                 relation = (node_1_index, node_2_index)
-                relations.append(relation)
+                all_relations.append(relation)
         self.wv.vocab = vocab
         self.wv.index2word = index2word
-        self.indices = set((range(len(index2word))))
+        self.indices_set = set((range(len(index2word))))
+        self.indices_array = np.array(range(len(index2word)))
         counts = np.array([self.wv.vocab[index2word[i]].count for i in range(len(index2word))])
         self.probs = counts / counts.sum()
-        self.valid_negatives = {}
-        self.valid_negative_probs = {}
-        self.relations = relations
+        self.all_relations = all_relations
         self.term_relations = term_relations
 
     def init_embeddings(self):
@@ -402,22 +401,26 @@ class PoincareModel(utils.SaveLoad):
 
     def sample_negatives(self, node_index):
         """Return a sample of negative examples for the given positive example"""
-        # indices = self.random.sample(range(len(self.wv.index2word)), self.negative)
-        # TODO: memory-intensive, but fast - possibly implement differently
-        if node_index in self.valid_negatives:
-            population = self.valid_negatives[node_index]
-            probs = self.valid_negative_probs[node_index]
+        # Note: np.random.choice much slower than random.sample for large samples, possible bottleneck
+        node_relations = self.term_relations[node_index]
+        positive_fraction = len(node_relations) / len(self.term_relations)
+        if False:#positive_fraction < 0.005:
+            # If number of positive relations is a small fraction of total nodes
+            # re-sample till no positively connected nodes are chosen
+            indices = self.np_random.choice(self.indices_array, size=self.negative, p=self.probs)
+            times_sampled = 1
+            while len(set(indices) & node_relations):
+                times_sampled += 1
+                indices = self.np_random.choice(self.indices_array, size=self.negative, p=self.probs)
+            # print('Sampled %d times, fraction positive %.5f' % (times_sampled, positive_fraction))
         else:
-            positive_indices = self.term_relations[node_index]
-            population = np.array(list(self.indices - positive_indices))
-            probs = self.probs[population]
+            # If number of positive relations is a significant fraction of total nodes
+            # subtract positively connected nodes from set of choices and sample from the remaining
+            valid_negatives = np.array(list(self.indices_set - node_relations))
+            probs = self.probs[valid_negatives]
             probs /= probs.sum()
-            self.valid_negatives[node_index] = population
-            self.valid_negatives[node_index] = population
-            self.valid_negative_probs[node_index] = probs
+            indices = self.np_random.choice(valid_negatives, size=self.negative, p=probs)
 
-        indices = self.np_random.choice(population, size=self.negative, p=probs)
-        # TODO: slow, refactor/use different random number generator
         return list(indices)
 
     @staticmethod
@@ -589,11 +592,11 @@ class PoincareModel(utils.SaveLoad):
             raise NotImplementedError("Multi-threaded version not implemented yet")
         last_time = time.time()
         for epoch in range(1, self.iter + 1):
-            indices = list(range(len(self.relations)))
+            indices = list(range(len(self.all_relations)))
             self.np_random.shuffle(indices)
             avg_loss = 0
             for i, idx in enumerate(indices, start=1):
-                relation = self.relations[idx]
+                relation = self.all_relations[idx]
                 print_check = not (i % print_every)
                 result = self.train_on_example(relation, check_gradients=print_check)
                 avg_loss += result.loss
@@ -618,13 +621,13 @@ class PoincareModel(utils.SaveLoad):
             raise NotImplementedError("Multi-threaded version not implemented yet")
         last_time = time.time()
         for epoch in range(1, self.iter + 1):
-            indices = list(range(len(self.relations)))
+            indices = list(range(len(self.all_relations)))
             self.np_random.shuffle(indices)
             avg_loss = 0
             for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
                 print_check = not (batch_num % print_every)
                 batch_indices = indices[i:i+batch_size]
-                relations = [self.relations[idx] for idx in batch_indices]
+                relations = [self.all_relations[idx] for idx in batch_indices]
                 result = self.train_on_batch(relations, check_gradients=print_check)
                 avg_loss += result.loss
                 if print_check:
