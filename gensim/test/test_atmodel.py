@@ -24,7 +24,7 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import atmodel
 from gensim import matutils
 from gensim.test import basetmtests
-from gensim.test.utils import (datapath, get_tmpfile)
+from gensim.test.utils import datapath, get_tmpfile
 
 # TODO:
 # Test that computing the bound on new unseen documents works as expected (this is somewhat different

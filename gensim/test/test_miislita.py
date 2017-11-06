@@ -20,7 +20,7 @@ import os
 import unittest
 
 from gensim import utils, corpora, models, similarities
-from gensim.test.utils import (datapath, get_tmpfile)
+from gensim.test.utils import datapath, get_tmpfile
 
 logger = logging.getLogger('test_miislita')
 

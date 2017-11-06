@@ -23,7 +23,7 @@ from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
 from gensim.interfaces import TransformedCorpus
 from gensim.utils import to_unicode
-from gensim.test.utils import (datapath, get_tmpfile)
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class DummyTransformer(object):
@@ -486,7 +486,7 @@ class TestTextDirectoryCorpus(unittest.TestCase):
         .
         ├── 0.txt
         ├── a_folder
-        │   └── 1.txt
+        │   └── 1.txt
         └── b_folder
             ├── 2.txt
             ├── 3.txt

@@ -19,7 +19,7 @@ import numpy as np
 
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
-from gensim.test.utils import (datapath, get_tmpfile)
+from gensim.test.utils import datapath, get_tmpfile
 from testfixtures import log_capture
 
 try:

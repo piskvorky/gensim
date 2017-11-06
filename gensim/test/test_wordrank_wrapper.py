@@ -16,7 +16,7 @@ import os
 import numpy
 
 from gensim.models.wrappers import wordrank
-from gensim.test.utils import (datapath, get_tmpfile)
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestWordrank(unittest.TestCase):

@@ -16,7 +16,7 @@ import numpy
 
 from gensim.models.wrappers import fasttext
 from gensim.models import keyedvectors
-from gensim.test.utils import (datapath, get_tmpfile)
+from gensim.test.utils import datapath, get_tmpfile
 
 logger = logging.getLogger(__name__)
 

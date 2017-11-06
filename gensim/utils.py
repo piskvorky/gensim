@@ -337,7 +337,7 @@ class SaveLoad(object):
     @staticmethod
     def _adapt_by_suffix(fname):
         """Give appropriate compress setting and filename formula"""
-        [compress, suffix] = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
+        compress, suffix = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
         return compress, lambda *args: '.'.join(args + (suffix,))
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):

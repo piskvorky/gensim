@@ -23,7 +23,7 @@ from gensim.models import KeyedVectors
 from gensim.models.wrappers import fasttext
 from gensim import matutils, similarities
 from gensim.models import Word2Vec
-from gensim.test.utils import (datapath, get_tmpfile)
+from gensim.test.utils import datapath, get_tmpfile
 
 try:
     from pyemd import emd  # noqa:F401

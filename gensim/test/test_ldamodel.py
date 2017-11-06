@@ -20,7 +20,7 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import ldamodel, ldamulticore
 from gensim import matutils, utils
 from gensim.test import basetmtests
-from gensim.test.utils import (datapath, get_tmpfile)
+from gensim.test.utils import datapath, get_tmpfile
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [

@@ -23,7 +23,7 @@ import numpy as np
 
 from gensim import utils
 from gensim.models import doc2vec, keyedvectors
-from gensim.test.utils import (datapath, get_tmpfile)
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class DocsLeeCorpus(object):

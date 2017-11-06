@@ -11,7 +11,7 @@ from gensim.models.doc2vec import Doc2Vec
 from gensim import utils
 from gensim.models import translation_matrix
 from gensim.models import KeyedVectors
-from gensim.test.utils import (datapath, get_tmpfile)
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestTranslationMatrix(unittest.TestCase):
