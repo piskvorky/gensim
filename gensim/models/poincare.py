@@ -307,6 +307,7 @@ class PoincareModel(utils.SaveLoad):
         self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
         counts = np.array([self.wv.vocab[index2word[i]].count for i in range(len(index2word))])
         self.node_probabilities = counts / counts.sum()
+        self.node_probabilities_cumsum = np.cumsum(self.node_probabilities)
         self.all_relations = all_relations
         self.term_relations = term_relations
         self.negatives_buffer = []  # Buffer to store negative samples, to reduce calls to sampling method
@@ -330,7 +331,9 @@ class PoincareModel(utils.SaveLoad):
 
         if self.negatives_buffer_index >= len(self.negatives_buffer):
             # Note: np.random.choice much slower than random.sample for large populations, possible bottleneck
-            self.negatives_buffer = self.np_random.choice(self.indices_array, size=self.negatives_buffer_size, p=self.node_probabilities)
+            uniform_numbers = np.random.random(self.negatives_buffer_size)
+            cumsum_table_indices = np.searchsorted(self.node_probabilities_cumsum, uniform_numbers)
+            self.negatives_buffer = self.indices_array[cumsum_table_indices]
             self.negatives_buffer_index = 0
         start_index = self.negatives_buffer_index
         end_index = start_index + self.negative
