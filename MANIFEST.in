@@ -1,6 +1,6 @@
 recursive-include docs *
 recursive-include gensim/test/test_data *
-recursive-include . *.sh
+recursive-exclude . *.sh
 prune docs/src*
 prune docs/notebooks/datasets
 include README.md
@@ -14,3 +14,4 @@ include gensim/models/word2vec_inner.pyx
 include gensim/models/word2vec_inner.pxd
 include gensim/models/doc2vec_inner.c
 include gensim/models/doc2vec_inner.pyx
+prune docs/notebooks/
