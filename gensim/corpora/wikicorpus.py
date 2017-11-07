@@ -184,8 +184,11 @@ def tokenize(content, tokenizer_func=utils.tokenize, token_min_len=TOKEN_MIN_LEN
         content = content.lower()
     if deacc:
         content = utils.deaccent(content)
+    tokenize = [] if (tokenizer_func is None) else (tokenizer_func if isinstance(tokenizer_func, list) else [tokenizer_func])
+    for tokenizer in tokenize:
+        content = " ".join(tokenizer(content))
     return [
-        utils.to_unicode(token) for token in tokenizer_func(content) \
+        utils.to_unicode(token) for token in content.split() \
         if token_min_len <= len(token) <= token_max_len and not token.startswith(filter_starts_with)
     ]
 
