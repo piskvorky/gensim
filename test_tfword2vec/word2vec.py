@@ -61,7 +61,7 @@ flags.DEFINE_string("job_name", None, "Job name: ps or worker")
 flags.DEFINE_integer("task_index", None, "Task index")
 flags.DEFINE_integer("embedding_size", 200, "The embedding dimension size.")
 flags.DEFINE_integer(
-    "epochs_to_train", 3,
+    "epochs_to_train", 1,
     "Number of epochs to train. Each epoch processes the training data once "
     "completely.")
 flags.DEFINE_float("learning_rate", 0.2, "Initial learning rate.")
@@ -70,7 +70,7 @@ flags.DEFINE_integer("num_neg_samples", 100,
 flags.DEFINE_integer("batch_size", 16,
                      "Number of training examples processed per step "
                      "(size of a minibatch).")
-flags.DEFINE_integer("concurrent_steps", 6,
+flags.DEFINE_integer("concurrent_steps", 12,
                      "The number of concurrent training steps.")
 flags.DEFINE_integer("window_size", 5,
                      "The number of words to predict to the left and right "
@@ -177,9 +177,6 @@ class Word2Vec(object):
         self._session = session
         self._word2id = {}
         self._id2word = []
-        # self.build_graph()
-        # self.build_eval_graph()
-        # self.save_vocab()
 
     def read_analogies(self):
         """Reads through the analogy question file.
@@ -354,22 +351,15 @@ class Word2Vec(object):
     def build_graph(self):
         """Build the graph for the full model."""
         opts = self._options
+        (words, counts, words_per_epoch, self._epoch, self._words, examples,
+         labels) = word2vec.skipgram_word2vec(filename=opts.train_data,
+                                              batch_size=opts.batch_size,
+                                              window_size=opts.window_size,
+                                              min_count=opts.min_count,
+                                              subsample=opts.subsample)
+        (opts.vocab_words, opts.vocab_counts, opts.words_per_epoch) = self._session.run([words, counts, words_per_epoch])
+        opts.vocab_size = len(opts.vocab_words)
         if opts.job_name == "ps":
-            opts.server.join()
-        elif opts.job_name == "worker":
-            # Build graph
-            #   with tf.device(tf.train.replica_device_setter(
-            #              worker_device='/job:worker/task:%d' % opts.task_index,
-            #              cluster=opts.cluster)):
-            # The training data. A text file.
-            (words, counts, words_per_epoch, self._epoch, self._words, examples,
-            labels) = word2vec.skipgram_word2vec(filename=opts.train_data,
-                                                batch_size=opts.batch_size,
-                                                window_size=opts.window_size,
-                                                min_count=opts.min_count,
-                                                subsample=opts.subsample)
-            (opts.vocab_words, opts.vocab_counts, opts.words_per_epoch) = self._session.run([words, counts, words_per_epoch])
-            opts.vocab_size = len(opts.vocab_words)
             print("Data file: ", opts.train_data)
             print("Vocab size: ", opts.vocab_size - 1, " + UNK")
             print("Words per epoch: ", opts.words_per_epoch)
@@ -378,10 +368,16 @@ class Word2Vec(object):
             self._id2word = opts.vocab_words
             for i, w in enumerate(self._id2word):
                 self._word2id[w] = i
+            q = tf.FIFOQueue(opts.batch_size * 10, [tf.int32, tf.int32], shapes=[(), ()], shared_name="queue_ps")
+            enqueue_op = q.enqueue_many([examples, labels])
+            opts.server.join()
+        elif opts.job_name == "worker":
             # Build graph
             with tf.device(tf.train.replica_device_setter(
                             worker_device='/job:worker/task:%d' % opts.task_index,
                             cluster=opts.cluster)):
+                q = tf.FIFOQueue(opts.batch_size * 10, [tf.int32, tf.int32], shapes=[(), ()], shared_name="queue_ps")
+                examples, labels = q.dequeue_many(opts.batch_size)
                 true_logits, sampled_logits = self.forward(examples, labels)
                 loss = self.nce_loss(true_logits, sampled_logits)
                 tf.summary.scalar("NCE loss", loss)
@@ -390,7 +386,6 @@ class Word2Vec(object):
 
                 # Properly initialize all variables.
                 self.init = tf.global_variables_initializer()
-                # self.init.run()
 
                 self.saver = tf.train.Saver()
 
@@ -423,7 +418,6 @@ class Word2Vec(object):
             t.start()
             workers.append(t)
         last_words, last_time = initial_words, time.time()
-        # last_summary_time = 0
         last_checkpoint_time = 0
         while True:
             time.sleep(opts.statistics_interval)  # Reports our progress once a while.
@@ -444,7 +438,6 @@ class Word2Vec(object):
                 self.saver.save(self._session,
                         os.path.join(opts.save_path, "model.ckpt"),
                         global_step=step.astype(int))
-            last_checkpoint_time = now
             if epoch != initial_epoch:
                 break
 
@@ -491,8 +484,8 @@ class Word2Vec(object):
                     else:
                         # The correct label is not the precision@1
                         break
-            print()
-            print("Eval %4d/%d accuracy = %4.1f%%" % (correct, total,
+        print()
+        print("Eval %4d/%d accuracy = %4.1f%%" % (correct, total,
                                                 correct * 100.0 / total))
 
     def analogy(self, w0, w1, w2):
@@ -526,6 +519,7 @@ class Word2Vec(object):
 
 
 def main(_):
+    t = time.time()
     """Train a word2vec model."""
     if not FLAGS.train_data or not FLAGS.eval_data or not FLAGS.save_path:
         print("--train_data --eval_data and --save_path must be specified.")
@@ -549,16 +543,7 @@ def main(_):
             initial_epoch, initial_words = model._session.run([model._epoch, model._words])
             model.train()  # Process one epoch
             model.eval()  # Eval analogies.
-    # Perform a final save.
-    # model.saver.save(session,
-    #                 os.path.join(opts.save_path, "model.ckpt"),
-    #                 global_step=model.global_step)
-    # if FLAGS.interactive:
-    # E.g.,
-    # [0]: model.analogy(b'france', b'paris', b'russia')
-    # [1]: model.nearby([b'proton', b'elephant', b'maxwell'])
-    #  _start_shell(locals())
-
+    print("TIME: ", time.time() - t)
 
 if __name__ == "__main__":
     tf.app.run()
