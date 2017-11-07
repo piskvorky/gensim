@@ -341,6 +341,15 @@ class PoincareModel(utils.SaveLoad):
         self.negatives_buffer_index += self.negative
         return candidate_negatives
 
+    @staticmethod
+    def has_duplicates(array):
+        seen = set()
+        for value in array:
+            if value in seen:
+                return True
+            seen.add(value)
+        return False
+
     def sample_negatives(self, node_index):
         """
         Return a sample of negatives for the given node.
@@ -362,7 +371,7 @@ class PoincareModel(utils.SaveLoad):
             # re-sample till no positively connected nodes are chosen
             indices = self.get_candidate_negatives()
             times_sampled = 1
-            while len(set(indices) & node_relations):
+            while len(set(indices) & node_relations) or self.has_duplicates(indices):
                 times_sampled += 1
                 indices = self.get_candidate_negatives()
             logger.debug('Sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
