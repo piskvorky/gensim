@@ -14,7 +14,6 @@ from __future__ import with_statement
 import logging
 import unittest
 import os
-import tempfile
 
 from six.moves import zip as izip
 from collections import namedtuple
@@ -24,9 +23,7 @@ import numpy as np
 
 from gensim import utils
 from gensim.models import doc2vec, keyedvectors
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import datapath, get_tmpfile, common_texts as raw_sentences
 
 
 class DocsLeeCorpus(object):
@@ -49,56 +46,42 @@ class DocsLeeCorpus(object):
 
 list_corpus = list(DocsLeeCorpus())
 
-raw_sentences = [
-        ['human', 'interface', 'computer'],
-        ['survey', 'user', 'computer', 'system', 'response', 'time'],
-        ['eps', 'user', 'interface', 'system'],
-        ['system', 'human', 'system', 'eps'],
-        ['user', 'response', 'time'],
-        ['trees'],
-        ['graph', 'trees'],
-        ['graph', 'minors', 'trees'],
-        ['graph', 'minors', 'survey']
-    ]
 
 sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(raw_sentences)]
 
 
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.tst')
-
-
 def load_on_instance():
     # Save and load a Doc2Vec Model on instance for test
+    tmpf = get_tmpfile('gensim_doc2vec.tst')
     model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
-    model.save(testfile())
+    model.save(tmpf)
     model = doc2vec.Doc2Vec()  # should fail at this point
-    return model.load(testfile())
+    return model.load(tmpf)
 
 
 class TestDoc2VecModel(unittest.TestCase):
     def test_persistence(self):
         """Test storing/loading the entire model."""
+        tmpf = get_tmpfile('gensim_doc2vec.tst')
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
-        model.save(testfile())
-        self.models_equal(model, doc2vec.Doc2Vec.load(testfile()))
+        model.save(tmpf)
+        self.models_equal(model, doc2vec.Doc2Vec.load(tmpf))
 
     def testPersistenceWord2VecFormat(self):
         """Test storing the entire model in word2vec format."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
         # test saving both document and word embedding
-        test_doc_word = os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.dw')
+        test_doc_word = get_tmpfile('gensim_doc2vec.dw')
         model.save_word2vec_format(test_doc_word, doctag_vec=True, word_vec=True, binary=True)
         binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_doc_word, binary=True)
         self.assertEqual(len(model.wv.vocab) + len(model.docvecs), len(binary_model_dv.vocab))
         # test saving document embedding only
-        test_doc = os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.d')
+        test_doc = get_tmpfile('gensim_doc2vec.d')
         model.save_word2vec_format(test_doc, doctag_vec=True, word_vec=False, binary=True)
         binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_doc, binary=True)
         self.assertEqual(len(model.docvecs), len(binary_model_dv.vocab))
         # test saving word embedding only
-        test_word = os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.w')
+        test_word = get_tmpfile('gensim_doc2vec.w')
         model.save_word2vec_format(test_word, doctag_vec=False, word_vec=True, binary=True)
         binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_word, binary=True)
         self.assertEqual(len(model.wv.vocab), len(binary_model_dv.vocab))
@@ -106,21 +89,23 @@ class TestDoc2VecModel(unittest.TestCase):
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(unicode_tags=True), min_count=1)
+        tmpf = get_tmpfile('gensim_doc2vec.tst')
         try:
-            model.save_word2vec_format(testfile(), doctag_vec=True, word_vec=True, binary=True)
+            model.save_word2vec_format(tmpf, doctag_vec=True, word_vec=True, binary=True)
         except UnicodeEncodeError:
             self.fail('Failed storing unicode title.')
 
     def test_load_mmap(self):
         """Test storing/loading the entire model."""
         model = doc2vec.Doc2Vec(sentences, min_count=1)
+        tmpf = get_tmpfile('gensim_doc2vec.tst')
 
         # test storing the internal arrays into separate files
-        model.save(testfile(), sep_limit=0)
-        self.models_equal(model, doc2vec.Doc2Vec.load(testfile()))
+        model.save(tmpf, sep_limit=0)
+        self.models_equal(model, doc2vec.Doc2Vec.load(tmpf))
 
         # make sure mmaping the arrays back works, too
-        self.models_equal(model, doc2vec.Doc2Vec.load(testfile(), mmap='r'))
+        self.models_equal(model, doc2vec.Doc2Vec.load(tmpf, mmap='r'))
 
     def test_int_doctags(self):
         """Test doc2vec doctag alternatives"""
@@ -217,8 +202,9 @@ class TestDoc2VecModel(unittest.TestCase):
 
         # keep training after save
         if keep_training:
-            model.save(testfile())
-            loaded = doc2vec.Doc2Vec.load(testfile())
+            tmpf = get_tmpfile('gensim_doc2vec.tst')
+            model.save(tmpf)
+            loaded = doc2vec.Doc2Vec.load(tmpf)
             loaded.train(sentences, total_examples=loaded.corpus_count, epochs=loaded.iter)
 
     def test_training(self):
@@ -385,6 +371,12 @@ class TestDoc2VecModel(unittest.TestCase):
         model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
         self.model_sanity(model, keep_training=False)
         self.assertTrue(hasattr(model, 'syn1neg'))
+
+    def test_word_vec_non_writeable(self):
+        model = keyedvectors.KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'))
+        vector = model['says']
+        with self.assertRaises(ValueError):
+            vector *= 0
 
     @log_capture()
     def testBuildVocabWarning(self, l):

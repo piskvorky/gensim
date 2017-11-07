@@ -9,30 +9,23 @@
 import logging
 import unittest
 import os
-import tempfile
+import sys
 
 import numpy
 import gensim
 
 from gensim.utils import check_output
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
-
-def testfile():
-    # temporary model will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'glove2word2vec.test')
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestGlove2Word2Vec(unittest.TestCase):
     def setUp(self):
         self.datapath = datapath('test_glove.txt')
-        self.output_file = testfile()
+        self.output_file = get_tmpfile('glove2word2vec.test')
 
     def testConversion(self):
         check_output(args=[
-            'python', '-m', 'gensim.scripts.glove2word2vec',
+            sys.executable, '-m', 'gensim.scripts.glove2word2vec',
             '--input', self.datapath, '--output', self.output_file
         ])
         # test that the converted model loads successfully

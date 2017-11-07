@@ -25,10 +25,7 @@ from gensim.corpora import Dictionary
 
 import gensim.models.wrappers.ldavowpalwabbit as ldavowpalwabbit
 from gensim.models.wrappers.ldavowpalwabbit import LdaVowpalWabbit
-
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import datapath
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)

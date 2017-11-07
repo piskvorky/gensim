@@ -79,6 +79,7 @@ Modules:
     scripts/make_wiki_online_lemma
     scripts/make_wiki_online_nodebug
     scripts/word2vec2tensor
+    scripts/segment_wiki
     parsing/porter
     parsing/preprocessing
     summarization/bm25

@@ -12,19 +12,11 @@ Automated tests for checking transformation algorithms (the models package).
 import logging
 import unittest
 import os
-import tempfile
 
 import numpy
 
 from gensim.models.wrappers import wordrank
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
-
-def testfile():
-    # temporary model will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_wordrank.test')
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestWordrank(unittest.TestCase):
@@ -61,8 +53,9 @@ class TestWordrank(unittest.TestCase):
         """Test storing/loading the entire model"""
         if not self.wr_path:
             return
-        self.test_model.save(testfile())
-        loaded = wordrank.Wordrank.load(testfile())
+        tmpf = get_tmpfile('gensim_wordrank.test')
+        self.test_model.save(tmpf)
+        loaded = wordrank.Wordrank.load(tmpf)
         self.models_equal(self.test_model, loaded)
 
     def testSimilarity(self):
