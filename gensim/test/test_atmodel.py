@@ -486,7 +486,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model.state.gamma, model2.state.gamma))
 
     def testPersistenceIgnore(self):
-        fname = get_tmpfile('gensim_models_atmodel.tst')
+        fname = get_tmpfile('gensim_models_atmodel_testPersistenceIgnore.tst')
         model = atmodel.AuthorTopicModel(corpus, author2doc=author2doc, num_topics=2)
         model.save(fname, ignore='id2word')
         model2 = atmodel.AuthorTopicModel.load(fname)
