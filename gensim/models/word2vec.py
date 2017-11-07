@@ -681,7 +681,7 @@ class Word2Vec(utils.SaveLoad):
                         type(sentence)
                     )
                 checked_string_types += 1
-            if sentence_no % progress_per == 0 and sentence_no != 0:
+            if sentence_no % progress_per == 0:
                 logger.info(
                     "PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
                     sentence_no, total_words, len(vocab)
