@@ -670,8 +670,12 @@ class PoincareData(object):
         self.encoding = encoding
         self.delimiter = delimiter
 
+    def stream_lines(self):
+        with smart_open(self.file_path, 'rb') as f:
+            for line in f:
+                yield line.decode(self.encoding)
+
     def __iter__(self):
-        with smart_open(self.file_path, 'r', encoding=self.encoding) as f:
-            reader = csv.reader(f, delimiter=self.delimiter)
-            for row in reader:
-                yield row
+        reader = csv.reader(self.stream_lines(), delimiter=self.delimiter)
+        for row in reader:
+            yield row
