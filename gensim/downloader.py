@@ -9,7 +9,7 @@ import sys
 import errno
 import hashlib
 import math
-from shutil import rmtree
+import shutil
 import tempfile
 try:
     import urllib.request as urllib
@@ -46,10 +46,10 @@ def _progress(chunks_downloaded, chunk_size, total_size):
     bar_len = 50
     size_downloaded = float(chunks_downloaded * chunk_size)
     filled_len = int(math.floor((bar_len * size_downloaded) / total_size))
-    percent_downloaded = round(((size_downloaded * 100) / total_size), 1) 
+    percent_downloaded = round(((size_downloaded * 100) / total_size), 1)
     bar = '=' * filled_len + '-' * (bar_len - filled_len)
     sys.stdout.write(
-        '[%s] %s%s %s/%sMB downloaded\r' % (bar, percent_downloaded, "%",
+        '\r[%s] %s%s %s/%sMB downloaded' % (bar, percent_downloaded, "%",
         round(size_downloaded / (1024 * 1024), 1),
         round(float(total_size) / (1024 * 1024), 1)))
     sys.stdout.flush()
@@ -144,7 +144,7 @@ def info(name=None):
         return data
 
 
-def _get_checksum(name):
+def _get_checksum(name, part=None):
     """Retrieve the checksum of the model/dataset.
     This is compared to the checksum of the downloaded model/dataset in _download function.
 
@@ -162,10 +162,39 @@ def _get_checksum(name):
     data = info()
     corpora = data['corpora']
     models = data['models']
+    if part is None:
+        if name in corpora:
+            return data['corpora'][name]["checksum"]
+        elif name in models:
+            return data['models'][name]["checksum"]
+    else:
+        if name in corpora:
+            return data['corpora'][name]["checksum-" + str(part)]
+        elif name in models:
+            return data['models'][name]["checksum-" + str(part)]
+
+
+def _get_parts(name):
+    """Retrieve the number of parts in which dataset/model has been split.
+
+    Parameters
+    ----------
+    name: str
+        Dataset/model name
+
+    Returns
+    -------
+    str
+        Number of parts in which dataset/model has been split.
+
+    """
+    data = info()
+    corpora = data['corpora']
+    models = data['models']
     if name in corpora:
-        return data['corpora'][name]["checksum"]
+        return data['corpora'][name]["parts"]
     elif name in models:
-        return data['models'][name]["checksum"]
+        return data['models'][name]["parts"]
 
 
 def _download(name):
@@ -183,25 +212,54 @@ def _download(name):
         then downloaded has not been donw properly.
 
     """
-    url_data = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/{f}.tar.gz".format(f=name)
     url_load_file = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/__init__.py".format(f=name)
     data_folder_dir = os.path.join(base_dir, name)
-    compressed_folder_name = "{f}.tar.gz".format(f=name)
     tmp_dir = tempfile.mkdtemp()
-    tmp_load_file = os.path.join(tmp_dir, "__init__.py")
-    urllib.urlretrieve(url_load_file, tmp_load_file)
-    logger.info("Downloading %s", name)
-    tmp_data_file = os.path.join(tmp_dir, compressed_folder_name)
-    urllib.urlretrieve(url_data, tmp_data_file, reporthook=_progress)
-    if _calculate_md5_checksum(tmp_data_file) == _get_checksum(name):
-        logger.info("%s downloaded", name)
+    tmp_load_file_path = os.path.join(tmp_dir, "__init__.py")
+    urllib.urlretrieve(url_load_file, tmp_load_file_path)
+    no_parts = int(_get_parts(name))
+    if no_parts > 1:
+        concatenated_folder_name = "{f}.tar.gz".format(f=name)
+        concatenated_folder_dir = os.path.join(tmp_dir, concatenated_folder_name)
+        for part in range(1, no_parts + 1):
+            url_data = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/{f}.tar.gz_a{p}".format(f=name, p=chr(96 + part))
+            compressed_folder_name = "{f}.tar.gz_a{p}".format(f=name, p=chr(96 + part))
+            tmp_data_file_dir = os.path.join(tmp_dir, compressed_folder_name)
+            logger.info("Downloading Part %s/%s", part, no_parts)
+            urllib.urlretrieve(url_data, tmp_data_file_dir, reporthook=_progress)
+            if _calculate_md5_checksum(tmp_data_file_dir) == _get_checksum(name, part):
+                sys.stdout.write("\n")
+                sys.stdout.flush()
+                logger.info("Part %s/%s downloaded", part, no_parts)
+            else:
+                shutil.rmtree(tmp_dir)
+                raise Exception("There was a problem in downloading the data. We recommend you to re-try.")
+        with open(concatenated_folder_dir, 'wb') as wfp:
+            for part in range(1, no_parts + 1):
+                part_path = os.path.join(tmp_dir, "{f}.tar.gz_a{p}".format(f=name, p=chr(96 + part)))
+                with open(part_path, "rb") as rfp:
+                    shutil.copyfileobj(rfp, wfp)
+                os.remove(part_path)
+        with tarfile.open(concatenated_folder_dir, 'r') as tar:
+            tar.extractall(tmp_dir)
+        os.remove(concatenated_folder_dir)
+        os.rename(tmp_dir, data_folder_dir)
     else:
-        rmtree(tmp_dir)
-        raise Exception("There was a problem in downloading the data. We recommend you to re-try.")
-    with tarfile.open(tmp_data_file, 'r') as tar:
-        tar.extractall(tmp_dir)
-    os.remove(tmp_data_file)
-    os.rename(tmp_dir, data_folder_dir)
+        url_data = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/{f}.tar.gz".format(f=name)
+        compressed_folder_name = "{f}.tar.gz".format(f=name)
+        tmp_data_file_dir = os.path.join(tmp_dir, compressed_folder_name)
+        urllib.urlretrieve(url_data, tmp_data_file_dir, reporthook=_progress)
+        if _calculate_md5_checksum(tmp_data_file_dir) == _get_checksum(name):
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+            logger.info("%s downloaded", name)
+        else:
+            shutil.rmtree(tmp_dir)
+            raise Exception("There was a problem in downloading the data. We recommend you to re-try.")
+        with tarfile.open(tmp_data_file_dir, 'r') as tar:
+            tar.extractall(tmp_dir)
+        os.remove(tmp_data_file_dir)
+        os.rename(tmp_dir, data_folder_dir)
 
 
 def _get_filename(name):
