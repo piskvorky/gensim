@@ -671,11 +671,28 @@ class PoincareData(object):
         self.delimiter = delimiter
 
     def stream_lines(self):
+        """
+        Streams lines from self.file_path decoded into unicode strings.
+
+        Yields
+        -------
+        str (unicode)
+            Single line from input file.
+        """
         with smart_open(self.file_path, 'rb') as f:
             for line in f:
                 yield line.decode(self.encoding)
 
     def __iter__(self):
+        """
+        Streams relations from self.file_path decoded into unicode strings.
+
+        Yields
+        -------
+        2-tuple (unicode)
+            Hypernym relation from input file.
+        """
         reader = csv.reader(self.stream_lines(), delimiter=self.delimiter)
         for row in reader:
-            yield row
+            yield tuple(row)
+

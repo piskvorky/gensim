@@ -28,12 +28,12 @@ class TestPoincareData(unittest.TestCase):
         non_utf8_file = datapath('poincare_cp852.tsv')
         relations = [relation for relation in PoincareData(non_utf8_file, encoding='cp852')]
         self.assertEqual(len(relations), 2)
-        self.assertEqual(relations[0], [u'tímto', u'budeš'])
+        self.assertEqual(relations[0], (u'tímto', u'budeš'))
 
         utf8_file = datapath('poincare_utf8.tsv')
         relations = [relation for relation in PoincareData(utf8_file)]
         self.assertEqual(len(relations), 2)
-        self.assertEqual(relations[0], [u'tímto', u'budeš'])
+        self.assertEqual(relations[0], (u'tímto', u'budeš'))
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
