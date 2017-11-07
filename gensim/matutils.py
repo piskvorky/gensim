@@ -605,7 +605,7 @@ def dirichlet_expectation(alpha):
         result = psi(alpha) - psi(np.sum(alpha))
     else:
         result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
-    return result
+    return result.astype(alpha.dtype, copy=False)  # keep the same precision as input
 
 
 def qr_destroy(la):
