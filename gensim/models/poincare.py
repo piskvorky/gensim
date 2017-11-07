@@ -50,15 +50,15 @@ class PoincareModel(utils.SaveLoad):
 
     """
     def __init__(
-        self, train_file, size=50, alpha=0.1, negative=10, iter=50,
-        workers=1, epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, encoding='utf8', seed=0):
+        self, train_data, size=50, alpha=0.1, negative=10, iter=50,
+        workers=1, epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, seed=0):
         """
-        Initialize and train a Poincare embedding model from a file of transitive closure relations.
+        Initialize and train a Poincare embedding model from an iterable of transitive closure relations.
 
         Parameters
         ----------
-        train_file : str
-            Path to tsv file containing relation pairs.
+        train_file : iterable
+            iterable of hypernym pairs, e.g. a list of tuples, or a PoincareData instance streaming from a file.
         size : int, optional
             Number of dimensions of the trained model, defaults to 50.
         alpha : float, optional
@@ -75,8 +75,6 @@ class PoincareModel(utils.SaveLoad):
             Number of epochs to use for burn-in initialization (0 means no burn-in), defaults to 0.
         burn_in_alpha : float, optional
             learning rate for burn-in initialization, defaults to 0.01, ignored if `burn_in` is 0.
-        encoding : str, optional
-            encoding of training file, defaults to utf8.
         seed : int, optional
             seed for random to ensure reproducibility, defaults to 0.
 
@@ -85,8 +83,7 @@ class PoincareModel(utils.SaveLoad):
         PoincareModel instance
 
         """
-        self.train_file = train_file
-        self.encoding = encoding
+        self.train_data = train_data
         self.wv = KeyedVectors()
         self.size = size
         self.train_alpha = alpha  # Learning rate for training
@@ -106,27 +103,25 @@ class PoincareModel(utils.SaveLoad):
         self.init_embeddings()
 
     def load_relations(self):
-        """Load relations from the train file and build vocab."""
+        """Load relations from the train data and build vocab."""
         vocab = {}
         index2word = []
         all_relations = []  # List of all relation pairs
         term_relations = defaultdict(set)  # Mapping from node index to its related node indices
 
-        with smart_open(self.train_file, 'r', encoding=self.encoding) as f:
-            reader = csv.reader(f, delimiter='\t')
-            for row in reader:
-                assert len(row) == 2, 'Relation pair has more than two items'
-                for item in row:
-                    if item in vocab:
-                        vocab[item].count += 1
-                    else:
-                        vocab[item] = Vocab(count=1, index=len(index2word))
-                        index2word.append(item)
-                node_1, node_2 = row
-                node_1_index, node_2_index = vocab[node_1].index, vocab[node_2].index
-                term_relations[node_1_index].add(node_2_index)
-                relation = (node_1_index, node_2_index)
-                all_relations.append(relation)
+        for hypernym_pair in self.train_data:
+            assert len(hypernym_pair) == 2, 'Relation pair has more than two items'
+            for item in hypernym_pair:
+                if item in vocab:
+                    vocab[item].count += 1
+                else:
+                    vocab[item] = Vocab(count=1, index=len(index2word))
+                    index2word.append(item)
+            node_1, node_2 = hypernym_pair
+            node_1_index, node_2_index = vocab[node_1].index, vocab[node_2].index
+            term_relations[node_1_index].add(node_2_index)
+            relation = (node_1_index, node_2_index)
+            all_relations.append(relation)
 
         self.wv.vocab = vocab
         self.wv.index2word = index2word
@@ -646,3 +641,37 @@ class PoincareKeyedVectors(KeyedVectors):
                 )
             )
     # TODO: Add other KeyedVector supported methods - most_similar, etc.
+
+
+class PoincareData(object):
+    """
+    Class to stream hypernym relations for `PoincareModel` from a tsv-like file
+
+    """
+    def __init__(self, file_path, encoding='utf8', delimiter='\t'):
+        """
+        Initialize instance from file containing one hypernym pair per line.
+
+        Parameters
+        ----------
+        file_path : str
+            path to file containing one hypernym pair per line, separated by `delimiter`.
+        encoding : str, optional
+            character encoding of the input file.
+        delimiter : str, optional
+            delimiter character for each hypernym pair.
+
+        Returns
+        -------
+        PoincareData instance
+        """
+
+        self.file_path = file_path
+        self.encoding = encoding
+        self.delimiter = delimiter
+
+    def __iter__(self):
+        with smart_open(self.file_path, 'r', encoding=self.encoding) as f:
+            reader = csv.reader(f, delimiter=self.delimiter)
+            for row in reader:
+                yield row
