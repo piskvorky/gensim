@@ -21,7 +21,6 @@ import numpy as np
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
 from testfixtures import log_capture
-from six import itervalues
 
 try:
     from pyemd import emd  # noqa:F401
@@ -160,8 +159,7 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testTotalWordCount(self):
         model = word2vec.Word2Vec(size=10, min_count=0, seed=42)
-        model.build_vocab(sentences, keep_raw_vocab=True)
-        total_words = sum(itervalues(model.raw_vocab))
+        total_words = model.scan_vocab(sentences)
         self.assertEqual(total_words, 29)
 
     def testOnlineLearning(self):

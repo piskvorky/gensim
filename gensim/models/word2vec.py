@@ -700,6 +700,7 @@ class Word2Vec(utils.SaveLoad):
         )
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
+        return total_words
 
     def scale_vocab(self, min_count=None, sample=None, dry_run=False,
                     keep_raw_vocab=False, trim_rule=None, update=False):
