@@ -11,9 +11,6 @@ Automated tests for checking transformation algorithms (the models package).
 
 import logging
 import unittest
-import os
-import os.path
-import tempfile
 
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -21,14 +18,7 @@ from scipy.sparse import issparse
 
 from gensim.corpora import mmcorpus
 from gensim.models import normmodel
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestNormModel(unittest.TestCase):
@@ -140,7 +130,7 @@ class TestNormModel(unittest.TestCase):
         self.assertRaises(ValueError, normmodel.NormModel, self.corpus, 'l0')
 
     def testPersistence(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models.tst')
         model = normmodel.NormModel(self.corpus)
         model.save(fname)
         model2 = normmodel.NormModel.load(fname)
@@ -149,7 +139,7 @@ class TestNormModel(unittest.TestCase):
         self.assertTrue(np.allclose(model.normalize(tstvec), model2.normalize(tstvec)))  # try projecting an empty vector
 
     def testPersistenceCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models.tst.gz')
         model = normmodel.NormModel(self.corpus)
         model.save(fname)
         model2 = normmodel.NormModel.load(fname, mmap=None)

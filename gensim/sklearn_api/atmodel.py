@@ -76,17 +76,11 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
                 "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
             )
 
-        check = lambda x: [x] if not isinstance(x, list) else x
-        author_names = check(author_names)
-        X = [[] for _ in range(0, len(author_names))]
-
-        for k, v in enumerate(author_names):
-            transformed_author = self.gensim_model[v]
-            # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
-            probs_author = matutils.sparse2full(transformed_author, self.num_topics)
-            X[k] = probs_author
-
-        return np.reshape(np.array(X), (len(author_names), self.num_topics))
+        if not isinstance(author_names, list):
+            author_names = [author_names]
+        # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
+        topics = [matutils.sparse2full(self.gensim_model[author_name], self.num_topics) for author_name in author_names]
+        return np.reshape(np.array(topics), (len(author_names), self.num_topics))
 
     def partial_fit(self, X, author2doc=None, doc2author=None):
         """

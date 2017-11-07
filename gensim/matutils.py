@@ -28,7 +28,9 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange, zip as izip
 
 
-blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
+def blas(name, ndarray):
+    return scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
+
 
 logger = logging.getLogger(__name__)
 
