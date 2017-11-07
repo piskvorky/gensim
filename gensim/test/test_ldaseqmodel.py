@@ -222,7 +222,7 @@ class TestLdaSeq(unittest.TestCase):
         self.assertAlmostEqual(doc_topic[0], expected_doc_topic, places=2)
 
     def testDtypeBackwardCompatibility(self):
-        ldaseq_3_0_1_fname = datapath('ldaseq_3_0_1_model')
+        ldaseq_3_0_1_fname = datapath('DTM/ldaseq_3_0_1_model')
         test_doc = [(547, 1), (549, 1), (552, 1), (555, 1)]
         expected_topics = [0.99751244, 0.00248756]
 
