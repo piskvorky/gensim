@@ -49,7 +49,7 @@ class PorterStemmer(object):
         --------
         >>> from gensim.parsing.porter import PorterStemmer
         >>> p = PorterStemmer()
-        >>> print "b = ", p.b," ,k = ", p.k, " ,j = ", p.j
+        >>> print "b (word) = ", p.b, " ,k (readjusted downwards as the stemming progresses) = ", p.k, " ,j (word length) = ", p.j
         b =    ,k =  0  ,j =  0
 
         """
@@ -171,7 +171,7 @@ class PorterStemmer(object):
         return not all(self._cons(i) for i in xrange(self.j + 1))
 
     def _doublec(self, j):
-        """Check if b[j],b[j-1] contain a double consonant.
+        """Check if b[j], b[j-1] contain a double consonant.
 
         Parameters
         ----------
@@ -180,7 +180,7 @@ class PorterStemmer(object):
         Returns
         -------
         bool
-            True, if b[j],b[j-1] contain a double consonant , otherwise - False.
+            True, if b[j], b[j-1] contain a double consonant , otherwise - False.
 
         Examples
         --------
@@ -202,7 +202,7 @@ class PorterStemmer(object):
         return j > 0 and self.b[j] == self.b[j - 1] and self._cons(j)
 
     def _cvc(self, i):
-        """Check if b[i-2],b[i-1],b[i] have the form consonant - vowel - consonant
+        """Check if b[i-2], b[i-1], b[i] have the form consonant - vowel - consonant
         and also if the second c is not w,x or y. This is used when trying to
         restore an e at the end of a short word, e.g.
         cav(e), lov(e), hop(e), crim(e), but
@@ -215,7 +215,7 @@ class PorterStemmer(object):
         Returns
         -------
         bool
-            True, if b[i-2],b[i-1],b[i] have the form consonant - vowel - consonant , otherwise - False.
+            True, if b[i-2], b[i-1], b[i] have the form consonant - vowel - consonant , otherwise - False.
 
         Examples
         --------

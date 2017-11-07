@@ -37,20 +37,21 @@ was we well were what whatever when whence whenever where whereafter whereas whe
 your yours yourself yourselves
 """
 STOPWORDS = frozenset(w for w in STOPWORDS.split() if w)
-
+# set of stopwords for :func:`~gensim.parsing.preprocessing.remove_stopwords`.
 RE_PUNCT = re.compile(r'([%s])+' % re.escape(string.punctuation), re.UNICODE)
-
+# remove punctuation according to :func:`~gensim.parsing.preprocessing.strip_punctuation`.
 RE_TAGS = re.compile(r"<([^>]+)>", re.UNICODE)
-
+# remove tags according to :func:`~gensim.parsing.preprocessing.strip_tags`.
 RE_NUMERIC = re.compile(r"[0-9]+", re.UNICODE)
-
+# remove digits according to :func:`~gensim.parsing.preprocessing.strip_numeric`.
 RE_NONALPHA = re.compile(r"\W", re.UNICODE)
-
+# remove not a word characters according to :func:`~gensim.parsing.preprocessing.non_alphanum`.
 RE_AL_NUM = re.compile(r"([a-z]+)([0-9]+)", flags=re.UNICODE)
-
+# add spaces between letters & digits according to :func:`~gensim.parsing.preprocessing.split_alphanum`.
 RE_NUM_AL = re.compile(r"([0-9]+)([a-z]+)", flags=re.UNICODE)
-
+# add spaces between digits & letters according to :func:`~gensim.parsing.preprocessing.split_alphanum`.
 RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
+# remove repeating in a row whitespace characters according to :func:`~gensim.parsing.preprocessing.multiple_whitespaces`.
 
 
 def remove_stopwords(s):
@@ -300,9 +301,11 @@ DEFAULT_FILTERS = [
 
 def preprocess_string(s, filters=DEFAULT_FILTERS):
     """Take string, apply list of chosen filters to it, where filters are methods from this module.
-    Default list of filters consists of: strip_tags, strip_punctuation, strip_multiple_whitespaces,
-    strip_numeric, remove_stopwords, strip_short, stem_text. <function <lambda>> in signature means
-    that we use lambda function for applying methods to filters.
+    Default list of filters consists of: :func:`~gensim.parsing.preprocessing.strip_tags`,
+    :func:`~gensim.parsing.preprocessing.strip_punctuation`, :func:`~gensim.parsing.preprocessing.strip_multiple_whitespaces`,
+    :func:`~gensim.parsing.preprocessing.strip_numeric`, :func:`~gensim.parsing.preprocessing.remove_stopwords`,
+    :func:`~gensim.parsing.preprocessing.strip_short`,  :func:`~gensim.parsing.preprocessing.stem_text`.
+    <function <lambda>> in signature means that we use lambda function for applying methods to filters.
 
     Parameters
     ----------
