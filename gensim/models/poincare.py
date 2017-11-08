@@ -452,12 +452,12 @@ class PoincareModel(utils.SaveLoad):
             avg_loss = 0.0
             last_time = time.time()
             for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
-                print_check = not (batch_num % print_every)
+                should_print = not (batch_num % print_every)
                 batch_indices = indices[i:i+batch_size]
                 relations = [self.all_relations[idx] for idx in batch_indices]
-                result = self.train_on_batch(relations, check_gradients=print_check)
+                result = self.train_on_batch(relations, check_gradients=should_print)
                 avg_loss += result.loss
-                if print_check:
+                if should_print:
                     avg_loss /= print_every
                     time_taken = time.time() - last_time
                     speed = print_every * batch_size / time_taken
