@@ -115,10 +115,10 @@ class TestPoincareModel(unittest.TestCase):
 
     def test_reproducible(self):
         """Tests that vectors are same for two independent models trained with the same seed."""
-        model_1 = PoincareModel(self.data, iter=2, seed=1, negative=3)
+        model_1 = PoincareModel(self.data_large, iter=2, seed=1, negative=3)
         model_1.train()
 
-        model_2 = PoincareModel(self.data, iter=2, seed=1, negative=3)
+        model_2 = PoincareModel(self.data_large, iter=2, seed=1, negative=3)
         model_2.train()
         self.assertTrue(np.allclose(model_1.wv.syn0, model_2.wv.syn0))
 

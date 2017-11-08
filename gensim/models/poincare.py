@@ -166,7 +166,7 @@ class PoincareModel(utils.SaveLoad):
 
         if self.negatives_buffer.num_items() < self.negative:
             # Note: np.random.choice much slower than random.sample for large populations, possible bottleneck
-            uniform_numbers = np.random.random(self.negatives_buffer_size)
+            uniform_numbers = self.np_random.random_sample(self.negatives_buffer_size)
             cumsum_table_indices = np.searchsorted(self.node_probabilities_cumsum, uniform_numbers)
             self.negatives_buffer = NegativesBuffer(cumsum_table_indices)
         return self.negatives_buffer.get_items(self.negative)
