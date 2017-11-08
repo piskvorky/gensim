@@ -421,13 +421,13 @@ class PoincareModel(utils.SaveLoad):
         self.wv.syn0[indices_v] -= v_updates
         self.wv.syn0[indices_v] = self.clip_vectors(self.wv.syn0[indices_v], self.epsilon)
 
-    def train(self):
+    def train(self, batch_size=10, print_every=1000):
         """Trains Poincare embeddings using loaded data and model parameters."""
         if self.burn_in > 0:
             self.alpha = self.burn_in_alpha
-            self.train_batchwise(epochs=self.burn_in)
+            self.train_batchwise(epochs=self.burn_in, batch_size=batch_size, print_every=print_every)
         self.alpha = self.train_alpha
-        self.train_batchwise()
+        self.train_batchwise(batch_size=batch_size, print_every=print_every)
 
     def train_batchwise(self, epochs=None, batch_size=10, print_every=1000):
         """
