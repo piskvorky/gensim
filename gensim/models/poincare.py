@@ -60,23 +60,23 @@ class PoincareModel(utils.SaveLoad):
         train_file : iterable
             iterable of hypernym pairs, e.g. a list of tuples, or a PoincareData instance streaming from a file.
         size : int, optional
-            Number of dimensions of the trained model, defaults to 50.
+            Number of dimensions of the trained model.
         alpha : float, optional
-            learning rate for training, defaults to 0.1.
+            learning rate for training.
         negative : int, optional
-            Number of negative samples to use, defaults to 10.
+            Number of negative samples to use.
         iter : int, optional
-            Number of iterations (epochs) over the corpus, defaults to 50.
+            Number of iterations (epochs) over the corpus.
         workers : int, optional
-            Number of threads to use for training the model, defaults to 1.
+            Number of threads to use for training the model.
         epsilon : float, optional
-            Constant used for clipping embeddings below a norm of one, defaults to 1e-5.
+            Constant used for clipping embeddings below a norm of one.
         burn_in : int, optional
-            Number of epochs to use for burn-in initialization (0 means no burn-in), defaults to 0.
+            Number of epochs to use for burn-in initialization (0 means no burn-in).
         burn_in_alpha : float, optional
-            learning rate for burn-in initialization, defaults to 0.01, ignored if `burn_in` is 0.
+            learning rate for burn-in initialization, ignored if `burn_in` is 0.
         seed : int, optional
-            seed for random to ensure reproducibility, defaults to 0.
+            seed for random to ensure reproducibility.
 
         Returns
         --------
@@ -285,7 +285,7 @@ class PoincareModel(utils.SaveLoad):
         all_negatives : list of lists
             list of lists of negative samples for each node_1 in the positive examples.
         check_gradients : bool, optional
-            whether to compare the computed gradients to autograd gradients for this batch, defaults to False.
+            whether to compare the computed gradients to autograd gradients for this batch.
 
         Returns
         -------
@@ -349,7 +349,7 @@ class PoincareModel(utils.SaveLoad):
         relations : list of tuples
             list of tuples of positive examples of the form (node_1_index, node_2_index).
         check_gradients : bool, optional
-            whether to compare the computed gradients to autograd gradients for this batch, defaults to False.
+            whether to compare the computed gradients to autograd gradients for this batch.
 
         Returns
         -------
@@ -427,9 +427,9 @@ class PoincareModel(utils.SaveLoad):
         Parameters
         ----------
         batch_size : int, optional
-            Number of examples to train on in a single batch, defaults to 10.
+            Number of examples to train on in a single batch.
         print_every : int, optional
-            Prints progress and average loss after every `print_every` batches, defaults to 1000.
+            Prints progress and average loss after every `print_every` batches.
         check_gradients_every : int, optional
             Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
         """
@@ -446,11 +446,11 @@ class PoincareModel(utils.SaveLoad):
         Parameters
         ----------
         epochs : int or None, optional
-            Number of epochs after which training ends, if `None`, runs for `self.iter` epochs, default `None`.
+            Number of epochs after which training ends, if `None`, runs for `self.iter` epochs.
         batch_size : int, optional
-            Number of examples to train on in a single batch, defaults to 10.
+            Number of examples to train on in a single batch.
         print_every : int, optional
-            Prints progress and average loss after every `print_every` batches, defaults to 1000.
+            Prints progress and average loss after every `print_every` batches.
         check_gradients_every : int, optional
             Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
         """
