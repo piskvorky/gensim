@@ -123,7 +123,8 @@ class PoincareModel(utils.SaveLoad):
 
         logger.info("Loading relations from train data..")
         for hypernym_pair in self.train_data:
-            assert len(hypernym_pair) == 2, 'Relation pair "%s" should have exactly two items' % hypernym_pair
+            if len(hypernym_pair) != 2:
+                raise ValueError('Relation pair "%s" should have exactly two items' % str(hypernym_pair))
             for item in hypernym_pair:
                 if item in vocab:
                     vocab[item].count += 1
