@@ -11,6 +11,7 @@ Automated tests for checking the poincare module from the models package.
 
 import logging
 import unittest
+from unittest.mock import Mock
 import os
 
 import numpy as np
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class TestPoincareData(unittest.TestCase):
     def test_encoding_handling(self):
+        """Tests whether utf8 and non-utf8 data loaded correctly."""
         non_utf8_file = datapath('poincare_cp852.tsv')
         relations = [relation for relation in PoincareData(non_utf8_file, encoding='cp852')]
         self.assertEqual(len(relations), 2)
@@ -59,6 +61,19 @@ class TestPoincareModel(unittest.TestCase):
         old_vectors = np.copy(model.wv.syn0)
         model.train()
         self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
+
+    def test_gradients_check(self):
+        """Tests that the gradients check succeeds during training."""
+        model = PoincareModel(self.data, iter=2)
+        old_vectors = np.copy(model.wv.syn0)
+        model.train(batch_size=1, check_gradients_every=1)
+        self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
+
+    def test_wrong_gradients_raises_assertion(self):
+        model = PoincareModel(self.data, iter=2)
+        model.loss_grad = Mock(return_value=np.zeros((2 + model.negative, model.size)))
+        with self.assertRaises(AssertionError):
+            model.train(batch_size=1, check_gradients_every=1)
 
     def test_reproducible(self):
         """Tests that vectors are same for two independent models trained with the same seed."""
