@@ -208,7 +208,14 @@ class PoincareModel(utils.SaveLoad):
             numpy array of shape (self.negative,) containing indices of negative nodes for the given node index.
         """
         node_relations = self.term_relations[node_index]
-        positive_fraction = len(node_relations) / len(self.term_relations)
+        num_remaining_nodes = len(self.wv.vocab) - len(node_relations)
+        if  num_remaining_nodes < self.negative:
+            raise ValueError(
+                'Cannot sample %d negative items from a set of %d items' %
+                (self.negative, num_remaining_nodes)
+            )
+
+        positive_fraction = len(node_relations) / len(self.wv.vocab)
         if positive_fraction < 0.01:
             # If number of positive relations is a small fraction of total nodes
             # re-sample till no positively connected nodes are chosen
@@ -225,7 +232,7 @@ class PoincareModel(utils.SaveLoad):
             valid_negatives = np.array(list(self.indices_set - node_relations))
             probs = self.node_probabilities[valid_negatives]
             probs /= probs.sum()
-            indices = self.np_random.choice(valid_negatives, size=self.negative, p=probs)
+            indices = self.np_random.choice(valid_negatives, size=self.negative, p=probs, replace=False)
 
         return list(indices)
 

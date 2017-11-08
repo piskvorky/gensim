@@ -63,7 +63,7 @@ class TestPoincareModel(unittest.TestCase):
 
     def test_persistence(self):
         """Tests whether the model is saved and loaded correctly."""
-        model = PoincareModel(self.data, iter=1, burn_in=0)
+        model = PoincareModel(self.data, iter=1, burn_in=0, negative=3)
         model.train()
         model.save(testfile())
         loaded = PoincareModel.load(testfile())
@@ -71,7 +71,7 @@ class TestPoincareModel(unittest.TestCase):
 
     def test_persistence_separate_file(self):
         """Tests whether the model is saved and loaded correctly when the arrays are stored separately."""
-        model = PoincareModel(self.data, iter=1, burn_in=0)
+        model = PoincareModel(self.data, iter=1, burn_in=0, negative=3)
         model.train()
         model.save(testfile(), sep_limit=1)
         loaded = PoincareModel.load(testfile())
@@ -93,47 +93,63 @@ class TestPoincareModel(unittest.TestCase):
 
     def test_training(self):
         """Tests that vectors are different before and after training."""
-        model = PoincareModel(self.data, iter=2)
+        model = PoincareModel(self.data, iter=2, negative=3)
         old_vectors = np.copy(model.wv.syn0)
         model.train()
         self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
 
     def test_gradients_check(self):
         """Tests that the gradients check succeeds during training."""
-        model = PoincareModel(self.data, iter=2)
+        model = PoincareModel(self.data, iter=2, negative=3)
         old_vectors = np.copy(model.wv.syn0)
         model.train(batch_size=1, check_gradients_every=1)
         self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
 
     def test_wrong_gradients_raises_assertion(self):
         """Tests that discrepancy in gradients raises an error."""
-        model = PoincareModel(self.data, iter=2)
+        model = PoincareModel(self.data, iter=2, negative=3)
         model.loss_grad = Mock(return_value=np.zeros((2 + model.negative, model.size)))
         with self.assertRaises(AssertionError):
             model.train(batch_size=1, check_gradients_every=1)
 
     def test_reproducible(self):
         """Tests that vectors are same for two independent models trained with the same seed."""
-        model_1 = PoincareModel(self.data, iter=2, seed=1)
+        model_1 = PoincareModel(self.data, iter=2, seed=1, negative=3)
         model_1.train()
 
-        model_2 = PoincareModel(self.data, iter=2, seed=1)
+        model_2 = PoincareModel(self.data, iter=2, seed=1, negative=3)
         model_2.train()
         self.assertTrue(np.allclose(model_1.wv.syn0, model_2.wv.syn0))
 
     def test_burn_in(self):
         """Tests that vectors are different for models with and without burn-in."""
-        model_1 = PoincareModel(self.data, iter=2, burn_in=0)
+        model_1 = PoincareModel(self.data, iter=2, burn_in=0, negative=3)
         model_1.train()
 
-        model_2 = PoincareModel(self.data, iter=2, burn_in=1)
+        model_2 = PoincareModel(self.data, iter=2, burn_in=1, negative=3)
         model_2.train()
         self.assertFalse(np.allclose(model_1.wv.syn0, model_2.wv.syn0))
 
     def test_negatives(self):
-        """Tests that correct number of negatives are used."""
+        """Tests that correct number of negatives are sampled."""
         model = PoincareModel(self.data, negative=5)
         self.assertEqual(len(model.get_candidate_negatives()), 5)
+
+    def test_error_if_negative_more_than_population(self):
+        """Tests error is rased if number of negatives to sample is more than remaining nodes."""
+        model = PoincareModel(self.data, negative=10)
+        with self.assertRaises(ValueError):
+            model.train()
+
+    def test_no_duplicates_and_positives_in_negative_sample(self):
+        """Tests that no duplicates or positively related nodes are present in negative samples."""
+        model = PoincareModel(self.data, negative=3)
+        positive_nodes = model.term_relations[0]  # Positive nodes for node 0
+        num_samples = 100  # Repeat experiment multiple times
+        for i in range(num_samples):
+            negatives = model.sample_negatives(0)
+            self.assertFalse(positive_nodes & set(negatives))
+            self.assertEqual(len(negatives), len(set(negatives)))
 
     def test_handle_duplicates(self):
         """Tests that correct number of negatives are used."""
