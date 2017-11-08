@@ -10,9 +10,10 @@ Automated tests for checking the poincare module from the models package.
 """
 
 import logging
+import os
+import tempfile
 import unittest
 from unittest.mock import Mock
-import os
 
 import numpy as np
 
@@ -22,6 +23,11 @@ from gensim.models.poincare import PoincareData, PoincareModel
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 logger = logging.getLogger(__name__)
+
+
+def testfile():
+    # temporary data will be stored to this file
+    return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
 
 
 class TestPoincareData(unittest.TestCase):
@@ -42,6 +48,11 @@ class TestPoincareModel(unittest.TestCase):
     def setUp(self):
         self.data = PoincareData(datapath('poincare_hypernyms.tsv'))
 
+    def models_equal(self, model_1, model_2):
+        self.assertEqual(len(model_1.wv.vocab), len(model_2.wv.vocab))
+        self.assertEqual(set(model_1.wv.vocab.keys()), set(model_2.wv.vocab.keys()))
+        self.assertTrue(np.allclose(model_1.wv.syn0, model_2.wv.syn0))
+
     def test_data_counts(self):
         """Tests whether data has been loaded correctly and completely."""
         model = PoincareModel(self.data)
@@ -49,6 +60,22 @@ class TestPoincareModel(unittest.TestCase):
         self.assertEqual(len(model.term_relations[model.wv.vocab['kangaroo.n.01'].index]), 3)
         self.assertEqual(len(model.wv.vocab), 7)
         self.assertTrue('mammal.n.01' not in model.term_relations)
+
+    def test_persistence(self):
+        """Tests whether the model is saved and loaded correctly."""
+        model = PoincareModel(self.data, iter=1, burn_in=0)
+        model.train()
+        model.save(testfile())
+        loaded = PoincareModel.load(testfile())
+        self.models_equal(model, loaded)
+
+    def test_persistence_separate_file(self):
+        """Tests whether the model is saved and loaded correctly when the arrays are stored separately."""
+        model = PoincareModel(self.data, iter=1, burn_in=0)
+        model.train()
+        model.save(testfile(), sep_limit=1)
+        loaded = PoincareModel.load(testfile())
+        self.models_equal(model, loaded)
 
     def test_vector_shape(self):
         """Tests whether vectors are initialized with the correct size."""
@@ -70,6 +97,7 @@ class TestPoincareModel(unittest.TestCase):
         self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
 
     def test_wrong_gradients_raises_assertion(self):
+        """Tests that discrepancy in gradients raises an error."""
         model = PoincareModel(self.data, iter=2)
         model.loss_grad = Mock(return_value=np.zeros((2 + model.negative, model.size)))
         with self.assertRaises(AssertionError):
@@ -105,6 +133,13 @@ class TestPoincareModel(unittest.TestCase):
         PoincareModel.handle_duplicates(vector_updates, node_indices)
         vector_updates_expected = np.array([[0.0, 0.0], [0.1, 0.2], [0.8, 0.3]])
         self.assertTrue((vector_updates == vector_updates_expected).all())
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            os.unlink(testfile())
+        except OSError:
+            pass
 
 
 if __name__ == '__main__':
