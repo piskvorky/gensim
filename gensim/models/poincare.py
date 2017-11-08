@@ -121,8 +121,9 @@ class PoincareModel(utils.SaveLoad):
         all_relations = []  # List of all relation pairs
         term_relations = defaultdict(set)  # Mapping from node index to its related node indices
 
+        logger.info("Loading relations from train data..")
         for hypernym_pair in self.train_data:
-            assert len(hypernym_pair) == 2, 'Relation pair has more than two items'
+            assert len(hypernym_pair) == 2, 'Relation pair "%s" should have exactly two items' % hypernym_pair
             for item in hypernym_pair:
                 if item in vocab:
                     vocab[item].count += 1
@@ -134,7 +135,7 @@ class PoincareModel(utils.SaveLoad):
             term_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
             all_relations.append(relation)
-
+        logger.info("Loaded %d relations from train data, %d unique terms", len(all_relations), len(vocab))
         self.wv.vocab = vocab
         self.wv.index2word = index2word
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
@@ -202,7 +203,8 @@ class PoincareModel(utils.SaveLoad):
             while (set(indices) & node_relations) or self.has_duplicates(indices):
                 times_sampled += 1
                 indices = self.get_candidate_negatives()
-            logger.debug('Sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
+            if times_sampled > 1:
+                logger.debug('Sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
         else:
             # If number of positive relations is a significant fraction of total nodes
             # subtract positively connected nodes from set of choices and sample from the remaining
@@ -322,7 +324,7 @@ class PoincareModel(utils.SaveLoad):
                 diff = np.abs(auto_gradients - computed_gradients).max()
                 if diff > max_diff:
                     max_diff = diff
-            logger.info('Max difference between gradients: %.10f', max_diff)
+            logger.info('Max difference between computed gradients and autograd gradients: %.10f', max_diff)
             if max_diff > 1e-8:
                 logger.warning(
                     'Max difference between computed gradients and autograd gradients %.10f, '
@@ -439,11 +441,29 @@ class PoincareModel(utils.SaveLoad):
         check_gradients_every : int, optional
             Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
         """
+        if self.workers > 1:
+            raise NotImplementedError("Multi-threaded version not implemented yet")
+
+        logger.info(
+            "training model of size %d with %d workers on %d relations for %d epochs and %d burn-in epochs, "
+            "using lr=%.5f burn-in lr=%.5f negative=%d",
+            self.size, self.workers, len(self.all_relations), self.iter, self.burn_in,
+            self.alpha, self.burn_in_alpha, self.negative
+        )
+
         if self.burn_in > 0:
+            logger.info("Starting burn-in (%d epochs)----------------------------------------", self.burn_in)
             self.alpha = self.burn_in_alpha
-            self.train_batchwise(epochs=self.burn_in, batch_size=batch_size, print_every=print_every)
+            self.train_batchwise(
+                epochs=self.burn_in, batch_size=batch_size, print_every=print_every,
+                check_gradients_every=check_gradients_every)
+            logger.info("Burn-in finished")
+
         self.alpha = self.train_alpha
-        self.train_batchwise(batch_size=batch_size, print_every=print_every)
+        logger.info("Starting training (%d epochs)----------------------------------------", self.iter)
+        self.train_batchwise(
+            batch_size=batch_size, print_every=print_every, check_gradients_every=check_gradients_every)
+        logger.info("Training finished")
 
     def train_batchwise(self, epochs=None, batch_size=10, print_every=1000, check_gradients_every=1000):
         """
@@ -471,9 +491,10 @@ class PoincareModel(utils.SaveLoad):
             last_time = time.time()
             for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
                 should_print = not (batch_num % print_every)
+                check_gradients = not (batch_num % check_gradients_every)
                 batch_indices = indices[i:i+batch_size]
                 relations = [self.all_relations[idx] for idx in batch_indices]
-                result = self.train_on_batch(relations, check_gradients=check_gradients_every)
+                result = self.train_on_batch(relations, check_gradients=check_gradients)
                 avg_loss += result.loss
                 if should_print:
                     avg_loss /= print_every
