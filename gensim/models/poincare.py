@@ -164,7 +164,7 @@ class PoincareModel(utils.SaveLoad):
             numpy array of shape (`self.negative`,) containing indices of negative nodes.
         """
 
-        if self.negatives_buffer.is_empty():
+        if self.negatives_buffer.num_items() < self.negative:
             # Note: np.random.choice much slower than random.sample for large populations, possible bottleneck
             uniform_numbers = np.random.random(self.negatives_buffer_size)
             cumsum_table_indices = np.searchsorted(self.node_probabilities_cumsum, uniform_numbers)
@@ -790,16 +790,16 @@ class NegativesBuffer(object):
         self.items = items
         self.current_index = 0
 
-    def is_empty(self):
+    def num_items(self):
         """
-        Whether or not buffer has been completely consumed.
+        Returns number of items remaining in the buffer.
 
         Returns
         -------
-        bool
-            If the buffer has been completely consumed.
+        int
+            number of items in the buffer that haven't been consumed yet.
         """
-        return self.current_index >= len(self.items)
+        return len(self.items) - self.current_index
 
     def get_items(self, num_items):
         """
@@ -814,6 +814,11 @@ class NegativesBuffer(object):
         -------
         numpy array or list
             Slice containing `num_items` items from the original data.
+
+        Notes
+        -----
+        No error is raised if less than `num_items` items are remaining,
+        simply all the remaining items are returned.
         """
         start_index = self.current_index
         end_index = start_index + num_items
