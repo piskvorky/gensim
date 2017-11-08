@@ -47,6 +47,7 @@ class TestPoincareData(unittest.TestCase):
 class TestPoincareModel(unittest.TestCase):
     def setUp(self):
         self.data = PoincareData(datapath('poincare_hypernyms.tsv'))
+        self.data_large = PoincareData(datapath('poincare_hypernyms_large.tsv'))
 
     def models_equal(self, model_1, model_2):
         self.assertEqual(len(model_1.wv.vocab), len(model_2.wv.vocab))
@@ -93,7 +94,7 @@ class TestPoincareModel(unittest.TestCase):
 
     def test_training(self):
         """Tests that vectors are different before and after training."""
-        model = PoincareModel(self.data, iter=2, negative=3)
+        model = PoincareModel(self.data_large, iter=2, negative=3)
         old_vectors = np.copy(model.wv.syn0)
         model.train()
         self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
@@ -137,13 +138,13 @@ class TestPoincareModel(unittest.TestCase):
 
     def test_error_if_negative_more_than_population(self):
         """Tests error is rased if number of negatives to sample is more than remaining nodes."""
-        model = PoincareModel(self.data, negative=10)
+        model = PoincareModel(self.data, negative=5)
         with self.assertRaises(ValueError):
             model.train()
 
     def test_no_duplicates_and_positives_in_negative_sample(self):
         """Tests that no duplicates or positively related nodes are present in negative samples."""
-        model = PoincareModel(self.data, negative=3)
+        model = PoincareModel(self.data_large, negative=3)
         positive_nodes = model.term_relations[0]  # Positive nodes for node 0
         num_samples = 100  # Repeat experiment multiple times
         for i in range(num_samples):
