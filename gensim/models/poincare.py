@@ -338,10 +338,9 @@ class PoincareModel(utils.SaveLoad):
                 if diff > max_diff:
                     max_diff = diff
             logger.info('Max difference between computed gradients and autograd gradients: %.10f', max_diff)
-            if max_diff > 1e-8:
-                logger.warning(
+            assert max_diff < 1e-8, (
                     'Max difference between computed gradients and autograd gradients %.10f, '
-                    'greater than tolerance %.10f', max_diff, 1e-8)
+                    'greater than tolerance %.10f' % (max_diff, 1e-8))
         return batch
 
     def sample_negatives_batch(self, nodes):
