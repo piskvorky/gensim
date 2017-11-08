@@ -11,32 +11,31 @@ import hashlib
 import math
 import shutil
 import tempfile
-try:
-    import urllib.request as urllib
-except ImportError:
-    import urllib
+from functools import partial
 
-try:
-    from urllib.request import urlopen
-except ImportError:
+if sys.version_info[0] == 2:
+    import urllib
     from urllib2 import urlopen
+else:
+    import urllib.request as urllib
+    from urllib.request import urlopen
 
 user_dir = os.path.expanduser('~')
 base_dir = os.path.join(user_dir, 'gensim-data')
 logger = logging.getLogger('gensim.api')
 
 
-def _progress(chunks_downloaded, chunk_size, total_size):
+def _progress(chunks_downloaded, chunk_size, total_size, part=1, no_parts=1):
     """Create and update the _progress bar.
 
     Parameters
     ----------
     chunks_downloaded : int
-        Number of chunks of data that have been downloaded
+        Number of chunks of data that have been downloaded.
     chunks_size : int
         Size of each chunk of data.
     total_size : int
-        Total size of the dataset/model
+        Total size of the dataset/model.
 
     References
     ----------
@@ -48,21 +47,28 @@ def _progress(chunks_downloaded, chunk_size, total_size):
     filled_len = int(math.floor((bar_len * size_downloaded) / total_size))
     percent_downloaded = round(((size_downloaded * 100) / total_size), 1)
     bar = '=' * filled_len + '-' * (bar_len - filled_len)
-    sys.stdout.write(
-        '\r[%s] %s%s %s/%sMB downloaded' % (bar, percent_downloaded, "%",
-        round(size_downloaded / (1024 * 1024), 1),
-        round(float(total_size) / (1024 * 1024), 1)))
-    sys.stdout.flush()
+    if no_parts == 1:
+        sys.stdout.write(
+            '\r[%s] %s%s %s/%sMB downloaded' % (bar, percent_downloaded, "%",
+            round(size_downloaded / (1024 * 1024), 1),
+            round(float(total_size) / (1024 * 1024), 1)))
+        sys.stdout.flush()
+    else:
+        sys.stdout.write(
+            '\r Part %s/%s [%s] %s%s %s/%sMB downloaded' % (part + 1, no_parts, bar, percent_downloaded, "%",
+            round(size_downloaded / (1024 * 1024), 1),
+            round(float(total_size) / (1024 * 1024), 1)))
+        sys.stdout.flush()
 
 
 def _create_base_dir():
     """Create the gensim-data directory in home directory, if it has not been already created.
+
     Raises
     ------
-    File Exists Error
-        Give this exception when a file gensim-data already exists in the home directory.
     Exception
-        An exception is raised when read/write permissions are not available
+        An exception is raised when read/write permissions are not available or a file named
+        gensim-data already exists in the home directory.
 
     """
     if not os.path.isdir(base_dir):
@@ -83,6 +89,7 @@ def _create_base_dir():
 
 def _calculate_md5_checksum(tar_file):
     """Calculate the checksum of the given tar.gz file.
+
     Parameters
     ----------
     tar_file : str
@@ -115,7 +122,7 @@ def info(name=None):
     -------
     dict
         Return detailed information about all models/datasets if name is not
-        provided. Otherwise return detailed informtiona of the specific model/dataset
+        provided. Otherwise return detailed informtiona of the specific model/dataset.
 
     Raises
     ------
@@ -123,7 +130,7 @@ def info(name=None):
         If name that has been passed is incorrect, an exception is raised.
 
     """
-    url = "https://raw.githubusercontent.com/chaitaliSaini/gensim-data/master/list.json"
+    url = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
     response = urlopen(url)
     data = response.read().decode("utf-8")
     data = json.loads(data)
@@ -151,12 +158,12 @@ def _get_checksum(name, part=None):
     Parameters
     ----------
     name: str
-        Dataset/model name
+        Dataset/model name.
 
     Returns
     -------
     str
-        Retrieved checksum of dataset/model
+        Retrieved checksum of dataset/model.
 
     """
     data = info()
@@ -169,9 +176,9 @@ def _get_checksum(name, part=None):
             return data['models'][name]["checksum"]
     else:
         if name in corpora:
-            return data['corpora'][name]["checksum-" + str(part)]
+            return data['corpora'][name]["checksum-{}".format(part)]
         elif name in models:
-            return data['models'][name]["checksum-" + str(part)]
+            return data['models'][name]["checksum-{}".format(part)]
 
 
 def _get_parts(name):
@@ -180,11 +187,11 @@ def _get_parts(name):
     Parameters
     ----------
     name: str
-        Dataset/model name
+        Dataset/model name.
 
     Returns
     -------
-    str
+    int
         Number of parts in which dataset/model has been split.
 
     """
@@ -198,45 +205,38 @@ def _get_parts(name):
 
 
 def _download(name):
-    """Download and extract the dataset/model
+    """Download and extract the dataset/model.
 
     Parameters
     ----------
     name: str
-        Dataset/model name which has to be downloaded
-
-    Raises
-    ------
-    Exception
-        If checksum of dowloaded data does not match the retrieved checksum,
-        then downloaded has not been donw properly.
+        Dataset/model name which has to be downloaded.
 
     """
-    url_load_file = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/__init__.py".format(f=name)
+    url_load_file = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/__init__.py".format(f=name)
     data_folder_dir = os.path.join(base_dir, name)
     tmp_dir = tempfile.mkdtemp()
     tmp_load_file_path = os.path.join(tmp_dir, "__init__.py")
     urllib.urlretrieve(url_load_file, tmp_load_file_path)
-    no_parts = int(_get_parts(name))
+    no_parts = _get_parts(name)
     if no_parts > 1:
         concatenated_folder_name = "{f}.tar.gz".format(f=name)
         concatenated_folder_dir = os.path.join(tmp_dir, concatenated_folder_name)
-        for part in range(1, no_parts + 1):
-            url_data = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/{f}.tar.gz_a{p}".format(f=name, p=chr(96 + part))
-            compressed_folder_name = "{f}.tar.gz_a{p}".format(f=name, p=chr(96 + part))
+        for part in range(0, no_parts):
+            url_data = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.tar.gz_0{p}".format(f=name, p=part)
+            compressed_folder_name = "{f}.tar.gz_0{p}".format(f=name, p=part)
             tmp_data_file_dir = os.path.join(tmp_dir, compressed_folder_name)
-            logger.info("Downloading Part %s/%s", part, no_parts)
-            urllib.urlretrieve(url_data, tmp_data_file_dir, reporthook=_progress)
+            urllib.urlretrieve(url_data, tmp_data_file_dir, reporthook=partial(_progress, part=part, no_parts=no_parts))
             if _calculate_md5_checksum(tmp_data_file_dir) == _get_checksum(name, part):
                 sys.stdout.write("\n")
                 sys.stdout.flush()
-                logger.info("Part %s/%s downloaded", part, no_parts)
+                logger.info("Part %s/%s downloaded", part + 1, no_parts)
             else:
                 shutil.rmtree(tmp_dir)
                 raise Exception("There was a problem in downloading the data. We recommend you to re-try.")
         with open(concatenated_folder_dir, 'wb') as wfp:
-            for part in range(1, no_parts + 1):
-                part_path = os.path.join(tmp_dir, "{f}.tar.gz_a{p}".format(f=name, p=chr(96 + part)))
+            for part in range(0, no_parts):
+                part_path = os.path.join(tmp_dir, "{f}.tar.gz_0{p}".format(f=name, p=part))
                 with open(part_path, "rb") as rfp:
                     shutil.copyfileobj(rfp, wfp)
                 os.remove(part_path)
@@ -245,7 +245,7 @@ def _download(name):
         os.remove(concatenated_folder_dir)
         os.rename(tmp_dir, data_folder_dir)
     else:
-        url_data = "https://github.com/chaitaliSaini/gensim-data/releases/download/{f}/{f}.tar.gz".format(f=name)
+        url_data = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.tar.gz".format(f=name)
         compressed_folder_name = "{f}.tar.gz".format(f=name)
         tmp_data_file_dir = os.path.join(tmp_dir, compressed_folder_name)
         urllib.urlretrieve(url_data, tmp_data_file_dir, reporthook=_progress)
@@ -292,13 +292,13 @@ def load(name, return_path=False):
     Parameters
     ----------
     name: str
-        Name of the model/dataset
+        Name of the model/dataset.
     return_path: False or True, optional
 
     Returns
     -------
     data:
-        Load model to memory
+        Load model to memory.
     data_dir: str
         Return path of dataset/model.
 

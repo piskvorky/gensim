@@ -20,21 +20,21 @@ class TestApi(unittest.TestCase):
     def test_load_dataset(self):
         user_dir = os.path.expanduser('~')
         base_dir = os.path.join(user_dir, 'gensim-data')
-        data_dir = os.path.join(base_dir, "matrix-synopsis")
+        data_dir = os.path.join(base_dir, "__testing_matrix-synopsis")
         dataset_path = os.path.join(data_dir, "matrix-synopsis.txt")
         if os.path.isdir(base_dir):
             shutil.rmtree(base_dir)
-        self.assertEqual(api.load("matrix-synopsis"), dataset_path)
+        self.assertEqual(api.load("__testing_matrix-synopsis"), dataset_path)
         shutil.rmtree(base_dir)
 
     def test_return_path_dataset(self):
         user_dir = os.path.expanduser('~')
         base_dir = os.path.join(user_dir, 'gensim-data')
-        data_dir = os.path.join(base_dir, "matrix-synopsis")
+        data_dir = os.path.join(base_dir, "__testing_matrix-synopsis")
         dataset_path = os.path.join(data_dir, "matrix-synopsis.txt")
         if os.path.isdir(base_dir):
             shutil.rmtree(base_dir)
-        self.assertEqual(dataset_path, api.load("matrix-synopsis", return_path=True))
+        self.assertEqual(dataset_path, api.load("__testing_matrix-synopsis", return_path=True))
         shutil.rmtree(base_dir)
 
     def test_load_model(self):
@@ -53,7 +53,7 @@ class TestApi(unittest.TestCase):
             -0.10245913, 0.1170633, 0.16583319, 0.1183883, -0.11217165,
             0.1261425, -0.0319365, -0.15787181, 0.03753783, 0.14748634,
             0.00414471, -0.02296237, 0.18336892, -0.23840059, 0.17924534])
-        model = api.load("word2vec-matrix-synopsis")
+        model = api.load("__testing_word2vec-matrix-synopsis")
         vector_dead_calc = model["dead"]
         self.assertTrue(np.allclose(vector_dead, vector_dead_calc))
         shutil.rmtree(base_dir)
@@ -61,13 +61,22 @@ class TestApi(unittest.TestCase):
     def test_return_path_model(self):
         user_dir = os.path.expanduser('~')
         base_dir = os.path.join(user_dir, 'gensim-data')
-        data_dir = os.path.join(base_dir, "word2vec-matrix-synopsis")
+        data_dir = os.path.join(base_dir, "__testing_word2vec-matrix-synopsis")
         model_path = os.path.join(data_dir, "word2vec-matrix-synopsis.txt")
         if os.path.isdir(base_dir):
             shutil.rmtree(base_dir)
-        self.assertEqual(model_path, api.load("word2vec-matrix-synopsis", return_path=True))
+        self.assertEqual(model_path, api.load("__testing_word2vec-matrix-synopsis", return_path=True))
         shutil.rmtree(base_dir)
 
+    def test_multipart_download(self):
+        user_dir = os.path.expanduser('~')
+        base_dir = os.path.join(user_dir, 'gensim-data')
+        data_dir = os.path.join(base_dir, '__testing_multipart-matrix-synopsis')
+        dataset_path = os.path.join(data_dir, 'matrix-synopsis.txt')
+        if os.path.isdir(base_dir):
+            shutil.rmtree(base_dir)
+        self.assertEqual(dataset_path, api.load("__testing_multipart-matrix-synopsis", return_path=True))
+        shutil.rmtree(base_dir)
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
