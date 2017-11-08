@@ -294,6 +294,18 @@ class PoincareModel(utils.SaveLoad):
                 vectors[norms >= threshold] -= np.sign(vectors[norms >= threshold]) * epsilon
                 return vectors
 
+    def save(self, *args, **kwargs):
+        """Save complete model to disk, inherited from `utils.SaveLoad`"""
+        self.loss_grad = None  # Can't pickle autograd fn to disk
+        super(PoincareModel, self).save(*args, **kwargs)
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """Load model from disk, inherited from `utils.SaveLoad`"""
+        model = super(PoincareModel, cls).load(*args, **kwargs)
+        model.loss_grad = grad(PoincareModel.loss_fn)  # autograd fn not pickled to disk
+        return model
+
     def prepare_training_batch(self, relations, all_negatives, check_gradients=False):
         """
         Creates training batch and computes gradients and loss for the batch.
