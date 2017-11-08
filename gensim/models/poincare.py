@@ -82,6 +82,18 @@ class PoincareModel(utils.SaveLoad):
         --------
         PoincareModel instance
 
+        Examples
+        --------
+        Initialize a model from a list::
+
+        >>> model = PoincareModel(list_of_relations)
+
+        Initialize a model from a file containing one relation per line::
+
+        >>> model = PoincareModel(PoincareData(file_path))
+
+        See `PoincareData` for more options.
+
         """
         self.train_data = train_data
         self.wv = KeyedVectors()
