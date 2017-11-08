@@ -193,7 +193,7 @@ class PoincareModel(utils.SaveLoad):
             # re-sample till no positively connected nodes are chosen
             indices = self.get_candidate_negatives()
             times_sampled = 1
-            while len(set(indices) & node_relations) or self.has_duplicates(indices):
+            while (set(indices) & node_relations) or self.has_duplicates(indices):
                 times_sampled += 1
                 indices = self.get_candidate_negatives()
             logger.debug('Sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
@@ -299,8 +299,7 @@ class PoincareModel(utils.SaveLoad):
             u, v = relation
             indices_u.append(u)
             indices_v.append(v)
-            for negative in negatives:
-                indices_v.append(negative)
+            indices_v.extend(negatives)
 
         vectors_u = self.wv.syn0[indices_u]
         vectors_v = self.wv.syn0[indices_v].reshape((batch_size, 1 + self.negative, self.size))
