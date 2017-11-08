@@ -78,6 +78,7 @@ class TestApi(unittest.TestCase):
         self.assertEqual(dataset_path, api.load("__testing_multipart-matrix-synopsis", return_path=True))
         shutil.rmtree(base_dir)
 
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
