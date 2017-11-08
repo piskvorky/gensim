@@ -78,8 +78,8 @@ class TestWord2VecModel(unittest.TestCase):
         model_neg = word2vec.Word2Vec(size=10, min_count=0, seed=42, hs=0, negative=5)
         model_hs.build_vocab_from_freq(freq_dict)
         model_neg.build_vocab_from_freq(freq_dict)
-        self.assertTrue(len(model_hs.wv.vocab), 12)
-        self.assertTrue(len(model_neg.wv.vocab), 12)
+        self.assertEqual(len(model_hs.wv.vocab), 12)
+        self.assertEqual(len(model_neg.wv.vocab), 12)
         self.assertEqual(model_hs.wv.vocab['minors'].count, 2)
         self.assertEqual(model_hs.wv.vocab['graph'].count, 3)
         self.assertEqual(model_hs.wv.vocab['system'].count, 4)
@@ -107,10 +107,41 @@ class TestWord2VecModel(unittest.TestCase):
         new_freq_dict = {'computer': 1, 'artificial': 4, 'human': 1, 'graph': 1, 'intelligence': 4, 'system': 1, 'trees': 1}
         model_hs.build_vocab_from_freq(new_freq_dict, update=True)
         model_neg.build_vocab_from_freq(new_freq_dict, update=True)
-        self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
-        self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
+        self.assertEqual(model_hs.wv.vocab['graph'].count, 4)
+        self.assertEqual(model_hs.wv.vocab['artificial'].count, 4)
         self.assertEqual(len(model_hs.wv.vocab), 14)
         self.assertEqual(len(model_neg.wv.vocab), 14)
+
+    def testPruneVocab(self):
+        """Test Prune vocab while scanning sentences"""
+        sentences = [
+            ["graph", "system"],
+            ["graph", "system"],
+            ["system", "eps"],
+            ["graph", "system"]
+        ]
+        model = word2vec.Word2Vec(sentences, size=10, min_count=0, max_vocab_size=2, seed=42, hs=1, negative=0)
+        self.assertEqual(len(model.wv.vocab), 2)
+        self.assertEqual(model.wv.vocab['graph'].count, 3)
+        self.assertEqual(model.wv.vocab['system'].count, 4)
+
+        sentences = [
+            ["graph", "system"],
+            ["graph", "system"],
+            ["system", "eps"],
+            ["graph", "system"],
+            ["minors", "survey", "minors", "survey", "minors"]
+        ]
+        model = word2vec.Word2Vec(sentences, size=10, min_count=0, max_vocab_size=2, seed=42, hs=1, negative=0)
+        self.assertEqual(len(model.wv.vocab), 3)
+        self.assertEqual(model.wv.vocab['graph'].count, 3)
+        self.assertEqual(model.wv.vocab['minors'].count, 3)
+        self.assertEqual(model.wv.vocab['system'].count, 4)
+
+    def testTotalWordCount(self):
+        model = word2vec.Word2Vec(size=10, min_count=0, seed=42)
+        total_words = model.scan_vocab(sentences)
+        self.assertEqual(total_words, 29)
 
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
