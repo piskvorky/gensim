@@ -172,6 +172,19 @@ class PoincareModel(utils.SaveLoad):
 
     @staticmethod
     def has_duplicates(array):
+        """
+        Returns whether or not the input array has any duplicates.
+
+        Parameters
+        ----------
+        array : iterable of hashables
+            input array to checked, should contain hashable items.
+
+        Returns
+        -------
+        bool
+            Whether the input array contains any duplicates
+        """
         seen = set()
         for value in array:
             if value in seen:
@@ -385,7 +398,7 @@ class PoincareModel(utils.SaveLoad):
         -----
         Mutates the `vector_updates` array.
 
-        Required because array[[2, 1, 2]] += np.array([-0.5, 1.0, 0.5]) performs only the last update
+        Required because vectors[[2, 1, 2]] += np.array([-0.5, 1.0, 0.5]) performs only the last update
         on the row at index 2.
         """
         counts = Counter(node_indices)
