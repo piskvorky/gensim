@@ -31,7 +31,7 @@ from collections import defaultdict, Counter
 from numpy import random as np_random
 from smart_open import smart_open
 
-from gensim import utils
+from gensim import utils, matutils
 from gensim.models.keyedvectors import KeyedVectors, Vocab
 from gensim.models.word2vec import Word2Vec
 
@@ -96,7 +96,7 @@ class PoincareModel(utils.SaveLoad):
 
         """
         self.train_data = train_data
-        self.wv = KeyedVectors()
+        self.wv = PoincareKeyedVectors()
         self.size = size
         self.train_alpha = alpha  # Learning rate for training
         self.burn_in_alpha = burn_in_alpha  # Learning rate for burn-in
@@ -693,7 +693,79 @@ class PoincareKeyedVectors(KeyedVectors):
                     (euclidean_dist ** 2) / ((1 - norm_1 ** 2) * (1 - norm_2 ** 2))
                 )
             )
-    # TODO: Add other KeyedVector supported methods - most_similar, etc.
+
+    def most_similar(self, term, topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar terms to the given term, sorted in increasing order of Poincare distance.
+
+        Parameters
+        ----------
+
+        term : str
+            term for which similar terms are to be found.
+        topn : int or None, optional
+            number of similar terms to return, if `None`, returns all.
+        restrict_vocab : int or None, optional
+            limits the range of vectors which are searched for most-similar values.
+            For example, restrict_vocab=10000 would only check the first 10000 vectors in the vocabulary order.
+            (This may be meaningful if you've sorted the vocabulary by descending frequency.)
+
+        Returns
+        --------
+        list of tuples (str, float)
+            list of tuples containing (term, distance) pairs in increasing order of Poincare distance.
+
+        Examples
+        --------
+        >>> model.wv.most_similar('lion.n.01')
+        [('lion_cub.n.01', 0.4484), ('lionet.n.01', 0.6552), ...]
+
+        """
+        dists = self.get_all_distances(term)
+        term_index = self.vocab[term].index
+        if not topn:
+            return dists
+        closest_indices = matutils.argsort(dists, topn=1 + topn)
+        result = [
+            (self.index2word[index], float(dists[index]))
+            for index in closest_indices if index != term_index  # ignore the input term
+        ]
+        return result[:topn]
+
+    def get_all_distances(self, term):
+        """
+        Return Poincare distances to all terms for given term, including itself.
+        Distances are indexed by node indices.
+
+        Parameters
+        ----------
+        term : str
+            term from which distances are to be found.
+
+        Returns
+        -------
+        numpy array
+            numpy array containing distances to all terms from input `term`, indexed by node indices.
+            e.g. distances[0] is the distance to node with index 0 from node with key `term`.
+
+        Examples
+        --------
+
+          >>> model.get_all_distances('mammal.n.01')
+          np.array([2.1199, 2.0710, 9.5088, ...]
+        """
+        term_vector = self.word_vec(term)
+        all_vectors = self.syn0
+
+        euclidean_dists = np.linalg.norm(term_vector - all_vectors, axis=1)
+        norm = np.linalg.norm(term_vector)
+        all_norms = np.linalg.norm(all_vectors, axis=1)
+        return np.arccosh(
+            1 + 2 * (
+                (euclidean_dists ** 2) / ((1 - norm ** 2) * (1 - all_norms ** 2))
+            )
+        )
+    # TODO: Add other KeyedVector supported methods.
 
 
 class PoincareData(object):
