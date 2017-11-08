@@ -421,15 +421,26 @@ class PoincareModel(utils.SaveLoad):
         self.wv.syn0[indices_v] -= v_updates
         self.wv.syn0[indices_v] = self.clip_vectors(self.wv.syn0[indices_v], self.epsilon)
 
-    def train(self, batch_size=10, print_every=1000):
-        """Trains Poincare embeddings using loaded data and model parameters."""
+    def train(self, batch_size=10, print_every=1000, check_gradients_every=1000):
+        """
+        Trains Poincare embeddings using loaded data and model parameters.
+
+        Parameters
+        ----------
+        batch_size : int, optional
+            Number of examples to train on in a single batch, defaults to 10.
+        print_every : int, optional
+            Prints progress and average loss after every `print_every` batches, defaults to 1000.
+        check_gradients_every : int, optional
+            Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
+        """
         if self.burn_in > 0:
             self.alpha = self.burn_in_alpha
             self.train_batchwise(epochs=self.burn_in, batch_size=batch_size, print_every=print_every)
         self.alpha = self.train_alpha
         self.train_batchwise(batch_size=batch_size, print_every=print_every)
 
-    def train_batchwise(self, epochs=None, batch_size=10, print_every=1000):
+    def train_batchwise(self, epochs=None, batch_size=10, print_every=1000, check_gradients_every=1000):
         """
         Trains Poincare embeddings using specified parameters.
 
@@ -439,8 +450,10 @@ class PoincareModel(utils.SaveLoad):
             Number of epochs after which training ends, if `None`, runs for `self.iter` epochs, default `None`.
         batch_size : int, optional
             Number of examples to train on in a single batch, defaults to 10.
-        print_every : int or None, optional
+        print_every : int, optional
             Prints progress and average loss after every `print_every` batches, defaults to 1000.
+        check_gradients_every : int, optional
+            Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
         """
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
@@ -455,7 +468,7 @@ class PoincareModel(utils.SaveLoad):
                 should_print = not (batch_num % print_every)
                 batch_indices = indices[i:i+batch_size]
                 relations = [self.all_relations[idx] for idx in batch_indices]
-                result = self.train_on_batch(relations, check_gradients=should_print)
+                result = self.train_on_batch(relations, check_gradients=check_gradients_every)
                 avg_loss += result.loss
                 if should_print:
                     avg_loss /= print_every
