@@ -3,6 +3,26 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+"""
+This module contains methods for parsing strings. Let's consider the most noticeable:
+:func:`~gensim.parsing.preprocessing.remove_stopwords` - take string, remove all words those are among stopwords;
+:func:`~gensim.parsing.preprocessing.preprocess_string` -  take string, apply list of chosen filters to it,
+where filters are methods from this module.
+
+Examples
+--------
+>>> from gensim.parsing.preprocessing import remove_stopwords
+>>> s = "Better late than never, but better never late."
+>>> remove_stopwords(s)
+u'Better late never, better late.'
+
+>>> from gensim.parsing.preprocessing import preprocess_string
+>>> s = "<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?"
+>>> preprocess_string(s)
+[u'hel', u'rld', u'weather', u'todai', u'isn'
+
+"""
+
 import re
 import string
 import glob
@@ -36,22 +56,30 @@ various very very via
 was we well were what whatever when whence whenever where whereafter whereas whereby wherein whereupon wherever whether which while whither who whoever whole whom whose why will with within without would yet you
 your yours yourself yourselves
 """
-STOPWORDS = frozenset(w for w in STOPWORDS.split() if w)
+
 # set of stopwords for :func:`~gensim.parsing.preprocessing.remove_stopwords`.
-RE_PUNCT = re.compile(r'([%s])+' % re.escape(string.punctuation), re.UNICODE)
+STOPWORDS = frozenset(w for w in STOPWORDS.split() if w)
+
 # remove punctuation according to :func:`~gensim.parsing.preprocessing.strip_punctuation`.
-RE_TAGS = re.compile(r"<([^>]+)>", re.UNICODE)
+RE_PUNCT = re.compile(r'([%s])+' % re.escape(string.punctuation), re.UNICODE)
+
 # remove tags according to :func:`~gensim.parsing.preprocessing.strip_tags`.
-RE_NUMERIC = re.compile(r"[0-9]+", re.UNICODE)
+RE_TAGS = re.compile(r"<([^>]+)>", re.UNICODE)
+
 # remove digits according to :func:`~gensim.parsing.preprocessing.strip_numeric`.
-RE_NONALPHA = re.compile(r"\W", re.UNICODE)
+RE_NUMERIC = re.compile(r"[0-9]+", re.UNICODE)
+
 # remove not a word characters according to :func:`~gensim.parsing.preprocessing.non_alphanum`.
-RE_AL_NUM = re.compile(r"([a-z]+)([0-9]+)", flags=re.UNICODE)
+RE_NONALPHA = re.compile(r"\W", re.UNICODE)
+
 # add spaces between letters & digits according to :func:`~gensim.parsing.preprocessing.split_alphanum`.
-RE_NUM_AL = re.compile(r"([0-9]+)([a-z]+)", flags=re.UNICODE)
+RE_AL_NUM = re.compile(r"([a-z]+)([0-9]+)", flags=re.UNICODE)
+
 # add spaces between digits & letters according to :func:`~gensim.parsing.preprocessing.split_alphanum`.
-RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
+RE_NUM_AL = re.compile(r"([0-9]+)([a-z]+)", flags=re.UNICODE)
+
 # remove repeating in a row whitespace characters according to :func:`~gensim.parsing.preprocessing.multiple_whitespaces`.
+RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
 
 
 def remove_stopwords(s):
