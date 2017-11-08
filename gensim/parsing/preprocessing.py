@@ -3,8 +3,7 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-This module contains methods for parsing strings. Let's consider the most noticeable:
+"""This module contains methods for parsing and preprocessing strings. Let's consider the most noticeable:
 :func:`~gensim.parsing.preprocessing.remove_stopwords` - take string, remove all words those are among stopwords;
 :func:`~gensim.parsing.preprocessing.preprocess_string` -  take string, apply list of chosen filters to it,
 where filters are methods from this module.

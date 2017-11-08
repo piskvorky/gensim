@@ -32,17 +32,25 @@ Optimizations and cleanup of the code by Lars Buitinck, July 2012.
 
 --------------------------------------------------------------------
 
-The main part of the stemming algorithm starts in :func:`~gensim.parsing.porter.PorterStemmer`.
+The main part of the stemming algorithm (https://en.wikipedia.org/wiki/Stemming)
+starts in :func:`~gensim.parsing.porter.PorterStemmer`.
 b is a buffer holding a word to be stemmed. The letters are in b[0],
 b[1] ... ending at b[k]. k is readjusted downwards as the stemming
 progresses. j is word length.
 
-Example
---------
+Examples:
+    
 >>> from gensim.parsing.porter import PorterStemmer
 >>> p = PorterStemmer()
->>> print "b (word) = ", p.b, " ,k (readjusted downwards as the stemming progresses) = ", p.k, " ,j (word length) = ", p.j
-b =    ,k =  0  ,j =  0
+>>> text = "Cats and ponies have meeting"
+>>> p.stem_sentence(text)
+'cat and poni have meet'
+
+>>> from gensim.parsing.porter import PorterStemmer
+>>> p = PorterStemmer()
+>>> docs = ["Cats and ponies", "have meeting"]
+>>> p.stem_documents(docs)
+['cat and poni', 'have meet']
 
 """
 
