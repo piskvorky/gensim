@@ -75,6 +75,25 @@ class ModelDictionary():
     """
 
     def __init__(self, t, bucket, minn, maxn, max_vocab_size=30000000, max_line_size=1024):
+        """
+        Initialize a sent2vec dictionary.
+
+        `t` = threshold for configuring which higher-frequency words are randomly downsampled;
+            default is 1e-3, useful range is (0, 1e-5).
+
+        `bucket` = Number of hash buckets for vocabulary. Default is 2000000.
+
+        `minn` = min length of char ngrams. Default is 3.
+
+        `maxn` = max length of char ngrams. Default is 6.
+
+        `max_vocab_size` = limit RAM during vocabulary building; if there are more unique
+        words than this, then prune the infrequent ones. Every 10 million word types
+        need about 1GB of RAM. Set to `None` for no limit (default).
+
+        `max_line_size` = maximum number of characters in a sentence.
+        """
+
         self.max_vocab_size = max_vocab_size
         self.max_line_size = max_line_size
         self.words = []
@@ -90,6 +109,8 @@ class ModelDictionary():
     def hash_(self, word):
         """
         Compute hash of given word.
+
+        `word` is the actual vocabulary word.
         """
 
         h = 2166136261
@@ -101,6 +122,8 @@ class ModelDictionary():
     def find(self, word):
         """
         Find hash of given word. The word may or may not be present in the vocabulary.
+
+        `word` is the actual vocabulary word.
         """
 
         h = self.hash_(word) % self.max_vocab_size
@@ -111,6 +134,8 @@ class ModelDictionary():
     def add(self, word):
         """
         Add given word to vocabulary.
+
+        `word` is the actual vocabulary word.
         """
 
         h = self.find(word)
@@ -128,7 +153,7 @@ class ModelDictionary():
         Process all words present in sentences (where each sentence is a list of unicode strings).
         Initialize discard table to downsample higher frequency words according to given sampling threshold.
         Also initialize character ngrams for all words and threshold lower frequency words if their count
-        is less than a given value.
+        is less than a given value (min_count).
         """
 
         min_threshold = 1
@@ -330,6 +355,10 @@ class Sent2Vec(SaveLoad):
         self.dropoutk = dropoutk
 
     def negative_sampling(self, target, lr):
+        """
+        Get loss using negative sampling.
+        """
+
         loss = 0.0
         self.grad = np.zeros(self.vector_size)
         for i in range(self.neg + 1):
@@ -340,9 +369,17 @@ class Sent2Vec(SaveLoad):
         return loss
 
     def sigmoid(self, val):
+        """
+        Compute sigmoid of a particular value.
+        """
+
         return 1.0 / (1.0 + np.exp(-val))
 
     def binary_logistic(self, target, label, lr):
+        """
+        Compute loss for given target, label and learning rate using binary logistic regression.
+        """
+
         score = self.sigmoid(np.dot(self.wo[target], self.hidden))
         alpha = lr * (float(label) - score)
         self.grad += self.wo[target] * alpha
@@ -353,6 +390,12 @@ class Sent2Vec(SaveLoad):
             return -np.log(1.0 - score)
 
     def init_table_negatives(self, counts):
+        """
+        Initialise table of negatives for negative sampling.
+
+        `counts` is a list of counts of all words in the vocabulary.
+        """
+
         z = 0.0
         for i in range(len(counts)):
             z += counts[i] ** 0.5
@@ -363,6 +406,10 @@ class Sent2Vec(SaveLoad):
         random.shuffle(self.negatives)
 
     def get_negative(self, target):
+        """
+        Get a negative from the list of negatives for caluculating nagtive sampling loss.
+        """
+
         while True:
             negative = self.negatives[self.negpos]
             self.negpos = (self.negpos + 1) % len(self.negatives)
@@ -371,6 +418,10 @@ class Sent2Vec(SaveLoad):
         return negative
 
     def update(self, input_, target, lr):
+        """
+        Update model's neural weights for given context, target word and learning rate.
+        """
+
         assert(target >= 0)
         assert(target < self.dict.size)
         if len(input_) == 0:
