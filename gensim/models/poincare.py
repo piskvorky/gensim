@@ -144,8 +144,7 @@ class PoincareModel(utils.SaveLoad):
         self.node_probabilities_cumsum = np.cumsum(self.node_probabilities)
         self.all_relations = all_relations
         self.term_relations = term_relations
-        self.negatives_buffer = []  # Buffer to store negative samples, to reduce calls to sampling method
-        self.negatives_buffer_index = 0  # Position in buffer till which samples have been consumed
+        self.negatives_buffer = NegativesBuffer([])  # Buffer to store negative samples, to reduce calls to sampling method
         self.negatives_buffer_size = 2000
 
     def init_embeddings(self):
@@ -163,17 +162,12 @@ class PoincareModel(utils.SaveLoad):
             numpy array of shape (`self.negative`,) containing indices of negative nodes.
         """
 
-        if self.negatives_buffer_index >= len(self.negatives_buffer):
+        if self.negatives_buffer.is_empty():
             # Note: np.random.choice much slower than random.sample for large populations, possible bottleneck
             uniform_numbers = np.random.random(self.negatives_buffer_size)
             cumsum_table_indices = np.searchsorted(self.node_probabilities_cumsum, uniform_numbers)
-            self.negatives_buffer = self.indices_array[cumsum_table_indices]
-            self.negatives_buffer_index = 0
-        start_index = self.negatives_buffer_index
-        end_index = start_index + self.negative
-        candidate_negatives = self.negatives_buffer[start_index:end_index]
-        self.negatives_buffer_index += self.negative
-        return candidate_negatives
+            self.negatives_buffer = NegativesBuffer(cumsum_table_indices)
+        return self.negatives_buffer.get_items(self.negative)
 
     @staticmethod
     def has_duplicates(array):
@@ -670,7 +664,7 @@ class PoincareKeyedVectors(KeyedVectors):
 
 class PoincareData(object):
     """
-    Class to stream hypernym relations for `PoincareModel` from a tsv-like file
+    Class to stream hypernym relations for `PoincareModel` from a tsv-like file.
 
     """
     def __init__(self, file_path, encoding='utf8', delimiter='\t'):
@@ -720,4 +714,56 @@ class PoincareData(object):
         reader = csv.reader(self.stream_lines(), delimiter=self.delimiter)
         for row in reader:
             yield tuple(row)
+
+class NegativesBuffer(object):
+    """
+    Class to buffer and return negative samples.
+
+    """
+    def __init__(self, items):
+        """
+        Initialize instance from list or numpy array of samples.
+
+        Parameters
+        ----------
+        items : list/numpy array
+            list or numpy array containing negative samples.
+
+        Returns
+        -------
+        NegativesBuffer instance
+        """
+
+        self.items = items
+        self.current_index = 0
+
+    def is_empty(self):
+        """
+        Whether or not buffer has been completely consumed.
+
+        Returns
+        -------
+        bool
+            If the buffer has been completely consumed.
+        """
+        return self.current_index >= len(self.items)
+
+    def get_items(self, num_items):
+        """
+        Returns next `num_items` from buffer.
+
+        Parameters
+        ----------
+        num_items : int
+            number of items to fetch.
+
+        Returns
+        -------
+        numpy array or list
+            Slice containing `num_items` items from the original data.
+        """
+        start_index = self.current_index
+        end_index = start_index + num_items
+        self.current_index += num_items
+        return self.items[start_index:end_index]
 
