@@ -39,8 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 class PoincareModel(utils.SaveLoad):
-    """
-    Class for training, using and evaluating Poincare Embeddings described in https://arxiv.org/pdf/1705.08039.pdf
+    """Class for training, using and evaluating Poincare Embeddings.
 
     The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in the word2vec
     format via `wv.save_word2vec_format()` and `KeyedVectors.load_word2vec_format()`.
@@ -52,17 +51,16 @@ class PoincareModel(utils.SaveLoad):
     def __init__(
         self, train_data, size=50, alpha=0.1, negative=10, iter=50,
         workers=1, epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, seed=0):
-        """
-        Initialize and train a Poincare embedding model from an iterable of transitive closure relations.
+        """Initialize and train a Poincare embedding model from an iterable of transitive closure relations.
 
         Parameters
         ----------
-        train_file : iterable
-            iterable of hypernym pairs, e.g. a list of tuples, or a PoincareData instance streaming from a file.
+        train_data : iterable of (str, str)
+            Iterable of relations, e.g. a list of tuples, or a PoincareData instance streaming from a file.
         size : int, optional
             Number of dimensions of the trained model.
         alpha : float, optional
-            learning rate for training.
+            Learning rate for training.
         negative : int, optional
             Number of negative samples to use.
         iter : int, optional
@@ -76,11 +74,7 @@ class PoincareModel(utils.SaveLoad):
         burn_in_alpha : float, optional
             learning rate for burn-in initialization, ignored if `burn_in` is 0.
         seed : int, optional
-            seed for random to ensure reproducibility.
-
-        Returns
-        --------
-        PoincareModel instance
+            Seed for random to ensure reproducibility.
 
         Examples
         --------
@@ -155,13 +149,13 @@ class PoincareModel(utils.SaveLoad):
         self.wv.syn0 = self.np_random.uniform(self.init_range[0], self.init_range[1], shape)
 
     def get_candidate_negatives(self):
-        """
-        Returns candidate negatives of size `self.negative` from the negative examples buffer.
+        """Returns candidate negatives of size `self.negative` from the negative examples buffer.
 
         Returns
         --------
-        numpy array
-            numpy array of shape (`self.negative`,) containing indices of negative nodes.
+        numpy.array
+            Array of shape (`self.negative`,) containing indices of negative nodes.
+
         """
 
         if self.negatives_buffer.num_items() < self.negative:
@@ -173,18 +167,18 @@ class PoincareModel(utils.SaveLoad):
 
     @staticmethod
     def has_duplicates(array):
-        """
-        Returns whether or not the input array has any duplicates.
+        """Returns whether or not the input array has any duplicates.
 
         Parameters
         ----------
         array : iterable of hashables
-            input array to checked, should contain hashable items.
+            Input array to checked, should contain hashable items.
 
         Returns
         -------
         bool
-            Whether the input array contains any duplicates
+            Whether the input array contains any duplicates.
+
         """
         seen = set()
         for value in array:
@@ -194,18 +188,18 @@ class PoincareModel(utils.SaveLoad):
         return False
 
     def sample_negatives(self, node_index):
-        """
-        Return a sample of negatives for the given node.
+        """Return a sample of negatives for the given node.
 
         Parameters
         ----------
         node_index : int
-            index of the positive node for which negative samples are to be returned.
+            Index of the positive node for which negative samples are to be returned.
 
         Returns
         --------
-        numpy array
-            numpy array of shape (self.negative,) containing indices of negative nodes for the given node index.
+        numpy.array
+            Array of shape (self.negative,) containing indices of negative nodes for the given node index.
+
         """
         node_relations = self.term_relations[node_index]
         num_remaining_nodes = len(self.wv.vocab) - len(node_relations)
@@ -238,22 +232,22 @@ class PoincareModel(utils.SaveLoad):
 
     @staticmethod
     def loss_fn(matrix):
-        """
-        Given a numpy array with vectors for u, v and negative samples, computes loss value.
+        """Given a numpy array with vectors for u, v and negative samples, computes loss value.
 
         Parameters
         ----------
-        matrix : numpy array
-            numpy array containing vectors for u, v and negative samples, of shape (2 + negative_size, dim).
+        matrix : numpy.array
+            Array containing vectors for u, v and negative samples, of shape (2 + negative_size, dim).
 
         Returns
         -------
         float
-            computed loss value.
+            Computed loss value.
 
         Notes
         -----
         Only used for autograd gradients, since autograd requires a specific function signature.
+
         """
         vector_u = matrix[0]
         vector_v = matrix[1]
@@ -269,20 +263,20 @@ class PoincareModel(utils.SaveLoad):
 
     @staticmethod
     def clip_vectors(vectors, epsilon):
-        """
-        Clip vectors to have a norm of less than one.
+        """Clip vectors to have a norm of less than one.
 
         Parameters
         ----------
-        vectors : numpy array
-            can be 1-D,or 2-D (in which case the norm for each row is checked).
+        vectors : numpy.array
+            Can be 1-D,or 2-D (in which case the norm for each row is checked).
         epsilon : float
-            parameter for numerical stability, each dimension of the vector is reduced by `epsilon`
+            Parameter for numerical stability, each dimension of the vector is reduced by `epsilon`
             if the norm of the vector is greater than or equal to 1.
+
         Returns
         -------
-        numpy array
-            numpy array with norms clipped below 1.
+        numpy.array
+            Array with norms clipped below 1.
 
         """
         one_d = len(vectors.shape) == 1
@@ -303,35 +297,35 @@ class PoincareModel(utils.SaveLoad):
                 return vectors
 
     def save(self, *args, **kwargs):
-        """Save complete model to disk, inherited from `utils.SaveLoad`"""
+        """Save complete model to disk, inherited from `utils.SaveLoad`."""
         self.loss_grad = None  # Can't pickle autograd fn to disk
         super(PoincareModel, self).save(*args, **kwargs)
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Load model from disk, inherited from `utils.SaveLoad`"""
+        """Load model from disk, inherited from `utils.SaveLoad`."""
         model = super(PoincareModel, cls).load(*args, **kwargs)
         model.loss_grad = grad(PoincareModel.loss_fn)  # autograd fn not pickled to disk
         return model
 
     def prepare_training_batch(self, relations, all_negatives, check_gradients=False):
-        """
-        Creates training batch and computes gradients and loss for the batch.
+        """Creates training batch and computes gradients and loss for the batch.
 
         Parameters
         ----------
 
         relations : list of tuples
-            list of tuples of positive examples of the form (node_1_index, node_2_index).
+            List of tuples of positive examples of the form (node_1_index, node_2_index).
         all_negatives : list of lists
-            list of lists of negative samples for each node_1 in the positive examples.
+            List of lists of negative samples for each node_1 in the positive examples.
         check_gradients : bool, optional
-            whether to compare the computed gradients to autograd gradients for this batch.
+            Whether to compare the computed gradients to autograd gradients for this batch.
 
         Returns
         -------
         PoincareBatch instance
-            contains node indices, computed gradients and loss for the batch.
+            Contains node indices, computed gradients and loss for the batch.
+
         """
         batch_size = len(relations)
         all_vectors = []
@@ -364,37 +358,37 @@ class PoincareModel(utils.SaveLoad):
         return batch
 
     def sample_negatives_batch(self, nodes):
-        """
-        Return negative examples for each node in the given nodes.
+        """Return negative examples for each node in the given nodes.
 
         Parameters
         ----------
         nodes : list
-            list of node indices for which negative samples are to be returned.
+            List of node indices for which negative samples are to be returned.
 
         Returns
         -------
         list of lists
-            each inner list is a list of negative sample for a single node in the input list.
+            Each inner list is a list of negative sample for a single node in the input list.
+
         """
         all_indices = [self.sample_negatives(node) for node in nodes]
         return all_indices
 
     def train_on_batch(self, relations, check_gradients=False):
-        """
-        Performs training for a single training batch.
+        """Performs training for a single training batch.
 
         Parameters
         ----------
         relations : list of tuples
-            list of tuples of positive examples of the form (node_1_index, node_2_index).
+            List of tuples of positive examples of the form (node_1_index, node_2_index).
         check_gradients : bool, optional
-            whether to compare the computed gradients to autograd gradients for this batch.
+            Whether to compare the computed gradients to autograd gradients for this batch.
 
         Returns
         -------
         PoincareBatch instance
-            the batch that was just trained on, contains computed loss for the batch.
+            The batch that was just trained on, contains computed loss for the batch.
+
         """
         all_negatives = self.sample_negatives_batch([relation[0] for relation in relations])
         batch = self.prepare_training_batch(relations, all_negatives, check_gradients)
@@ -403,15 +397,14 @@ class PoincareModel(utils.SaveLoad):
 
     @staticmethod
     def handle_duplicates(vector_updates, node_indices):
-        """
-        Handles occurrences of multiple updates to the same node in a batch of vector updates.
+        """Handles occurrences of multiple updates to the same node in a batch of vector updates.
 
         Parameters
         ----------
-        vector_updates : numpy array
-            array with each row containing updates to be performed on a certain node.
+        vector_updates : numpy.array
+            Array with each row containing updates to be performed on a certain node.
         node_indices : list
-            node indices on which the above updates are to be performed on.
+            Node indices on which the above updates are to be performed on.
 
         Notes
         -----
@@ -419,6 +412,7 @@ class PoincareModel(utils.SaveLoad):
 
         Required because vectors[[2, 1, 2]] += np.array([-0.5, 1.0, 0.5]) performs only the last update
         on the row at index 2.
+
         """
         counts = Counter(node_indices)
         for node_index, count in counts.items():
@@ -430,17 +424,13 @@ class PoincareModel(utils.SaveLoad):
             vector_updates[positions[:-1]] = 0
 
     def update_vectors_batch(self, batch):
-        """
-        Updates vectors for nodes in the given batch.
+        """Updates vectors for nodes in the given batch.
 
         Parameters
         ----------
         batch : PoincareBatch instance
-            batch containing computed gradients and node indices of the batch for which updates are to be done.
+            Batch containing computed gradients and node indices of the batch for which updates are to be done.
 
-        Notes
-        -----
-        Mutates the `syn0` array.
         """
         grad_u, grad_v = batch.gradients_u, batch.gradients_v
         indices_u, indices_v = batch.indices_u, batch.indices_v
@@ -461,8 +451,7 @@ class PoincareModel(utils.SaveLoad):
         self.wv.syn0[indices_v] = self.clip_vectors(self.wv.syn0[indices_v], self.epsilon)
 
     def train(self, batch_size=10, print_every=1000, check_gradients_every=1000):
-        """
-        Trains Poincare embeddings using loaded data and model parameters.
+        """Trains Poincare embeddings using loaded data and model parameters.
 
         Parameters
         ----------
@@ -472,6 +461,7 @@ class PoincareModel(utils.SaveLoad):
             Prints progress and average loss after every `print_every` batches.
         check_gradients_every : int, optional
             Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
+
         """
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
@@ -498,8 +488,7 @@ class PoincareModel(utils.SaveLoad):
         logger.info("Training finished")
 
     def train_batchwise(self, epochs=None, batch_size=10, print_every=1000, check_gradients_every=1000):
-        """
-        Trains Poincare embeddings using specified parameters.
+        """Trains Poincare embeddings using specified parameters.
 
         Parameters
         ----------
@@ -511,6 +500,7 @@ class PoincareModel(utils.SaveLoad):
             Prints progress and average loss after every `print_every` batches.
         check_gradients_every : int, optional
             Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
+
         """
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
@@ -543,9 +533,11 @@ class PoincareModel(utils.SaveLoad):
 
 
 class PoincareBatch(object):
-    """
+    """Compute Poincare distances, gradients and loss for a training batch.
+
     Class for computing Poincare distances, gradients and loss for a training batch,
     and storing intermediate state to avoid recomputing multiple times.
+
     """
     def __init__(self, vectors_u, vectors_v, indices_u, indices_v):
         """
@@ -553,22 +545,19 @@ class PoincareBatch(object):
 
         Parameters
         ----------
-        vectors_u : numpy array
-            expected shape (batch_size, dim).
-            vectors of all nodes `u` in the batch.
-        vectors_v : numpy array
-            expected shape (1 + neg_size, dim, batch_size).
-            vectors of all hypernym nodes `v` and negatively sampled nodes `v'`,
+        vectors_u : numpy.array
+            Vectors of all nodes `u` in the batch.
+            Expected shape (batch_size, dim).
+        vectors_v : numpy.array
+            Vectors of all hypernym nodes `v` and negatively sampled nodes `v'`,
             for each node `u` in the batch.
+            Expected shape (1 + neg_size, dim, batch_size).
         indices_u : list
-            list of node indices for each of the vectors in `vectors_u`.
+            List of node indices for each of the vectors in `vectors_u`.
         indices_v : list
-            nested list of lists, each of which is a  list of node indices
+            Nested list of lists, each of which is a  list of node indices
             for each of the vectors in `vectors_v` for a specific node `u`.
 
-        Returns
-        -------
-        PoincareBatch instance
         """
         self.vectors_u = vectors_u.T[np.newaxis, :, :]  # (1, dim, batch_size)
         self.vectors_v = vectors_v  # (1 + neg_size, dim, batch_size)
@@ -693,9 +682,9 @@ class PoincareBatch(object):
 
 
 class PoincareKeyedVectors(KeyedVectors):
-    """
-    Class to contain vectors and vocab for the PoincareModel training class,
-    can be used to perform operations on the vectors such as vector lookup, distance etc.
+    """Class to contain vectors and vocab for the PoincareModel training class.
+
+    Used to perform operations on the vectors such as vector lookup, distance etc.
 
     """
     @staticmethod
@@ -716,26 +705,20 @@ class PoincareKeyedVectors(KeyedVectors):
 
 
 class PoincareData(object):
-    """
-    Class to stream hypernym relations for `PoincareModel` from a tsv-like file.
+    """Class to stream hypernym relations for `PoincareModel` from a tsv-like file."""
 
-    """
     def __init__(self, file_path, encoding='utf8', delimiter='\t'):
-        """
-        Initialize instance from file containing one hypernym pair per line.
+        """Initialize instance from file containing one hypernym pair per line.
 
         Parameters
         ----------
         file_path : str
-            path to file containing one hypernym pair per line, separated by `delimiter`.
+            Path to file containing one hypernym pair per line, separated by `delimiter`.
         encoding : str, optional
-            character encoding of the input file.
+            Character encoding of the input file.
         delimiter : str, optional
-            delimiter character for each hypernym pair.
+            Delimiter character for each hypernym pair.
 
-        Returns
-        -------
-        PoincareData instance
         """
 
         self.file_path = file_path
@@ -743,67 +726,61 @@ class PoincareData(object):
         self.delimiter = delimiter
 
     def stream_lines(self):
-        """
-        Streams lines from self.file_path decoded into unicode strings.
+        """Streams lines from self.file_path decoded into unicode strings.
 
         Yields
         -------
         str (unicode)
             Single line from input file.
+
         """
         with smart_open(self.file_path, 'rb') as f:
             for line in f:
                 yield line.decode(self.encoding)
 
     def __iter__(self):
-        """
-        Streams relations from self.file_path decoded into unicode strings.
+        """Streams relations from self.file_path decoded into unicode strings.
 
         Yields
         -------
         2-tuple (unicode)
             Hypernym relation from input file.
+
         """
         reader = csv.reader(self.stream_lines(), delimiter=self.delimiter)
         for row in reader:
             yield tuple(row)
 
-class NegativesBuffer(object):
-    """
-    Class to buffer and return negative samples.
 
-    """
+class NegativesBuffer(object):
+    """Class to buffer and return negative samples."""
+
     def __init__(self, items):
-        """
-        Initialize instance from list or numpy array of samples.
+        """Initialize instance from list or numpy array of samples.
 
         Parameters
         ----------
-        items : list/numpy array
-            list or numpy array containing negative samples.
+        items : list/numpy.array
+            List or array containing negative samples.
 
-        Returns
-        -------
-        NegativesBuffer instance
         """
 
         self.items = items
         self.current_index = 0
 
     def num_items(self):
-        """
-        Returns number of items remaining in the buffer.
+        """Returns number of items remaining in the buffer.
 
         Returns
         -------
         int
-            number of items in the buffer that haven't been consumed yet.
+            Number of items in the buffer that haven't been consumed yet.
+
         """
         return len(self.items) - self.current_index
 
     def get_items(self, num_items):
-        """
-        Returns next `num_items` from buffer.
+        """Returns next `num_items` from buffer.
 
         Parameters
         ----------
@@ -812,13 +789,14 @@ class NegativesBuffer(object):
 
         Returns
         -------
-        numpy array or list
+        numpy.array or list
             Slice containing `num_items` items from the original data.
 
         Notes
         -----
         No error is raised if less than `num_items` items are remaining,
         simply all the remaining items are returned.
+
         """
         start_index = self.current_index
         end_index = start_index + num_items
