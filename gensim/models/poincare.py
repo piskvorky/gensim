@@ -248,16 +248,10 @@ class PoincareModel(utils.SaveLoad):
         Only used for autograd gradients, since autograd requires a specific function signature.
         """
         vector_u = matrix[0]
-        vector_v = matrix[1]
-        vectors_negative = matrix[2:]
-        positive_distance = PoincareKeyedVectors.poincare_dist(vector_u, vector_v)
-        negative_distances = np.array([
-            PoincareKeyedVectors.poincare_dist(vector_u, vector_negative)
-            for vector_negative in vectors_negative
-        ])
-        exp_negative_distances = np.exp(-negative_distances)
-        exp_positive_distance = np.exp(-positive_distance)
-        return -np.log(exp_positive_distance / (exp_positive_distance + exp_negative_distances.sum()))
+        vectors_v = matrix[1:]
+        all_distances = PoincareKeyedVectors.poincare_dists(vector_u, vectors_v)
+        exp_negative_distances = np.exp(-all_distances)
+        return -np.log(exp_negative_distances[0] / (exp_negative_distances.sum()))
 
     @staticmethod
     def clip_vectors(vectors, epsilon):
@@ -680,19 +674,33 @@ class PoincareKeyedVectors(KeyedVectors):
 
     """
     @staticmethod
-    def poincare_dist(vector_1, vector_2):
-        """Return poincare distance between two vectors."""
-        norm_1 = np.linalg.norm(vector_1)
-        norm_2 = np.linalg.norm(vector_2)
-        euclidean_dist = np.linalg.norm(vector_1 - vector_2)
-        if euclidean_dist == 0.0:
-            return 0.0
-        else:
-            return np.arccosh(
-                1 + 2 * (
-                    (euclidean_dist ** 2) / ((1 - norm_1 ** 2) * (1 - norm_2 ** 2))
-                )
+    def poincare_dists(vector_1, vectors_all):
+        """
+        Return poincare distances between one vector and a set of other vectors.
+
+        Parameters
+        ----------
+        vector_1 : numpy array
+            vector from which Poincare distances are to be computed.
+            expected shape (dim,)
+        vectors_all : numpy array
+            for each row in vectors_all, distance from vector_1 is computed.
+            expected shape (num_vectors, dim)
+
+        Returns
+        -------
+        numpy array
+            contains Poincare distance between vector_1 and each row in vectors_all.
+            shape (num_vectors,)
+        """
+        euclidean_dists = np.linalg.norm(vector_1 - vectors_all, axis=1)
+        norm = np.linalg.norm(vector_1)
+        all_norms = np.linalg.norm(vectors_all, axis=1)
+        return np.arccosh(
+            1 + 2 * (
+                (euclidean_dists ** 2) / ((1 - norm ** 2) * (1 - all_norms ** 2))
             )
+        )
 
     def most_similar(self, term, topn=10, restrict_vocab=None):
         """
@@ -756,15 +764,7 @@ class PoincareKeyedVectors(KeyedVectors):
         """
         term_vector = self.word_vec(term)
         all_vectors = self.syn0
-
-        euclidean_dists = np.linalg.norm(term_vector - all_vectors, axis=1)
-        norm = np.linalg.norm(term_vector)
-        all_norms = np.linalg.norm(all_vectors, axis=1)
-        return np.arccosh(
-            1 + 2 * (
-                (euclidean_dists ** 2) / ((1 - norm ** 2) * (1 - all_norms ** 2))
-            )
-        )
+        return self.poincare_dists(term_vector, all_vectors)
     # TODO: Add other KeyedVector supported methods.
 
 
