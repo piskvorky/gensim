@@ -83,6 +83,14 @@ class TestPoincareModel(unittest.TestCase):
         model = PoincareModel(self.data, negative=5)
         self.assertEqual(len(model.get_candidate_negatives()), 5)
 
+    def test_handle_duplicates(self):
+        """Tests that correct number of negatives are used."""
+        vector_updates = np.array([[0.5, 0.5], [0.1, 0.2], [0.3, -0.2]])
+        node_indices = [0, 1, 0]
+        PoincareModel.handle_duplicates(vector_updates, node_indices)
+        vector_updates_expected = np.array([[0.0, 0.0], [0.1, 0.2], [0.8, 0.3]])
+        self.assertTrue((vector_updates == vector_updates_expected).all())
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

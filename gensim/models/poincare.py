@@ -362,7 +362,8 @@ class PoincareModel(utils.SaveLoad):
         self.update_vectors_batch(batch)
         return batch
 
-    def handle_duplicates(self, vector_updates, node_indices):
+    @staticmethod
+    def handle_duplicates(vector_updates, node_indices):
         """
         Handles occurrences of multiple updates to the same node in a batch of vector updates.
 
