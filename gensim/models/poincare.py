@@ -66,7 +66,7 @@ class PoincareModel(utils.SaveLoad):
     """
     def __init__(
         self, train_data, size=50, alpha=0.1, negative=10, workers=1,
-        epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, seed=0):
+        epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), seed=0):
         """Initialize and train a Poincare embedding model from an iterable of transitive closure relations.
 
         Parameters
@@ -86,7 +86,9 @@ class PoincareModel(utils.SaveLoad):
         burn_in : int, optional
             Number of epochs to use for burn-in initialization (0 means no burn-in).
         burn_in_alpha : float, optional
-            learning rate for burn-in initialization, ignored if `burn_in` is 0.
+            Learning rate for burn-in initialization, ignored if `burn_in` is 0.
+        init_range : 2-tuple (float, float)
+            Range within which the vectors are randomly initialized.
         seed : int, optional
             Seed for random to ensure reproducibility.
 
@@ -119,7 +121,7 @@ class PoincareModel(utils.SaveLoad):
         self.burn_in = burn_in
         self.seed = seed
         self.np_random = np_random.RandomState(seed)
-        self.init_range = (-0.001, 0.001)
+        self.init_range = init_range
         self.loss_grad = None
         self._load_relations()
         self._init_embeddings()
@@ -792,7 +794,7 @@ class PoincareRelations(object):
 
         Yields
         -------
-        2-tuple (unicode)
+        2-tuple (unicode, unicode)
             Hypernym relation from input file.
 
         """
