@@ -43,7 +43,7 @@ import logging
 import random
 import time
 
-from autograd import numpy as np, grad
+import numpy as np
 from collections import defaultdict, Counter
 from numpy import random as np_random
 from smart_open import smart_open
@@ -122,7 +122,7 @@ class PoincareModel(utils.SaveLoad):
         self.random = random.Random(seed)
         self.np_random = np_random.RandomState(seed)
         self.init_range = (-0.001, 0.001)
-        self.loss_grad = grad(PoincareModel.loss_fn)
+        self.loss_grad = None
         self.load_relations()
         self.init_embeddings()
 
@@ -267,17 +267,21 @@ class PoincareModel(utils.SaveLoad):
         Only used for autograd gradients, since autograd requires a specific function signature.
 
         """
+        # Loaded only if gradients are to be checked to avoid dependency
+        from autograd import numpy as grad_np
+
         vector_u = matrix[0]
-        vector_v = matrix[1]
-        vectors_negative = matrix[2:]
-        positive_distance = PoincareKeyedVectors.poincare_dist(vector_u, vector_v)
-        negative_distances = np.array([
-            PoincareKeyedVectors.poincare_dist(vector_u, vector_negative)
-            for vector_negative in vectors_negative
-        ])
-        exp_negative_distances = np.exp(-negative_distances)
-        exp_positive_distance = np.exp(-positive_distance)
-        return -np.log(exp_positive_distance / (exp_positive_distance + exp_negative_distances.sum()))
+        vectors_v = matrix[1:]
+        euclidean_dists = grad_np.linalg.norm(vector_u - vectors_v, axis=1)
+        norm = grad_np.linalg.norm(vector_u)
+        all_norms = grad_np.linalg.norm(vectors_v, axis=1)
+        poincare_dists = grad_np.arccosh(
+            1 + 2 * (
+                (euclidean_dists ** 2) / ((1 - norm ** 2) * (1 - all_norms ** 2))
+            )
+        )
+        exp_negative_distances = grad_np.exp(-poincare_dists)
+        return -grad_np.log(exp_negative_distances[0] / (exp_negative_distances.sum()))
 
     @staticmethod
     def clip_vectors(vectors, epsilon):
@@ -323,7 +327,6 @@ class PoincareModel(utils.SaveLoad):
     def load(cls, *args, **kwargs):
         """Load model from disk, inherited from `utils.SaveLoad`."""
         model = super(PoincareModel, cls).load(*args, **kwargs)
-        model.loss_grad = grad(PoincareModel.loss_fn)  # autograd fn not pickled to disk
         return model
 
     def prepare_training_batch(self, relations, all_negatives, check_gradients=False):
@@ -378,6 +381,16 @@ class PoincareModel(utils.SaveLoad):
             List of lists of negative samples for each node_1 in the positive examples.
 
         """
+        try:  # Loaded only if gradients are to be checked to avoid dependency
+            from autograd import grad
+        except ImportError:
+            logger.warning('autograd could not be imported, skipping checking of gradients')
+            logger.warning('please install autograd to enable gradient checking')
+            return
+
+        if self.loss_grad is None:
+            self.loss_grad = grad(PoincareModel.loss_fn)
+
         max_diff = 0.0
         for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
             u, v = relation
