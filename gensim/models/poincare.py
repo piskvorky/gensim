@@ -468,7 +468,7 @@ class PoincareModel(utils.SaveLoad):
         self.wv.syn0[indices_v] -= v_updates
         self.wv.syn0[indices_v] = self.clip_vectors(self.wv.syn0[indices_v], self.epsilon)
 
-    def train(self, epochs, batch_size=10, print_every=1000, check_gradients_every=1000):
+    def train(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
         """Trains Poincare embeddings using loaded data and model parameters.
 
         Parameters
@@ -480,8 +480,9 @@ class PoincareModel(utils.SaveLoad):
             Number of iterations (epochs) over the corpus.
         print_every : int, optional
             Prints progress and average loss after every `print_every` batches.
-        check_gradients_every : int, optional
+        check_gradients_every : int or None, optional
             Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
+            Useful for debugging, doesn't compare by default.
 
         """
         if self.workers > 1:
@@ -509,7 +510,7 @@ class PoincareModel(utils.SaveLoad):
             check_gradients_every=check_gradients_every)
         logger.info("Training finished")
 
-    def train_batchwise(self, epochs, batch_size=10, print_every=1000, check_gradients_every=1000):
+    def train_batchwise(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
         """Trains Poincare embeddings using specified parameters.
 
         Parameters
@@ -520,8 +521,9 @@ class PoincareModel(utils.SaveLoad):
             Number of examples to train on in a single batch.
         print_every : int, optional
             Prints progress and average loss after every `print_every` batches.
-        check_gradients_every : int, optional
+        check_gradients_every : int or None, optional
             Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
+            Useful for debugging, doesn't compare by default.
 
         """
         if self.workers > 1:
@@ -533,7 +535,7 @@ class PoincareModel(utils.SaveLoad):
             last_time = time.time()
             for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
                 should_print = not (batch_num % print_every)
-                check_gradients = not (batch_num % check_gradients_every)
+                check_gradients = bool(check_gradients_every) and (batch_num % check_gradients_every) == 0
                 batch_indices = indices[i:i+batch_size]
                 relations = [self.all_relations[idx] for idx in batch_indices]
                 result = self.train_on_batch(relations, check_gradients=check_gradients)
