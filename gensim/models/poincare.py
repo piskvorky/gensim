@@ -361,19 +361,35 @@ class PoincareModel(utils.SaveLoad):
         batch.compute_all()
 
         if check_gradients:
-            max_diff = 0.0
-            for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
-                u, v = relation
-                auto_gradients = self.loss_grad(np.vstack((self.wv.syn0[u], self.wv.syn0[[v] + negatives])))
-                computed_gradients = np.vstack((batch.gradients_u[:, i], batch.gradients_v[:, :, i]))
-                diff = np.abs(auto_gradients - computed_gradients).max()
-                if diff > max_diff:
-                    max_diff = diff
-            logger.info('Max difference between computed gradients and autograd gradients: %.10f', max_diff)
-            assert max_diff < 1e-8, (
-                    'Max difference between computed gradients and autograd gradients %.10f, '
-                    'greater than tolerance %.10f' % (max_diff, 1e-8))
+            self.check_gradients(relations, all_negatives, batch)
+
         return batch
+
+    def check_gradients(self, relations, all_negatives, batch, tol=1e-8):
+        """Compare computed gradients for batch to autograd gradients.
+
+        Parameters
+        ----------
+        batch : PoincareBatch instance
+            Batch for which computed gradients are to checked.
+        relations : list of tuples
+            List of tuples of positive examples of the form (node_1_index, node_2_index).
+        all_negatives : list of lists
+            List of lists of negative samples for each node_1 in the positive examples.
+
+        """
+        max_diff = 0.0
+        for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
+            u, v = relation
+            auto_gradients = self.loss_grad(np.vstack((self.wv.syn0[u], self.wv.syn0[[v] + negatives])))
+            computed_gradients = np.vstack((batch.gradients_u[:, i], batch.gradients_v[:, :, i]))
+            diff = np.abs(auto_gradients - computed_gradients).max()
+            if diff > max_diff:
+                max_diff = diff
+        logger.info('Max difference between computed gradients and autograd gradients: %.10f', max_diff)
+        assert max_diff < tol, (
+                'Max difference between computed gradients and autograd gradients %.10f, '
+                'greater than tolerance %.10f' % (max_diff, tol))
 
     def sample_negatives_batch(self, nodes):
         """Return negative examples for each node in the given nodes.
