@@ -108,7 +108,7 @@ class TestPoincareModel(unittest.TestCase):
     def test_wrong_gradients_raises_assertion(self):
         """Tests that discrepancy in gradients raises an error."""
         model = PoincareModel(self.data, negative=3)
-        model.loss_grad = Mock(return_value=np.zeros((2 + model.negative, model.size)))
+        model._loss_grad = Mock(return_value=np.zeros((2 + model.negative, model.size)))
         with self.assertRaises(AssertionError):
             model.train(epochs=1, batch_size=1, check_gradients_every=1)
 

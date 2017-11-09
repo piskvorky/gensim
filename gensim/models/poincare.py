@@ -120,9 +120,9 @@ class PoincareModel(utils.SaveLoad):
         self.epsilon = epsilon
         self.burn_in = burn_in
         self.seed = seed
-        self.np_random = np_random.RandomState(seed)
+        self._np_random = np_random.RandomState(seed)
         self.init_range = init_range
-        self.loss_grad = None
+        self._loss_grad = None
         self._load_relations()
         self._init_embeddings()
 
@@ -154,17 +154,17 @@ class PoincareModel(utils.SaveLoad):
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
         self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
         counts = np.array([self.wv.vocab[index2word[i]].count for i in range(len(index2word))])
-        self.node_probabilities = counts / counts.sum()
-        self.node_probabilities_cumsum = np.cumsum(self.node_probabilities)
+        self._node_probabilities = counts / counts.sum()
+        self._node_probabilities_cumsum = np.cumsum(self._node_probabilities)
         self.all_relations = all_relations
         self.node_relations = node_relations
-        self.negatives_buffer = NegativesBuffer([])  # Buffer to store negative samples, to reduce calls to sampling method
-        self.negatives_buffer_size = 2000
+        self._negatives_buffer = NegativesBuffer([])  # Buffer to store negative samples, to reduce calls to sampling method
+        self._negatives_buffer_size = 2000
 
     def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.wv.index2word), self.size)
-        self.wv.syn0 = self.np_random.uniform(self.init_range[0], self.init_range[1], shape)
+        self.wv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape)
 
     def _get_candidate_negatives(self):
         """Returns candidate negatives of size `self.negative` from the negative examples buffer.
@@ -176,12 +176,12 @@ class PoincareModel(utils.SaveLoad):
 
         """
 
-        if self.negatives_buffer.num_items() < self.negative:
+        if self._negatives_buffer.num_items() < self.negative:
             # Note: np.random.choice much slower than random.sample for large populations, possible bottleneck
-            uniform_numbers = self.np_random.random_sample(self.negatives_buffer_size)
-            cumsum_table_indices = np.searchsorted(self.node_probabilities_cumsum, uniform_numbers)
-            self.negatives_buffer = NegativesBuffer(cumsum_table_indices)
-        return self.negatives_buffer.get_items(self.negative)
+            uniform_numbers = self._np_random.random_sample(self._negatives_buffer_size)
+            cumsum_table_indices = np.searchsorted(self._node_probabilities_cumsum, uniform_numbers)
+            self._negatives_buffer = NegativesBuffer(cumsum_table_indices)
+        return self._negatives_buffer.get_items(self.negative)
 
     @staticmethod
     def _has_duplicates(array):
@@ -242,9 +242,9 @@ class PoincareModel(utils.SaveLoad):
             # If number of positive relations is a significant fraction of total nodes
             # subtract positively connected nodes from set of choices and sample from the remaining
             valid_negatives = np.array(list(self.indices_set - node_relations))
-            probs = self.node_probabilities[valid_negatives]
+            probs = self._node_probabilities[valid_negatives]
             probs /= probs.sum()
-            indices = self.np_random.choice(valid_negatives, size=self.negative, p=probs, replace=False)
+            indices = self._np_random.choice(valid_negatives, size=self.negative, p=probs, replace=False)
 
         return list(indices)
 
@@ -320,7 +320,7 @@ class PoincareModel(utils.SaveLoad):
 
     def save(self, *args, **kwargs):
         """Save complete model to disk, inherited from `utils.SaveLoad`."""
-        self.loss_grad = None  # Can't pickle autograd fn to disk
+        self._loss_grad = None  # Can't pickle autograd fn to disk
         super(PoincareModel, self).save(*args, **kwargs)
 
     @classmethod
@@ -388,13 +388,13 @@ class PoincareModel(utils.SaveLoad):
             logger.warning('please install autograd to enable gradient checking')
             return
 
-        if self.loss_grad is None:
-            self.loss_grad = grad(PoincareModel._loss_fn)
+        if self._loss_grad is None:
+            self._loss_grad = grad(PoincareModel._loss_fn)
 
         max_diff = 0.0
         for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
             u, v = relation
-            auto_gradients = self.loss_grad(np.vstack((self.wv.syn0[u], self.wv.syn0[[v] + negatives])))
+            auto_gradients = self._loss_grad(np.vstack((self.wv.syn0[u], self.wv.syn0[[v] + negatives])))
             computed_gradients = np.vstack((batch.gradients_u[:, i], batch.gradients_v[:, :, i]))
             diff = np.abs(auto_gradients - computed_gradients).max()
             if diff > max_diff:
@@ -559,7 +559,7 @@ class PoincareModel(utils.SaveLoad):
             raise NotImplementedError("Multi-threaded version not implemented yet")
         for epoch in range(1, epochs + 1):
             indices = list(range(len(self.all_relations)))
-            self.np_random.shuffle(indices)
+            self._np_random.shuffle(indices)
             avg_loss = 0.0
             last_time = time.time()
             for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
@@ -631,10 +631,10 @@ class PoincareBatch(object):
 
         self.loss = None
 
-        self.distances_computed = False
-        self.gradients_computed = False
-        self.distance_gradients_computed = False
-        self.loss_computed = False
+        self._distances_computed = False
+        self._gradients_computed = False
+        self._distance_gradients_computed = False
+        self._loss_computed = False
 
     def compute_all(self):
         """Convenience method to perform all computations."""
@@ -645,7 +645,7 @@ class PoincareBatch(object):
 
     def compute_distances(self):
         """Compute and store norms, euclidean distances and poincare distances between input vectors."""
-        if self.distances_computed:
+        if self._distances_computed:
             return
         euclidean_dists = np.linalg.norm(self.vectors_u - self.vectors_v, axis=1)  # (1 + neg_size, batch_size)
         norms_u = np.linalg.norm(self.vectors_u, axis=1)  # (1, batch_size)
@@ -670,11 +670,11 @@ class PoincareBatch(object):
         self.beta = beta
         self.gamma = gamma
 
-        self.distances_computed = True
+        self._distances_computed = True
 
     def compute_gradients(self):
         """Compute and store gradients of loss function for all input vectors."""
-        if self.gradients_computed:
+        if self._gradients_computed:
             return
         self.compute_distances()
         self.compute_distance_gradients()
@@ -693,11 +693,11 @@ class PoincareBatch(object):
         self.gradients_u = gradients_u
         self.gradients_v = gradients_v
 
-        self.gradients_computed = True
+        self._gradients_computed = True
 
     def compute_distance_gradients(self):
         """Compute and store partial derivatives of poincare distance d(u, v) w.r.t all u and all v."""
-        if self.distance_gradients_computed:
+        if self._distance_gradients_computed:
             return
         self.compute_distances()
 
@@ -720,16 +720,16 @@ class PoincareBatch(object):
             distance_gradients_v.swapaxes(1, 2)[nan_gradients] = 0
         self.distance_gradients_v = distance_gradients_v
 
-        self.distance_gradients_computed = True
+        self._distance_gradients_computed = True
 
     def compute_loss(self):
         """Compute and store loss value for the given batch of examples."""
-        if self.loss_computed:
+        if self._loss_computed:
             return
         self.compute_distances()
 
         self.loss = -np.log(self.exp_negative_distances[0] / self.Z).sum()  # scalar
-        self.loss_computed = True
+        self._loss_computed = True
 
 
 class PoincareKeyedVectors(KeyedVectors):
@@ -816,8 +816,8 @@ class NegativesBuffer(object):
 
         """
 
-        self.items = items
-        self.current_index = 0
+        self._items = items
+        self._current_index = 0
 
     def num_items(self):
         """Returns number of items remaining in the buffer.
@@ -828,7 +828,7 @@ class NegativesBuffer(object):
             Number of items in the buffer that haven't been consumed yet.
 
         """
-        return len(self.items) - self.current_index
+        return len(self._items) - self._current_index
 
     def get_items(self, num_items):
         """Returns next `num_items` from buffer.
@@ -849,8 +849,8 @@ class NegativesBuffer(object):
         simply all the remaining items are returned.
 
         """
-        start_index = self.current_index
+        start_index = self._current_index
         end_index = start_index + num_items
-        self.current_index += num_items
-        return self.items[start_index:end_index]
+        self._current_index += num_items
+        return self._items[start_index:end_index]
 
