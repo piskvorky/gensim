@@ -133,7 +133,7 @@ class TestPoincareModel(unittest.TestCase):
     def test_negatives(self):
         """Tests that correct number of negatives are sampled."""
         model = PoincareModel(self.data, negative=5)
-        self.assertEqual(len(model.get_candidate_negatives()), 5)
+        self.assertEqual(len(model._get_candidate_negatives()), 5)
 
     def test_error_if_negative_more_than_population(self):
         """Tests error is rased if number of negatives to sample is more than remaining nodes."""
@@ -147,7 +147,7 @@ class TestPoincareModel(unittest.TestCase):
         positive_nodes = model.node_relations[0]  # Positive nodes for node 0
         num_samples = 100  # Repeat experiment multiple times
         for i in range(num_samples):
-            negatives = model.sample_negatives(0)
+            negatives = model._sample_negatives(0)
             self.assertFalse(positive_nodes & set(negatives))
             self.assertEqual(len(negatives), len(set(negatives)))
 
@@ -155,7 +155,7 @@ class TestPoincareModel(unittest.TestCase):
         """Tests that correct number of negatives are used."""
         vector_updates = np.array([[0.5, 0.5], [0.1, 0.2], [0.3, -0.2]])
         node_indices = [0, 1, 0]
-        PoincareModel.handle_duplicates(vector_updates, node_indices)
+        PoincareModel._handle_duplicates(vector_updates, node_indices)
         vector_updates_expected = np.array([[0.0, 0.0], [0.1, 0.2], [0.8, 0.3]])
         self.assertTrue((vector_updates == vector_updates_expected).all())
 

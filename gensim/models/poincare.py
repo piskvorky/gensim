@@ -40,7 +40,6 @@ Initialize and train a model from a file containing one relation per line::
 
 import csv
 import logging
-import random
 import time
 
 import numpy as np
@@ -119,14 +118,13 @@ class PoincareModel(utils.SaveLoad):
         self.epsilon = epsilon
         self.burn_in = burn_in
         self.seed = seed
-        self.random = random.Random(seed)
         self.np_random = np_random.RandomState(seed)
         self.init_range = (-0.001, 0.001)
         self.loss_grad = None
-        self.load_relations()
-        self.init_embeddings()
+        self._load_relations()
+        self._init_embeddings()
 
-    def load_relations(self):
+    def _load_relations(self):
         """Load relations from the train data and build vocab."""
         vocab = {}
         index2word = []
@@ -161,12 +159,12 @@ class PoincareModel(utils.SaveLoad):
         self.negatives_buffer = NegativesBuffer([])  # Buffer to store negative samples, to reduce calls to sampling method
         self.negatives_buffer_size = 2000
 
-    def init_embeddings(self):
+    def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.wv.index2word), self.size)
         self.wv.syn0 = self.np_random.uniform(self.init_range[0], self.init_range[1], shape)
 
-    def get_candidate_negatives(self):
+    def _get_candidate_negatives(self):
         """Returns candidate negatives of size `self.negative` from the negative examples buffer.
 
         Returns
@@ -184,7 +182,7 @@ class PoincareModel(utils.SaveLoad):
         return self.negatives_buffer.get_items(self.negative)
 
     @staticmethod
-    def has_duplicates(array):
+    def _has_duplicates(array):
         """Returns whether or not the input array has any duplicates.
 
         Parameters
@@ -205,7 +203,7 @@ class PoincareModel(utils.SaveLoad):
             seen.add(value)
         return False
 
-    def sample_negatives(self, node_index):
+    def _sample_negatives(self, node_index):
         """Return a sample of negatives for the given node.
 
         Parameters
@@ -231,11 +229,11 @@ class PoincareModel(utils.SaveLoad):
         if positive_fraction < 0.01:
             # If number of positive relations is a small fraction of total nodes
             # re-sample till no positively connected nodes are chosen
-            indices = self.get_candidate_negatives()
+            indices = self._get_candidate_negatives()
             times_sampled = 1
-            while self.has_duplicates(indices) or (set(indices) & node_relations):
+            while self._has_duplicates(indices) or (set(indices) & node_relations):
                 times_sampled += 1
-                indices = self.get_candidate_negatives()
+                indices = self._get_candidate_negatives()
             if times_sampled > 1:
                 logger.debug('Sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
         else:
@@ -249,7 +247,7 @@ class PoincareModel(utils.SaveLoad):
         return list(indices)
 
     @staticmethod
-    def loss_fn(matrix):
+    def _loss_fn(matrix):
         """Given a numpy array with vectors for u, v and negative samples, computes loss value.
 
         Parameters
@@ -284,7 +282,7 @@ class PoincareModel(utils.SaveLoad):
         return -grad_np.log(exp_negative_distances[0] / (exp_negative_distances.sum()))
 
     @staticmethod
-    def clip_vectors(vectors, epsilon):
+    def _clip_vectors(vectors, epsilon):
         """Clip vectors to have a norm of less than one.
 
         Parameters
@@ -329,7 +327,7 @@ class PoincareModel(utils.SaveLoad):
         model = super(PoincareModel, cls).load(*args, **kwargs)
         return model
 
-    def prepare_training_batch(self, relations, all_negatives, check_gradients=False):
+    def _prepare_training_batch(self, relations, all_negatives, check_gradients=False):
         """Creates training batch and computes gradients and loss for the batch.
 
         Parameters
@@ -364,11 +362,11 @@ class PoincareModel(utils.SaveLoad):
         batch.compute_all()
 
         if check_gradients:
-            self.check_gradients(relations, all_negatives, batch)
+            self._check_gradients(relations, all_negatives, batch)
 
         return batch
 
-    def check_gradients(self, relations, all_negatives, batch, tol=1e-8):
+    def _check_gradients(self, relations, all_negatives, batch, tol=1e-8):
         """Compare computed gradients for batch to autograd gradients.
 
         Parameters
@@ -389,7 +387,7 @@ class PoincareModel(utils.SaveLoad):
             return
 
         if self.loss_grad is None:
-            self.loss_grad = grad(PoincareModel.loss_fn)
+            self.loss_grad = grad(PoincareModel._loss_fn)
 
         max_diff = 0.0
         for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
@@ -404,7 +402,7 @@ class PoincareModel(utils.SaveLoad):
                 'Max difference between computed gradients and autograd gradients %.10f, '
                 'greater than tolerance %.10f' % (max_diff, tol))
 
-    def sample_negatives_batch(self, nodes):
+    def _sample_negatives_batch(self, nodes):
         """Return negative examples for each node in the given nodes.
 
         Parameters
@@ -418,10 +416,10 @@ class PoincareModel(utils.SaveLoad):
             Each inner list is a list of negative sample for a single node in the input list.
 
         """
-        all_indices = [self.sample_negatives(node) for node in nodes]
+        all_indices = [self._sample_negatives(node) for node in nodes]
         return all_indices
 
-    def train_on_batch(self, relations, check_gradients=False):
+    def _train_on_batch(self, relations, check_gradients=False):
         """Performs training for a single training batch.
 
         Parameters
@@ -437,13 +435,13 @@ class PoincareModel(utils.SaveLoad):
             The batch that was just trained on, contains computed loss for the batch.
 
         """
-        all_negatives = self.sample_negatives_batch([relation[0] for relation in relations])
-        batch = self.prepare_training_batch(relations, all_negatives, check_gradients)
-        self.update_vectors_batch(batch)
+        all_negatives = self._sample_negatives_batch([relation[0] for relation in relations])
+        batch = self._prepare_training_batch(relations, all_negatives, check_gradients)
+        self._update_vectors_batch(batch)
         return batch
 
     @staticmethod
-    def handle_duplicates(vector_updates, node_indices):
+    def _handle_duplicates(vector_updates, node_indices):
         """Handles occurrences of multiple updates to the same node in a batch of vector updates.
 
         Parameters
@@ -470,7 +468,7 @@ class PoincareModel(utils.SaveLoad):
             vector_updates[positions[-1]] = vector_updates[positions].sum(axis=0)
             vector_updates[positions[:-1]] = 0
 
-    def update_vectors_batch(self, batch):
+    def _update_vectors_batch(self, batch):
         """Updates vectors for nodes in the given batch.
 
         Parameters
@@ -484,18 +482,18 @@ class PoincareModel(utils.SaveLoad):
         batch_size = len(indices_u)
 
         u_updates = (self.alpha * (batch.alpha ** 2) / 4 * grad_u).T
-        self.handle_duplicates(u_updates, indices_u)
+        self._handle_duplicates(u_updates, indices_u)
 
         self.wv.syn0[indices_u] -= u_updates
-        self.wv.syn0[indices_u] = self.clip_vectors(self.wv.syn0[indices_u], self.epsilon)
+        self.wv.syn0[indices_u] = self._clip_vectors(self.wv.syn0[indices_u], self.epsilon)
 
         v_updates = self.alpha * (batch.beta ** 2)[:, np.newaxis] / 4 * grad_v
         v_updates = v_updates.swapaxes(1, 2).swapaxes(0, 1)
         v_updates = v_updates.reshape(((1 + self.negative) * batch_size, self.size))
-        self.handle_duplicates(v_updates, indices_v)
+        self._handle_duplicates(v_updates, indices_v)
 
         self.wv.syn0[indices_v] -= v_updates
-        self.wv.syn0[indices_v] = self.clip_vectors(self.wv.syn0[indices_v], self.epsilon)
+        self.wv.syn0[indices_v] = self._clip_vectors(self.wv.syn0[indices_v], self.epsilon)
 
     def train(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
         """Trains Poincare embeddings using loaded data and model parameters.
@@ -527,19 +525,19 @@ class PoincareModel(utils.SaveLoad):
         if self.burn_in > 0:
             logger.info("Starting burn-in (%d epochs)----------------------------------------", self.burn_in)
             self.alpha = self.burn_in_alpha
-            self.train_batchwise(
+            self._train_batchwise(
                 epochs=self.burn_in, batch_size=batch_size, print_every=print_every,
                 check_gradients_every=check_gradients_every)
             logger.info("Burn-in finished")
 
         self.alpha = self.train_alpha
         logger.info("Starting training (%d epochs)----------------------------------------", epochs)
-        self.train_batchwise(
+        self._train_batchwise(
             epochs=epochs, batch_size=batch_size, print_every=print_every,
             check_gradients_every=check_gradients_every)
         logger.info("Training finished")
 
-    def train_batchwise(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
+    def _train_batchwise(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
         """Trains Poincare embeddings using specified parameters.
 
         Parameters
@@ -567,7 +565,7 @@ class PoincareModel(utils.SaveLoad):
                 check_gradients = bool(check_gradients_every) and (batch_num % check_gradients_every) == 0
                 batch_indices = indices[i:i+batch_size]
                 relations = [self.all_relations[idx] for idx in batch_indices]
-                result = self.train_on_batch(relations, check_gradients=check_gradients)
+                result = self._train_on_batch(relations, check_gradients=check_gradients)
                 avg_loss += result.loss
                 if should_print:
                     avg_loss /= print_every
@@ -776,7 +774,7 @@ class PoincareRelations(object):
         self.encoding = encoding
         self.delimiter = delimiter
 
-    def stream_lines(self):
+    def _stream_lines(self):
         """Streams lines from self.file_path decoded into unicode strings.
 
         Yields
@@ -798,7 +796,7 @@ class PoincareRelations(object):
             Hypernym relation from input file.
 
         """
-        reader = csv.reader(self.stream_lines(), delimiter=self.delimiter)
+        reader = csv.reader(self._stream_lines(), delimiter=self.delimiter)
         for row in reader:
             yield tuple(row)
 
