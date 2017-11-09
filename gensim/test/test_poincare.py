@@ -17,7 +17,7 @@ from unittest.mock import Mock
 
 import numpy as np
 
-from gensim.models.poincare import PoincareData, PoincareModel
+from gensim.models.poincare import PoincareRelations, PoincareModel
 
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
@@ -34,20 +34,20 @@ class TestPoincareData(unittest.TestCase):
     def test_encoding_handling(self):
         """Tests whether utf8 and non-utf8 data loaded correctly."""
         non_utf8_file = datapath('poincare_cp852.tsv')
-        relations = [relation for relation in PoincareData(non_utf8_file, encoding='cp852')]
+        relations = [relation for relation in PoincareRelations(non_utf8_file, encoding='cp852')]
         self.assertEqual(len(relations), 2)
         self.assertEqual(relations[0], (u'tímto', u'budeš'))
 
         utf8_file = datapath('poincare_utf8.tsv')
-        relations = [relation for relation in PoincareData(utf8_file)]
+        relations = [relation for relation in PoincareRelations(utf8_file)]
         self.assertEqual(len(relations), 2)
         self.assertEqual(relations[0], (u'tímto', u'budeš'))
 
 
 class TestPoincareModel(unittest.TestCase):
     def setUp(self):
-        self.data = PoincareData(datapath('poincare_hypernyms.tsv'))
-        self.data_large = PoincareData(datapath('poincare_hypernyms_large.tsv'))
+        self.data = PoincareRelations(datapath('poincare_hypernyms.tsv'))
+        self.data_large = PoincareRelations(datapath('poincare_hypernyms_large.tsv'))
 
     def models_equal(self, model_1, model_2):
         self.assertEqual(len(model_1.wv.vocab), len(model_2.wv.vocab))

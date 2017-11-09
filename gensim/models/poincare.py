@@ -56,7 +56,7 @@ class PoincareModel(utils.SaveLoad):
         Parameters
         ----------
         train_data : iterable of (str, str)
-            Iterable of relations, e.g. a list of tuples, or a PoincareData instance streaming from a file.
+            Iterable of relations, e.g. a list of tuples, or a PoincareRelations instance streaming from a file.
         size : int, optional
             Number of dimensions of the trained model.
         alpha : float, optional
@@ -84,9 +84,9 @@ class PoincareModel(utils.SaveLoad):
 
         Initialize a model from a file containing one relation per line::
 
-        >>> model = PoincareModel(PoincareData(file_path))
+        >>> model = PoincareModel(PoincareRelations(file_path))
 
-        See `PoincareData` for more options.
+        See `PoincareRelations` for more options.
 
         """
         self.train_data = train_data
@@ -704,7 +704,7 @@ class PoincareKeyedVectors(KeyedVectors):
     # TODO: Add other KeyedVector supported methods - most_similar, etc.
 
 
-class PoincareData(object):
+class PoincareRelations(object):
     """Class to stream hypernym relations for `PoincareModel` from a tsv-like file."""
 
     def __init__(self, file_path, encoding='utf8', delimiter='\t'):
