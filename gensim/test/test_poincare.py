@@ -98,6 +98,19 @@ class TestPoincareModel(unittest.TestCase):
         model.train(epochs=2)
         self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
 
+    def test_training_multiple(self):
+        """Tests that calling train multiple times results in different vectors."""
+        model = PoincareModel(self.data_large, burn_in=0, negative=3)
+        model.train(epochs=2)
+        old_vectors = np.copy(model.wv.syn0)
+
+        model.train(epochs=1)
+        self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
+
+        old_vectors = np.copy(model.wv.syn0)
+        model.train(epochs=0)
+        self.assertTrue(np.allclose(old_vectors, model.wv.syn0))
+
     def test_gradients_check(self):
         """Tests that the gradients check succeeds during training."""
         model = PoincareModel(self.data, negative=3)
