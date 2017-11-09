@@ -57,9 +57,9 @@ class TestPoincareModel(unittest.TestCase):
         """Tests whether data has been loaded correctly and completely."""
         model = PoincareModel(self.data)
         self.assertEqual(len(model.all_relations), 5)
-        self.assertEqual(len(model.term_relations[model.wv.vocab['kangaroo.n.01'].index]), 3)
+        self.assertEqual(len(model.node_relations[model.wv.vocab['kangaroo.n.01'].index]), 3)
         self.assertEqual(len(model.wv.vocab), 7)
-        self.assertTrue('mammal.n.01' not in model.term_relations)
+        self.assertTrue('mammal.n.01' not in model.node_relations)
 
     def test_persistence(self):
         """Tests whether the model is saved and loaded correctly."""
@@ -144,7 +144,7 @@ class TestPoincareModel(unittest.TestCase):
     def test_no_duplicates_and_positives_in_negative_sample(self):
         """Tests that no duplicates or positively related nodes are present in negative samples."""
         model = PoincareModel(self.data_large, negative=3)
-        positive_nodes = model.term_relations[0]  # Positive nodes for node 0
+        positive_nodes = model.node_relations[0]  # Positive nodes for node 0
         num_samples = 100  # Repeat experiment multiple times
         for i in range(num_samples):
             negatives = model.sample_negatives(0)
