@@ -18,10 +18,9 @@ from unittest.mock import Mock
 import numpy as np
 
 from gensim.models.poincare import PoincareRelations, PoincareModel
+from gensim.test.utils import datapath
 
 
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 logger = logging.getLogger(__name__)
 
 
