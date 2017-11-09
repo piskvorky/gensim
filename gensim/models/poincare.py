@@ -39,9 +39,7 @@ Initialize and train a model from a file containing one relation per line::
 
 
 import csv
-import itertools
 import logging
-import os
 import random
 import time
 
@@ -52,7 +50,7 @@ from smart_open import smart_open
 
 from gensim import utils
 from gensim.models.keyedvectors import KeyedVectors, Vocab
-from gensim.models.word2vec import Word2Vec
+
 
 logger = logging.getLogger(__name__)
 
