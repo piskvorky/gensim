@@ -119,6 +119,7 @@ class PoincareModel(utils.SaveLoad):
         self.workers = workers
         self.epsilon = epsilon
         self.burn_in = burn_in
+        self._burn_in_done = False
         self.seed = seed
         self._np_random = np_random.RandomState(seed)
         self.init_range = init_range
@@ -524,12 +525,13 @@ class PoincareModel(utils.SaveLoad):
             self.alpha, self.burn_in_alpha, self.negative
         )
 
-        if self.burn_in > 0:
+        if self.burn_in > 0 and not self._burn_in_done:
             logger.info("Starting burn-in (%d epochs)----------------------------------------", self.burn_in)
             self.alpha = self.burn_in_alpha
             self._train_batchwise(
                 epochs=self.burn_in, batch_size=batch_size, print_every=print_every,
                 check_gradients_every=check_gradients_every)
+            self._burn_in_done = True
             logger.info("Burn-in finished")
 
         self.alpha = self.train_alpha

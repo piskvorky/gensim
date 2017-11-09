@@ -122,13 +122,19 @@ class TestPoincareModel(unittest.TestCase):
         self.assertTrue(np.allclose(model_1.wv.syn0, model_2.wv.syn0))
 
     def test_burn_in(self):
-        """Tests that vectors are different for models with and without burn-in."""
-        model_1 = PoincareModel(self.data, burn_in=0, negative=3)
-        model_1.train(epochs=1)
+        """Tests that vectors are different after burn-in."""
+        model = PoincareModel(self.data, burn_in=1, negative=3)
+        original_vectors = np.copy(model.wv.syn0)
+        model.train(epochs=0)
+        self.assertFalse(np.allclose(model.wv.syn0, original_vectors))
 
-        model_2 = PoincareModel(self.data, burn_in=1, negative=3)
-        model_2.train(epochs=1)
-        self.assertFalse(np.allclose(model_1.wv.syn0, model_2.wv.syn0))
+    def test_burn_in_only_done_once(self):
+        """Tests that burn-in does not happen when train is called a second time."""
+        model = PoincareModel(self.data, negative=3, burn_in=1)
+        model.train(epochs=0)
+        original_vectors = np.copy(model.wv.syn0)
+        model.train(epochs=0)
+        self.assertTrue(np.allclose(model.wv.syn0, original_vectors))
 
     def test_negatives(self):
         """Tests that correct number of negatives are sampled."""
