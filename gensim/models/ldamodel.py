@@ -48,7 +48,10 @@ from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
 
 # log(sum(exp(x))) that tries to avoid overflow
-from scipy.special import logsumexp
+try:
+    from scipy.special import logsumexp
+except ImportError:
+    from scipy.misc import logsumexp
 
 
 logger = logging.getLogger('gensim.models.ldamodel')
