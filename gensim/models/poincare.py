@@ -7,14 +7,33 @@
 
 
 """
-Python implementation of Poincare Embeddings, an embedding to capture hierarchical information,
-described in [1]
+Python implementation of Poincare Embeddings [1], an embedding that is better at capturing latent hierarchical
+information better than traditional Euclidean embeddings. The method is described in more detail in [1].
+
+The main use-case is to automatically learn hierarchical representations of nodes from a tree-like structure,
+such as a Directed Acyclic Graph, using the transitive closure of the relations.
 
 This module allows training a Poincare Embedding from a training file containing relations from
 a transitive closure.
 
+[1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
+    https://arxiv.org/pdf/1705.08039.pdf
 
-.. [1] https://arxiv.org/pdf/1705.08039.pdf
+Examples
+--------
+Initialize and train a model from a list::
+
+>>> from gensim.models.poincare import PoincareModel
+>>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
+>>> model = PoincareModel(relations, negative=2)
+>>> model.train()
+
+Initialize and train a model from a file containing one relation per line::
+
+>>> from gensim.models.poincare import PoincareModel, PoincareRelations
+>>> file_path = 'gensim/test/test_data/poincare_hypernyms.tsv'
+>>> model = PoincareModel(PoincareRelations(file_path), negative=2)
+>>> model.train()
 
 """
 
@@ -80,11 +99,15 @@ class PoincareModel(utils.SaveLoad):
         --------
         Initialize a model from a list::
 
-        >>> model = PoincareModel(list_of_relations)
+        >>> from gensim.models.poincare import PoincareModel
+        >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
+        >>> model = PoincareModel(relations, negative=2)
 
         Initialize a model from a file containing one relation per line::
 
-        >>> model = PoincareModel(PoincareRelations(file_path))
+        >>> from gensim.models.poincare import PoincareModel, PoincareRelations
+        >>> file_path = 'gensim/test/test_data/poincare_hypernyms.tsv'
+        >>> model = PoincareModel(PoincareRelations(file_path), negative=2)
 
         See `PoincareRelations` for more options.
 
