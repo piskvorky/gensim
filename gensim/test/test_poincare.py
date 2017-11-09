@@ -49,16 +49,16 @@ class TestPoincareModel(unittest.TestCase):
         self.data_large = PoincareRelations(datapath('poincare_hypernyms_large.tsv'))
 
     def models_equal(self, model_1, model_2):
-        self.assertEqual(len(model_1.wv.vocab), len(model_2.wv.vocab))
-        self.assertEqual(set(model_1.wv.vocab.keys()), set(model_2.wv.vocab.keys()))
-        self.assertTrue(np.allclose(model_1.wv.syn0, model_2.wv.syn0))
+        self.assertEqual(len(model_1.kv.vocab), len(model_2.kv.vocab))
+        self.assertEqual(set(model_1.kv.vocab.keys()), set(model_2.kv.vocab.keys()))
+        self.assertTrue(np.allclose(model_1.kv.syn0, model_2.kv.syn0))
 
     def test_data_counts(self):
         """Tests whether data has been loaded correctly and completely."""
         model = PoincareModel(self.data)
         self.assertEqual(len(model.all_relations), 5)
-        self.assertEqual(len(model.node_relations[model.wv.vocab['kangaroo.n.01'].index]), 3)
-        self.assertEqual(len(model.wv.vocab), 7)
+        self.assertEqual(len(model.node_relations[model.kv.vocab['kangaroo.n.01'].index]), 3)
+        self.assertEqual(len(model.kv.vocab), 7)
         self.assertTrue('mammal.n.01' not in model.node_relations)
 
     def test_persistence(self):
@@ -89,34 +89,34 @@ class TestPoincareModel(unittest.TestCase):
     def test_vector_shape(self):
         """Tests whether vectors are initialized with the correct size."""
         model = PoincareModel(self.data, size=20)
-        self.assertEqual(model.wv.syn0.shape, (7, 20))
+        self.assertEqual(model.kv.syn0.shape, (7, 20))
 
     def test_training(self):
         """Tests that vectors are different before and after training."""
         model = PoincareModel(self.data_large, burn_in=0, negative=3)
-        old_vectors = np.copy(model.wv.syn0)
+        old_vectors = np.copy(model.kv.syn0)
         model.train(epochs=2)
-        self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
+        self.assertFalse(np.allclose(old_vectors, model.kv.syn0))
 
     def test_training_multiple(self):
         """Tests that calling train multiple times results in different vectors."""
         model = PoincareModel(self.data_large, burn_in=0, negative=3)
         model.train(epochs=2)
-        old_vectors = np.copy(model.wv.syn0)
+        old_vectors = np.copy(model.kv.syn0)
 
         model.train(epochs=1)
-        self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
+        self.assertFalse(np.allclose(old_vectors, model.kv.syn0))
 
-        old_vectors = np.copy(model.wv.syn0)
+        old_vectors = np.copy(model.kv.syn0)
         model.train(epochs=0)
-        self.assertTrue(np.allclose(old_vectors, model.wv.syn0))
+        self.assertTrue(np.allclose(old_vectors, model.kv.syn0))
 
     def test_gradients_check(self):
         """Tests that the gradients check succeeds during training."""
         model = PoincareModel(self.data, negative=3)
-        old_vectors = np.copy(model.wv.syn0)
+        old_vectors = np.copy(model.kv.syn0)
         model.train(epochs=1, batch_size=1, check_gradients_every=1)
-        self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
+        self.assertFalse(np.allclose(old_vectors, model.kv.syn0))
 
     def test_wrong_gradients_raises_assertion(self):
         """Tests that discrepancy in gradients raises an error."""
@@ -132,22 +132,22 @@ class TestPoincareModel(unittest.TestCase):
 
         model_2 = PoincareModel(self.data_large, seed=1, negative=3, burn_in=1)
         model_2.train(epochs=2)
-        self.assertTrue(np.allclose(model_1.wv.syn0, model_2.wv.syn0))
+        self.assertTrue(np.allclose(model_1.kv.syn0, model_2.kv.syn0))
 
     def test_burn_in(self):
         """Tests that vectors are different after burn-in."""
         model = PoincareModel(self.data, burn_in=1, negative=3)
-        original_vectors = np.copy(model.wv.syn0)
+        original_vectors = np.copy(model.kv.syn0)
         model.train(epochs=0)
-        self.assertFalse(np.allclose(model.wv.syn0, original_vectors))
+        self.assertFalse(np.allclose(model.kv.syn0, original_vectors))
 
     def test_burn_in_only_done_once(self):
         """Tests that burn-in does not happen when train is called a second time."""
         model = PoincareModel(self.data, negative=3, burn_in=1)
         model.train(epochs=0)
-        original_vectors = np.copy(model.wv.syn0)
+        original_vectors = np.copy(model.kv.syn0)
         model.train(epochs=0)
-        self.assertTrue(np.allclose(model.wv.syn0, original_vectors))
+        self.assertTrue(np.allclose(model.kv.syn0, original_vectors))
 
     def test_negatives(self):
         """Tests that correct number of negatives are sampled."""

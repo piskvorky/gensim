@@ -110,7 +110,7 @@ class PoincareModel(utils.SaveLoad):
 
         """
         self.train_data = train_data
-        self.wv = KeyedVectors()
+        self.kv = KeyedVectors()
         self.size = size
         self.train_alpha = alpha  # Learning rate for training
         self.burn_in_alpha = burn_in_alpha  # Learning rate for burn-in
@@ -150,11 +150,11 @@ class PoincareModel(utils.SaveLoad):
             relation = (node_1_index, node_2_index)
             all_relations.append(relation)
         logger.info("Loaded %d relations from train data, %d unique terms", len(all_relations), len(vocab))
-        self.wv.vocab = vocab
-        self.wv.index2word = index2word
+        self.kv.vocab = vocab
+        self.kv.index2word = index2word
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
         self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
-        counts = np.array([self.wv.vocab[index2word[i]].count for i in range(len(index2word))])
+        counts = np.array([self.kv.vocab[index2word[i]].count for i in range(len(index2word))])
         self._node_probabilities = counts / counts.sum()
         self._node_probabilities_cumsum = np.cumsum(self._node_probabilities)
         self.all_relations = all_relations
@@ -164,8 +164,8 @@ class PoincareModel(utils.SaveLoad):
 
     def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
-        shape = (len(self.wv.index2word), self.size)
-        self.wv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape)
+        shape = (len(self.kv.index2word), self.size)
+        self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape)
 
     def _get_candidate_negatives(self):
         """Returns candidate negatives of size `self.negative` from the negative examples buffer.
@@ -221,14 +221,14 @@ class PoincareModel(utils.SaveLoad):
 
         """
         node_relations = self.node_relations[node_index]
-        num_remaining_nodes = len(self.wv.vocab) - len(node_relations)
+        num_remaining_nodes = len(self.kv.vocab) - len(node_relations)
         if  num_remaining_nodes < self.negative:
             raise ValueError(
                 'Cannot sample %d negative items from a set of %d items' %
                 (self.negative, num_remaining_nodes)
             )
 
-        positive_fraction = len(node_relations) / len(self.wv.vocab)
+        positive_fraction = len(node_relations) / len(self.kv.vocab)
         if positive_fraction < 0.01:
             # If number of positive relations is a small fraction of total nodes
             # re-sample till no positively connected nodes are chosen
@@ -358,8 +358,8 @@ class PoincareModel(utils.SaveLoad):
             indices_v.append(v)
             indices_v.extend(negatives)
 
-        vectors_u = self.wv.syn0[indices_u]
-        vectors_v = self.wv.syn0[indices_v].reshape((batch_size, 1 + self.negative, self.size))
+        vectors_u = self.kv.syn0[indices_u]
+        vectors_v = self.kv.syn0[indices_v].reshape((batch_size, 1 + self.negative, self.size))
         vectors_v = vectors_v.swapaxes(0,1).swapaxes(1,2)
         batch = PoincareBatch(vectors_u, vectors_v, indices_u, indices_v)
         batch.compute_all()
@@ -395,7 +395,7 @@ class PoincareModel(utils.SaveLoad):
         max_diff = 0.0
         for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
             u, v = relation
-            auto_gradients = self._loss_grad(np.vstack((self.wv.syn0[u], self.wv.syn0[[v] + negatives])))
+            auto_gradients = self._loss_grad(np.vstack((self.kv.syn0[u], self.kv.syn0[[v] + negatives])))
             computed_gradients = np.vstack((batch.gradients_u[:, i], batch.gradients_v[:, :, i]))
             diff = np.abs(auto_gradients - computed_gradients).max()
             if diff > max_diff:
@@ -487,16 +487,16 @@ class PoincareModel(utils.SaveLoad):
         u_updates = (self.alpha * (batch.alpha ** 2) / 4 * grad_u).T
         self._handle_duplicates(u_updates, indices_u)
 
-        self.wv.syn0[indices_u] -= u_updates
-        self.wv.syn0[indices_u] = self._clip_vectors(self.wv.syn0[indices_u], self.epsilon)
+        self.kv.syn0[indices_u] -= u_updates
+        self.kv.syn0[indices_u] = self._clip_vectors(self.kv.syn0[indices_u], self.epsilon)
 
         v_updates = self.alpha * (batch.beta ** 2)[:, np.newaxis] / 4 * grad_v
         v_updates = v_updates.swapaxes(1, 2).swapaxes(0, 1)
         v_updates = v_updates.reshape(((1 + self.negative) * batch_size, self.size))
         self._handle_duplicates(v_updates, indices_v)
 
-        self.wv.syn0[indices_v] -= v_updates
-        self.wv.syn0[indices_v] = self._clip_vectors(self.wv.syn0[indices_v], self.epsilon)
+        self.kv.syn0[indices_v] -= v_updates
+        self.kv.syn0[indices_v] = self._clip_vectors(self.kv.syn0[indices_v], self.epsilon)
 
     def train(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
         """Trains Poincare embeddings using loaded data and model parameters.
