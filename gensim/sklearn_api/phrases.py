@@ -50,15 +50,9 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
 
         # input as python lists
-        check = lambda x: [x] if isinstance(x[0], string_types) else x
-        docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
-
-        for k, v in enumerate(docs):
-            phrase_tokens = self.gensim_model[v]
-            X[k] = phrase_tokens
-
-        return X
+        if isinstance(docs[0], string_types):
+            docs = [docs]
+        return [self.gensim_model[doc] for doc in docs]
 
     def partial_fit(self, X):
         if self.gensim_model is None:

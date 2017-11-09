@@ -83,16 +83,11 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
             raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
 
         # The input as array of array
-        check = lambda x: [x] if isinstance(x[0], tuple) else x
-        docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
-
-        for k, v in enumerate(docs):
-            doc_topics = self.gensim_model[v]
-            # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
-            probs_docs = matutils.sparse2full(doc_topics, self.num_topics)
-            X[k] = probs_docs
-        return np.reshape(np.array(X), (len(docs), self.num_topics))
+        if isinstance(docs[0], tuple):
+            docs = [docs]
+        # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
+        distribution = [matutils.sparse2full(self.gensim_model[doc], self.num_topics) for doc in docs]
+        return np.reshape(np.array(distribution), (len(docs), self.num_topics))
 
     def partial_fit(self, X):
         """

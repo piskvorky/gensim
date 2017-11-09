@@ -336,18 +336,21 @@ class Similarity(interfaces.SimilarityABC):
             # the following uses a lot of lazy evaluation and (optionally) parallel
             # processing, to improve query latency and minimize memory footprint.
             offsets = numpy.cumsum([0] + [len(shard) for shard in self.shards])
-            convert = lambda doc, shard_no: [(doc_index + offsets[shard_no], sim) for doc_index, sim in doc]
+
+            def convert(shard_no, doc):
+                return [(doc_index + offsets[shard_no], sim) for doc_index, sim in doc]
+
             is_corpus, query = utils.is_corpus(query)
             is_corpus = is_corpus or hasattr(query, 'ndim') and query.ndim > 1 and query.shape[0] > 1
             if not is_corpus:
                 # user asked for num_best most similar and query is a single doc
-                results = (convert(result, shard_no) for shard_no, result in enumerate(shard_results))
+                results = (convert(shard_no, result) for shard_no, result in enumerate(shard_results))
                 result = heapq.nlargest(self.num_best, itertools.chain(*results), key=lambda item: item[1])
             else:
                 # the trickiest combination: returning num_best results when query was a corpus
                 results = []
                 for shard_no, result in enumerate(shard_results):
-                    shard_result = [convert(doc, shard_no) for doc in result]
+                    shard_result = [convert(shard_no, doc) for doc in result]
                     results.append(shard_result)
                 result = []
                 for parts in izip(*results):
