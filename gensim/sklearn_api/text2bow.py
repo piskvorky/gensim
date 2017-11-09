@@ -48,16 +48,10 @@ class Text2BowTransformer(TransformerMixin, BaseEstimator):
             )
 
         # input as python lists
-        check = lambda x: [x] if isinstance(x, string_types) else x
-        docs = check(docs)
-        tokenized_docs = [list(self.tokenizer(x)) for x in docs]
-        X = [[] for _ in range(0, len(tokenized_docs))]
-
-        for k, v in enumerate(tokenized_docs):
-            bow_val = self.gensim_model.doc2bow(v)
-            X[k] = bow_val
-
-        return X
+        if isinstance(docs, string_types):
+            docs = [docs]
+        tokenized_docs = (list(self.tokenizer(doc)) for doc in docs)
+        return [self.gensim_model.doc2bow(doc) for doc in tokenized_docs]
 
     def partial_fit(self, X):
         if self.gensim_model is None:

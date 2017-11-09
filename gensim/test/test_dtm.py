@@ -13,11 +13,7 @@ import os
 import sys
 import unittest
 from gensim import corpora
-
-
-# needed because sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import datapath
 
 
 class TestDtmModel(unittest.TestCase):

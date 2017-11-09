@@ -5,6 +5,7 @@ from gensim.corpora.dictionary import Dictionary
 from gensim.topic_coherence.text_analysis import (
     InvertedIndexAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator,
     CorpusAccumulator)
+from gensim.test.utils import common_texts
 
 
 class BaseTestCases(object):
@@ -28,18 +29,7 @@ class BaseTestCases(object):
         dictionary.id2token = {v: k for k, v in token2id.items()}
         top_ids = set(token2id.values())
 
-        texts2 = [
-            ['human', 'interface', 'computer'],
-            ['survey', 'user', 'computer', 'system', 'response', 'time'],
-            ['eps', 'user', 'interface', 'system'],
-            ['system', 'human', 'system', 'eps'],
-            ['user', 'response', 'time'],
-            ['trees'],
-            ['graph', 'trees'],
-            ['graph', 'minors', 'trees'],
-            ['graph', 'minors', 'survey'],
-            ['user', 'user']
-        ]
+        texts2 = common_texts + [['user', 'user']]
         dictionary2 = Dictionary(texts2)
         dictionary2.id2token = {v: k for k, v in dictionary2.token2id.items()}
         top_ids2 = set(dictionary2.token2id.values())
