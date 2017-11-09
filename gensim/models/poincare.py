@@ -215,7 +215,7 @@ class PoincareModel(utils.SaveLoad):
             # re-sample till no positively connected nodes are chosen
             indices = self.get_candidate_negatives()
             times_sampled = 1
-            while (set(indices) & node_relations) or self.has_duplicates(indices):
+            while self.has_duplicates(indices) or (set(indices) & node_relations):
                 times_sampled += 1
                 indices = self.get_candidate_negatives()
             if times_sampled > 1:
