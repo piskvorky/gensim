@@ -26,14 +26,14 @@ Initialize and train a model from a list::
 >>> from gensim.models.poincare import PoincareModel
 >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
 >>> model = PoincareModel(relations, negative=2)
->>> model.train()
+>>> model.train(epochs=50)
 
 Initialize and train a model from a file containing one relation per line::
 
 >>> from gensim.models.poincare import PoincareModel, PoincareRelations
 >>> file_path = 'gensim/test/test_data/poincare_hypernyms.tsv'
 >>> model = PoincareModel(PoincareRelations(file_path), negative=2)
->>> model.train()
+>>> model.train(epochs=50)
 
 """
 
@@ -66,8 +66,8 @@ class PoincareModel(utils.SaveLoad):
 
     """
     def __init__(
-        self, train_data, size=50, alpha=0.1, negative=10, iter=50,
-        workers=1, epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, seed=0):
+        self, train_data, size=50, alpha=0.1, negative=10, workers=1,
+        epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, seed=0):
         """Initialize and train a Poincare embedding model from an iterable of transitive closure relations.
 
         Parameters
@@ -80,8 +80,6 @@ class PoincareModel(utils.SaveLoad):
             Learning rate for training.
         negative : int, optional
             Number of negative samples to use.
-        iter : int, optional
-            Number of iterations (epochs) over the corpus.
         workers : int, optional
             Number of threads to use for training the model.
         epsilon : float, optional
@@ -117,7 +115,6 @@ class PoincareModel(utils.SaveLoad):
         self.burn_in_alpha = burn_in_alpha  # Learning rate for burn-in
         self.alpha = alpha  # Current learning rate
         self.negative = negative
-        self.iter = iter
         self.workers = workers
         self.epsilon = epsilon
         self.burn_in = burn_in
@@ -471,13 +468,16 @@ class PoincareModel(utils.SaveLoad):
         self.wv.syn0[indices_v] -= v_updates
         self.wv.syn0[indices_v] = self.clip_vectors(self.wv.syn0[indices_v], self.epsilon)
 
-    def train(self, batch_size=10, print_every=1000, check_gradients_every=1000):
+    def train(self, epochs, batch_size=10, print_every=1000, check_gradients_every=1000):
         """Trains Poincare embeddings using loaded data and model parameters.
 
         Parameters
         ----------
+
         batch_size : int, optional
             Number of examples to train on in a single batch.
+        epochs : int
+            Number of iterations (epochs) over the corpus.
         print_every : int, optional
             Prints progress and average loss after every `print_every` batches.
         check_gradients_every : int, optional
@@ -490,7 +490,7 @@ class PoincareModel(utils.SaveLoad):
         logger.info(
             "training model of size %d with %d workers on %d relations for %d epochs and %d burn-in epochs, "
             "using lr=%.5f burn-in lr=%.5f negative=%d",
-            self.size, self.workers, len(self.all_relations), self.iter, self.burn_in,
+            self.size, self.workers, len(self.all_relations), epochs, self.burn_in,
             self.alpha, self.burn_in_alpha, self.negative
         )
 
@@ -503,18 +503,19 @@ class PoincareModel(utils.SaveLoad):
             logger.info("Burn-in finished")
 
         self.alpha = self.train_alpha
-        logger.info("Starting training (%d epochs)----------------------------------------", self.iter)
+        logger.info("Starting training (%d epochs)----------------------------------------", epochs)
         self.train_batchwise(
-            batch_size=batch_size, print_every=print_every, check_gradients_every=check_gradients_every)
+            epochs=epochs, batch_size=batch_size, print_every=print_every,
+            check_gradients_every=check_gradients_every)
         logger.info("Training finished")
 
-    def train_batchwise(self, epochs=None, batch_size=10, print_every=1000, check_gradients_every=1000):
+    def train_batchwise(self, epochs, batch_size=10, print_every=1000, check_gradients_every=1000):
         """Trains Poincare embeddings using specified parameters.
 
         Parameters
         ----------
-        epochs : int or None, optional
-            Number of epochs after which training ends, if `None`, runs for `self.iter` epochs.
+        epochs : int
+            Number of iterations (epochs) over the corpus.
         batch_size : int, optional
             Number of examples to train on in a single batch.
         print_every : int, optional
@@ -525,8 +526,6 @@ class PoincareModel(utils.SaveLoad):
         """
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
-        if epochs is None:
-            epochs = self.iter
         for epoch in range(1, epochs + 1):
             indices = list(range(len(self.all_relations)))
             self.np_random.shuffle(indices)

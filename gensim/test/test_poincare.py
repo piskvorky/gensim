@@ -63,16 +63,16 @@ class TestPoincareModel(unittest.TestCase):
 
     def test_persistence(self):
         """Tests whether the model is saved and loaded correctly."""
-        model = PoincareModel(self.data, iter=1, burn_in=0, negative=3)
-        model.train()
+        model = PoincareModel(self.data, burn_in=0, negative=3)
+        model.train(epochs=1)
         model.save(testfile())
         loaded = PoincareModel.load(testfile())
         self.models_equal(model, loaded)
 
     def test_persistence_separate_file(self):
         """Tests whether the model is saved and loaded correctly when the arrays are stored separately."""
-        model = PoincareModel(self.data, iter=1, burn_in=0, negative=3)
-        model.train()
+        model = PoincareModel(self.data, burn_in=0, negative=3)
+        model.train(epochs=1)
         model.save(testfile(), sep_limit=1)
         loaded = PoincareModel.load(testfile())
         self.models_equal(model, loaded)
@@ -93,41 +93,41 @@ class TestPoincareModel(unittest.TestCase):
 
     def test_training(self):
         """Tests that vectors are different before and after training."""
-        model = PoincareModel(self.data_large, iter=2, negative=3)
+        model = PoincareModel(self.data_large, burn_in=0, negative=3)
         old_vectors = np.copy(model.wv.syn0)
-        model.train()
+        model.train(epochs=2)
         self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
 
     def test_gradients_check(self):
         """Tests that the gradients check succeeds during training."""
-        model = PoincareModel(self.data, iter=2, negative=3)
+        model = PoincareModel(self.data, negative=3)
         old_vectors = np.copy(model.wv.syn0)
-        model.train(batch_size=1, check_gradients_every=1)
+        model.train(epochs=1, batch_size=1, check_gradients_every=1)
         self.assertFalse(np.allclose(old_vectors, model.wv.syn0))
 
     def test_wrong_gradients_raises_assertion(self):
         """Tests that discrepancy in gradients raises an error."""
-        model = PoincareModel(self.data, iter=2, negative=3)
+        model = PoincareModel(self.data, negative=3)
         model.loss_grad = Mock(return_value=np.zeros((2 + model.negative, model.size)))
         with self.assertRaises(AssertionError):
-            model.train(batch_size=1, check_gradients_every=1)
+            model.train(epochs=1, batch_size=1, check_gradients_every=1)
 
     def test_reproducible(self):
         """Tests that vectors are same for two independent models trained with the same seed."""
-        model_1 = PoincareModel(self.data_large, iter=2, seed=1, negative=3)
-        model_1.train()
+        model_1 = PoincareModel(self.data_large, seed=1, negative=3, burn_in=1)
+        model_1.train(epochs=2)
 
-        model_2 = PoincareModel(self.data_large, iter=2, seed=1, negative=3)
-        model_2.train()
+        model_2 = PoincareModel(self.data_large, seed=1, negative=3, burn_in=1)
+        model_2.train(epochs=2)
         self.assertTrue(np.allclose(model_1.wv.syn0, model_2.wv.syn0))
 
     def test_burn_in(self):
         """Tests that vectors are different for models with and without burn-in."""
-        model_1 = PoincareModel(self.data, iter=2, burn_in=0, negative=3)
-        model_1.train()
+        model_1 = PoincareModel(self.data, burn_in=0, negative=3)
+        model_1.train(epochs=1)
 
-        model_2 = PoincareModel(self.data, iter=2, burn_in=1, negative=3)
-        model_2.train()
+        model_2 = PoincareModel(self.data, burn_in=1, negative=3)
+        model_2.train(epochs=1)
         self.assertFalse(np.allclose(model_1.wv.syn0, model_2.wv.syn0))
 
     def test_negatives(self):
@@ -139,7 +139,7 @@ class TestPoincareModel(unittest.TestCase):
         """Tests error is rased if number of negatives to sample is more than remaining nodes."""
         model = PoincareModel(self.data, negative=5)
         with self.assertRaises(ValueError):
-            model.train()
+            model.train(epochs=1)
 
     def test_no_duplicates_and_positives_in_negative_sample(self):
         """Tests that no duplicates or positively related nodes are present in negative samples."""
