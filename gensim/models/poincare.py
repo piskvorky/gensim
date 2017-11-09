@@ -136,7 +136,7 @@ class PoincareModel(utils.SaveLoad):
         vocab = {}
         index2word = []
         all_relations = []  # List of all relation pairs
-        term_relations = defaultdict(set)  # Mapping from node index to its related node indices
+        node_relations = defaultdict(set)  # Mapping from node index to its related node indices
 
         logger.info("Loading relations from train data..")
         for hypernym_pair in self.train_data:
@@ -150,7 +150,7 @@ class PoincareModel(utils.SaveLoad):
                     index2word.append(item)
             node_1, node_2 = hypernym_pair
             node_1_index, node_2_index = vocab[node_1].index, vocab[node_2].index
-            term_relations[node_1_index].add(node_2_index)
+            node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
             all_relations.append(relation)
         logger.info("Loaded %d relations from train data, %d unique terms", len(all_relations), len(vocab))
@@ -162,7 +162,7 @@ class PoincareModel(utils.SaveLoad):
         self.node_probabilities = counts / counts.sum()
         self.node_probabilities_cumsum = np.cumsum(self.node_probabilities)
         self.all_relations = all_relations
-        self.term_relations = term_relations
+        self.node_relations = node_relations
         self.negatives_buffer = NegativesBuffer([])  # Buffer to store negative samples, to reduce calls to sampling method
         self.negatives_buffer_size = 2000
 
@@ -224,7 +224,7 @@ class PoincareModel(utils.SaveLoad):
             Array of shape (self.negative,) containing indices of negative nodes for the given node index.
 
         """
-        node_relations = self.term_relations[node_index]
+        node_relations = self.node_relations[node_index]
         num_remaining_nodes = len(self.wv.vocab) - len(node_relations)
         if  num_remaining_nodes < self.negative:
             raise ValueError(
