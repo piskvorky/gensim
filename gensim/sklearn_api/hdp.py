@@ -51,7 +51,7 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
         Calls gensim.models.HdpModel
         """
         if sparse.issparse(X):
-            corpus = matutils.Sparse2Corpus(X)
+            corpus = matutils.Sparse2Corpus(X, False)
         else:
             corpus = X
 
