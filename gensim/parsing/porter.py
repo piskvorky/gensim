@@ -30,16 +30,23 @@ Release 2: July 2008
 
 Optimizations and cleanup of the code by Lars Buitinck, July 2012.
 
---------------------------------------------------------------------
+Notes:
+------
 
 The main part of the stemming algorithm (https://en.wikipedia.org/wiki/Stemming)
 starts in :func:`~gensim.parsing.porter.PorterStemmer`.
-b is a buffer holding a word to be stemmed. The letters are in b[0],
-b[1] ... ending at b[k]. k is readjusted downwards as the stemming
-progresses. j is word length.
+
+
+Attributes
+--------
+b : str : is a buffer holding a word to be stemmed. The letters are in b[0], b[1] ... ending at b[k].
+k : int : is readjusted downwards as the stemming progresses.
+j : int : is word length.
+
 
 Examples:
-    
+---------
+
 >>> from gensim.parsing.porter import PorterStemmer
 >>> p = PorterStemmer()
 >>> text = "Cats and ponies have meeting"
@@ -64,6 +71,7 @@ class PorterStemmer(object):
         b is a buffer holding a word to be stemmed. The letters are in b[0],
         b[1] ... ending at b[k]. k is readjusted downwards as the stemming
         progresses.
+
 
         Note that only lower case sequences are stemmed. Forcing to lower case
         should be done before stem(...) is called.
