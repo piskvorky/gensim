@@ -141,7 +141,7 @@ def info(name=None):
             logger.info("%s \n", json.dumps(data['corpora'][name], indent=4))
             return data['corpora'][name]
         elif name in models:
-            logger.info("%s \n", json.dumps(data['corpora'][name], indent=4))
+            logger.info("%s \n", json.dumps(data['models'][name], indent=4))
             return data['models'][name]
         else:
             raise Exception(
