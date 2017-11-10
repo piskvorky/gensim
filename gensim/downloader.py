@@ -381,6 +381,11 @@ def load(name, return_path=False):
     >>> for article in wiki:  # iterate over all wiki script
     >>>     ...
 
+    Download only example
+    >>> import gensim.downloader as api
+    >>>
+    >>> print(api.load("wiki-en", return_path=True))  # output: /home/user/gensim-data/wiki-en/wiki-en.gz
+
     """
     _create_base_dir()
     file_name = _get_filename(name)
