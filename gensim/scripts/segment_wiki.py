@@ -73,7 +73,8 @@ def segment_all_articles(file_path, min_article_character=200, workers=None):
 
     """
     with smart_open(file_path, 'rb') as xml_fileobj:
-        wiki_sections_corpus = _WikiSectionsCorpus(xml_fileobj, min_article_character=min_article_character, processes=workers)
+        wiki_sections_corpus = _WikiSectionsCorpus(
+            xml_fileobj, min_article_character=min_article_character, processes=workers)
         wiki_sections_corpus.metadata = True
         wiki_sections_text = wiki_sections_corpus.get_texts_with_sections()
         for article_title, article_sections in wiki_sections_text:
@@ -256,7 +257,8 @@ class _WikiSectionsCorpus(WikiCorpus):
             Structure contains (title, [(section_heading, section_content), ...]).
 
         """
-        articles = 0
+        skipped_namespace, skipped_length, skipped_redirect = 0, 0, 0
+        total_articles, total_sections = 0, 0
         page_xmls = extract_page_xmls(self.fileobj)
         pool = multiprocessing.Pool(self.processes)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
@@ -265,17 +267,24 @@ class _WikiSectionsCorpus(WikiCorpus):
             for article_title, sections in pool.imap(segment, group):  # chunksize=10):
                 # article redirects are pruned here
                 if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):  # filter non-articles
+                    skipped_namespace += 1
                     continue
                 if not sections or sections[0][1].lstrip().lower().startswith("#redirect"):  # filter redirect
+                    skipped_redirect += 1
                     continue
                 if sum(len(body.strip()) for (_, body) in sections) < self.min_article_character:
-                    # filter very short articles (trash)
+                    # filter stubs (incomplete, very short articles)
+                    skipped_length += 1
                     continue
 
-                articles += 1
+                total_articles += 1
+                total_sections += len(sections)
                 yield (article_title, sections)
+        logger.info(
+            "finished processing %i articles with %i sections (skipped %i redirects, %i stubs, %i ignored namespaces)",
+            total_articles, total_sections, skipped_redirect, skipped_length, skipped_namespace)
         pool.terminate()
-        self.length = articles  # cache corpus length
+        self.length = total_articles  # cache corpus length
 
 
 if __name__ == "__main__":
