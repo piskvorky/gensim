@@ -12,7 +12,7 @@ Corpus in the Matrix Market format.
 
 import logging
 
-from gensim import interfaces, matutils
+from gensim import matutils
 from gensim.corpora import IndexedCorpus
 
 
@@ -23,6 +23,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
     """
     Corpus in the Matrix Market format.
     """
+
     def __init__(self, fname):
         # avoid calling super(), too confusing
         IndexedCorpus.__init__(self, fname)
@@ -44,8 +45,8 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         This function is automatically called by `MmCorpus.serialize`; don't
         call it directly, call `serialize` instead.
         """
-        logger.info("storing corpus in Matrix Market format to %s" % fname)
+        logger.info("storing corpus in Matrix Market format to %s", fname)
         num_terms = len(id2word) if id2word is not None else None
-        return matutils.MmWriter.write_corpus(fname, corpus, num_terms=num_terms, index=True, progress_cnt=progress_cnt, metadata=metadata)
-
-# endclass MmCorpus
+        return matutils.MmWriter.write_corpus(
+            fname, corpus, num_terms=num_terms, index=True, progress_cnt=progress_cnt, metadata=metadata
+        )

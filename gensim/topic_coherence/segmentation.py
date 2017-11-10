@@ -9,9 +9,9 @@ This module contains functions to perform segmentation on a list of topics.
 """
 
 import logging
-import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 def s_one_pre(topics):
     """
@@ -27,18 +27,19 @@ def s_one_pre(topics):
         topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
 
     Returns:
-        s_one_pre : list of list of (W', W*) tuples for all unique topic ids
+        s_one_pre_res : list of list of (W', W*) tuples for all unique topic ids
     """
-    s_one_pre = []
+    s_one_pre_res = []
 
     for top_words in topics:
         s_one_pre_t = []
         for w_prime_index, w_prime in enumerate(top_words[1:]):
             for w_star in top_words[:w_prime_index + 1]:
                 s_one_pre_t.append((w_prime, w_star))
-        s_one_pre.append(s_one_pre_t)
+        s_one_pre_res.append(s_one_pre_t)
 
-    return s_one_pre
+    return s_one_pre_res
+
 
 def s_one_one(topics):
     """
@@ -54,9 +55,9 @@ def s_one_one(topics):
         topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
 
     Returns:
-        s_one_one : list of list of (W', W*) tuples for all unique topic ids
+        s_one_one_res : list of list of (W', W*) tuples for all unique topic ids
     """
-    s_one_one = []
+    s_one_one_res = []
 
     for top_words in topics:
         s_one_one_t = []
@@ -66,9 +67,10 @@ def s_one_one(topics):
                     continue
                 else:
                     s_one_one_t.append((w_prime, w_star))
-        s_one_one.append(s_one_one_t)
+        s_one_one_res.append(s_one_one_t)
 
-    return s_one_one
+    return s_one_one_res
+
 
 def s_one_set(topics):
     """
@@ -85,14 +87,14 @@ def s_one_set(topics):
         topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
 
     Returns:
-        s_one_set : list of list of (W', W*) tuples for all unique topic ids.
+        s_one_set_res : list of list of (W', W*) tuples for all unique topic ids.
     """
-    s_one_set = []
+    s_one_set_res = []
 
     for top_words in topics:
         s_one_set_t = []
         for w_prime in top_words:
             s_one_set_t.append((w_prime, top_words))
-        s_one_set.append(s_one_set_t)
+        s_one_set_res.append(s_one_set_t)
 
-    return s_one_set
+    return s_one_set_res

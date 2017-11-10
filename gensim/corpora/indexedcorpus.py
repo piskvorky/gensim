@@ -50,8 +50,8 @@ class IndexedCorpus(interfaces.CorpusABC):
             self.index = utils.unpickle(index_fname)
             # change self.index into a numpy.ndarray to support fancy indexing
             self.index = numpy.asarray(self.index)
-            logger.info("loaded corpus index from %s" % index_fname)
-        except:
+            logger.info("loaded corpus index from %s", index_fname)
+        except Exception:
             self.index = None
         self.length = None
 
@@ -83,27 +83,24 @@ class IndexedCorpus(interfaces.CorpusABC):
         if index_fname is None:
             index_fname = utils.smart_extension(fname, '.index')
 
+        kwargs = {'metadata': metadata}
         if progress_cnt is not None:
-            if labels is not None:
-                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels, progress_cnt=progress_cnt, metadata=metadata)
-            else:
-                offsets = serializer.save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt, metadata=metadata)
-        else:
-            if labels is not None:
-                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels, metadata=metadata)
-            else:
-                offsets = serializer.save_corpus(fname, corpus, id2word, metadata=metadata)
+            kwargs['progress_cnt'] = progress_cnt
+
+        if labels is not None:
+            kwargs['labels'] = labels
+
+        offsets = serializer.save_corpus(fname, corpus, id2word, **kwargs)
 
         if offsets is None:
-            raise NotImplementedError("called serialize on class %s which doesn't support indexing!" %
-                serializer.__name__)
+            raise NotImplementedError("Called serialize on class %s which doesn't support indexing!" % serializer.__name__)
 
         # store offsets persistently, using pickle
         # we shouldn't have to worry about self.index being a numpy.ndarray as the serializer will return
         # the offsets that are actually stored on disk - we're not storing self.index in any case, the
         # load just needs to turn whatever is loaded from disk back into a ndarray - this should also ensure
         # backwards compatibility
-        logger.info("saving %s index to %s" % (serializer.__name__, index_fname))
+        logger.info("saving %s index to %s", serializer.__name__, index_fname)
         utils.pickle(offsets, index_fname)
 
     def __len__(self):
@@ -115,20 +112,15 @@ class IndexedCorpus(interfaces.CorpusABC):
             return len(self.index)
         if self.length is None:
             logger.info("caching corpus length")
-            self.length = sum(1 for doc in self)
+            self.length = sum(1 for _ in self)
         return self.length
 
     def __getitem__(self, docno):
         if self.index is None:
-            raise RuntimeError("cannot call corpus[docid] without an index")
-
+            raise RuntimeError("Cannot call corpus[docid] without an index")
         if isinstance(docno, (slice, list, numpy.ndarray)):
             return utils.SlicedCorpus(self, docno)
         elif isinstance(docno, six.integer_types + (numpy.integer,)):
             return self.docbyoffset(self.index[docno])
         else:
             raise ValueError('Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')
-
-
-
-# endclass IndexedCorpus

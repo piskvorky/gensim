@@ -56,9 +56,9 @@ class SvmLightCorpus(IndexedCorpus):
 
         """
         IndexedCorpus.__init__(self, fname)
-        logger.info("loading corpus from %s" % fname)
+        logger.info("loading corpus from %s", fname)
 
-        self.fname = fname # input file, see class doc for format
+        self.fname = fname  # input file, see class doc for format
         self.length = None
         self.store_labels = store_labels
         self.labels = []
@@ -89,12 +89,12 @@ class SvmLightCorpus(IndexedCorpus):
         This function is automatically called by `SvmLightCorpus.serialize`; don't
         call it directly, call `serialize` instead.
         """
-        logger.info("converting corpus to SVMlight format: %s" % fname)
+        logger.info("converting corpus to SVMlight format: %s", fname)
 
         offsets = []
         with utils.smart_open(fname, 'wb') as fout:
             for docno, doc in enumerate(corpus):
-                label = labels[docno] if labels else 0 # target class is 0 by default
+                label = labels[docno] if labels else 0  # target class is 0 by default
                 offsets.append(fout.tell())
                 fout.write(utils.to_utf8(SvmLightCorpus.doc2line(doc, label)))
         return offsets
@@ -114,12 +114,12 @@ class SvmLightCorpus(IndexedCorpus):
         line = utils.to_unicode(line)
         line = line[: line.find('#')].strip()
         if not line:
-            return None # ignore comments and empty lines
+            return None  # ignore comments and empty lines
         parts = line.split()
         if not parts:
             raise ValueError('invalid line format in %s' % self.fname)
         target, fields = parts[0], [part.rsplit(':', 1) for part in parts[1:]]
-        doc = [(int(p1) - 1, float(p2)) for p1, p2 in fields if p1 != 'qid'] # ignore 'qid' features, convert 1-based feature ids to 0-based
+        doc = [(int(p1) - 1, float(p2)) for p1, p2 in fields if p1 != 'qid']  # ignore 'qid' features, convert 1-based feature ids to 0-based
         return doc, target
 
     @staticmethod
@@ -127,7 +127,5 @@ class SvmLightCorpus(IndexedCorpus):
         """
         Output the document in SVMlight format, as a string. Inverse function to `line2doc`.
         """
-        pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc) # +1 to convert 0-base to 1-base
+        pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc)  # +1 to convert 0-base to 1-base
         return "%s %s\n" % (label, pairs)
-
-# endclass SvmLightCorpus

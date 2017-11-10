@@ -10,7 +10,6 @@ Unit tests for the `corpora.Dictionary` class.
 
 from collections import Mapping
 import logging
-import tempfile
 import unittest
 import codecs
 import os
@@ -20,30 +19,14 @@ import scipy
 import gensim
 from gensim.corpora import Dictionary
 from gensim.utils import to_utf8
+from gensim.test.utils import get_tmpfile, common_texts
 from six import PY3
 from six.moves import zip
 
 
-# sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
-
-
-def get_tmpfile(suffix):
-    return os.path.join(tempfile.gettempdir(), suffix)
-
-
 class TestDictionary(unittest.TestCase):
     def setUp(self):
-        self.texts = [
-                ['human', 'interface', 'computer'],
-                ['survey', 'user', 'computer', 'system', 'response', 'time'],
-                ['eps', 'user', 'interface', 'system'],
-                ['system', 'human', 'system', 'eps'],
-                ['user', 'response', 'time'],
-                ['trees'],
-                ['graph', 'trees'],
-                ['graph', 'minors', 'trees'],
-                ['graph', 'minors', 'survey']]
+        self.texts = common_texts
 
     def testDocFreqOneDoc(self):
         texts = [['human', 'interface', 'computer']]
@@ -102,9 +85,10 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(sorted(d.dfs.keys()), expected_keys)
         self.assertEqual(sorted(d.dfs.values()), expected_values)
 
-        expected_keys = sorted(['computer', 'eps', 'graph', 'human',
-                                'interface', 'minors', 'response', 'survey',
-                                'system', 'time', 'trees', 'user'])
+        expected_keys = sorted([
+            'computer', 'eps', 'graph', 'human', 'interface',
+            'minors', 'response', 'survey', 'system', 'time', 'trees', 'user'
+        ])
         expected_values = list(range(12))
         self.assertEqual(sorted(d.token2id.keys()), expected_keys)
         self.assertEqual(sorted(d.token2id.values()), expected_values)
@@ -127,21 +111,21 @@ class TestDictionary(unittest.TestCase):
         # provide keep_tokens argument, keep the tokens given
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=3, no_above=1.0, keep_tokens=['human', 'survey'])
-        expected = set(['graph', 'trees', 'human', 'system', 'user', 'survey'])
+        expected = {'graph', 'trees', 'human', 'system', 'user', 'survey'}
         self.assertEqual(set(d.token2id.keys()), expected)
 
     def testFilterKeepTokens_unchangedFunctionality(self):
         # do not provide keep_tokens argument, filter_extremes functionality is unchanged
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=3, no_above=1.0)
-        expected = set(['graph', 'trees', 'system', 'user'])
+        expected = {'graph', 'trees', 'system', 'user'}
         self.assertEqual(set(d.token2id.keys()), expected)
 
     def testFilterKeepTokens_unseenToken(self):
         # do provide keep_tokens argument with unseen tokens, filter_extremes functionality is unchanged
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=3, no_above=1.0, keep_tokens=['unknown_token'])
-        expected = set(['graph', 'trees', 'system', 'user'])
+        expected = {'graph', 'trees', 'system', 'user'}
         self.assertEqual(set(d.token2id.keys()), expected)
 
     def testFilterMostFrequent(self):
@@ -160,7 +144,8 @@ class TestDictionary(unittest.TestCase):
         expected = {
             'computer': 0, 'eps': 8, 'graph': 10, 'human': 1,
             'interface': 2, 'minors': 11, 'response': 3, 'survey': 4,
-            'system': 5, 'time': 6, 'trees': 9, 'user': 7}
+            'system': 5, 'time': 6, 'trees': 9, 'user': 7
+        }
         del expected[removed_word]
         self.assertEqual(sorted(d.token2id.keys()), sorted(expected.keys()))
 
@@ -186,7 +171,8 @@ class TestDictionary(unittest.TestCase):
         small_text = [
             ["prvé", "slovo"],
             ["slovo", "druhé"],
-            ["druhé", "slovo"]]
+            ["druhé", "slovo"]
+        ]
 
         d = Dictionary(small_text)
 
@@ -264,7 +250,8 @@ class TestDictionary(unittest.TestCase):
             "The generation of random binary unordered trees",
             "The intersection graph of paths in trees",
             "Graph minors IV Widths of trees and well quasi ordering",
-            "Graph minors A survey"]
+            "Graph minors A survey"
+        ]
         stoplist = set('for a of the and to in'.split())
         texts = [
             [word for word in document.lower().split() if word not in stoplist]

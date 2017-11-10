@@ -10,10 +10,9 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
+import collections
 import logging
 import warnings
-
-logger = logging.getLogger(__name__)
 
 try:
     from html.entities import name2codepoint as n2cp
@@ -34,18 +33,19 @@ from functools import wraps  # for `synchronous` function lock
 import multiprocessing
 import shutil
 import sys
-from contextlib import contextmanager
 import subprocess
 
 import numpy as np
 import numbers
 import scipy.sparse
 
+from six import iterkeys, iteritems, u, string_types, unichr
+from six.moves import xrange
+
 if sys.version_info[0] >= 3:
     unicode = str
 
-from six import iterkeys, iteritems, u, string_types, unichr
-from six.moves import xrange
+logger = logging.getLogger(__name__)
 
 try:
     from smart_open import smart_open
@@ -78,7 +78,7 @@ except ImportError:
         return open(fname, mode)
 
 
-PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
+PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
@@ -106,12 +106,12 @@ def synchronous(tlockname):
         @wraps(func)
         def _synchronizer(self, *args, **kwargs):
             tlock = getattr(self, tlockname)
-            logger.debug("acquiring lock %r for %s" % (tlockname, func.__name__))
+            logger.debug("acquiring lock %r for %s", tlockname, func.__name__)
 
             with tlock:  # use lock as a context manager to perform safe acquire/release pairs
-                logger.debug("acquired lock %r for %s" % (tlockname, func.__name__))
+                logger.debug("acquired lock %r for %s", tlockname, func.__name__)
                 result = func(self, *args, **kwargs)
-                logger.debug("releasing lock %r for %s" % (tlockname, func.__name__))
+                logger.debug("releasing lock %r for %s", tlockname, func.__name__)
                 return result
         return _synchronizer
     return _synched
@@ -129,10 +129,11 @@ class NoCM(object):
 
     def __exit__(self, type, value, traceback):
         pass
+
+
 nocm = NoCM()
 
 
-@contextmanager
 def file_or_filename(input):
     """
     Return a file-like object ready to be read from the beginning. `input` is either
@@ -141,11 +142,11 @@ def file_or_filename(input):
     """
     if isinstance(input, string_types):
         # input was a filename: open as file
-        yield smart_open(input)
+        return smart_open(input)
     else:
         # input already a file-like object; just reset to the beginning
         input.seek(0)
-        yield input
+        return input
 
 
 def deaccent(text):
@@ -179,8 +180,7 @@ def copytree_hardlink(source, dest):
         shutil.copy2 = copy2
 
 
-def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict", to_lower=False,
-             lower=False):
+def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict", to_lower=False, lower=False):
     """
     Iteratively yield tokens as unicode strings, removing accent marks
     and optionally lowercasing the unidoce string by assigning True
@@ -230,6 +230,8 @@ def any2utf8(text, errors='strict', encoding='utf8'):
         return text.encode('utf8')
     # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
     return unicode(text, encoding, errors=errors).encode('utf8')
+
+
 to_utf8 = any2utf8
 
 
@@ -238,6 +240,8 @@ def any2unicode(text, encoding='utf8', errors='strict'):
     if isinstance(text, unicode):
         return text
     return unicode(text, encoding, errors=errors)
+
+
 to_unicode = any2unicode
 
 
@@ -269,7 +273,7 @@ class SaveLoad(object):
         is encountered.
 
         """
-        logger.info("loading %s object from %s" % (cls.__name__, fname))
+        logger.info("loading %s object from %s", cls.__name__, fname)
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
@@ -284,19 +288,19 @@ class SaveLoad(object):
         opportunity to recursively included SaveLoad instances.
 
         """
-        mmap_error = lambda x, y: IOError(
-            'Cannot mmap compressed object %s in file %s. ' % (x, y) +
-            'Use `load(fname, mmap=None)` or uncompress files manually.')
+        def mmap_error(obj, filename):
+            return IOError(
+                'Cannot mmap compressed object %s in file %s. ' % (obj, filename) +
+                'Use `load(fname, mmap=None)` or uncompress files manually.'
+            )
 
         for attrib in getattr(self, '__recursive_saveloads', []):
             cfname = '.'.join((fname, attrib))
-            logger.info("loading %s recursively from %s.* with mmap=%s" % (
-                attrib, cfname, mmap))
+            logger.info("loading %s recursively from %s.* with mmap=%s", attrib, cfname, mmap)
             getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
 
         for attrib in getattr(self, '__numpys', []):
-            logger.info("loading %s from %s with mmap=%s" % (
-                attrib, subname(fname, attrib), mmap))
+            logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
 
             if compress:
                 if mmap:
@@ -309,8 +313,7 @@ class SaveLoad(object):
             setattr(self, attrib, val)
 
         for attrib in getattr(self, '__scipys', []):
-            logger.info("loading %s from %s with mmap=%s" % (
-                attrib, subname(fname, attrib), mmap))
+            logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
             sparse = unpickle(subname(fname, attrib))
             if compress:
                 if mmap:
@@ -328,22 +331,16 @@ class SaveLoad(object):
             setattr(self, attrib, sparse)
 
         for attrib in getattr(self, '__ignoreds', []):
-            logger.info("setting ignored attribute %s to None" % (attrib))
+            logger.info("setting ignored attribute %s to None", attrib)
             setattr(self, attrib, None)
 
     @staticmethod
     def _adapt_by_suffix(fname):
         """Give appropriate compress setting and filename formula"""
-        if fname.endswith('.gz') or fname.endswith('.bz2'):
-            compress = True
-            subname = lambda *args: '.'.join(list(args) + ['npz'])
-        else:
-            compress = False
-            subname = lambda *args: '.'.join(list(args) + ['npy'])
-        return (compress, subname)
+        compress, suffix = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
+        return compress, lambda *args: '.'.join(args + (suffix,))
 
-    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2,
-                    ignore=frozenset(), pickle_protocol=2):
+    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
         """
         Save the object to file (also see `load`).
 
@@ -364,9 +361,7 @@ class SaveLoad(object):
         in both Python 2 and 3.
 
         """
-        logger.info(
-            "saving %s object under %s, separately %s" % (
-                self.__class__.__name__, fname, separately))
+        logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
@@ -413,17 +408,14 @@ class SaveLoad(object):
             if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
                 cfname = '.'.join((fname, attrib))
-                restores.extend(val._save_specials(
-                    cfname, None, sep_limit, ignore,
-                    pickle_protocol, compress, subname))
+                restores.extend(val._save_specials(cfname, None, sep_limit, ignore, pickle_protocol, compress, subname))
 
         try:
             numpys, scipys, ignoreds = [], [], []
             for attrib, val in iteritems(asides):
                 if isinstance(val, np.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
-                    logger.info("storing np array '%s' to %s" % (
-                        attrib, subname(fname, attrib)))
+                    logger.info("storing np array '%s' to %s", attrib, subname(fname, attrib))
 
                     if compress:
                         np.savez_compressed(subname(fname, attrib), val=np.ascontiguousarray(val))
@@ -432,15 +424,15 @@ class SaveLoad(object):
 
                 elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
                     scipys.append(attrib)
-                    logger.info("storing scipy.sparse array '%s' under %s" % (
-                        attrib, subname(fname, attrib)))
+                    logger.info("storing scipy.sparse array '%s' under %s", attrib, subname(fname, attrib))
 
                     if compress:
                         np.savez_compressed(
                             subname(fname, attrib, 'sparse'),
                             data=val.data,
                             indptr=val.indptr,
-                            indices=val.indices)
+                            indices=val.indices
+                        )
                     else:
                         np.save(subname(fname, attrib, 'data'), val.data)
                         np.save(subname(fname, attrib, 'indptr'), val.indptr)
@@ -455,22 +447,21 @@ class SaveLoad(object):
                     finally:
                         val.data, val.indptr, val.indices = data, indptr, indices
                 else:
-                    logger.info("not storing attribute %s" % (attrib))
+                    logger.info("not storing attribute %s", attrib)
                     ignoreds.append(attrib)
 
             self.__dict__['__numpys'] = numpys
             self.__dict__['__scipys'] = scipys
             self.__dict__['__ignoreds'] = ignoreds
             self.__dict__['__recursive_saveloads'] = recursive_saveloads
-        except:
+        except Exception:
             # restore the attributes if exception-interrupted
             for attrib, val in iteritems(asides):
                 setattr(self, attrib, val)
             raise
         return restores + [(self, asides)]
 
-    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
-             ignore=frozenset(), pickle_protocol=2):
+    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
         """
         Save the object to file (also see `load`).
 
@@ -498,11 +489,9 @@ class SaveLoad(object):
         """
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
-            logger.info("saved %s object" % self.__class__.__name__)
+            logger.info("saved %s object", self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
-            self._smart_save(fname_or_handle, separately, sep_limit, ignore,
-                             pickle_protocol=pickle_protocol)
-#endclass SaveLoad
+            self._smart_save(fname_or_handle, separately, sep_limit, ignore, pickle_protocol=pickle_protocol)
 
 
 def identity(p):
@@ -532,6 +521,7 @@ class FakeDict(object):
     is a waste of memory.
 
     """
+
     def __init__(self, num_terms):
         self.num_terms = num_terms
 
@@ -599,7 +589,7 @@ def is_corpus(obj):
     try:
         if 'Corpus' in obj.__class__.__name__:  # the most common case, quick hack
             return True, obj
-    except:
+    except Exception:
         pass
     try:
         if hasattr(obj, 'next') or hasattr(obj, '__next__'):
@@ -637,14 +627,14 @@ def get_my_ip():
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect((ns._pyroUri.host, ns._pyroUri.port))
         result, port = s.getsockname()
-    except:
+    except Exception:
         try:
             # see what ifconfig says about our default interface
             import commands
             result = commands.getoutput("ifconfig").split("\n")[1].split()[1][5:]
             if len(result.split('.')) != 4:
                 raise Exception()
-        except:
+        except Exception:
             # give up, leave the resolution to gethostbyname
             result = socket.gethostbyname(socket.gethostname())
     return result
@@ -655,6 +645,7 @@ class RepeatCorpus(SaveLoad):
     Used in the tutorial on distributed computing and likely not useful anywhere else.
 
     """
+
     def __init__(self, corpus, reps):
         """
         Wrap a `corpus` as another corpus of length `reps`. This is achieved by
@@ -734,17 +725,18 @@ class SlicedCorpus(SaveLoad):
 
     def __iter__(self):
         if hasattr(self.corpus, 'index') and len(self.corpus.index) > 0:
-            return (self.corpus.docbyoffset(i) for i in
-                    self.corpus.index[self.slice_])
-        else:
-            return itertools.islice(self.corpus, self.slice_.start,
-                                    self.slice_.stop, self.slice_.step)
+            return (self.corpus.docbyoffset(i) for i in self.corpus.index[self.slice_])
+        return itertools.islice(self.corpus, self.slice_.start, self.slice_.stop, self.slice_.step)
 
     def __len__(self):
         # check cached length, calculate if needed
         if self.length is None:
             if isinstance(self.slice_, (list, np.ndarray)):
                 self.length = len(self.slice_)
+            elif isinstance(self.slice_, slice):
+                (start, end, step) = self.slice_.indices(len(self.corpus.index))
+                diff = end - start
+                self.length = diff // step + (diff % step > 0)
             else:
                 self.length = sum(1 for x in self)
 
@@ -794,7 +786,7 @@ def decode_htmlentities(text):
                     return safe_unichr(cp)
                 else:
                     return match.group()
-        except:
+        except Exception:
             # in case of errors, return original input
             return match.group()
 
@@ -822,6 +814,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
             break
         # memory opt: wrap the chunk and then pop(), to avoid leaving behind a dangling reference
         yield wrapped_chunk.pop()
+
 
 grouper = chunkize_serial
 
@@ -855,10 +848,8 @@ class InputQueue(multiprocessing.Process):
                 qsize = self.q.qsize()
             except NotImplementedError:
                 qsize = '?'
-            logger.debug("prepared another chunk of %i documents (qsize=%s)" %
-                        (len(wrapped_chunk[0]), qsize))
+            logger.debug("prepared another chunk of %i documents (qsize=%s)", len(wrapped_chunk[0]), qsize)
             self.q.put(wrapped_chunk.pop(), block=True)
-#endclass InputQueue
 
 
 if os.name == 'nt':
@@ -948,7 +939,7 @@ def revdict(d):
     result (which one is kept is arbitrary).
 
     """
-    return dict((v, k) for (k, v) in iteritems(dict(d)))
+    return {v: k for (k, v) in iteritems(dict(d))}
 
 
 def toptexts(query, texts, index, n=10):
@@ -965,10 +956,7 @@ def toptexts(query, texts, index, n=10):
     sims = index[query]  # perform a similarity query against the corpus
     sims = sorted(enumerate(sims), key=lambda item: -item[1])
 
-    result = []
-    for topid, topcosine in sims[:n]:  # only consider top-n most similar docs
-        result.append((topid, topcosine, texts[topid]))
-    return result
+    return [(topid, topcosine, texts[topid]) for topid, topcosine in sims[:n]]  # only consider top-n most similar docs
 
 
 def randfname(prefix='gensim'):
@@ -988,7 +976,7 @@ def upload_chunked(server, docs, chunksize=1000, preprocess=None):
     start = 0
     for chunk in grouper(docs, chunksize):
         end = start + len(chunk)
-        logger.info("uploading documents %i-%i" % (start, end - 1))
+        logger.info("uploading documents %i-%i", start, end - 1)
         if preprocess is not None:
             pchunk = []
             for doc in chunk:
@@ -1011,15 +999,18 @@ def getNS(host=None, port=None, broadcast=True, hmac_key=None):
         raise RuntimeError("Pyro name server not found")
 
 
-def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf={}):
+def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None):
     """
     Register object with name server (starting the name server if not running
     yet) and block until the daemon is terminated. The object is registered under
     `name`, or `name`+ some random suffix if `random_suffix` is set.
 
     """
+    if ns_conf is None:
+        ns_conf = {}
     if random_suffix:
         name += '.' + hex(random.randint(0, 0xffffff))[2:]
+
     import Pyro4
     with getNS(**ns_conf) as ns:
         with Pyro4.Daemon(ip or get_my_ip(), port or 0) as daemon:
@@ -1027,7 +1018,7 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf={}):
             uri = daemon.register(obj, name)
             ns.remove(name)
             ns.register(name, uri)
-            logger.info("%s registered with nameserver (URI '%s')" % (name, uri))
+            logger.info("%s registered with nameserver (URI '%s')", name, uri)
             daemon.requestLoop()
 
 
@@ -1036,15 +1027,14 @@ def has_pattern():
     Function which returns a flag indicating whether pattern is installed or not
     """
     try:
-        from pattern.en import parse
+        from pattern.en import parse  # noqa:F401
         return True
     except ImportError:
         return False
 
 
-def lemmatize(
-        content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
-        stopwords=frozenset(), min_length=2, max_length=15):
+def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
+              stopwords=frozenset(), min_length=2, max_length=15):
     """
     This function is only available when the optional 'pattern' package is installed.
 
@@ -1097,9 +1087,7 @@ def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
 
     """
     nnz = np.random.uniform(size=(dim,))
-    data = [(i, float(np.random.poisson(lam=lam) + 1.0))
-            for i in xrange(dim) if nnz[i] < prob_nnz]
-    return data
+    return [(i, float(np.random.poisson(lam=lam) + 1.0)) for i in xrange(dim) if nnz[i] < prob_nnz]
 
 
 def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
@@ -1108,9 +1096,7 @@ def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
     to be used as a mock corpus.
 
     """
-    data = [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam)
-            for _ in xrange(n_items)]
-    return data
+    return [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam) for _ in xrange(n_items)]
 
 
 def prune_vocab(vocab, min_reduce, trim_rule=None):
@@ -1126,8 +1112,7 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
         if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
-    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
-                old_len - len(vocab), min_reduce, old_len, len(vocab))
+    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)", old_len - len(vocab), min_reduce, old_len, len(vocab))
     return result
 
 
@@ -1138,6 +1123,7 @@ def qsize(queue):
     except NotImplementedError:
         # OS X doesn't support qsize
         return -1
+
 
 RULE_DEFAULT = 0
 RULE_DISCARD = 1
@@ -1263,3 +1249,26 @@ def _iter_windows(document, window_size, copy=False, ignore_below_size=True):
     else:
         for doc_window in doc_windows:
             yield doc_window.copy() if copy else doc_window
+
+
+def flatten(nested_list):
+    """Recursively flatten out a nested list.
+
+    Args:
+        nested_list (list): possibly nested list.
+
+    Returns:
+        list: flattened version of input, where any list elements have been unpacked into the
+            top-level list in a recursive fashion.
+    """
+    return list(lazy_flatten(nested_list))
+
+
+def lazy_flatten(nested_list):
+    """Lazy version of `flatten`."""
+    for el in nested_list:
+        if isinstance(el, collections.Iterable) and not isinstance(el, string_types):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el
