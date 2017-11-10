@@ -24,17 +24,22 @@ base_dir = os.path.join(user_dir, 'gensim-data')
 logger = logging.getLogger('gensim.api')
 
 
-def _progress(chunks_downloaded, chunk_size, total_size, part=1, no_parts=1):
-    """Create and update the _progress bar.
+def _progress(chunks_downloaded, chunk_size, total_size, part=1, total_parts=1):
+    """Reporthook for :func:`urllib.urlretrieve`.
 
     Parameters
     ----------
     chunks_downloaded : int
         Number of chunks of data that have been downloaded.
-    chunks_size : int
+    chunk_size : int
         Size of each chunk of data.
     total_size : int
         Total size of the dataset/model.
+    part : int, optional
+        Number of current part, used only if `no_parts` > 1.
+    total_parts : int, optional
+        Total number of parts.
+
 
     References
     ----------
@@ -46,17 +51,21 @@ def _progress(chunks_downloaded, chunk_size, total_size, part=1, no_parts=1):
     filled_len = int(math.floor((bar_len * size_downloaded) / total_size))
     percent_downloaded = round(((size_downloaded * 100) / total_size), 1)
     bar = '=' * filled_len + '-' * (bar_len - filled_len)
-    if no_parts == 1:
+    if total_parts == 1:
         sys.stdout.write(
-            '\r[%s] %s%s %s/%sMB downloaded' % (bar, percent_downloaded, "%",
-            round(size_downloaded / (1024 * 1024), 1),
-            round(float(total_size) / (1024 * 1024), 1)))
+            '\r[%s] %s%s %s/%sMB downloaded' % (
+                bar, percent_downloaded, "%",
+                round(size_downloaded / (1024 * 1024), 1),
+                round(float(total_size) / (1024 * 1024), 1))
+        )
         sys.stdout.flush()
     else:
         sys.stdout.write(
-            '\r Part %s/%s [%s] %s%s %s/%sMB downloaded' % (part + 1, no_parts, bar, percent_downloaded, "%",
-            round(size_downloaded / (1024 * 1024), 1),
-            round(float(total_size) / (1024 * 1024), 1)))
+            '\r Part %s/%s [%s] %s%s %s/%sMB downloaded' % (
+                part + 1, total_parts, bar, percent_downloaded, "%",
+                round(size_downloaded / (1024 * 1024), 1),
+                round(float(total_size) / (1024 * 1024), 1))
+        )
         sys.stdout.flush()
 
 
@@ -66,8 +75,8 @@ def _create_base_dir():
     Raises
     ------
     Exception
-        An exception is raised when read/write permissions are not available or a file named
-        gensim-data already exists in the home directory.
+        An exception is raised when read/write permissions are not available or a file named gensim-data
+        already exists in the home directory.
 
     """
     if not os.path.isdir(base_dir):
@@ -78,86 +87,88 @@ def _create_base_dir():
             if e.errno == errno.EEXIST:
                 raise Exception(
                     "Not able to create folder gensim-data in {}. File gensim-data "
-                    "exists in the direcory already.".format(user_dir))
+                    "exists in the direcory already.".format(user_dir)
+                )
             else:
                 raise Exception(
                     "Can't create {}. Make sure you have the read/write permissions "
                     "to the directory or you can try creating the folder manually"
-                    .format(base_dir))
+                    .format(base_dir)
+                )
 
 
-def _calculate_md5_checksum(tar_file):
-    """Calculate the checksum of the given tar.gz file.
+def _calculate_md5_checksum(fname):
+    """Calculate the checksum of the file, exactly same as md5-sum linux util.
 
     Parameters
     ----------
-    tar_file : str
-        Path to the tar.gz file that contains the downloaded dataset/model.
+    fname : str
+        Path to the file.
 
     Returns
     -------
     str
-        Return the calculated checksum of the tsr.gz file.
+        MD5-hash of file names as `fname`.
 
     """
     hash_md5 = hashlib.md5()
-    with open(tar_file, "rb") as f:
+    with open(fname, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
 
 def info(name=None):
-    """Return the information related to model/dataset.
-
-    If name is supplied, then information related to the given dataset/model will
-    be returned. Otherwise detailed information of all model/datasets will be returned.
+    """Provide the information related to model/dataset.
 
     Parameters
     ----------
-    name : str or None, optional
-        str stores the data name.
+    name : str, optional
+        Name of model/dataset.
+
     Returns
     -------
     dict
-        Return detailed information about all models/datasets if name is not
-        provided. Otherwise return detailed informtiona of the specific model/dataset.
+        Detailed information about one or all models/datasets. If name is specified,
+        return full information about concrete dataset/model, otherwise,
+        return information about all available datasets/models.
 
     Raises
     ------
     Exception
-        If name that has been passed is incorrect, an exception is raised.
+        If name that has been passed is incorrect.
 
     """
     url = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
-    response = urlopen(url)
-    data = response.read().decode("utf-8")
-    data = json.loads(data)
+    information = json.loads(urlopen(url).read().decode("utf-8"))
+
     if name is not None:
-        corpora = data['corpora']
-        models = data['models']
+        corpora = information['corpora']
+        models = information['models']
         if name in corpora:
-            logger.info("%s \n", json.dumps(data['corpora'][name], indent=4))
-            return data['corpora'][name]
+            logger.info("%s \n", json.dumps(information['corpora'][name], indent=4))
+            return information['corpora'][name]
         elif name in models:
-            logger.info("%s \n", json.dumps(data['corpora'][name], indent=4))
-            return data['models'][name]
+            logger.info("%s \n", json.dumps(information['corpora'][name], indent=4))
+            return information['models'][name]
         else:
             raise Exception(
                 "Incorrect model/corpus name. Choose the model/corpus from the list "
-                "\n {}".format(json.dumps(data, indent=4)))
+                "\n {}".format(json.dumps(information, indent=4))
+            )
     else:
-        return data
+        return information
 
 
 def _get_checksum(name, part=None):
-    """Retrieve the checksum of the model/dataset.
-    This is compared to the checksum of the downloaded model/dataset in _download function.
+    """Retrieve the checksum of the model/dataset from gensim-data repository.
 
     Parameters
     ----------
-    name: str
+    name : str
         Dataset/model name.
+    part : int, optional
+        Number of part (for multipart data only).
 
     Returns
     -------
@@ -165,19 +176,19 @@ def _get_checksum(name, part=None):
         Retrieved checksum of dataset/model.
 
     """
-    data = info()
-    corpora = data['corpora']
-    models = data['models']
+    information = info()
+    corpora = information['corpora']
+    models = information['models']
     if part is None:
         if name in corpora:
-            return data['corpora'][name]["checksum"]
+            return information['corpora'][name]["checksum"]
         elif name in models:
-            return data['models'][name]["checksum"]
+            return information['models'][name]["checksum"]
     else:
         if name in corpora:
-            return data['corpora'][name]["checksum-{}".format(part)]
+            return information['corpora'][name]["checksum-{}".format(part)]
         elif name in models:
-            return data['models'][name]["checksum-{}".format(part)]
+            return information['models'][name]["checksum-{}".format(part)]
 
 
 def _get_parts(name):
@@ -194,13 +205,13 @@ def _get_parts(name):
         Number of parts in which dataset/model has been split.
 
     """
-    data = info()
-    corpora = data['corpora']
-    models = data['models']
+    information = info()
+    corpora = information['corpora']
+    models = information['models']
     if name in corpora:
-        return data['corpora'][name]["parts"]
+        return information['corpora'][name]["parts"]
     elif name in models:
-        return data['models'][name]["parts"]
+        return information['models'][name]["parts"]
 
 
 def _download(name):
@@ -225,7 +236,10 @@ def _download(name):
             url_data = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.gz_0{p}".format(f=name, p=part)
             compressed_folder_name = "{f}.gz_0{p}".format(f=name, p=part)
             tmp_data_file_dir = os.path.join(tmp_dir, compressed_folder_name)
-            urllib.urlretrieve(url_data, tmp_data_file_dir, reporthook=partial(_progress, part=part, no_parts=no_parts))
+            urllib.urlretrieve(
+                url_data, tmp_data_file_dir,
+                reporthook=partial(_progress, part=part, total_parts=no_parts)
+            )
             if _calculate_md5_checksum(tmp_data_file_dir) == _get_checksum(name, part):
                 sys.stdout.write("\n")
                 sys.stdout.flush()
@@ -256,26 +270,26 @@ def _download(name):
 
 
 def _get_filename(name):
-    """Retrive the filename(or foldername, in case of some datasets) of the dataset/model.
+    """Retrieve the filename of the dataset/model.
 
     Parameters
     ----------
     name: str
-        Dataset/model of which filename is retrieved.
+        Name of dataset/model.
 
     Returns
     -------
     str:
-        Filename(or foldername, in case of some datasets) of the dataset/model.
+        Filename of the dataset/model.
 
     """
-    data = info()
-    corpora = data['corpora']
-    models = data['models']
+    information = info()
+    corpora = information['corpora']
+    models = information['models']
     if name in corpora:
-        return data['corpora'][name]["file_name"]
+        return information['corpora'][name]["file_name"]
     elif name in models:
-        return data['models'][name]["file_name"]
+        return information['models'][name]["file_name"]
 
 
 def load(name, return_path=False):
@@ -301,7 +315,8 @@ def load(name, return_path=False):
     if file_name is None:
         raise Exception(
             "Incorrect model/corpus name. Choose the model/corpus from the list "
-            "\n {}".format(json.dumps(info(), indent=4)))
+            "\n {}".format(json.dumps(info(), indent=4))
+        )
     folder_dir = os.path.join(base_dir, name)
     data_dir = os.path.join(folder_dir, file_name)
     if not os.path.exists(folder_dir):
@@ -312,17 +327,32 @@ def load(name, return_path=False):
     else:
         sys.path.insert(0, base_dir)
         module = __import__(name)
-        data = module.load_data()
-        return data
+        return module.load_data()
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s :%(name)s :%(levelname)s :%(message)s', stream=sys.stdout, level=logging.INFO)
-    parser = argparse.ArgumentParser(description="Gensim console API", usage="python -m gensim.api.downloader  [-h] [-d data_name | -i data_name | -c]")
+    logging.basicConfig(
+        format='%(asctime)s :%(name)s :%(levelname)s :%(message)s', stream=sys.stdout, level=logging.INFO
+    )
+    parser = argparse.ArgumentParser(
+        description="Gensim console API",
+        usage="python -m gensim.api.downloader  [-h] [-d data_name | -i data_name | -c]"
+    )
+
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-d", "--download", metavar="data_name", nargs=1, help="To download a corpus/model : python -m gensim.downloader -d corpus/model name")
-    group.add_argument("-i", "--info", metavar="data_name", nargs=1, help="To get information about a corpus/model : python -m gensim.downloader -i model/corpus name")
-    group.add_argument("-c", "--catalogue", help="To get the list of all models/corpus stored : python -m gensim.downloader -c", action="store_true")
+    group.add_argument(
+        "-d", "--download", metavar="data_name", nargs=1,
+        help="To download a corpus/model : python -m gensim.downloader -d <dataname>"
+    )
+    group.add_argument(
+        "-i", "--info", metavar="data_name", nargs=1,
+        help="To get information about a corpus/model : python -m gensim.downloader -i <dataname>"
+    )
+    group.add_argument(
+        "-c", "--catalogue", action="store_true",
+        help="To get the list of all models/corpus stored : python -m gensim.downloader -c"
+    )
+
     args = parser.parse_args()
     if args.download is not None:
         data_path = load(args.download[0], return_path=True)
