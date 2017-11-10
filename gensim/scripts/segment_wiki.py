@@ -5,30 +5,25 @@
 # Copyright (C) 2016 RaRe Technologies
 
 """
-Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump (typical filename
-is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2),
-extract titles, section names, section content and save to json-line format,
-that contains 3 fields ::
+CLI script for processing a raw Wikipedia dump (the xml.bz2 format provided by MediaWiki).
 
-    'title' (str) - title of article,
-    'section_titles' (list) - list of titles of sections,
-    'section_texts' (list) - list of content from sections.
-
-English Wikipedia dump available
-`here <https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2>`_. Approximate time
-for processing is 2.5 hours (i7-6700HQ, SSD).
+It streams through all the XML articles and extracts their plain text. For each article,
+it prints its title, section names and section contents, in json-line format.
 
 Examples
 --------
 
-Convert wiki to json-lines format:
-`python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 | gzip > enwiki-latest.json.gz`
+The English Wikipedia dump is available
+`here <https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2>`_.
+Its approximate time for processing is 2.5 hours (about 3 million articles per hour, on i7-6700HQ, SSD):
 
-Read json-lines dump
+  python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 -o enwiki-latest.json.gz
+
+You can then read the created output with:
 
 >>> # iterate over the plain text file we just created
 >>> for line in smart_open('enwiki-latest.json.gz'):
->>>    # decode JSON into a Python object
+>>>    # decode each JSON line into a Python dictionary object
 >>>    article = json.loads(line)
 >>>
 >>>    # each article has a "title", "section_titles" and "section_texts" fields
@@ -36,7 +31,6 @@ Read json-lines dump
 >>>    for section_title, section_text in zip(article['section_titles'], article['section_texts']):
 >>>        print("Section title: %s" % section_title)
 >>>        print("Section text: %s" % section_text)
-
 """
 
 import argparse
