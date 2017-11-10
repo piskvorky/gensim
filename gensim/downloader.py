@@ -191,18 +191,12 @@ def info(name=None):
         corpora = information['corpora']
         models = information['models']
         if name in corpora:
-            logger.info("%s \n", json.dumps(information['corpora'][name], indent=4))
             return information['corpora'][name]
         elif name in models:
-            logger.info("%s \n", json.dumps(information['corpora'][name], indent=4))
             return information['models'][name]
         else:
-            raise Exception(
-                "Incorrect model/corpus name. Choose the model/corpus from the list "
-                "\n {}".format(json.dumps(information, indent=4))
-            )
+            raise Exception("Incorrect model/corpus name")
     else:
-        logger.info("%s \n", json.dumps(information, indent=4))
         return information
 
 
@@ -434,7 +428,5 @@ if __name__ == '__main__':
         data_path = load(args.download[0], return_path=True)
         logger.info("Data has been installed and data path is %s", data_path)
     elif args.info is not None:
-        if args.info == full_information:
-            info()
-        else:
-            info(name=args.info)
+        output = info() if (args.info == full_information) else info(name=args.info)
+        print(json.dumps(info, indent=4))
