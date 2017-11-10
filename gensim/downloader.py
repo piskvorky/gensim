@@ -268,33 +268,41 @@ def _download(name):
     name: str
         Dataset/model name which has to be downloaded.
 
+    Raises
+    ------
+    Exception
+        If md5sum on client and in repo are different.
+
     """
     url_load_file = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/__init__.py".format(f=name)
     data_folder_dir = os.path.join(base_dir, name)
     tmp_dir = tempfile.mkdtemp()
-    tmp_load_file_path = os.path.join(tmp_dir, "__init__.py")
-    urllib.urlretrieve(url_load_file, tmp_load_file_path)
-    no_parts = _get_parts(name)
-    if no_parts > 1:
+    init_path = os.path.join(tmp_dir, "__init__.py")
+    urllib.urlretrieve(url_load_file, init_path)
+    total_parts = _get_parts(name)
+    if total_parts > 1:
         concatenated_folder_name = "{f}.gz".format(f=name)
         concatenated_folder_dir = os.path.join(tmp_dir, concatenated_folder_name)
-        for part in range(0, no_parts):
-            url_data = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.gz_0{p}".format(f=name, p=part)
-            compressed_folder_name = "{f}.gz_0{p}".format(f=name, p=part)
-            tmp_data_file_dir = os.path.join(tmp_dir, compressed_folder_name)
+        for part in range(0, total_parts):
+            url_data = \
+                "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.gz_0{p}" \
+                .format(f=name, p=part)
+
+            fname = "{f}.gz_0{p}".format(f=name, p=part)
+            dst_path = os.path.join(tmp_dir, fname)
             urllib.urlretrieve(
-                url_data, tmp_data_file_dir,
-                reporthook=partial(_progress, part=part, total_parts=no_parts)
+                url_data, dst_path,
+                reporthook=partial(_progress, part=part, total_parts=total_parts)
             )
-            if _calculate_md5_checksum(tmp_data_file_dir) == _get_checksum(name, part):
+            if _calculate_md5_checksum(dst_path) == _get_checksum(name, part):
                 sys.stdout.write("\n")
                 sys.stdout.flush()
-                logger.info("Part %s/%s downloaded", part + 1, no_parts)
+                logger.info("Part %s/%s downloaded", part + 1, total_parts)
             else:
                 shutil.rmtree(tmp_dir)
-                raise Exception("There was a problem in downloading the data. We recommend you to re-try.")
+                raise Exception("Checksum comparison failed, try again")
         with open(concatenated_folder_dir, 'wb') as wfp:
-            for part in range(0, no_parts):
+            for part in range(0, total_parts):
                 part_path = os.path.join(tmp_dir, "{f}.gz_0{p}".format(f=name, p=part))
                 with open(part_path, "rb") as rfp:
                     shutil.copyfileobj(rfp, wfp)
@@ -302,16 +310,16 @@ def _download(name):
         os.rename(tmp_dir, data_folder_dir)
     else:
         url_data = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.gz".format(f=name)
-        compressed_folder_name = "{f}.gz".format(f=name)
-        tmp_data_file_dir = os.path.join(tmp_dir, compressed_folder_name)
-        urllib.urlretrieve(url_data, tmp_data_file_dir, reporthook=_progress)
-        if _calculate_md5_checksum(tmp_data_file_dir) == _get_checksum(name):
+        fname = "{f}.gz".format(f=name)
+        dst_path = os.path.join(tmp_dir, fname)
+        urllib.urlretrieve(url_data, dst_path, reporthook=_progress)
+        if _calculate_md5_checksum(dst_path) == _get_checksum(name):
             sys.stdout.write("\n")
             sys.stdout.flush()
             logger.info("%s downloaded", name)
         else:
             shutil.rmtree(tmp_dir)
-            raise Exception("There was a problem in downloading the data. We recommend you to re-try.")
+            raise Exception("Checksum comparison failed, try again")
         os.rename(tmp_dir, data_folder_dir)
 
 
@@ -388,12 +396,12 @@ def load(name, return_path=False):
             "\n {}".format(json.dumps(info(), indent=4))
         )
     folder_dir = os.path.join(base_dir, name)
-    data_dir = os.path.join(folder_dir, file_name)
+    path = os.path.join(folder_dir, file_name)
     if not os.path.exists(folder_dir):
         _download(name)
 
     if return_path:
-        return data_dir
+        return path
     else:
         sys.path.insert(0, base_dir)
         module = __import__(name)
