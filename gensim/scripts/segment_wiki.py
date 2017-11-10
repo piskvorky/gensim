@@ -7,17 +7,20 @@
 """
 CLI script for processing a raw Wikipedia dump (the xml.bz2 format provided by MediaWiki).
 
-It streams through all the XML articles and extracts their plain text. For each article,
-it prints its title, section names and section contents, in json-line format.
+It streams through all the XML articles, decompressing on the fly and extracting plain text
+sections from each article.
+
+For each article, it prints its title, section names and section contents, in json-line format.
 
 Examples
 --------
 
-The English Wikipedia dump is available
-`here <https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2>`_.
-Its approximate time for processing is 2.5 hours (about 3 million articles per hour, on i7-6700HQ, SSD):
+  python -m gensim.scripts.segment_wiki -h
 
   python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 -o enwiki-latest.json.gz
+
+Processing the entire English Wikipedia dump (13.5 GB, https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2) \
+takes about 2.5 hours (about 3 million articles per hour, on i7-6700HQ, SSD).
 
 You can then read the created output with:
 
@@ -26,7 +29,7 @@ You can then read the created output with:
 >>>    # decode each JSON line into a Python dictionary object
 >>>    article = json.loads(line)
 >>>
->>>    # each article has a "title", "section_titles" and "section_texts" fields
+>>>    # each article has a "title" and a list of "section_titles" and "section_texts".
 >>>    print("Article title: %s" % article['title'])
 >>>    for section_title, section_text in zip(article['section_titles'], article['section_texts']):
 >>>        print("Section title: %s" % section_title)
@@ -48,7 +51,7 @@ from smart_open import smart_open
 logger = logging.getLogger(__name__)
 
 
-def segment_all_articles(file_path, min_article_character=200):
+def segment_all_articles(file_path, min_article_character=200, workers=None):
     """Extract article titles and sections from a MediaWiki bz2 database dump.
 
     Parameters
@@ -60,6 +63,9 @@ def segment_all_articles(file_path, min_article_character=200):
     min_article_character : int, optional
         Minimal number of character for article (except titles and leading gaps).
 
+    workers: int, optional
+        Number of parallel workers for multi-core processing (default: number of cores - 1)
+
     Yields
     ------
     (str, list of (str, str))
@@ -67,16 +73,17 @@ def segment_all_articles(file_path, min_article_character=200):
 
     """
     with smart_open(file_path, 'rb') as xml_fileobj:
-        wiki_sections_corpus = _WikiSectionsCorpus(xml_fileobj, min_article_character=min_article_character)
+        wiki_sections_corpus = _WikiSectionsCorpus(xml_fileobj, min_article_character=min_article_character, processes=workers)
         wiki_sections_corpus.metadata = True
         wiki_sections_text = wiki_sections_corpus.get_texts_with_sections()
         for article_title, article_sections in wiki_sections_text:
             yield article_title, article_sections
 
 
-def segment_and_write_all_articles(file_path, output_file, min_article_character=200):
-    """Write article title and sections to output_file,
-    output_file is json-line file with 3 fields::
+def segment_and_write_all_articles(file_path, output_file, min_article_character=200, workers=None):
+    """Write article title and sections to `output_file` (or stdout, if output_file is None).
+
+    The output format is one article per line, in json-line format with 3 fields::
 
         'title' - title of article,
         'section_titles' - list of titles of sections,
@@ -88,11 +95,14 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
         Path to MediaWiki dump, typical filename is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
         or <LANG>wiki-latest-pages-articles.xml.bz2.
 
-    output_file : str
-        Path to output file in json-lines format.
+    output_file : str or None
+        Path to output file in json-lines format, or None for printing to stdout.
 
     min_article_character : int, optional
         Minimal number of character for article (except titles and leading gaps).
+
+    workers: int, optional
+        Number of parallel workers for multi-core processing (default: number of cores - 1)
 
     """
     if output_file is None:
@@ -101,7 +111,8 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
         outfile = smart_open(output_file, 'wb')
 
     try:
-        for idx, (article_title, article_sections) in enumerate(segment_all_articles(file_path, min_article_character)):
+        article_stream = segment_all_articles(file_path, min_article_character, workers=workers)
+        for idx, (article_title, article_sections) in enumerate(article_stream):
             output_data = {"title": article_title, "section_titles": [], "section_texts": []}
             for section_heading, section_content in article_sections:
                 output_data["section_titles"].append(section_heading)
@@ -272,8 +283,15 @@ if __name__ == "__main__":
     logger.info("running %s", " ".join(sys.argv))
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=globals()['__doc__'])
+    default_workers = max(1, multiprocessing.cpu_count() - 1)
     parser.add_argument('-f', '--file', help='Path to MediaWiki database dump', required=True)
     parser.add_argument('-o', '--output', help='Path to output file (stdout if not specified)')
+    parser.add_argument(
+        '-w', '--workers',
+        help='Number of parallel workers for multi-core systems (default: %i)' % default_workers,
+        type=int,
+        default=default_workers
+    )
     parser.add_argument(
         '-m', '--min-article-character',
         help="Minimal number of character for article (except titles and leading gaps), "
@@ -282,6 +300,11 @@ if __name__ == "__main__":
         default=200
     )
     args = parser.parse_args()
-    segment_and_write_all_articles(args.file, args.output, args.min_article_character)
+
+    segment_and_write_all_articles(
+        args.file, args.output,
+        min_article_character=args.min_article_character,
+        workers=args.workers
+    )
 
     logger.info("finished running %s", sys.argv[0])
