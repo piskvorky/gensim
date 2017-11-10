@@ -4,6 +4,7 @@ This module is an API for downloading, getting information and loading datasets/
 Give information about available models/datasets:
 
 >>> import gensim.downloader as api
+>>>
 >>> api.info()  # return dict with info about available models/datasets
 >>> api.info("text8")  # return dict with info about "text8" dataset
 
@@ -11,6 +12,7 @@ Give information about available models/datasets:
 Model example:
 
 >>> import gensim.downloader as api
+>>>
 >>> model = api.load("glove-twitter-25")  # load glove vectors
 >>> model.most_similar("cat")  # show words that similar to word 'cat'
 
@@ -22,6 +24,12 @@ Dataset example:
 >>>
 >>> dataset = api.load("text8")  # load dataset as iterable
 >>> model = Word2Vec(dataset)  # train w2v model
+
+
+Also, this API available via CLI::
+
+    python -m gensim.downloader --info <dataname> # same as api.info(dataname)
+    python -m gensim.downloader --download <dataname> # same as api.load(dataname, return_path=True)
 
 """
 from __future__ import absolute_import
@@ -154,14 +162,26 @@ def info(name=None):
     Returns
     -------
     dict
-        Detailed information about one or all models/datasets. If name is specified,
-        return full information about concrete dataset/model, otherwise,
-        return information about all available datasets/models.
+        Detailed information about one or all models/datasets.
+        If name is specified, return full information about concrete dataset/model,
+        otherwise, return information about all available datasets/models.
 
     Raises
     ------
     Exception
         If name that has been passed is incorrect.
+
+    Examples
+    --------
+    >>> import gensim.downloader as api
+    >>> api.info("text8")  # retrieve information about text8 dataset
+    {u'checksum': u'68799af40b6bda07dfa47a32612e5364',
+     u'description': u'Cleaned small sample from wikipedia',
+     u'file_name': u'text8.gz',
+     u'parts': 1,
+     u'source': u'http://mattmahoney.net/dc/text8.zip'}
+    >>>
+    >>> api.info()  # retrieve information about all available datasets and models
 
     """
     url = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
@@ -182,6 +202,7 @@ def info(name=None):
                 "\n {}".format(json.dumps(information, indent=4))
             )
     else:
+        logger.info("%s \n", json.dumps(information, indent=4))
         return information
 
 
@@ -369,13 +390,11 @@ if __name__ == '__main__':
         "-d", "--download", metavar="data_name", nargs=1,
         help="To download a corpus/model : python -m gensim.downloader -d <dataname>"
     )
+
+    full_information = 1
     group.add_argument(
-        "-i", "--info", metavar="data_name", nargs=1,
+        "-i", "--info", metavar="data_name", nargs='?', const=full_information,
         help="To get information about a corpus/model : python -m gensim.downloader -i <dataname>"
-    )
-    group.add_argument(
-        "-c", "--catalogue", action="store_true",
-        help="To get the list of all models/corpus stored : python -m gensim.downloader -c"
     )
 
     args = parser.parse_args()
@@ -383,7 +402,7 @@ if __name__ == '__main__':
         data_path = load(args.download[0], return_path=True)
         logger.info("Data has been installed and data path is %s", data_path)
     elif args.info is not None:
-        info(name=args.info[0])
-    elif args.catalogue is not None:
-        data = info()
-        logger.info("%s\n", json.dumps(data, indent=4))
+        if args.info == full_information:
+            info()
+        else:
+            info(name=args.info)
