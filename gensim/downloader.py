@@ -339,21 +339,45 @@ def _get_filename(name):
 
 
 def load(name, return_path=False):
-    """For models, if return_path is False, then load model to memory. Otherwise, return the path to the model.
-    For datasets, return path to the dataset in both cases.
+    """Download (if needed) dataset/model and load it to memory (managed by return_path).
 
     Parameters
     ----------
     name: str
         Name of the model/dataset.
-    return_path: False or True, optional
+    return_path: bool, optional
+        If True, return full path to file, otherwise, return loaded model / iterable dataset.
 
     Returns
     -------
-    data:
-        Load model to memory.
-    data_dir: str
-        Return path of dataset/model.
+    Model
+        Requested model, if `name` is model and `return_path` == False.
+    Dataset (iterable)
+        Requested dataset, if `name` is dataset and `return_path` == False.
+    str
+        Path to file with dataset / model, only when `return_path` == True.
+
+    Raises
+    ------
+    Exception
+        Raised if `name` is incorrect.
+
+    Examples
+    --------
+    Model example:
+
+    >>> import gensim.downloader as api
+    >>>
+    >>> model = api.load("glove-twitter-25")  # load glove vectors
+    >>> model.most_similar("cat")  # show words that similar to word 'cat'
+
+    Dataset example:
+
+    >>> import gensim.downloader as api
+    >>>
+    >>> wiki = api.load("wiki-en")  # load extracted Wikipedia dump, around 6 Gb
+    >>> for article in wiki:  # iterate over all wiki script
+    >>>     ...
 
     """
     _create_base_dir()
