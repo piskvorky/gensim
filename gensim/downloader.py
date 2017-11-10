@@ -434,4 +434,4 @@ if __name__ == '__main__':
         logger.info("Data has been installed and data path is %s", data_path)
     elif args.info is not None:
         output = info() if (args.info == full_information) else info(name=args.info)
-        print(json.dumps(info, indent=4))
+        print(json.dumps(output, indent=4))
