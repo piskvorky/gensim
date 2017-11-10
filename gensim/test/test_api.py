@@ -57,6 +57,8 @@ class TestApi(unittest.TestCase):
             shutil.rmtree(base_dir)
         self.assertEqual(dataset_path, api.load("__testing_multipart-matrix-synopsis", return_path=True))
         shutil.rmtree(base_dir)
+        dataset = api.load("__testing_multipart-matrix-synopsis")
+        self.assertEqual(len(list(dataset)), 1)
 
 
 if __name__ == '__main__':
