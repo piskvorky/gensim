@@ -1,4 +1,29 @@
-"""This module is an API for downloading, getting information and loading datasets/models."""
+"""
+This module is an API for downloading, getting information and loading datasets/models.
+
+Give information about available models/datasets:
+
+>>> import gensim.downloader as api
+>>> api.info()  # return dict with info about available models/datasets
+>>> api.info("text8")  # return dict with info about "text8" dataset
+
+
+Model example:
+
+>>> import gensim.downloader as api
+>>> model = api.load("glove-twitter-25")  # load glove vectors
+>>> model.most_similar("cat")  # show words that similar to word 'cat'
+
+
+Dataset example:
+
+>>> import gensim.downloader as api
+>>> from gensim.models import Word2Vec
+>>>
+>>> dataset = api.load("text8")  # load dataset as iterable
+>>> model = Word2Vec(dataset)  # train w2v model
+
+"""
 from __future__ import absolute_import
 import argparse
 import os
