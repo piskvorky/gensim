@@ -60,7 +60,16 @@ class TestApi(unittest.TestCase):
         dataset = api.load("__testing_multipart-matrix-synopsis")
         self.assertEqual(len(list(dataset)), 1)
 
+    def test_info(self):
+        data = api.info("text8")
+        self.assertEqual(data["parts"], 1)
+        self.assertEqual(data["file_name"], 'text8.gz')
+        data = api.info()
+        self.assertEqual(sorted(data.keys()), sorted(['models', 'corpora']))
+        self.assertTrue(len(data['models']))
+        self.assertTrue(len(data['corpora']))
+
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     unittest.main()
