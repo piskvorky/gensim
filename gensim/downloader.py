@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import argparse
 import os
 import json
-import tarfile
 import logging
 import sys
 import errno
@@ -220,11 +219,11 @@ def _download(name):
     urllib.urlretrieve(url_load_file, tmp_load_file_path)
     no_parts = _get_parts(name)
     if no_parts > 1:
-        concatenated_folder_name = "{f}.tar.gz".format(f=name)
+        concatenated_folder_name = "{f}.gz".format(f=name)
         concatenated_folder_dir = os.path.join(tmp_dir, concatenated_folder_name)
         for part in range(0, no_parts):
-            url_data = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.tar.gz_0{p}".format(f=name, p=part)
-            compressed_folder_name = "{f}.tar.gz_0{p}".format(f=name, p=part)
+            url_data = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.gz_0{p}".format(f=name, p=part)
+            compressed_folder_name = "{f}.gz_0{p}".format(f=name, p=part)
             tmp_data_file_dir = os.path.join(tmp_dir, compressed_folder_name)
             urllib.urlretrieve(url_data, tmp_data_file_dir, reporthook=partial(_progress, part=part, no_parts=no_parts))
             if _calculate_md5_checksum(tmp_data_file_dir) == _get_checksum(name, part):
@@ -236,17 +235,14 @@ def _download(name):
                 raise Exception("There was a problem in downloading the data. We recommend you to re-try.")
         with open(concatenated_folder_dir, 'wb') as wfp:
             for part in range(0, no_parts):
-                part_path = os.path.join(tmp_dir, "{f}.tar.gz_0{p}".format(f=name, p=part))
+                part_path = os.path.join(tmp_dir, "{f}.gz_0{p}".format(f=name, p=part))
                 with open(part_path, "rb") as rfp:
                     shutil.copyfileobj(rfp, wfp)
                 os.remove(part_path)
-        with tarfile.open(concatenated_folder_dir, 'r') as tar:
-            tar.extractall(tmp_dir)
-        os.remove(concatenated_folder_dir)
         os.rename(tmp_dir, data_folder_dir)
     else:
-        url_data = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.tar.gz".format(f=name)
-        compressed_folder_name = "{f}.tar.gz".format(f=name)
+        url_data = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.gz".format(f=name)
+        compressed_folder_name = "{f}.gz".format(f=name)
         tmp_data_file_dir = os.path.join(tmp_dir, compressed_folder_name)
         urllib.urlretrieve(url_data, tmp_data_file_dir, reporthook=_progress)
         if _calculate_md5_checksum(tmp_data_file_dir) == _get_checksum(name):
@@ -256,9 +252,6 @@ def _download(name):
         else:
             shutil.rmtree(tmp_dir)
             raise Exception("There was a problem in downloading the data. We recommend you to re-try.")
-        with tarfile.open(tmp_data_file_dir, 'r') as tar:
-            tar.extractall(tmp_dir)
-        os.remove(tmp_data_file_dir)
         os.rename(tmp_dir, data_folder_dir)
 
 
