@@ -5,7 +5,9 @@
 # Copyright (C) 2016 RaRe Technologies
 
 """
-CLI script for extracting plain text out of a raw Wikipedia dump (the xml.bz2 format provided by MediaWiki).
+CLI script for extracting plain text out of a raw Wikipedia dump. This is a xml.bz2 file provided by MediaWiki \
+and looks like <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2 \
+(e.g. 14 GB: https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2).
 
 It streams through all the XML articles using multiple cores (#cores - 1, by default), \
 decompressing on the fly and extracting plain text article sections from each article.
@@ -19,8 +21,8 @@ Examples
 
   python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 -o enwiki-latest.json.gz
 
-Processing the entire English Wikipedia dump (14 GB, https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2) \
-takes 2 hours (about 2.5 million articles per hour, on 8 core Intel Xeon E3-1275@3.60GHz).
+Processing the entire English Wikipedia dump takes 2 hours (about 2.5 million articles \
+per hour, on 8 core Intel Xeon E3-1275@3.60GHz).
 
 You can then read the created output (~6.1 GB gzipped) with:
 
