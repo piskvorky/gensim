@@ -195,7 +195,7 @@ def info(name=None):
         elif name in models:
             return information['models'][name]
         else:
-            raise Exception("Incorrect model/corpus name")
+            raise ValueError("Incorrect model/corpus name")
     else:
         return information
 
@@ -341,7 +341,7 @@ def _get_filename(name):
 
 
 def load(name, return_path=False):
-    """Download (if needed) dataset/model and load it to memory (managed by return_path).
+    """Download (if needed) dataset/model and load it to memory (unless `return_path` is set).
 
     Parameters
     ----------
@@ -390,10 +390,7 @@ def load(name, return_path=False):
     _create_base_dir()
     file_name = _get_filename(name)
     if file_name is None:
-        raise Exception(
-            "Incorrect model/corpus name. Choose the model/corpus from the list "
-            "\n {}".format(json.dumps(info(), indent=4))
-        )
+        raise ValueError("Incorrect model/corpus name")
     folder_dir = os.path.join(base_dir, name)
     path = os.path.join(folder_dir, file_name)
     if not os.path.exists(folder_dir):
