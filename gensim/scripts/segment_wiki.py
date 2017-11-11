@@ -24,7 +24,7 @@ takes 2 hours (about 2.5 million articles per hour, on 8 core Intel Xeon E3-1275
 
 You can then read the created output (~6.1 GB gzipped) with:
 
->>> # iterate over the plain text file we just created
+>>> # iterate over the plain text data we just created
 >>> for line in smart_open('enwiki-latest.json.gz'):
 >>>    # decode each JSON line into a Python dictionary object
 >>>    article = json.loads(line)
@@ -293,19 +293,20 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=globals()['__doc__'])
     default_workers = max(1, multiprocessing.cpu_count() - 1)
-    parser.add_argument('-f', '--file', help='Path to MediaWiki database dump', required=True)
-    parser.add_argument('-o', '--output', help='Path to output file (stdout if not specified)')
+    parser.add_argument('-f', '--file', help='Path to MediaWiki database dump (read-only).', required=True)
+    parser.add_argument(
+        '-o', '--output',
+        help='Path to output file (stdout if not specified). If ends in .gz or .bz2, '
+             'the output file will be automatically compressed (recommended!).')
     parser.add_argument(
         '-w', '--workers',
-        help='Number of parallel workers for multi-core systems (default: %i)' % default_workers,
+        help='Number of parallel workers for multi-core systems. Default: %(default)s.',
         type=int,
         default=default_workers
     )
     parser.add_argument(
         '-m', '--min-article-character',
-        help="Minimal number of character for article (except titles and leading gaps), "
-             "if article contains less characters that this value, "
-             "article will be filtered (will not be in the output file), default: %(default)s",
+        help="Ignore articles with fewer characters than this (article stubs). Default: %(default)s.",
         default=200
     )
     args = parser.parse_args()
