@@ -1,200 +1,108 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-
-import logging
 import numpy as np
-from six import string_types
-from six.moves import xrange
-from scipy.special import gammaln, psi  # gamma function utils
-from scipy.special import polygamma
-from scipy.misc import logsumexp
+from scipy.special import gammaln, psi
+from numpy.linalg import solve
 
-from gensim import interfaces, utils, matutils
+eps = 1e-100
 
 
-def sampling_from_dist(prob):
-    """
-    Sample index from a list of unnormalised probability distribution
-    same as np.random.multinomial(1, prob/np.sum(prob)).argmax()
+class sLDA:
+    def __init__(self, docs, responses, vocab, num_topic, alpha=0.1, sigma=1):
+        self.docs = docs
+        self.responses = np.array(responses)
+        self.vocab = vocab
 
-    Parameters
-    ----------
-    prob: ndarray
-        array of unnormalised probability distribution
+        self.n_doc = len(docs)
+        self.n_voca = len(vocab)
+        self.n_topic = num_topic
 
-    Returns
-    -------
-    new_topic: return a sampled index
-    """
-
-    thr = prob.sum() * np.random.rand()
-    new_topic = 0
-    tmp = prob[new_topic]
-    while tmp < thr:
-        new_topic += 1
-        tmp += prob[new_topic]
-    return new_topic
-
-
-def get_top_words(topic_word_matrix, vocab, topic, n_words=20):
-    if not isinstance(vocab, np.ndarray):
-        vocab = np.array(vocab)
-    top_words = vocab[topic_word_matrix[topic].argsort()[::-1][:n_words]]
-    return top_words
-
-
-class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-
-    def __init__(self, corpus=None, n_topics=100, alpha='symmetric', beta, mu, nu, nu2,
-                 sigma2, iterations=100, report_iter=10, seed=None):
-        """
-        Supervised latent Dirichlet allocation, using collapsed Gibbs
-        sampling.
-        Args:
-            n_topics : int
-                Number of topics
-            alpha : array-like, shape = (n_topics,)
-                Dirichlet distribution parameter for each document's topic
-                distribution.
-            beta : array-like, shape = (n_terms,)
-                Dirichlet distribution parameter for each topic's term distribution.
-            mu : float
-                Mean of regression coefficients (eta).
-            nu2 : float
-                Variance of regression coefficients (eta).
-            sigma2 : float
-                Variance of response (y).
-            n_iter : int, default=100
-                Number of iterations of Gibbs sampler
-            n_report_iter : int, default=10
-                Number of iterations of Gibbs sampler between progress reports.
-            seed : int, optional
-                Seed for random number generator
-        """
-        super(SLdaModel, self).__init__(n_doc=n_doc, n_voca=n_voca, n_topic=n_topic, alpha=alpha, beta=beta,
-                                        **kwargs)
-        self.eta = np.random.normal(scale=5, size=self.n_topic)
+        # topic proportion for document
+        self.gamma = np.random.gamma(100., 1. / 100, (self.n_doc, self.n_topic))
+        # word-topic distribution
+        self.beta = np.random.gamma(100., 1. / 100, (self.n_topic, self.n_voca))
+        self.beta /= np.sum(self.beta, 1)[:, np.newaxis]
+        # coefficient & covariance
+        self.eta = np.zeros(self.n_topic)
         self.sigma = sigma
+        self.alpha = alpha
+        self.dir_prior = 0.01
+        self.ssword = np.random.gamma(100., 1. / 100, (self.n_topic, self.n_voca))
+        self.EA = np.zeros((self.n_doc, self.n_topic))
+        self.EAA = np.zeros((self.n_topic, self.n_topic))
+        self.small_iter = 10
 
-    def random_init(self, docs):
-        """
-        Random initialization of topics
-        """
-        for di in xrange(len(docs)):
-            doc = docs[di]
-            topics = np.random.randint(self.n_topic, size=len(doc))
-            self.topic_assignment.append(topics)
+    def do_e_step(self):
+        self.EA = np.zeros((self.n_doc, self.n_topic))
+        self.EAA = np.zeros((self.n_topic, self.n_topic))
 
-            for wi in xrange(len(doc)):
-                topic = topics[wi]
-                word = doc[wi]
-                self.TW[topic, word] += 1
-                self.sum_T[topic] += 1
-                self.DT[di, topic] += 1
-
-    def log_likelihood(self, docs, responses):
-        """
-        Calculate log-likelihood function
-        """
-        l1 = 0
-
-        l1 += len(docs) * gammaln(self.alpha * self.n_topic)
-        l1 -= len(docs) * self.n_topic * gammaln(self.alpha)
-        l1 += self.n_topic * gammaln(self.beta * self.n_voca)
-        l1 -= self.n_topic * self.n_voca * gammaln(self.beta)
+        e_log_beta = np.log(self.beta)
 
         for di in xrange(self.n_doc):
-            l1 += gammaln(self.DT[di, :]).sum() - gammaln(self.DT[di, :].sum())
-            z_bar = self.DT[di] / np.sum(self.DT[di])
-            mean = np.dot(z_bar, self.eta)
-            l1 += norm.logpdf(responses[di], mean, np.sqrt(self.sigma))
-        for ki in xrange(self.n_topic):
-            l1 += gammaln(self.TW[ki, :]).sum() - gammaln(self.TW[ki, :].sum())
+            doc = self.docs[di]
+            doc_len = len(doc)
+            y = self.responses[di]
 
-        return l1
+            phi = self.gamma[di, :][:, np.newaxis] * self.beta[:, doc]  # K * N
+            phi /= np.sum(phi, 1)[:, np.newaxis]
 
-    def sample_heldout_doc(self, max_iter, heldout_docs):
-        """
-        Calculate Topic sum on heldout docs.
-        """
-        h_doc_topics = list()
-        h_doc_topic_sum = np.zeros(
-            [len(heldout_docs), self.n_topic]) + self.alpha
+            e_log_theta = psi(self.gamma[di, :]) - psi(np.sum(self.gamma[di, :]))
+            # exact update phi
+            # for i in xrange(self.small_iter):
+            # for wi in xrange(len(doc)):
+            #     word = doc[wi]
+            #     phi_sum = np.sum(phi, 1) - phi[:,wi]    # K dim
+            #     rss = (2. * np.dot(phi_sum, self.eta) * self.eta + (self.eta ** 2))/(2.* (np.float(doc_len)**2.) * (self.sigma**2.) )
+            #     phi[:,wi] = np.exp(e_log_theta + e_log_beta[:,word] + (y/(np.float(doc_len)*(self.sigma**2.)))*self.eta - rss )
+            #     phi[:,wi] /= phi[:,wi].sum()
 
-        # random init
-        for di in xrange(len(heldout_docs)):
-            doc = heldout_docs[di]
-            topics = np.random.randint(self.n_topic, size=len(doc))
-            h_doc_topics.append(topics)
+            # approximately update phi
+            phi_sum = np.sum(phi, 1)[:, np.newaxis] - phi
+            rss = (2. * np.dot(self.eta, phi_sum)[:, np.newaxis] * self.eta + (self.eta ** 2)) / (
+            2. * (np.float(doc_len) ** 2.) * (self.sigma ** 2.))
+            rss = rss.T  # K x len
+            phi = np.exp(e_log_theta[:, np.newaxis] + e_log_beta[:, doc] + ((y / (
+            np.float(doc_len) * (self.sigma ** 2.))) * self.eta)[:, np.newaxis] - rss + eps)
+            phi /= np.sum(phi, 0)
 
+            # update gamma
+            self.gamma[di, :] = np.sum(phi, 1) + self.alpha
+
+            # ssword for updating bata
             for wi in xrange(len(doc)):
-                topic = topics[wi]
-                h_doc_topic_sum[di, topic] += 1
+                word = doc[wi]
+                self.ssword[:, word] += phi[:, wi]
+
+            phi_norm = np.sum(phi, 1)
+            phi_norm /= phi_norm.sum()
+
+            self.EA[di, :] = phi_norm
+            self.EAA += np.outer(phi_norm, phi_norm)
+
+    def do_m_step(self):
+        # update beta
+        self.beta = self.ssword / np.sum(self.ssword, 1)[:, np.newaxis]
+        self.ssword = np.zeros(self.beta.shape) + self.dir_prior
+
+        self.eta = solve(self.EAA, np.dot(self.EA.T, self.responses))
+
+        # compute mean absolute error
+        mae = np.abs(np.dot(self.EA, self.eta) - self.responses).sum()
+        return mae
+
+    def heldoutEstep(self, max_iter, heldout):
+        gamma = np.random.gamma(100., 1. / 100, (len(heldout), self.n_topic))
 
         for iter in xrange(max_iter):
-            for di in xrange(len(heldout_docs)):
-                doc = heldout_docs[di]
-                for wi in xrange(len(doc)):
-                    word = doc[wi]
-                    old_topic = h_doc_topics[di][wi]
+            for di in xrange(len(heldout)):
+                doc = heldout[di]
+                doc_len = len(doc)
 
-                    h_doc_topic_sum[di, old_topic] -= 1
+                phi = np.zeros([self.n_topic, doc_len])
 
-                    # update
-                    prob = (self.TW[:, word] / self.sum_T) * (self.DT[di, :])
+                e_log_theta = psi(self.gamma[di, :]) - psi(np.sum(self.gamma[di, :]))
+                phi = self.beta[:, doc] * np.exp(e_log_theta)[:, np.newaxis]
+                phi /= np.sum(phi, 0)
 
-                    new_topic = sampling_from_dist(prob)
+                # update gamma
+                gamma[di, :] = np.sum(phi, 1) + self.alpha
 
-                    h_doc_topics[di][wi] = new_topic
-                    h_doc_topic_sum[di, new_topic] += 1
-
-        return h_doc_topic_sum
-
-    def fit(self, docs, responses, max_iter=100):
-        """
-        Fit sLDA model using Stochastic Expectation Maximisation.
-        """
-        self.random_init(docs)
-        for iteration in xrange(max_iter):
-
-            for di in xrange(len(docs)):
-                doc = docs[di]
-                for wi in xrange(len(doc)):
-                    word = doc[wi]
-                    old_topic = self.topic_assignment[di][wi]
-
-                    self.TW[old_topic, word] -= 1
-                    self.sum_T[old_topic] -= 1
-                    self.DT[di, old_topic] -= 1
-
-                    # Calculate z-bar
-                    z_bar = np.zeros([self.n_topic, self.n_topic]) + \
-                        self.DT[di, :] + np.identity(self.n_topic)
-                    z_bar /= self.DT[di, :].sum() + 1
-
-                    # update
-                    prob = (self.TW[:, word]) / (self.sum_T) * (self.DT[di, :]) * np.exp(
-                        np.negative((responses[di] - np.dot(z_bar, self.eta)) ** 2) / 2 / self.sigma)
-
-                    new_topic = sampling_from_dist(prob)
-
-                    self.topic_assignment[di][wi] = new_topic
-                    self.TW[new_topic, word] += 1
-                    self.sum_T[new_topic] += 1
-                    self.DT[di, new_topic] += 1
-
-            # estimate parameters
-            z_bar = self.DT / self.DT.sum(1)[:, np.newaxis]  # DxK
-            self.eta = solve(
-                np.dot(
-                    z_bar.T, z_bar), np.dot(
-                    z_bar.T, responses))
-
-            # compute mean absolute error
-            mae = np.mean(np.abs(responses - np.dot(z_bar, self.eta)))
-            if self.verbose:
-                logger.info('[ITER] %d,\tMAE:%.2f,\tlog_likelihood:%.2f', iteration, mae,
-                            self.log_likelihood(docs, responses))
+        return gamma
