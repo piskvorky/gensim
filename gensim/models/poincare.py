@@ -45,6 +45,9 @@ import time
 import numpy as np
 from collections import defaultdict, Counter
 from numpy import random as np_random
+from pygtrie import Trie
+from scipy.spatial.distance import euclidean
+from scipy.stats import spearmanr
 from smart_open import smart_open
 
 from gensim import utils, matutils
@@ -1161,6 +1164,7 @@ class LinkPredictionEvaluation(object):
 
 class LexicalEntailmentEvaluation(object):
     """Evaluating reconstruction on given network for any embedding."""
+
     def __init__(self, filepath):
         """Initialize evaluation instance with HyperLex text file containing relation pairs.
 
@@ -1179,7 +1183,7 @@ class LexicalEntailmentEvaluation(object):
         self.scores = expected_scores
         self.alpha = 1000
 
-    def score_function(self, embedding, term_1, term_2):
+    def score_function(self, embedding, trie, term_1, term_2):
         """
         Given an embedding and two terms, return the predicted score for them -
         extent to which `term_1` is a type of `term_2`.
@@ -1188,6 +1192,8 @@ class LexicalEntailmentEvaluation(object):
         ----------
         embedding : PoincareEmbedding instance
             Embedding to use for computing predicted score.
+        trie : pygtrie.Trie instance
+            Trie to use for finding matching vocab terms for input terms.
         term_1 : str
             Input term.
         term_2 : str
@@ -1197,10 +1203,11 @@ class LexicalEntailmentEvaluation(object):
         -------
         float
             Predicted score (the extent to which `term_1` is a type of `term_2`).
+
         """
         try:
-            word_1_terms = embedding.find_matching_keys(term_1)
-            word_2_terms = embedding.find_matching_keys(term_2)
+            word_1_terms = self.find_matching_terms(trie, term_1)
+            word_2_terms = self.find_matching_terms(trie, term_2)
         except KeyError:
             raise ValueError("No matching terms found for either %s or %s" % (term_1, term_2))
         min_distance = np.inf
@@ -1215,6 +1222,48 @@ class LexicalEntailmentEvaluation(object):
         vector_1, vector_2 = embedding.get_vector(min_term_1), embedding.get_vector(min_term_2)
         norm_1, norm_2 = np.linalg.norm(vector_1), np.linalg.norm(vector_2)
         return -1 * (1 + self.alpha * (norm_2 - norm_1)) * distance
+
+    @staticmethod
+    def find_matching_terms(trie, word):
+        """
+        Given a trie and a word, find terms in the trie beginning with the word.
+
+        Parameters
+        ----------
+        trie : pygtrie.Trie instance
+            Trie to use for finding matching terms.
+        word : str
+            Input word to use for prefix search.
+
+        Returns
+        -------
+        list (str)
+            List of matching terms.
+
+        """
+        matches = trie.items('%s.' % word)
+        matching_terms = [''.join(key_chars) for key_chars, value in matches]
+        return matching_terms
+
+    @staticmethod
+    def create_vocab_trie(embedding):
+        """Create trie with vocab terms of the given embedding to enable quick prefix searches.
+
+        Parameters
+        ----------
+        embedding : PoincareEmbedding instance
+            Embedding for which trie is to be created.
+
+        Returns
+        -------
+        pygtrie.Trie instance
+            Trie containing vocab terms of the input embedding.
+
+        """
+        vocab_trie = Trie()
+        for key in embedding.kv.vocab:
+            vocab_trie[key] = True
+        return vocab_trie
 
     def evaluate_spearman(self, embedding):
         """Evaluate spearman scores for lexical entailment for given embedding.
@@ -1234,9 +1283,10 @@ class LexicalEntailmentEvaluation(object):
         expected_scores = []
         skipped = 0
         count = 0
+        vocab_trie = self.create_vocab_trie(embedding)
         for (word_1, word_2), expected_score in self.scores.items():
             try:
-                predicted_score = self.score_function(embedding, word_1, word_2)
+                predicted_score = self.score_function(embedding, vocab_trie, word_1, word_2)
             except ValueError:
                 skipped += 1
                 continue
@@ -1254,13 +1304,6 @@ class PoincareEmbedding(object):
     def __init__(self, keyed_vectors):
         """Initialize PoincareEmbedding via a KeyedVectors instance."""
         self.kv = keyed_vectors
-        self.init_key_trie()
-
-    def init_key_trie(self):
-        """Setup trie containing vocab keys for quick prefix lookups."""
-        self.key_trie = Trie()
-        for key in self.kv.vocab:
-            self.key_trie[key] = True
 
     @staticmethod
     def poincare_dist(vector_1, vector_2):
@@ -1328,12 +1371,6 @@ class PoincareEmbedding(object):
         """
         model = PoincareModel.load(input_filename)
         return cls(model.kv)
-
-    def find_matching_keys(self, word):
-        """Find all senses of given word in embedding vocabulary."""
-        matches = self.key_trie.items('%s.' % word)
-        matching_keys = [''.join(key_chars) for key_chars, value in matches]
-        return matching_keys
 
     def get_vector(self, term):
         """Return vector for given term."""
