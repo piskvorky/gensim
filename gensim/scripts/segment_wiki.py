@@ -5,10 +5,10 @@
 # Copyright (C) 2016 RaRe Technologies
 
 """
-CLI script for processing a raw Wikipedia dump (the xml.bz2 format provided by MediaWiki).
+CLI script for extracting plain text out of a raw Wikipedia dump (the xml.bz2 format provided by MediaWiki).
 
-It streams through all the XML articles, decompressing on the fly and extracting plain text
-sections from each article.
+It streams through all the XML articles using multiple cores (#cores - 1, by default), \
+decompressing on the fly and extracting plain text article sections from each article.
 
 For each article, it prints its title, section names and section contents, in json-line format.
 
@@ -63,8 +63,8 @@ def segment_all_articles(file_path, min_article_character=200, workers=None):
     min_article_character : int, optional
         Minimal number of character for article (except titles and leading gaps).
 
-    workers: int, optional
-        Number of parallel workers for multi-core processing (default: number of cores - 1)
+    workers: int or None
+        Number of parallel workers, max(1, multiprocessing.cpu_count() - 1) if None.
 
     Yields
     ------
@@ -102,8 +102,8 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
     min_article_character : int, optional
         Minimal number of character for article (except titles and leading gaps).
 
-    workers: int, optional
-        Number of parallel workers for multi-core processing (default: number of cores - 1)
+    workers: int or None
+        Number of parallel workers, max(1, multiprocessing.cpu_count() - 1) if None.
 
     """
     if output_file is None:
