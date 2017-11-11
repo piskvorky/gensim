@@ -19,10 +19,10 @@ Examples
 
   python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 -o enwiki-latest.json.gz
 
-Processing the entire English Wikipedia dump (13.5 GB, https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2) \
-takes about 2.5 hours (about 3 million articles per hour, on i7-6700HQ, SSD).
+Processing the entire English Wikipedia dump (14 GB, https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2) \
+takes 2 hours (about 2.5 million articles per hour, on 8 core Intel Xeon E3-1275@3.60GHz).
 
-You can then read the created output with:
+You can then read the created output (~6.1 GB gzipped) with:
 
 >>> # iterate over the plain text file we just created
 >>> for line in smart_open('enwiki-latest.json.gz'):
