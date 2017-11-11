@@ -119,7 +119,7 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
                 output_data["section_titles"].append(section_heading)
                 output_data["section_texts"].append(section_content)
             if (idx + 1) % 100000 == 0:
-                logger.info("Processed #%d articles", idx + 1)
+                logger.info("processed #%d articles (at %r now)", idx + 1, article_title)
             outfile.write(json.dumps(output_data) + "\n")
     finally:
         outfile.close()
