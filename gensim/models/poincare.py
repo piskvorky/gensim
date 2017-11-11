@@ -810,6 +810,40 @@ class PoincareKeyedVectors(KeyedVectors):
         ]
         return result[:topn]
 
+    def distance(self, term_1, term_2):
+        """
+        Return Poincare distance between two terms.
+
+        Parameters
+        ----------
+        term_1 : str
+            Input term.
+        term_2 : str
+            Input term.
+
+        Returns
+        -------
+        float
+            Poincare distance between the vectors for `term_1` and `term_2`.
+
+        Examples
+        --------
+
+        >>> model.distance('mammal.n.01', 'carnivore.n.01')
+        2.13
+
+        Notes
+        -----
+        Raises KeyError if either of `term_1` and `term_2` is absent from vocab.
+
+        Poincare distance is symmetric, so distance(term_1, term_2) is equal to distance(term_2, term_1).
+        The range of possible distances is [0, inf).
+
+        """
+        vector_1 = self.word_vec(term_1)
+        vector_2 = self.word_vec(term_2)
+        return self.poincare_dists(vector_1, vector_2[:, np.newaxis])[0]
+
     def get_all_distances(self, term):
         """
         Return Poincare distances to all terms for given term, including itself.
@@ -948,12 +982,12 @@ class ReconstructionEvaluation(object):
         ----------
         file_path : str
             Path to tsv file containing relation pairs.
-        embedding : PoincareEmbedding instance
+        embedding : PoincareKeyedVectors instance
             Embedding to be evaluated.
 
         """
         items = set()
-        embedding_vocab = embedding.kv.vocab
+        embedding_vocab = embedding.vocab
         relations = defaultdict(set)
         with smart_open(file_path, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
@@ -985,7 +1019,7 @@ class ReconstructionEvaluation(object):
         tuple (list, float)
             The list contains ranks (int) of positive relations in the same order as `positive_relations`.
             The float is the Average Precision of the ranking.
-            e.g. ([])  # TODO
+            e.g. ([1, 2, 3, 20], 0.610).
 
         """
         positive_relation_distances = all_distances[positive_relations]
@@ -1036,7 +1070,7 @@ class ReconstructionEvaluation(object):
             if item not in self.relations:
                 continue
             item_relations = list(self.relations[item])
-            item_term = self.embedding.kv.index2word[item]
+            item_term = self.embedding.index2word[item]
             item_distances = self.embedding.get_all_distances(item_term)
             positive_relation_ranks, avg_precision = self.get_positive_relation_ranks_and_avg_prec(item_distances, item_relations)
             ranks += positive_relation_ranks
@@ -1058,12 +1092,12 @@ class LinkPredictionEvaluation(object):
             Path to tsv file containing relation pairs used for training.
         test_path : str
             Path to tsv file containing relation pairs to evaluate.
-        embedding : PoincareEmbedding instance
+        embedding : PoincareKeyedVectors instance
             Embedding to be evaluated.
 
         """
         items = set()
-        embedding_vocab = embedding.kv.vocab
+        embedding_vocab = embedding.vocab
         relations = {'known': defaultdict(set), 'unknown': defaultdict(set)}
         data_files = {'known': train_path, 'unknown': test_path}
         for relation_type, data_file in data_files.items():
@@ -1083,7 +1117,7 @@ class LinkPredictionEvaluation(object):
     def get_unknown_relation_ranks_and_avg_prec(all_distances, unknown_relations, known_relations):
         """
         Given a numpy array of distances and indices of known and unknown positive relations,
-        compute ranks and Average Precision of unknown positive relations
+        compute ranks and Average Precision of unknown positive relations.
 
         Parameters
         ----------
@@ -1099,7 +1133,7 @@ class LinkPredictionEvaluation(object):
         tuple (list, float)
             The list contains ranks (int) of positive relations in the same order as `positive_relations`.
             The float is the Average Precision of the ranking.
-            e.g. ([])  # TODO
+            e.g. ([1, 2, 3, 20], 0.610).
 
         """
         unknown_relation_distances = all_distances[unknown_relations]
@@ -1152,7 +1186,7 @@ class LinkPredictionEvaluation(object):
                 continue
             unknown_relations = list(self.relations['unknown'][item])
             known_relations = list(self.relations['known'][item])
-            item_term = self.embedding.kv.index2word[item]
+            item_term = self.embedding.index2word[item]
             item_distances = self.embedding.get_all_distances(item_term)
             unknown_relation_ranks, avg_precision = self.get_unknown_relation_ranks_and_avg_prec(item_distances, unknown_relations, known_relations)
             ranks += unknown_relation_ranks
@@ -1190,7 +1224,7 @@ class LexicalEntailmentEvaluation(object):
 
         Parameters
         ----------
-        embedding : PoincareEmbedding instance
+        embedding : PoincareKeyedVectors instance
             Embedding to use for computing predicted score.
         trie : pygtrie.Trie instance
             Trie to use for finding matching vocab terms for input terms.
@@ -1214,12 +1248,12 @@ class LexicalEntailmentEvaluation(object):
         min_term_1, min_term_2 = None, None
         for term_1 in word_1_terms:
             for term_2 in word_2_terms:
-                distance = embedding.get_distance(term_1, term_2)
+                distance = embedding.distance(term_1, term_2)
                 if distance < min_distance:
                     min_term_1, min_term_2 = term_1, term_2
                     min_distance = distance
         assert min_term_1 is not None and min_term_2 is not None
-        vector_1, vector_2 = embedding.get_vector(min_term_1), embedding.get_vector(min_term_2)
+        vector_1, vector_2 = embedding.word_vec(min_term_1), embedding.word_vec(min_term_2)
         norm_1, norm_2 = np.linalg.norm(vector_1), np.linalg.norm(vector_2)
         return -1 * (1 + self.alpha * (norm_2 - norm_1)) * distance
 
@@ -1251,7 +1285,7 @@ class LexicalEntailmentEvaluation(object):
 
         Parameters
         ----------
-        embedding : PoincareEmbedding instance
+        embedding : PoincareKeyedVectors instance
             Embedding for which trie is to be created.
 
         Returns
@@ -1261,7 +1295,7 @@ class LexicalEntailmentEvaluation(object):
 
         """
         vocab_trie = Trie()
-        for key in embedding.kv.vocab:
+        for key in embedding.vocab:
             vocab_trie[key] = True
         return vocab_trie
 
@@ -1270,7 +1304,7 @@ class LexicalEntailmentEvaluation(object):
 
         Parameters
         ----------
-        embedding : PoincareEmbedding instance
+        embedding : PoincareKeyedVectors instance
             Embedding for which evaluation is to be done.
 
         Returns
@@ -1296,63 +1330,4 @@ class LexicalEntailmentEvaluation(object):
         print('Skipped pairs: %d out of %d' % (skipped, len(self.scores)))
         spearman = spearmanr(expected_scores, predicted_scores)
         return spearman.correlation
-
-
-class PoincareEmbedding(object):
-    """Load and perform distance operations on poincare embedding."""
-
-    def __init__(self, keyed_vectors):
-        """Initialize PoincareEmbedding via a KeyedVectors instance."""
-        self.kv = keyed_vectors
-
-    @staticmethod
-    def poincare_dist(vector_1, vector_2):
-        """Return poincare distance between two vectors."""
-        norm_1 = np.linalg.norm(vector_1)
-        norm_2 = np.linalg.norm(vector_2)
-        euclidean_dist = euclidean(vector_1, vector_2)
-        return np.arccosh(
-            1 + 2 * (
-                (euclidean_dist ** 2) / ((1 - norm_1 ** 2) * (1 - norm_2 ** 2))
-            )
-        )
-
-    def get_vector(self, term):
-        """Return vector for given term."""
-        return self.kv.word_vec(term)
-
-    def get_all_distances(self, term):
-        """Return distances to all terms for given term, including itself."""
-        term_vector = self.kv.word_vec(term)
-        all_vectors = self.kv.syn0
-
-        euclidean_dists = np.linalg.norm(term_vector - all_vectors, axis=1)
-        norm = np.linalg.norm(term_vector)
-        all_norms = np.linalg.norm(all_vectors, axis=1)
-        return np.arccosh(
-            1 + 2 * (
-                (euclidean_dists ** 2) / ((1 - norm ** 2) * (1 - all_norms ** 2))
-            )
-        )
-
-    def get_distance(self, term_1, term_2):
-        """Returns distance between vectors for input terms.
-
-        Parameters
-        ----------
-        term_1 (str)
-        term_2 (str)
-
-        Returns
-        -------
-        float
-            Poincare distance between the two terms.
-
-        Notes
-        ----
-        Raises KeyError if either term_1 or term_2 is absent from vocabulary.
-
-        """
-        vector_1, vector_2 = self.kv[term_1], self.kv[term_2]
-        return self.poincare_dist(vector_1, vector_2)
 
