@@ -281,8 +281,7 @@ class PorterStemmer(object):
 
         Returns
         -------
-        int
-            1 if ends, otherwise - 0.
+        bool
 
         Examples
         --------
@@ -292,18 +291,18 @@ class PorterStemmer(object):
         >>> p.j = 5
         >>> p.k = 2
         >>> p._ends("cow")
-        1
+        True
 
         """
         if s[-1] != self.b[self.k]:  # tiny speed-up
-            return 0
+            return False
         length = len(s)
         if length > (self.k + 1):
-            return 0
+            return False
         if self.b[self.k - length + 1:self.k + 1] != s:
-            return 0
+            return False
         self.j = self.k - length
-        return 1
+        return True
 
     def _setto(self, s):
         """Set (j+1),...k to the characters in the string s, adjusting k.
