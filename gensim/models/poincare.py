@@ -936,22 +936,23 @@ class NegativesBuffer(object):
 
 
 class ReconstructionEvaluation(object):
-    """Evaluating reconstruction on given network for given embedding"""
-    def __init__(self, filepath, embedding):
-        """Initialize evaluation instance with tsv file containing relation pairs and embedding to be evaluated
+    """Evaluating reconstruction on given network for given embedding."""
 
-        Args:
-            filepath (str): path to tsv file containing relation pairs
-            embedding (PoincareEmbedding instance): embedding to be evaluated
+    def __init__(self, file_path, embedding):
+        """Initialize evaluation instance with tsv file containing relation pairs and embedding to be evaluated.
 
-        Returns
-            ReconstructionEvaluation instance
+        Parameters
+        ----------
+        file_path : str
+            Path to tsv file containing relation pairs.
+        embedding : PoincareEmbedding instance
+            Embedding to be evaluated.
 
         """
         items = set()
         embedding_vocab = embedding.kv.vocab
         relations = defaultdict(set)
-        with smart_open(filepath, 'r') as f:
+        with smart_open(file_path, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for row in reader:
                 assert len(row) == 2, 'Hypernym pair has more than two items'
@@ -967,16 +968,22 @@ class ReconstructionEvaluation(object):
     def get_positive_relation_ranks_and_avg_prec(all_distances, positive_relations):
         """
         Given a numpy array of all distances from an item and indices of its positive relations,
-        compute ranks and Average Precision of positive relations
+        compute ranks and Average Precision of positive relations.
 
-        Args:
-            distances (numpy float array): np array of all distances for a specific item
-            positive_relations (list): list of indices of positive relations for the item
+        Parameters
+        ----------
+        distances : numpy.array (float)
+            Array of all distances (floats) for a specific item.
+        positive_relations : list
+            List of indices of positive relations for the item.
 
-        Returns:
-            tuple of (ranks, avg_precision)
-            `ranks` is a list of ranks (int) of positive relations in the same order as `positive_relations`
-            `avg_precision` is a float representing the Average Precision of the ranking
+        Returns
+        -------
+        tuple (list, float)
+            The list contains ranks (int) of positive relations in the same order as `positive_relations`.
+            The float is the Average Precision of the ranking.
+            e.g. ([])  # TODO
+
         """
         positive_relation_distances = all_distances[positive_relations]
         negative_relation_distances = np.ma.array(all_distances, mask=False)
@@ -988,27 +995,36 @@ class ReconstructionEvaluation(object):
         return list(ranks), avg_precision
 
     def evaluate(self, max_n=None):
-        """Evaluate all defined metrics for the reconstruction task
+        """Evaluate all defined metrics for the reconstruction task.
 
-        Args:
-            max_n (int or None): Maximum number of positive relations to evaluate, all if max_n is None
+        Parameters
+        ----------
+        max_n : int or None
+            Maximum number of positive relations to evaluate, all if `max_n` is None.
 
-        Returns:
-            dict containing (metric_name, metric_value) pairs
-            e.g. {'mean_rank': 50.3, 'MAP': 0.31}
+        Returns
+        -------
+        dict
+            Contains (metric_name, metric_value) pairs.
+            e.g. {'mean_rank': 50.3, 'MAP': 0.31}.
 
         """
         mean_rank, map_ = self.evaluate_mean_rank_and_map(max_n)
         return {'mean_rank': mean_rank, 'MAP': map_}
 
     def evaluate_mean_rank_and_map(self, max_n=None):
-        """Evaluate mean rank and MAP for reconstruction
+        """Evaluate mean rank and MAP for reconstruction.
 
-        Args:
-            max_n (int or None): Maximum number of positive relations to evaluate, all if max_n is None
+        Parameters
+        ----------
+        max_n : int or None
+            Maximum number of positive relations to evaluate, all if `max_n` is None.
 
-        Returns:
-            tuple of (mean_rank, MAP)
+        Returns
+        -------
+        tuple (float, float)
+            Contains (mean_rank, MAP).
+            e.g (50.3, 0.31)
 
         """
         ranks = []
@@ -1028,17 +1044,19 @@ class ReconstructionEvaluation(object):
 
 
 class LinkPredictionEvaluation(object):
-    """Evaluating reconstruction on given network for given embedding"""
+    """Evaluating reconstruction on given network for given embedding."""
+
     def __init__(self, train_path, test_path, embedding):
-        """Initialize evaluation instance with tsv file containing relation pairs and embedding to be evaluated
+        """Initialize evaluation instance with tsv file containing relation pairs and embedding to be evaluated.
 
-        Args:
-            train_path (str): path to tsv file containing relation pairs used for training
-            test_path (str): path to tsv file containing relation pairs to evaluate
-            embedding (PoincareEmbedding instance): embedding to be evaluated
-
-        Returns
-            LinkPredictionEvaluation instance
+        Parameters
+        ----------
+        train_path : str
+            Path to tsv file containing relation pairs used for training.
+        test_path : str
+            Path to tsv file containing relation pairs to evaluate.
+        embedding : PoincareEmbedding instance
+            Embedding to be evaluated.
 
         """
         items = set()
@@ -1064,15 +1082,22 @@ class LinkPredictionEvaluation(object):
         Given a numpy array of distances and indices of known and unknown positive relations,
         compute ranks and Average Precision of unknown positive relations
 
-        Args:
-            all_distances (numpy float array): np array of all distances for a specific item
-            unknown_relations (list): list of indices of unknown positive relations
-            known_relations (list): list of indices of known positive relations
+        Parameters
+        ----------
+        all_distances : numpy.array (float)
+            Array of all distances for a specific item.
+        unknown_relations : list
+            List of indices of unknown positive relations.
+        known_relations : list
+            List of indices of known positive relations.
 
-        Returns:
-            tuple of (ranks, avg_precision)
-            `ranks` is a list of ranks (int) of unknown relations in the same order as `unknown_relations`
-            `avg_precision` is a float representing the Average Precision of the ranking
+        Returns
+        -------
+        tuple (list, float)
+            The list contains ranks (int) of positive relations in the same order as `positive_relations`.
+            The float is the Average Precision of the ranking.
+            e.g. ([])  # TODO
+
         """
         unknown_relation_distances = all_distances[unknown_relations]
         negative_relation_distances = np.ma.array(all_distances, mask=False)
@@ -1085,27 +1110,36 @@ class LinkPredictionEvaluation(object):
         return list(ranks), avg_precision
 
     def evaluate(self, max_n=None):
-        """Evaluate all defined metrics for the reconstruction task
+        """Evaluate all defined metrics for the link prediction task.
 
-        Args:
-            max_n (int or None): Maximum number of positive relations to evaluate, all if max_n is None
+        Parameters
+        ----------
+        max_n : int or None
+            Maximum number of positive relations to evaluate, all if `max_n` is None.
 
-        Returns:
-            dict containing (metric_name, metric_value) pairs
-            e.g. {'mean_rank': 50.3, 'MAP': 0.31}
+        Returns
+        -------
+        dict
+            Contains (metric_name, metric_value) pairs.
+            e.g. {'mean_rank': 50.3, 'MAP': 0.31}.
 
         """
         mean_rank, map_ = self.evaluate_mean_rank_and_map(max_n)
         return {'mean_rank': mean_rank, 'MAP': map_}
 
     def evaluate_mean_rank_and_map(self, max_n=None):
-        """Evaluate mean rank and MAP for reconstruction
+        """Evaluate mean rank and MAP for link prediction.
 
-        Args:
-            max_n (int or None): Maximum number of positive relations to evaluate, all if max_n is None
+        Parameters
+        ----------
+        max_n : int or None
+            Maximum number of positive relations to evaluate, all if `max_n` is None.
 
-        Returns:
-            tuple of (mean_rank, MAP)
+        Returns
+        -------
+        tuple (float, float)
+            Contains (mean_rank, MAP).
+            e.g (50.3, 0.31).
 
         """
         ranks = []
@@ -1126,15 +1160,14 @@ class LinkPredictionEvaluation(object):
 
 
 class LexicalEntailmentEvaluation(object):
-    """Evaluating reconstruction on given network for any embedding"""
+    """Evaluating reconstruction on given network for any embedding."""
     def __init__(self, filepath):
-        """Initialize evaluation instance with HyperLex text file containing relation pairs
+        """Initialize evaluation instance with HyperLex text file containing relation pairs.
 
-        Args:
-            filepath (str): path to HyperLex text file
-
-        Returns
-            LexicalEntailmentEvaluation instance
+        Parameters
+        ----------
+        filepath : str
+            Path to HyperLex text file.
 
         """
         expected_scores = {}
@@ -1146,13 +1179,30 @@ class LexicalEntailmentEvaluation(object):
         self.scores = expected_scores
         self.alpha = 1000
 
-    def score_function(self, embedding, word_1, word_2):
-        """Given an embedding and two terms, return the predicted score for them (extent to which term_1 is a type of term_2)"""
+    def score_function(self, embedding, term_1, term_2):
+        """
+        Given an embedding and two terms, return the predicted score for them -
+        extent to which `term_1` is a type of `term_2`.
+
+        Parameters
+        ----------
+        embedding : PoincareEmbedding instance
+            Embedding to use for computing predicted score.
+        term_1 : str
+            Input term.
+        term_2 : str
+            Input term.
+
+        Returns
+        -------
+        float
+            Predicted score (the extent to which `term_1` is a type of `term_2`).
+        """
         try:
-            word_1_terms = embedding.find_matching_keys(word_1)
-            word_2_terms = embedding.find_matching_keys(word_2)
+            word_1_terms = embedding.find_matching_keys(term_1)
+            word_2_terms = embedding.find_matching_keys(term_2)
         except KeyError:
-            raise ValueError("No matching terms found for either %s or %s" % (word_1, word_2))
+            raise ValueError("No matching terms found for either %s or %s" % (term_1, term_2))
         min_distance = np.inf
         min_term_1, min_term_2 = None, None
         for term_1 in word_1_terms:
@@ -1167,13 +1217,17 @@ class LexicalEntailmentEvaluation(object):
         return -1 * (1 + self.alpha * (norm_2 - norm_1)) * distance
 
     def evaluate_spearman(self, embedding):
-        """Evaluate spearman scores for lexical entailment for given embedding
+        """Evaluate spearman scores for lexical entailment for given embedding.
 
-        Args:
-            embedding (PoincareEmbedding instance): embedding for which evaluation is to be done
+        Parameters
+        ----------
+        embedding : PoincareEmbedding instance
+            Embedding for which evaluation is to be done.
 
-        Returns:
-            spearman correlation score (float)
+        Returns
+        -------
+        float
+            Spearman correlation score for the task for input embedding.
 
         """
         predicted_scores = []
@@ -1195,22 +1249,22 @@ class LexicalEntailmentEvaluation(object):
 
 
 class PoincareEmbedding(object):
-    """Load and perform distance operations on poincare embedding"""
+    """Load and perform distance operations on poincare embedding."""
 
     def __init__(self, keyed_vectors):
-        """Initialize PoincareEmbedding via a KeyedVectors instance"""
+        """Initialize PoincareEmbedding via a KeyedVectors instance."""
         self.kv = keyed_vectors
         self.init_key_trie()
 
     def init_key_trie(self):
-        """Setup trie containing vocab keys for quick prefix lookups"""
+        """Setup trie containing vocab keys for quick prefix lookups."""
         self.key_trie = Trie()
         for key in self.kv.vocab:
             self.key_trie[key] = True
 
     @staticmethod
     def poincare_dist(vector_1, vector_2):
-        """Return poincare distance between two vectors"""
+        """Return poincare distance between two vectors."""
         norm_1 = np.linalg.norm(vector_1)
         norm_2 = np.linalg.norm(vector_2)
         euclidean_dist = euclidean(vector_1, vector_2)
@@ -1222,13 +1276,16 @@ class PoincareEmbedding(object):
 
     @classmethod
     def load_poincare_cpp(cls, input_filename):
-        """Load embedding trained via C++ Poincare model
+        """Load embedding trained via C++ Poincare model.
 
-        Args:
-            filepath (str): Path to tsv file containing embedding
+        Parameters
+        ----------
+        filepath : str
+            Path to tsv file containing embedding.
 
-        Returns:
-            PoincareEmbedding instance
+        Returns
+        -------
+        PoincareEmbedding instance.
 
         """
         keyed_vectors_filename = input_filename + '.kv'
@@ -1239,13 +1296,15 @@ class PoincareEmbedding(object):
 
     @classmethod
     def load_poincare_numpy(cls, input_filename):
-        """Load embedding trained via Python numpy Poincare model
+        """Load embedding trained via Python numpy Poincare model.
 
-        Args:
-            filepath (str): Path to pkl file containing embedding
+        Parameters
+        ----------
+        filepath : str
+            Path to pkl file containing embedding.
 
         Returns:
-            PoincareEmbedding instance
+            PoincareEmbedding instance.
 
         """
         keyed_vectors_filename = input_filename + '.kv'
@@ -1256,30 +1315,32 @@ class PoincareEmbedding(object):
 
     @classmethod
     def load_poincare_gensim(cls, input_filename):
-        """Load embedding trained via Gensim PoincareModel
+        """Load embedding trained via Gensim PoincareModel.
 
-        Args:
-            filepath (str): Path to model file
+        Parameters
+        ----------
+        filepath : str
+            Path to model file.
 
         Returns:
-            PoincareEmbedding instance
+            PoincareEmbedding instance.
 
         """
         model = PoincareModel.load(input_filename)
         return cls(model.kv)
 
     def find_matching_keys(self, word):
-        """Find all senses of given word in embedding vocabulary"""
+        """Find all senses of given word in embedding vocabulary."""
         matches = self.key_trie.items('%s.' % word)
         matching_keys = [''.join(key_chars) for key_chars, value in matches]
         return matching_keys
 
     def get_vector(self, term):
-        """Return vector for given term"""
+        """Return vector for given term."""
         return self.kv.word_vec(term)
 
     def get_all_distances(self, term):
-        """Return distances to all terms for given term, including itself"""
+        """Return distances to all terms for given term, including itself."""
         term_vector = self.kv.word_vec(term)
         all_vectors = self.kv.syn0
 
@@ -1293,17 +1354,21 @@ class PoincareEmbedding(object):
         )
 
     def get_distance(self, term_1, term_2):
-        """Returns distance between vectors for input terms
+        """Returns distance between vectors for input terms.
 
-        Args:
-            term_1 (str)
-            term_2 (str)
+        Parameters
+        ----------
+        term_1 (str)
+        term_2 (str)
 
-        Returns:
-            Poincare distance between the two terms (float)
+        Returns
+        -------
+        float
+            Poincare distance between the two terms.
 
-        Note:
-            Raises KeyError if either term_1 or term_2 is absent from vocabulary
+        Notes
+        ----
+        Raises KeyError if either term_1 or term_2 is absent from vocabulary.
 
         """
         vector_1, vector_2 = self.kv[term_1], self.kv[term_2]
