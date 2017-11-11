@@ -82,7 +82,7 @@ RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
 
 
 def remove_stopwords(s):
-    """Take string, remove all words those are among stopwords.
+    """Remove `STOPWORDS` from s.
 
     Parameters
     ----------
@@ -106,7 +106,7 @@ def remove_stopwords(s):
 
 
 def strip_punctuation(s):
-    """Take string, replace all punctuation characters with spaces.
+    """Replace punctuation characters with spaces.
 
     Parameters
     ----------
@@ -138,7 +138,7 @@ strip_punctuation2 = strip_punctuation
 
 
 def strip_tags(s):
-    """Take string and remove tags.
+    """Remove tags from s.
 
     Parameters
     ----------
@@ -162,7 +162,7 @@ def strip_tags(s):
 
 
 def strip_short(s, minsize=3):
-    """Take string and remove words with length lesser than minsize (default = 3).
+    """Remove words with length lesser than minsize (default = 3).
 
     Parameters
     ----------
@@ -173,7 +173,6 @@ def strip_short(s, minsize=3):
     -------
     str
         Unicode string without words with length lesser than minsize.
-
 
     Examples
     --------
@@ -193,7 +192,7 @@ def strip_short(s, minsize=3):
 
 
 def strip_numeric(s):
-    """Take string and remove digits from it.
+    """Remove digits from s.
 
     Parameters
     ----------
@@ -217,7 +216,7 @@ def strip_numeric(s):
 
 
 def strip_non_alphanum(s):
-    """Take string and remove not a word characters from it.
+    """Remove not a word characters from s.
     (Word characters - alphanumeric & underscore)
 
     Parameters
@@ -242,7 +241,7 @@ def strip_non_alphanum(s):
 
 
 def strip_multiple_whitespaces(s):
-    r"""Take string, remove repeating in a row whitespace characters (spaces, tabs, line breaks) from it
+    r"""Remove repeating whitespace characters (spaces, tabs, line breaks) from s
     and turns tabs & line breaks into spaces.
 
     Parameters
@@ -267,7 +266,7 @@ def strip_multiple_whitespaces(s):
 
 
 def split_alphanum(s):
-    """Take string, add spaces between digits & letters.
+    """Add spaces between digits & letters in s.
 
     Parameters
     ----------
@@ -292,7 +291,7 @@ def split_alphanum(s):
 
 
 def stem_text(text):
-    """Take string, tranform it into lowercase and (porter-)stemmed version.
+    """Transform s into lowercase and (porter-)stemmed version.
 
     Parameters
     ----------
@@ -327,7 +326,7 @@ DEFAULT_FILTERS = [
 
 
 def preprocess_string(s, filters=DEFAULT_FILTERS):
-    """Take string, apply list of chosen filters to it, where filters are methods from this module.
+    """Apply list of chosen filters to s, where filters are methods from this module.
     Default list of filters consists of: :func:`~gensim.parsing.preprocessing.strip_tags`,
     :func:`~gensim.parsing.preprocessing.strip_punctuation`, :func:`~gensim.parsing.preprocessing.strip_multiple_whitespaces`,
     :func:`~gensim.parsing.preprocessing.strip_numeric`, :func:`~gensim.parsing.preprocessing.remove_stopwords`,
@@ -365,15 +364,15 @@ def preprocess_string(s, filters=DEFAULT_FILTERS):
 
 
 def preprocess_documents(docs):
-    """Take list of strings, then apply default filters to every string.
+    """Apply default filters to the documents strings.
 
     Parameters
     ----------
-    docs : list
+    docs : list of str
 
     Returns
     -------
-    list
+    list of (list of str)
         List of lists, filled by unicode strings.
 
     Examples

@@ -89,7 +89,7 @@ class PorterStemmer(object):
         self.j = 0   # j is a general offset into the string
 
     def _cons(self, i):
-        """Take b[i], check if it is a consonant.
+        """Take b[i], check if it is a consonant letter.
 
         Parameters
         ----------
@@ -98,7 +98,6 @@ class PorterStemmer(object):
         Returns
         -------
         bool
-            True, if b[i] is a consonant, otherwise - False.
 
         Examples
         --------
@@ -175,12 +174,11 @@ class PorterStemmer(object):
             i += 1
 
     def _vowelinstem(self):
-        """Check if b[i] (i = 0,...j) contains a vowel.
+        """Check if b[i] (i = 0,...j) contains a vowel letter.
 
         Returns
         -------
         bool
-            True, if b contains a vowel, otherwise - False.
 
         Examples
         --------
@@ -202,7 +200,7 @@ class PorterStemmer(object):
         return not all(self._cons(i) for i in xrange(self.j + 1))
 
     def _doublec(self, j):
-        """Check if b[j], b[j-1] contain a double consonant.
+        """Check if b[j], b[j-1] contain a double consonant letter.
 
         Parameters
         ----------
@@ -211,7 +209,6 @@ class PorterStemmer(object):
         Returns
         -------
         bool
-            True, if b[j], b[j-1] contain a double consonant , otherwise - False.
 
         Examples
         --------
@@ -233,7 +230,7 @@ class PorterStemmer(object):
         return j > 0 and self.b[j] == self.b[j - 1] and self._cons(j)
 
     def _cvc(self, i):
-        """Check if b[i-2], b[i-1], b[i] have the form consonant - vowel - consonant
+        """Check if b[i-2], b[i-1], b[i] have the form consonant letter - vowel letter- consonant letter
         and also if the second c is not w,x or y. This is used when trying to
         restore an e at the end of a short word, e.g.
         cav(e), lov(e), hop(e), crim(e), but
@@ -246,7 +243,6 @@ class PorterStemmer(object):
         Returns
         -------
         bool
-            True, if b[i-2], b[i-1], b[i] have the form consonant - vowel - consonant , otherwise - False.
 
         Examples
         --------
@@ -277,7 +273,7 @@ class PorterStemmer(object):
         return self.b[i] not in "wxy"
 
     def _ends(self, s):
-        """Check if b[0],...b[k] ends with the string s.
+        """Check if sequence of letters b[0],...b[k] ends with the string s.
 
         Parameters
         ----------
@@ -286,7 +282,7 @@ class PorterStemmer(object):
         Returns
         -------
         int
-            1, if b[0],...b[k] ends with the string s, otherwise - 0.
+            1 if ends, otherwise - 0.
 
         Examples
         --------
