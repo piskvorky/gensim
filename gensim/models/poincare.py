@@ -1317,61 +1317,6 @@ class PoincareEmbedding(object):
             )
         )
 
-    @classmethod
-    def load_poincare_cpp(cls, input_filename):
-        """Load embedding trained via C++ Poincare model.
-
-        Parameters
-        ----------
-        filepath : str
-            Path to tsv file containing embedding.
-
-        Returns
-        -------
-        PoincareEmbedding instance.
-
-        """
-        keyed_vectors_filename = input_filename + '.kv'
-        transform_cpp_embedding_to_kv(input_filename, keyed_vectors_filename)
-        keyed_vectors = KeyedVectors.load_word2vec_format(keyed_vectors_filename)
-        os.unlink(keyed_vectors_filename)
-        return cls(keyed_vectors)
-
-    @classmethod
-    def load_poincare_numpy(cls, input_filename):
-        """Load embedding trained via Python numpy Poincare model.
-
-        Parameters
-        ----------
-        filepath : str
-            Path to pkl file containing embedding.
-
-        Returns:
-            PoincareEmbedding instance.
-
-        """
-        keyed_vectors_filename = input_filename + '.kv'
-        transform_numpy_embedding_to_kv(input_filename, keyed_vectors_filename)
-        keyed_vectors = PoincareKeyedVectors.load_word2vec_format(keyed_vectors_filename)
-        os.unlink(keyed_vectors_filename)
-        return cls(keyed_vectors)
-
-    @classmethod
-    def load_poincare_gensim(cls, input_filename):
-        """Load embedding trained via Gensim PoincareModel.
-
-        Parameters
-        ----------
-        filepath : str
-            Path to model file.
-
-        Returns:
-            PoincareEmbedding instance.
-
-        """
-        model = PoincareModel.load(input_filename)
-        return cls(model.kv)
-
     def get_vector(self, term):
         """Return vector for given term."""
         return self.kv.word_vec(term)
