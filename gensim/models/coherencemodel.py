@@ -215,7 +215,7 @@ class CoherenceModel(interfaces.TransformationABC):
         self._topics = None
         self.topics = topics
 
-        self.processes = processes if processes > 1 else max(1, mp.cpu_count() - 1)
+        self.processes = processes if processes >= 1 else max(1, mp.cpu_count() - 1)
 
     @classmethod
     def for_models(cls, models, dictionary, topn=20, **kwargs):

@@ -7,40 +7,55 @@
 
 
 """
-Python implementation of Poincare Embeddings, an embedding to capture hierarchical information,
-described in [1]
+Python implementation of Poincare Embeddings [1], an embedding that is better at capturing latent hierarchical
+information better than traditional Euclidean embeddings. The method is described in more detail in [1].
+
+The main use-case is to automatically learn hierarchical representations of nodes from a tree-like structure,
+such as a Directed Acyclic Graph, using the transitive closure of the relations.
 
 This module allows training a Poincare Embedding from a training file containing relations from
 a transitive closure.
 
+[1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
+    https://arxiv.org/pdf/1705.08039.pdf
 
-.. [1] https://arxiv.org/pdf/1705.08039.pdf
+Examples
+--------
+Initialize and train a model from a list::
+
+>>> from gensim.models.poincare import PoincareModel
+>>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
+>>> model = PoincareModel(relations, negative=2)
+>>> model.train(epochs=50)
+
+Initialize and train a model from a file containing one relation per line::
+
+>>> from gensim.models.poincare import PoincareModel, PoincareRelations
+>>> file_path = 'gensim/test/test_data/poincare_hypernyms.tsv'
+>>> model = PoincareModel(PoincareRelations(file_path), negative=2)
+>>> model.train(epochs=50)
 
 """
 
 
 import csv
-import itertools
 import logging
-import os
-import random
 import time
 
-from autograd import numpy as np, grad
+import numpy as np
 from collections import defaultdict, Counter
 from numpy import random as np_random
 from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.models.keyedvectors import KeyedVectors, Vocab
-from gensim.models.word2vec import Word2Vec
+
 
 logger = logging.getLogger(__name__)
 
 
 class PoincareModel(utils.SaveLoad):
-    """
-    Class for training, using and evaluating Poincare Embeddings described in https://arxiv.org/pdf/1705.08039.pdf
+    """Class for training, using and evaluating Poincare Embeddings.
 
     The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in the word2vec
     format via `wv.save_word2vec_format()` and `KeyedVectors.load_word2vec_format()`.
@@ -50,23 +65,20 @@ class PoincareModel(utils.SaveLoad):
 
     """
     def __init__(
-        self, train_data, size=50, alpha=0.1, negative=10, iter=50,
-        workers=1, epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, seed=0):
-        """
-        Initialize and train a Poincare embedding model from an iterable of transitive closure relations.
+        self, train_data, size=50, alpha=0.1, negative=10, workers=1,
+        epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), seed=0):
+        """Initialize and train a Poincare embedding model from an iterable of transitive closure relations.
 
         Parameters
         ----------
-        train_file : iterable
-            iterable of hypernym pairs, e.g. a list of tuples, or a PoincareData instance streaming from a file.
+        train_data : iterable of (str, str)
+            Iterable of relations, e.g. a list of tuples, or a PoincareRelations instance streaming from a file.
         size : int, optional
             Number of dimensions of the trained model.
         alpha : float, optional
-            learning rate for training.
+            Learning rate for training.
         negative : int, optional
             Number of negative samples to use.
-        iter : int, optional
-            Number of iterations (epochs) over the corpus.
         workers : int, optional
             Number of threads to use for training the model.
         epsilon : float, optional
@@ -74,56 +86,58 @@ class PoincareModel(utils.SaveLoad):
         burn_in : int, optional
             Number of epochs to use for burn-in initialization (0 means no burn-in).
         burn_in_alpha : float, optional
-            learning rate for burn-in initialization, ignored if `burn_in` is 0.
+            Learning rate for burn-in initialization, ignored if `burn_in` is 0.
+        init_range : 2-tuple (float, float)
+            Range within which the vectors are randomly initialized.
         seed : int, optional
-            seed for random to ensure reproducibility.
-
-        Returns
-        --------
-        PoincareModel instance
+            Seed for random to ensure reproducibility.
 
         Examples
         --------
         Initialize a model from a list::
 
-        >>> model = PoincareModel(list_of_relations)
+        >>> from gensim.models.poincare import PoincareModel
+        >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
+        >>> model = PoincareModel(relations, negative=2)
 
         Initialize a model from a file containing one relation per line::
 
-        >>> model = PoincareModel(PoincareData(file_path))
+        >>> from gensim.models.poincare import PoincareModel, PoincareRelations
+        >>> file_path = 'gensim/test/test_data/poincare_hypernyms.tsv'
+        >>> model = PoincareModel(PoincareRelations(file_path), negative=2)
 
-        See `PoincareData` for more options.
+        See `PoincareRelations` for more options.
 
         """
         self.train_data = train_data
-        self.wv = PoincareKeyedVectors()
+        self.kv = PoincareKeyedVectors()
         self.size = size
         self.train_alpha = alpha  # Learning rate for training
         self.burn_in_alpha = burn_in_alpha  # Learning rate for burn-in
         self.alpha = alpha  # Current learning rate
         self.negative = negative
-        self.iter = iter
         self.workers = workers
         self.epsilon = epsilon
         self.burn_in = burn_in
+        self._burn_in_done = False
         self.seed = seed
-        self.random = random.Random(seed)
-        self.np_random = np_random.RandomState(seed)
-        self.init_range = (-0.001, 0.001)
-        self.loss_grad = grad(PoincareModel.loss_fn)
-        self.load_relations()
-        self.init_embeddings()
+        self._np_random = np_random.RandomState(seed)
+        self.init_range = init_range
+        self._loss_grad = None
+        self._load_relations()
+        self._init_embeddings()
 
-    def load_relations(self):
+    def _load_relations(self):
         """Load relations from the train data and build vocab."""
         vocab = {}
         index2word = []
         all_relations = []  # List of all relation pairs
-        term_relations = defaultdict(set)  # Mapping from node index to its related node indices
+        node_relations = defaultdict(set)  # Mapping from node index to its related node indices
 
         logger.info("Loading relations from train data..")
         for hypernym_pair in self.train_data:
-            assert len(hypernym_pair) == 2, 'Relation pair "%s" should have exactly two items' % hypernym_pair
+            if len(hypernym_pair) != 2:
+                raise ValueError('Relation pair "%s" should have exactly two items' % str(hypernym_pair))
             for item in hypernym_pair:
                 if item in vocab:
                     vocab[item].count += 1
@@ -132,58 +146,58 @@ class PoincareModel(utils.SaveLoad):
                     index2word.append(item)
             node_1, node_2 = hypernym_pair
             node_1_index, node_2_index = vocab[node_1].index, vocab[node_2].index
-            term_relations[node_1_index].add(node_2_index)
+            node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
             all_relations.append(relation)
         logger.info("Loaded %d relations from train data, %d unique terms", len(all_relations), len(vocab))
-        self.wv.vocab = vocab
-        self.wv.index2word = index2word
+        self.kv.vocab = vocab
+        self.kv.index2word = index2word
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
         self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
-        counts = np.array([self.wv.vocab[index2word[i]].count for i in range(len(index2word))])
-        self.node_probabilities = counts / counts.sum()
-        self.node_probabilities_cumsum = np.cumsum(self.node_probabilities)
+        counts = np.array([self.kv.vocab[index2word[i]].count for i in range(len(index2word))])
+        self._node_probabilities = counts / counts.sum()
+        self._node_probabilities_cumsum = np.cumsum(self._node_probabilities)
         self.all_relations = all_relations
-        self.term_relations = term_relations
-        self.negatives_buffer = NegativesBuffer([])  # Buffer to store negative samples, to reduce calls to sampling method
-        self.negatives_buffer_size = 2000
+        self.node_relations = node_relations
+        self._negatives_buffer = NegativesBuffer([])  # Buffer to store negative samples, to reduce calls to sampling method
+        self._negatives_buffer_size = 2000
 
-    def init_embeddings(self):
+    def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
-        shape = (len(self.wv.index2word), self.size)
-        self.wv.syn0 = self.np_random.uniform(self.init_range[0], self.init_range[1], shape)
+        shape = (len(self.kv.index2word), self.size)
+        self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape)
 
-    def get_candidate_negatives(self):
-        """
-        Returns candidate negatives of size `self.negative` from the negative examples buffer.
+    def _get_candidate_negatives(self):
+        """Returns candidate negatives of size `self.negative` from the negative examples buffer.
 
         Returns
         --------
-        numpy array
-            numpy array of shape (`self.negative`,) containing indices of negative nodes.
+        numpy.array
+            Array of shape (`self.negative`,) containing indices of negative nodes.
+
         """
 
-        if self.negatives_buffer.is_empty():
+        if self._negatives_buffer.num_items() < self.negative:
             # Note: np.random.choice much slower than random.sample for large populations, possible bottleneck
-            uniform_numbers = np.random.random(self.negatives_buffer_size)
-            cumsum_table_indices = np.searchsorted(self.node_probabilities_cumsum, uniform_numbers)
-            self.negatives_buffer = NegativesBuffer(cumsum_table_indices)
-        return self.negatives_buffer.get_items(self.negative)
+            uniform_numbers = self._np_random.random_sample(self._negatives_buffer_size)
+            cumsum_table_indices = np.searchsorted(self._node_probabilities_cumsum, uniform_numbers)
+            self._negatives_buffer = NegativesBuffer(cumsum_table_indices)
+        return self._negatives_buffer.get_items(self.negative)
 
     @staticmethod
-    def has_duplicates(array):
-        """
-        Returns whether or not the input array has any duplicates.
+    def _has_duplicates(array):
+        """Returns whether or not the input array has any duplicates.
 
         Parameters
         ----------
         array : iterable of hashables
-            input array to checked, should contain hashable items.
+            Input array to checked, should contain hashable items.
 
         Returns
         -------
         bool
-            Whether the input array contains any duplicates
+            Whether the input array contains any duplicates.
+
         """
         seen = set()
         for value in array:
@@ -192,83 +206,100 @@ class PoincareModel(utils.SaveLoad):
             seen.add(value)
         return False
 
-    def sample_negatives(self, node_index):
-        """
-        Return a sample of negatives for the given node.
+    def _sample_negatives(self, node_index):
+        """Return a sample of negatives for the given node.
 
         Parameters
         ----------
         node_index : int
-            index of the positive node for which negative samples are to be returned.
+            Index of the positive node for which negative samples are to be returned.
 
         Returns
         --------
-        numpy array
-            numpy array of shape (self.negative,) containing indices of negative nodes for the given node index.
+        numpy.array
+            Array of shape (self.negative,) containing indices of negative nodes for the given node index.
+
         """
-        node_relations = self.term_relations[node_index]
-        positive_fraction = len(node_relations) / len(self.term_relations)
+        node_relations = self.node_relations[node_index]
+        num_remaining_nodes = len(self.kv.vocab) - len(node_relations)
+        if  num_remaining_nodes < self.negative:
+            raise ValueError(
+                'Cannot sample %d negative items from a set of %d items' %
+                (self.negative, num_remaining_nodes)
+            )
+
+        positive_fraction = len(node_relations) / len(self.kv.vocab)
         if positive_fraction < 0.01:
             # If number of positive relations is a small fraction of total nodes
             # re-sample till no positively connected nodes are chosen
-            indices = self.get_candidate_negatives()
+            indices = self._get_candidate_negatives()
             times_sampled = 1
-            while (set(indices) & node_relations) or self.has_duplicates(indices):
+            while self._has_duplicates(indices) or (set(indices) & node_relations):
                 times_sampled += 1
-                indices = self.get_candidate_negatives()
+                indices = self._get_candidate_negatives()
             if times_sampled > 1:
                 logger.debug('Sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
         else:
             # If number of positive relations is a significant fraction of total nodes
             # subtract positively connected nodes from set of choices and sample from the remaining
             valid_negatives = np.array(list(self.indices_set - node_relations))
-            probs = self.node_probabilities[valid_negatives]
+            probs = self._node_probabilities[valid_negatives]
             probs /= probs.sum()
-            indices = self.np_random.choice(valid_negatives, size=self.negative, p=probs)
+            indices = self._np_random.choice(valid_negatives, size=self.negative, p=probs, replace=False)
 
         return list(indices)
 
     @staticmethod
-    def loss_fn(matrix):
-        """
-        Given a numpy array with vectors for u, v and negative samples, computes loss value.
+    def _loss_fn(matrix):
+        """Given a numpy array with vectors for u, v and negative samples, computes loss value.
 
         Parameters
         ----------
-        matrix : numpy array
-            numpy array containing vectors for u, v and negative samples, of shape (2 + negative_size, dim).
+        matrix : numpy.array
+            Array containing vectors for u, v and negative samples, of shape (2 + negative_size, dim).
 
         Returns
         -------
         float
-            computed loss value.
+            Computed loss value.
 
         Notes
         -----
         Only used for autograd gradients, since autograd requires a specific function signature.
+
         """
+        # Loaded only if gradients are to be checked to avoid dependency
+        from autograd import numpy as grad_np
+
         vector_u = matrix[0]
         vectors_v = matrix[1:]
-        all_distances = PoincareKeyedVectors.poincare_dists(vector_u, vectors_v)
-        exp_negative_distances = np.exp(-all_distances)
-        return -np.log(exp_negative_distances[0] / (exp_negative_distances.sum()))
+        euclidean_dists = grad_np.linalg.norm(vector_u - vectors_v, axis=1)
+        norm = grad_np.linalg.norm(vector_u)
+        all_norms = grad_np.linalg.norm(vectors_v, axis=1)
+        poincare_dists = grad_np.arccosh(
+            1 + 2 * (
+                (euclidean_dists ** 2) / ((1 - norm ** 2) * (1 - all_norms ** 2))
+            )
+        )
+        exp_negative_distances = grad_np.exp(-poincare_dists)
+        return -grad_np.log(exp_negative_distances[0] / (exp_negative_distances.sum()))
 
     @staticmethod
-    def clip_vectors(vectors, epsilon):
-        """
-        Clip vectors to have a norm of less than one.
+    def _clip_vectors(vectors, epsilon):
+        """Clip vectors to have a norm of less than one.
 
         Parameters
         ----------
-        vectors : numpy array
-            can be 1-D,or 2-D (in which case the norm for each row is checked).
+        vectors : numpy.array
+            Can be 1-D,or 2-D (in which case the norm for each row is checked).
         epsilon : float
-            parameter for numerical stability, each dimension of the vector is reduced by `epsilon`
+            Parameter for numerical stability, each dimension of the vector is reduced by `epsilon`
             if the norm of the vector is greater than or equal to 1.
+
         Returns
         -------
-        numpy array
-            numpy array with norms clipped below 1.
+        numpy.array
+            Array with norms clipped below 1.
 
         """
         one_d = len(vectors.shape) == 1
@@ -288,24 +319,35 @@ class PoincareModel(utils.SaveLoad):
                 vectors[norms >= threshold] -= np.sign(vectors[norms >= threshold]) * epsilon
                 return vectors
 
-    def prepare_training_batch(self, relations, all_negatives, check_gradients=False):
-        """
-        Creates training batch and computes gradients and loss for the batch.
+    def save(self, *args, **kwargs):
+        """Save complete model to disk, inherited from `utils.SaveLoad`."""
+        self._loss_grad = None  # Can't pickle autograd fn to disk
+        super(PoincareModel, self).save(*args, **kwargs)
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """Load model from disk, inherited from `utils.SaveLoad`."""
+        model = super(PoincareModel, cls).load(*args, **kwargs)
+        return model
+
+    def _prepare_training_batch(self, relations, all_negatives, check_gradients=False):
+        """Creates training batch and computes gradients and loss for the batch.
 
         Parameters
         ----------
 
         relations : list of tuples
-            list of tuples of positive examples of the form (node_1_index, node_2_index).
+            List of tuples of positive examples of the form (node_1_index, node_2_index).
         all_negatives : list of lists
-            list of lists of negative samples for each node_1 in the positive examples.
+            List of lists of negative samples for each node_1 in the positive examples.
         check_gradients : bool, optional
-            whether to compare the computed gradients to autograd gradients for this batch.
+            Whether to compare the computed gradients to autograd gradients for this batch.
 
         Returns
         -------
         PoincareBatch instance
-            contains node indices, computed gradients and loss for the batch.
+            Contains node indices, computed gradients and loss for the batch.
+
         """
         batch_size = len(relations)
         all_vectors = []
@@ -316,77 +358,101 @@ class PoincareModel(utils.SaveLoad):
             indices_v.append(v)
             indices_v.extend(negatives)
 
-        vectors_u = self.wv.syn0[indices_u]
-        vectors_v = self.wv.syn0[indices_v].reshape((batch_size, 1 + self.negative, self.size))
+        vectors_u = self.kv.syn0[indices_u]
+        vectors_v = self.kv.syn0[indices_v].reshape((batch_size, 1 + self.negative, self.size))
         vectors_v = vectors_v.swapaxes(0,1).swapaxes(1,2)
         batch = PoincareBatch(vectors_u, vectors_v, indices_u, indices_v)
         batch.compute_all()
 
         if check_gradients:
-            max_diff = 0.0
-            for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
-                u, v = relation
-                auto_gradients = self.loss_grad(np.vstack((self.wv.syn0[u], self.wv.syn0[[v] + negatives])))
-                computed_gradients = np.vstack((batch.gradients_u[:, i], batch.gradients_v[:, :, i]))
-                diff = np.abs(auto_gradients - computed_gradients).max()
-                if diff > max_diff:
-                    max_diff = diff
-            logger.info('Max difference between computed gradients and autograd gradients: %.10f', max_diff)
-            if max_diff > 1e-8:
-                logger.warning(
-                    'Max difference between computed gradients and autograd gradients %.10f, '
-                    'greater than tolerance %.10f', max_diff, 1e-8)
+            self._check_gradients(relations, all_negatives, batch)
+
         return batch
 
-    def sample_negatives_batch(self, nodes):
+    def _check_gradients(self, relations, all_negatives, batch, tol=1e-8):
+        """Compare computed gradients for batch to autograd gradients.
+
+        Parameters
+        ----------
+        batch : PoincareBatch instance
+            Batch for which computed gradients are to checked.
+        relations : list of tuples
+            List of tuples of positive examples of the form (node_1_index, node_2_index).
+        all_negatives : list of lists
+            List of lists of negative samples for each node_1 in the positive examples.
+
         """
-        Return negative examples for each node in the given nodes.
+        try:  # Loaded only if gradients are to be checked to avoid dependency
+            from autograd import grad
+        except ImportError:
+            logger.warning('autograd could not be imported, skipping checking of gradients')
+            logger.warning('please install autograd to enable gradient checking')
+            return
+
+        if self._loss_grad is None:
+            self._loss_grad = grad(PoincareModel._loss_fn)
+
+        max_diff = 0.0
+        for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
+            u, v = relation
+            auto_gradients = self._loss_grad(np.vstack((self.kv.syn0[u], self.kv.syn0[[v] + negatives])))
+            computed_gradients = np.vstack((batch.gradients_u[:, i], batch.gradients_v[:, :, i]))
+            diff = np.abs(auto_gradients - computed_gradients).max()
+            if diff > max_diff:
+                max_diff = diff
+        logger.info('Max difference between computed gradients and autograd gradients: %.10f', max_diff)
+        assert max_diff < tol, (
+                'Max difference between computed gradients and autograd gradients %.10f, '
+                'greater than tolerance %.10f' % (max_diff, tol))
+
+    def _sample_negatives_batch(self, nodes):
+        """Return negative examples for each node in the given nodes.
 
         Parameters
         ----------
         nodes : list
-            list of node indices for which negative samples are to be returned.
+            List of node indices for which negative samples are to be returned.
 
         Returns
         -------
         list of lists
-            each inner list is a list of negative sample for a single node in the input list.
+            Each inner list is a list of negative sample for a single node in the input list.
+
         """
-        all_indices = [self.sample_negatives(node) for node in nodes]
+        all_indices = [self._sample_negatives(node) for node in nodes]
         return all_indices
 
-    def train_on_batch(self, relations, check_gradients=False):
-        """
-        Performs training for a single training batch.
+    def _train_on_batch(self, relations, check_gradients=False):
+        """Performs training for a single training batch.
 
         Parameters
         ----------
         relations : list of tuples
-            list of tuples of positive examples of the form (node_1_index, node_2_index).
+            List of tuples of positive examples of the form (node_1_index, node_2_index).
         check_gradients : bool, optional
-            whether to compare the computed gradients to autograd gradients for this batch.
+            Whether to compare the computed gradients to autograd gradients for this batch.
 
         Returns
         -------
         PoincareBatch instance
-            the batch that was just trained on, contains computed loss for the batch.
+            The batch that was just trained on, contains computed loss for the batch.
+
         """
-        all_negatives = self.sample_negatives_batch([relation[0] for relation in relations])
-        batch = self.prepare_training_batch(relations, all_negatives, check_gradients)
-        self.update_vectors_batch(batch)
+        all_negatives = self._sample_negatives_batch([relation[0] for relation in relations])
+        batch = self._prepare_training_batch(relations, all_negatives, check_gradients)
+        self._update_vectors_batch(batch)
         return batch
 
     @staticmethod
-    def handle_duplicates(vector_updates, node_indices):
-        """
-        Handles occurrences of multiple updates to the same node in a batch of vector updates.
+    def _handle_duplicates(vector_updates, node_indices):
+        """Handles occurrences of multiple updates to the same node in a batch of vector updates.
 
         Parameters
         ----------
-        vector_updates : numpy array
-            array with each row containing updates to be performed on a certain node.
+        vector_updates : numpy.array
+            Array with each row containing updates to be performed on a certain node.
         node_indices : list
-            node indices on which the above updates are to be performed on.
+            Node indices on which the above updates are to be performed on.
 
         Notes
         -----
@@ -394,6 +460,7 @@ class PoincareModel(utils.SaveLoad):
 
         Required because vectors[[2, 1, 2]] += np.array([-0.5, 1.0, 0.5]) performs only the last update
         on the row at index 2.
+
         """
         counts = Counter(node_indices)
         for node_index, count in counts.items():
@@ -404,49 +471,49 @@ class PoincareModel(utils.SaveLoad):
             vector_updates[positions[-1]] = vector_updates[positions].sum(axis=0)
             vector_updates[positions[:-1]] = 0
 
-    def update_vectors_batch(self, batch):
-        """
-        Updates vectors for nodes in the given batch.
+    def _update_vectors_batch(self, batch):
+        """Updates vectors for nodes in the given batch.
 
         Parameters
         ----------
         batch : PoincareBatch instance
-            batch containing computed gradients and node indices of the batch for which updates are to be done.
+            Batch containing computed gradients and node indices of the batch for which updates are to be done.
 
-        Notes
-        -----
-        Mutates the `syn0` array.
         """
         grad_u, grad_v = batch.gradients_u, batch.gradients_v
         indices_u, indices_v = batch.indices_u, batch.indices_v
         batch_size = len(indices_u)
 
         u_updates = (self.alpha * (batch.alpha ** 2) / 4 * grad_u).T
-        self.handle_duplicates(u_updates, indices_u)
+        self._handle_duplicates(u_updates, indices_u)
 
-        self.wv.syn0[indices_u] -= u_updates
-        self.wv.syn0[indices_u] = self.clip_vectors(self.wv.syn0[indices_u], self.epsilon)
+        self.kv.syn0[indices_u] -= u_updates
+        self.kv.syn0[indices_u] = self._clip_vectors(self.kv.syn0[indices_u], self.epsilon)
 
         v_updates = self.alpha * (batch.beta ** 2)[:, np.newaxis] / 4 * grad_v
         v_updates = v_updates.swapaxes(1, 2).swapaxes(0, 1)
         v_updates = v_updates.reshape(((1 + self.negative) * batch_size, self.size))
-        self.handle_duplicates(v_updates, indices_v)
+        self._handle_duplicates(v_updates, indices_v)
 
-        self.wv.syn0[indices_v] -= v_updates
-        self.wv.syn0[indices_v] = self.clip_vectors(self.wv.syn0[indices_v], self.epsilon)
+        self.kv.syn0[indices_v] -= v_updates
+        self.kv.syn0[indices_v] = self._clip_vectors(self.kv.syn0[indices_v], self.epsilon)
 
-    def train(self, batch_size=10, print_every=1000, check_gradients_every=1000):
-        """
-        Trains Poincare embeddings using loaded data and model parameters.
+    def train(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
+        """Trains Poincare embeddings using loaded data and model parameters.
 
         Parameters
         ----------
+
         batch_size : int, optional
             Number of examples to train on in a single batch.
+        epochs : int
+            Number of iterations (epochs) over the corpus.
         print_every : int, optional
             Prints progress and average loss after every `print_every` batches.
-        check_gradients_every : int, optional
+        check_gradients_every : int or None, optional
             Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
+            Useful for debugging, doesn't compare by default.
+
         """
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
@@ -454,54 +521,55 @@ class PoincareModel(utils.SaveLoad):
         logger.info(
             "training model of size %d with %d workers on %d relations for %d epochs and %d burn-in epochs, "
             "using lr=%.5f burn-in lr=%.5f negative=%d",
-            self.size, self.workers, len(self.all_relations), self.iter, self.burn_in,
+            self.size, self.workers, len(self.all_relations), epochs, self.burn_in,
             self.alpha, self.burn_in_alpha, self.negative
         )
 
-        if self.burn_in > 0:
+        if self.burn_in > 0 and not self._burn_in_done:
             logger.info("Starting burn-in (%d epochs)----------------------------------------", self.burn_in)
             self.alpha = self.burn_in_alpha
-            self.train_batchwise(
+            self._train_batchwise(
                 epochs=self.burn_in, batch_size=batch_size, print_every=print_every,
                 check_gradients_every=check_gradients_every)
+            self._burn_in_done = True
             logger.info("Burn-in finished")
 
         self.alpha = self.train_alpha
-        logger.info("Starting training (%d epochs)----------------------------------------", self.iter)
-        self.train_batchwise(
-            batch_size=batch_size, print_every=print_every, check_gradients_every=check_gradients_every)
+        logger.info("Starting training (%d epochs)----------------------------------------", epochs)
+        self._train_batchwise(
+            epochs=epochs, batch_size=batch_size, print_every=print_every,
+            check_gradients_every=check_gradients_every)
         logger.info("Training finished")
 
-    def train_batchwise(self, epochs=None, batch_size=10, print_every=1000, check_gradients_every=1000):
-        """
-        Trains Poincare embeddings using specified parameters.
+    def _train_batchwise(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
+        """Trains Poincare embeddings using specified parameters.
 
         Parameters
         ----------
-        epochs : int or None, optional
-            Number of epochs after which training ends, if `None`, runs for `self.iter` epochs.
+        epochs : int
+            Number of iterations (epochs) over the corpus.
         batch_size : int, optional
             Number of examples to train on in a single batch.
         print_every : int, optional
             Prints progress and average loss after every `print_every` batches.
-        check_gradients_every : int, optional
+        check_gradients_every : int or None, optional
             Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
+            Useful for debugging, doesn't compare by default.
+
         """
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
-        if epochs is None:
-            epochs = self.iter
         for epoch in range(1, epochs + 1):
             indices = list(range(len(self.all_relations)))
-            self.np_random.shuffle(indices)
+            self._np_random.shuffle(indices)
             avg_loss = 0.0
             last_time = time.time()
             for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
                 should_print = not (batch_num % print_every)
-                check_gradients = not (batch_num % check_gradients_every)
+                check_gradients = bool(check_gradients_every) and (batch_num % check_gradients_every) == 0
                 batch_indices = indices[i:i+batch_size]
                 relations = [self.all_relations[idx] for idx in batch_indices]
-                result = self.train_on_batch(relations, check_gradients=check_gradients)
+                result = self._train_on_batch(relations, check_gradients=check_gradients)
                 avg_loss += result.loss
                 if should_print:
                     avg_loss /= print_every
@@ -518,9 +586,11 @@ class PoincareModel(utils.SaveLoad):
 
 
 class PoincareBatch(object):
-    """
+    """Compute Poincare distances, gradients and loss for a training batch.
+
     Class for computing Poincare distances, gradients and loss for a training batch,
     and storing intermediate state to avoid recomputing multiple times.
+
     """
     def __init__(self, vectors_u, vectors_v, indices_u, indices_v):
         """
@@ -528,22 +598,19 @@ class PoincareBatch(object):
 
         Parameters
         ----------
-        vectors_u : numpy array
-            expected shape (batch_size, dim).
-            vectors of all nodes `u` in the batch.
-        vectors_v : numpy array
-            expected shape (1 + neg_size, dim, batch_size).
-            vectors of all hypernym nodes `v` and negatively sampled nodes `v'`,
+        vectors_u : numpy.array
+            Vectors of all nodes `u` in the batch.
+            Expected shape (batch_size, dim).
+        vectors_v : numpy.array
+            Vectors of all hypernym nodes `v` and negatively sampled nodes `v'`,
             for each node `u` in the batch.
+            Expected shape (1 + neg_size, dim, batch_size).
         indices_u : list
-            list of node indices for each of the vectors in `vectors_u`.
+            List of node indices for each of the vectors in `vectors_u`.
         indices_v : list
-            nested list of lists, each of which is a  list of node indices
+            Nested list of lists, each of which is a  list of node indices
             for each of the vectors in `vectors_v` for a specific node `u`.
 
-        Returns
-        -------
-        PoincareBatch instance
         """
         self.vectors_u = vectors_u.T[np.newaxis, :, :]  # (1, dim, batch_size)
         self.vectors_v = vectors_v  # (1 + neg_size, dim, batch_size)
@@ -566,10 +633,10 @@ class PoincareBatch(object):
 
         self.loss = None
 
-        self.distances_computed = False
-        self.gradients_computed = False
-        self.distance_gradients_computed = False
-        self.loss_computed = False
+        self._distances_computed = False
+        self._gradients_computed = False
+        self._distance_gradients_computed = False
+        self._loss_computed = False
 
     def compute_all(self):
         """Convenience method to perform all computations."""
@@ -580,7 +647,7 @@ class PoincareBatch(object):
 
     def compute_distances(self):
         """Compute and store norms, euclidean distances and poincare distances between input vectors."""
-        if self.distances_computed:
+        if self._distances_computed:
             return
         euclidean_dists = np.linalg.norm(self.vectors_u - self.vectors_v, axis=1)  # (1 + neg_size, batch_size)
         norms_u = np.linalg.norm(self.vectors_u, axis=1)  # (1, batch_size)
@@ -605,11 +672,11 @@ class PoincareBatch(object):
         self.beta = beta
         self.gamma = gamma
 
-        self.distances_computed = True
+        self._distances_computed = True
 
     def compute_gradients(self):
         """Compute and store gradients of loss function for all input vectors."""
-        if self.gradients_computed:
+        if self._gradients_computed:
             return
         self.compute_distances()
         self.compute_distance_gradients()
@@ -628,11 +695,11 @@ class PoincareBatch(object):
         self.gradients_u = gradients_u
         self.gradients_v = gradients_v
 
-        self.gradients_computed = True
+        self._gradients_computed = True
 
     def compute_distance_gradients(self):
         """Compute and store partial derivatives of poincare distance d(u, v) w.r.t all u and all v."""
-        if self.distance_gradients_computed:
+        if self._distance_gradients_computed:
             return
         self.compute_distances()
 
@@ -655,22 +722,22 @@ class PoincareBatch(object):
             distance_gradients_v.swapaxes(1, 2)[nan_gradients] = 0
         self.distance_gradients_v = distance_gradients_v
 
-        self.distance_gradients_computed = True
+        self._distance_gradients_computed = True
 
     def compute_loss(self):
         """Compute and store loss value for the given batch of examples."""
-        if self.loss_computed:
+        if self._loss_computed:
             return
         self.compute_distances()
 
         self.loss = -np.log(self.exp_negative_distances[0] / self.Z).sum()  # scalar
-        self.loss_computed = True
+        self._loss_computed = True
 
 
 class PoincareKeyedVectors(KeyedVectors):
-    """
-    Class to contain vectors and vocab for the PoincareModel training class,
-    can be used to perform operations on the vectors such as vector lookup, distance etc.
+    """Class to contain vectors and vocab for the PoincareModel training class.
+
+    Used to perform operations on the vectors such as vector lookup, distance etc.
 
     """
     @staticmethod
@@ -768,95 +835,83 @@ class PoincareKeyedVectors(KeyedVectors):
     # TODO: Add other KeyedVector supported methods.
 
 
-class PoincareData(object):
-    """
-    Class to stream hypernym relations for `PoincareModel` from a tsv-like file.
+class PoincareRelations(object):
+    """Class to stream hypernym relations for `PoincareModel` from a tsv-like file."""
 
-    """
     def __init__(self, file_path, encoding='utf8', delimiter='\t'):
-        """
-        Initialize instance from file containing one hypernym pair per line.
+        """Initialize instance from file containing one hypernym pair per line.
 
         Parameters
         ----------
         file_path : str
-            path to file containing one hypernym pair per line, separated by `delimiter`.
+            Path to file containing one hypernym pair per line, separated by `delimiter`.
         encoding : str, optional
-            character encoding of the input file.
+            Character encoding of the input file.
         delimiter : str, optional
-            delimiter character for each hypernym pair.
+            Delimiter character for each hypernym pair.
 
-        Returns
-        -------
-        PoincareData instance
         """
 
         self.file_path = file_path
         self.encoding = encoding
         self.delimiter = delimiter
 
-    def stream_lines(self):
-        """
-        Streams lines from self.file_path decoded into unicode strings.
+    def _stream_lines(self):
+        """Streams lines from self.file_path decoded into unicode strings.
 
         Yields
         -------
         str (unicode)
             Single line from input file.
+
         """
         with smart_open(self.file_path, 'rb') as f:
             for line in f:
                 yield line.decode(self.encoding)
 
     def __iter__(self):
-        """
-        Streams relations from self.file_path decoded into unicode strings.
+        """Streams relations from self.file_path decoded into unicode strings.
 
         Yields
         -------
-        2-tuple (unicode)
+        2-tuple (unicode, unicode)
             Hypernym relation from input file.
+
         """
-        reader = csv.reader(self.stream_lines(), delimiter=self.delimiter)
+        reader = csv.reader(self._stream_lines(), delimiter=self.delimiter)
         for row in reader:
             yield tuple(row)
 
-class NegativesBuffer(object):
-    """
-    Class to buffer and return negative samples.
 
-    """
+class NegativesBuffer(object):
+    """Class to buffer and return negative samples."""
+
     def __init__(self, items):
-        """
-        Initialize instance from list or numpy array of samples.
+        """Initialize instance from list or numpy array of samples.
 
         Parameters
         ----------
-        items : list/numpy array
-            list or numpy array containing negative samples.
+        items : list/numpy.array
+            List or array containing negative samples.
+
+        """
+
+        self._items = items
+        self._current_index = 0
+
+    def num_items(self):
+        """Returns number of items remaining in the buffer.
 
         Returns
         -------
-        NegativesBuffer instance
-        """
+        int
+            Number of items in the buffer that haven't been consumed yet.
 
-        self.items = items
-        self.current_index = 0
-
-    def is_empty(self):
         """
-        Whether or not buffer has been completely consumed.
-
-        Returns
-        -------
-        bool
-            If the buffer has been completely consumed.
-        """
-        return self.current_index >= len(self.items)
+        return len(self._items) - self._current_index
 
     def get_items(self, num_items):
-        """
-        Returns next `num_items` from buffer.
+        """Returns next `num_items` from buffer.
 
         Parameters
         ----------
@@ -865,11 +920,17 @@ class NegativesBuffer(object):
 
         Returns
         -------
-        numpy array or list
+        numpy.array or list
             Slice containing `num_items` items from the original data.
+
+        Notes
+        -----
+        No error is raised if less than `num_items` items are remaining,
+        simply all the remaining items are returned.
+
         """
-        start_index = self.current_index
+        start_index = self._current_index
         end_index = start_index + num_items
-        self.current_index += num_items
-        return self.items[start_index:end_index]
+        self._current_index += num_items
+        return self._items[start_index:end_index]
 

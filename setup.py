@@ -231,13 +231,14 @@ test_env = [
     'scikit-learn',
     'pyemd',
     'annoy',
-    'tensorflow >= 1.1.0',
+    'tensorflow <= 1.3.0',
     'keras >= 2.0.4',
+    'autograd==1.2',
 ]
 
 setup(
     name='gensim',
-    version='3.0.1',
+    version='3.1.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 

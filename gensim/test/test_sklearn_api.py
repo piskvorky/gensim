@@ -1,6 +1,5 @@
 import unittest
 import numpy
-import os
 import codecs
 import pickle
 
@@ -25,10 +24,7 @@ from gensim.sklearn_api.hdp import HdpTransformer
 from gensim.sklearn_api.phrases import PhrasesTransformer
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils, models
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-datapath_ldaseq = lambda fname: os.path.join(module_path, 'test_data/DTM', fname)
+from gensim.test.utils import datapath, common_texts
 
 texts = [
     ['complier', 'system', 'computer'],
@@ -114,28 +110,9 @@ w2v_texts = [
 
 d2v_sentences = [models.doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(w2v_texts)]
 
-dict_texts = [
-    'human interface computer',
-    'survey user computer system response time',
-    'eps user interface system',
-    'system human system eps',
-    'user response time',
-    'trees',
-    'graph trees',
-    'graph minors trees',
-    'graph minors survey'
-]
+dict_texts = [' '.join(text) for text in common_texts]
 
-phrases_sentences = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey'],
+phrases_sentences = common_texts + [
     ['graph', 'minors', 'survey', 'human', 'interface']
 ]
 
@@ -218,7 +195,7 @@ class TestLdaWrapper(unittest.TestCase):
         text_lda = Pipeline([('features', model,), ('classifier', clf)])
         text_lda.fit(corpus, data.target)
         score = text_lda.score(corpus, data.target)
-        self.assertGreater(score, 0.40)
+        self.assertGreaterEqual(score, 0.40)
 
     def testSetGetParams(self):
         # updating only one param
@@ -1048,6 +1025,7 @@ class TestPhrasesTransformerCustomScorer(unittest.TestCase):
     def testModelNotFitted(self):
         phrases_transformer = PhrasesTransformer()
         self.assertRaises(NotFittedError, phrases_transformer.transform, phrases_sentences[0])
+
 
 if __name__ == '__main__':
     unittest.main()
