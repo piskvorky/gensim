@@ -36,11 +36,11 @@ import logging
 import numpy as np
 from numpy import dot
 from gensim import matutils
-from random import randint
 import sys
-import random
+from random import randint
 from gensim.utils import SaveLoad
 import time
+from types import GeneratorType
 
 logger = logging.getLogger(__name__)
 # Comment out the below statement to avoid printing info logs to console
@@ -56,11 +56,16 @@ class Entry():
         """
         Initialize a single dictionary entry.
 
-        `word` is the actual vocabulary word.
+        Parameters
+        ----------
+        word : str
+            Actual vocabulary word.
 
-        `count` is the number of times the word occurs in the vocabulary.
+        count : int
+            Number of times the word occurs in the vocabulary.
 
-        `subwords` is the list of character ngrams for the word.
+        subwords : list
+            List of character ngrams for the word.
         """
 
         self.word = word
@@ -78,20 +83,28 @@ class ModelDictionary():
         """
         Initialize a sent2vec dictionary.
 
-        `t` = threshold for configuring which higher-frequency words are randomly downsampled;
+        Parameters
+        ----------
+        t : float
+            Threshold for configuring which higher-frequency words are randomly downsampled;
             default is 1e-3, useful range is (0, 1e-5).
 
-        `bucket` = Number of hash buckets for vocabulary. Default is 2000000.
+        bucket : int
+            Number of hash buckets for vocabulary. Default is 2000000.
 
-        `minn` = min length of char ngrams. Default is 3.
+        minn : int
+            Min length of char ngrams. Default is 3.
 
-        `maxn` = max length of char ngrams. Default is 6.
+        maxn : int
+            Max length of char ngrams. Default is 6.
 
-        `max_vocab_size` = limit RAM during vocabulary building; if there are more unique
-        words than this, then prune the infrequent ones. Every 10 million word types
-        need about 1GB of RAM. Set to `None` for no limit (default).
+        max_vocab_size : int
+            Limit RAM during vocabulary building; if there are more unique
+            words than this, then prune the infrequent ones. Every 10 million word types
+            need about 1GB of RAM. Set to `None` for no limit (default).
 
-        `max_line_size` = maximum number of characters in a sentence.
+        max_line_size : int
+            Maximum number of characters in a sentence.
         """
 
         self.max_vocab_size = max_vocab_size
@@ -110,7 +123,15 @@ class ModelDictionary():
         """
         Compute hash of given word.
 
-        `word` is the actual vocabulary word.
+        Parameters
+        ----------
+        word : str
+            Actual vocabulary word.
+
+        Returns
+        -------
+        int
+            Hash of the given word.
         """
 
         h = 2166136261
@@ -123,7 +144,15 @@ class ModelDictionary():
         """
         Find hash of given word. The word may or may not be present in the vocabulary.
 
-        `word` is the actual vocabulary word.
+        Parameters
+        ----------
+        word : str
+            Actual vocabulary word.
+
+        Returns
+        -------
+        int
+            Hash of the given word.
         """
 
         h = self.hash_(word) % self.max_vocab_size
@@ -135,7 +164,10 @@ class ModelDictionary():
         """
         Add given word to vocabulary.
 
-        `word` is the actual vocabulary word.
+        Parameters
+        ----------
+        word : str
+            Actual vocabulary word.
         """
 
         h = self.find(word)
@@ -154,6 +186,16 @@ class ModelDictionary():
         Initialize discard table to downsample higher frequency words according to given sampling threshold.
         Also initialize character ngrams for all words and threshold lower frequency words if their count
         is less than a given value (min_count).
+
+        Parameters
+        ----------
+        sentences : iterable or list
+            for larger corpora (like the Toronto corpus),
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`TorontoCorpus` in this module for such examples.
+
+        min_count : int
+            Value for thresholding lower frequency words.
         """
 
         min_threshold = 1
@@ -177,6 +219,11 @@ class ModelDictionary():
     def threshold(self, t):
         """
         Remove words from vocabulary having count lower than t.
+
+        Parameters
+        ----------
+        t : int
+            Value for thresholding lower frequency words.
         """
 
         self.words = [entry for entry in self.words if entry.count > t]
@@ -219,9 +266,24 @@ class ModelDictionary():
 
     def add_ngrams_train(self, context, n, k):
         """
-        Training word ngrams for a given context and target word where n is the
-        number of word ngrams and k is the number of word ngrams dropped while
+        Training word ngrams for a given context and target word.
+
+        Parameters
+        ----------
+        context : list
+            List of word ids.
+
+        n : int
+            Number of word ngrams.
+
+        k : int
+            Number of word ngrams dropped while
         training a Sent2Vec model.
+
+        Returns
+        -------
+        line : list
+            List of word and word ngram ids.
         """
 
         line = list(context)
@@ -248,6 +310,19 @@ class ModelDictionary():
         """
         Computing word ngrams for given sentence while infering sentence vector.
         n is the number of word ngrams used.
+
+        Parameters
+        ----------
+        context : list
+            List of word ids.
+
+        n : int
+            Number of word ngrams.
+
+        Returns
+        -------
+        line : list
+            List of word and word ngram ids.
         """
 
         line = list(context)
@@ -263,8 +338,24 @@ class ModelDictionary():
 
     def get_line(self, sentence):
         """
-        Converting sentence (which is a list of unicode strings) to a list of
+        Converting sentence to a list of
         word ids inferred from the dictionary.
+
+        Parameters
+        ----------
+        sentence : list
+            List of words.
+
+        Returns
+        -------
+        ntokens : int
+            Number of tokens processed in given sentence.
+
+        hashes : list
+            List of hashes of words in the sentence.
+
+        words : list
+            List of word ids.
         """
 
         hashes = []
@@ -291,50 +382,72 @@ class Sent2Vec(SaveLoad):
     The model can be stored/loaded via its `save()` and `load()` methods.
     """
 
-    def __init__(self, vector_size=100, lr=0.2, lr_update_rate=100, epochs=5,
+    def __init__(self, sentences=None, vector_size=100, lr=0.2, lr_update_rate=100, epochs=5,
             min_count=5, neg=10, word_ngrams=2, loss_type='ns', bucket=2000000, t=0.0001,
             minn=3, maxn=6, dropoutk=2, seed=42):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
 
-        `vector_size` is the dimensionality of the feature vectors.
+        Parameters
+        ----------
+        sentences : iterable or list
+            For larger corpora (like the Toronto corpus),
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`TorontoCorpus` in this module for such examples.
 
-        `lr` is the initial learning rate.
+        vector_size : int
+            Dimensionality of the feature vectors.
 
-        `seed` = for the random number generator.
+        lr : float
+            Initial learning rate.
 
-        `min_count` = ignore all words with total frequency lower than this.
+        seed : int
+            For the random number generator for reproducible reasons.
 
-        `max_vocab_size` = limit RAM during vocabulary building; if there are more unique
-        words than this, then prune the infrequent ones. Every 10 million word types
-        need about 1GB of RAM. Set to `None` for no limit (default).
+        min_count : int
+            Ignore all words with total frequency lower than this.
 
-        `t` = threshold for configuring which higher-frequency words are randomly downsampled;
+        max_vocab_size : int
+            Limit RAM during vocabulary building; if there are more unique
+            words than this, then prune the infrequent ones. Every 10 million word types
+            need about 1GB of RAM. Set to `None` for no limit (default).
+
+        t : float
+            Threshold for configuring which higher-frequency words are randomly downsampled;
             default is 1e-3, useful range is (0, 1e-5).
 
-        `loss_type` = 'ns', negative sampling will be used.
+        loss_type : str
+            Default is 'ns', negative sampling will be used.
 
-        `neg` = specifies how many "noise words" should be drawn (usually between 5-20).
-        Default is 10.
+        neg : int
+            Specifies how many "noise words" should be drawn (usually between 5-20).
+            Default is 10.
 
-        `epochs` = number of iterations (epochs) over the corpus. Default is 5.
+        epochs : int
+            Number of iterations (epochs) over the corpus. Default is 5.
 
-        `lr_update_rate` = Change the rate of updates for the learning rate. Default is 100.
+        lr_update_rate : int
+            Change the rate of updates for the learning rate. Default is 100.
 
-        `word_ngrams` = Max length of word ngram. Default is 2.
+        word_ngrams : int
+            Max length of word ngram. Default is 2.
 
-        `bucket` = Number of hash buckets for vocabulary. Default is 2000000.
+        bucket : int
+            Number of hash buckets for vocabulary. Default is 2000000.
 
-        `minn` = min length of char ngrams. Default is 3.
+        minn : int
+            Min length of char ngrams. Default is 3.
 
-        `maxn` = max length of char ngrams. Default is 6.
+        maxn : int
+            Max length of char ngrams. Default is 6.
 
-        `dropoutk` = Number of ngrams dropped when training a sent2vec model. Default is 2.
+        dropoutk : int
+            Number of ngrams dropped when training a sent2vec model. Default is 2.
         """
 
-        random.seed(seed)
-        np.random.seed(seed)
+        self.seed = seed
+        self.random = np.random.RandomState(seed)
         self.negpos = 1
         self.loss = 0.0
         self.nexamples = 1
@@ -353,10 +466,27 @@ class Sent2Vec(SaveLoad):
         self.minn = minn
         self.maxn = maxn
         self.dropoutk = dropoutk
+        if sentences is not None:
+            if isinstance(sentences, GeneratorType):
+                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+            self.train(sentences)
 
     def negative_sampling(self, target, lr):
         """
         Get loss using negative sampling.
+
+        Pararmeters
+        -----------
+        target : int
+            Word id of target word.
+
+        lr : float
+            current learning rate.
+
+        Returns
+        -------
+        loss : float
+            Negative sampling loss.
         """
 
         loss = 0.0
@@ -371,6 +501,16 @@ class Sent2Vec(SaveLoad):
     def sigmoid(self, val):
         """
         Compute sigmoid of a particular value.
+
+        Parameters
+        ----------
+        val : float
+            Value for which sigmoid has to be calculated.
+
+        Returns
+        -------
+        float
+            Sigmoid of given real number.
         """
 
         return 1.0 / (1.0 + np.exp(-val))
@@ -378,6 +518,22 @@ class Sent2Vec(SaveLoad):
     def binary_logistic(self, target, label, lr):
         """
         Compute loss for given target, label and learning rate using binary logistic regression.
+
+        Parameters
+        ----------
+        target : int
+            Target word id.
+
+        label : bool
+            True if no negative is sampled, False otherwise.
+
+        lr : float
+            Current learning rate.
+
+        Returns
+        -------
+        float
+            Binary logistic regression loss.
         """
 
         score = self.sigmoid(np.dot(self.wo[target], self.hidden))
@@ -393,7 +549,10 @@ class Sent2Vec(SaveLoad):
         """
         Initialise table of negatives for negative sampling.
 
-        `counts` is a list of counts of all words in the vocabulary.
+        Parameters
+        ----------
+        counts : list
+            List of counts of all words in the vocabulary.
         """
 
         z = 0.0
@@ -403,11 +562,21 @@ class Sent2Vec(SaveLoad):
             c = counts[i] ** 0.5
             for j in range(int(c * self.negative_table_size / z) + 1):
                 self.negatives.append(i)
-        random.shuffle(self.negatives)
+        np.random.shuffle(self.negatives)
 
     def get_negative(self, target):
         """
         Get a negative from the list of negatives for caluculating nagtive sampling loss.
+
+        Parameter
+        ---------
+        target : int
+            Target word id.
+
+        Returns
+        -------
+        int
+            Word id of negative sample.
         """
 
         while True:
@@ -420,6 +589,17 @@ class Sent2Vec(SaveLoad):
     def update(self, input_, target, lr):
         """
         Update model's neural weights for given context, target word and learning rate.
+
+        Parameters
+        ----------
+        input_ : list
+            List of word ids of context words.
+
+        target : int
+            Word id of target word.
+
+        lr : float
+            Current Learning rate.
         """
 
         assert(target >= 0)
@@ -439,7 +619,13 @@ class Sent2Vec(SaveLoad):
     def train(self, sentences):
         """
         Update the model's neural weights from a sequence of sentences.
-        For Sent2Vec, each sentence must be a list of unicode strings.
+
+        Parameters
+        ----------
+        sentences : iterable or list
+            For larger corpora (like the Toronto corpus),
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`TorontoCorpus` in this module for such examples.
         """
 
         logger.info("Creating dictionary...")
@@ -467,7 +653,7 @@ class Sent2Vec(SaveLoad):
                 local_token_count += ntokens_temp
                 if len(words) > 1:
                     for i in range(len(words)):
-                        if random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
+                        if np.random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
                             continue
                         context = list(words)
                         context[i] = 0
@@ -483,7 +669,17 @@ class Sent2Vec(SaveLoad):
 
     def sentence_vectors(self, sentence):
         """
-        Function for getting sentence vector for an input sentence which is a list of words.
+        Function for getting sentence vector for an input sentence.
+
+        Parameters
+        ----------
+        sentence : list
+            List of words.
+
+        Returns
+        -------
+        numpy array
+            Sentence vector for input sentence.
         """
 
         ntokens_temp, hashes, words = self.dict.get_line(sentence)
@@ -498,7 +694,41 @@ class Sent2Vec(SaveLoad):
     def similarity(self, sent1, sent2):
         """
         Function to compute cosine similarity between two sentences.
-        sent1 and sent2 are a list of words.
+
+        Parameters
+        ----------
+        sent1, sent2 : list
+            List of words.
+
+        Returns
+        -------
+        float
+            Cosine similarity score between two sentence vectors.
         """
 
         return dot(matutils.unitvec(self.sentence_vectors(sent1)), matutils.unitvec(self.sentence_vectors(sent2)))
+
+
+class TorontoCorpus():
+    """Iterate over sentences from the Toronto Book Corpus."""
+
+    def __init__(self, dirname):
+        """
+        Parameters
+        ----------
+        dirname : str
+            Name of the directory where the dataset is located.
+        """
+        self.dirname = dirname
+
+    def __iter__(self):
+        for fname in os.listdir(self.dirname):
+            fname = os.path.join(self.dirname, fname)
+            if not os.path.isfile(fname):
+                continue
+            for line in utils.smart_open(fname):
+                if line not in ['\n', '\r\n']:
+                    sentence = list(tokenize(line))
+                if not sentence:  # don't bother sending out empty sentences
+                    continue
+                yield sentence
