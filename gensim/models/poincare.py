@@ -750,17 +750,17 @@ class PoincareKeyedVectors(KeyedVectors):
 
         Parameters
         ----------
-        vector_1 : numpy array
+        vector_1 : numpy.array
             vector from which Poincare distances are to be computed.
             expected shape (dim,)
-        vectors_all : numpy array
+        vectors_all : numpy.array
             for each row in vectors_all, distance from vector_1 is computed.
             expected shape (num_vectors, dim)
 
         Returns
         -------
-        numpy array
-            contains Poincare distance between vector_1 and each row in vectors_all.
+        numpy.array
+            Contains Poincare distance between vector_1 and each row in vectors_all.
             shape (num_vectors,)
         """
         euclidean_dists = np.linalg.norm(vector_1 - vectors_all, axis=1)
@@ -791,7 +791,7 @@ class PoincareKeyedVectors(KeyedVectors):
         Returns
         --------
         list of tuples (str, float)
-            list of tuples containing (term, distance) pairs in increasing order of Poincare distance.
+            List of tuples containing (term, distance) pairs in increasing order of distance.
 
         Examples
         --------
@@ -842,7 +842,7 @@ class PoincareKeyedVectors(KeyedVectors):
         """
         vector_1 = self.word_vec(term_1)
         vector_2 = self.word_vec(term_2)
-        return self.poincare_dists(vector_1, vector_2[:, np.newaxis])[0]
+        return self.poincare_dists(vector_1, vector_2[np.newaxis, :])[0]
 
     def get_all_distances(self, term):
         """
@@ -856,8 +856,8 @@ class PoincareKeyedVectors(KeyedVectors):
 
         Returns
         -------
-        numpy array
-            numpy array containing distances to all terms from input `term`, indexed by node indices.
+        numpy.array
+            Array containing distances to all terms from input `term`, indexed by node indices.
             e.g. distances[0] is the distance to node with index 0 from node with key `term`.
 
         Examples
