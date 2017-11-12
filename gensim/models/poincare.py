@@ -810,6 +810,60 @@ class PoincareKeyedVectors(KeyedVectors):
         ]
         return result[:topn]
 
+    def nodes_closer_than(self, term_1, term_2):
+        """
+        Returns all nodes that are closer to `term_1` than `term_2` from `term_1`.
+
+        Parameters
+        ----------
+        term_1 : str
+            Input term.
+        term_2 : str
+            Input term.
+
+        Returns
+        -------
+        List (str)
+            List of nodes that are closer to `term_1` than `term_2` is from `term_1`.
+
+        Examples
+        --------
+
+        >>> model.closer_than('carnivore.n.01', 'mammal.n.01')
+        ['dog.n.01', 'canine.n.02']
+
+        """
+        all_distances = self.get_all_distances(term_1)
+        term_1_index = self.vocab[term_1].index
+        term_2_index = self.vocab[term_2].index
+        closer_node_indices = np.where(all_distances < all_distances[term_2_index])[0]
+        return [self.index2word[index] for index in closer_node_indices if index != term_1_index]
+
+    def rank(self, term_1, term_2):
+        """
+        Rank of the distance of term_2 from term_1, in relation to distances of all nodes from term_1.
+
+        Parameters
+        ----------
+        term_1 : str
+            Input term.
+        term_2 : str
+            Input term.
+
+        Returns
+        -------
+        int
+            Rank of term_2 from term_1 in relation to all other nodes.
+
+        Examples
+        --------
+
+        >>> model.rank('mammal.n.01', 'carnivore.n.01')
+        3
+
+        """
+        return len(self.nodes_closer_than(term_1, term_2)) + 1
+
     def distance(self, term_1, term_2):
         """
         Return Poincare distance between two terms.
