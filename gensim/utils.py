@@ -288,10 +288,11 @@ class SaveLoad(object):
         opportunity to recursively included SaveLoad instances.
 
         """
-        mmap_error = lambda x, y: IOError(
-            'Cannot mmap compressed object %s in file %s. ' % (x, y) +
-            'Use `load(fname, mmap=None)` or uncompress files manually.'
-        )
+        def mmap_error(obj, filename):
+            return IOError(
+                'Cannot mmap compressed object %s in file %s. ' % (obj, filename) +
+                'Use `load(fname, mmap=None)` or uncompress files manually.'
+            )
 
         for attrib in getattr(self, '__recursive_saveloads', []):
             cfname = '.'.join((fname, attrib))
@@ -336,13 +337,8 @@ class SaveLoad(object):
     @staticmethod
     def _adapt_by_suffix(fname):
         """Give appropriate compress setting and filename formula"""
-        if fname.endswith('.gz') or fname.endswith('.bz2'):
-            compress = True
-            subname = lambda *args: '.'.join(list(args) + ['npz'])
-        else:
-            compress = False
-            subname = lambda *args: '.'.join(list(args) + ['npy'])
-        return compress, subname
+        compress, suffix = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
+        return compress, lambda *args: '.'.join(args + (suffix,))
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
         """

@@ -11,9 +11,6 @@ Automated tests for checking transformation algorithms (the models package).
 
 import logging
 import unittest
-import os
-import os.path
-import tempfile
 import numbers
 
 import six
@@ -23,31 +20,10 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import ldamodel, ldamulticore
 from gensim import matutils, utils
 from gensim.test import basetmtests
+from gensim.test.utils import datapath, get_tmpfile, common_texts
 
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
-
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
-
-
-def testfile(test_fname=''):
-    # temporary data will be stored to this file
-    fname = 'gensim_models_' + test_fname + '.tst'
-    return os.path.join(tempfile.gettempdir(), fname)
+dictionary = Dictionary(common_texts)
+corpus = [dictionary.doc2bow(text) for text in common_texts]
 
 
 def testRandomState():
@@ -348,22 +324,24 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # construct what we expect when passes aren't involved
         test_rhots = list()
         model = self.class_(id2word=dictionary, chunksize=1, num_topics=2)
-        final_rhot = lambda: pow(model.offset + (1 * model.num_updates) / model.chunksize, -model.decay)
+
+        def final_rhot(model):
+            return pow(model.offset + (1 * model.num_updates) / model.chunksize, -model.decay)
 
         # generate 5 updates to test rhot on
         for x in range(5):
             model.update(self.corpus)
-            test_rhots.append(final_rhot())
+            test_rhots.append(final_rhot(model))
 
         for passes in [1, 5, 10, 50, 100]:
             model = self.class_(id2word=dictionary, chunksize=1, num_topics=2, passes=passes)
-            self.assertEqual(final_rhot(), 1.0)
+            self.assertEqual(final_rhot(model), 1.0)
             # make sure the rhot matches the test after each update
             for test_rhot in test_rhots:
                 model.update(self.corpus)
 
                 msg = ", ".join(str(x) for x in [passes, model.num_updates, model.state.numdocs])
-                self.assertAlmostEqual(final_rhot(), test_rhot, msg=msg)
+                self.assertAlmostEqual(final_rhot(model), test_rhot, msg=msg)
 
             self.assertEqual(model.state.numdocs, len(corpus) * len(test_rhots))
             self.assertEqual(model.num_updates, len(corpus) * len(test_rhots))
@@ -402,7 +380,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     #         self.assertTrue(passed)
 
     def testPersistence(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_lda.tst')
         model = self.model
         model.save(fname)
         model2 = self.class_.load(fname)
@@ -425,7 +403,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
 
     def testPersistenceIgnore(self):
-        fname = testfile('testPersistenceIgnore')
+        fname = get_tmpfile('gensim_models_lda_testPersistenceIgnore.tst')
         model = ldamodel.LdaModel(self.corpus, num_topics=2)
         model.save(fname, ignore='id2word')
         model2 = ldamodel.LdaModel.load(fname)
@@ -436,7 +414,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(model2.id2word is None)
 
     def testPersistenceCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_lda.tst.gz')
         model = self.model
         model.save(fname)
         model2 = self.class_.load(fname, mmap=None)
@@ -446,7 +424,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testLargeMmap(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_lda.tst')
         model = self.model
 
         # simulate storing large arrays separately
@@ -461,7 +439,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testLargeMmapCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_lda.tst.gz')
         model = self.model
 
         # simulate storing large arrays separately
@@ -483,7 +461,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(i[1], six.string_types))
 
         # save back the loaded model using a post-0.13.2 version of Gensim
-        post_0_13_2_fname = testfile('post_0_13_2_model')
+        post_0_13_2_fname = get_tmpfile('gensim_models_lda_post_0_13_2_model.tst')
         model_pre_0_13_2.save(post_0_13_2_fname)
 
         # load a model saved using a post-0.13.2 version of Gensim

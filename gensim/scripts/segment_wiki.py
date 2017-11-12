@@ -5,38 +5,37 @@
 # Copyright (C) 2016 RaRe Technologies
 
 """
-Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump (typical filename
-is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2),
-extract titles, section names, section content and save to json-line format,
-that contains 3 fields ::
+CLI script for extracting plain text out of a raw Wikipedia dump. Input is an xml.bz2 file provided by MediaWiki \
+that looks like <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2 \
+(e.g. 14 GB of https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2).
 
-    'title' (str) - title of article,
-    'section_titles' (list) - list of titles of sections,
-    'section_texts' (list) - list of content from sections.
+It streams through all the XML articles using multiple cores (#cores - 1, by default), \
+decompressing on the fly and extracting plain text from the articles and their sections.
 
-English Wikipedia dump available
-`here <https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2>`_. Approximate time
-for processing is 2.5 hours (i7-6700HQ, SSD).
+For each extracted article, it prints its title, section names and plain text section contents, in json-line format.
 
 Examples
 --------
 
-Convert wiki to json-lines format:
-`python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 | gzip > enwiki-latest.json.gz`
+  python -m gensim.scripts.segment_wiki -h
 
-Read json-lines dump
+  python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 -o enwiki-latest.json.gz
 
->>> # iterate over the plain text file we just created
+Processing the entire English Wikipedia dump takes 1.7 hours (about 3 million articles per hour, \
+or 10 MB of XML per second) on an 8 core Intel i7-7700 @3.60GHz.
+
+You can then read the created output (~6.1 GB gzipped) with:
+
+>>> # iterate over the plain text data we just created
 >>> for line in smart_open('enwiki-latest.json.gz'):
->>>    # decode JSON into a Python object
+>>>    # decode each JSON line into a Python dictionary object
 >>>    article = json.loads(line)
 >>>
->>>    # each article has a "title", "section_titles" and "section_texts" fields
+>>>    # each article has a "title" and a list of "section_titles" and "section_texts".
 >>>    print("Article title: %s" % article['title'])
 >>>    for section_title, section_text in zip(article['section_titles'], article['section_texts']):
 >>>        print("Section title: %s" % section_title)
 >>>        print("Section text: %s" % section_text)
-
 """
 
 import argparse
@@ -54,7 +53,7 @@ from smart_open import smart_open
 logger = logging.getLogger(__name__)
 
 
-def segment_all_articles(file_path, min_article_character=200):
+def segment_all_articles(file_path, min_article_character=200, workers=None):
     """Extract article titles and sections from a MediaWiki bz2 database dump.
 
     Parameters
@@ -66,6 +65,9 @@ def segment_all_articles(file_path, min_article_character=200):
     min_article_character : int, optional
         Minimal number of character for article (except titles and leading gaps).
 
+    workers: int or None
+        Number of parallel workers, max(1, multiprocessing.cpu_count() - 1) if None.
+
     Yields
     ------
     (str, list of (str, str))
@@ -73,16 +75,18 @@ def segment_all_articles(file_path, min_article_character=200):
 
     """
     with smart_open(file_path, 'rb') as xml_fileobj:
-        wiki_sections_corpus = _WikiSectionsCorpus(xml_fileobj, min_article_character=min_article_character)
+        wiki_sections_corpus = _WikiSectionsCorpus(
+            xml_fileobj, min_article_character=min_article_character, processes=workers)
         wiki_sections_corpus.metadata = True
         wiki_sections_text = wiki_sections_corpus.get_texts_with_sections()
         for article_title, article_sections in wiki_sections_text:
             yield article_title, article_sections
 
 
-def segment_and_write_all_articles(file_path, output_file, min_article_character=200):
-    """Write article title and sections to output_file,
-    output_file is json-line file with 3 fields::
+def segment_and_write_all_articles(file_path, output_file, min_article_character=200, workers=None):
+    """Write article title and sections to `output_file` (or stdout, if output_file is None).
+
+    The output format is one article per line, in json-line format with 3 fields::
 
         'title' - title of article,
         'section_titles' - list of titles of sections,
@@ -94,11 +98,14 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
         Path to MediaWiki dump, typical filename is <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
         or <LANG>wiki-latest-pages-articles.xml.bz2.
 
-    output_file : str
-        Path to output file in json-lines format.
+    output_file : str or None
+        Path to output file in json-lines format, or None for printing to stdout.
 
     min_article_character : int, optional
         Minimal number of character for article (except titles and leading gaps).
+
+    workers: int or None
+        Number of parallel workers, max(1, multiprocessing.cpu_count() - 1) if None.
 
     """
     if output_file is None:
@@ -107,13 +114,14 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
         outfile = smart_open(output_file, 'wb')
 
     try:
-        for idx, (article_title, article_sections) in enumerate(segment_all_articles(file_path, min_article_character)):
+        article_stream = segment_all_articles(file_path, min_article_character, workers=workers)
+        for idx, (article_title, article_sections) in enumerate(article_stream):
             output_data = {"title": article_title, "section_titles": [], "section_texts": []}
             for section_heading, section_content in article_sections:
                 output_data["section_titles"].append(section_heading)
                 output_data["section_texts"].append(section_content)
             if (idx + 1) % 100000 == 0:
-                logger.info("Processed #%d articles", idx + 1)
+                logger.info("processed #%d articles (at %r now)", idx + 1, article_title)
             outfile.write(json.dumps(output_data) + "\n")
     finally:
         outfile.close()
@@ -251,7 +259,8 @@ class _WikiSectionsCorpus(WikiCorpus):
             Structure contains (title, [(section_heading, section_content), ...]).
 
         """
-        articles = 0
+        skipped_namespace, skipped_length, skipped_redirect = 0, 0, 0
+        total_articles, total_sections = 0, 0
         page_xmls = extract_page_xmls(self.fileobj)
         pool = multiprocessing.Pool(self.processes)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
@@ -260,17 +269,24 @@ class _WikiSectionsCorpus(WikiCorpus):
             for article_title, sections in pool.imap(segment, group):  # chunksize=10):
                 # article redirects are pruned here
                 if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):  # filter non-articles
+                    skipped_namespace += 1
                     continue
                 if not sections or sections[0][1].lstrip().lower().startswith("#redirect"):  # filter redirect
+                    skipped_redirect += 1
                     continue
                 if sum(len(body.strip()) for (_, body) in sections) < self.min_article_character:
-                    # filter very short articles (trash)
+                    # filter stubs (incomplete, very short articles)
+                    skipped_length += 1
                     continue
 
-                articles += 1
+                total_articles += 1
+                total_sections += len(sections)
                 yield (article_title, sections)
+        logger.info(
+            "finished processing %i articles with %i sections (skipped %i redirects, %i stubs, %i ignored namespaces)",
+            total_articles, total_sections, skipped_redirect, skipped_length, skipped_namespace)
         pool.terminate()
-        self.length = articles  # cache corpus length
+        self.length = total_articles  # cache corpus length
 
 
 if __name__ == "__main__":
@@ -278,16 +294,29 @@ if __name__ == "__main__":
     logger.info("running %s", " ".join(sys.argv))
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=globals()['__doc__'])
-    parser.add_argument('-f', '--file', help='Path to MediaWiki database dump', required=True)
-    parser.add_argument('-o', '--output', help='Path to output file (stdout if not specified)')
+    default_workers = max(1, multiprocessing.cpu_count() - 1)
+    parser.add_argument('-f', '--file', help='Path to MediaWiki database dump (read-only).', required=True)
+    parser.add_argument(
+        '-o', '--output',
+        help='Path to output file (stdout if not specified). If ends in .gz or .bz2, '
+             'the output file will be automatically compressed (recommended!).')
+    parser.add_argument(
+        '-w', '--workers',
+        help='Number of parallel workers for multi-core systems. Default: %(default)s.',
+        type=int,
+        default=default_workers
+    )
     parser.add_argument(
         '-m', '--min-article-character',
-        help="Minimal number of character for article (except titles and leading gaps), "
-             "if article contains less characters that this value, "
-             "article will be filtered (will not be in the output file), default: %(default)s",
+        help="Ignore articles with fewer characters than this (article stubs). Default: %(default)s.",
         default=200
     )
     args = parser.parse_args()
-    segment_and_write_all_articles(args.file, args.output, args.min_article_character)
+
+    segment_and_write_all_articles(
+        args.file, args.output,
+        min_article_character=args.min_article_character,
+        workers=args.workers
+    )
 
     logger.info("finished running %s", sys.argv[0])

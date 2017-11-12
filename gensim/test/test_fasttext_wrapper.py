@@ -11,21 +11,14 @@ Automated tests for checking transformation algorithms (the models package).
 import logging
 import unittest
 import os
-import tempfile
 
 import numpy
 
 from gensim.models.wrappers import fasttext
 from gensim.models import keyedvectors
+from gensim.test.utils import datapath, get_tmpfile
 
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 logger = logging.getLogger(__name__)
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_fasttext.tst')
 
 
 class TestFastText(unittest.TestCase):
@@ -55,8 +48,9 @@ class TestFastText(unittest.TestCase):
             logger.info("FT_HOME env variable not set, skipping test")
             return  # Use self.skipTest once python < 2.7 is no longer supported
         vocab_size, model_size = 1763, 10
+        tmpf = get_tmpfile('gensim_fasttext_wrapper.tst')
         trained_model = fasttext.FastText.train(
-            self.ft_path, self.corpus_file, size=model_size, output_file=testfile()
+            self.ft_path, self.corpus_file, size=model_size, output_file=tmpf
         )
 
         self.assertEqual(trained_model.wv.syn0.shape, (vocab_size, model_size))
@@ -65,20 +59,21 @@ class TestFastText(unittest.TestCase):
         self.model_sanity(trained_model)
 
         # Tests temporary training files deleted
-        self.assertFalse(os.path.exists('%s.bin' % testfile()))
+        self.assertFalse(os.path.exists('%s.bin' % tmpf))
 
     def testMinCount(self):
         """Tests words with frequency less than `min_count` absent from vocab"""
         if self.ft_path is None:
             logger.info("FT_HOME env variable not set, skipping test")
             return  # Use self.skipTest once python < 2.7 is no longer supported
+        tmpf = get_tmpfile('gensim_fasttext_wrapper.tst')
         test_model_min_count_5 = fasttext.FastText.train(
-            self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=5
+            self.ft_path, self.corpus_file, output_file=tmpf, size=10, min_count=5
         )
         self.assertTrue('forests' not in test_model_min_count_5.wv.vocab)
 
         test_model_min_count_1 = fasttext.FastText.train(
-            self.ft_path, self.corpus_file, output_file=testfile(), size=10, min_count=1
+            self.ft_path, self.corpus_file, output_file=tmpf, size=10, min_count=1
         )
         self.assertTrue('forests' in test_model_min_count_1.wv.vocab)
 
@@ -87,8 +82,9 @@ class TestFastText(unittest.TestCase):
         if self.ft_path is None:
             logger.info("FT_HOME env variable not set, skipping test")
             return  # Use self.skipTest once python < 2.7 is no longer supported
+        tmpf = get_tmpfile('gensim_fasttext_wrapper.tst')
         test_model_size_20 = fasttext.FastText.train(
-            self.ft_path, self.corpus_file, output_file=testfile(), size=20
+            self.ft_path, self.corpus_file, output_file=tmpf, size=20
         )
         self.assertEqual(test_model_size_20.vector_size, 20)
         self.assertEqual(test_model_size_20.wv.syn0.shape[1], 20)
@@ -96,24 +92,26 @@ class TestFastText(unittest.TestCase):
 
     def testPersistence(self):
         """Test storing/loading the entire model."""
-        self.test_model.save(testfile())
-        loaded = fasttext.FastText.load(testfile())
+        tmpf = get_tmpfile('gensim_fasttext_wrapper.tst')
+        self.test_model.save(tmpf)
+        loaded = fasttext.FastText.load(tmpf)
         self.models_equal(self.test_model, loaded)
 
-        self.test_model.save(testfile(), sep_limit=0)
-        self.models_equal(self.test_model, fasttext.FastText.load(testfile()))
+        self.test_model.save(tmpf, sep_limit=0)
+        self.models_equal(self.test_model, fasttext.FastText.load(tmpf))
 
     def testNormalizedVectorsNotSaved(self):
         """Test syn0norm/syn0_ngrams_norm aren't saved in model file"""
+        tmpf = get_tmpfile('gensim_fasttext_wrapper.tst')
         self.test_model.init_sims()
-        self.test_model.save(testfile())
-        loaded = fasttext.FastText.load(testfile())
+        self.test_model.save(tmpf)
+        loaded = fasttext.FastText.load(tmpf)
         self.assertTrue(loaded.wv.syn0norm is None)
         self.assertTrue(loaded.wv.syn0_ngrams_norm is None)
 
         wv = self.test_model.wv
-        wv.save(testfile())
-        loaded_kv = keyedvectors.KeyedVectors.load(testfile())
+        wv.save(tmpf)
+        loaded_kv = keyedvectors.KeyedVectors.load(tmpf)
         self.assertTrue(loaded_kv.syn0norm is None)
         self.assertTrue(loaded_kv.syn0_ngrams_norm is None)
 

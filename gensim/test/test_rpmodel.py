@@ -11,44 +11,18 @@ Automated tests for checking transformation algorithms (the models package).
 
 import logging
 import unittest
-import os
-import os.path
-import tempfile
 
 import numpy as np
 
-from gensim.corpora import mmcorpus, Dictionary
+from gensim.corpora.mmcorpus import MmCorpus
 from gensim.models import rpmodel
 from gensim import matutils
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
-
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestRpModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.corpus = MmCorpus(datapath('testcorpus.mm'))
 
     def testTransform(self):
         # create the transformation model
@@ -64,7 +38,7 @@ class TestRpModel(unittest.TestCase):
         self.assertTrue(np.allclose(vec, expected))  # transformed entries must be equal up to sign
 
     def testPersistence(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models.tst')
         model = rpmodel.RpModel(self.corpus, num_topics=2)
         model.save(fname)
         model2 = rpmodel.RpModel.load(fname)
@@ -74,7 +48,7 @@ class TestRpModel(unittest.TestCase):
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testPersistenceCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models.tst.gz')
         model = rpmodel.RpModel(self.corpus, num_topics=2)
         model.save(fname)
         model2 = rpmodel.RpModel.load(fname, mmap=None)

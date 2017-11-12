@@ -9,15 +9,13 @@ Automated tests for checking the WikiCorpus
 """
 
 
-import os
 import logging
 import unittest
 
 from gensim.corpora.wikicorpus import WikiCorpus
 from gensim import utils
+from gensim.test.utils import datapath
 
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 FILENAME = 'enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2'
 FILENAME_U = 'bgwiki-latest-pages-articles-shortened.xml.bz2'
 

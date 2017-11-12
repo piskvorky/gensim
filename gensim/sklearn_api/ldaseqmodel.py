@@ -69,12 +69,7 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
             raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
 
         # The input as array of array
-        check = lambda x: [x] if isinstance(x[0], tuple) else x
-        docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
-
-        for k, v in enumerate(docs):
-            transformed_author = self.gensim_model[v]
-            X[k] = transformed_author
-
-        return np.reshape(np.array(X), (len(docs), self.num_topics))
+        if isinstance(docs[0], tuple):
+            docs = [docs]
+        proportions = [self.gensim_model[doc] for doc in docs]
+        return np.reshape(np.array(proportions), (len(docs), self.num_topics))
