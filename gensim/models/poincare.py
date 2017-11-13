@@ -778,23 +778,6 @@ class PoincareRelations(object):
         self.encoding = encoding
         self.delimiter = delimiter
 
-    def _stream_lines(self):
-        """Streams lines from self.file_path decoded into unicode strings.
-
-        Yields
-        -------
-        unicode or bytes
-            Single line from input file.
-            Yields bytestrings for python2, unicode for python3.
-
-        """
-        with smart_open(self.file_path, 'rb') as f:
-            for line in f:
-                if sys.version_info[0] >= 3:
-                    yield line.decode(self.encoding)
-                else:
-                    yield line
-
     def __iter__(self):
         """Streams relations from self.file_path decoded into unicode strings.
 
@@ -804,7 +787,12 @@ class PoincareRelations(object):
             Hypernym relation from input file.
 
         """
-        reader = csv.reader(self._stream_lines(), delimiter=self.delimiter)
+        if sys.version_info[0] < 3:
+            lines = smart_open(self.file_path, 'rb')
+        else:
+            lines = (l.decode(self.encoding) for l in smart_open(self.file_path, 'rb'))
+
+        reader = csv.reader(lines, delimiter=self.delimiter)
         for row in reader:
             if sys.version_info[0] < 3:
                 row = [value.decode(self.encoding) for value in row]
