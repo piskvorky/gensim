@@ -8,8 +8,8 @@
 :func:`~gensim.parsing.preprocessing.preprocess_string` -  take string, apply list of chosen filters to it,
 where filters are methods from this module.
 
-Examples
---------
+Examples:
+---------
 >>> from gensim.parsing.preprocessing import remove_stopwords
 >>> s = "Better late than never, but better never late."
 >>> remove_stopwords(s)
