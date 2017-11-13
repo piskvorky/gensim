@@ -520,6 +520,8 @@ class PoincareModel(utils.SaveLoad):
         """
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
+        # Some divide-by-zero results are handled explicitly
+        old_settings = np.seterr(divide='ignore', invalid='ignore')
 
         logger.info(
             "training model of size %d with %d workers on %d relations for %d epochs and %d burn-in epochs, "
@@ -543,6 +545,8 @@ class PoincareModel(utils.SaveLoad):
             epochs=epochs, batch_size=batch_size, print_every=print_every,
             check_gradients_every=check_gradients_every)
         logger.info("Training finished")
+
+        np.seterr(**old_settings)
 
     def _train_batchwise(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
         """Trains Poincare embeddings using specified parameters.
