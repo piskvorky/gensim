@@ -214,7 +214,7 @@ def strip_non_alphanum(s):
     Returns
     -------
     str
-        Unicode string without not a word characters.
+        Unicode string with alphabetic characters only.
 
     Notes
     -----
@@ -364,7 +364,7 @@ def preprocess_documents(docs):
     Returns
     -------
     list of (list of str)
-        List of lists, filled by unicode strings.
+        Processed documents split by whitespace.
 
     Examples
     --------
