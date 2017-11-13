@@ -36,7 +36,7 @@ class PorterStemmer(object):
     Attributes
     --------
     b : str
-        Buffer holding a word to be stemmed. The letters are in b[0], b[1] ... ending at b[k].
+        Buffer holding a word to be stemmed. The letters are in b[0], b[1] ... ending at b[`k`].
     k : int
         Readjusted downwards as the stemming progresses.
     j : int
@@ -132,7 +132,7 @@ class PorterStemmer(object):
             i += 1
 
     def _vowelinstem(self):
-        """Check if b[i] (i = 0, ... , j) contains a vowel letter.
+        """Check if b[0: j + 1] contains a vowel letter.
 
         Returns
         -------
@@ -158,7 +158,7 @@ class PorterStemmer(object):
         return not all(self._cons(i) for i in xrange(self.j + 1))
 
     def _doublec(self, j):
-        """Check if b[j], b[j - 1] contain a double consonant letter.
+        """Check if b[j - 1: j + 1] contain a double consonant letter.
 
         Parameters
         ----------
@@ -189,10 +189,9 @@ class PorterStemmer(object):
         return j > 0 and self.b[j] == self.b[j - 1] and self._cons(j)
 
     def _cvc(self, i):
-        """Check if b[i - 2], b[i - 1], b[i] have the form consonant letter - vowel letter- consonant letter
-        and also if the second 'c' is not 'w', 'x' or 'y'. This is used when trying to restore an 'e'
-        at the end of a short word, e.g. cav(e), lov(e), hop(e), crim(e),
-        but snow, box, tray.
+        """Check if b[j - 2: j + 1] make the (consonant, vowel, consonant) pattern and also
+        if the second 'c' is not 'w', 'x' or 'y'. This is used when trying to restore an 'e' at the end of a short word,
+        e.g. cav(e), lov(e), hop(e), crim(e), but snow, box, tray.
 
         Parameters
         ----------
@@ -232,12 +231,11 @@ class PorterStemmer(object):
         return self.b[i] not in "wxy"
 
     def _ends(self, s):
-        """Check if sequence of letters b[0], ... , b[k] ends with the string `s`.
+        """Check if b[: k + 1] ends with `s`.
 
         Parameters
         ----------
         s : str
-            Input string.
 
         Returns
         -------
@@ -265,12 +263,11 @@ class PorterStemmer(object):
         return True
 
     def _setto(self, s):
-        """Set (j + 1), ... , k based on the characters from the string `s`, adjusting k.
+        """Append `s` to `b`, adjusting `k`.
 
         Parameters
         ----------
         s : str
-            Input string.
 
         """
         self.b = self.b[:self.j + 1] + s
@@ -488,7 +485,7 @@ class PorterStemmer(object):
         Parameters
         ----------
         w : str
-            Input word.
+
         Returns
         -------
         str
