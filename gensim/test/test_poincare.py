@@ -80,11 +80,11 @@ class TestPoincareModel(unittest.TestCase):
     def test_invalid_data_raises_error(self):
         """Tests that error is raised on invalid input data."""
         with self.assertRaises(ValueError):
-            model = PoincareModel([("a", "b", "c")])
+            PoincareModel([("a", "b", "c")])
         with self.assertRaises(ValueError):
-            model = PoincareModel(["a", "b", "c"])
+            PoincareModel(["a", "b", "c"])
         with self.assertRaises(ValueError):
-            model = PoincareModel("ab")
+            PoincareModel("ab")
 
     def test_vector_shape(self):
         """Tests whether vectors are initialized with the correct size."""
