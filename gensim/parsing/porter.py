@@ -189,7 +189,7 @@ class PorterStemmer(object):
         return j > 0 and self.b[j] == self.b[j - 1] and self._cons(j)
 
     def _cvc(self, i):
-        """Check if b[j - 2: j + 1] make the (consonant, vowel, consonant) pattern and also
+        """Check if b[j - 2: j + 1] makes the (consonant, vowel, consonant) pattern and also
         if the second 'c' is not 'w', 'x' or 'y'. This is used when trying to restore an 'e' at the end of a short word,
         e.g. cav(e), lov(e), hop(e), crim(e), but snow, box, tray.
 
