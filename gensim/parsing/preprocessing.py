@@ -29,6 +29,7 @@ Data:
 .. data:: RE_AL_NUM - Regexp for search a position between letters and digits.
 .. data:: RE_NUM_AL - Regexp for search a position between digits and letters .
 .. data:: RE_WHITESPACE - Regexp for search space characters.
+.. data:: DEFAULT_FILTERS - List of function for string preprocessing.
 
 """
 
@@ -105,7 +106,7 @@ def remove_stopwords(s):
 
 
 def strip_punctuation(s):
-    """Replace punctuation characters with spaces using :const:`~gensim.parsing.preprocessing.RE_PUNCT`.
+    """Replace punctuation characters with spaces in `s` using :const:`~gensim.parsing.preprocessing.RE_PUNCT`.
 
     Parameters
     ----------
@@ -354,7 +355,7 @@ def preprocess_string(s, filters=DEFAULT_FILTERS):
 
 
 def preprocess_documents(docs):
-    """Apply default filters to the documents strings.
+    """Apply :const:`~gensim.parsing.preprocessing.DEFAULT_FILTERS` to the documents strings.
 
     Parameters
     ----------
