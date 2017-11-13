@@ -136,16 +136,16 @@ class PoincareModel(utils.SaveLoad):
         node_relations = defaultdict(set)  # Mapping from node index to its related node indices
 
         logger.info("Loading relations from train data..")
-        for hypernym_pair in self.train_data:
-            if len(hypernym_pair) != 2:
-                raise ValueError('Relation pair "%s" should have exactly two items' % str(hypernym_pair))
-            for item in hypernym_pair:
+        for relation in self.train_data:
+            if len(relation) != 2:
+                raise ValueError('Relation pair "%s" should have exactly two items' % repr(relation))
+            for item in relation:
                 if item in vocab:
                     vocab[item].count += 1
                 else:
                     vocab[item] = Vocab(count=1, index=len(index2word))
                     index2word.append(item)
-            node_1, node_2 = hypernym_pair
+            node_1, node_2 = relation
             node_1_index, node_2_index = vocab[node_1].index, vocab[node_2].index
             node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
@@ -602,7 +602,7 @@ class PoincareBatch(object):
             Vectors of all nodes `u` in the batch.
             Expected shape (batch_size, dim).
         vectors_v : numpy.array
-            Vectors of all hypernym nodes `v` and negatively sampled nodes `v'`,
+            Vectors of all positively related nodes `v` and negatively sampled nodes `v'`,
             for each node `u` in the batch.
             Expected shape (1 + neg_size, dim, batch_size).
         indices_u : list
@@ -758,19 +758,19 @@ class PoincareKeyedVectors(KeyedVectors):
 
 
 class PoincareRelations(object):
-    """Class to stream hypernym relations for `PoincareModel` from a tsv-like file."""
+    """Class to stream relations for `PoincareModel` from a tsv-like file."""
 
     def __init__(self, file_path, encoding='utf8', delimiter='\t'):
-        """Initialize instance from file containing one hypernym pair per line.
+        """Initialize instance from file containing a pair of nodes (a relation) per line.
 
         Parameters
         ----------
         file_path : str
-            Path to file containing one hypernym pair per line, separated by `delimiter`.
+            Path to file containing a pair of nodes (a relation) per line, separated by `delimiter`.
         encoding : str, optional
             Character encoding of the input file.
         delimiter : str, optional
-            Delimiter character for each hypernym pair.
+            Delimiter character for each relation.
 
         """
 
@@ -784,7 +784,7 @@ class PoincareRelations(object):
         Yields
         -------
         2-tuple (unicode, unicode)
-            Hypernym relation from input file.
+            Relation from input file.
 
         """
         if sys.version_info[0] < 3:
