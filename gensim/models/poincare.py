@@ -155,7 +155,7 @@ class PoincareModel(utils.SaveLoad):
         self.kv.index2word = index2word
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
         self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
-        counts = np.array([self.kv.vocab[index2word[i]].count for i in range(len(index2word))])
+        counts = np.array([self.kv.vocab[index2word[i]].count for i in range(len(index2word))], dtype=np.float64)
         self._node_probabilities = counts / counts.sum()
         self._node_probabilities_cumsum = np.cumsum(self._node_probabilities)
         self.all_relations = all_relations
