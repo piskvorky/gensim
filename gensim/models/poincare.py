@@ -185,28 +185,6 @@ class PoincareModel(utils.SaveLoad):
             self._negatives_buffer = NegativesBuffer(cumsum_table_indices)
         return self._negatives_buffer.get_items(self.negative)
 
-    @staticmethod
-    def _has_duplicates(array):
-        """Returns whether or not the input array has any duplicates.
-
-        Parameters
-        ----------
-        array : iterable of hashables
-            Input array to checked, should contain hashable items.
-
-        Returns
-        -------
-        bool
-            Whether the input array contains any duplicates.
-
-        """
-        seen = set()
-        for value in array:
-            if value in seen:
-                return True
-            seen.add(value)
-        return False
-
     def _sample_negatives(self, node_index):
         """Return a sample of negatives for the given node.
 
@@ -234,10 +212,12 @@ class PoincareModel(utils.SaveLoad):
             # If number of positive relations is a small fraction of total nodes
             # re-sample till no positively connected nodes are chosen
             indices = self._get_candidate_negatives()
+            unique_indices = set(indices)
             times_sampled = 1
-            while self._has_duplicates(indices) or (set(indices) & node_relations):
+            while (len(indices) != len(unique_indices)) or (unique_indices & node_relations):
                 times_sampled += 1
                 indices = self._get_candidate_negatives()
+                unique_indices = set(indices)
             if times_sampled > 1:
                 logger.debug('Sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
         else:
