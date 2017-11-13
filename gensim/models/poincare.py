@@ -222,7 +222,7 @@ class PoincareModel(utils.SaveLoad):
         """
         node_relations = self.node_relations[node_index]
         num_remaining_nodes = len(self.kv.vocab) - len(node_relations)
-        if  num_remaining_nodes < self.negative:
+        if num_remaining_nodes < self.negative:
             raise ValueError(
                 'Cannot sample %d negative items from a set of %d items' %
                 (self.negative, num_remaining_nodes)
@@ -350,7 +350,6 @@ class PoincareModel(utils.SaveLoad):
 
         """
         batch_size = len(relations)
-        all_vectors = []
         indices_u, indices_v = [], []
         for relation, negatives in zip(relations, all_negatives):
             u, v = relation
@@ -360,7 +359,7 @@ class PoincareModel(utils.SaveLoad):
 
         vectors_u = self.kv.syn0[indices_u]
         vectors_v = self.kv.syn0[indices_v].reshape((batch_size, 1 + self.negative, self.size))
-        vectors_v = vectors_v.swapaxes(0,1).swapaxes(1,2)
+        vectors_v = vectors_v.swapaxes(0, 1).swapaxes(1, 2)
         batch = PoincareBatch(vectors_u, vectors_v, indices_u, indices_v)
         batch.compute_all()
 
@@ -567,7 +566,7 @@ class PoincareModel(utils.SaveLoad):
             for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
                 should_print = not (batch_num % print_every)
                 check_gradients = bool(check_gradients_every) and (batch_num % check_gradients_every) == 0
-                batch_indices = indices[i:i+batch_size]
+                batch_indices = indices[i:i + batch_size]
                 relations = [self.all_relations[idx] for idx in batch_indices]
                 result = self._train_on_batch(relations, check_gradients=check_gradients)
                 avg_loss += result.loss
@@ -855,4 +854,3 @@ class NegativesBuffer(object):
         end_index = start_index + num_items
         self._current_index += num_items
         return self._items[start_index:end_index]
-
