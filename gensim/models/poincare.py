@@ -40,6 +40,7 @@ Initialize and train a model from a file containing one relation per line::
 
 import csv
 import logging
+import sys
 import time
 
 import numpy as np
@@ -782,13 +783,17 @@ class PoincareRelations(object):
 
         Yields
         -------
-        str (unicode)
+        unicode or bytes
             Single line from input file.
+            Yields bytestrings for python2, unicode for python3.
 
         """
         with smart_open(self.file_path, 'rb') as f:
             for line in f:
-                yield line.decode(self.encoding)
+                if sys.version_info[0] >= 3:
+                    yield line.decode(self.encoding)
+                else:
+                    yield line
 
     def __iter__(self):
         """Streams relations from self.file_path decoded into unicode strings.
@@ -801,6 +806,8 @@ class PoincareRelations(object):
         """
         reader = csv.reader(self._stream_lines(), delimiter=self.delimiter)
         for row in reader:
+            if sys.version_info[0] < 3:
+                row = [value.decode(self.encoding) for value in row]
             yield tuple(row)
 
 
