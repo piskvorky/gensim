@@ -56,6 +56,8 @@ user_dir = os.path.expanduser('~')
 base_dir = os.path.join(user_dir, 'gensim-data')
 logger = logging.getLogger('gensim.api')
 
+DATA_LIST_URL = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
+
 
 def _progress(chunks_downloaded, chunk_size, total_size, part=1, total_parts=1):
     """Reporthook for :func:`urllib.urlretrieve`.
@@ -184,8 +186,7 @@ def info(name=None):
     >>> api.info()  # retrieve information about all available datasets and models
 
     """
-    url = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
-    information = json.loads(urlopen(url).read().decode("utf-8"))
+    information = json.loads(urlopen(DATA_LIST_URL).read().decode("utf-8"))
 
     if name is not None:
         corpora = information['corpora']
