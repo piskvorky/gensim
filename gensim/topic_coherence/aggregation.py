@@ -25,7 +25,7 @@ def arithmetic_mean(confirmed_measures):
 
     Returns
     -------
-    float
+    numpy.float
         Arithmetic mean of all the values contained in confirmation measures.
 
     Examples
