@@ -11,10 +11,11 @@ Python implementation of Poincare Embeddings [1], an embedding that is better at
 information better than traditional Euclidean embeddings. The method is described in more detail in [1].
 
 The main use-case is to automatically learn hierarchical representations of nodes from a tree-like structure,
-such as a Directed Acyclic Graph, using the transitive closure of the relations.
+such as a Directed Acyclic Graph, using the transitive closure of the relations. Representations of nodes in a
+symmetric graph can also be learned, using an iterable of the relations in the graph.
 
-This module allows training a Poincare Embedding from a training file containing relations from
-a transitive closure.
+This module allows training a Poincare Embedding from a training file containing relations of graph in a
+csv-like format.
 
 [1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
     https://arxiv.org/pdf/1705.08039.pdf
@@ -68,12 +69,15 @@ class PoincareModel(utils.SaveLoad):
     def __init__(
         self, train_data, size=50, alpha=0.1, negative=10, workers=1,
         epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), seed=0):
-        """Initialize and train a Poincare embedding model from an iterable of transitive closure relations.
+        """Initialize and train a Poincare embedding model from an iterable of relations.
 
         Parameters
         ----------
         train_data : iterable of (str, str)
             Iterable of relations, e.g. a list of tuples, or a PoincareRelations instance streaming from a file.
+            Note that the relations are treated as ordered pairs, i.e. a relation (a, b) does not imply the
+            opposite relation (b, a). In case the relations are symmetric, the data should contain both relations
+            (a, b) and (b, a).
         size : int, optional
             Number of dimensions of the trained model.
         alpha : float, optional
