@@ -20,7 +20,7 @@ except ImportError:
 
 import numpy as np
 try:
-    import autograd
+    import autograd  # noqa:F401
     autograd_installed = True
 except ImportError:
     autograd_installed = False
@@ -130,7 +130,6 @@ class TestPoincareModel(unittest.TestCase):
     def test_gradients_check(self):
         """Tests that the model is trained successfully with gradients check enabled."""
         model = PoincareModel(self.data, negative=3)
-        old_vectors = np.copy(model.kv.syn0)
         try:
             model.train(epochs=1, batch_size=1, check_gradients_every=1)
         except Exception as e:
