@@ -130,7 +130,8 @@ class LdaSeqModel(utils.SaveLoad):
             if initialize == 'gensim':
                 lda_model = ldamodel.LdaModel(
                     corpus, id2word=self.id2word, num_topics=self.num_topics,
-                    passes=passes, alpha=self.alphas, random_state=random_state
+                    passes=passes, alpha=self.alphas, random_state=random_state,
+                    dtype=np.float64
                 )
                 self.sstats = np.transpose(lda_model.state.sstats)
             if initialize == 'ldamodel':
@@ -244,7 +245,7 @@ class LdaSeqModel(utils.SaveLoad):
         vocab_len = self.vocab_len
         bound = 0.0
 
-        lda = ldamodel.LdaModel(num_topics=num_topics, alpha=self.alphas, id2word=self.id2word)
+        lda = ldamodel.LdaModel(num_topics=num_topics, alpha=self.alphas, id2word=self.id2word, dtype=np.float64)
         lda.topics = np.array(np.split(np.zeros(vocab_len * num_topics), vocab_len))
         ldapost = LdaPost(max_doc_len=self.max_doc_len, num_topics=num_topics, lda=lda)
 
@@ -419,7 +420,7 @@ class LdaSeqModel(utils.SaveLoad):
         """
         Similar to the LdaModel __getitem__ function, it returns topic proportions of a document passed.
         """
-        lda_model = ldamodel.LdaModel(num_topics=self.num_topics, alpha=self.alphas, id2word=self.id2word)
+        lda_model = ldamodel.LdaModel(num_topics=self.num_topics, alpha=self.alphas, id2word=self.id2word, dtype=np.float64)
         lda_model.topics = np.array(np.split(np.zeros(self.vocab_len * self.num_topics), self.vocab_len))
         ldapost = LdaPost(num_topics=self.num_topics, max_doc_len=len(doc), lda=lda_model, doc=doc)
 

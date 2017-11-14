@@ -26,7 +26,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
 
     def __init__(self, num_topics=100, id2word=None, chunksize=2000, passes=1, update_every=1, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01, random_state=None, scorer='perplexity'):
+                 minimum_probability=0.01, random_state=None, scorer='perplexity', dtype=np.float32):
         """
         Sklearn wrapper for LDA model. See gensim.model.LdaModel for parameter details.
 
@@ -50,6 +50,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         self.minimum_probability = minimum_probability
         self.random_state = random_state
         self.scorer = scorer
+        self.dtype = dtype
 
     def fit(self, X, y=None):
         """
@@ -67,7 +68,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
             alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
             eval_every=self.eval_every, iterations=self.iterations,
             gamma_threshold=self.gamma_threshold, minimum_probability=self.minimum_probability,
-            random_state=self.random_state
+            random_state=self.random_state, dtype=self.dtype
         )
         return self
 
@@ -109,7 +110,8 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
                 chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
                 alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
                 eval_every=self.eval_every, iterations=self.iterations, gamma_threshold=self.gamma_threshold,
-                minimum_probability=self.minimum_probability, random_state=self.random_state
+                minimum_probability=self.minimum_probability, random_state=self.random_state,
+                dtype=self.dtype
             )
 
         self.gensim_model.update(corpus=X)

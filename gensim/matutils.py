@@ -602,13 +602,12 @@ def jaccard_distance(set1, set2):
 def dirichlet_expectation(alpha):
     """
     For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
-
     """
     if len(alpha.shape) == 1:
         result = psi(alpha) - psi(np.sum(alpha))
     else:
         result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
-    return result.astype(alpha.dtype)  # keep the same precision as input
+    return result.astype(alpha.dtype, copy=False)  # keep the same precision as input
 
 
 def qr_destroy(la):

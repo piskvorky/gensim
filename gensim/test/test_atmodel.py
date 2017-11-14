@@ -541,6 +541,20 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, self.class_.load, fname, mmap='r')
 
+    def testDtypeBackwardCompatibility(self):
+        atmodel_3_0_1_fname = datapath('atmodel_3_0_1_model')
+        expected_topics = [(0, 0.068200842977296727), (1, 0.93179915702270333)]
+
+        # save model to use in test
+        # self.model.save(atmodel_3_0_1_fname)
+
+        # load a model saved using a 3.0.1 version of Gensim
+        model = self.class_.load(atmodel_3_0_1_fname)
+
+        # and test it on a predefined document
+        topics = model['jane']
+        self.assertTrue(np.allclose(expected_topics, topics))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
