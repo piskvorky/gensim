@@ -165,9 +165,9 @@ def merge_syntactic_units(original_units, filtered_units, tags=None):
     Parameters
     ----------
     original_units : list
-        List of original sintences.
+        List of original sentences.
     filtered_units : list
-        List of tokenized sintences.
+        List of tokenized sentences.
     tags : list
         List of strings used as tags for each unit. None as deafault.
     
