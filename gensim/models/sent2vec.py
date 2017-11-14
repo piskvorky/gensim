@@ -35,12 +35,13 @@ from __future__ import division
 import logging
 import numpy as np
 from numpy import dot
-from gensim import matutils
+from gensim import utils, matutils
 import sys
 from random import randint
-from gensim.utils import SaveLoad
+from gensim.utils import SaveLoad, tokenize
 import time
 from types import GeneratorType
+import os
 
 logger = logging.getLogger(__name__)
 # Comment out the below statement to avoid printing info logs to console
