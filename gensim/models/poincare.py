@@ -6,9 +6,8 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Python implementation of Poincare Embeddings [1], an embedding that is better at capturing latent hierarchical
-information better than traditional Euclidean embeddings. The method is described in more detail in [1].
+"""Python implementation of Poincare Embeddings [1]_, an embedding that is better at capturing latent hierarchical
+information better than traditional Euclidean embeddings. The method is described in more detail in [1]_.
 
 The main use-case is to automatically learn hierarchical representations of nodes from a tree-like structure,
 such as a Directed Acyclic Graph, using the transitive closure of the relations. Representations of nodes in a
@@ -17,22 +16,23 @@ symmetric graph can also be learned, using an iterable of the relations in the g
 This module allows training a Poincare Embedding from a training file containing relations of graph in a
 csv-like format.
 
-[1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
+.. [1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
     https://arxiv.org/pdf/1705.08039.pdf
 
-Examples
---------
-Initialize and train a model from a list::
+Examples:
+---------
+Initialize and train a model from a list:
 
 >>> from gensim.models.poincare import PoincareModel
 >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
 >>> model = PoincareModel(relations, negative=2)
 >>> model.train(epochs=50)
 
-Initialize and train a model from a file containing one relation per line::
+Initialize and train a model from a file containing one relation per line:
 
 >>> from gensim.models.poincare import PoincareModel, PoincareRelations
->>> file_path = 'gensim/test/test_data/poincare_hypernyms.tsv'
+>>> from gensim.test.utils import datapath
+>>> file_path = datapath('poincare_hypernyms.tsv')
 >>> model = PoincareModel(PoincareRelations(file_path), negative=2)
 >>> model.train(epochs=50)
 
@@ -59,16 +59,17 @@ logger = logging.getLogger(__name__)
 class PoincareModel(utils.SaveLoad):
     """Class for training, using and evaluating Poincare Embeddings.
 
-    The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in the word2vec
-    format via `wv.save_word2vec_format()` and `KeyedVectors.load_word2vec_format()`.
+    The model can be stored/loaded via its :meth:`~gensim.models.poincare.PoincareModel.save`
+    and :meth:`~gensim.models.poincare.PoincareModel.load` methods, or stored/loaded in the word2vec format
+    via `model.kv.save_word2vec_format` and :meth:`~gensim.models.keyedvectors.KeyedVectors.load_word2vec_format`.
 
     Note that training cannot be resumed from a model loaded via `load_word2vec_format`, if you wish to train further,
-    use `save()` and `load()` methods instead.
+    use :meth:`~gensim.models.poincare.PoincareModel.save` and :meth:`~gensim.models.poincare.PoincareModel.load`
+    methods instead.
 
     """
-    def __init__(
-        self, train_data, size=50, alpha=0.1, negative=10, workers=1,
-        epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), seed=0):
+    def __init__(self, train_data, size=50, alpha=0.1, negative=10, workers=1, epsilon=1e-5,
+                 burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), seed=0):
         """Initialize and train a Poincare embedding model from an iterable of relations.
 
         Parameters
@@ -99,19 +100,20 @@ class PoincareModel(utils.SaveLoad):
 
         Examples
         --------
-        Initialize a model from a list::
+        Initialize a model from a list:
 
         >>> from gensim.models.poincare import PoincareModel
         >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
         >>> model = PoincareModel(relations, negative=2)
 
-        Initialize a model from a file containing one relation per line::
+        Initialize a model from a file containing one relation per line:
 
         >>> from gensim.models.poincare import PoincareModel, PoincareRelations
-        >>> file_path = 'gensim/test/test_data/poincare_hypernyms.tsv'
+        >>> from gensim.test.utils import datapath
+        >>> file_path = datapath('poincare_hypernyms.tsv')
         >>> model = PoincareModel(PoincareRelations(file_path), negative=2)
 
-        See `PoincareRelations` for more options.
+        See :class:`~gensim.models.poincare.PoincareRelations` for more options.
 
         """
         self.train_data = train_data
@@ -164,7 +166,7 @@ class PoincareModel(utils.SaveLoad):
         self._node_probabilities_cumsum = np.cumsum(self._node_probabilities)
         self.all_relations = all_relations
         self.node_relations = node_relations
-        self._negatives_buffer = NegativesBuffer([])  # Buffer to store negative samples, to reduce calls to sampling method
+        self._negatives_buffer = NegativesBuffer([])  # Buffer for negative samples, to reduce calls to sampling method
         self._negatives_buffer_size = 2000
 
     def _init_embeddings(self):
@@ -248,8 +250,8 @@ class PoincareModel(utils.SaveLoad):
         float
             Computed loss value.
 
-        Notes
-        -----
+        Warnings
+        --------
         Only used for autograd gradients, since autograd requires a specific function signature.
 
         """
@@ -305,13 +307,13 @@ class PoincareModel(utils.SaveLoad):
                 return vectors
 
     def save(self, *args, **kwargs):
-        """Save complete model to disk, inherited from `utils.SaveLoad`."""
+        """Save complete model to disk, inherited from :class:`gensim.utils.SaveLoad`."""
         self._loss_grad = None  # Can't pickle autograd fn to disk
         super(PoincareModel, self).save(*args, **kwargs)
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Load model from disk, inherited from `utils.SaveLoad`."""
+        """Load model from disk, inherited from :class:`~gensim.utils.SaveLoad`."""
         model = super(PoincareModel, cls).load(*args, **kwargs)
         return model
 
@@ -330,7 +332,7 @@ class PoincareModel(utils.SaveLoad):
 
         Returns
         -------
-        PoincareBatch instance
+        :class:`~gensim.models.poincare.PoincareBatch`
             Contains node indices, computed gradients and loss for the batch.
 
         """
@@ -418,7 +420,7 @@ class PoincareModel(utils.SaveLoad):
 
         Returns
         -------
-        PoincareBatch instance
+        :class:`~gensim.models.poincare.PoincareBatch`
             The batch that was just trained on, contains computed loss for the batch.
 
         """
@@ -460,7 +462,7 @@ class PoincareModel(utils.SaveLoad):
 
         Parameters
         ----------
-        batch : PoincareBatch instance
+        batch : :class:`~gensim.models.poincare.PoincareBatch`
             Batch containing computed gradients and node indices of the batch for which updates are to be done.
 
         """
@@ -497,6 +499,13 @@ class PoincareModel(utils.SaveLoad):
         check_gradients_every : int or None, optional
             Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
             Useful for debugging, doesn't compare by default.
+
+        Examples
+        --------
+        >>> from gensim.models.poincare import PoincareModel
+        >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
+        >>> model = PoincareModel(relations, negative=2)
+        >>> model.train(epochs=50)
 
         """
         if self.workers > 1:
@@ -719,7 +728,7 @@ class PoincareBatch(object):
 
 
 class PoincareKeyedVectors(KeyedVectors):
-    """Class to contain vectors and vocab for the PoincareModel training class.
+    """Class to contain vectors and vocab for the :class:`~gensim.models.poincare.PoincareModel` training class.
 
     Used to perform operations on the vectors such as vector lookup, distance etc.
 
