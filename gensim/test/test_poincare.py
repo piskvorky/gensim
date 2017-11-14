@@ -19,6 +19,11 @@ except ImportError:
     from unittest.mock import Mock
 
 import numpy as np
+try:
+    import autograd
+    autograd_installed = True
+except ImportError:
+    autograd_installed = False
 
 from gensim.models.poincare import PoincareRelations, PoincareModel
 from gensim.test.utils import datapath
@@ -63,6 +68,14 @@ class TestPoincareModel(unittest.TestCase):
         self.assertEqual(len(model.node_relations[model.kv.vocab['kangaroo.n.01'].index]), 3)
         self.assertEqual(len(model.kv.vocab), 7)
         self.assertTrue('mammal.n.01' not in model.node_relations)
+
+    def test_data_counts_with_bytes(self):
+        """Tests whether input bytes data is loaded correctly and completely."""
+        model = PoincareModel([(b'\x80\x01c', b'\x50\x71a'), (b'node.1', b'node.2')])
+        self.assertEqual(len(model.all_relations), 2)
+        self.assertEqual(len(model.node_relations[model.kv.vocab[b'\x80\x01c'].index]), 1)
+        self.assertEqual(len(model.kv.vocab), 4)
+        self.assertTrue(b'\x50\x71a' not in model.node_relations)
 
     def test_persistence(self):
         """Tests whether the model is saved and loaded correctly."""
@@ -115,12 +128,15 @@ class TestPoincareModel(unittest.TestCase):
         self.assertTrue(np.allclose(old_vectors, model.kv.syn0))
 
     def test_gradients_check(self):
-        """Tests that the gradients check succeeds during training."""
+        """Tests that the model is trained successfully with gradients check enabled."""
         model = PoincareModel(self.data, negative=3)
         old_vectors = np.copy(model.kv.syn0)
-        model.train(epochs=1, batch_size=1, check_gradients_every=1)
-        self.assertFalse(np.allclose(old_vectors, model.kv.syn0))
+        try:
+            model.train(epochs=1, batch_size=1, check_gradients_every=1)
+        except Exception as e:
+            self.fail('Exception %s raised unexpectedly while training with gradient checking' % repr(e))
 
+    @unittest.skipIf(not autograd_installed, 'autograd needs to be installed for this test')
     def test_wrong_gradients_raises_assertion(self):
         """Tests that discrepancy in gradients raises an error."""
         model = PoincareModel(self.data, negative=3)
