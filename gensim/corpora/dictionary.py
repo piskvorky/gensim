@@ -17,7 +17,7 @@ with other dictionary (:func:`Dictionary.merge_with`) etc.
 
 from __future__ import with_statement
 
-from collections import Mapping, defaultdict
+from collections import Mapping, defaultdict, OrderedDict
 import sys
 import logging
 import itertools
@@ -149,6 +149,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         token2id = self.token2id
         if allow_update or return_missing:
             missing = {w: freq for w, freq in iteritems(counter) if w not in token2id}
+            missing = OrderedDict(sorted(missing.items(), key=lambda x: (x[1], x[0])))
             if allow_update:
                 for w in missing:
                     # new id = number of ids made so far;
@@ -247,12 +248,17 @@ class Dictionary(utils.SaveLoad, Mapping):
         """
         if bad_ids is not None:
             bad_ids = set(bad_ids)
-            self.token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if tokenid not in bad_ids}
-            self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if tokenid not in bad_ids}
+            token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if tokenid not in bad_ids}
+            self.token2id = OrderedDict(sorted(token2id.items(), key=lambda x: (x[1], x[0])))
+            dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if tokenid not in bad_ids}
+            self.dfs = OrderedDict(sorted(dfs.items(), key=lambda x: (x[0], x[1])))
         if good_ids is not None:
             good_ids = set(good_ids)
-            self.token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if tokenid in good_ids}
-            self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if tokenid in good_ids}
+            token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if tokenid in good_ids}
+            self.token2id = OrderedDict(sorted(token2id.items(), key=lambda x: (x[1], x[0])))
+            dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if tokenid in good_ids}
+            self.dfs = OrderedDict(sorted(dfs.items(), key=lambda x: (x[0], x[1])))
+
         self.compactify()
 
     def compactify(self):
@@ -269,9 +275,11 @@ class Dictionary(utils.SaveLoad, Mapping):
         idmap = dict(izip(itervalues(self.token2id), xrange(len(self.token2id))))
 
         # reassign mappings to new ids
-        self.token2id = {token: idmap[tokenid] for token, tokenid in iteritems(self.token2id)}
+        token2id = {token: idmap[tokenid] for token, tokenid in iteritems(self.token2id)}
+        self.token2id = OrderedDict(sorted(token2id.items(), key=lambda x: (x[1], x[0])))
         self.id2token = {}
-        self.dfs = {idmap[tokenid]: freq for tokenid, freq in iteritems(self.dfs)}
+        dfs = {idmap[tokenid]: freq for tokenid, freq in iteritems(self.dfs)}
+        self.dfs = OrderedDict(sorted(dfs.items(), key=lambda x: (x[0], x[1])))
 
     def save_as_text(self, fname, sort_by_word=True):
         """
