@@ -233,7 +233,7 @@ test_env = [
     'annoy',
     'tensorflow <= 1.3.0',
     'keras >= 2.0.4',
-    'autograd==1.2',
+    'mock==2.0.0',
 ]
 
 setup(

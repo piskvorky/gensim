@@ -6,32 +6,33 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Python implementation of Poincare Embeddings [1], an embedding that is better at capturing latent hierarchical
-information better than traditional Euclidean embeddings. The method is described in more detail in [1].
+"""Python implementation of Poincare Embeddings [1]_, an embedding that is better at capturing latent hierarchical
+information better than traditional Euclidean embeddings. The method is described in more detail in [1]_.
 
 The main use-case is to automatically learn hierarchical representations of nodes from a tree-like structure,
-such as a Directed Acyclic Graph, using the transitive closure of the relations.
+such as a Directed Acyclic Graph, using the transitive closure of the relations. Representations of nodes in a
+symmetric graph can also be learned, using an iterable of the relations in the graph.
 
-This module allows training a Poincare Embedding from a training file containing relations from
-a transitive closure.
+This module allows training a Poincare Embedding from a training file containing relations of graph in a
+csv-like format.
 
-[1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
+.. [1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
     https://arxiv.org/pdf/1705.08039.pdf
 
-Examples
---------
-Initialize and train a model from a list::
+Examples:
+---------
+Initialize and train a model from a list:
 
 >>> from gensim.models.poincare import PoincareModel
 >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
 >>> model = PoincareModel(relations, negative=2)
 >>> model.train(epochs=50)
 
-Initialize and train a model from a file containing one relation per line::
+Initialize and train a model from a file containing one relation per line:
 
 >>> from gensim.models.poincare import PoincareModel, PoincareRelations
->>> file_path = 'gensim/test/test_data/poincare_hypernyms.tsv'
+>>> from gensim.test.utils import datapath
+>>> file_path = datapath('poincare_hypernyms.tsv')
 >>> model = PoincareModel(PoincareRelations(file_path), negative=2)
 >>> model.train(epochs=50)
 
@@ -40,6 +41,7 @@ Initialize and train a model from a file containing one relation per line::
 
 import csv
 import logging
+import sys
 import time
 
 import numpy as np
@@ -60,22 +62,26 @@ logger = logging.getLogger(__name__)
 class PoincareModel(utils.SaveLoad):
     """Class for training, using and evaluating Poincare Embeddings.
 
-    The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in the word2vec
-    format via `model.kv.save_word2vec_format()` and `PoincareKeyedVectors.load_word2vec_format()`.
+    The model can be stored/loaded via its :meth:`~gensim.models.poincare.PoincareModel.save`
+    and :meth:`~gensim.models.poincare.PoincareModel.load` methods, or stored/loaded in the word2vec format
+    via `model.kv.save_word2vec_format` and :meth:`~gensim.models.poincare.PoincareKeyedVectors.load_word2vec_format`.
 
     Note that training cannot be resumed from a model loaded via `load_word2vec_format`, if you wish to train further,
-    use `save()` and `load()` methods instead.
+    use :meth:`~gensim.models.poincare.PoincareModel.save` and :meth:`~gensim.models.poincare.PoincareModel.load`
+    methods instead.
 
     """
-    def __init__(
-        self, train_data, size=50, alpha=0.1, negative=10, workers=1,
-        epsilon=1e-5, burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), seed=0):
-        """Initialize and train a Poincare embedding model from an iterable of transitive closure relations.
+    def __init__(self, train_data, size=50, alpha=0.1, negative=10, workers=1, epsilon=1e-5,
+                 burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), dtype=np.float64, seed=0):
+        """Initialize and train a Poincare embedding model from an iterable of relations.
 
         Parameters
         ----------
         train_data : iterable of (str, str)
             Iterable of relations, e.g. a list of tuples, or a PoincareRelations instance streaming from a file.
+            Note that the relations are treated as ordered pairs, i.e. a relation (a, b) does not imply the
+            opposite relation (b, a). In case the relations are symmetric, the data should contain both relations
+            (a, b) and (b, a).
         size : int, optional
             Number of dimensions of the trained model.
         alpha : float, optional
@@ -92,24 +98,28 @@ class PoincareModel(utils.SaveLoad):
             Learning rate for burn-in initialization, ignored if `burn_in` is 0.
         init_range : 2-tuple (float, float)
             Range within which the vectors are randomly initialized.
+        dtype : numpy.dtype
+            The numpy dtype to use for the vectors in the model (numpy.float64, numpy.float32 etc).
+            Using lower precision floats may be useful in increasing training speed and reducing memory usage.
         seed : int, optional
             Seed for random to ensure reproducibility.
 
         Examples
         --------
-        Initialize a model from a list::
+        Initialize a model from a list:
 
         >>> from gensim.models.poincare import PoincareModel
         >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
         >>> model = PoincareModel(relations, negative=2)
 
-        Initialize a model from a file containing one relation per line::
+        Initialize a model from a file containing one relation per line:
 
         >>> from gensim.models.poincare import PoincareModel, PoincareRelations
-        >>> file_path = 'gensim/test/test_data/poincare_hypernyms.tsv'
+        >>> from gensim.test.utils import datapath
+        >>> file_path = datapath('poincare_hypernyms.tsv')
         >>> model = PoincareModel(PoincareRelations(file_path), negative=2)
 
-        See `PoincareRelations` for more options.
+        See :class:`~gensim.models.poincare.PoincareRelations` for more options.
 
         """
         self.train_data = train_data
@@ -123,6 +133,7 @@ class PoincareModel(utils.SaveLoad):
         self.epsilon = epsilon
         self.burn_in = burn_in
         self._burn_in_done = False
+        self.dtype = dtype
         self.seed = seed
         self._np_random = np_random.RandomState(seed)
         self.init_range = init_range
@@ -138,16 +149,16 @@ class PoincareModel(utils.SaveLoad):
         node_relations = defaultdict(set)  # Mapping from node index to its related node indices
 
         logger.info("Loading relations from train data..")
-        for hypernym_pair in self.train_data:
-            if len(hypernym_pair) != 2:
-                raise ValueError('Relation pair "%s" should have exactly two items' % str(hypernym_pair))
-            for item in hypernym_pair:
+        for relation in self.train_data:
+            if len(relation) != 2:
+                raise ValueError('Relation pair "%s" should have exactly two items' % repr(relation))
+            for item in relation:
                 if item in vocab:
                     vocab[item].count += 1
                 else:
                     vocab[item] = Vocab(count=1, index=len(index2word))
                     index2word.append(item)
-            node_1, node_2 = hypernym_pair
+            node_1, node_2 = relation
             node_1_index, node_2_index = vocab[node_1].index, vocab[node_2].index
             node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
@@ -157,18 +168,18 @@ class PoincareModel(utils.SaveLoad):
         self.kv.index2word = index2word
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
         self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
-        counts = np.array([self.kv.vocab[index2word[i]].count for i in range(len(index2word))])
+        counts = np.array([self.kv.vocab[index2word[i]].count for i in range(len(index2word))], dtype=np.float64)
         self._node_probabilities = counts / counts.sum()
         self._node_probabilities_cumsum = np.cumsum(self._node_probabilities)
         self.all_relations = all_relations
         self.node_relations = node_relations
-        self._negatives_buffer = NegativesBuffer([])  # Buffer to store negative samples, to reduce calls to sampling method
+        self._negatives_buffer = NegativesBuffer([])  # Buffer for negative samples, to reduce calls to sampling method
         self._negatives_buffer_size = 2000
 
     def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.kv.index2word), self.size)
-        self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape)
+        self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
 
     def _get_candidate_negatives(self):
         """Returns candidate negatives of size `self.negative` from the negative examples buffer.
@@ -187,28 +198,6 @@ class PoincareModel(utils.SaveLoad):
             self._negatives_buffer = NegativesBuffer(cumsum_table_indices)
         return self._negatives_buffer.get_items(self.negative)
 
-    @staticmethod
-    def _has_duplicates(array):
-        """Returns whether or not the input array has any duplicates.
-
-        Parameters
-        ----------
-        array : iterable of hashables
-            Input array to checked, should contain hashable items.
-
-        Returns
-        -------
-        bool
-            Whether the input array contains any duplicates.
-
-        """
-        seen = set()
-        for value in array:
-            if value in seen:
-                return True
-            seen.add(value)
-        return False
-
     def _sample_negatives(self, node_index):
         """Return a sample of negatives for the given node.
 
@@ -225,10 +214,10 @@ class PoincareModel(utils.SaveLoad):
         """
         node_relations = self.node_relations[node_index]
         num_remaining_nodes = len(self.kv.vocab) - len(node_relations)
-        if  num_remaining_nodes < self.negative:
+        if num_remaining_nodes < self.negative:
             raise ValueError(
-                'Cannot sample %d negative items from a set of %d items' %
-                (self.negative, num_remaining_nodes)
+                'Cannot sample %d negative nodes from a set of %d negative nodes for %s' %
+                (self.negative, num_remaining_nodes, self.kv.index2word[node_index])
             )
 
         positive_fraction = len(node_relations) / len(self.kv.vocab)
@@ -236,10 +225,12 @@ class PoincareModel(utils.SaveLoad):
             # If number of positive relations is a small fraction of total nodes
             # re-sample till no positively connected nodes are chosen
             indices = self._get_candidate_negatives()
+            unique_indices = set(indices)
             times_sampled = 1
-            while self._has_duplicates(indices) or (set(indices) & node_relations):
+            while (len(indices) != len(unique_indices)) or (unique_indices & node_relations):
                 times_sampled += 1
                 indices = self._get_candidate_negatives()
+                unique_indices = set(indices)
             if times_sampled > 1:
                 logger.debug('Sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
         else:
@@ -266,8 +257,8 @@ class PoincareModel(utils.SaveLoad):
         float
             Computed loss value.
 
-        Notes
-        -----
+        Warnings
+        --------
         Only used for autograd gradients, since autograd requires a specific function signature.
 
         """
@@ -323,13 +314,13 @@ class PoincareModel(utils.SaveLoad):
                 return vectors
 
     def save(self, *args, **kwargs):
-        """Save complete model to disk, inherited from `utils.SaveLoad`."""
+        """Save complete model to disk, inherited from :class:`gensim.utils.SaveLoad`."""
         self._loss_grad = None  # Can't pickle autograd fn to disk
         super(PoincareModel, self).save(*args, **kwargs)
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Load model from disk, inherited from `utils.SaveLoad`."""
+        """Load model from disk, inherited from :class:`~gensim.utils.SaveLoad`."""
         model = super(PoincareModel, cls).load(*args, **kwargs)
         return model
 
@@ -348,12 +339,11 @@ class PoincareModel(utils.SaveLoad):
 
         Returns
         -------
-        PoincareBatch instance
+        :class:`~gensim.models.poincare.PoincareBatch`
             Contains node indices, computed gradients and loss for the batch.
 
         """
         batch_size = len(relations)
-        all_vectors = []
         indices_u, indices_v = [], []
         for relation, negatives in zip(relations, all_negatives):
             u, v = relation
@@ -363,7 +353,7 @@ class PoincareModel(utils.SaveLoad):
 
         vectors_u = self.kv.syn0[indices_u]
         vectors_v = self.kv.syn0[indices_v].reshape((batch_size, 1 + self.negative, self.size))
-        vectors_v = vectors_v.swapaxes(0,1).swapaxes(1,2)
+        vectors_v = vectors_v.swapaxes(0, 1).swapaxes(1, 2)
         batch = PoincareBatch(vectors_u, vectors_v, indices_u, indices_v)
         batch.compute_all()
 
@@ -437,7 +427,7 @@ class PoincareModel(utils.SaveLoad):
 
         Returns
         -------
-        PoincareBatch instance
+        :class:`~gensim.models.poincare.PoincareBatch`
             The batch that was just trained on, contains computed loss for the batch.
 
         """
@@ -479,7 +469,7 @@ class PoincareModel(utils.SaveLoad):
 
         Parameters
         ----------
-        batch : PoincareBatch instance
+        batch : :class:`~gensim.models.poincare.PoincareBatch`
             Batch containing computed gradients and node indices of the batch for which updates are to be done.
 
         """
@@ -516,6 +506,13 @@ class PoincareModel(utils.SaveLoad):
         check_gradients_every : int or None, optional
             Compares computed gradients and autograd gradients after every `check_gradients_every` batches.
             Useful for debugging, doesn't compare by default.
+
+        Examples
+        --------
+        >>> from gensim.models.poincare import PoincareModel
+        >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
+        >>> model = PoincareModel(relations, negative=2)
+        >>> model.train(epochs=50)
 
         """
         if self.workers > 1:
@@ -574,7 +571,7 @@ class PoincareModel(utils.SaveLoad):
             for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
                 should_print = not (batch_num % print_every)
                 check_gradients = bool(check_gradients_every) and (batch_num % check_gradients_every) == 0
-                batch_indices = indices[i:i+batch_size]
+                batch_indices = indices[i:i + batch_size]
                 relations = [self.all_relations[idx] for idx in batch_indices]
                 result = self._train_on_batch(relations, check_gradients=check_gradients)
                 avg_loss += result.loss
@@ -609,7 +606,7 @@ class PoincareBatch(object):
             Vectors of all nodes `u` in the batch.
             Expected shape (batch_size, dim).
         vectors_v : numpy.array
-            Vectors of all hypernym nodes `v` and negatively sampled nodes `v'`,
+            Vectors of all positively related nodes `v` and negatively sampled nodes `v'`,
             for each node `u` in the batch.
             Expected shape (1 + neg_size, dim, batch_size).
         indices_u : list
@@ -742,7 +739,7 @@ class PoincareBatch(object):
 
 
 class PoincareKeyedVectors(KeyedVectorsBase):
-    """Class to contain vectors and vocab for the PoincareModel training class.
+    """Class to contain vectors and vocab for the :class:`~gensim.models.poincare.PoincareModel` training class.
 
     Used to perform operations on the vectors such as vector lookup, distance etc.
 
@@ -1034,19 +1031,19 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
 
 class PoincareRelations(object):
-    """Class to stream hypernym relations for `PoincareModel` from a tsv-like file."""
+    """Class to stream relations for `PoincareModel` from a tsv-like file."""
 
     def __init__(self, file_path, encoding='utf8', delimiter='\t'):
-        """Initialize instance from file containing one hypernym pair per line.
+        """Initialize instance from file containing a pair of nodes (a relation) per line.
 
         Parameters
         ----------
         file_path : str
-            Path to file containing one hypernym pair per line, separated by `delimiter`.
+            Path to file containing a pair of nodes (a relation) per line, separated by `delimiter`.
         encoding : str, optional
             Character encoding of the input file.
         delimiter : str, optional
-            Delimiter character for each hypernym pair.
+            Delimiter character for each relation.
 
         """
 
@@ -1054,30 +1051,24 @@ class PoincareRelations(object):
         self.encoding = encoding
         self.delimiter = delimiter
 
-    def _stream_lines(self):
-        """Streams lines from self.file_path decoded into unicode strings.
-
-        Yields
-        -------
-        str (unicode)
-            Single line from input file.
-
-        """
-        with smart_open(self.file_path, 'rb') as f:
-            for line in f:
-                yield line.decode(self.encoding)
-
     def __iter__(self):
         """Streams relations from self.file_path decoded into unicode strings.
 
         Yields
         -------
         2-tuple (unicode, unicode)
-            Hypernym relation from input file.
+            Relation from input file.
 
         """
-        reader = csv.reader(self._stream_lines(), delimiter=self.delimiter)
+        if sys.version_info[0] < 3:
+            lines = smart_open(self.file_path, 'rb')
+        else:
+            lines = (l.decode(self.encoding) for l in smart_open(self.file_path, 'rb'))
+        # csv.reader requires bytestring input in python2, unicode input in python3
+        reader = csv.reader(lines, delimiter=self.delimiter)
         for row in reader:
+            if sys.version_info[0] < 3:
+                row = [value.decode(self.encoding) for value in row]
             yield tuple(row)
 
 
