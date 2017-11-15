@@ -209,8 +209,8 @@ class PoincareModel(utils.SaveLoad):
         num_remaining_nodes = len(self.kv.vocab) - len(node_relations)
         if num_remaining_nodes < self.negative:
             raise ValueError(
-                'Cannot sample %d negative items from a set of %d items' %
-                (self.negative, num_remaining_nodes)
+                'Cannot sample %d negative nodes from a set of %d negative nodes for %s' %
+                (self.negative, num_remaining_nodes, self.kv.index2word[node_index])
             )
 
         positive_fraction = len(node_relations) / len(self.kv.vocab)
