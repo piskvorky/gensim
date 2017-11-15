@@ -44,6 +44,7 @@ Modules:
     models/doc2vec
     models/fasttext
     models/phrases
+    models/poincare
     models/coherencemodel
     models/basemodel
     models/callbacks
