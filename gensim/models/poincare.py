@@ -786,40 +786,6 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         vectors.precompute_max_distance()
         return vectors
 
-    def most_similar(self, term, topn=10):
-        """
-        Find the top-N most similar terms to the given term, sorted in increasing order of Poincare distance.
-
-        Parameters
-        ----------
-
-        term : str
-            term for which similar terms are to be found.
-        topn : int or None, optional
-            number of similar terms to return, if `None`, returns all.
-
-        Returns
-        --------
-        list of tuples (str, float)
-            List of tuples containing (term, distance) pairs in increasing order of distance.
-
-        Examples
-        --------
-        >>> model.kv.most_similar('lion.n.01')
-        [('lion_cub.n.01', 0.4484), ('lionet.n.01', 0.6552), ...]
-
-        """
-        dists = self.get_all_distances(term)
-        term_index = self.vocab[term].index
-        if not topn:
-            return dists
-        closest_indices = matutils.argsort(dists, topn=1 + topn)
-        result = [
-            (self.index2word[index], float(dists[index]))
-            for index in closest_indices if index != term_index  # ignore the input term
-        ]
-        return result[:topn]
-
     def nodes_closer_than(self, term_1, term_2):
         """
         Returns all nodes that are closer to `term_1` than `term_2` from `term_1`.
@@ -843,7 +809,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         ['dog.n.01', 'canine.n.02']
 
         """
-        all_distances = self.get_all_distances(term_1)
+        all_distances = self.distances(term_1)
         term_1_index = self.vocab[term_1].index
         term_2_index = self.vocab[term_2].index
         closer_node_indices = np.where(all_distances < all_distances[term_2_index])[0]
@@ -889,7 +855,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             Node closest to `term_1` that is lower in the hierarchy than `term_1`.
             If there are no nodes lower in the hierarchy, None is returned.
         """
-        all_distances = self.get_all_distances(term_1)
+        all_distances = self.distances(term_1)
         all_norms = np.linalg.norm(self.syn0, axis=1)
         term_1_norm = all_norms[self.vocab[term_1].index]
         mask = term_1_norm >= all_norms
@@ -915,7 +881,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             If there are no nodes higher in the hierarchy, None is returned.
 
         """
-        all_distances = self.get_all_distances(term_1)
+        all_distances = self.distances(term_1)
         all_norms = np.linalg.norm(self.syn0, axis=1)
         term_1_norm = all_norms[self.vocab[term_1].index]
         mask = term_1_norm <= all_norms
@@ -1055,7 +1021,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             if vector_max_distance > self.max_distance:
                 self.max_distance = vector_max_distance
 
-    def get_all_distances(self, term):
+    def distances(self, term):
         """
         Return Poincare distances to all terms for given term, including itself.
         Distances are indexed by node indices.
@@ -1074,7 +1040,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         Examples
         --------
 
-          >>> model.get_all_distances('mammal.n.01')
+          >>> model.distances('mammal.n.01')
           np.array([2.1199, 2.0710, 9.5088, ...]
         """
         term_vector = self.word_vec(term)
@@ -1276,7 +1242,7 @@ class ReconstructionEvaluation(object):
                 continue
             item_relations = list(self.relations[item])
             item_term = self.embedding.index2word[item]
-            item_distances = self.embedding.get_all_distances(item_term)
+            item_distances = self.embedding.distances(item_term)
             positive_relation_ranks, avg_precision = self.get_positive_relation_ranks_and_avg_prec(item_distances, item_relations)
             ranks += positive_relation_ranks
             avg_precision_scores.append(avg_precision)
@@ -1392,7 +1358,7 @@ class LinkPredictionEvaluation(object):
             unknown_relations = list(self.relations['unknown'][item])
             known_relations = list(self.relations['known'][item])
             item_term = self.embedding.index2word[item]
-            item_distances = self.embedding.get_all_distances(item_term)
+            item_distances = self.embedding.distances(item_term)
             unknown_relation_ranks, avg_precision = self.get_unknown_relation_ranks_and_avg_prec(item_distances, unknown_relations, known_relations)
             ranks += unknown_relation_ranks
             avg_precision_scores.append(avg_precision)

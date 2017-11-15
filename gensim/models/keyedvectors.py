@@ -254,16 +254,26 @@ class KeyedVectorsBase(utils.SaveLoad):
         logger.info("loaded %s matrix from %s", result.syn0.shape, fname)
         return result
 
-    def similarity(self, w1, w2):
+    def similarity(self, word_1, word_2):
         """
         Compute similarity between vectors of two input words.
         To be implemented by child class.
         """
         raise NotImplementedError
 
-    def distance(self, w1, w2):
+    def distance(self, word_1, word_2):
         """
         Compute distance between vectors of two input words.
+        To be implemented by child class.
+        """
+        raise NotImplementedError
+
+    def distances(self, word_1, words_2):
+        """
+        Compute distance between vectors of `word_1` and all words in `words_2`.
+        If `words_2` is empty, distances between `word_1` and all words in vocab (including `word_1`) itself
+        are returned, in the same order as word indices.
+
         To be implemented by child class.
         """
         raise NotImplementedError
@@ -316,6 +326,41 @@ class KeyedVectorsBase(utils.SaveLoad):
 
     def __contains__(self, word):
         return word in self.vocab
+
+    def most_similar(self, word, topn=10):
+        """
+        Find the top-N most similar words to the given word, sorted in increasing order of distance.
+
+        Parameters
+        ----------
+
+        word : str
+            word for which similar words are to be found.
+        topn : int or None, optional
+            number of similar words to return, if `None`, returns all.
+
+        Returns
+        --------
+        list of tuples (str, float)
+            List of tuples containing (word, distance) pairs in increasing order of distance.
+
+        Examples
+        --------
+        >>> vectors.most_similar('lion.n.01')
+        [('lion_cub.n.01', 0.4484), ('lionet.n.01', 0.6552), ...]
+
+        """
+        all_distances = self.distances(word)
+        word_index = self.vocab[word].index
+        if not topn:
+            closest_indices = matutils.argsort(all_distances)
+        else:
+            closest_indices = matutils.argsort(all_distances, topn=1 + topn)
+        result = [
+            (self.index2word[index], float(all_distances[index]))
+            for index in closest_indices if index != word_index  # ignore the input term
+        ]
+        return result
 
 
 class EuclideanKeyedVectors(KeyedVectorsBase):

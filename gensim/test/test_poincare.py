@@ -230,6 +230,10 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertEqual(len(self.vectors.most_similar('dog.n.01', topn=5)), 5)
         self.assertEqual(len(self.vectors.most_similar('dog.n.01', topn=10)), 10)
 
+        predicted = self.vectors.most_similar('dog.n.01', topn=None)
+        self.assertEqual(len(predicted), len(self.vectors.vocab) - 1)
+        self.assertEqual(predicted[-1][0], 'gallant_fox.n.01')
+
     def test_distance(self):
         self.assertTrue(np.allclose(self.vectors.distance('dog.n.01', 'mammal.n.01'), 4.5278745))
         self.assertEqual(self.vectors.distance('dog.n.01', 'dog.n.01'), 0)
