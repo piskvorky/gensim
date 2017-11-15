@@ -25,7 +25,7 @@ try:
 except ImportError:
     autograd_installed = False
 
-from gensim.models.poincare import PoincareRelations, PoincareModel
+from gensim.models.poincare import PoincareRelations, PoincareModel, PoincareKeyedVectors
 from gensim.test.utils import datapath
 
 
@@ -209,6 +209,51 @@ class TestPoincareModel(unittest.TestCase):
             os.unlink(testfile())
         except OSError:
             pass
+
+
+class TestPoincareKeyedVectors(unittest.TestCase):
+    def setUp(self):
+        self.vectors = PoincareKeyedVectors.load_word2vec_format(datapath('poincare_vectors.bin'), binary=True)
+
+    def test_most_similar(self):
+        expected = [
+            'canine.n.02',
+            'hunting_dog.n.01',
+            'carnivore.n.01',
+            'placental.n.01',
+            'mammal.n.01'
+        ]
+        predicted = [result[0] for result in self.vectors.most_similar('dog.n.01', topn=5)]
+        self.assertEqual(expected, predicted)
+
+    def test_most_similar_topn(self):
+        self.assertEqual(len(self.vectors.most_similar('dog.n.01', topn=5)), 5)
+        self.assertEqual(len(self.vectors.most_similar('dog.n.01', topn=10)), 10)
+
+    def test_distance(self):
+        self.assertTrue(np.allclose(self.vectors.distance('dog.n.01', 'mammal.n.01'), 4.5278745))
+        self.assertEqual(self.vectors.distance('dog.n.01', 'dog.n.01'), 0)
+
+    def test_closest_child(self):
+        self.assertEqual(self.vectors.closest_child('dog.n.01'), 'terrier.n.01')
+        self.assertEqual(self.vectors.closest_child('harbor_porpoise.n.01'), None)
+
+    def test_closest_parent(self):
+        self.assertEqual(self.vectors.closest_parent('dog.n.01'), 'canine.n.02')
+        self.assertEqual(self.vectors.closest_parent('mammal.n.01'), None)
+
+    def test_ancestors(self):
+        expected = ['canine.n.02', 'carnivore.n.01', 'placental.n.01', 'mammal.n.01']
+        self.assertEqual(self.vectors.ancestors('dog.n.01'), expected)
+        expected = []
+        self.assertEqual(self.vectors.ancestors('mammal.n.01'), expected)
+
+    def test_descendants(self):
+        expected = [
+            'terrier.n.01', 'sporting_dog.n.01', 'spaniel.n.01', 'water_spaniel.n.01', 'irish_water_spaniel.n.01'
+        ]
+        self.assertEqual(self.vectors.descendants('dog.n.01'), expected)
+        self.assertEqual(self.vectors.descendants('dog.n.01', max_depth=3), expected[:3])
 
 
 if __name__ == '__main__':
