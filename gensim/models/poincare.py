@@ -872,14 +872,17 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Returns
         -------
-        str
+        str or None
             Node closest to `term_1` that is lower in the hierarchy than `term_1`.
-
+            If there are no nodes lower in the hierarchy, None is returned.
         """
         all_distances = self.get_all_distances(term_1)
         all_norms = np.linalg.norm(self.syn0, axis=1)
         term_1_norm = all_norms[self.vocab[term_1].index]
-        all_distances = np.ma.array(all_distances, mask=term_1_norm >= all_norms)
+        mask = term_1_norm >= all_norms
+        if mask.all():  # No nodes lower in the hierarchy
+            return None
+        all_distances = np.ma.array(all_distances, mask=mask)
         closest_child_index = np.ma.argmin(all_distances)
         return self.index2word[closest_child_index]
 
