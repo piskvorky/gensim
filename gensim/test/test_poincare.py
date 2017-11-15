@@ -108,8 +108,10 @@ class TestPoincareModel(unittest.TestCase):
         self.assertEqual(model.kv.syn0.shape, (7, 20))
 
     def test_vector_dtype(self):
-        """Tests whether vectors are initialized with the correct dtype."""
-        model = PoincareModel(self.data, dtype=np.float32)
+        """Tests whether vectors have the correct dtype before and after training."""
+        model = PoincareModel(self.data_large, dtype=np.float32, burn_in=0, negative=3)
+        self.assertEqual(model.kv.syn0.dtype, np.float32)
+        model.train(epochs=1)
         self.assertEqual(model.kv.syn0.dtype, np.float32)
 
     def test_training(self):

@@ -97,6 +97,7 @@ class PoincareModel(utils.SaveLoad):
             Range within which the vectors are randomly initialized.
         dtype : numpy.dtype
             The numpy dtype to use for the vectors in the model (numpy.float64, numpy.float32 etc).
+            Using lower precision floats may be useful in increasing training speed and reducing memory usage.
         seed : int, optional
             Seed for random to ensure reproducibility.
 
