@@ -51,7 +51,7 @@ from scipy.stats import spearmanr
 from smart_open import smart_open
 
 from gensim import utils, matutils
-from gensim.models.keyedvectors import KeyedVectors, Vocab
+from gensim.models.keyedvectors import KeyedVectorsBase, Vocab
 
 
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ class PoincareModel(utils.SaveLoad):
     """Class for training, using and evaluating Poincare Embeddings.
 
     The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in the word2vec
-    format via `wv.save_word2vec_format()` and `KeyedVectors.load_word2vec_format()`.
+    format via `model.kv.save_word2vec_format()` and `PoincareKeyedVectors.load_word2vec_format()`.
 
     Note that training cannot be resumed from a model loaded via `load_word2vec_format`, if you wish to train further,
     use `save()` and `load()` methods instead.
@@ -741,7 +741,7 @@ class PoincareBatch(object):
         self._loss_computed = True
 
 
-class PoincareKeyedVectors(KeyedVectors):
+class PoincareKeyedVectors(KeyedVectorsBase):
     """Class to contain vectors and vocab for the PoincareModel training class.
 
     Used to perform operations on the vectors such as vector lookup, distance etc.
@@ -776,7 +776,7 @@ class PoincareKeyedVectors(KeyedVectors):
             )
         )
 
-    def most_similar(self, term, topn=10, restrict_vocab=None):
+    def most_similar(self, term, topn=10):
         """
         Find the top-N most similar terms to the given term, sorted in increasing order of Poincare distance.
 
@@ -787,10 +787,6 @@ class PoincareKeyedVectors(KeyedVectors):
             term for which similar terms are to be found.
         topn : int or None, optional
             number of similar terms to return, if `None`, returns all.
-        restrict_vocab : int or None, optional
-            limits the range of vectors which are searched for most-similar values.
-            For example, restrict_vocab=10000 would only check the first 10000 vectors in the vocabulary order.
-            (This may be meaningful if you've sorted the vocabulary by descending frequency.)
 
         Returns
         --------
@@ -799,7 +795,7 @@ class PoincareKeyedVectors(KeyedVectors):
 
         Examples
         --------
-        >>> model.wv.most_similar('lion.n.01')
+        >>> model.kv.most_similar('lion.n.01')
         [('lion_cub.n.01', 0.4484), ('lionet.n.01', 0.6552), ...]
 
         """

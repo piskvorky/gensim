@@ -103,27 +103,18 @@ class Vocab(object):
         return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
 
 
-class KeyedVectors(utils.SaveLoad):
+
+class KeyedVectorsBase(utils.SaveLoad):
     """
-    Class to contain vectors and vocab for the Word2Vec training class and other w2v methods not directly
-    involved in training such as most_similar()
+    Base class to contain vectors and vocab for any set of vectors which are each associated with a key.
+
     """
 
     def __init__(self):
         self.syn0 = []
-        self.syn0norm = None
         self.vocab = {}
         self.index2word = []
         self.vector_size = None
-
-    @property
-    def wv(self):
-        return self
-
-    def save(self, *args, **kwargs):
-        # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
-        super(KeyedVectors, self).save(*args, **kwargs)
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
         """
@@ -262,6 +253,75 @@ class KeyedVectors(utils.SaveLoad):
 
         logger.info("loaded %s matrix from %s", result.syn0.shape, fname)
         return result
+
+    def word_vec(self, word):
+        """
+        Accept a single word as input.
+        Returns the word's representations in vector space, as a 1D numpy array.
+
+        Example::
+
+          >>> trained_model['office']
+          array([ -1.40128313e-02, ...])
+
+        """
+        if word in self.vocab:
+            result = self.syn0[self.vocab[word].index]
+            result.setflags(write=False)
+            return result
+        else:
+            raise KeyError("word '%s' not in vocabulary" % word)
+
+    def __getitem__(self, words):
+        """
+        Accept a single word or a list of words as input.
+
+        If a single word: returns the word's representations in vector space, as
+        a 1D numpy array.
+
+        Multiple words: return the words' representations in vector space, as a
+        2d numpy array: #words x #vector_size. Matrix rows are in the same order
+        as in input.
+
+        Example::
+
+          >>> trained_model['office']
+          array([ -1.40128313e-02, ...])
+
+          >>> trained_model[['office', 'products']]
+          array([ -1.40128313e-02, ...]
+                [ -1.70425311e-03, ...]
+                 ...)
+
+        """
+        if isinstance(words, string_types):
+            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
+            return self.word_vec(words)
+
+        return vstack([self.word_vec(word) for word in words])
+
+    def __contains__(self, word):
+        return word in self.vocab
+
+
+class EuclideanKeyedVectors(KeyedVectorsBase):
+    """
+    Class to contain vectors and vocab for the Word2Vec training class and other w2v methods not directly
+    involved in training such as most_similar()
+    """
+
+    def __init__(self):
+        super(EuclideanKeyedVectors, self).__init__()
+        self.syn0norm = None
+
+    @property
+    def wv(self):
+        return self
+
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
+        super(EuclideanKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
         """
@@ -574,37 +634,6 @@ class KeyedVectors(utils.SaveLoad):
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words))[0][1]
 
-    def __getitem__(self, words):
-        """
-        Accept a single word or a list of words as input.
-
-        If a single word: returns the word's representations in vector space, as
-        a 1D numpy array.
-
-        Multiple words: return the words' representations in vector space, as a
-        2d numpy array: #words x #vector_size. Matrix rows are in the same order
-        as in input.
-
-        Example::
-
-          >>> trained_model['office']
-          array([ -1.40128313e-02, ...])
-
-          >>> trained_model[['office', 'products']]
-          array([ -1.40128313e-02, ...]
-                [ -1.70425311e-03, ...]
-                 ...)
-
-        """
-        if isinstance(words, string_types):
-            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
-            return self.word_vec(words)
-
-        return vstack([self.word_vec(word) for word in words])
-
-    def __contains__(self, word):
-        return word in self.vocab
-
     def similarity(self, w1, w2):
         """
         Compute cosine similarity between two words.
@@ -873,3 +902,6 @@ class KeyedVectors(utils.SaveLoad):
             weights=[weights], trainable=train_embeddings
         )
         return layer
+
+# For backward compatibility
+KeyedVectors = EuclideanKeyedVectors
