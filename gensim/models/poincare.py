@@ -180,6 +180,7 @@ class PoincareModel(utils.SaveLoad):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.kv.index2word), self.size)
         self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
+        self.kv.precompute_max_distance()
 
     def _get_candidate_negatives(self):
         """Returns candidate negatives of size `self.negative` from the negative examples buffer.
@@ -744,6 +745,12 @@ class PoincareKeyedVectors(KeyedVectorsBase):
     Used to perform operations on the vectors such as vector lookup, distance etc.
 
     """
+
+    def __init__(self):
+        super(PoincareKeyedVectors, self).__init__()
+        self.max_distance = 0
+        self.precompute_max_distance()
+
     @staticmethod
     def poincare_dists(vector_1, vectors_all):
         """
@@ -772,6 +779,12 @@ class PoincareKeyedVectors(KeyedVectorsBase):
                 (euclidean_dists ** 2) / ((1 - norm ** 2) * (1 - all_norms ** 2))
             )
         )
+
+    @classmethod
+    def load_word2vec_format(cls, *args, **kwargs):
+        vectors = super(PoincareKeyedVectors, cls).load_word2vec_format(*args, **kwargs)
+        vectors.precompute_max_distance()
+        return vectors
 
     def most_similar(self, term, topn=10):
         """
@@ -1004,6 +1017,43 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         vector_1 = self.word_vec(term_1)
         vector_2 = self.word_vec(term_2)
         return self.poincare_dists(vector_1, vector_2[np.newaxis, :])[0]
+
+    def similarity(self, term_1, term_2):
+        """
+        Return similarity based on Poincare distance between two terms.
+
+        Parameters
+        ----------
+        term_1 : str
+            Input term.
+        term_2 : str
+            Input term.
+
+        Returns
+        -------
+        float
+            Similarity between the vectors for `term_1` and `term_2` (between 0 and 1).
+
+        Examples
+        --------
+
+        >>> model.similarity('mammal.n.01', 'carnivore.n.01')
+        0.73
+
+        Notes
+        -----
+        Raises KeyError if either of `term_1` and `term_2` is absent from vocab.
+
+        """
+        distance = self.distance(term_1, term_2)
+        return 1 - distance / self.max_distance
+
+    def precompute_max_distance(self):
+        for vector in self.syn0:
+            vector_distances = self.poincare_dists(vector, self.syn0)
+            vector_max_distance = np.max(vector_distances)
+            if vector_max_distance > self.max_distance:
+                self.max_distance = vector_max_distance
 
     def get_all_distances(self, term):
         """

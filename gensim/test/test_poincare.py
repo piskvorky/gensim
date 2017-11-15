@@ -255,6 +255,10 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertEqual(self.vectors.descendants('dog.n.01'), expected)
         self.assertEqual(self.vectors.descendants('dog.n.01', max_depth=3), expected[:3])
 
+    def test_similarity(self):
+        self.assertTrue(np.allclose(self.vectors.similarity('dog.n.01', 'dog.n.01'), 1))
+        self.assertTrue(np.allclose(self.vectors.similarity('dog.n.01', 'mammal.n.01'), 0.728260))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

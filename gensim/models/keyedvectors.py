@@ -254,6 +254,20 @@ class KeyedVectorsBase(utils.SaveLoad):
         logger.info("loaded %s matrix from %s", result.syn0.shape, fname)
         return result
 
+    def similarity(self, w1, w2):
+        """
+        Compute similarity between vectors of two input words.
+        To be implemented by child class.
+        """
+        raise NotImplementedError
+
+    def distance(self, w1, w2):
+        """
+        Compute distance between vectors of two input words.
+        To be implemented by child class.
+        """
+        raise NotImplementedError
+
     def word_vec(self, word):
         """
         Accept a single word as input.
@@ -633,6 +647,21 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words))[0][1]
+
+    def distance(self, w1, w2):
+        """
+        Compute cosine distance between two words.
+
+        Example::
+
+          >>> trained_model.distance('woman', 'man')
+          0.34
+
+          >>> trained_model.distance('woman', 'woman')
+          0.0
+
+        """
+        return 1 - self.similarity(w1, w2)
 
     def similarity(self, w1, w2):
         """
