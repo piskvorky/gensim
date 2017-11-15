@@ -121,8 +121,8 @@ def log_ratio_measure(
 
     Parameters
     ----------
-    segmented_topics : list
-        Output from the segmentation module of the segmented topics. Is a list of list of tuples.
+    segmented_topics : list of (list of tuples)
+        Output from the segmentation module of the segmented topics.
     accumulator: list
         word occurrence accumulator from probability_estimation.
     with_std : bool
