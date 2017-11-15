@@ -1021,31 +1021,41 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             if vector_max_distance > self.max_distance:
                 self.max_distance = vector_max_distance
 
-    def distances(self, term):
+    def distances(self, word_1, words_2=[]):
         """
-        Return Poincare distances to all terms for given term, including itself.
-        Distances are indexed by node indices.
+        Return Poincare distances to all words in `words_2` from given `word_1`.
+        If `words_2` is empty or None, distances between `word_1` and all words in vocab (including `word_1`) itself
+        are returned, in the same order as word indices.
 
         Parameters
         ----------
-        term : str
-            term from which distances are to be found.
+        word_1 : str
+            Word from which distances are to be computed.
+
+        words_2 : iterable(str) or None
+            For each word in `words_2` distance from `word_1` is computed.
+            If None or empty, distance of `word_1` from all words in vocab is computed (including itself).
 
         Returns
         -------
         numpy.array
-            Array containing distances to all terms from input `term`, indexed by node indices.
-            e.g. distances[0] is the distance to node with index 0 from node with key `term`.
+            Array containing distances to all words in `words_2` from input `word_1`, indexed by node indices.
+            e.g. distances[0] is the distance to node with index 0 from node with key `word_1`.
 
         Examples
         --------
 
           >>> model.distances('mammal.n.01')
           np.array([2.1199, 2.0710, 9.5088, ...]
+
         """
-        term_vector = self.word_vec(term)
-        all_vectors = self.syn0
-        return self.poincare_dists(term_vector, all_vectors)
+        word_1_vector = self.word_vec(word_1)
+        if not words_2:
+            word_2_vectors = self.syn0
+        else:
+            word_2_indices = [self.vocab[word].index for word in words_2]
+            word_2_vectors = self.syn0[word_2_indices]
+        return self.poincare_dists(word_1_vector, word_2_vectors)
     # TODO: Add other KeyedVector supported methods.
 
 

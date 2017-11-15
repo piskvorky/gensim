@@ -238,6 +238,14 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(self.vectors.distance('dog.n.01', 'mammal.n.01'), 4.5278745))
         self.assertEqual(self.vectors.distance('dog.n.01', 'dog.n.01'), 0)
 
+    def test_distances(self):
+        distances = self.vectors.distances('dog.n.01', ['mammal.n.01', 'dog.n.01'])
+        self.assertTrue(np.allclose(distances, [4.5278745, 0]))
+
+        distances = self.vectors.distances('dog.n.01')
+        self.assertEqual(len(distances), len(self.vectors.vocab))
+        self.assertTrue(np.allclose(distances[-1], 10.04756))
+
     def test_closest_child(self):
         self.assertEqual(self.vectors.closest_child('dog.n.01'), 'terrier.n.01')
         self.assertEqual(self.vectors.closest_child('harbor_porpoise.n.01'), None)
