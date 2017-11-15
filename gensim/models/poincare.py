@@ -69,7 +69,7 @@ class PoincareModel(utils.SaveLoad):
 
     """
     def __init__(self, train_data, size=50, alpha=0.1, negative=10, workers=1, epsilon=1e-5,
-                 burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), seed=0):
+                 burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), dtype=np.float64, seed=0):
         """Initialize and train a Poincare embedding model from an iterable of relations.
 
         Parameters
@@ -95,6 +95,8 @@ class PoincareModel(utils.SaveLoad):
             Learning rate for burn-in initialization, ignored if `burn_in` is 0.
         init_range : 2-tuple (float, float)
             Range within which the vectors are randomly initialized.
+        dtype : numpy.dtype
+            The numpy dtype to use for the vectors in the model (numpy.float64, numpy.float32 etc).
         seed : int, optional
             Seed for random to ensure reproducibility.
 
@@ -127,6 +129,7 @@ class PoincareModel(utils.SaveLoad):
         self.epsilon = epsilon
         self.burn_in = burn_in
         self._burn_in_done = False
+        self.dtype = dtype
         self.seed = seed
         self._np_random = np_random.RandomState(seed)
         self.init_range = init_range
@@ -172,7 +175,7 @@ class PoincareModel(utils.SaveLoad):
     def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.kv.index2word), self.size)
-        self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape)
+        self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
 
     def _get_candidate_negatives(self):
         """Returns candidate negatives of size `self.negative` from the negative examples buffer.
