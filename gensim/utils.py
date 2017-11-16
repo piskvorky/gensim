@@ -602,7 +602,9 @@ def is_corpus(obj):
             doc1 = next(iter(obj))  # empty corpus is resolved to False here
         if len(doc1) == 0:  # sparse documents must have a __len__ function (list, tuple...)
             return True, obj  # the first document is empty=>assume this is a corpus
-        id1, val1 = next(iter(doc1))  # if obj is a 1D numpy array(scalars) instead of 2-tuples, it resolves to False here
+
+        # if obj is a 1D numpy array(scalars) instead of 2-tuples, it resolves to False here
+        id1, val1 = next(iter(doc1))
         id1, val1 = int(id1), float(val1)  # must be a 2-tuple (integer, float)
     except Exception:
         return False, obj
@@ -757,7 +759,8 @@ def decode_htmlentities(text):
     """
     Decode HTML entities in text, coded as hex, decimal or named.
 
-    Adapted from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
+    Adapted
+    from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
 
     >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
     >>> print(decode_htmlentities(u).encode('UTF-8'))
@@ -1055,7 +1058,9 @@ def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
 
     """
     if not has_pattern():
-        raise ImportError("Pattern library is not installed. Pattern library is needed in order to use lemmatize function")
+        raise ImportError(
+            "Pattern library is not installed. Pattern library is needed in order to use lemmatize function"
+        )
     from pattern.en import parse
 
     if light:
@@ -1112,7 +1117,10 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
         if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
-    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)", old_len - len(vocab), min_reduce, old_len, len(vocab))
+    logger.info(
+        "pruned out %i tokens with count <=%i (before %i, after %i)",
+        old_len - len(vocab), min_reduce, old_len, len(vocab)
+    )
     return result
 
 

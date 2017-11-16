@@ -78,7 +78,11 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
     def transform(self, docs):
         """
         Return the vector representations for the input documents.
-        The input `docs` should be a list of lists like : [ ['calculus', 'mathematical'], ['geometry', 'operations', 'curves'] ]
+        The input `docs` should be a list of lists like :
+        [
+            ['calculus', 'mathematical'],
+            ['geometry', 'operations', 'curves']
+        ]
         or a single document like : ['calculus', 'mathematical']
         """
         if self.gensim_model is None:

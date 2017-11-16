@@ -37,8 +37,10 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
         """
         Fit the model according to the given training data.
         """
-        self.gensim_model = TfidfModel(corpus=X, id2word=self.id2word, dictionary=self.dictionary,
-            wlocal=self.wlocal, wglobal=self.wglobal, normalize=self.normalize)
+        self.gensim_model = TfidfModel(
+            corpus=X, id2word=self.id2word, dictionary=self.dictionary,
+            wlocal=self.wlocal, wglobal=self.wglobal, normalize=self.normalize
+        )
         return self
 
     def transform(self, docs):

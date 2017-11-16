@@ -31,7 +31,8 @@ If you have the `pattern` package installed, this script will use a fancy
 lemmatization to get a lemma of each token (instead of plain alphabetic
 tokenizer). The package is available at https://github.com/clips/pattern .
 
-Example: python -m gensim.scripts.make_wikicorpus ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en
+Example:
+  python -m gensim.scripts.make_wikicorpus ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki
 """
 
 
