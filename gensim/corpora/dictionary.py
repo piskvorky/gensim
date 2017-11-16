@@ -188,7 +188,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         """
         if isinstance(document, string_types):
             raise TypeError("doc2idx expects an array of unicode tokens on input, not a single string")
- 
+
         token2id = self.token2id
 
         list_word_idx = list()
