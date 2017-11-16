@@ -176,12 +176,12 @@ class Dictionary(utils.SaveLoad, Mapping):
     def doc2idx(self, document, unk_wrd_idx=0):
         """
         Convert `document` (a list of words) into a list of indexes = list
-        of `token_id`. Each word is assumed to be a **tokenized and normalized** string (either unicode or utf8-encoded)
+        of `token_id`. Each word is assumed to be a **tokenized and normalized** string
+        (either unicode or utf8-encoded).
         No further preprocessing is done on the words in `document`; apply tokenization, stemming etc. before calling
         this method.
 
-        Replace all unknown ie, words not in the dictionary presently with the index as set via `unk_wrd_idx`, defaults
-        to 0.
+        Replace all unknown i.e, words not in the dictionary with the index as set via `unk_wrd_idx`, defaults to 0.
 
         This function is `const`, aka read-only
         """
