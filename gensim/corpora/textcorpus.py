@@ -139,7 +139,8 @@ class TextCorpus(interfaces.CorpusABC):
                 remove, or replace tokens, or do nothing at all. The default token filters
                 remove tokens less than 3 characters long and remove stopwords using the list
                 in `gensim.parsing.preprocessing.STOPWORDS`.
-            mode (bool): True to return BoW format (default) else return index vector as per the `dictionary` if False
+            bow_format (bool): True to return BoW format (default) else return index vector as per
+                the `dictionary` if False
             unk_wrd_idx (int): index to represent unknown words, i.e, words not in the `dictionary`
         """
         self.input = input
