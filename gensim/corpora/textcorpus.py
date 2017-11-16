@@ -76,8 +76,8 @@ class TextCorpus(interfaces.CorpusABC):
     this class via subclassing or by construction with different preprocessing arguments.
 
     The `iter` method converts the lists of tokens produced by `get_texts` to BoW format
-    if `bow_format` is set to True or to an index vector if `bow_format` is set to False using
-    `Dictionary.doc2bow`.
+    if `bow_format` is set to True (default) using `Dictionary.doc2bow` or to an index vector
+    if `bow_format` is set to False using `Dictionary.doc2idx`.
     `get_texts` does the following:
 
     1.  Calls `getstream` to get a generator over the texts. It yields each document in
