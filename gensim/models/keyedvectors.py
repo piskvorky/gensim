@@ -271,7 +271,7 @@ class KeyedVectorsBase(utils.SaveLoad):
     def distances(self, word_1, words_2):
         """
         Compute distance between vectors of `word_1` and all words in `words_2`.
-        If `words_2` is empty, distances between `word_1` and all words in vocab (including `word_1`) itself
+        If `words_2` is empty or None, distances between `word_1` and all words in vocab (including `word_1`) itself
         are returned, in the same order as word indices.
 
         To be implemented by child class.
@@ -327,7 +327,7 @@ class KeyedVectorsBase(utils.SaveLoad):
     def __contains__(self, word):
         return word in self.vocab
 
-    def most_similar(self, word, topn=10):
+    def most_similar(self, word, topn=10, restrict_vocab=None):
         """
         Find the top-N most similar words to the given word, sorted in increasing order of distance.
 
@@ -338,6 +338,10 @@ class KeyedVectorsBase(utils.SaveLoad):
             word for which similar words are to be found.
         topn : int or None, optional
             number of similar words to return, if `None`, returns all.
+        restrict_vocab : int or None, optional
+            Optional integer which limits the range of vectors which are searched for most-similar values.
+            For example, restrict_vocab=10000 would only check the first 10000 word vectors in the vocabulary order.
+            This may be meaningful if vocabulary is sorted by descending frequency.
 
         Returns
         --------
@@ -350,7 +354,12 @@ class KeyedVectorsBase(utils.SaveLoad):
         [('lion_cub.n.01', 0.4484), ('lionet.n.01', 0.6552), ...]
 
         """
-        all_distances = self.distances(word)
+        if not restrict_vocab:
+            all_distances = self.distances(word)
+        else:
+            words_to_use = self.index2word[:restrict_vocab]
+            all_distances = self.distances(word, words_to_use)
+
         word_index = self.vocab[word].index
         if not topn:
             closest_indices = matutils.argsort(all_distances)

@@ -234,6 +234,17 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertEqual(len(predicted), len(self.vectors.vocab) - 1)
         self.assertEqual(predicted[-1][0], 'gallant_fox.n.01')
 
+    def test_most_similar_raises_keyerror(self):
+        """Test most_similar raises KeyError when input is out of vocab."""
+        with self.assertRaises(KeyError):
+            self.vectors.most_similar('not_in_vocab')
+
+    def test_most_similar_restrict_vocab(self):
+        """Test most_similar returns handles restrict_vocab correctly."""
+        expected = set(self.vectors.index2word[:5])
+        predicted = set(result[0] for result in self.vectors.most_similar('dog.n.01', topn=5, restrict_vocab=5))
+        self.assertEqual(expected, predicted)
+
     def test_distance(self):
         self.assertTrue(np.allclose(self.vectors.distance('dog.n.01', 'mammal.n.01'), 4.5278745))
         self.assertEqual(self.vectors.distance('dog.n.01', 'dog.n.01'), 0)
