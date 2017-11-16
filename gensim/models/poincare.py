@@ -1009,6 +1009,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         Notes
         -----
         Raises KeyError if either of `term_1` and `term_2` is absent from vocab.
+        Similarity lies between 0 and 1.
 
         """
         distance = self.distance(term_1, term_2)
@@ -1039,14 +1040,21 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         Returns
         -------
         numpy.array
-            Array containing distances to all words in `words_2` from input `word_1`, indexed by node indices.
-            e.g. distances[0] is the distance to node with index 0 from node with key `word_1`.
+            Array containing distances to all words in `words_2` from input `word_1`, in the same order as `words_2`.
 
         Examples
         --------
 
-          >>> model.distances('mammal.n.01')
-          np.array([2.1199, 2.0710, 9.5088, ...]
+        >>> model.distances('mammal.n.01', ['carnivore.n.01', 'dog.n.01'])
+        np.array([2.1199, 2.0710]
+
+        >>> model.distances('mammal.n.01')
+        np.array([0.43753847, 3.67973852, ..., 6.66172886])
+
+        Notes
+        -----
+        Raises KeyError if either `word_1` or any word in `words_2` is absent from vocab.
+        Similarity lies between 0 and 1.
 
         """
         word_1_vector = self.word_vec(word_1)
@@ -1056,7 +1064,44 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             word_2_indices = [self.vocab[word].index for word in words_2]
             word_2_vectors = self.syn0[word_2_indices]
         return self.poincare_dists(word_1_vector, word_2_vectors)
-    # TODO: Add other KeyedVector supported methods.
+
+    def similarities(self, word_1, words_2=[]):
+        """
+        Return similarity of `word_1` to all words in `words_2`.
+        If `words_2` is empty or None, similarities between `word_1` and all words in vocab (including `word_1`) itself
+        are returned, in the same order as word indices.
+
+        Parameters
+        ----------
+        word_1 : str
+            Word for which similarities are to be computed.
+
+        words_2 : iterable(str) or None
+            For each word in `words_2` similarity to `word_1` is computed.
+            If None or empty, similarity of `word_1` to all words in vocab is computed (including itself).
+
+        Returns
+        -------
+        numpy.array
+            Array containing similarity of `word_1` to all words in `words_2`, in the same order as `words_2`.
+
+        Examples
+        --------
+
+        >>> model.similarities('mammal.n.01', ['carnivore.n.01', 'dog.n.01'])
+        np.array([0.63, 0.46]
+
+        >>> model.similarities('mammal.n.01')
+        np.array([0.97374117, 0.77916104, ..., 0.60019732])
+
+        Notes
+        -----
+        Raises KeyError if either `word_1` or any word in `words_2` is absent from vocab.
+        Similarity values lie between 0 and 1.
+
+        """
+        distances = self.distances(word_1, words_2)
+        return 1 - distances / self.max_distance
 
 
 class PoincareRelations(object):

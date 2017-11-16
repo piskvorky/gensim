@@ -271,6 +271,13 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(self.vectors.similarity('dog.n.01', 'dog.n.01'), 1))
         self.assertTrue(np.allclose(self.vectors.similarity('dog.n.01', 'mammal.n.01'), 0.728260))
 
+    def test_similarities(self):
+        similarities = self.vectors.similarities('dog.n.01', ['mammal.n.01', 'dog.n.01'])
+        self.assertTrue(np.allclose(similarities, [0.7282602, 1]))
+
+        similarities = self.vectors.similarities('dog.n.01')
+        self.assertEqual(len(similarities), len(self.vectors.vocab))
+        self.assertTrue(np.allclose(similarities[-1], 0.39699667))
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
