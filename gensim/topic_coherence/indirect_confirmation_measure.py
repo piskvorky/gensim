@@ -4,9 +4,10 @@
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-r"""
-This module contains functions to compute confirmation on a pair of words or word subsets.
+r"""This module contains functions to compute confirmation on a pair of words or word subsets.
 
+Notes
+-----
 The advantage of indirect confirmation measure is that it computes similarity of words in W' and
 W* with respect to direct confirmations to all words. Eg. Suppose x and z are both competing
 brands of cars, which semantically support each other. However, both brands are seldom mentioned
@@ -25,6 +26,7 @@ where s_sim can be cosine, dice or jaccard similarity and
         \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
 Here 'm' is the direct confirmation measure used.
+
 """
 
 import itertools
@@ -126,24 +128,45 @@ def cosine_similarity(
         \vec{V}^{\,}_{m,\gamma}(W') =
             \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
-    Args:
-        segmented_topics: Output from the segmentation module of the
-            segmented topics. Is a list of list of tuples.
-        accumulator: Output from the probability_estimation module. Is an
-            accumulator of word occurrences (see text_analysis module).
-        topics: Topics obtained from the trained topic model.
-        measure (str): Direct confirmation measure to be used. Supported
-            values are "nlr" (normalized log ratio).
-        gamma: Gamma value for computing W', W* vectors; default is 1.
-        with_std (bool): True to also include standard deviation across topic
-            segment sets in addition to the mean coherence for each topic;
-            default is False.
-        with_support (bool): True to also include support across topic segments.
-            The support is defined as the number of pairwise similarity
-            comparisons were used to compute the overall topic coherence.
+    Parameters
+    ----------
+    segmented_topics: list of (list of tuples)
+        Output from the segmentation module of the segmented topics.
+    accumulator: accumulator of word occurrences (see text_analysis module).
+        Output from the probability_estimation module. Is an topics: Topics obtained from the trained topic model.
+    measure : str
+        Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
+    gamma:
+        Gamma value for computing W', W* vectors; default is 1.
+    with_std : bool
+        True to also include standard deviation across topic segment sets in addition to the mean coherence
+        for each topic; default is False.
+    with_support : bool
+        True to also include support across topic segments. The support is defined as the number of pairwise similarity
+        comparisons were used to compute the overall topic coherence.
 
-    Returns:
-        list: of indirect cosine similarity measure for each topic.
+    Returns
+    -------
+    list
+        List of indirect cosine similarity measure for each topic.
+
+    Examples
+    --------
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>> from gensim.topic_coherence import indirect_confirmation_measure,text_analysis
+    >>> import numpy as np
+    >>> dictionary = Dictionary()
+    >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
+    >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
+    >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
+    >>> accumulator._num_docs = 5
+    >>> topics = [np.array([1, 2])]
+    >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
+    >>> gamma = 1
+    >>> measure = 'nlr'
+    >>> obtained = indirect_confirmation_measure.cosine_similarity(segmentation, accumulator, topics, measure, gamma)
+    >>> print obtained[0]
+    0.623018926945
 
     """
     context_vectors = ContextVectorComputer(measure, topics, accumulator, gamma)

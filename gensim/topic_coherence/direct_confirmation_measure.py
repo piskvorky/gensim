@@ -82,12 +82,12 @@ def aggregate_segment_sims(segment_sims, with_std, with_support):
 
     Parameters
     ----------
-        segment_sims : iterable
-            floating point similarity values to aggregate.
-        with_std : bool
-            Set to True to include standard deviation.
-        with_support : bool
-            Set to True to include number of elements in `segment_sims` as a statistic in the results returned.
+    segment_sims : iterable
+        floating point similarity values to aggregate.
+    with_std : bool
+        Set to True to include standard deviation.
+    with_support : bool
+        Set to True to include number of elements in `segment_sims` as a statistic in the results returned.
 
     Returns
     -------
@@ -124,7 +124,7 @@ def log_ratio_measure(
     segmented_topics : list of (list of tuples)
         Output from the segmentation module of the segmented topics.
     accumulator: list
-        word occurrence accumulator from probability_estimation.
+        Word occurrence accumulator from probability_estimation.
     with_std : bool
         True to also include standard deviation across topic segment
         sets in addition to the mean coherence for each topic; default is False.
