@@ -25,6 +25,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.vectors = EuclideanKeyedVectors.load_word2vec_format(datapath('euclidean_vectors.bin'), binary=True)
 
     def test_most_similar(self):
+        """Test most_similar returns expected results."""
         expected = [
             'conflict',
             'administration',
@@ -36,6 +37,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.assertEqual(expected, predicted)
 
     def test_most_similar_topn(self):
+        """Test most_similar returns correct results when `topn` is specified."""
         self.assertEqual(len(self.vectors.most_similar('war', topn=5)), 5)
         self.assertEqual(len(self.vectors.most_similar('war', topn=10)), 10)
 
@@ -43,10 +45,12 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.assertEqual(len(predicted), len(self.vectors.vocab))
 
     def test_most_similar_raises_keyerror(self):
+        """Test most_similar raises KeyError when input is out of vocab."""
         with self.assertRaises(KeyError):
             self.vectors.most_similar('not_in_vocab')
 
     def test_most_similar_restrict_vocab(self):
+        """Test most_similar returns handles restrict_vocab correctly."""
         expected = set(self.vectors.index2word[:5])
         predicted = set(result[0] for result in self.vectors.most_similar('war', topn=5, restrict_vocab=5))
         self.assertEqual(expected, predicted)

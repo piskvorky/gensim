@@ -216,6 +216,7 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.vectors = PoincareKeyedVectors.load_word2vec_format(datapath('poincare_vectors.bin'), binary=True)
 
     def test_most_similar(self):
+        """Test most_similar returns expected results."""
         expected = [
             'canine.n.02',
             'hunting_dog.n.01',
@@ -227,6 +228,7 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertEqual(expected, predicted)
 
     def test_most_similar_topn(self):
+        """Test most_similar returns correct results when `topn` is specified."""
         self.assertEqual(len(self.vectors.most_similar('dog.n.01', topn=5)), 5)
         self.assertEqual(len(self.vectors.most_similar('dog.n.01', topn=10)), 10)
 
@@ -246,10 +248,12 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertEqual(expected, predicted)
 
     def test_distance(self):
+        """Test that distance returns expected values."""
         self.assertTrue(np.allclose(self.vectors.distance('dog.n.01', 'mammal.n.01'), 4.5278745))
         self.assertEqual(self.vectors.distance('dog.n.01', 'dog.n.01'), 0)
 
     def test_distances(self):
+        """Test that distances between one word and multiple other words have expected values."""
         distances = self.vectors.distances('dog.n.01', ['mammal.n.01', 'dog.n.01'])
         self.assertTrue(np.allclose(distances, [4.5278745, 0]))
 
@@ -258,20 +262,24 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(distances[-1], 10.04756))
 
     def test_closest_child(self):
+        """Test closest_child returns expected value and returns None for lowest node in hierarchy."""
         self.assertEqual(self.vectors.closest_child('dog.n.01'), 'terrier.n.01')
         self.assertEqual(self.vectors.closest_child('harbor_porpoise.n.01'), None)
 
     def test_closest_parent(self):
+        """Test closest_parent returns expected value and returns None for highest node in hierarchy."""
         self.assertEqual(self.vectors.closest_parent('dog.n.01'), 'canine.n.02')
         self.assertEqual(self.vectors.closest_parent('mammal.n.01'), None)
 
     def test_ancestors(self):
+        """Test ancestors returns expected list and returns empty list for highest node in hierarchy."""
         expected = ['canine.n.02', 'carnivore.n.01', 'placental.n.01', 'mammal.n.01']
         self.assertEqual(self.vectors.ancestors('dog.n.01'), expected)
         expected = []
         self.assertEqual(self.vectors.ancestors('mammal.n.01'), expected)
 
     def test_descendants(self):
+        """Test descendants returns expected list and returns empty list for lowest node in hierarchy."""
         expected = [
             'terrier.n.01', 'sporting_dog.n.01', 'spaniel.n.01', 'water_spaniel.n.01', 'irish_water_spaniel.n.01'
         ]
@@ -279,10 +287,12 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertEqual(self.vectors.descendants('dog.n.01', max_depth=3), expected[:3])
 
     def test_similarity(self):
+        """Test similarity returns expected value for two nodes, and for identical nodes."""
         self.assertTrue(np.allclose(self.vectors.similarity('dog.n.01', 'dog.n.01'), 1))
         self.assertTrue(np.allclose(self.vectors.similarity('dog.n.01', 'mammal.n.01'), 0.728260))
 
     def test_similarities(self):
+        """Test similarities returns expected values for multiple nodes."""
         similarities = self.vectors.similarities('dog.n.01', ['mammal.n.01', 'dog.n.01'])
         self.assertTrue(np.allclose(similarities, [0.7282602, 1]))
 
