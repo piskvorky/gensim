@@ -186,23 +186,23 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         This function is `const`, aka read-only
         """
-        if isinstance(document, string_types): 
-            raise TypeError("doc2idx expects an array of unicode tokens on input, not a single string") 
+        if isinstance(document, string_types):
+            raise TypeError("doc2idx expects an array of unicode tokens on input, not a single string")
  
         token2id = self.token2id
 
-        list_word_idx = list() 
-        for word in document: 
+        list_word_idx = list()
+        for word in document:
             word = word if isinstance(word, unicode) else unicode(word, 'utf-8')
- 
-            wrd_idx = token2id.get(word, None) 
- 
-            if wrd_idx is not None: 
+
+            wrd_idx = token2id.get(word, None)
+
+            if wrd_idx is not None:
                 list_word_idx.append(wrd_idx)
             else:
                 list_word_idx.append(unk_wrd_idx)
 
-        return list_word_idx 
+        return list_word_idx
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
         """
