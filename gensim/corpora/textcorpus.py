@@ -65,7 +65,7 @@ def strip_multiple_whitespaces(s):
 
 class TextCorpus(interfaces.CorpusABC):
     """Helper class to simplify the pipeline of getting bag-of-words vectors (= a
-    gensim corpus) from plain text.
+    gensim corpus) or an index vector from plain text.
 
     This is an abstract base class: override the `get_texts()` and `__len__()`
     methods to match your particular input.
@@ -76,7 +76,9 @@ class TextCorpus(interfaces.CorpusABC):
     this class via subclassing or by construction with different preprocessing arguments.
 
     The `iter` method converts the lists of tokens produced by `get_texts` to BoW format
-    using `Dictionary.doc2bow`. `get_texts` does the following:
+    if `bow_format` is set to True or to an index vector if `bow_format` is set to False using
+    `Dictionary.doc2bow`.
+    `get_texts` does the following:
 
     1.  Calls `getstream` to get a generator over the texts. It yields each document in
         turn from the underlying text file or files.
@@ -112,7 +114,10 @@ class TextCorpus(interfaces.CorpusABC):
     6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
 
     """
-    def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None, tokenizer=None, token_filters=None):
+    def __init__(
+            self, input=None, dictionary=None, metadata=False, character_filters=None, tokenizer=None,
+            token_filters=None, bow_format=True, unk_wrd_idx=0
+    ):
         """
         Args:
             input (str): path to top-level directory to traverse for corpus documents.
@@ -134,6 +139,8 @@ class TextCorpus(interfaces.CorpusABC):
                 remove, or replace tokens, or do nothing at all. The default token filters
                 remove tokens less than 3 characters long and remove stopwords using the list
                 in `gensim.parsing.preprocessing.STOPWORDS`.
+            mode (bool): True to return BoW format (default) else return index vector as per the `dictionary` if False
+            unk_wrd_idx (int): index to represent unknown words, i.e, words not in the `dictionary`
         """
         self.input = input
         self.metadata = metadata
@@ -153,6 +160,9 @@ class TextCorpus(interfaces.CorpusABC):
         self.length = None
         self.dictionary = None
         self.init_dictionary(dictionary)
+
+        self.bow_format = bow_format
+        self.unk_wrd_idx = unk_wrd_idx
 
     def init_dictionary(self, dictionary):
         """If `dictionary` is None, initialize to an empty Dictionary, and then if there
@@ -179,10 +189,16 @@ class TextCorpus(interfaces.CorpusABC):
         """
         if self.metadata:
             for text, metadata in self.get_texts():
-                yield self.dictionary.doc2bow(text, allow_update=False), metadata
+                if self.bow_format:
+                    yield self.dictionary.doc2bow(text, allow_update=False), metadata
+                else:
+                    yield self.dictionary.doc2idx(text, unk_wrd_idx=self.unk_wrd_idx), metadata
         else:
             for text in self.get_texts():
-                yield self.dictionary.doc2bow(text, allow_update=False)
+                if self.bow_format:
+                    yield self.dictionary.doc2bow(text, allow_update=False)
+                else:
+                    yield self.dictionary.doc2idx(text, unk_wrd_idx=self.unk_wrd_idx)
 
     def getstream(self):
         """Yield documents from the underlying plain text collection (of one or more files).

@@ -20,7 +20,7 @@ import unittest
 import numpy as np
 
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
-                            ucicorpus, malletcorpus, textcorpus, indexedcorpus)
+                            ucicorpus, malletcorpus, textcorpus, indexedcorpus, dictionary)
 from gensim.interfaces import TransformedCorpus
 from gensim.utils import to_unicode
 from gensim.test.utils import datapath, get_tmpfile
@@ -322,6 +322,23 @@ class TestTextCorpus(CorpusTestCase):
         for i, docmeta in enumerate(docs):
             doc, metadata = docmeta
             self.assertEqual(metadata[0], i)
+
+    def test_load_with_index_vector_mode(self):
+        dictionary_obj = dictionary.Dictionary()
+        dictionary_obj.token2id = {
+            '<UNK>': 0, 'computer': 1, 'human': 2, 'response': 3, 'survey': 4,
+            'system': 5, 'time': 6, 'user': 7, 'graph': 8, 'eps': 9, 'trees': 10,
+            'minors': 11
+        }
+        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        corpus = self.corpus_class(
+            fname, dictionary=dictionary_obj, token_filters=[], bow_format=False, unk_wrd_idx=0
+        )
+
+        docs = list(corpus)
+        first_doc, last_doc = docs[0], docs[-1]
+        self.assertEqual(first_doc, [1, 2, 0])
+        self.assertEqual(last_doc, [4, 8, 11])
 
     def test_default_preprocessing(self):
         lines = [
