@@ -181,7 +181,8 @@ class Dictionary(utils.SaveLoad, Mapping):
         No further preprocessing is done on the words in `document`; apply tokenization, stemming etc. before calling
         this method.
 
-        Replace all unknown i.e, words not in the dictionary with the index as set via `unk_wrd_idx`, defaults to 0.
+        Replace all unknown words i.e, words not in the dictionary with the index as set via `unk_wrd_idx`, defaults to
+        0.
 
         This function is `const`, aka read-only
         """
