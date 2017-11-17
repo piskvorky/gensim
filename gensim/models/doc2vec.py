@@ -29,13 +29,16 @@ to trim unneeded model memory = use (much) less RAM.
 
 
 
-.. [1] Quoc Le and Tomas Mikolov. Distributed Representations of Sentences and Documents. http://arxiv.org/pdf/1405.4053v2.pdf
-.. [2] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
-.. [3] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
-       In Proceedings of NIPS, 2013.
+.. [1] Quoc Le and Tomas Mikolov. Distributed Representations of Sentences and Documents.
+       http://arxiv.org/pdf/1405.4053v2.pdf
+.. [2] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean.
+       Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
+.. [3] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean.
+       Distributed Representations of Words and Phrases and their Compositionality. In Proceedings of NIPS, 2013.
 .. [blog] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
 
-.. [#tutorial] Doc2vec in gensim tutorial, https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
+.. [#tutorial] Doc2vec in gensim tutorial,
+               https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
 
 
 
@@ -383,8 +386,12 @@ class DocvecsArray(utils.SaveLoad):
     def reset_weights(self, model):
         length = max(len(self.doctags), self.count)
         if self.mapfile_path:
-            self.doctag_syn0 = np_memmap(self.mapfile_path + '.doctag_syn0', dtype=REAL, mode='w+', shape=(length, model.vector_size))
-            self.doctag_syn0_lockf = np_memmap(self.mapfile_path + '.doctag_syn0_lockf', dtype=REAL, mode='w+', shape=(length,))
+            self.doctag_syn0 = np_memmap(
+                self.mapfile_path + '.doctag_syn0', dtype=REAL, mode='w+', shape=(length, model.vector_size)
+            )
+            self.doctag_syn0_lockf = np_memmap(
+                self.mapfile_path + '.doctag_syn0_lockf', dtype=REAL, mode='w+', shape=(length,)
+            )
             self.doctag_syn0_lockf.fill(1.0)
         else:
             self.doctag_syn0 = empty((length, model.vector_size), dtype=REAL)
@@ -626,7 +633,9 @@ class Doc2Vec(Word2Vec):
         """
 
         if 'sentences' in kwargs:
-            raise DeprecationWarning("'sentences' in doc2vec was renamed to 'documents'. Please use documents parameter.")
+            raise DeprecationWarning(
+                "'sentences' in doc2vec was renamed to 'documents'. Please use documents parameter."
+            )
 
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
@@ -688,7 +697,8 @@ class Doc2Vec(Word2Vec):
             if not checked_string_types:
                 if isinstance(document.words, string_types):
                     logger.warning(
-                        "Each 'words' should be a list of words (usually unicode strings). First 'words' here is instead plain %s.",
+                        "Each 'words' should be a list of words (usually unicode strings). "
+                        "First 'words' here is instead plain %s.",
                         type(document.words)
                     )
                 checked_string_types += 1

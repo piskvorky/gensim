@@ -148,7 +148,8 @@ class DiffMetric(Metric):
                 `hellinger`
                 `jaccard`
             num_words : is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
-            n_ann_terms : max quantity of words in intersection/symmetric difference between topics (used for annotation)
+            n_ann_terms : max quantity of words in intersection/symmetric difference
+                          between topics (used for annotation)
             diagonal : difference between  identical topic no.s
             annotation : intersection or difference of words between topics
             normed (bool) : If `true`, matrix/array Z will be normalized
@@ -195,7 +196,8 @@ class ConvergenceMetric(Metric):
                 `hellinger`
                 `jaccard`
             num_words : is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
-            n_ann_terms : max quantity of words in intersection/symmetric difference between topics (used for annotation)
+            n_ann_terms : max quantity of words in intersection/symmetric difference
+                          between topics (used for annotation)
             diagonal : difference between  identical topic no.s
             annotation : intersection or difference of words between topics
             normed (bool) : If `true`, matrix/array Z will be normalized

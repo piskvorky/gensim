@@ -93,7 +93,9 @@ class IndexedCorpus(interfaces.CorpusABC):
         offsets = serializer.save_corpus(fname, corpus, id2word, **kwargs)
 
         if offsets is None:
-            raise NotImplementedError("Called serialize on class %s which doesn't support indexing!" % serializer.__name__)
+            raise NotImplementedError(
+                "Called serialize on class %s which doesn't support indexing!" % serializer.__name__
+            )
 
         # store offsets persistently, using pickle
         # we shouldn't have to worry about self.index being a numpy.ndarray as the serializer will return
