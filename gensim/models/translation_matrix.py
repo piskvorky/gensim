@@ -35,7 +35,8 @@ Translate the source words to target words, for example
 
 .. [1] Dinu, Georgiana, Angeliki Lazaridou, and Marco Baroni. "Improving zero-shot learning by mitigating the
         hubness problem." arXiv preprint arXiv:1412.6568 (2014).
-.. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
+.. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean.
+       Distributed Representations of Words and Phrases and their Compositionality.
        In Proceedings of NIPS, 2013.
 """
 
@@ -69,7 +70,8 @@ class Space(object):
         Construct a space class for the lexicon, if it's provided.
         Args:
             `lang_vec`: word2vec model that extract word vector for lexicon
-            `lexicon`: the default is None, if it is not provided, the lexicon is all the lang_vec's word, i.e. lang_vec.vocab.keys()
+            `lexicon`: the default is None, if it is not provided, the lexicon is all the lang_vec's word,
+                       i.e. lang_vec.vocab.keys()
         Returns:
             `Space` object for the lexicon
         """
@@ -220,17 +222,26 @@ class TranslationMatrix(utils.SaveLoad):
         # If the language word vector not provided by user, use the model's
         # language word vector as default
         if source_lang_vec is None:
-            warnings.warn("The parameter source_lang_vec isn't specified, use the model's source language word vector as default.")
+            warnings.warn(
+                "The parameter source_lang_vec isn't specified, "
+                "use the model's source language word vector as default."
+            )
             source_lang_vec = self.source_lang_vec
 
         if target_lang_vec is None:
-            warnings.warn("The parameter target_lang_vec isn't specified, use the model's target language word vector as default.")
+            warnings.warn(
+                "The parameter target_lang_vec isn't specified, "
+                "use the model's target language word vector as default."
+            )
             target_lang_vec = self.target_lang_vec
 
         # If additional is provided, bootstrapping vocabulary from the source language word vector model.
         if gc:
             if sample_num is None:
-                raise RuntimeError("When using the globally corrected neighbour retrieval method, the `sample_num` parameter(i.e. the number of words sampled from source space) must be provided.")
+                raise RuntimeError(
+                    "When using the globally corrected neighbour retrieval method, "
+                    "the `sample_num` parameter(i.e. the number of words sampled from source space) must be provided."
+                )
             lexicon = set(source_lang_vec.index2word)
             addition = min(sample_num, len(lexicon) - len(source_words))
             lexicon = self.random_state.choice(list(lexicon.difference(source_words)), addition)

@@ -123,7 +123,8 @@ class FastTextKeyedVectors(KeyedVectors):
                     self.syn0_ngrams[i, :] /= sqrt((self.syn0_ngrams[i, :] ** 2).sum(-1))
                 self.syn0_ngrams_norm = self.syn0_ngrams
             else:
-                self.syn0_ngrams_norm = (self.syn0_ngrams / sqrt((self.syn0_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
+                self.syn0_ngrams_norm = \
+                    (self.syn0_ngrams / sqrt((self.syn0_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
     def __contains__(self, word):
         """
@@ -272,7 +273,8 @@ class FastText(Word2Vec):
         magic, version = self.struct_unpack(file_handle, '@2i')
         if magic == FASTTEXT_FILEFORMAT_MAGIC:  # newer format
             self.new_format = True
-            dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
+            dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = \
+                self.struct_unpack(file_handle, '@12i1d')
         else:  # older format
             self.new_format = False
             dim = magic

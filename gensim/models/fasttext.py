@@ -76,11 +76,10 @@ def train_batch_sg(model, sentences, alpha, work=None):
 
 
 class FastText(Word2Vec):
-    def __init__(
-            self, sentences=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
-            max_vocab_size=None, word_ngrams=1, loss='ns', sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-            negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1, bucket=2000000,
-            trim_rule=None, batch_words=MAX_WORDS_IN_BATCH):
+    def __init__(self, sentences=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
+                 max_vocab_size=None, word_ngrams=1, loss='ns', sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
+                 negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6,
+                 sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH):
 
         # fastText specific params
         self.bucket = bucket

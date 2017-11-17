@@ -203,7 +203,8 @@ class AuthorTopicModel(LdaModel):
         >>> model = AuthorTopicModel(corpus, num_topics=100, author2doc=author2doc, id2word=id2word)  # train model
         >>> model.update(corpus2)  # update the author-topic model with additional documents
 
-        >>> model = AuthorTopicModel(corpus, num_topics=50, author2doc=author2doc, id2word=id2word, alpha='auto', eval_every=5)  # train asymmetric alpha from data
+        >>> model = AuthorTopicModel(
+        ... corpus, num_topics=50, author2doc=author2doc, id2word=id2word, alpha='auto', eval_every=5)
 
         """
         # NOTE: this doesn't call constructor of a base class, but duplicates most of this code
@@ -211,7 +212,8 @@ class AuthorTopicModel(LdaModel):
         self.dtype = np.float64
 
         # NOTE: as distributed version of this model is not implemented, "distributed" is set to false. Some of the
-        # infrastructure to implement a distributed author-topic model is already in place, such as the AuthorTopicState.
+        # infrastructure to implement a distributed author-topic model is already in place,
+        # such as the AuthorTopicState.
         distributed = False
         self.dispatcher = None
         self.numworkers = 1
