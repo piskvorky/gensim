@@ -337,6 +337,17 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(self.vectors.similarity('dog.n.01', 'dog.n.01'), 1))
         self.assertTrue(np.allclose(self.vectors.similarity('dog.n.01', 'mammal.n.01'), 0.180901358))
 
+    def test_position_in_hierarchy(self):
+        """Test position_in_hierarchy returns expected value."""
+        self.assertTrue(np.allclose(self.vectors.position_in_hierarchy('dog.n.01'), 0.02242398))
+        self.assertTrue(np.allclose(self.vectors.position_in_hierarchy('mammal.n.01'), 0.96085270))
+
+    def test_difference_in_hierarchy(self):
+        """Test difference_in_hierarchy returns expected value for two nodes, and for identical nodes."""
+        self.assertTrue(np.allclose(self.vectors.difference_in_hierarchy('dog.n.01', 'dog.n.01'), 0))
+        self.assertTrue(np.allclose(self.vectors.difference_in_hierarchy('mammal.n.01', 'dog.n.01'), 0.9384287))
+        self.assertTrue(np.allclose(self.vectors.difference_in_hierarchy('dog.n.01', 'mammal.n.01'), -0.9384287))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

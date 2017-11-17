@@ -1032,7 +1032,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         Parameters
         ----------
 
-        word_or_vector : str
+        word_or_vector : str or numpy.array
             word or vector for which similar words are to be found.
         topn : int or None, optional
             number of similar words to return, if `None`, returns all.
@@ -1080,7 +1080,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Parameters
         ----------
-        word_or_vector : str
+        word_or_vector : str or numpy.array
             Word or vector from which distances are to be computed.
 
         words_2 : iterable(str) or None
@@ -1116,6 +1116,80 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             word_2_indices = [self.vocab[word].index for word in words_2]
             word_2_vectors = self.syn0[word_2_indices]
         return self.poincare_distance_batch(input_vector, word_2_vectors)
+
+    def position_in_hierarchy(self, word_or_vector):
+        """
+        Return absolute position in hierarchy of input word or vector.
+        Values range between 0 and 1. A higher value indicates the input word or vector is higher in the hierarchy.
+
+        Parameters
+        ----------
+        word_or_vector : string or numpy.array
+            Input word or vector for which position in hierarchy is to be returned.
+
+        Returns
+        -------
+        float
+            Absolute position in the hierarchy of the input vector or word.
+
+        Examples
+        --------
+
+        >>> model.position_in_hierarchy('mammal.n.01')
+        0.9
+
+        Notes
+        -----
+        The position in hierarchy is based on the norm of the vector.
+
+        """
+        if isinstance(word_or_vector, string_types):
+            input_vector = self.word_vec(word_or_vector)
+        else:
+            input_vector = word_or_vector
+        return 1 - np.linalg.norm(input_vector)
+
+    def difference_in_hierarchy(self, word_or_vector_1, word_or_vector_2):
+        """
+        Relative position in hierarchy of `word_or_vector_1` relative to `word_or_vector_2`.
+        A positive value indicates `word_or_vector_1` is higher in the hierarchy than `word_or_vector_2`.
+
+        Parameters
+        ----------
+        word_or_vector_1 : string or numpy.array
+            Input word or vector.
+
+        word_or_vector_2 : string or numpy.array
+            Input word or vector.
+
+        Returns
+        -------
+        float
+            Relative position in hierarchy of `word_or_vector_1` relative to `word_or_vector_2`.
+
+        Examples
+        --------
+
+        >>> model.difference_in_hierarchy('mammal.n.01', 'dog.n.01')
+        0.51
+
+        >>> model.difference_in_hierarchy('dog.n.01', 'mammal.n.01')
+        -0.51
+
+        Notes
+        -----
+        The returned value can be positive or negative, depending on whether `word_or_vector_1` is higher
+        or lower in the hierarchy than `word_or_vector_2`.
+
+        """
+        if isinstance(word_or_vector_1, string_types) and isinstance(word_or_vector_2, string_types):
+            input_vector_1 = self.word_vec(word_or_vector_1)
+            input_vector_2 = self.word_vec(word_or_vector_2)
+        elif isinstance(word_or_vector_1, np.ndarray) and isinstance(word_or_vector_2, np.ndarray):
+            input_vector_1 = word_or_vector_1
+            input_vector_2 = word_or_vector_2
+
+        return np.linalg.norm(input_vector_2) - np.linalg.norm(input_vector_1)
 
 
 class PoincareRelations(object):
