@@ -10,7 +10,6 @@ import logging
 from subprocess import CalledProcessError
 import gensim
 import os
-import sys
 import unittest
 from gensim import corpora
 from gensim.test.utils import datapath
