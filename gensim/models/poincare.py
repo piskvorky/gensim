@@ -751,7 +751,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         self.max_distance = 0
 
     @staticmethod
-    def poincare_dists(vector_1, vectors_all):
+    def poincare_distance_batch(vector_1, vectors_all):
         """
         Return poincare distances between one vector and a set of other vectors.
 
@@ -973,7 +973,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         """
         vector_1 = self.word_vec(term_1)
         vector_2 = self.word_vec(term_2)
-        return self.poincare_dists(vector_1, vector_2[np.newaxis, :])[0]
+        return self.poincare_distance_batch(vector_1, vector_2[np.newaxis, :])[0]
 
     def similarity(self, term_1, term_2):
         """
@@ -1095,7 +1095,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         else:
             word_2_indices = [self.vocab[word].index for word in words_2]
             word_2_vectors = self.syn0[word_2_indices]
-        return self.poincare_dists(input_vector, word_2_vectors)
+        return self.poincare_distance_batch(input_vector, word_2_vectors)
 
 
 class PoincareRelations(object):
