@@ -5,7 +5,7 @@ set -e
 pip freeze
 
 if [[ "$ONLY_CODESTYLE" == "yes" ]]; then
-	continuous_integration/travis/flake8_diff.sh
+	tox -e flake8
 else
-	python setup.py test
+	tox -e ${PYTHON_VERSION}
 fi

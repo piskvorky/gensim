@@ -12,11 +12,11 @@ language: python
 
 matrix:
   include:
-    - env: PYTHON_VERSION="2.7" NUMPY_VERSION="1.11.3" SCIPY_VERSION="0.18.1" ONLY_CODESTYLE="yes"
-    - env: PYTHON_VERSION="2.7" NUMPY_VERSION="1.11.3" SCIPY_VERSION="0.18.1" ONLY_CODESTYLE="no"
-    - env: PYTHON_VERSION="3.5" NUMPY_VERSION="1.11.3" SCIPY_VERSION="0.18.1" ONLY_CODESTYLE="no"
-    - env: PYTHON_VERSION="3.6" NUMPY_VERSION="1.11.3" SCIPY_VERSION="0.18.1" ONLY_CODESTYLE="no"
+    - env: ONLY_CODESTYLE="yes"
+    - env: PYTHON_VERSION="py27" NUMPY_VERSION="1.11.3" SCIPY_VERSION="0.18.1" ONLY_CODESTYLE="no"
+    - env: PYTHON_VERSION="py35" NUMPY_VERSION="1.11.3" SCIPY_VERSION="0.18.1" ONLY_CODESTYLE="no"
+    - env: PYTHON_VERSION="py36" NUMPY_VERSION="1.11.3" SCIPY_VERSION="0.18.1" ONLY_CODESTYLE="no"
 
 
-install: source continuous_integration/travis/install.sh
+# install: source continuous_integration/travis/install.sh
 script: bash continuous_integration/travis/run.sh
