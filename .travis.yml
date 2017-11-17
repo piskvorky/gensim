@@ -12,11 +12,17 @@ language: python
 
 matrix:
   include:
-    - env: ONLY_CODESTYLE="yes"
-    - env: PYTHON_VERSION="py27" NUMPY_VERSION="1.11.3" SCIPY_VERSION="0.18.1" ONLY_CODESTYLE="no"
-    - env: PYTHON_VERSION="py35" NUMPY_VERSION="1.11.3" SCIPY_VERSION="0.18.1" ONLY_CODESTYLE="no"
-    - env: PYTHON_VERSION="py36" NUMPY_VERSION="1.11.3" SCIPY_VERSION="0.18.1" ONLY_CODESTYLE="no"
+    - python: '2.7'
+      env: TOXENV="flake8"
 
+    - python: '2.7'
+      env: TOXENV="py27"
+
+    - python: '3.5'
+      env: TOXENV="py35"
+
+    - python: '3.6'
+      env: TOXENV="py36"
 
 install: source continuous_integration/travis/install.sh
-script: bash continuous_integration/travis/run.sh
+script: tox -v
