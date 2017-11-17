@@ -18,5 +18,5 @@ matrix:
     - env: PYTHON_VERSION="py36" NUMPY_VERSION="1.11.3" SCIPY_VERSION="0.18.1" ONLY_CODESTYLE="no"
 
 
-# install: source continuous_integration/travis/install.sh
+install: source continuous_integration/travis/install.sh
 script: bash continuous_integration/travis/run.sh
