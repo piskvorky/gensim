@@ -71,7 +71,7 @@ class Space(object):
         Args:
             `lang_vec`: word2vec model that extract word vector for lexicon
             `lexicon`: the default is None, if it is not provided, the lexicon is all the lang_vec's word,
-                       i.e. lang_vec.vocab.keys()
+            i.e. lang_vec.vocab.keys()
         Returns:
             `Space` object for the lexicon
         """

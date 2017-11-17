@@ -1058,9 +1058,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         (returns diagonal of diff matrix)
         `annotation` whether the intersection or difference of words between two topics should be returned
         Returns a matrix Z with shape (m1.num_topics, m2.num_topics),
-         where Z[i][j] - difference between topic_i and topic_j
+        where Z[i][j] - difference between topic_i and topic_j
         and matrix annotation (if True) with shape (m1.num_topics, m2.num_topics, 2, None),
-        where:
+        where::
 
             annotation[i][j] = [[`int_1`, `int_2`, ...], [`diff_1`, `diff_2`, ...]] and
             `int_k` is word from intersection of `topic_i` and `topic_j` and
