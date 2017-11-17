@@ -50,6 +50,7 @@ from numpy import random as np_random
 from pygtrie import Trie
 from scipy.spatial.distance import euclidean
 from scipy.stats import spearmanr
+from six import string_types
 from smart_open import smart_open
 
 from gensim import utils, matutils
@@ -1013,15 +1014,15 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         distance = self.distance(term_1, term_2)
         return 1 - distance / self.max_distance
 
-    def most_similar(self, word, topn=10, restrict_vocab=None):
+    def most_similar(self, word_or_vector, topn=10, restrict_vocab=None):
         """
-        Find the top-N most similar words to the given word, sorted in increasing order of distance.
+        Find the top-N most similar words to the given word or vector, sorted in increasing order of distance.
 
         Parameters
         ----------
 
-        word : str
-            word for which similar words are to be found.
+        word_or_vector : str
+            word or vector for which similar words are to be found.
         topn : int or None, optional
             number of similar words to return, if `None`, returns all.
         restrict_vocab : int or None, optional
@@ -1041,20 +1042,25 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         """
         if not restrict_vocab:
-            all_distances = self.distances(word)
+            all_distances = self.distances(word_or_vector)
         else:
             words_to_use = self.index2word[:restrict_vocab]
-            all_distances = self.distances(word, words_to_use)
+            all_distances = self.distances(word_or_vector, words_to_use)
 
-        word_index = self.vocab[word].index
+        if isinstance(word_or_vector, string_types):
+            word_index = self.vocab[word_or_vector].index
+        else:
+            word_index = None
         if not topn:
             closest_indices = matutils.argsort(all_distances)
         else:
             closest_indices = matutils.argsort(all_distances, topn=1 + topn)
         result = [
             (self.index2word[index], float(all_distances[index]))
-            for index in closest_indices if index != word_index  # ignore the input term
+            for index in closest_indices if (not word_index or index != word_index)  # ignore the input word
         ]
+        if topn:
+            result = result[:topn]
         return result
 
     def precompute_max_distance(self):
@@ -1064,23 +1070,23 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             if vector_max_distance > self.max_distance:
                 self.max_distance = vector_max_distance
 
-    def distances(self, word_1, words_2=[]):
+    def distances(self, word_or_vector, words_2=[]):
         """
-        Return Poincare distances from given `word_1` to all words in `words_2`.
+        Return Poincare distances from given word or vector to all words in `words_2`.
 
         Parameters
         ----------
-        word_1 : str
-            Word from which distances are to be computed.
+        word_or_vector : str
+            Word or vector from which distances are to be computed.
 
         words_2 : iterable(str) or None
-            For each word in `words_2` distance from `word_1` is computed.
-            If None or empty, distance of `word_1` from all words in vocab is computed (including itself).
+            For each word in `words_2` distance from `word_or_vector` is computed.
+            If None or empty, distance of `word_or_vector` from all words in vocab is computed (including itself).
 
         Returns
         -------
         numpy.array
-            Array containing distances to all words in `words_2` from input `word_1`, in the same order as `words_2`.
+            Array containing distances to all words in `words_2` from input `word_or_vector`, in the same order as `words_2`.
 
         Examples
         --------
@@ -1093,16 +1099,19 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Notes
         -----
-        Raises KeyError if either `word_1` or any word in `words_2` is absent from vocab.
+        Raises KeyError if either `word_or_vector` or any word in `words_2` is absent from vocab.
 
         """
-        word_1_vector = self.word_vec(word_1)
+        if isinstance(word_or_vector, string_types):
+            input_vector = self.word_vec(word_or_vector)
+        else:
+            input_vector = word_or_vector
         if not words_2:
             word_2_vectors = self.syn0
         else:
             word_2_indices = [self.vocab[word].index for word in words_2]
             word_2_vectors = self.syn0[word_2_indices]
-        return self.poincare_dists(word_1_vector, word_2_vectors)
+        return self.poincare_dists(input_vector, word_2_vectors)
 
 
 class PoincareRelations(object):

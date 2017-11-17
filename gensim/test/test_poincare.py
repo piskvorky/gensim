@@ -255,7 +255,7 @@ class TestPoincareKeyedVectors(unittest.TestCase):
     def test_most_similar_with_vector_input(self):
         """Test most_similar returns expected results with an input vector instead of an input word."""
         expected = [
-            'dog.n.01'
+            'dog.n.01',
             'canine.n.02',
             'hunting_dog.n.01',
             'carnivore.n.01',
@@ -276,6 +276,16 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(distances, [4.5278745, 0]))
 
         distances = self.vectors.distances('dog.n.01')
+        self.assertEqual(len(distances), len(self.vectors.vocab))
+        self.assertTrue(np.allclose(distances[-1], 10.04756))
+
+    def test_distances_with_vector_input(self):
+        """Test that distances between one word and multiple other words have expected values."""
+        input_vector = self.vectors['dog.n.01']
+        distances = self.vectors.distances(input_vector, ['mammal.n.01', 'dog.n.01'])
+        self.assertTrue(np.allclose(distances, [4.5278745, 0]))
+
+        distances = self.vectors.distances(input_vector)
         self.assertEqual(len(distances), len(self.vectors.vocab))
         self.assertTrue(np.allclose(distances[-1], 10.04756))
 
