@@ -3,14 +3,14 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module provides functions of creatinf graph from sequence of values and
+"""This module provides functions of creating graph from sequence of values and
 removing of unreachable nodes.
 
 
 Examples
 --------
 
-Create simple graph and add edges. Let's kake a look at nodes.
+Create simple graph and add edges. Let's take a look at nodes.
 
 >>> gg = build_graph(['Felidae', 'Lion', 'Tiger', 'Wolf'])
 >>> gg.add_edge(("Felidae", "Lion"))

@@ -199,6 +199,36 @@ def _format_results(_keywords, combined_keywords, split, scores):
 
 def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=('NN', 'JJ'),
              lemmatize=False, deacc=True):
+    """.
+
+    Parameters
+    ----------
+    text : str
+        Sequence of values.
+    ratio : float
+        If no "words" option is selected, the number of sentences is
+        reduced by the provided ratio, else, the ratio is ignored.
+    words : list
+        .
+    split : bool
+        .
+    scores : bool
+        .
+    pos_filter : tuple
+        Part of speech filters.
+    lemmatize : bool
+        Lemmatize words, optional.
+    deacc : bool
+        Remove accentuation, optional.
+
+    Returns
+    -------
+    Graph
+        Created graph.
+
+    """
+
+
     # Gets a dict of word -> lemma
     text = to_unicode(text)
     tokens = _clean_text_by_word(text, deacc=deacc)
@@ -233,6 +263,20 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
 
 
 def get_graph(text):
+    """Creates and returns graph with given text. Cleans, tokenizes text 
+    before creating a graph.
+
+    Parameters
+    ----------
+    text : str
+        Sequence of values.
+
+    Returns
+    -------
+    Graph
+        Created graph.
+
+    """
     tokens = _clean_text_by_word(text)
     split_text = list(_tokenize_by_word(text))
 
