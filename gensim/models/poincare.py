@@ -770,6 +770,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         numpy.array
             Contains Poincare distance between vector_1 and each row in vectors_all.
             shape (num_vectors,)
+
         """
         euclidean_dists = np.linalg.norm(vector_1 - vectors_all, axis=1)
         norm = np.linalg.norm(vector_1)
@@ -976,9 +977,6 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         -----
         Raises KeyError if either of `term_1` and `term_2` is absent from vocab.
 
-        Poincare distance is symmetric, so distance(term_1, term_2) is equal to distance(term_2, term_1).
-        The range of possible distances is [0, inf).
-
         """
         vector_1 = self.word_vec(term_1)
         vector_2 = self.word_vec(term_2)
@@ -1024,9 +1022,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
     def distances(self, word_1, words_2=[]):
         """
-        Return Poincare distances to all words in `words_2` from given `word_1`.
-        If `words_2` is empty or None, distances between `word_1` and all words in vocab (including `word_1`) itself
-        are returned, in the same order as word indices.
+        Return Poincare distances from given `word_1` to all words in `words_2`.
 
         Parameters
         ----------
@@ -1054,7 +1050,6 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         Notes
         -----
         Raises KeyError if either `word_1` or any word in `words_2` is absent from vocab.
-        Similarity lies between 0 and 1.
 
         """
         word_1_vector = self.word_vec(word_1)
@@ -1068,8 +1063,6 @@ class PoincareKeyedVectors(KeyedVectorsBase):
     def similarities(self, word_1, words_2=[]):
         """
         Return similarity of `word_1` to all words in `words_2`.
-        If `words_2` is empty or None, similarities between `word_1` and all words in vocab (including `word_1`) itself
-        are returned, in the same order as word indices.
 
         Parameters
         ----------

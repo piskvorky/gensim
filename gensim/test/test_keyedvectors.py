@@ -13,6 +13,8 @@ import logging
 import os
 import unittest
 
+import numpy as np
+
 from gensim.models.keyedvectors import EuclideanKeyedVectors
 from gensim.test.utils import datapath
 
@@ -22,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 class TestEuclideanKeyedVectors(unittest.TestCase):
     def setUp(self):
-        self.vectors = EuclideanKeyedVectors.load_word2vec_format(datapath('euclidean_vectors.bin'), binary=True)
+        self.vectors = EuclideanKeyedVectors.load_word2vec_format(
+            datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
 
     def test_most_similar(self):
         """Test most_similar returns expected results."""
@@ -54,6 +57,34 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         expected = set(self.vectors.index2word[:5])
         predicted = set(result[0] for result in self.vectors.most_similar('war', topn=5, restrict_vocab=5))
         self.assertEqual(expected, predicted)
+
+    def test_distance(self):
+        """Test that distance returns expected values."""
+        self.assertTrue(np.allclose(self.vectors.distance('war', 'conflict'), 0.06694602))
+        self.assertEqual(self.vectors.distance('war', 'war'), 0)
+
+    def test_distances(self):
+        """Test that distances between one word and multiple other words have expected values."""
+        distances = self.vectors.distances('war', ['conflict', 'war'])
+        self.assertTrue(np.allclose(distances, [0.06694602, 0]))
+
+        distances = self.vectors.distances('war')
+        self.assertEqual(len(distances), len(self.vectors.vocab))
+        self.assertTrue(np.allclose(distances[-1], 0.94963574))
+
+    def test_similarity(self):
+        """Test similarity returns expected value for two words, and for identical words."""
+        self.assertTrue(np.allclose(self.vectors.similarity('war', 'war'), 1))
+        self.assertTrue(np.allclose(self.vectors.similarity('war', 'conflict'), 0.93305397))
+
+    def test_similarities(self):
+        """Test similarities returns expected values for multiple words."""
+        similarities = self.vectors.similarities('war', ['conflict', 'war'])
+        self.assertTrue(np.allclose(similarities, [0.93305397, 1]))
+
+        similarities = self.vectors.similarities('war')
+        self.assertEqual(len(similarities), len(self.vectors.vocab))
+        self.assertTrue(np.allclose(similarities[-1], 0.05036429))
 
 
 if __name__ == '__main__':

@@ -73,6 +73,7 @@ from numpy import dot, zeros, dtype, float32 as REAL,\
     double, array, vstack, fromstring, sqrt, newaxis,\
     ndarray, sum as np_sum, prod, ascontiguousarray,\
     argmax
+import numpy as np
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -257,6 +258,16 @@ class KeyedVectorsBase(utils.SaveLoad):
     def similarity(self, word_1, word_2):
         """
         Compute similarity between vectors of two input words.
+        To be implemented by child class.
+        """
+        raise NotImplementedError
+
+    def similarities(self, word_1, words_2):
+        """
+        Compute similarities between vectors of `word_1` and all words in `words_2`.
+        If `words_2` is empty or None, similarities between `word_1` and all words in vocab (including `word_1`) itself
+        are returned, in the same order as word indices.
+
         To be implemented by child class.
         """
         raise NotImplementedError
@@ -702,7 +713,34 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words))[0][1]
 
-    def distance(self, w1, w2):
+    @staticmethod
+    def cosine_similarities(vector_1, vectors_all):
+        """
+        Return cosine similarities between one vector and a set of other vectors.
+
+        Parameters
+        ----------
+        vector_1 : numpy.array
+            vector from which similarities are to be computed.
+            expected shape (dim,)
+        vectors_all : numpy.array
+            for each row in vectors_all, distance from vector_1 is computed.
+            expected shape (num_vectors, dim)
+
+        Returns
+        -------
+        numpy.array
+            Contains cosine distance between vector_1 and each row in vectors_all.
+            shape (num_vectors,)
+
+        """
+        norm = np.linalg.norm(vector_1)
+        all_norms = np.linalg.norm(vectors_all, axis=1)
+        dot_products = dot(vectors_all, vector_1)
+        similarities = dot_products  / (norm * all_norms)
+        return similarities
+
+    def distance(self, word_1, word_2):
         """
         Compute cosine distance between two words.
 
@@ -715,7 +753,41 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
           0.0
 
         """
-        return 1 - self.similarity(w1, w2)
+        return 1 - self.similarity(word_1, word_2)
+
+    def distances(self, word_1, words_2=[]):
+        """
+        Return distances from given `word_1` to all words in `words_2`.
+
+        Parameters
+        ----------
+        word_1 : str
+            Word from which distances are to be computed.
+
+        words_2 : iterable(str) or None
+            For each word in `words_2` distance from `word_1` is computed.
+            If None or empty, distance of `word_1` from all words in vocab is computed (including itself).
+
+        Returns
+        -------
+        numpy.array
+            Array containing distances to all words in `words_2` from input `word_1`, in the same order as `words_2`.
+
+        Examples
+        --------
+
+        >>> model.distances('war', ['conflict', 'terrorism'])
+        np.array([0.07, 0.15]
+
+        >>> model.distances('war')
+        np.array([0.43, 0.79, ..., 0.31])
+
+        Notes
+        -----
+        Raises KeyError if either `word_1` or any word in `words_2` is absent from vocab.
+
+        """
+        return 1 - self.similarities(word_1, words_2)
 
     def similarity(self, w1, w2):
         """
@@ -731,6 +803,47 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
         """
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
+
+    def similarities(self, word_1, words_2=[]):
+        """
+        Return similarity of `word_1` to all words in `words_2`.
+
+        Parameters
+        ----------
+        word_1 : str
+            Word for which similarities are to be computed.
+
+        words_2 : iterable(str) or None
+            For each word in `words_2` similarity to `word_1` is computed.
+            If None or empty, similarity of `word_1` to all words in vocab is computed (including itself).
+
+        Returns
+        -------
+        numpy.array
+            Array containing similarity of `word_1` to all words in `words_2`, in the same order as `words_2`.
+
+        Examples
+        --------
+
+        >>> model.similarities('war', ['conflict', 'terrorism'])
+        np.array([0.63, 0.46]
+
+        >>> model.similarities('war')
+        np.array([0.97374117, 0.77916104, ..., 0.60019732])
+
+        Notes
+        -----
+        Raises KeyError if either `word_1` or any word in `words_2` is absent from vocab.
+        Similarity values lie between 0 and 1.
+
+        """
+        word_1_vector = self.word_vec(word_1)
+        if not words_2:
+            word_2_vectors = self.syn0
+        else:
+            word_2_indices = [self.vocab[word].index for word in words_2]
+            word_2_vectors = self.syn0[word_2_indices]
+        return self.cosine_similarities(word_1_vector, word_2_vectors)
 
     def most_similar_to_given(self, w1, word_list):
         """Return the word from word_list most similar to w1.
