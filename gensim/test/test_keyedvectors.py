@@ -93,29 +93,10 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(self.vectors.distance('war', 'conflict'), 0.06694602))
         self.assertEqual(self.vectors.distance('war', 'war'), 0)
 
-    def test_distances(self):
-        """Test that distances between one word and multiple other words have expected values."""
-        distances = self.vectors.distances('war', ['conflict', 'war'])
-        self.assertTrue(np.allclose(distances, [0.06694602, 0]))
-
-        distances = self.vectors.distances('war')
-        self.assertEqual(len(distances), len(self.vectors.vocab))
-        self.assertTrue(np.allclose(distances[-1], 0.94963574))
-
     def test_similarity(self):
         """Test similarity returns expected value for two words, and for identical words."""
         self.assertTrue(np.allclose(self.vectors.similarity('war', 'war'), 1))
         self.assertTrue(np.allclose(self.vectors.similarity('war', 'conflict'), 0.93305397))
-
-    def test_similarities(self):
-        """Test similarities returns expected values for multiple words."""
-        similarities = self.vectors.similarities('war', ['conflict', 'war'])
-        self.assertTrue(np.allclose(similarities, [0.93305397, 1]))
-
-        similarities = self.vectors.similarities('war')
-        self.assertEqual(len(similarities), len(self.vectors.vocab))
-        self.assertTrue(np.allclose(similarities[-1], 0.05036429))
-
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

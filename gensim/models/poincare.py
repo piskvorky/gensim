@@ -1013,6 +1013,50 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         distance = self.distance(term_1, term_2)
         return 1 - distance / self.max_distance
 
+    def most_similar(self, word, topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar words to the given word, sorted in increasing order of distance.
+
+        Parameters
+        ----------
+
+        word : str
+            word for which similar words are to be found.
+        topn : int or None, optional
+            number of similar words to return, if `None`, returns all.
+        restrict_vocab : int or None, optional
+            Optional integer which limits the range of vectors which are searched for most-similar values.
+            For example, restrict_vocab=10000 would only check the first 10000 word vectors in the vocabulary order.
+            This may be meaningful if vocabulary is sorted by descending frequency.
+
+        Returns
+        --------
+        list of tuples (str, float)
+            List of tuples containing (word, distance) pairs in increasing order of distance.
+
+        Examples
+        --------
+        >>> vectors.most_similar('lion.n.01')
+        [('lion_cub.n.01', 0.4484), ('lionet.n.01', 0.6552), ...]
+
+        """
+        if not restrict_vocab:
+            all_distances = self.distances(word)
+        else:
+            words_to_use = self.index2word[:restrict_vocab]
+            all_distances = self.distances(word, words_to_use)
+
+        word_index = self.vocab[word].index
+        if not topn:
+            closest_indices = matutils.argsort(all_distances)
+        else:
+            closest_indices = matutils.argsort(all_distances, topn=1 + topn)
+        result = [
+            (self.index2word[index], float(all_distances[index]))
+            for index in closest_indices if index != word_index  # ignore the input term
+        ]
+        return result
+
     def precompute_max_distance(self):
         for vector in self.syn0:
             vector_distances = self.poincare_dists(vector, self.syn0)
@@ -1059,42 +1103,6 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             word_2_indices = [self.vocab[word].index for word in words_2]
             word_2_vectors = self.syn0[word_2_indices]
         return self.poincare_dists(word_1_vector, word_2_vectors)
-
-    def similarities(self, word_1, words_2=[]):
-        """
-        Return similarity of `word_1` to all words in `words_2`.
-
-        Parameters
-        ----------
-        word_1 : str
-            Word for which similarities are to be computed.
-
-        words_2 : iterable(str) or None
-            For each word in `words_2` similarity to `word_1` is computed.
-            If None or empty, similarity of `word_1` to all words in vocab is computed (including itself).
-
-        Returns
-        -------
-        numpy.array
-            Array containing similarity of `word_1` to all words in `words_2`, in the same order as `words_2`.
-
-        Examples
-        --------
-
-        >>> model.similarities('mammal.n.01', ['carnivore.n.01', 'dog.n.01'])
-        np.array([0.63, 0.46]
-
-        >>> model.similarities('mammal.n.01')
-        np.array([0.97374117, 0.77916104, ..., 0.60019732])
-
-        Notes
-        -----
-        Raises KeyError if either `word_1` or any word in `words_2` is absent from vocab.
-        Similarity values lie between 0 and 1.
-
-        """
-        distances = self.distances(word_1, words_2)
-        return 1 - distances / self.max_distance
 
 
 class PoincareRelations(object):

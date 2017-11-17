@@ -262,29 +262,9 @@ class KeyedVectorsBase(utils.SaveLoad):
         """
         raise NotImplementedError
 
-    def similarities(self, word_1, words_2):
-        """
-        Compute similarities between vectors of `word_1` and all words in `words_2`.
-        If `words_2` is empty or None, similarities between `word_1` and all words in vocab (including `word_1`) itself
-        are returned, in the same order as word indices.
-
-        To be implemented by child class.
-        """
-        raise NotImplementedError
-
     def distance(self, word_1, word_2):
         """
         Compute distance between vectors of two input words.
-        To be implemented by child class.
-        """
-        raise NotImplementedError
-
-    def distances(self, word_1, words_2):
-        """
-        Compute distance between vectors of `word_1` and all words in `words_2`.
-        If `words_2` is empty or None, distances between `word_1` and all words in vocab (including `word_1`) itself
-        are returned, in the same order as word indices.
-
         To be implemented by child class.
         """
         raise NotImplementedError
@@ -341,46 +321,10 @@ class KeyedVectorsBase(utils.SaveLoad):
     def most_similar(self, word, topn=10, restrict_vocab=None):
         """
         Find the top-N most similar words to the given word, sorted in increasing order of distance.
-
-        Parameters
-        ----------
-
-        word : str
-            word for which similar words are to be found.
-        topn : int or None, optional
-            number of similar words to return, if `None`, returns all.
-        restrict_vocab : int or None, optional
-            Optional integer which limits the range of vectors which are searched for most-similar values.
-            For example, restrict_vocab=10000 would only check the first 10000 word vectors in the vocabulary order.
-            This may be meaningful if vocabulary is sorted by descending frequency.
-
-        Returns
-        --------
-        list of tuples (str, float)
-            List of tuples containing (word, distance) pairs in increasing order of distance.
-
-        Examples
-        --------
-        >>> vectors.most_similar('lion.n.01')
-        [('lion_cub.n.01', 0.4484), ('lionet.n.01', 0.6552), ...]
+        To be implemented by child classes
 
         """
-        if not restrict_vocab:
-            all_distances = self.distances(word)
-        else:
-            words_to_use = self.index2word[:restrict_vocab]
-            all_distances = self.distances(word, words_to_use)
-
-        word_index = self.vocab[word].index
-        if not topn:
-            closest_indices = matutils.argsort(all_distances)
-        else:
-            closest_indices = matutils.argsort(all_distances, topn=1 + topn)
-        result = [
-            (self.index2word[index], float(all_distances[index]))
-            for index in closest_indices if index != word_index  # ignore the input term
-        ]
-        return result
+        raise NotImplementedError
 
     def most_similar_to_given(self, w1, word_list):
         """Return the word from word_list most similar to w1.
@@ -404,48 +348,7 @@ class KeyedVectorsBase(utils.SaveLoad):
           'animal'
 
         """
-        return word_list[argmax(self.similarities(w1, word_list))]
-
-    def similar_by_word(self, word, topn=10, restrict_vocab=None):
-        """
-        Find the top-N most similar words.
-
-        If topn is False, similar_by_word returns the vector of similarity scores.
-
-        `restrict_vocab` is an optional integer which limits the range of vectors which
-        are searched for most-similar values. For example, restrict_vocab=10000 would
-        only check the first 10000 word vectors in the vocabulary order. (This may be
-        meaningful if you've sorted the vocabulary by descending frequency.)
-
-        Example::
-
-          >>> trained_model.similar_by_word('graph')
-          [('user', 0.9999163150787354), ...]
-
-        """
-
-        return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
-
-    def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
-        """
-        Find the top-N most similar words by vector.
-
-        If topn is False, similar_by_vector returns the vector of similarity scores.
-
-        `restrict_vocab` is an optional integer which limits the range of vectors which
-        are searched for most-similar values. For example, restrict_vocab=10000 would
-        only check the first 10000 word vectors in the vocabulary order. (This may be
-        meaningful if you've sorted the vocabulary by descending frequency.)
-
-        Example::
-
-          >>> trained_model.similar_by_vector([1,2])
-          [('survey', 0.9942699074745178), ...]
-
-        """
-
-        return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
-
+        return word_list[argmax([self.similarity(w1, word) for word in word_list])]
 
 
 class EuclideanKeyedVectors(KeyedVectorsBase):
@@ -559,6 +462,44 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
+
+    def similar_by_word(self, word, topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar words.
+
+        If topn is False, similar_by_word returns the vector of similarity scores.
+
+        `restrict_vocab` is an optional integer which limits the range of vectors which
+        are searched for most-similar values. For example, restrict_vocab=10000 would
+        only check the first 10000 word vectors in the vocabulary order. (This may be
+        meaningful if you've sorted the vocabulary by descending frequency.)
+
+        Example::
+
+          >>> trained_model.similar_by_word('graph')
+          [('user', 0.9999163150787354), ...]
+
+        """
+        return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
+
+    def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar words by vector.
+
+        If topn is False, similar_by_vector returns the vector of similarity scores.
+
+        `restrict_vocab` is an optional integer which limits the range of vectors which
+        are searched for most-similar values. For example, restrict_vocab=10000 would
+        only check the first 10000 word vectors in the vocabulary order. (This may be
+        meaningful if you've sorted the vocabulary by descending frequency.)
+
+        Example::
+
+          >>> trained_model.similar_by_vector([1,2])
+          [('survey', 0.9942699074745178), ...]
+
+        """
+        return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
 
     def wmdistance(self, document1, document2):
         """
@@ -765,7 +706,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         similarities = dot_products  / (norm * all_norms)
         return similarities
 
-    def distance(self, word_1, word_2):
+    def distance(self, w1, w2):
         """
         Compute cosine distance between two words.
 
@@ -778,41 +719,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
           0.0
 
         """
-        return 1 - self.similarity(word_1, word_2)
-
-    def distances(self, word_1, words_2=[]):
-        """
-        Return distances from given `word_1` to all words in `words_2`.
-
-        Parameters
-        ----------
-        word_1 : str
-            Word from which distances are to be computed.
-
-        words_2 : iterable(str) or None
-            For each word in `words_2` distance from `word_1` is computed.
-            If None or empty, distance of `word_1` from all words in vocab is computed (including itself).
-
-        Returns
-        -------
-        numpy.array
-            Array containing distances to all words in `words_2` from input `word_1`, in the same order as `words_2`.
-
-        Examples
-        --------
-
-        >>> model.distances('war', ['conflict', 'terrorism'])
-        np.array([0.07, 0.15]
-
-        >>> model.distances('war')
-        np.array([0.43, 0.79, ..., 0.31])
-
-        Notes
-        -----
-        Raises KeyError if either `word_1` or any word in `words_2` is absent from vocab.
-
-        """
-        return 1 - self.similarities(word_1, words_2)
+        return 1 - self.similarity(w1, w2)
 
     def similarity(self, w1, w2):
         """
@@ -828,47 +735,6 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
         """
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
-
-    def similarities(self, word_1, words_2=[]):
-        """
-        Return similarity of `word_1` to all words in `words_2`.
-
-        Parameters
-        ----------
-        word_1 : str
-            Word for which similarities are to be computed.
-
-        words_2 : iterable(str) or None
-            For each word in `words_2` similarity to `word_1` is computed.
-            If None or empty, similarity of `word_1` to all words in vocab is computed (including itself).
-
-        Returns
-        -------
-        numpy.array
-            Array containing similarity of `word_1` to all words in `words_2`, in the same order as `words_2`.
-
-        Examples
-        --------
-
-        >>> model.similarities('war', ['conflict', 'terrorism'])
-        np.array([0.63, 0.46]
-
-        >>> model.similarities('war')
-        np.array([0.97374117, 0.77916104, ..., 0.60019732])
-
-        Notes
-        -----
-        Raises KeyError if either `word_1` or any word in `words_2` is absent from vocab.
-        Similarity values lie between 0 and 1.
-
-        """
-        word_1_vector = self.word_vec(word_1)
-        if not words_2:
-            word_2_vectors = self.syn0
-        else:
-            word_2_indices = [self.vocab[word].index for word in words_2]
-            word_2_vectors = self.syn0[word_2_indices]
-        return self.cosine_similarities(word_1_vector, word_2_vectors)
 
     def n_similarity(self, ws1, ws2):
         """
