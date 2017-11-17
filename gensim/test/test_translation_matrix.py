@@ -52,7 +52,9 @@ class TestTranslationMatrix(unittest.TestCase):
         model.train(self.word_pairs)
 
         test_source_word, test_target_word = zip(*self.test_word_pairs)
-        translated_words = model.translate(test_source_word, topn=5, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec)
+        translated_words = model.translate(
+            test_source_word, topn=5, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec
+        )
 
         for idx, item in enumerate(self.test_word_pairs):
             self.assertTrue(item[1] in translated_words[item[0]])
@@ -63,7 +65,10 @@ class TestTranslationMatrix(unittest.TestCase):
         model.train(self.word_pairs)
 
         test_source_word, test_target_word = zip(*self.test_word_pairs)
-        translated_words = model.translate(test_source_word, topn=5, gc=1, sample_num=3, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec)
+        translated_words = model.translate(
+            test_source_word, topn=5, gc=1, sample_num=3,
+            source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec
+        )
 
         for idx, item in enumerate(self.test_word_pairs):
             self.assertTrue(item[1] in translated_words[item[0]])
@@ -93,12 +98,16 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
         self.target_doc_vec = Doc2Vec.load(self.target_doc_vec_file)
 
     def test_translation_matrix(self):
-        model = translation_matrix.BackMappingTranslationMatrix(self.train_docs[:5], self.source_doc_vec, self.target_doc_vec)
+        model = translation_matrix.BackMappingTranslationMatrix(
+            self.train_docs[:5], self.source_doc_vec, self.target_doc_vec
+        )
         transmat = model.train(self.train_docs[:5])
         self.assertEqual(transmat.shape, (100, 100))
 
     def test_infer_vector(self):
-        model = translation_matrix.BackMappingTranslationMatrix(self.train_docs[:5], self.source_doc_vec, self.target_doc_vec)
+        model = translation_matrix.BackMappingTranslationMatrix(
+            self.train_docs[:5], self.source_doc_vec, self.target_doc_vec
+        )
         model.train(self.train_docs[:5])
         infered_vec = model.infer_vector(self.target_doc_vec.docvecs[self.train_docs[5].tags])
         self.assertEqual(infered_vec.shape, (100, ))

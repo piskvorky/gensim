@@ -55,10 +55,13 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
             vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
             expected = [0.13, 0.87]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
+            # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)
             if passed:
                 break
-            logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)", i, sorted(vec), sorted(expected))
+            logging.warning(
+                "LDA failed to converge on attempt %i (got %s, expected %s)", i, sorted(vec), sorted(expected)
+            )
         self.assertTrue(passed)
 
     def testAlphaAuto(self):
