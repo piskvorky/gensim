@@ -252,6 +252,31 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         predicted = self.vectors.most_similar_to_given('dog.n.01', ['carnivore.n.01', 'placental.n.01', 'mammal.n.01'])
         self.assertEqual(predicted, 'carnivore.n.01')
 
+    def test_similar_by_word(self):
+        """Test similar_by_word returns expected results."""
+        expected = [
+            'canine.n.02',
+            'hunting_dog.n.01',
+            'carnivore.n.01',
+            'placental.n.01',
+            'mammal.n.01'
+        ]
+        predicted = [result[0] for result in self.vectors.similar_by_word('dog.n.01', topn=5)]
+        self.assertEqual(expected, predicted)
+
+    def test_similar_by_vector(self):
+        """Test similar_by_vector returns expected results."""
+        expected = [
+            'dog.n.01',
+            'canine.n.02',
+            'hunting_dog.n.01',
+            'carnivore.n.01',
+            'placental.n.01',
+        ]
+        input_vector = self.vectors['dog.n.01']
+        predicted = [result[0] for result in self.vectors.similar_by_vector(input_vector, topn=5)]
+        self.assertEqual(expected, predicted)
+
     def test_distance(self):
         """Test that distance returns expected values."""
         self.assertTrue(np.allclose(self.vectors.distance('dog.n.01', 'mammal.n.01'), 4.5278745))
