@@ -181,7 +181,6 @@ class PoincareModel(utils.SaveLoad):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.kv.index2word), self.size)
         self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
-        self.kv.precompute_max_distance()
 
     def _get_candidate_negatives(self):
         """Returns candidate negatives of size `self.negative` from the negative examples buffer.
@@ -750,7 +749,6 @@ class PoincareKeyedVectors(KeyedVectorsBase):
     def __init__(self):
         super(PoincareKeyedVectors, self).__init__()
         self.max_distance = 0
-        self.precompute_max_distance()
 
     @staticmethod
     def poincare_dists(vector_1, vectors_all):
@@ -781,12 +779,6 @@ class PoincareKeyedVectors(KeyedVectorsBase):
                 (euclidean_dists ** 2) / ((1 - norm ** 2) * (1 - all_norms ** 2))
             )
         )
-
-    @classmethod
-    def load_word2vec_format(cls, *args, **kwargs):
-        vectors = super(PoincareKeyedVectors, cls).load_word2vec_format(*args, **kwargs)
-        vectors.precompute_max_distance()
-        return vectors
 
     def nodes_closer_than(self, term_1, term_2):
         """
@@ -1011,8 +1003,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         Similarity lies between 0 and 1.
 
         """
-        distance = self.distance(term_1, term_2)
-        return 1 - distance / self.max_distance
+        return 1 / (1 + self.distance(term_1, term_2))
 
     def most_similar(self, word_or_vector, topn=10, restrict_vocab=None):
         """
@@ -1062,13 +1053,6 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         if topn:
             result = result[:topn]
         return result
-
-    def precompute_max_distance(self):
-        for vector in self.syn0:
-            vector_distances = self.poincare_dists(vector, self.syn0)
-            vector_max_distance = np.max(vector_distances)
-            if vector_max_distance > self.max_distance:
-                self.max_distance = vector_max_distance
 
     def distances(self, word_or_vector, words_2=[]):
         """

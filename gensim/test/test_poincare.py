@@ -317,7 +317,7 @@ class TestPoincareKeyedVectors(unittest.TestCase):
     def test_similarity(self):
         """Test similarity returns expected value for two nodes, and for identical nodes."""
         self.assertTrue(np.allclose(self.vectors.similarity('dog.n.01', 'dog.n.01'), 1))
-        self.assertTrue(np.allclose(self.vectors.similarity('dog.n.01', 'mammal.n.01'), 0.728260))
+        self.assertTrue(np.allclose(self.vectors.similarity('dog.n.01', 'mammal.n.01'), 0.180901358))
 
 
 if __name__ == '__main__':
