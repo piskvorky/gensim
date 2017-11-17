@@ -176,8 +176,7 @@ class Dictionary(utils.SaveLoad, Mapping):
     def doc2idx(self, document, unknown_word_index=-1):
         """Convert `document` (a list of words) into a list of indexes = list of `token_id`.
 
-        Each word is assumed to be a **tokenized and normalized** string
-        (either unicode or utf8-encoded).
+        Each word is assumed to be a **tokenized and normalized** string (either unicode or utf8-encoded).
         No further preprocessing is done on the words in `document`; apply tokenization, stemming etc. before calling
         this method.
 
@@ -186,19 +185,26 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Notes
         -----
-            This function is `const`, aka read-only
+        This function is `const`, aka read-only
 
         Parameters
         ----------
-        document : list
-            List of words tokenized, normalized and preprocessed.
+        document : list of str
+            Tokenized, normalized and preprocessed words
         unknown_word_index : int, optional
             Index to use for words not in the dictionary.
 
         Returns
         -------
-        list
-            List of indexes in the dictionary for words in the `document`
+        list of int
+            Indexes in the dictionary for words in the `document` preserving the order of words
+
+        Examples
+        --------
+        >>> dictionary_obj = Dictionary()
+        >>> dictionary_obj.token2id = {'computer': 0, 'human': 1, 'response': 2, 'survey': 3}
+        >>> dictionary_obj.doc2idx(document=['human', 'computer', 'interface'], unknown_word_index=-1)
+        [1, 0, -1]
 
         """
         if isinstance(document, string_types):
