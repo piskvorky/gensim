@@ -114,10 +114,8 @@ class TextCorpus(interfaces.CorpusABC):
     6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
 
     """
-    def __init__(
-            self, input=None, dictionary=None, metadata=False, character_filters=None, tokenizer=None,
-            token_filters=None, bow_format=True, unk_wrd_idx=0
-    ):
+    def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None, tokenizer=None,
+                 token_filters=None, bow_format=True, unknown_word_index=-1):
         """
         Args:
             input (str): path to top-level directory to traverse for corpus documents.
@@ -141,7 +139,8 @@ class TextCorpus(interfaces.CorpusABC):
                 in `gensim.parsing.preprocessing.STOPWORDS`.
             bow_format (bool): True to return BoW format (default) else return index vector as per
                 the `dictionary` if False
-            unk_wrd_idx (int): index to represent unknown words, i.e, words not in the `dictionary`
+            unknown_word_index (int): index to represent unknown words (default -1), i.e, words not
+                in the `dictionary`
         """
         self.input = input
         self.metadata = metadata
@@ -163,7 +162,7 @@ class TextCorpus(interfaces.CorpusABC):
         self.init_dictionary(dictionary)
 
         self.bow_format = bow_format
-        self.unk_wrd_idx = unk_wrd_idx
+        self.unknown_word_index = unknown_word_index
 
     def init_dictionary(self, dictionary):
         """If `dictionary` is None, initialize to an empty Dictionary, and then if there
@@ -193,13 +192,13 @@ class TextCorpus(interfaces.CorpusABC):
                 if self.bow_format:
                     yield self.dictionary.doc2bow(text, allow_update=False), metadata
                 else:
-                    yield self.dictionary.doc2idx(text, unk_wrd_idx=self.unk_wrd_idx), metadata
+                    yield self.dictionary.doc2idx(text, unknown_word_index=self.unknown_word_index), metadata
         else:
             for text in self.get_texts():
                 if self.bow_format:
                     yield self.dictionary.doc2bow(text, allow_update=False)
                 else:
-                    yield self.dictionary.doc2idx(text, unk_wrd_idx=self.unk_wrd_idx)
+                    yield self.dictionary.doc2idx(text, unknown_word_index=self.unknown_word_index)
 
     def getstream(self):
         """Yield documents from the underlying plain text collection (of one or more files).

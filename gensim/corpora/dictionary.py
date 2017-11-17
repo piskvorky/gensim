@@ -173,36 +173,39 @@ class Dictionary(utils.SaveLoad, Mapping):
         else:
             return result
 
-    def doc2idx(self, document, unk_wrd_idx=0):
-        """
-        Convert `document` (a list of words) into a list of indexes = list
-        of `token_id`. Each word is assumed to be a **tokenized and normalized** string
+    def doc2idx(self, document, unknown_word_index=-1):
+        """Convert `document` (a list of words) into a list of indexes = list of `token_id`.
+
+        Each word is assumed to be a **tokenized and normalized** string
         (either unicode or utf8-encoded).
         No further preprocessing is done on the words in `document`; apply tokenization, stemming etc. before calling
         this method.
 
-        Replace all unknown words i.e, words not in the dictionary with the index as set via `unk_wrd_idx`, defaults to
-        0.
+        Replace all unknown words i.e, words not in the dictionary with the index as set via `unknown_word_index`,
+        defaults to -1.
 
-        This function is `const`, aka read-only
+        Notes
+        -----
+            This function is `const`, aka read-only
+
+        Parameters
+        ----------
+        document : list
+            List of words tokenized, normalized and preprocessed.
+        unknown_word_index : int, optional
+            Index to use for words not in the dictionary.
+
+        Returns
+        -------
+        list
+            List of indexes in the dictionary for words in the `document`
+
         """
         if isinstance(document, string_types):
             raise TypeError("doc2idx expects an array of unicode tokens on input, not a single string")
 
-        token2id = self.token2id
-
-        list_word_idx = list()
-        for word in document:
-            word = word if isinstance(word, unicode) else unicode(word, 'utf-8')
-
-            wrd_idx = token2id.get(word, None)
-
-            if wrd_idx is not None:
-                list_word_idx.append(wrd_idx)
-            else:
-                list_word_idx.append(unk_wrd_idx)
-
-        return list_word_idx
+        document = [word if isinstance(word, unicode) else unicode(word, 'utf-8') for word in document]
+        return [self.token2id.get(word, unknown_word_index) for word in document]
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
         """
