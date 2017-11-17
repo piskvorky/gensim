@@ -751,6 +751,26 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         self.max_distance = 0
 
     @staticmethod
+    def poincare_distance(vector_1, vector_2):
+        """
+        Return poincare distance between two input vectors. Convenience method over `poincare_distance_batch`.
+
+        Parameters
+        ----------
+        vector_1 : numpy.array
+            input vector
+        vector_2 : numpy.array
+            input vector
+
+        Returns
+        -------
+        numpy.float
+            Contains Poincare distance between `vector_1` and `vector_2`.
+
+        """
+        return PoincareKeyedVectors.poincare_distance_batch(vector_1, vector_2[np.newaxis, :])[0]
+
+    @staticmethod
     def poincare_distance_batch(vector_1, vectors_all):
         """
         Return poincare distances between one vector and a set of other vectors.
@@ -973,7 +993,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         """
         vector_1 = self.word_vec(term_1)
         vector_2 = self.word_vec(term_2)
-        return self.poincare_distance_batch(vector_1, vector_2[np.newaxis, :])[0]
+        return self.poincare_distance(vector_1, vector_2)
 
     def similarity(self, term_1, term_2):
         """

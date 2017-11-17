@@ -280,7 +280,7 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(distances[-1], 10.04756))
 
     def test_distances_with_vector_input(self):
-        """Test that distances between one word and multiple other words have expected values."""
+        """Test that distances between input vector and a list of words have expected values."""
         input_vector = self.vectors['dog.n.01']
         distances = self.vectors.distances(input_vector, ['mammal.n.01', 'dog.n.01'])
         self.assertTrue(np.allclose(distances, [4.5278745, 0]))
@@ -288,6 +288,24 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         distances = self.vectors.distances(input_vector)
         self.assertEqual(len(distances), len(self.vectors.vocab))
         self.assertTrue(np.allclose(distances[-1], 10.04756))
+
+    def test_poincare_distances_batch(self):
+        """Test that poincare_distance_batch returns correct distances."""
+        vector_1 = self.vectors['dog.n.01']
+        vectors_2 = self.vectors[['mammal.n.01', 'dog.n.01']]
+        distances = self.vectors.poincare_distance_batch(vector_1, vectors_2)
+        self.assertTrue(np.allclose(distances, [4.5278745, 0]))
+
+    def test_poincare_distance(self):
+        """Test that poincare_distance returns correct distance between two input vectors."""
+        vector_1 = self.vectors['dog.n.01']
+        vector_2 = self.vectors['mammal.n.01']
+
+        distance = self.vectors.poincare_distance(vector_1, vector_2)
+        self.assertTrue(np.allclose(distance, 4.5278745))
+
+        distance = self.vectors.poincare_distance(vector_1, vector_1)
+        self.assertTrue(np.allclose(distance, 0))
 
     def test_closest_child(self):
         """Test closest_child returns expected value and returns None for lowest node in hierarchy."""
