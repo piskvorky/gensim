@@ -204,7 +204,7 @@ class AuthorTopicModel(LdaModel):
         >>> model = AuthorTopicModel(corpus, num_topics=50, author2doc=author2doc, id2word=id2word, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
-
+        self.dtype = np.float64
         # NOTE: as distributed version of this model is not implemented, "distributed" is set to false. Some of the
         # infrastructure to implement a distributed author-topic model is already in place, such as the AuthorTopicState.
         distributed = False
