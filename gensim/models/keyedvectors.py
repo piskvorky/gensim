@@ -382,6 +382,30 @@ class KeyedVectorsBase(utils.SaveLoad):
         ]
         return result
 
+    def most_similar_to_given(self, w1, word_list):
+        """Return the word from word_list most similar to w1.
+
+        Args:
+            w1 (str): a word
+            word_list (list): list of words containing a word most similar to w1
+
+        Returns:
+            the word in word_list with the highest similarity to w1
+
+        Raises:
+            KeyError: If w1 or any word in word_list is not in the vocabulary
+
+        Example::
+
+          >>> trained_model.most_similar_to_given('music', ['water', 'sound', 'backpack', 'mouse'])
+          'sound'
+
+          >>> trained_model.most_similar_to_given('snake', ['food', 'pencil', 'animal', 'phone'])
+          'animal'
+
+        """
+        return word_list[argmax(self.similarities(w1, word_list))]
+
 
 class EuclideanKeyedVectors(KeyedVectorsBase):
     """
@@ -844,30 +868,6 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
             word_2_indices = [self.vocab[word].index for word in words_2]
             word_2_vectors = self.syn0[word_2_indices]
         return self.cosine_similarities(word_1_vector, word_2_vectors)
-
-    def most_similar_to_given(self, w1, word_list):
-        """Return the word from word_list most similar to w1.
-
-        Args:
-            w1 (str): a word
-            word_list (list): list of words containing a word most similar to w1
-
-        Returns:
-            the word in word_list with the highest similarity to w1
-
-        Raises:
-            KeyError: If w1 or any word in word_list is not in the vocabulary
-
-        Example::
-
-          >>> trained_model.most_similar_to_given('music', ['water', 'sound', 'backpack', 'mouse'])
-          'sound'
-
-          >>> trained_model.most_similar_to_given('snake', ['food', 'pencil', 'animal', 'phone'])
-          'animal'
-
-        """
-        return word_list[argmax([self.similarity(w1, word) for word in word_list])]
 
     def n_similarity(self, ws1, ws2):
         """
