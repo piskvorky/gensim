@@ -1128,16 +1128,17 @@ class PoincareRelations(object):
             Relation from input file.
 
         """
-        if sys.version_info[0] < 3:
-            lines = smart_open(self.file_path, 'rb')
-        else:
-            lines = (l.decode(self.encoding) for l in smart_open(self.file_path, 'rb'))
-        # csv.reader requires bytestring input in python2, unicode input in python3
-        reader = csv.reader(lines, delimiter=self.delimiter)
-        for row in reader:
+        with smart_open(self.file_path) as file_obj:
             if sys.version_info[0] < 3:
-                row = [value.decode(self.encoding) for value in row]
-            yield tuple(row)
+                lines = file_obj
+            else:
+                lines = (l.decode(self.encoding) for l in file_obj)
+            # csv.reader requires bytestring input in python2, unicode input in python3
+            reader = csv.reader(lines, delimiter=self.delimiter)
+            for row in reader:
+                if sys.version_info[0] < 3:
+                    row = [value.decode(self.encoding) for value in row]
+                yield tuple(row)
 
 
 class NegativesBuffer(object):
