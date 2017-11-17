@@ -236,7 +236,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         asymmetric priors over the word distribution on a per-topic basis
         (can not be learned from data).
 
-        Turn on `distributed` to force distributed computing (see the `web tutorial <http://radimrehurek.com/gensim/distributed.html>`_
+        Turn on `distributed` to force distributed computing
+        (see the `web tutorial <http://radimrehurek.com/gensim/distributed.html>`_
         on how to set up a cluster of machines for gensim).
 
         Calculate and log perplexity estimate from the latest mini-batch every
@@ -269,7 +270,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # store user-supplied parameters
         self.id2word = id2word
         if corpus is None and self.id2word is None:
-            raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
+            raise ValueError(
+                'at least one of corpus/id2word must be specified, to establish input space dimensionality'
+            )
 
         if self.id2word is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
@@ -379,7 +382,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
                 init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)], dtype=self.dtype)
             elif prior == 'asymmetric':
-                init_prior = np.asarray([1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)], dtype=self.dtype)
+                init_prior = \
+                    np.asarray([1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)], dtype=self.dtype)
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
@@ -1050,9 +1054,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Available values: `kullback_leibler`, `hellinger`, `jaccard` and `jensen_shannon`
         `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
         `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
-        `diagonal` set to True if the difference is required only between the identical topic no.s (returns diagonal of diff matrix)
+        `diagonal` set to True if the difference is required only between the identical topic no.s
+        (returns diagonal of diff matrix)
         `annotation` whether the intersection or difference of words between two topics should be returned
-        Returns a matrix Z with shape (m1.num_topics, m2.num_topics), where Z[i][j] - difference between topic_i and topic_j
+        Returns a matrix Z with shape (m1.num_topics, m2.num_topics),
+         where Z[i][j] - difference between topic_i and topic_j
         and matrix annotation (if True) with shape (m1.num_topics, m2.num_topics, 2, None),
         where:
 
@@ -1098,7 +1104,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if diagonal:
             assert t1_size == t2_size, \
-                "Both input models should have same no. of topics, as the diagonal will only be valid in a square matrix"
+                "Both input models should have same no. of topics, " \
+                "as the diagonal will only be valid in a square matrix"
             # initialize z and annotation array
             z = np.zeros(t1_size)
             if annotation:
@@ -1169,7 +1176,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
              those ones that exceed `sep_limit` set in `gensim.utils.SaveLoad.save`. The main
              concern here is the `alpha` array if for instance using `alpha='auto'`.
 
-        Please refer to the wiki recipes section (https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q9-how-do-i-load-a-model-in-python-3-that-was-trained-and-saved-using-python-2)
+        Please refer to the wiki recipes section (goo.gl/qoje24)
         for an example on how to work around these issues.
         """
         if self.state is not None:
@@ -1193,9 +1200,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         separately_explicit = ['expElogbeta', 'sstats']
         # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some
         # array manually.
-        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
+        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or \
+                (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
             separately_explicit.append('alpha')
-        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
+        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or \
+                (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
             separately_explicit.append('eta')
         # Merge separately_explicit with separately.
         if separately:
@@ -1222,7 +1231,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         # check if `random_state` attribute has been set after main pickle load
         # if set -> the model to be loaded was saved using a >= 0.13.2 version of Gensim
-        # if not set -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so set `random_state` as the default value
+        # if not set -> the model to be loaded was saved using a < 0.13.2 version of Gensim,
+        # so set `random_state` as the default value
         if not hasattr(result, 'random_state'):
             result.random_state = utils.get_random_state(None)  # using default value `get_random_state(None)`
             logging.warning("random_state not set so using default value")
@@ -1240,8 +1250,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         id2word_fname = utils.smart_extension(fname, '.id2word')
         # check if `id2word_fname` file is present on disk
-        # if present -> the model to be loaded was saved using a >= 0.13.2 version of Gensim, so set `result.id2word` using the `id2word_fname` file
-        # if not present -> the model to be loaded was saved using a < 0.13.2 version of Gensim, so `result.id2word` already set after the main pickle load
+        # if present -> the model to be loaded was saved using a >= 0.13.2 version of Gensim,
+        # so set `result.id2word` using the `id2word_fname` file
+        # if not present -> the model to be loaded was saved using a < 0.13.2 version of Gensim,
+        # so `result.id2word` already set after the main pickle load
         if os.path.isfile(id2word_fname):
             try:
                 result.id2word = utils.unpickle(id2word_fname)

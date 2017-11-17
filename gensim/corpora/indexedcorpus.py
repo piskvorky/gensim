@@ -56,7 +56,8 @@ class IndexedCorpus(interfaces.CorpusABC):
         self.length = None
 
     @classmethod
-    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None, metadata=False):
+    def serialize(serializer, fname, corpus, id2word=None, index_fname=None,
+                  progress_cnt=None, labels=None, metadata=False):
         """
         Iterate through the document stream `corpus`, saving the documents to `fname`
         and recording byte offset of each document. Save the resulting index
