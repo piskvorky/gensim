@@ -58,6 +58,19 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         predicted = set(result[0] for result in self.vectors.most_similar('war', topn=5, restrict_vocab=5))
         self.assertEqual(expected, predicted)
 
+    def test_most_similar_with_vector_input(self):
+        """Test most_similar returns expected results with an input vector instead of an input word."""
+        expected = [
+            'war',
+            'conflict',
+            'administration',
+            'terrorism',
+            'call',
+        ]
+        input_vector = self.vectors['war']
+        predicted = [result[0] for result in self.vectors.most_similar([input_vector], topn=5)]
+        self.assertEqual(expected, predicted)
+
     def test_most_similar_to_given(self):
         """Test most_similar_to_given returns correct results."""
         predicted = self.vectors.most_similar_to_given('war', ['terrorism', 'call', 'waging'])
