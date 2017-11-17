@@ -63,6 +63,31 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         predicted = self.vectors.most_similar_to_given('war', ['terrorism', 'call', 'waging'])
         self.assertEqual(predicted, 'terrorism')
 
+    def test_similar_by_word(self):
+        """Test similar_by_word returns expected results."""
+        expected = [
+            'conflict',
+            'administration',
+            'terrorism',
+            'call',
+            'israel'
+        ]
+        predicted = [result[0] for result in self.vectors.similar_by_word('war', topn=5)]
+        self.assertEqual(expected, predicted)
+
+    def test_similar_by_vector(self):
+        """Test similar_by_word returns expected results."""
+        expected = [
+            'war',
+            'conflict',
+            'administration',
+            'terrorism',
+            'call',
+        ]
+        input_vector = self.vectors['war']
+        predicted = [result[0] for result in self.vectors.similar_by_vector(input_vector, topn=5)]
+        self.assertEqual(expected, predicted)
+
     def test_distance(self):
         """Test that distance returns expected values."""
         self.assertTrue(np.allclose(self.vectors.distance('war', 'conflict'), 0.06694602))
