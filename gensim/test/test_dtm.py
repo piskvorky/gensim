@@ -24,11 +24,8 @@ class TestDtmModel(unittest.TestCase):
         self.id2word = corpora.Dictionary.load(datapath('dtm_test.dict'))
         # first you need to setup the environment variable $DTM_PATH for the dtm executable file
         self.dtm_path = os.environ.get('DTM_PATH', None)
-        if self.dtm_path is None:
-            if sys.version_info >= (2, 7, 0):
-                self.skipTest("$DTM_PATH is not properly set up.")
-            else:
-                logging.warning("$DTM_PATH is not properly set up.")
+        if not self.dtm_path:
+            self.skipTest("$DTM_PATH is not properly set up.")
 
     def testDtm(self):
         if self.dtm_path is not None:
