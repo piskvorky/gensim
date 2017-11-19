@@ -21,7 +21,7 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
     """
     Calculate the log-conditional-probability measure
     which is used by coherence measures such as U_mass.
-    This is defined as: m_lc(S_i) = log[(P(W', W*) + e) / P(W*)]
+    This is defined as :math:`m_lc(S_i) = log[(P(W', W*) + e) / P(W*)]`
 
     Parameters
     ----------
@@ -49,10 +49,9 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
     >>> token2id = {v: k for k, v in id2token.items()}
     >>> dictionary = namedtuple('Dictionary', 'token2id, id2token')(token2id, id2token)
     >>> segmentation = [[(1, 2)]]
-    >>> num_docs = 5
     >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
     >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
-    >>> accumulator._num_docs = num_docs
+    >>> accumulator._num_docs = 5
     >>> direct_confirmation_measure.log_conditional_probability(segmentation, accumulator)[0]
     Answer should be ~ ln(1 / 2) = -0.693147181
 
@@ -112,12 +111,12 @@ def log_ratio_measure(
         Popularly known as PMI.
         Calculate the log-ratio-measure which is used by
         coherence measures such as c_v.
-        This is defined as: m_lr(S_i) = log[(P(W', W*) + e) / (P(W') * P(W*))]
+        This is defined as :math:`m_lr(S_i) = log[(P(W', W*) + e) / (P(W') * P(W*))]`
 
     If normalize=True:
         Calculate the normalized-log-ratio-measure, popularly knowns as
         NPMI which is used by coherence measures such as c_v.
-        This is defined as: m_nlr(S_i) = m_lr(S_i) / -log[P(W', W*) + e]
+        This is defined as :math:`m_nlr(S_i) = m_lr(S_i) / -log[P(W', W*) + e]`
 
     Parameters
     ----------
@@ -146,10 +145,9 @@ def log_ratio_measure(
     >>> token2id = {v: k for k, v in id2token.items()}
     >>> dictionary = namedtuple('Dictionary', 'token2id, id2token')(token2id, id2token)
     >>> segmentation = [[(1, 2)]]
-    >>> num_docs = 5
     >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
     >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
-    >>> accumulator._num_docs = num_docs
+    >>> accumulator._num_docs = 5
     >>> direct_confirmation_measure.log_ratio_measure(segmentation, accumulator)[0]
     Answer should be ~ ln{(1 / 5) / [(3 / 5) * (2 / 5)]} = -0.182321557
 

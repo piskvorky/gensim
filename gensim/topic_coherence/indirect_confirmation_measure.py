@@ -15,17 +15,17 @@ together in documents in the reference corpus. But their confirmations to other 
 or “speed” do strongly correlate. This would be reflected by an indirect confirmation measure.
 Thus, indirect confirmation measures may capture semantic support that direct measures would miss.
 
-The formula used to compute indirect confirmation measure is
+The formula used to compute indirect confirmation measure is .. math::
 
-    m_{sim}_{(m, \gamma)}(W', W*) =
-        s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
+    m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
 
-where s_sim can be cosine, dice or jaccard similarity and
+where s_sim can be cosine, dice or jaccard similarity and .. math::
 
-    \vec{V}^{\,}_{m,\gamma}(W') =
-        \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
+    \vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
-Here 'm' is the direct confirmation measure used.
+Attributes:
+-----------
+m: direct confirmation measure.
 
 """
 
@@ -114,19 +114,17 @@ def cosine_similarity(
         with_std=False, with_support=False):
     r"""Calculate the indirect cosine measure.
 
-    Given context vectors u = V(W') and w = V(W*) for the
-    word sets of a pair S_i = (W', W*) indirect cosine measure
+    Given context vectors :math:`u = V(W') and w = V(W*)` for the
+    word sets of a pair  :math:`S_i = (W', W*)` indirect cosine measure
     is computed as the cosine similarity between u and w.
 
-    The formula used is
+    The formula used is ..math::
 
-        m_{sim}_{(m, \gamma)}(W', W*) =
-            s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
+        `m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))`
 
-    where each vector
+    where each vector ::math::
 
-        \vec{V}^{\,}_{m,\gamma}(W') =
-            \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
+        `\vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}`
 
     Parameters
     ----------
@@ -189,6 +187,17 @@ class ContextVectorComputer(object):
     """Lazily compute context vectors for topic segments."""
 
     def __init__(self, measure, topics, accumulator, gamma):
+        """
+        Parameters
+        ----------
+        measure: tuple
+            no idea
+        topics: list
+            no idea
+        accumulator : list
+            Word occurrence accumulator from probability_estimation.
+        gamma:
+        """
         if measure == 'nlr':
             self.similarity = _pair_npmi
         else:
