@@ -351,6 +351,22 @@ class TestFastText(unittest.TestCase):
         oov_embedding = self.test_model[oov_word]
         self.assertEqual(vocab_embedding.dtype, oov_embedding.dtype)
 
+    def testPersistenceForOldVersions(self):
+        """Test backward compatibility for models saved with versions < 3.0.0"""
+        old_model_path = datapath('ft_model_2.3.0')
+        loaded_model = fasttext.FastText.load(old_model_path)
+        self.assertEqual(loaded_model.vector_size, 10)
+        self.assertEqual(loaded_model.wv.syn0.shape[1], 10)
+        self.assertEqual(loaded_model.wv.syn0_ngrams.shape[1], 10)
+        # in-vocab word
+        in_expected_vec = numpy.array([-2.44566941, -1.54802394, -2.61103821, -1.88549316, 1.02860415,
+            1.19031894, 2.01627707, 1.98942184, -1.39095843, -0.65036952])
+        self.assertTrue(numpy.allclose(loaded_model["the"], in_expected_vec, atol=1e-4))
+        # out-of-vocab word
+        out_expected_vec = numpy.array([-1.34948218, -0.8686831, -1.51483142, -1.0164026, 0.56272298,
+            0.66228276, 1.06477463, 1.1355902, -0.80972326, -0.39845538])
+        self.assertTrue(numpy.allclose(loaded_model["random_word"], out_expected_vec, atol=1e-4))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

@@ -252,6 +252,14 @@ class FastText(Word2Vec):
         return model
 
     @classmethod
+    def load(cls, *args, **kwargs):
+        model = super(FastText, cls).load(*args, **kwargs)
+        if hasattr(model.wv, 'syn0_all'):
+            setattr(model.wv, 'syn0_ngrams', model.wv.syn0_all)
+            delattr(model.wv, 'syn0_all')
+        return model
+
+    @classmethod
     def delete_training_files(cls, model_file):
         """Deletes the files created by FastText training"""
         try:
