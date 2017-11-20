@@ -27,10 +27,39 @@ EXCLUDING_FILTER = []
 
 
 def _get_pos_filters():
+    """Returns default including and excluding filters as frozen sets.
+    
+    Returns
+    -------
+    tuple of frozenset
+        Including and excluding filters.
+
+    """
     return frozenset(INCLUDING_FILTER), frozenset(EXCLUDING_FILTER)
 
 
 def _get_words_for_graph(tokens, pos_filter=None):
+    """Filters given dictionary of tokens using provided part of speech filters
+    and returns appropriate list of words.
+
+    Parameters
+    ----------
+    tokens : dictionary
+        Input text.
+    pos_filter : tuple
+        Part of speech filters, optional.
+    
+    Returns
+    -------
+    list
+        Filtered words.
+
+    Raises
+    ------
+    ValueError
+        If include and exclude filters ar not empty at the same time.
+
+    """
     if pos_filter is None:
         include_filters, exclude_filters = _get_pos_filters()
     else:
@@ -49,10 +78,38 @@ def _get_words_for_graph(tokens, pos_filter=None):
 
 
 def _get_first_window(split_text):
+    """Returns first `WINDOW_SIZE` tokens from given splitted text.
+
+    Parameters
+    ----------
+    split_text : list
+        Given splitted text.
+    
+    Returns
+    -------
+    tuple of frozenset
+        Including and excluding filters.
+        
+    """
     return split_text[:WINDOW_SIZE]
 
 
 def _set_graph_edge(graph, tokens, word_a, word_b):
+    """Sets an edge between nodes word_a and word_b if they exists in `tokens`
+    and `graph`. Works inplace.
+
+    Parameters
+    ----------
+    graph : Graph
+        Given graph.
+    tokens : Graph
+        Given tokens.
+    word_a : str
+        First word.
+    word_b : str
+        Second word.
+        
+    """
     if word_a in tokens and word_b in tokens:
         lemma_a = tokens[word_a].token
         lemma_b = tokens[word_b].token
@@ -63,12 +120,38 @@ def _set_graph_edge(graph, tokens, word_a, word_b):
 
 
 def _process_first_window(graph, tokens, split_text):
+    """Sets an edges between nodes taken from first `WINDOW_SIZE` words
+    of `split_text` if they exist in `tokens` and `graph`. Works inplace.
+
+    Parameters
+    ----------
+    graph : Graph
+        Given graph.
+    tokens : Graph
+        Given tokens.
+    split_text : list of str
+        First word.
+        
+    """
     first_window = _get_first_window(split_text)
     for word_a, word_b in _combinations(first_window, 2):
         _set_graph_edge(graph, tokens, word_a, word_b)
 
 
 def _init_queue(split_text):
+    """Initializies queue by first words from `split_text`. 
+
+    Parameters
+    ----------
+    split_text : list of str
+        Splitted text.
+
+    Returns
+    -------
+    Queue
+        Initialized queue.
+        
+    """
     queue = _Queue()
     first_window = _get_first_window(split_text)
     for word in first_window[1:]:
@@ -77,17 +160,54 @@ def _init_queue(split_text):
 
 
 def _process_word(graph, tokens, queue, word):
+    """Sets edge between `word` and each element in queue in `graph` if such nodes
+    exist in `tokens` and `graph`. 
+
+    Parameters
+    ----------
+    graph : Graph
+        Given graph.
+    tokens : Graph
+        Given tokens.
+    queue : Queue
+        Given queue.
+    word : str
+        Word, possible `node` in graph and item in `tokens`.
+
+    """
     for word_to_compare in _queue_iterator(queue):
         _set_graph_edge(graph, tokens, word, word_to_compare)
 
 
 def _update_queue(queue, word):
+    """Updates given `queue` (removes last item and puts `word`).
+
+    Parameters
+    ----------
+    queue : Queue
+        Given queue.
+    word : str
+        Word to be added to queue.
+    """
     queue.get()
     queue.put(word)
     assert queue.qsize() == (WINDOW_SIZE - 1)
 
 
 def _process_text(graph, tokens, split_text):
+    """Processes `split_text` by updating given `graph` with new eges between 
+    nodes if they exists in `tokens` and `graph`. Words are taken from 
+    `split_text` with window size `WINDOW_SIZE`.
+
+    Parameters
+    ----------
+    graph : Graph
+        Given graph.
+    tokens : Graph
+        Given tokens.
+    split_text : list of str
+        Splitted text.
+    """
     queue = _init_queue(split_text)
     for i in xrange(WINDOW_SIZE, len(split_text)):
         word = split_text[i]
@@ -96,6 +216,19 @@ def _process_text(graph, tokens, split_text):
 
 
 def _queue_iterator(queue):
+    """Represents iterator of the given queue.
+
+    Parameters
+    ----------
+    queue : Queue
+        Given queue.
+
+    Yields
+    ------
+    str
+        Current item of queue.
+        
+    """
     iterations = queue.qsize()
     for _ in xrange(iterations):
         var = queue.get()
@@ -104,20 +237,64 @@ def _queue_iterator(queue):
 
 
 def _set_graph_edges(graph, tokens, split_text):
+    """Updates given `graph` by setting eges between nodes if they exists in 
+    `tokens` and `graph`. Words are taken from `split_text` with window size
+    `WINDOW_SIZE`.
+
+    Parameters
+    ----------
+    graph : Graph
+        Given graph.
+    tokens : dict
+        Given tokens.
+    split_text : list of str
+        Splitted text.
+    """
     _process_first_window(graph, tokens, split_text)
     _process_text(graph, tokens, split_text)
 
 
 def _extract_tokens(lemmas, scores, ratio, words):
-    lemmas.sort(key=lambda s: scores[s], reverse=True)
+    """Extracts tokens from provided lemmas. Most scored lemmas are used if 
+    `words` not provided.
 
-    # If no "words" option is selected, the number of sentences is
-    # reduced by the provided ratio, else, the ratio is ignored.
+    Parameters
+    ----------
+    lemmas : list
+        Given lemmas.
+    scores : dict
+        Dictionary with lemmas and its scores.
+    ratio : float
+        Proportion of `lemmas` used for final result. 
+    words : int
+        Number of used words. If no "words" option is selected, the number of 
+        sentences is reduced by the provided ratio, else, the ratio is ignored.
+
+    Returns
+    -------
+    list of (tuple of float and str)
+        Scores and corresponded lemmas.
+
+    """
+    lemmas.sort(key=lambda s: scores[s], reverse=True)
     length = len(lemmas) * ratio if words is None else words
     return [(scores[lemmas[i]], lemmas[i],) for i in range(int(length))]
 
 
 def _lemmas_to_words(tokens):
+    """Extracts words and lemmas from given tokens.
+
+    Parameters
+    ----------
+    tokens : dict
+        Given tokens.
+
+    Returns
+    -------
+    dict
+        Keys are lemmas and values are corresponding words.
+         
+    """
     lemma_to_word = {}
     for word, unit in iteritems(tokens):
         lemma = unit.token
@@ -129,11 +306,23 @@ def _lemmas_to_words(tokens):
 
 
 def _get_keywords_with_score(extracted_lemmas, lemma_to_word):
+    """Returns lemmas and its scores from `extracted_lemmas` contained in 
+    `lemma_to_word`.
+
+    Parameters
+    ----------
+    extracted_lemmas : list of tuples
+        Given lemmas.
+    lemma_to_word : dict of {lemma:list of words}
+        .
+
+    Returns
+    -------
+    dict
+        Keywords as keys and scores as values.
+         
     """
-    :param extracted_lemmas:list of tuples
-    :param lemma_to_word: dict of {lemma:list of words}
-    :return: dict of {keyword:score}
-    """
+
     keywords = {}
     for score, lemma in extracted_lemmas:
         keyword_list = lemma_to_word[lemma]
@@ -208,7 +397,7 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
     ratio : float
         If no "words" option is selected, the number of sentences is
         reduced by the provided ratio, else, the ratio is ignored.
-    words : list
+    words : int
         .
     split : bool
         .
