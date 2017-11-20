@@ -21,7 +21,8 @@ The wrapped model can NOT be updated with new documents for online training -- u
 
 Example:
 
-    >>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
+    >>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet',
+    ... corpus=my_corpus, num_topics=20, id2word=dictionary)
     >>> print model[my_vector]  # print LDA topics of a document
 
 .. [1] http://mallet.cs.umass.edu/
@@ -65,13 +66,16 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
         `workers` is the number of threads, for parallel training.
 
-        `prefix` is the string prefix under which all data files will be stored; default: system temp + random filename prefix.
+        `prefix` is the string prefix under which all data files will be stored;
+        default: system temp + random filename prefix.
 
-        `optimize_interval` optimize hyperparameters every N iterations (sometimes leads to Java exception; 0 to switch off hyperparameter optimization).
+        `optimize_interval` optimize hyperparameters every N iterations (sometimes leads to Java exception;
+        0 to switch off hyperparameter optimization).
 
         `iterations` is the number of sampling iterations.
 
-        `topic_threshold` is the threshold of the probability above which we consider a topic. This is basically for sparse topic distribution.
+        `topic_threshold` is the threshold of the probability above which we consider a topic.
+        This is basically for sparse topic distribution.
 
         """
         self.mallet_path = mallet_path
@@ -143,7 +147,10 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
                 self.corpus2mallet(corpus, fout)
 
         # convert the text file above into MALLET's internal format
-        cmd = self.mallet_path + " import-file --preserve-case --keep-sequence --remove-stopwords --token-regex \"\S+\" --input %s --output %s"
+        cmd = \
+            self.mallet_path + \
+            " import-file --preserve-case --keep-sequence " \
+            "--remove-stopwords --token-regex \"\S+\" --input %s --output %s"
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
@@ -167,7 +174,8 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         check_output(args=cmd, shell=True)
         self.word_topics = self.load_word_topics()
         # NOTE - we are still keeping the wordtopics variable to not break backward compatibility.
-        # word_topics has replaced wordtopics throughout the code; wordtopics just stores the values of word_topics when train is called.
+        # word_topics has replaced wordtopics throughout the code;
+        # wordtopics just stores the values of word_topics when train is called.
         self.wordtopics = self.word_topics
 
     def __getitem__(self, bow, iterations=100):
@@ -177,7 +185,9 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             bow = [bow]
 
         self.convert_input(bow, infer=True)
-        cmd = self.mallet_path + ' infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s --doc-topics-threshold %s'
+        cmd = \
+            self.mallet_path + ' infer-topics --input %s --inferencer %s ' \
+                               '--output-doc-topics %s --num-iterations %s --doc-topics-threshold %s'
         cmd = cmd % (
             self.fcorpusmallet() + '.infer', self.finferencer(),
             self.fdoctopics() + '.infer', iterations, self.topic_threshold
@@ -239,7 +249,8 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             chosen_topics = range(num_topics)
         else:
             num_topics = min(num_topics, self.num_topics)
-            sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha))  # add a little random jitter, to randomize results around the same alpha
+            # add a little random jitter, to randomize results around the same alpha
+            sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha))
             sorted_topics = list(matutils.argsort(sort_alpha))
             chosen_topics = sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
         shown = []
@@ -308,19 +319,25 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
                 # the MALLET doctopic format changed in 2.0.8 to exclude the id,
                 # this handles the file differently dependent on the pattern
                 if len(parts) == 2 * self.num_topics:
-                    doc = [(int(id_), float(weight)) for id_, weight in zip(*[iter(parts)] * 2) if abs(float(weight)) > eps]
+                    doc = [
+                        (int(id_), float(weight)) for id_, weight in zip(*[iter(parts)] * 2)
+                        if abs(float(weight)) > eps
+                    ]
                 elif len(parts) == self.num_topics and mallet_version != '2.0.7':
                     doc = [(id_, float(weight)) for id_, weight in enumerate(parts) if abs(float(weight)) > eps]
                 else:
                     if mallet_version == "2.0.7":
                         """
 
-                            1   1   0   1.0780612802674239  30.005575655428533364   2   0.005575655428533364    1   0.005575655428533364
-                            2   2   0   0.9184413079632608  40.009062076892971008   3   0.009062076892971008    2   0.009062076892971008    1   0.009062076892971008
-                            In the above example there is a mix of the above if and elif statement. There are neither `2*num_topics` nor `num_topics` elements.
-                            It has 2 formats 40.009062076892971008 and 0   1.0780612802674239 which cannot be handled by above if elif.
-                            Also, there are some topics are missing(meaning that the topic is not there) which is another reason why the above if elif
-                            fails even when the `mallet` produces the right results
+                            1   1   0   1.0780612802674239  30.005575655428533364   2   0.005575655428533364
+                            2   2   0   0.9184413079632608  40.009062076892971008   3   0.009062076892971008
+                            In the above example there is a mix of the above if and elif statement.
+                            There are neither `2*num_topics` nor `num_topics` elements.
+                            It has 2 formats 40.009062076892971008 and 0   1.0780612802674239
+                            which cannot be handled by above if elif.
+                            Also, there are some topics are missing(meaning that the topic is not there)
+                            which is another reason why the above if elif fails even when the `mallet`
+                            produces the right results
 
                         """
                         count = 0

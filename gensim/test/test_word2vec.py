@@ -104,7 +104,9 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(model_neg.wv.vocab['time'].count, 2)
         self.assertEqual(model_neg.wv.vocab['interface'].count, 2)
         self.assertEqual(model_neg.wv.vocab['response'].count, 2)
-        new_freq_dict = {'computer': 1, 'artificial': 4, 'human': 1, 'graph': 1, 'intelligence': 4, 'system': 1, 'trees': 1}
+        new_freq_dict = {
+            'computer': 1, 'artificial': 4, 'human': 1, 'graph': 1, 'intelligence': 4, 'system': 1, 'trees': 1
+        }
         model_hs.build_vocab_from_freq(new_freq_dict, update=True)
         model_neg.build_vocab_from_freq(new_freq_dict, update=True)
         self.assertEqual(model_hs.wv.vocab['graph'].count, 4)
@@ -416,7 +418,8 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(min_count=1, hs=1, negative=0)
         model.build_vocab(corpus)
         self.assertTrue(len(model.wv.vocab) == 6981)
-        # with min_count=1, we're not throwing away anything, so make sure the word counts add up to be the entire corpus
+        # with min_count=1, we're not throwing away anything,
+        # so make sure the word counts add up to be the entire corpus
         self.assertEqual(sum(v.count for v in model.wv.vocab.values()), total_words)
         # make sure the binary codes are correct
         np.allclose(model.wv.vocab['the'].code, [1, 1, 0, 0])
@@ -885,7 +888,8 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
 # class TestWord2VecScripts(unittest.TestCase):
 #     def testWord2VecStandAloneScript(self):
 #         """Does Word2Vec script launch standalone?"""
-#         cmd = 'python -m gensim.scripts.word2vec_standalone -train ' + datapath('testcorpus.txt') + ' -output vec.txt -size 200 -sample 1e-4 -binary 0 -iter 3 -min_count 1'
+#         cmd = 'python -m gensim.scripts.word2vec_standalone -train ' + datapath('testcorpus.txt') + \
+#               ' -output vec.txt -size 200 -sample 1e-4 -binary 0 -iter 3 -min_count 1'
 #         output = check_output(cmd, stderr=PIPE)
 #         self.assertEqual(output, '0')
 # #endclass TestWord2VecScripts

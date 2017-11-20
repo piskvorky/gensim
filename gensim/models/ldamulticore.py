@@ -193,8 +193,10 @@ class LdaMulticore(LdaModel):
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info(
             "running %s LDA training, %s topics, %i passes over the supplied corpus of %i documents, "
-            "updating every %i documents, evaluating every ~%i documents, iterating %ix with a convergence threshold of %f",
-            updatetype, self.num_topics, self.passes, lencorpus, updateafter, evalafter, self.iterations, self.gamma_threshold
+            "updating every %i documents, evaluating every ~%i documents, "
+            "iterating %ix with a convergence threshold of %f",
+            updatetype, self.num_topics, self.passes, lencorpus, updateafter,
+            evalafter, self.iterations, self.gamma_threshold
         )
 
         if updates_per_pass * self.passes < 10:
@@ -232,7 +234,9 @@ class LdaMulticore(LdaModel):
                 if (force and merged_new and queue_size[0] == 0) or (not self.batch and (other.numdocs >= updateafter)):
                     self.do_mstep(rho(), other, pass_ > 0)
                     other.reset()
-                    if self.eval_every is not None and ((force and queue_size[0] == 0) or (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
+                    if self.eval_every is not None and \
+                            ((force and queue_size[0] == 0) or
+                                 (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
                         self.log_perplexity(chunk, total_docs=lencorpus)
 
             chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=chunks_as_numpy)
@@ -247,7 +251,8 @@ class LdaMulticore(LdaModel):
                         chunk_put = True
                         queue_size[0] += 1
                         logger.info(
-                            "PROGRESS: pass %i, dispatched chunk #%i = documents up to #%i/%i, outstanding queue size %i",
+                            "PROGRESS: pass %i, dispatched chunk #%i = documents up to #%i/%i, "
+                            "outstanding queue size %i",
                             pass_, chunk_no, chunk_no * self.chunksize + len(chunk), lencorpus, queue_size[0]
                         )
                     except queue.Full:

@@ -486,7 +486,9 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         """
         if num_features is None:
-            logger.warning("scanning corpus to determine the number of features (consider setting `num_features` explicitly)")
+            logger.warning(
+                "scanning corpus to determine the number of features (consider setting `num_features` explicitly)"
+            )
             num_features = 1 + utils.get_max_id(corpus)
 
         self.num_features = num_features
@@ -577,7 +579,8 @@ class WmdSimilarity(interfaces.SimilarityABC):
     .. Matt Kusner et al. "From Word Embeddings To Document Distances".
 
     Example:
-        # See Tutorial Notebook for more examples https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb
+        # See Tutorial Notebook for more examples
+        https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb
         >>> # Given a document collection "corpus", train word2vec model.
         >>> model = word2vec(corpus)
         >>> instance = WmdSimilarity(corpus, model, num_best=10)

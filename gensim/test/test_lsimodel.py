@@ -60,7 +60,8 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         transformed = model[doc]
         vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
         expected = np.array([-0.6594664, 0.142115444])  # scaled LSI version
-        self.assertTrue(np.allclose(abs(vec), abs(expected), atol=1.e-5))  # transformed entries must be equal up to sign
+        # transformed entries must be equal up to sign
+        self.assertTrue(np.allclose(abs(vec), abs(expected), atol=1.e-5))
 
     def testCorpusTransform(self):
         """Test lsi[corpus] transformation."""
@@ -85,7 +86,8 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         # create the transformation model
         model2 = lsimodel.LsiModel(corpus=corpus, num_topics=5)  # compute everything at once
-        model = lsimodel.LsiModel(corpus=None, id2word=model2.id2word, num_topics=5)  # start with no documents, we will add them later
+        # start with no documents, we will add them later
+        model = lsimodel.LsiModel(corpus=None, id2word=model2.id2word, num_topics=5)
 
         # train model on a single document
         model.add_documents([corpus[0]])
@@ -111,7 +113,8 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # make sure the final transformation is the same as if we had decomposed the whole corpus at once
         vec1 = matutils.sparse2full(model[doc], model.num_topics)
         vec2 = matutils.sparse2full(model2[doc], model2.num_topics)
-        self.assertTrue(np.allclose(abs(vec1), abs(vec2), atol=1e-5))  # the two LSI representations must equal up to sign
+        # the two LSI representations must equal up to sign
+        self.assertTrue(np.allclose(abs(vec1), abs(vec2), atol=1e-5))
 
     def testPersistence(self):
         fname = get_tmpfile('gensim_models_lsi.tst')

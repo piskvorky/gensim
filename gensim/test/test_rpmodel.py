@@ -26,7 +26,8 @@ class TestRpModel(unittest.TestCase):
 
     def testTransform(self):
         # create the transformation model
-        np.random.seed(13)  # HACK; set fixed seed so that we always get the same random matrix (and can compare against expected results)
+        # HACK; set fixed seed so that we always get the same random matrix (and can compare against expected results)
+        np.random.seed(13)
         model = rpmodel.RpModel(self.corpus, num_topics=2)
 
         # transform one document

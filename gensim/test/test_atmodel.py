@@ -90,7 +90,8 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             # output of the model slightly.
             vec = matutils.sparse2full(jill_topics, 2)  # convert to dense vector, for easier equality tests
             expected = [0.91, 0.08]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
+            # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)
             if passed:
                 break
             logging.warning(
@@ -240,7 +241,8 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             # output of the model slightly.
             vec = matutils.sparse2full(jill_topics, 2)  # convert to dense vector, for easier equality tests
             expected = [0.91, 0.08]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
+            # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)
 
             # Delete the MmCorpus used for serialization inside the author-topic model.
             remove(datapath('testcorpus_serialization.mm'))

@@ -9,12 +9,14 @@
 Produce word vectors with deep learning via word2vec's "skip-gram and CBOW models", using either
 hierarchical softmax or negative sampling [1]_ [2]_.
 
-NOTE: There are more ways to get word vectors in Gensim than just Word2Vec. See wrappers for FastText, VarEmbed and WordRank.
+NOTE: There are more ways to get word vectors in Gensim than just Word2Vec.
+See wrappers for FastText, VarEmbed and WordRank.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
 
-For a blog tutorial on gensim word2vec, with an interactive web app trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
+For a blog tutorial on gensim word2vec, with an interactive web app trained on GoogleNews,
+visit http://radimrehurek.com/2014/02/word2vec-tutorial/
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled) word2vec training**
 (70x speedup compared to plain NumPy implementation [3]_).
@@ -28,14 +30,17 @@ Persist a model to disk with::
     >>> model.save(fname)
     >>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
 
-The word vectors are stored in a KeyedVectors instance in model.wv. This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec::
+The word vectors are stored in a KeyedVectors instance in model.wv.
+This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec::
 
   >>> model.wv['computer']  # numpy vector of a word
   array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
 
-The word vectors can also be instantiated from an existing file on disk in the word2vec C format as a KeyedVectors instance::
+The word vectors can also be instantiated from an existing file on disk in the word2vec C format
+as a KeyedVectors instance::
 
-    NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights, vocabulary frequency and the binary tree is missing::
+    NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights,
+    vocabulary frequency and the binary tree is missing::
 
         >>> from gensim.models.keyedvectors import KeyedVectors
         >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
@@ -74,7 +79,8 @@ And on analogies::
 
 and so on.
 
-If you're finished training a model (i.e. no more updates, only querying), then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
+If you're finished training a model (i.e. no more updates, only querying),
+then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
 
   >>> word_vectors = model.wv
   >>> del model
@@ -88,9 +94,10 @@ where "words" are actually multiword expressions, such as `new_york_times` or `f
     >>> bigram_transformer = gensim.models.Phrases(sentences)
     >>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
 
-.. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
-.. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
-       In Proceedings of NIPS, 2013.
+.. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean.
+       Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
+.. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean.
+       Distributed Representations of Words and Phrases and their Compositionality. In Proceedings of NIPS, 2013.
 .. [3] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
 """
 from __future__ import division  # py3 "true division"
@@ -329,8 +336,8 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
     return neu1e
 
 
-def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True, compute_loss=False,
-                    context_vectors=None, context_locks=None, is_ft=False):
+def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True,
+                    compute_loss=False, context_vectors=None, context_locks=None, is_ft=False):
     if context_vectors is None:
         if is_ft:
             context_vectors_vocab = model.wv.syn0_vocab
@@ -421,7 +428,8 @@ class Word2Vec(utils.SaveLoad):
     then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
 
     The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in a format
-    compatible with the original word2vec implementation via `wv.save_word2vec_format()` and `KeyedVectors.load_word2vec_format()`.
+    compatible with the original word2vec implementation via `wv.save_word2vec_format()`
+    and `KeyedVectors.load_word2vec_format()`.
 
     """
 
@@ -540,7 +548,10 @@ class Word2Vec(utils.SaveLoad):
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
-            self.train(sentences, total_examples=self.corpus_count, epochs=self.iter, start_alpha=self.alpha, end_alpha=self.min_alpha)
+            self.train(
+                sentences, total_examples=self.corpus_count, epochs=self.iter,
+                start_alpha=self.alpha, end_alpha=self.min_alpha
+            )
         else:
             if trim_rule is not None:
                 logger.warning(
@@ -617,7 +628,8 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
         """
         self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
-        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
+        # trim by min_count & precalculate downsampling
+        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)
         self.finalize_vocab(update=update)  # build tables & arrays
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
@@ -652,16 +664,20 @@ class Word2Vec(utils.SaveLoad):
         >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
         """
         logger.info("Processing provided word frequencies")
-        raw_vocab = word_freq  # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq) to be directly the raw vocab
+        # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq)
+        # to be directly the raw vocab
+        raw_vocab = word_freq
         logger.info(
             "collected %i different raw word, with total frequency of %i",
             len(raw_vocab), sum(itervalues(raw_vocab))
         )
 
-        self.corpus_count = corpus_count if corpus_count else 0  # Since no sentences are provided, this is to control the corpus_count
+        # Since no sentences are provided, this is to control the corpus_count
+        self.corpus_count = corpus_count if corpus_count else 0
         self.raw_vocab = raw_vocab
 
-        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
+        # trim by min_count & precalculate downsampling
+        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)
         self.finalize_vocab(update=update)  # build tables & arrays
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
@@ -926,7 +942,8 @@ class Word2Vec(utils.SaveLoad):
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s negative=%s window=%s",
-            self.workers, len(self.wv.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative, self.window
+            self.workers, len(self.wv.vocab), self.layer1_size, self.sg,
+            self.hs, self.sample, self.negative, self.window
         )
 
         if not self.wv.vocab:
@@ -936,7 +953,8 @@ class Word2Vec(utils.SaveLoad):
 
         if not hasattr(self, 'corpus_count'):
             raise ValueError(
-                "The number of sentences in the training corpus is missing. Did you load the model via KeyedVectors.load_word2vec_format?"
+                "The number of sentences in the training corpus is missing. "
+                "Did you load the model via KeyedVectors.load_word2vec_format?"
                 "Models loaded via load_word2vec_format don't support further training. "
                 "Instead start with a blank model, scan_vocab on the new corpus, "
                 "intersect_word2vec_format with the old model, then train."
@@ -1093,13 +1111,19 @@ class Word2Vec(utils.SaveLoad):
             raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
         )
         if job_tally < 10 * self.workers:
-            logger.warning("under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay")
+            logger.warning(
+                "under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay"
+            )
 
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
-            logger.warning("supplied example count (%i) did not equal expected count (%i)", example_count, total_examples)
+            logger.warning(
+                "supplied example count (%i) did not equal expected count (%i)", example_count, total_examples
+            )
         if total_words and total_words != raw_word_count:
-            logger.warning("supplied raw word count (%i) did not equal expected count (%i)", raw_word_count, total_words)
+            logger.warning(
+                "supplied raw word count (%i) did not equal expected count (%i)", raw_word_count, total_words
+            )
 
         self.train_count += 1  # number of times train() has been called
         self.total_train_time += elapsed
@@ -1119,9 +1143,11 @@ class Word2Vec(utils.SaveLoad):
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
 
-        See the article by [#taddy]_ and the gensim demo at [#deepir]_ for examples of how to use such scores in document classification.
+        See the article by [#taddy]_ and the gensim demo at [#deepir]_ for examples of
+        how to use such scores in document classification.
 
-        .. [#taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
+        .. [#taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations,
+                    in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
         .. [#deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
 
         """
@@ -1410,7 +1436,8 @@ class Word2Vec(utils.SaveLoad):
         return self.wv.n_similarity(ws1, ws2)
 
     def predict_output_word(self, context_words_list, topn=10):
-        """Report the probability distribution of the center word given the context words as input to the trained model."""
+        """Report the probability distribution of the center word given the context words
+        as input to the trained model."""
         if not self.negative:
             raise RuntimeError(
                 "We have currently only implemented predict_output_word for the negative sampling scheme, "
@@ -1434,7 +1461,8 @@ class Word2Vec(utils.SaveLoad):
         prob_values = exp(dot(l1, self.syn1neg.T))  # propagate hidden -> output and take softmax to get probabilities
         prob_values /= sum(prob_values)
         top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
-        return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]  # returning the most probable output words with their probabilities
+        # returning the most probable output words with their probabilities
+        return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]
 
     def init_sims(self, replace=False):
         """
@@ -1478,7 +1506,8 @@ class Word2Vec(utils.SaveLoad):
         """
         return KeyedVectors.log_evaluate_word_pairs(pearson, spearman, oov, pairs)
 
-    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
+                            case_insensitive=True, dummy4unknown=False):
         """
         Deprecated. Use self.wv.evaluate_word_pairs() instead.
         Refer to the documentation for `gensim.models.KeyedVectors.evaluate_word_pairs`
@@ -1486,7 +1515,9 @@ class Word2Vec(utils.SaveLoad):
         return self.wv.evaluate_word_pairs(pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
 
     def __str__(self):
-        return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha)
+        return "%s(vocab=%s, size=%s, alpha=%s)" % (
+            self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
+        )
 
     def _minimize_model(self, save_syn1=False, save_syn1neg=False, save_syn0_lockf=False):
         warnings.warn(
@@ -1675,11 +1706,11 @@ class PathLineSentences(object):
     """
 
     Works like word2vec.LineSentence, but will process all files in a directory in alphabetical order by filename.
-    The directory can only contain files that can be read by LineSentence: .bz2, .gz, and text files. Any file not ending
-    with .bz2 or .gz is assumed to be a text file. Does not work with subdirectories.
+    The directory can only contain files that can be read by LineSentence: .bz2, .gz, and text files.
+    Any file not ending with .bz2 or .gz is assumed to be a text file. Does not work with subdirectories.
 
-    The format of files (either text, or compressed text files) in the path is one sentence = one line, with words already
-    preprocessed and separated by whitespace.
+    The format of files (either text, or compressed text files) in the path is one sentence = one line,
+    with words already preprocessed and separated by whitespace.
 
     """
 
@@ -1726,7 +1757,8 @@ class PathLineSentences(object):
                         i += self.max_sentence_length
 
 
-# Example: ./word2vec.py -train data.txt -output vec.txt -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3
+# Example: ./word2vec.py -train data.txt -output vec.txt -size 200 -window 5 -sample 1e-4 \
+# -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3
 if __name__ == "__main__":
     import argparse
     logging.basicConfig(
@@ -1751,14 +1783,35 @@ if __name__ == "__main__":
     parser.add_argument("-output", help="Use file OUTPUT to save the resulting word vectors")
     parser.add_argument("-window", help="Set max skip length WINDOW between words; default is 5", type=int, default=5)
     parser.add_argument("-size", help="Set size of word vectors; default is 100", type=int, default=100)
-    parser.add_argument("-sample", help="Set threshold for occurrence of words. Those that appear with higher frequency in the training data will be randomly down-sampled; default is 1e-3, useful range is (0, 1e-5)", type=float, default=1e-3)
-    parser.add_argument("-hs", help="Use Hierarchical Softmax; default is 0 (not used)", type=int, default=0, choices=[0, 1])
-    parser.add_argument("-negative", help="Number of negative examples; default is 5, common values are 3 - 10 (0 = not used)", type=int, default=5)
+    parser.add_argument(
+        "-sample",
+        help="Set threshold for occurrence of words. "
+             "Those that appear with higher frequency in the training data will be randomly down-sampled;"
+             " default is 1e-3, useful range is (0, 1e-5)",
+        type=float, default=1e-3
+    )
+    parser.add_argument(
+        "-hs", help="Use Hierarchical Softmax; default is 0 (not used)",
+        type=int, default=0, choices=[0, 1]
+    )
+    parser.add_argument(
+        "-negative", help="Number of negative examples; default is 5, common values are 3 - 10 (0 = not used)",
+        type=int, default=5
+    )
     parser.add_argument("-threads", help="Use THREADS threads (default 12)", type=int, default=12)
     parser.add_argument("-iter", help="Run more training iterations (default 5)", type=int, default=5)
-    parser.add_argument("-min_count", help="This will discard words that appear less than MIN_COUNT times; default is 5", type=int, default=5)
-    parser.add_argument("-cbow", help="Use the continuous bag of words model; default is 1 (use 0 for skip-gram model)", type=int, default=1, choices=[0, 1])
-    parser.add_argument("-binary", help="Save the resulting vectors in binary mode; default is 0 (off)", type=int, default=0, choices=[0, 1])
+    parser.add_argument(
+        "-min_count", help="This will discard words that appear less than MIN_COUNT times; default is 5",
+        type=int, default=5
+    )
+    parser.add_argument(
+        "-cbow", help="Use the continuous bag of words model; default is 1 (use 0 for skip-gram model)",
+        type=int, default=1, choices=[0, 1]
+    )
+    parser.add_argument(
+        "-binary", help="Save the resulting vectors in binary mode; default is 0 (off)",
+        type=int, default=0, choices=[0, 1]
+    )
     parser.add_argument("-accuracy", help="Use questions from file ACCURACY to evaluate the model")
 
     args = parser.parse_args()

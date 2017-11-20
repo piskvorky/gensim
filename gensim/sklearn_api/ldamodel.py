@@ -77,16 +77,21 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         Takes a list of documents as input ('docs').
         Returns a matrix of topic distribution for the given document bow, where a_ij
         indicates (topic_i, topic_probability_j).
-        The input `docs` should be in BOW format and can be a list of documents like : [ [(4, 1), (7, 1)], [(9, 1), (13, 1)], [(2, 1), (6, 1)] ]
+        The input `docs` should be in BOW format and can be a list of documents like
+        [[(4, 1), (7, 1)],
+        [(9, 1), (13, 1)], [(2, 1), (6, 1)]]
         or a single document like : [(4, 1), (7, 1)]
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # The input as array of array
         if isinstance(docs[0], tuple):
             docs = [docs]
-        # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
+        # returning dense representation for compatibility with sklearn
+        # but we should go back to sparse representation in the future
         distribution = [matutils.sparse2full(self.gensim_model[doc], self.num_topics) for doc in docs]
         return np.reshape(np.array(distribution), (len(docs), self.num_topics))
 
@@ -124,8 +129,9 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         if self.scorer == 'perplexity':
             corpus_words = sum(cnt for document in X for _, cnt in document)
             subsample_ratio = 1.0
-            perwordbound = self.gensim_model.bound(X, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
-            return -1 * np.exp2(-perwordbound)  # returning (-1*perplexity) to select model with minimum perplexity value
+            perwordbound = \
+                self.gensim_model.bound(X, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
+            return -1 * np.exp2(-perwordbound)  # returning (-1*perplexity) to select model with minimum value
         elif self.scorer == 'u_mass':
             goodcm = models.CoherenceModel(model=self.gensim_model, corpus=X, coherence=self.scorer, topn=3)
             return goodcm.get_coherence()

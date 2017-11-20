@@ -20,7 +20,8 @@ you'd train the detector with:
 
 >>> phrases = Phrases(sentence_stream)
 
-and then create a performant Phraser object to transform any sentence (list of token strings) using the standard gensim syntax:
+and then create a performant Phraser object to transform any sentence (list of token strings)
+using the standard gensim syntax:
 
 >>> bigram = Phraser(phrases)
 >>> sent = [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there']
@@ -270,7 +271,9 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
             else:
                 raise ValueError('unknown scoring method string %s specified' % (scoring))
 
-        scoring_parameters = ['worda_count', 'wordb_count', 'bigram_count', 'len_vocab', 'min_count', 'corpus_word_count']
+        scoring_parameters = [
+            'worda_count', 'wordb_count', 'bigram_count', 'len_vocab', 'min_count', 'corpus_word_count'
+        ]
         if callable(scoring):
             if all(parameter in getargspec(scoring)[0] for parameter in scoring_parameters):
                 self.scoring = scoring
@@ -461,8 +464,8 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
     @classmethod
     def load(cls, *args, **kwargs):
         """
-        Load a previously saved Phrases class. Handles backwards compatibility from older Phrases versions which did not support
-            pluggable scoring functions. Otherwise, relies on utils.load
+        Load a previously saved Phrases class. Handles backwards compatibility from
+            older Phrases versions which did not support  pluggable scoring functions. Otherwise, relies on utils.load
         """
 
         # for python 2 and 3 compatibility. basestring is used to check if model.scoring is a string

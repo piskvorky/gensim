@@ -5,7 +5,8 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Word vector storage and similarity look-ups. Common code independent of the way the vectors are trained(Word2Vec, FastText, WordRank, VarEmbed etc)
+Word vector storage and similarity look-ups.
+Common code independent of the way the vectors are trained(Word2Vec, FastText, WordRank, VarEmbed etc)
 
 The word vectors are considered read-only in this class.
 
@@ -19,7 +20,8 @@ Persist the word vectors to disk with::
 >>> word_vectors.save(fname)
 >>> word_vectors = KeyedVectors.load(fname)
 
-The vectors can also be instantiated from an existing file on disk in the original Google's word2vec C format as a KeyedVectors instance::
+The vectors can also be instantiated from an existing file on disk
+in the original Google's word2vec C format as a KeyedVectors instance::
 
   >>> from gensim.models.keyedvectors import KeyedVectors
   >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
@@ -679,7 +681,9 @@ class KeyedVectors(utils.SaveLoad):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
-        See questions-words.txt in https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/word2vec/source-archive.zip for an example.
+        See questions-words.txt in
+        https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/word2vec/source-archive.zip
+        for an example.
 
         The accuracy is reported (=printed to log and returned as a list) for each
         section separately, plus there's one aggregate summary at the end.
@@ -762,7 +766,8 @@ class KeyedVectors(utils.SaveLoad):
         logger.info('Spearman rank-order correlation coefficient against %s: %.4f', pairs, spearman[0])
         logger.info('Pairs with unknown words ratio: %.1f%%', oov)
 
-    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
+                            case_insensitive=True, dummy4unknown=False):
         """
         Compute correlation of the model with human similarity judgments. `pairs` is a filename of a dataset where
         lines are 3-tuples, each consisting of a word pair and a similarity value, separated by `delimiter`.
