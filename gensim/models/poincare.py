@@ -1645,4 +1645,3 @@ class LexicalEntailmentEvaluation(object):
         print('Skipped pairs: %d out of %d' % (skipped, len(self.scores)))
         spearman = spearmanr(expected_scores, predicted_scores)
         return spearman.correlation
-
