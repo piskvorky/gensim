@@ -112,6 +112,7 @@ class TextCorpus(interfaces.CorpusABC):
     6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
 
     """
+
     def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None,
                  tokenizer=None, token_filters=None):
         """
