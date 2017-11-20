@@ -230,7 +230,7 @@ win_testenv = [
     'pytest',
     'pytest-rerunfailures',
     'pytest-cov',
-    'cython'
+    'cython',
     'pyemd',
     'testfixtures',
     'scikit-learn',
