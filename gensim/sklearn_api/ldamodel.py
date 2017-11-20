@@ -58,7 +58,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         Calls gensim.models.LdaModel
         """
         if sparse.issparse(X):
-            corpus = matutils.Sparse2Corpus(X)
+            corpus = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
         else:
             corpus = X
 
@@ -102,7 +102,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
 
         """
         if sparse.issparse(X):
-            X = matutils.Sparse2Corpus(X)
+            X = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
 
         if self.gensim_model is None:
             self.gensim_model = models.LdaModel(

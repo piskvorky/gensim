@@ -177,7 +177,7 @@ class TestLdaWrapper(unittest.TestCase):
         newmodel.fit(sarr)
         bow = [(0, 1), (1, 2), (2, 0)]
         transformed_vec = newmodel.transform(bow)
-        expected_vec = numpy.array([0.35367903, 0.64632097])
+        expected_vec = numpy.array([0.12843782, 0.87156218])
         passed = numpy.allclose(transformed_vec, expected_vec, atol=1e-1)
         self.assertTrue(passed)
 
