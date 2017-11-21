@@ -104,7 +104,6 @@ class Vocab(object):
         return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
 
 
-
 class KeyedVectorsBase(utils.SaveLoad):
     """
     Base class to contain vectors and vocab for any set of vectors which are each associated with a key.
@@ -276,7 +275,7 @@ class KeyedVectorsBase(utils.SaveLoad):
 
         Example::
 
-          >>> trained_model['office']
+          >>> trained_model.word_vec('office')
           array([ -1.40128313e-02, ...])
 
         """

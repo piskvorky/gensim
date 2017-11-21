@@ -48,7 +48,6 @@ import numpy as np
 from collections import defaultdict, Counter
 from numpy import random as np_random
 from pygtrie import Trie
-from scipy.spatial.distance import euclidean
 from scipy.stats import spearmanr
 from six import string_types
 from smart_open import smart_open
@@ -1324,7 +1323,7 @@ class ReconstructionEvaluation(object):
 
         Parameters
         ----------
-        distances : numpy.array (float)
+        all_distances : numpy.array (float)
             Array of all distances (floats) for a specific item.
         positive_relations : list
             List of indices of positive relations for the item.
