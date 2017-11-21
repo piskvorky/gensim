@@ -51,11 +51,11 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         corpus :
             
         id2word :
-             (Default value = None)
+            (Default value = None)
         progress_cnt :
-             (Default value = 1000)
+            (Default value = 1000)
         metadata :
-             (Default value = False)
+            (Default value = False)
 
         Returns
         -------
