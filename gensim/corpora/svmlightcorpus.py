@@ -22,22 +22,21 @@ logger = logging.getLogger('gensim.corpora.svmlightcorpus')
 
 
 class SvmLightCorpus(IndexedCorpus):
-    """
-    Corpus in SVMlight format.
-
+    """Corpus in SVMlight format.
+    
     Quoting http://svmlight.joachims.org/:
     The input file contains the training examples. The first lines
     may contain comments and are ignored if they start with #. Each of the following
     lines represents one training example and is of the following format::
-
+    
         <line> .=. <target> <feature>:<value> <feature>:<value> ... <feature>:<value> # <info>
         <target> .=. +1 | -1 | 0 | <float>
         <feature> .=. <integer> | "qid"
         <value> .=. <float>
         <info> .=. <string>
-
+    
     The "qid" feature (used for SVMlight ranking), if present, is ignored.
-
+    
     Although not mentioned in the specification above, SVMlight also expect its
     feature ids to be 1-based (counting starts at 1). We convert features to 0-base
     internally by decrementing all ids when loading a SVMlight input file, and
@@ -80,14 +79,30 @@ class SvmLightCorpus(IndexedCorpus):
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, labels=False, metadata=False):
-        """
-        Save a corpus in the SVMlight format.
-
+        """Save a corpus in the SVMlight format.
+        
         The SVMlight `<target>` class tag is taken from the `labels` array, or set
         to 0 for all documents if `labels` is not supplied.
-
+        
         This function is automatically called by `SvmLightCorpus.serialize`; don't
         call it directly, call `serialize` instead.
+
+        Parameters
+        ----------
+        fname :
+            
+        corpus :
+            
+        id2word :
+             (Default value = None)
+        labels :
+             (Default value = False)
+        metadata :
+             (Default value = False)
+
+        Returns
+        -------
+
         """
         logger.info("converting corpus to SVMlight format: %s", fname)
 
@@ -100,16 +115,33 @@ class SvmLightCorpus(IndexedCorpus):
         return offsets
 
     def docbyoffset(self, offset):
-        """
-        Return the document stored at file position `offset`.
+        """Return the document stored at file position `offset`.
+
+        Parameters
+        ----------
+        offset :
+            
+
+        Returns
+        -------
+            
+
         """
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())[0]
 
     def line2doc(self, line):
-        """
-        Create a document from a single line (string) in SVMlight format
+        """Create a document from a single line (string) in SVMlight format
+
+        Parameters
+        ----------
+        line :
+            
+
+        Returns
+        -------
+
         """
         line = utils.to_unicode(line)
         line = line[: line.find('#')].strip()
@@ -124,8 +156,18 @@ class SvmLightCorpus(IndexedCorpus):
 
     @staticmethod
     def doc2line(doc, label=0):
-        """
-        Output the document in SVMlight format, as a string. Inverse function to `line2doc`.
+        """Output the document in SVMlight format, as a string. Inverse function to `line2doc`.
+
+        Parameters
+        ----------
+        doc :
+            
+        label :
+             (Default value = 0)
+
+        Returns
+        -------
+
         """
         pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc)  # +1 to convert 0-base to 1-base
         return "%s %s\n" % (label, pairs)
