@@ -93,6 +93,9 @@ def aggregate_segment_sims(segment_sims, with_std, with_support):
     tuple
         tuple with (mean[, std[, support]])
 
+    Examples:
+    ---------
+    in progress
     """
     mean = np.mean(segment_sims)
     stats = [mean]

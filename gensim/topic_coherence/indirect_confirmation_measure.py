@@ -15,11 +15,13 @@ together in documents in the reference corpus. But their confirmations to other 
 or “speed” do strongly correlate. This would be reflected by an indirect confirmation measure.
 Thus, indirect confirmation measures may capture semantic support that direct measures would miss.
 
-The formula used to compute indirect confirmation measure is .. math::
+The formula used to compute indirect confirmation measure is
+.. math::
 
     m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
 
-where s_sim can be cosine, dice or jaccard similarity and .. math::
+where s_sim can be cosine, dice or jaccard similarity and
+.. math::
 
     \vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
@@ -118,13 +120,15 @@ def cosine_similarity(
     word sets of a pair  :math:`S_i = (W', W*)` indirect cosine measure
     is computed as the cosine similarity between u and w.
 
-    The formula used is ..math::
+    The formula used is
+    .. math::
 
-        `m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))`
+        m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
 
-    where each vector ::math::
+    where each vector
+    .. math::
 
-        `\vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}`
+        \vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
     Parameters
     ----------
@@ -160,9 +164,7 @@ def cosine_similarity(
     >>> accumulator._num_docs = 5
     >>> topics = [np.array([1, 2])]
     >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
-    >>> gamma = 1
-    >>> measure = 'nlr'
-    >>> obtained = indirect_confirmation_measure.cosine_similarity(segmentation, accumulator, topics, measure, gamma)
+    >>> obtained = indirect_confirmation_measure.cosine_similarity(segmentation, accumulator, topics, 'nlr', 1)
     >>> print obtained[0]
     0.623018926945
 
@@ -191,12 +193,13 @@ class ContextVectorComputer(object):
         Parameters
         ----------
         measure: tuple
-            no idea
+            in progress
         topics: list
-            no idea
+            in progress
         accumulator : list
             Word occurrence accumulator from probability_estimation.
         gamma:
+            in progress
         """
         if measure == 'nlr':
             self.similarity = _pair_npmi
@@ -216,8 +219,23 @@ class ContextVectorComputer(object):
 
     def compute_context_vector(self, segment_word_ids, topic_word_ids):
         """
-        Step 1. Check if (segment_word_ids, topic_word_ids) context vector has been cached.
-        Step 2. If yes, return corresponding context vector, else compute, cache, and return.
+        Check if (segment_word_ids, topic_word_ids) context vector has been cached.
+        If yes, return corresponding context vector, else compute, cache, and return.
+
+        Parameters
+        ----------
+        segment_word_ids: in progress
+
+        topic_word_ids: in progress
+
+        Returns
+        -------
+        in progress
+
+        Examples:
+        ---------
+        In progress
+
         """
         key = _key_for_segment(segment_word_ids, topic_word_ids)
         context_vector = self.context_vector_cache.get(key, None)
@@ -227,7 +245,25 @@ class ContextVectorComputer(object):
         return context_vector
 
     def _make_seg(self, segment_word_ids, topic_word_ids):
-        """Internal helper function to return context vectors for segmentations."""
+        """Return context vectors for segmentations (Internal helper function).
+
+        Parameters
+        ----------
+        segment_word_ids :
+
+        topic_word_ids :
+
+        Returns
+        -------
+        csr_matrix :class:`~scipy.sparse.csr`
+            Matrix in Compressed Sparse Row format
+
+        Examples:
+        ---------
+        In progress
+
+        """
+
         context_vector = sps.lil_matrix((self.vocab_size, 1))
         if not hasattr(segment_word_ids, '__iter__'):
             segment_word_ids = (segment_word_ids,)
