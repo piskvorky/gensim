@@ -306,7 +306,7 @@ def _lemmas_to_words(tokens):
 
 
 def _get_keywords_with_score(extracted_lemmas, lemma_to_word):
-    """Returns lemmas and its scores from `extracted_lemmas` contained in 
+    """Returns words of `extracted_lemmas` and its scores. Words contains in
     `lemma_to_word`.
 
     Parameters
@@ -314,7 +314,7 @@ def _get_keywords_with_score(extracted_lemmas, lemma_to_word):
     extracted_lemmas : list of tuples
         Given lemmas.
     lemma_to_word : dict of {lemma:list of words}
-        .
+        Lemmas and corresponding words.
 
     Returns
     -------
@@ -332,15 +332,37 @@ def _get_keywords_with_score(extracted_lemmas, lemma_to_word):
 
 
 def _strip_word(word):
+    """Return cleaned `word`.
+
+    Parameters
+    ----------
+    word : str
+        Given word.
+    
+    Returns
+    -------
+    str
+        Cleaned word.
+    """
     stripped_word_list = list(_tokenize_by_word(word))
     return stripped_word_list[0] if stripped_word_list else ""
 
 
 def _get_combined_keywords(_keywords, split_text):
     """
-    :param keywords:dict of keywords:scores
-    :param split_text: list of strings
-    :return: combined_keywords:list
+
+    Parameters
+    ----------
+    _keywords : dict {keywords:scores}
+        Keywords and its scores.
+    split_text : list of str
+        Splitted text.
+    
+    Returns
+    -------
+    list
+        .
+
     """
     result = []
     _keywords = _keywords.copy()
@@ -364,6 +386,20 @@ def _get_combined_keywords(_keywords, split_text):
 
 
 def _get_average_score(concept, _keywords):
+    """Returns average score of words in `concept`.
+
+    Parameters
+    ----------
+    text : str
+        Input text.
+    _keywords : dict {keywords:scores}
+        Keywords and its scores.
+    
+    Returns
+    -------
+    float
+        Average score.
+    """
     word_list = concept.split()
     word_counter = 0
     total = 0
@@ -374,9 +410,25 @@ def _get_average_score(concept, _keywords):
 
 
 def _format_results(_keywords, combined_keywords, split, scores):
-    """
-    :param keywords:dict of keywords:scores
-    :param combined_keywords:list of word/s
+    """Formats, sorts and returns combined_keywords in desired format.
+
+    Parameters
+    ----------
+    _keywords : dict {keywords:scores}
+        Keywords and its scores.
+    combined_keywords : list of str
+        ?.
+    split : bool
+        Whether split result or return string, optional.
+    scores : bool
+        Whether return `combined_keywords` with scores, optional. If True 
+        `split` is ignored.
+
+    Returns
+    -------
+    str or list of str or list of (tuple of str)
+        Formated `combined_keywords`.
+
     """
     combined_keywords.sort(key=lambda w: _get_average_score(w, _keywords), reverse=True)
     if scores:
