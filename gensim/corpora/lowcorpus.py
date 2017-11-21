@@ -140,7 +140,7 @@ class LowCorpus(IndexedCorpus):
                     yield self.line2doc(line)
 
     @staticmethod
-    def _save_corpus(fname, corpus, id2word=None, metadata=False):
+    def save_corpus(fname, corpus, id2word=None, metadata=False):
         """
         Save a corpus in the List-of-words format.
 

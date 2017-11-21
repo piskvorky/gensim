@@ -20,9 +20,7 @@ logger = logging.getLogger('gensim.corpora.mmcorpus')
 
 
 class MmCorpus(matutils.MmReader, IndexedCorpus):
-    """
-    Corpus in the Matrix Market format.
-    """
+    """Corpus in the Matrix Market format."""
 
     def __init__(self, fname):
         # avoid calling super(), too confusing
@@ -30,20 +28,38 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         matutils.MmReader.__init__(self, fname)
 
     def __iter__(self):
-        """
-        Interpret a matrix in Matrix Market format as a streamed gensim corpus
-        (yielding one document at a time).
+        """Iterate over the corpus.
+
+        Yields
+        ------
+        document :
         """
         for doc_id, doc in super(MmCorpus, self).__iter__():
             yield doc  # get rid of doc id, return the sparse vector only
 
     @staticmethod
-    def _save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False):
-        """
-        Save a corpus in the Matrix Market format to disk.
-
+    def save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False):
+        """Save a corpus in the Matrix Market format to disk.
+        
         This function is automatically called by `MmCorpus.serialize`; don't
         call it directly, call `serialize` instead.
+
+        Parameters
+        ----------
+        fname :
+            
+        corpus :
+            
+        id2word :
+             (Default value = None)
+        progress_cnt :
+             (Default value = 1000)
+        metadata :
+             (Default value = False)
+
+        Returns
+        -------
+
         """
         logger.info("storing corpus in Matrix Market format to %s", fname)
         num_terms = len(id2word) if id2word is not None else None

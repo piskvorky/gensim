@@ -67,7 +67,7 @@ class MalletCorpus(LowCorpus):
             return doc
 
     @staticmethod
-    def _save_corpus(fname, corpus, id2word=None, metadata=False):
+    def save_corpus(fname, corpus, id2word=None, metadata=False):
         """
         Save a corpus in the Mallet format.
 
