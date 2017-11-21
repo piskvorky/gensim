@@ -44,56 +44,104 @@ logger = logging.getLogger(__name__)
 
 
 def remove_stopwords(tokens, stopwords=STOPWORDS):
-    """Remove stopwords using list from `gensim.parsing.preprocessing.STOPWORDS`."""
+    """Remove stopwords using list from `gensim.parsing.preprocessing.STOPWORDS`.
+
+    Parameters
+    ----------
+    tokens :
+        
+    stopwords :
+         (Default value = STOPWORDS)
+
+    Returns
+    -------
+
+    """
     return [token for token in tokens if token not in stopwords]
 
 
 def remove_short(tokens, minsize=3):
-    """Remove tokens smaller than `minsize` chars, which is 3 by default."""
+    """Remove tokens smaller than `minsize` chars, which is 3 by default.
+
+    Parameters
+    ----------
+    tokens :
+        
+    minsize :
+         (Default value = 3)
+
+    Returns
+    -------
+
+    """
     return [token for token in tokens if len(token) >= minsize]
 
 
 def lower_to_unicode(text, encoding='utf8', errors='strict'):
-    """Lowercase `text` and convert to unicode."""
+    """Lowercase `text` and convert to unicode.
+
+    Parameters
+    ----------
+    text :
+        
+    encoding :
+         (Default value = 'utf8')
+    errors :
+         (Default value = 'strict')
+
+    Returns
+    -------
+
+    """
     return utils.to_unicode(text.lower(), encoding, errors)
 
 
 def strip_multiple_whitespaces(s):
-    """Collapse multiple whitespace characters into a single space."""
+    """Collapse multiple whitespace characters into a single space.
+
+    Parameters
+    ----------
+    s :
+        
+
+    Returns
+    -------
+
+    """
     return RE_WHITESPACE.sub(" ", s)
 
 
 class TextCorpus(interfaces.CorpusABC):
     """Helper class to simplify the pipeline of getting bag-of-words vectors (= a
     gensim corpus) from plain text.
-
+    
     This is an abstract base class: override the `get_texts()` and `__len__()`
     methods to match your particular input.
-
+    
     Given a filename (or a file-like object) in constructor, the corpus object
     will be automatically initialized with a dictionary in `self.dictionary` and
     will support the `iter` corpus method. You have a few different ways of utilizing
     this class via subclassing or by construction with different preprocessing arguments.
-
+    
     The `iter` method converts the lists of tokens produced by `get_texts` to BoW format
     using `Dictionary.doc2bow`. `get_texts` does the following:
-
+    
     1.  Calls `getstream` to get a generator over the texts. It yields each document in
         turn from the underlying text file or files.
     2.  For each document from the stream, calls `preprocess_text` to produce a list of
         tokens; if metadata is enabled, it yields a 2-`tuple` with the document number as
         the second element.
-
-
+    
+    
     Preprocessing consists of 0+ `character_filters`, a `tokenizer`, and 0+ `token_filters`.
-
+    
     The preprocessing consists of calling each filter in `character_filters` with the document
     text; unicode is not guaranteed, and if desired, the first filter should convert to unicode.
     The output of each character filter should be another string. The output from the final
     filter is fed to the `tokenizer`, which should split the string into a list of tokens (strings).
     Afterwards, the list of tokens is fed through each filter in `token_filters`. The final
     output returned from `preprocess_text` is the output from the final token filter.
-
+    
     So to use this class, you can either pass in different preprocessing functions using the
     `character_filters`, `tokenizer`, and `token_filters` arguments, or you can subclass it.
     If subclassing: override `getstream` to take text from different input sources in different
@@ -101,9 +149,9 @@ class TextCorpus(interfaces.CorpusABC):
     then call the `TextCorpus.preprocess_text` method to apply the normal preprocessing. You
     can also overrride `get_texts` in order to tag the documents (token lists) with different
     metadata.
-
+    
     The default preprocessing consists of:
-
+    
     1.  lowercase and convert to unicode; assumes utf8 encoding
     2.  deaccent (asciifolding)
     3.  collapse multiple whitespaces into a single one
@@ -158,6 +206,12 @@ class TextCorpus(interfaces.CorpusABC):
         """If `dictionary` is None, initialize to an empty Dictionary, and then if there
         is an `input` for the corpus, add all documents from that `input`. If the
         `dictionary` is already initialized, simply set it as the corpus's `dictionary`.
+
+        Parameters
+        ----------
+        dictionary :
+            
+
         """
         self.dictionary = dictionary if dictionary is not None else Dictionary()
         if self.input is not None:
@@ -188,6 +242,13 @@ class TextCorpus(interfaces.CorpusABC):
         """Yield documents from the underlying plain text collection (of one or more files).
         Each item yielded from this method will be considered a document by subsequent
         preprocessing methods.
+
+        Parameters
+        ----------
+
+        Yields
+        ------
+
         """
         num_texts = 0
         with utils.file_or_filename(self.input) as f:
@@ -201,11 +262,16 @@ class TextCorpus(interfaces.CorpusABC):
         """Apply preprocessing to a single text document. This should perform tokenization
         in addition to any other desired preprocessing steps.
 
-        Args:
-            text (str): document text read from plain-text file.
+        Parameters
+        ----------
+        text : str
+            document text read from plain-text file.
 
-        Returns:
-            iterable of str: tokens produced from `text` as a result of preprocessing.
+        Returns
+        -------
+        iterable of str
+            tokens produced from `text` as a result of preprocessing.
+
         """
         for character_filter in self.character_filters:
             text = character_filter(text)
@@ -219,6 +285,15 @@ class TextCorpus(interfaces.CorpusABC):
     def step_through_preprocess(self, text):
         """Yield tuples of functions and their output for each stage of preprocessing.
         This is useful for debugging issues with the corpus preprocessing pipeline.
+
+        Parameters
+        ----------
+        text :
+            
+
+        Yields
+        ------
+
         """
         for character_filter in self.character_filters:
             text = character_filter(text)
@@ -238,9 +313,12 @@ class TextCorpus(interfaces.CorpusABC):
         to be overridden if the metadata you'd like to yield differs from the line
         number.
 
-        Returns:
-            generator of lists of tokens (strings); each list corresponds to a preprocessed
+        Yields
+        ------
+        list of strings
+            each list corresponds to a preprocessed
             document from the corpus `input`.
+
         """
         lines = self.getstream()
         if self.metadata:
@@ -252,24 +330,31 @@ class TextCorpus(interfaces.CorpusABC):
 
     def sample_texts(self, n, seed=None, length=None):
         """Yield n random documents from the corpus without replacement.
-
+        
         Given the number of remaining documents in a corpus, we need to choose n elements.
         The probability for the current element to be chosen is n/remaining.
         If we choose it, we just decrease the n and move to the next element.
         Computing the corpus length may be a costly operation so you can use the optional
         parameter `length` instead.
 
-        Args:
-            n (int): number of documents we want to sample.
-            seed (int|None): if specified, use it as a seed for local random generator.
-            length (int|None): if specified, use it as a guess of corpus length.
-                It must be positive and not greater than actual corpus length.
+        Parameters
+        ----------
+        n : int
+            number of documents we want to sample.
+        seed : int or None
+            if specified, use it as a seed for local random generator. (Default value = None)
+        length : int or None
+            if specified, use it as a guess of corpus length.
+            It must be positive and not greater than actual corpus length. (Default value = None)
 
-        Yields:
-            list[str]: document represented as a list of tokens. See get_texts method.
+        Yields
+        ------
 
-        Raises:
-            ValueError: when n is invalid or length was set incorrectly.
+        Raises
+        ------
+        ValueError
+            when n is invalid or length was set incorrectly.
+
         """
         random_generator = random if seed is None else random.Random(seed)
         if length is None:
@@ -309,6 +394,7 @@ class TextCorpus(interfaces.CorpusABC):
 class TextDirectoryCorpus(TextCorpus):
     """Read documents recursively from a directory,
     where each file (or line of each file) is interpreted as a plain text document.
+
     """
 
     def __init__(self, input, dictionary=None, metadata=False, min_depth=0, max_depth=None,
@@ -339,46 +425,91 @@ class TextDirectoryCorpus(TextCorpus):
 
     @property
     def lines_are_documents(self):
+        """ """
         return self._lines_are_documents
 
     @lines_are_documents.setter
     def lines_are_documents(self, lines_are_documents):
+        """
+
+        Parameters
+        ----------
+        lines_are_documents :
+            
+
+        """
         self._lines_are_documents = lines_are_documents
         self.length = None
 
     @property
     def pattern(self):
+        """ """
         return self._pattern
 
     @pattern.setter
     def pattern(self, pattern):
+        """
+
+        Parameters
+        ----------
+        pattern :
+            
+
+        """
         self._pattern = None if pattern is None else re.compile(pattern)
         self.length = None
 
     @property
     def exclude_pattern(self):
+        """ """
         return self._exclude_pattern
 
     @exclude_pattern.setter
     def exclude_pattern(self, pattern):
+        """
+
+        Parameters
+        ----------
+        pattern :
+
+
+        """
         self._exclude_pattern = None if pattern is None else re.compile(pattern)
         self.length = None
 
     @property
     def min_depth(self):
+        """ """
         return self._min_depth
 
     @min_depth.setter
     def min_depth(self, min_depth):
+        """
+
+        Parameters
+        ----------
+        min_depth :
+            
+
+        """
         self._min_depth = min_depth
         self.length = None
 
     @property
     def max_depth(self):
+        """ """
         return self._max_depth
 
     @max_depth.setter
     def max_depth(self, max_depth):
+        """
+
+        Parameters
+        ----------
+        max_depth :
+            
+
+        """
         self._max_depth = max_depth
         self.length = None
 
@@ -386,6 +517,10 @@ class TextDirectoryCorpus(TextCorpus):
         """Lazily yield paths to each file in the directory structure within the specified
         range of depths. If a filename pattern to match was given, further filter to only
         those filenames that match.
+
+        Yields
+        ------
+
         """
         for depth, dirpath, dirnames, filenames in walk(self.input):
             if self.min_depth <= depth <= self.max_depth:
@@ -401,9 +536,13 @@ class TextDirectoryCorpus(TextCorpus):
         """Yield documents from the underlying plain text collection (of one or more files).
         Each item yielded from this method will be considered a document by subsequent
         preprocessing methods.
-
+        
         If `lines_are_documents` was set to True, items will be lines from files. Otherwise
         there will be one item per file, containing the entire contents of the file.
+
+        Yields
+        ------
+
         """
         num_texts = 0
         for path in self.iter_filepaths():
@@ -424,6 +563,7 @@ class TextDirectoryCorpus(TextCorpus):
         return self.length
 
     def _cache_corpus_length(self):
+        """ """
         if not self.lines_are_documents:
             self.length = sum(1 for _ in self.iter_filepaths())
         else:
@@ -434,6 +574,23 @@ def walk(top, topdown=True, onerror=None, followlinks=False, depth=0):
     """This is a mostly copied version of `os.walk` from the Python 2 source code.
     The only difference is that it returns the depth in the directory tree structure
     at which each yield is taking place.
+
+    Parameters
+    ----------
+    top :
+        
+    topdown :
+         (Default value = True)
+    onerror :
+         (Default value = None)
+    followlinks :
+         (Default value = False)
+    depth :
+         (Default value = 0)
+
+    Yields
+    ------
+
     """
     islink, join, isdir = os.path.islink, os.path.join, os.path.isdir
 
