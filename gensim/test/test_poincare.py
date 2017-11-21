@@ -348,6 +348,17 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(self.vectors.difference_in_hierarchy('mammal.n.01', 'dog.n.01'), 0.9384287))
         self.assertTrue(np.allclose(self.vectors.difference_in_hierarchy('dog.n.01', 'mammal.n.01'), -0.9384287))
 
+    def test_words_closer_than(self):
+        """Test words_closer_than returns expected value for distinct and identical nodes."""
+        self.assertEqual(self.vectors.words_closer_than('dog.n.01', 'dog.n.01'), [])
+        expected = ['canine.n.02', 'hunting_dog.n.01']
+        self.assertEqual(self.vectors.words_closer_than('dog.n.01', 'carnivore.n.01'), expected)
+
+    def test_rank(self):
+        """Test rank returns expected value for distinct and identical nodes."""
+        self.assertEqual(self.vectors.rank('dog.n.01', 'dog.n.01'), 1)
+        self.assertEqual(self.vectors.rank('dog.n.01', 'carnivore.n.01'), 3)
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

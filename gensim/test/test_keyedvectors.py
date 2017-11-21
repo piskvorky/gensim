@@ -111,6 +111,18 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(self.vectors.similarity('war', 'war'), 1))
         self.assertTrue(np.allclose(self.vectors.similarity('war', 'conflict'), 0.93305397))
 
+    def test_words_closer_than(self):
+        """Test words_closer_than returns expected value for distinct and identical nodes."""
+        self.assertEqual(self.vectors.words_closer_than('war', 'war'), [])
+        expected = ['conflict', 'administration']
+        self.assertEqual(self.vectors.words_closer_than('war', 'terrorism'), expected)
+
+    def test_rank(self):
+        """Test rank returns expected value for distinct and identical nodes."""
+        self.assertEqual(self.vectors.rank('war', 'war'), 1)
+        self.assertEqual(self.vectors.rank('war', 'terrorism'), 3)
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
