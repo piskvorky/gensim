@@ -853,99 +853,101 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         """
         return len(self.nodes_closer_than(term_1, term_2)) + 1
 
-    def closest_child(self, term_1):
+    def closest_child(self, node):
         """
-        Returns the node closest to `term_1` that is lower in the hierarchy than `term_1`.
+        Returns the node closest to `node` that is lower in the hierarchy than `node`.
 
         Parameters
         ----------
-        term_1 : str
-            Input term.
+        node : str
+            Key for node for which closest child is to be found.
 
         Returns
         -------
         str or None
-            Node closest to `term_1` that is lower in the hierarchy than `term_1`.
+            Node closest to `node` that is lower in the hierarchy than `node`.
             If there are no nodes lower in the hierarchy, None is returned.
+
         """
-        all_distances = self.distances(term_1)
+        all_distances = self.distances(node)
         all_norms = np.linalg.norm(self.syn0, axis=1)
-        term_1_norm = all_norms[self.vocab[term_1].index]
-        mask = term_1_norm >= all_norms
+        node_norm = all_norms[self.vocab[node].index]
+        mask = node_norm >= all_norms
         if mask.all():  # No nodes lower in the hierarchy
             return None
         all_distances = np.ma.array(all_distances, mask=mask)
         closest_child_index = np.ma.argmin(all_distances)
         return self.index2word[closest_child_index]
 
-    def closest_parent(self, term_1):
+    def closest_parent(self, node):
         """
-        Returns the node closest to `term_1` that is higher in the hierarchy than `term_1`.
+        Returns the node closest to `node` that is higher in the hierarchy than `node`.
 
         Parameters
         ----------
-        term_1 : str
-            Input term.
+        node : str
+            Key for node for which closest parent is to be found.
 
         Returns
         -------
         str or None
-            Node closest to `term_1` that is higher in the hierarchy than `term_1`.
+            Node closest to `node` that is higher in the hierarchy than `node`.
             If there are no nodes higher in the hierarchy, None is returned.
 
         """
-        all_distances = self.distances(term_1)
+        all_distances = self.distances(node)
         all_norms = np.linalg.norm(self.syn0, axis=1)
-        term_1_norm = all_norms[self.vocab[term_1].index]
-        mask = term_1_norm <= all_norms
+        node_norm = all_norms[self.vocab[node].index]
+        mask = node_norm <= all_norms
         if mask.all():  # No nodes higher in the hierarchy
             return None
         all_distances = np.ma.array(all_distances, mask=mask)
         closest_child_index = np.ma.argmin(all_distances)
         return self.index2word[closest_child_index]
 
-    def descendants(self, term_1, max_depth=5):
+    def descendants(self, node, max_depth=5):
         """
         Returns the list of recursively closest children from the given node, upto a max depth of `max_depth`.
 
         Parameters
         ----------
-        term_1 : str
-            Input term.
+        node : str
+            Key for node for which descendants are to be found.
         max_depth : int
             Maximum number of descendants to return.
 
         Returns
         -------
-        List (str)
-            Descendant nodes from the node `term_1`.
+        list (str)
+            Descendant nodes from the node `node`.
 
         """
         depth = 0
         descendants = []
-        current_node = term_1
+        current_node = node
         while depth < max_depth:
             descendants.append(self.closest_child(current_node))
             current_node = descendants[-1]
             depth += 1
         return descendants
 
-    def ancestors(self, term_1):
+    def ancestors(self, node):
         """
         Returns the list of recursively closest parents from the given node.
 
         Parameters
         ----------
-        term_1 : str
-            Input term.
+        node : str
+            Key for node for which ancestors are to be found.
 
         Returns
         -------
-        List (str)
+        list (str)
+            Ancestor nodes of the node `node`.
 
         """
         ancestors = []
-        current_node = term_1
+        current_node = node
         ancestor = self.closest_parent(current_node)
         while ancestor is not None:
             ancestors.append(ancestor)
@@ -1182,13 +1184,13 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         """
         if isinstance(word_or_vector_1, string_types) and isinstance(word_or_vector_2, string_types):
-            input_vector_1 = self.word_vec(word_or_vector_1)
-            input_vector_2 = self.word_vec(word_or_vector_2)
-        elif isinstance(word_or_vector_1, np.ndarray) and isinstance(word_or_vector_2, np.ndarray):
-            input_vector_1 = word_or_vector_1
-            input_vector_2 = word_or_vector_2
+            vector_1 = self.word_vec(word_or_vector_1)
+            vector_2 = self.word_vec(word_or_vector_2)
+        else:
+            vector_1 = word_or_vector_1
+            vector_2 = word_or_vector_2
 
-        return np.linalg.norm(input_vector_2) - np.linalg.norm(input_vector_1)
+        return np.linalg.norm(vector_2) - np.linalg.norm(vector_1)
 
 
 class PoincareRelations(object):
