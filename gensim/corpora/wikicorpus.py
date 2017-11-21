@@ -69,9 +69,17 @@ IGNORED_NAMESPACES = [
 
 
 def filter_wiki(raw):
-    """
-    Filter out wiki mark-up from `raw`, leaving only text. `raw` is either unicode
+    """Filter out wiki mark-up from `raw`, leaving only text. `raw` is either unicode
     or utf-8 encoded string.
+
+    Parameters
+    ----------
+    raw :
+        
+
+    Returns
+    -------
+
     """
     # parsing of the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
@@ -81,6 +89,17 @@ def filter_wiki(raw):
 
 
 def remove_markup(text):
+    """
+
+    Parameters
+    ----------
+    text :
+        
+
+    Returns
+    -------
+
+    """
     text = re.sub(RE_P2, "", text)  # remove the last list (=languages)
     # the wiki markup is recursive (markup inside markup etc)
     # instead of writing a recursive grammar, here we deal with that by removing
@@ -121,8 +140,19 @@ def remove_template(s):
     http://meta.wikimedia.org/wiki/Help:Template for wikimedia templates
     details.
 
-    Note: Since template can be nested, it is difficult remove them using
+    Parameters
+    ----------
+    s :
+        
+
+    Returns
+    -------
+
+    Notes
+    -----
+    Since template can be nested, it is difficult remove them using
     regular expresssions.
+
     """
 
     # Find the start and end position of each template by finding the opening
@@ -158,6 +188,15 @@ def remove_file(s):
     Return a copy of `s` with all the 'File:' and 'Image:' markup replaced by
     their corresponding captions. See http://www.mediawiki.org/wiki/Help:Images
     for the markup details.
+
+    Parameters
+    ----------
+    s :
+        
+
+    Returns
+    -------
+
     """
     # The regex RE_P15 match a File: or Image: markup
     for match in re.finditer(RE_P15, s):
@@ -168,13 +207,26 @@ def remove_file(s):
 
 
 def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
-    """
-    Tokenize a piece of text from wikipedia. The input string `content` is assumed
-    to be mark-up free (see `filter_wiki()`).
+    """Tokenize a piece of text from wikipedia. The input string `content` is
+    assumed to be mark-up free (see `filter_wiki()`).
+    
+    Set `token_min_len`, `token_max_len` as character length (not bytes!)
+    thresholds for individual tokens.
 
-    Set `token_min_len`, `token_max_len` as character length (not bytes!) thresholds for individual tokens.
+    Parameters
+    ----------
+    content :
+        
+    token_min_len :
+         (Default value = TOKEN_MIN_LEN)
+    token_max_len :
+         (Default value = TOKEN_MAX_LEN)
+    lower :
+         (Default value = True)
 
-    Return list of tokens as utf8 bytestrings.
+    Returns
+    -------
+
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
     return [
@@ -184,7 +236,17 @@ def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, 
 
 
 def get_namespace(tag):
-    """Returns the namespace of tag."""
+    """Returns the namespace of tag.
+
+    Parameters
+    ----------
+    tag :
+        
+
+    Returns
+    -------
+
+    """
     m = re.match("^{(.*?)}", tag)
     namespace = m.group(1) if m else ""
     if not namespace.startswith("http://www.mediawiki.org/xml/export-"):
@@ -196,10 +258,17 @@ _get_namespace = get_namespace
 
 
 def extract_pages(f, filter_namespaces=False):
-    """
-    Extract pages from a MediaWiki database dump = open file-like object `f`.
+    """Extract pages from a MediaWiki database dump = open file-like object `f`.
 
-    Return an iterable over (str, str, str) which generates (title, content, pageid) triplets.
+    Parameters
+    ----------
+    f :
+        
+    filter_namespaces :
+         (Default value = False)
+
+    Yields
+    ------
 
     """
     elems = (elem for _, elem in iterparse(f, events=("end",)))
@@ -244,12 +313,28 @@ _extract_pages = extract_pages  # for backward compatibility
 
 
 def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
-    """
-    Parse a wikipedia article, returning its content as a list of tokens
+    """Parse a wikipedia article, returning its content as a list of tokens
     (utf8-encoded strings).
-
+    
     Set `tokenizer_func` (defaults to `tokenize`) parameter for languages like japanese or thai to perform better
     tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower).
+
+    Parameters
+    ----------
+    args :
+        
+    tokenizer_func :
+         (Default value = tokenize)
+    token_min_len :
+         (Default value = TOKEN_MIN_LEN)
+    token_max_len :
+         (Default value = TOKEN_MAX_LEN)
+    lower :
+         (Default value = True)
+
+    Returns
+    -------
+
     """
     text, lemmatize, title, pageid = args
     text = filter_wiki(text)
@@ -266,7 +351,17 @@ def init_to_ignore_interrupt():
 
 
 def _process_article(args):
-    """Should not be called explicitly. Use `process_article` instead."""
+    """Should not be called explicitly. Use `process_article` instead.
+
+    Parameters
+    ----------
+    args :
+        
+
+    Returns
+    -------
+
+    """
 
     tokenizer_func, token_min_len, token_max_len, lower = args[-1]
     args = args[:-1]
@@ -278,16 +373,17 @@ def _process_article(args):
 
 
 class WikiCorpus(TextCorpus):
-    """
-    Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
-
+    """Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
+    
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
-
+    
     **Note:** "multistream" archives are *not* supported in Python 2 due to
     `limitations in the core bz2 library
     <https://docs.python.org/2/library/bz2.html#de-compression-of-files>`_.
 
+    Examples
+    --------
     >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
@@ -336,18 +432,23 @@ class WikiCorpus(TextCorpus):
             self.dictionary = dictionary
 
     def get_texts(self):
-        """
-        Iterate over the dump, returning text version of each article as a list
+        """Iterate over the dump, returning text version of each article as a list
         of tokens.
-
+        
         Only articles of sufficient length are returned (short articles & redirects
         etc are ignored). This is control by `article_min_tokens` on the class instance.
-
+        
         Note that this iterates over the **texts**; if you want vectors, just use
         the standard corpus interface instead of this function::
 
+        Yields
+        ------
+
+        Examples
+        --------
         >>> for vec in wiki_corpus:
         >>>     print(vec)
+
         """
 
         articles, articles_all = 0, 0
