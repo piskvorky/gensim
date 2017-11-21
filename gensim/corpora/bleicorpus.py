@@ -106,7 +106,7 @@ class BleiCorpus(IndexedCorpus):
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
         """Save a corpus in the LDA-C format.
-
+        
         There are actually two files saved: `fname` and `fname.vocab`, where
         `fname.vocab` is the vocabulary file.
 
