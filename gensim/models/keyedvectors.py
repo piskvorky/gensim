@@ -254,17 +254,19 @@ class KeyedVectorsBase(utils.SaveLoad):
         logger.info("loaded %s matrix from %s", result.syn0.shape, fname)
         return result
 
-    def similarity(self, word_1, word_2):
+    def similarity(self, w1, w2):
         """
         Compute similarity between vectors of two input words.
         To be implemented by child class.
+
         """
         raise NotImplementedError
 
-    def distance(self, word_1, word_2):
+    def distance(self, w1, w2):
         """
         Compute distance between vectors of two input words.
         To be implemented by child class.
+
         """
         raise NotImplementedError
 
@@ -348,6 +350,60 @@ class KeyedVectorsBase(utils.SaveLoad):
 
         """
         return word_list[argmax([self.similarity(w1, word) for word in word_list])]
+
+    def words_closer_than(self, w1, w2):
+        """
+        Returns all words that are closer to `w1` than `w2` is to `w1`.
+
+        Parameters
+        ----------
+        w1 : str
+            Input word.
+        w2 : str
+            Input word.
+
+        Returns
+        -------
+        list (str)
+            List of words that are closer to `w1` than `w2` is to `w1`.
+
+        Examples
+        --------
+
+        >>> model.words_closer_than('carnivore.n.01', 'mammal.n.01')
+        ['dog.n.01', 'canine.n.02']
+
+        """
+        all_distances = self.distances(w1)
+        w1_index = self.vocab[w1].index
+        w2_index = self.vocab[w2].index
+        closer_node_indices = np.where(all_distances < all_distances[w2_index])[0]
+        return [self.index2word[index] for index in closer_node_indices if index != w1_index]
+
+    def rank(self, w1, w2):
+        """
+        Rank of the distance of `w2` from `w1`, in relation to distances of all words from `w1`.
+
+        Parameters
+        ----------
+        w1 : str
+            Input word.
+        w2 : str
+            Input word.
+
+        Returns
+        -------
+        int
+            Rank of `w2` from `w1` in relation to all other nodes.
+
+        Examples
+        --------
+
+        >>> model.rank('mammal.n.01', 'carnivore.n.01')
+        3
+
+        """
+        return len(self.words_closer_than(w1, w2)) + 1
 
 
 class EuclideanKeyedVectors(KeyedVectorsBase):

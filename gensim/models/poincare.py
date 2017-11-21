@@ -163,7 +163,7 @@ class PoincareModel(utils.SaveLoad):
             node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
             all_relations.append(relation)
-        logger.info("Loaded %d relations from train data, %d unique terms", len(all_relations), len(vocab))
+        logger.info("Loaded %d relations from train data, %d nodes", len(all_relations), len(vocab))
         self.kv.vocab = vocab
         self.kv.index2word = index2word
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
@@ -799,60 +799,6 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             )
         )
 
-    def nodes_closer_than(self, term_1, term_2):
-        """
-        Returns all nodes that are closer to `term_1` than `term_2` from `term_1`.
-
-        Parameters
-        ----------
-        term_1 : str
-            Input term.
-        term_2 : str
-            Input term.
-
-        Returns
-        -------
-        List (str)
-            List of nodes that are closer to `term_1` than `term_2` is from `term_1`.
-
-        Examples
-        --------
-
-        >>> model.closer_than('carnivore.n.01', 'mammal.n.01')
-        ['dog.n.01', 'canine.n.02']
-
-        """
-        all_distances = self.distances(term_1)
-        term_1_index = self.vocab[term_1].index
-        term_2_index = self.vocab[term_2].index
-        closer_node_indices = np.where(all_distances < all_distances[term_2_index])[0]
-        return [self.index2word[index] for index in closer_node_indices if index != term_1_index]
-
-    def rank(self, term_1, term_2):
-        """
-        Rank of the distance of term_2 from term_1, in relation to distances of all nodes from term_1.
-
-        Parameters
-        ----------
-        term_1 : str
-            Input term.
-        term_2 : str
-            Input term.
-
-        Returns
-        -------
-        int
-            Rank of term_2 from term_1 in relation to all other nodes.
-
-        Examples
-        --------
-
-        >>> model.rank('mammal.n.01', 'carnivore.n.01')
-        3
-
-        """
-        return len(self.nodes_closer_than(term_1, term_2)) + 1
-
     def closest_child(self, node):
         """
         Returns the node closest to `node` that is lower in the hierarchy than `node`.
@@ -965,21 +911,21 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             clusters.append([self.index2word[index] for index in cluster_indices])
         return clusters
 
-    def distance(self, term_1, term_2):
+    def distance(self, w1, w2):
         """
-        Return Poincare distance between two terms.
+        Return Poincare distance between vectors for nodes `w1` and `w2`.
 
         Parameters
         ----------
-        term_1 : str
-            Input term.
-        term_2 : str
-            Input term.
+        w1 : str
+            Key for first node.
+        w2 : str
+            Key for second node.
 
         Returns
         -------
         float
-            Poincare distance between the vectors for `term_1` and `term_2`.
+            Poincare distance between the vectors for nodes `w1` and `w2`.
 
         Examples
         --------
@@ -989,28 +935,29 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Notes
         -----
-        Raises KeyError if either of `term_1` and `term_2` is absent from vocab.
+        Raises KeyError if either of `w1` and `w2` is absent from vocab.
 
         """
-        vector_1 = self.word_vec(term_1)
-        vector_2 = self.word_vec(term_2)
+        vector_1 = self.word_vec(w1)
+        vector_2 = self.word_vec(w2)
         return self.poincare_distance(vector_1, vector_2)
 
-    def similarity(self, term_1, term_2):
+    def similarity(self, w1, w2):
         """
-        Return similarity based on Poincare distance between two terms.
+        Return similarity based on Poincare distance between vectors for nodes `w1` and `w2`.
 
         Parameters
         ----------
-        term_1 : str
-            Input term.
-        term_2 : str
-            Input term.
+        w1 : str
+            Key for first node.
+        w2 : str
+            Key for second node.
+
 
         Returns
         -------
         float
-            Similarity between the vectors for `term_1` and `term_2` (between 0 and 1).
+            Similarity between the between the vectors for nodes `w1` and `w2` (between 0 and 1).
 
         Examples
         --------
@@ -1020,11 +967,11 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Notes
         -----
-        Raises KeyError if either of `term_1` and `term_2` is absent from vocab.
+        Raises KeyError if either of `w1` and `w2` is absent from vocab.
         Similarity lies between 0 and 1.
 
         """
-        return 1 / (1 + self.distance(term_1, term_2))
+        return 1 / (1 + self.distance(w1, w2))
 
     def most_similar(self, word_or_vector, topn=10, restrict_vocab=None):
         """
