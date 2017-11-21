@@ -310,7 +310,7 @@ def _download(name):
                 with open(part_path, "rb") as rfp:
                     shutil.copyfileobj(rfp, wfp)
                 os.remove(part_path)
-        os.rename(tmp_dir, data_folder_dir)
+        shutil.move(tmp_dir, data_folder_dir)
     else:
         url_data = "{base}/{fname}/{fname}.gz".format(base=DOWNLOAD_BASE_URL, fname=name)
         fname = "{fname}.gz".format(fname=name)
@@ -323,7 +323,7 @@ def _download(name):
         else:
             shutil.rmtree(tmp_dir)
             raise Exception("Checksum comparison failed, try again")
-        os.rename(tmp_dir, data_folder_dir)
+        shutil.move(tmp_dir, data_folder_dir)
 
 
 def _get_filename(name):
