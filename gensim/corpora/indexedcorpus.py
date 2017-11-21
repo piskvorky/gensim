@@ -5,9 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Base Indexed Corpus class
-"""
+"""Base Indexed Corpus class"""
 
 import logging
 import six
@@ -21,8 +19,7 @@ logger = logging.getLogger('gensim.corpora.indexedcorpus')
 
 class IndexedCorpus(interfaces.CorpusABC):
     def __init__(self, fname, index_fname=None):
-        """
-        Indexed corpus is a mechanism for random-accessing corpora.
+        """Indexed corpus is a mechanism for random-accessing corpora.
 
         While the standard corpus interface in gensim allows iterating over
         corpus with `for doc in corpus: pass`, indexed corpus allows accessing
@@ -42,12 +39,12 @@ class IndexedCorpus(interfaces.CorpusABC):
         Examples
         --------
         >>> # save corpus in SvmLightCorpus format with an index
-        >>> corpus = [[(1, 0.5)], [(0, 1.0), (1, 2.0)]]
-        >>> gensim.corpora.SvmLightCorpus.serialize('testfile.svmlight', corpus)
-        >>> # load back as a document stream (*not* plain Python list)
-        >>> corpus_with_random_access = gensim.corpora.SvmLightCorpus('tstfile.svmlight')
-        >>> print(corpus_with_random_access[1])
-        [(0, 1.0), (1, 2.0)]
+            >>> corpus = [[(1, 0.5)], [(0, 1.0), (1, 2.0)]]
+            >>> gensim.corpora.SvmLightCorpus.serialize('testfile.svmlight', corpus)
+            >>> # load back as a document stream (*not* plain Python list)
+            >>> corpus_with_random_access = gensim.corpora.SvmLightCorpus('tstfile.svmlight')
+            >>> print(corpus_with_random_access[1])
+            [(0, 1.0), (1, 2.0)]
 
         """
         try:
@@ -72,22 +69,21 @@ class IndexedCorpus(interfaces.CorpusABC):
             labels=None,
             metadata=False
     ):
-        """
-        Iterate through the document stream `corpus`, saving the documents to
+        """Iterate through the document stream `corpus`, saving the documents to
         `fname` and recording byte offset of each document.
-
+        
         Save the resulting index structure to file `index_fname` (or
         `fname`.index is not set).
-
+        
         This relies on the underlying corpus class `serializer` providing (in
-        addition to standard iteration):
-
-        * `save_corpus` method that returns a sequence of byte offsets, one for
-           each saved document
-        * the `docbyoffset(offset)` method, which returns a document
-          positioned at `offset` bytes within the persistent storage (file)
-        * metadata if set to true will ensure that serialize will write out
-        article titles to a pickle file.
+        addition to standard iteration)::
+        
+            * `save_corpus` method that returns a sequence of byte offsets, one for
+               each saved document
+            * the `docbyoffset(offset)` method, which returns a document
+              positioned at `offset` bytes within the persistent storage (file)
+            * metadata if set to true will ensure that serialize will write out
+            article titles to a pickle file.
 
         Parameters
         ----------
@@ -96,12 +92,15 @@ class IndexedCorpus(interfaces.CorpusABC):
         corpus : iterable
             Iterable of documents
         id2word : dict of (str, str), optional
-            Transforms id to word
+            Transforms id to word (Default value = None)
         index_fname : str
+             (Default value = None)
         progress_cnt : int
+             (Default value = None)
         labels :
+             (Default value = None)
         metadata : bool
-            Any additional info
+            Any additional info (Default value = False)
 
         Examples
         --------
@@ -117,14 +116,15 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         if progress_cnt is not None:
             if labels is not None:
-                offsets = serializer._save_corpus(fname, corpus, id2word, labels=labels, progress_cnt=progress_cnt, metadata=metadata)
+                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels, progress_cnt=progress_cnt, metadata=metadata)
             else:
-                offsets = serializer._save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt, metadata=metadata)
+                offsets = serializer.save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt, metadata=metadata)
         else:
             if labels is not None:
-                offsets = serializer._save_corpus(fname, corpus, id2word, labels=labels, metadata=metadata)
+                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels, metadata=metadata)
             else:
-                offsets = serializer._save_corpus(fname, corpus, id2word, metadata=metadata)
+                offsets = serializer.save_corpus(fname, corpus, id2word,
+                                                 metadata=metadata)
 
         if offsets is None:
             raise NotImplementedError("called serialize on class %s which doesn't support indexing!" % serializer.__name__)
