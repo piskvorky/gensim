@@ -319,14 +319,6 @@ class KeyedVectorsBase(utils.SaveLoad):
     def __contains__(self, word):
         return word in self.vocab
 
-    def most_similar(self, word, topn=10, restrict_vocab=None):
-        """
-        Find the top-N most similar words to the given word, sorted in increasing order of distance.
-        To be implemented by child classes
-
-        """
-        raise NotImplementedError
-
     def most_similar_to_given(self, w1, word_list):
         """Return the word from word_list most similar to w1.
 
