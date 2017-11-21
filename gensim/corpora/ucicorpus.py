@@ -29,11 +29,11 @@ logger = logging.getLogger('gensim.corpora.ucicorpus')
 
 class UciReader(MmReader):
     def __init__(self, input):
-        """
-        Initialize the reader.
+        """Initialize the reader.
 
         The `input` parameter refers to a file on the local filesystem,
         which is expected to be in the UCI Bag-of-Words format.
+
         """
 
         logger.info('Initializing corpus reader from %s', input)
@@ -55,20 +55,27 @@ class UciReader(MmReader):
         )
 
     def skip_headers(self, input_file):
+        """
+
+        Parameters
+        ----------
+        input_file :
+
+
+        """
         for lineno, _ in enumerate(input_file):
             if lineno == 2:
                 break
 
 
 class UciWriter(MmWriter):
-    """
-    Store a corpus in UCI Bag-of-Words format.
-
+    """Store a corpus in UCI Bag-of-Words format.
+    
     This corpus format is identical to MM format, except for
     different file headers. There is no format line, and the first
     three lines of the file contain number_docs, num_terms, and num_nnz,
     one value per line.
-
+    
     This implementation is based on matutils.MmWriter, and works the same way.
 
     """
@@ -76,8 +83,9 @@ class UciWriter(MmWriter):
     FAKE_HEADER = utils.to_utf8(' ' * MAX_HEADER_LENGTH + '\n')
 
     def write_headers(self):
-        """
-        Write blank header lines. Will be updated later, once corpus stats are known.
+        """Write blank header lines.
+
+        Will be updated later, once corpus stats are known.
         """
         for _ in range(3):
             self.fout.write(self.FAKE_HEADER)
@@ -86,8 +94,17 @@ class UciWriter(MmWriter):
         self.headers_written = True
 
     def update_headers(self, num_docs, num_terms, num_nnz):
-        """
-        Update headers with actual values.
+        """Update headers with actual values.
+
+        Parameters
+        ----------
+        num_docs :
+            
+        num_terms :
+            
+        num_nnz :
+            
+
         """
         offset = 0
         values = [utils.to_utf8(str(n)) for n in [num_docs, num_terms, num_nnz]]
@@ -101,6 +118,20 @@ class UciWriter(MmWriter):
 
     @staticmethod
     def write_corpus(fname, corpus, progress_cnt=1000, index=False):
+        """
+
+        Parameters
+        ----------
+        fname :
+            
+        corpus :
+            
+        progress_cnt :
+             (Default value = 1000)
+        index :
+             (Default value = False)
+
+        """
         writer = UciWriter(fname)
         writer.write_headers()
 
@@ -139,9 +170,7 @@ class UciWriter(MmWriter):
 
 
 class UciCorpus(UciReader, IndexedCorpus):
-    """
-    Corpus in the UCI bag-of-words format.
-    """
+    """Corpus in the UCI bag-of-words format."""
     def __init__(self, fname, fname_vocab=None):
         IndexedCorpus.__init__(self, fname)
         UciReader.__init__(self, fname)
@@ -165,9 +194,12 @@ class UciCorpus(UciReader, IndexedCorpus):
             yield doc  # get rid of docId, return the sparse vector only
 
     def create_dictionary(self):
-        """
-        Utility method to generate gensim-style Dictionary directly from
+        """Utility method to generate gensim-style Dictionary directly from
         the corpus and vocabulary data.
+
+        Returns
+        -------
+
         """
         dictionary = Dictionary()
 
@@ -193,14 +225,30 @@ class UciCorpus(UciReader, IndexedCorpus):
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, progress_cnt=10000, metadata=False):
-        """
-        Save a corpus in the UCI Bag-of-Words format.
-
+        """Save a corpus in the UCI Bag-of-Words format.
+        
         There are actually two files saved: `fname` and `fname.vocab`, where
         `fname.vocab` is the vocabulary file.
-
+        
         This function is automatically called by `UciCorpus.serialize`; don't
         call it directly, call `serialize` instead.
+
+        Parameters
+        ----------
+        fname :
+            
+        corpus :
+            
+        id2word :
+             (Default value = None)
+        progress_cnt :
+             (Default value = 10000)
+        metadata :
+             (Default value = False)
+
+        Returns
+        -------
+
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
