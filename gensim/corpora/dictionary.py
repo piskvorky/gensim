@@ -6,13 +6,13 @@
 
 
 """
-This module implements the concept of Dictionary -- a mapping between words and
-their integer ids.
+General mapping between normalized words and their ids.
 
 Dictionaries can be created from a corpus and can later be pruned according to
-document frequency (removing (un)common words via the :func:`Dictionary.filter_extremes` method),
-save/loaded from disk (via :func:`Dictionary.save` and :func:`Dictionary.load` methods), merged
-with other dictionary (:func:`Dictionary.merge_with`) etc.
+document frequency (removing (un)common words via the
+:func:`Dictionary.filter_extremes` method), save/loaded from disk (via
+:func:`Dictionary.save` and :func:`Dictionary.load` methods), merged with
+other dictionary (:func:`Dictionary.merge_with`) etc.
 """
 
 from __future__ import with_statement
@@ -36,15 +36,23 @@ logger = logging.getLogger('gensim.corpora.dictionary')
 
 
 class Dictionary(utils.SaveLoad, Mapping):
-    """
-    Dictionary encapsulates the mapping between normalized words and their integer ids.
-
+    """Mapping between normalized words and their ids.
+    
     The main function is `doc2bow`, which converts a collection of words to its
     bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
+
     """
+
     def __init__(self, documents=None, prune_at=2000000):
-        """
-        If `documents` are given, use them to initialize Dictionary (see `add_documents()`).
+        """Initialize the dictionary.
+
+        Parameters
+        ----------
+        documents : (iterable of (list of str)) or None
+            If not None, used to initialize dictionary
+        prune_at : int
+            Number of unique words to keep
+
         """
         self.token2id = {}  # token -> tokenId
         self.id2token = {}  # reverse mapping for token2id; only formed on request, to save memory
@@ -58,6 +66,17 @@ class Dictionary(utils.SaveLoad, Mapping):
             self.add_documents(documents, prune_at=prune_at)
 
     def __getitem__(self, tokenid):
+        """Return token.
+
+        If :param:``token2id`` has changed (presumably via
+        :func:``add_documents``),
+        update :param:``id2token``.
+
+        Returns
+        -------
+        str
+
+        """
         if len(self.id2token) != len(self.token2id):
             # the word->id mapping has changed (presumably via add_documents);
             # recompute id->word accordingly
@@ -65,6 +84,13 @@ class Dictionary(utils.SaveLoad, Mapping):
         return self.id2token[tokenid]  # will throw for non-existent ids
 
     def __iter__(self):
+        """Iterate through keys.
+
+        Returns
+        -------
+        iterable of str
+
+        """
         return iter(self.keys())
 
     if PY3:
@@ -72,9 +98,11 @@ class Dictionary(utils.SaveLoad, Mapping):
         iterkeys = __iter__
 
         def iteritems(self):
+            """Iterate through items."""
             return self.items()
 
         def itervalues(self):
+            """Iterate through values."""
             return self.values()
 
     def keys(self):
@@ -82,31 +110,65 @@ class Dictionary(utils.SaveLoad, Mapping):
         return list(self.token2id.values())
 
     def __len__(self):
-        """
-        Return the number of token->id mappings in the dictionary.
+        """Return the number of token->id mappings in the dictionary.
+
+        Returns
+        -------
+        int
+
         """
         return len(self.token2id)
 
     def __str__(self):
+        """Return string representation.
+
+        Returns
+        -------
+        str
+
+        """
         some_keys = list(itertools.islice(iterkeys(self.token2id), 5))
         return "Dictionary(%i unique tokens: %s%s)" % (len(self), some_keys, '...' if len(self) > 5 else '')
 
     @staticmethod
     def from_documents(documents):
+        """Build Dictionary from documents set.
+
+        Parameters
+        ----------
+        documents : iterable of (list of str)
+
+
+        Returns
+        -------
+        :class:`Dictionary`
+        
+        """
         return Dictionary(documents=documents)
 
     def add_documents(self, documents, prune_at=2000000):
-        """
-        Update dictionary from a collection of documents. Each document is a list
-        of tokens = **tokenized and normalized** strings (either utf8 or unicode).
-
+        u"""
+        Update dictionary from a collection of documents.
+        
+        Each document is a list of tokens = **tokenized and normalized**
+        strings (either utf8 or unicode).
+        
         This is a convenience wrapper for calling `doc2bow` on each document
         with `allow_update=True`, which also prunes infrequent words, keeping the
         total number of unique words <= `prune_at`. This is to save memory on very
         large inputs. To disable this pruning, set `prune_at=None`.
 
+        Parameters
+        ----------
+        documents : iterable of str
+        prune_at : int
+            Number of unique words to keep
+
+        Examples
+        --------
         >>> print(Dictionary(["máma mele maso".split(), "ema má máma".split()]))
         Dictionary(5 unique tokens)
+
         """
         for docno, document in enumerate(documents):
             # log progress & run a regular check for pruning, once every 10k docs
@@ -124,19 +186,27 @@ class Dictionary(utils.SaveLoad, Mapping):
         )
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
-        """
-        Convert `document` (a list of words) into the bag-of-words format = list
-        of `(token_id, token_count)` 2-tuples. Each word is assumed to be a
-        **tokenized and normalized** string (either unicode or utf8-encoded). No further preprocessing
-        is done on the words in `document`; apply tokenization, stemming etc. before
+        """Convert document to the bag-of-words format.
+        
+        Each word is assumed to be a **tokenized and normalized** string (
+        either unicode or utf8-encoded). No further preprocessing is done on
+        the words in `document`; apply tokenization, stemming etc. before
         calling this method.
 
-        If `allow_update` is set, then also update dictionary in the process: create
-        ids for new words. At the same time, update document frequencies -- for
-        each word appearing in this document, increase its document frequency (`self.dfs`)
-        by one.
+        Parameters
+        ----------
+        document : list of str
+            
+        allow_update : bool
+            Whether to update the dictionary in the process
+            (Default value = False)
+        return_missing :
+            (Default value = False)
 
-        If `allow_update` is **not** set, this function is `const`, aka read-only.
+        Returns
+        -------
+        dict of (int, int)
+
         """
         if isinstance(document, string_types):
             raise TypeError("doc2bow expects an array of unicode tokens on input, not a single string")
@@ -174,9 +244,8 @@ class Dictionary(utils.SaveLoad, Mapping):
             return result
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
-        """
-        Filter out tokens that appear in
-
+        """Filter out tokens that appear in
+        
         1. less than `no_below` documents (absolute number) or
         2. more than `no_above` documents (fraction of total corpus size, *not*
            absolute number).
@@ -184,11 +253,23 @@ class Dictionary(utils.SaveLoad, Mapping):
            the `no_below` and `no_above` settings
         4. after (1), (2) and (3), keep only the first `keep_n` most frequent tokens (or
            keep all if `None`).
-
+        
         After the pruning, shrink resulting gaps in word ids.
-
+        
         **Note**: Due to the gap shrinking, the same word may have a different
         word id before and after the call to this function!
+
+        Parameters
+        ----------
+        no_below :
+            (Default value = 5)
+        no_above :
+            (Default value = 0.5)
+        keep_n :
+            (Default value = 100000)
+        keep_tokens :
+            (Default value = None)
+
         """
         no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
 
@@ -219,13 +300,18 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.info("resulting dictionary: %s", self)
 
     def filter_n_most_frequent(self, remove_n):
-        """
-        Filter out the 'remove_n' most frequent tokens that appear in the documents.
-
+        """Filter out the 'remove_n' most frequent tokens that appear in the
+        documents.
+        
         After the pruning, shrink resulting gaps in word ids.
-
+        
         **Note**: Due to the gap shrinking, the same word may have a different
         word id before and after the call to this function!
+
+        Parameters
+        ----------
+        remove_n :
+
         """
         # determine which tokens to keep
         most_frequent_ids = (v for v in itervalues(self.token2id))
@@ -239,11 +325,18 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.info("resulting dictionary: %s", self)
 
     def filter_tokens(self, bad_ids=None, good_ids=None):
-        """
-        Remove the selected `bad_ids` tokens from all dictionary mappings, or, keep
-        selected `good_ids` in the mapping and remove the rest.
-
+        """Remove the selected `bad_ids` tokens from all dictionary mappings,
+        or keep selected `good_ids` in the mapping and remove the rest.
+        
         `bad_ids` and `good_ids` are collections of word ids to be removed.
+
+        Parameters
+        ----------
+        bad_ids :
+            (Default value = None)
+        good_ids :
+            (Default value = None)
+
         """
         if bad_ids is not None:
             bad_ids = set(bad_ids)
@@ -256,12 +349,15 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.compactify()
 
     def compactify(self):
-        """
-        Assign new word ids to all words.
-
+        """Assign new word ids to all words.
+        
         This is done to make the ids more compact, e.g. after some tokens have
         been removed via :func:`filter_tokens` and there are gaps in the id series.
         Calling this method will remove the gaps.
+
+        Parameters
+        ----------
+
         """
         logger.debug("rebuilding dictionary, shrinking gaps")
 
@@ -274,14 +370,21 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.dfs = {idmap[tokenid]: freq for tokenid, freq in iteritems(self.dfs)}
 
     def save_as_text(self, fname, sort_by_word=True):
-        """
-        Save this Dictionary to a text file, in format:
+        """Save this Dictionary to a text file, in format:
         `num_docs`
         `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`. Sorted by word,
         or by decreasing word frequency.
-
+        
         Note: text format should be use for corpus inspection. Use `save`/`load`
         to store in binary format (pickle) for improved performance.
+
+        Parameters
+        ----------
+        fname :
+            
+        sort_by_word :
+             (Default value = True)
+
         """
         logger.info("saving dictionary mapping to %s", fname)
         with utils.smart_open(fname, 'wb') as fout:
@@ -297,19 +400,26 @@ class Dictionary(utils.SaveLoad, Mapping):
                     fout.write(utils.to_utf8(line))
 
     def merge_with(self, other):
-        """
-        Merge another dictionary into this dictionary, mapping same tokens to the
+        """Merge another dictionary into this dictionary, mapping same tokens to the
         same ids and new tokens to new ids. The purpose is to merge two corpora
         created using two different dictionaries, one from `self` and one from `other`.
-
+        
         `other` can be any id=>word mapping (a dict, a Dictionary object, ...).
-
+        
         Return a transformation object which, when accessed as `result[doc_from_other_corpus]`,
         will convert documents from a corpus built using the `other` dictionary
         into a document using the new, merged dictionary (see :class:`gensim.interfaces.TransformationABC`).
 
-        Example:
+        Parameters
+        ----------
+        other :
+            
 
+        Returns
+        -------
+
+        Examples
+        --------
         >>> dict1 = Dictionary(some_documents)
         >>> dict2 = Dictionary(other_documents)  # ids not compatible with dict1!
         >>> dict2_to_dict1 = dict1.merge_with(dict2)
@@ -343,9 +453,17 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     @staticmethod
     def load_from_text(fname):
-        """
-        Load a previously stored Dictionary from a text file.
+        """Load a previously stored Dictionary from a text file.
         Mirror function to `save_as_text`.
+
+        Parameters
+        ----------
+        fname :
+            
+
+        Returns
+        -------
+
         """
         result = Dictionary()
         with utils.smart_open(fname) as f:
@@ -372,18 +490,28 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     @staticmethod
     def from_corpus(corpus, id2word=None):
-        """
-        Create Dictionary from an existing corpus. This can be useful if you only
-        have a term-document BOW matrix (represented by `corpus`), but not the
-        original text corpus.
-
+        """Create Dictionary from an existing corpus. This can be useful if you
+        only have a term-document BOW matrix (represented by `corpus`),
+        but not the original text corpus.
+        
         This will scan the term-document count matrix for all word ids that
         appear in it, then construct and return Dictionary which maps each
         `word_id -> id2word[word_id]`.
+        
+        `id2word` is an optional dictionary that maps the `word_id` to a
+        token. In case `id2word` isn't specified the mapping `id2word[
+        word_id] = str(word_id)` will be used.
 
-        `id2word` is an optional dictionary that maps the `word_id` to a token. In
-        case `id2word` isn't specified the mapping `id2word[word_id] = str(word_id)`
-        will be used.
+        Parameters
+        ----------
+        corpus :
+            
+        id2word :
+            (Default value = None)
+
+        Returns
+        -------
+
         """
 
         result = Dictionary()
