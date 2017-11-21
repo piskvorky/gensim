@@ -33,7 +33,6 @@ from functools import wraps  # for `synchronous` function lock
 import multiprocessing
 import shutil
 import sys
-from contextlib import contextmanager
 import subprocess
 
 import numpy as np
@@ -79,7 +78,7 @@ except ImportError:
         return open(fname, mode)
 
 
-PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
+PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
@@ -135,7 +134,6 @@ class NoCM(object):
 nocm = NoCM()
 
 
-@contextmanager
 def file_or_filename(input):
     """
     Return a file-like object ready to be read from the beginning. `input` is either
@@ -144,11 +142,11 @@ def file_or_filename(input):
     """
     if isinstance(input, string_types):
         # input was a filename: open as file
-        yield smart_open(input)
+        return smart_open(input)
     else:
         # input already a file-like object; just reset to the beginning
         input.seek(0)
-        yield input
+        return input
 
 
 def deaccent(text):
@@ -290,10 +288,11 @@ class SaveLoad(object):
         opportunity to recursively included SaveLoad instances.
 
         """
-        mmap_error = lambda x, y: IOError(
-            'Cannot mmap compressed object %s in file %s. ' % (x, y) +
-            'Use `load(fname, mmap=None)` or uncompress files manually.'
-        )
+        def mmap_error(obj, filename):
+            return IOError(
+                'Cannot mmap compressed object %s in file %s. ' % (obj, filename) +
+                'Use `load(fname, mmap=None)` or uncompress files manually.'
+            )
 
         for attrib in getattr(self, '__recursive_saveloads', []):
             cfname = '.'.join((fname, attrib))
@@ -338,13 +337,8 @@ class SaveLoad(object):
     @staticmethod
     def _adapt_by_suffix(fname):
         """Give appropriate compress setting and filename formula"""
-        if fname.endswith('.gz') or fname.endswith('.bz2'):
-            compress = True
-            subname = lambda *args: '.'.join(list(args) + ['npz'])
-        else:
-            compress = False
-            subname = lambda *args: '.'.join(list(args) + ['npy'])
-        return compress, subname
+        compress, suffix = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
+        return compress, lambda *args: '.'.join(args + (suffix,))
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
         """
@@ -497,8 +491,7 @@ class SaveLoad(object):
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object", self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
-            self._smart_save(fname_or_handle, separately, sep_limit, ignore,
-                             pickle_protocol=pickle_protocol)
+            self._smart_save(fname_or_handle, separately, sep_limit, ignore, pickle_protocol=pickle_protocol)
 
 
 def identity(p):
@@ -609,7 +602,9 @@ def is_corpus(obj):
             doc1 = next(iter(obj))  # empty corpus is resolved to False here
         if len(doc1) == 0:  # sparse documents must have a __len__ function (list, tuple...)
             return True, obj  # the first document is empty=>assume this is a corpus
-        id1, val1 = next(iter(doc1))  # if obj is a 1D numpy array(scalars) instead of 2-tuples, it resolves to False here
+
+        # if obj is a 1D numpy array(scalars) instead of 2-tuples, it resolves to False here
+        id1, val1 = next(iter(doc1))
         id1, val1 = int(id1), float(val1)  # must be a 2-tuple (integer, float)
     except Exception:
         return False, obj
@@ -732,17 +727,18 @@ class SlicedCorpus(SaveLoad):
 
     def __iter__(self):
         if hasattr(self.corpus, 'index') and len(self.corpus.index) > 0:
-            return (self.corpus.docbyoffset(i) for i in
-                    self.corpus.index[self.slice_])
-        else:
-            return itertools.islice(self.corpus, self.slice_.start,
-                                    self.slice_.stop, self.slice_.step)
+            return (self.corpus.docbyoffset(i) for i in self.corpus.index[self.slice_])
+        return itertools.islice(self.corpus, self.slice_.start, self.slice_.stop, self.slice_.step)
 
     def __len__(self):
         # check cached length, calculate if needed
         if self.length is None:
             if isinstance(self.slice_, (list, np.ndarray)):
                 self.length = len(self.slice_)
+            elif isinstance(self.slice_, slice):
+                (start, end, step) = self.slice_.indices(len(self.corpus.index))
+                diff = end - start
+                self.length = diff // step + (diff % step > 0)
             else:
                 self.length = sum(1 for x in self)
 
@@ -763,7 +759,8 @@ def decode_htmlentities(text):
     """
     Decode HTML entities in text, coded as hex, decimal or named.
 
-    Adapted from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
+    Adapted
+    from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
 
     >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
     >>> print(decode_htmlentities(u).encode('UTF-8'))
@@ -1039,8 +1036,8 @@ def has_pattern():
         return False
 
 
-def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
-        stopwords=frozenset(), min_length=2, max_length=15):
+def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
+              stopwords=frozenset(), min_length=2, max_length=15):
     """
     This function is only available when the optional 'pattern' package is installed.
 
@@ -1061,7 +1058,9 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
 
     """
     if not has_pattern():
-        raise ImportError("Pattern library is not installed. Pattern library is needed in order to use lemmatize function")
+        raise ImportError(
+            "Pattern library is not installed. Pattern library is needed in order to use lemmatize function"
+        )
     from pattern.en import parse
 
     if light:
@@ -1118,7 +1117,10 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
         if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
-    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)", old_len - len(vocab), min_reduce, old_len, len(vocab))
+    logger.info(
+        "pruned out %i tokens with count <=%i (before %i, after %i)",
+        old_len - len(vocab), min_reduce, old_len, len(vocab)
+    )
     return result
 
 

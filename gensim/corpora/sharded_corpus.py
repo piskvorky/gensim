@@ -500,7 +500,10 @@ class ShardedCorpus(IndexedCorpus):
             for old_shard_n, old_shard_name in enumerate(old_shard_names):
                 os.remove(old_shard_name)
         except Exception as e:
-            logger.error('Exception occurred during old shard no. %d removal: %s.\nAttempting to at least move new shards in.', old_shard_n, str(e))
+            logger.error(
+                'Exception occurred during old shard no. %d removal: %s.\nAttempting to at least move new shards in.',
+                old_shard_n, str(e)
+            )
         finally:
             # If something happens with cleaning up - try to at least get the
             # new guys in.
@@ -763,7 +766,10 @@ class ShardedCorpus(IndexedCorpus):
         Returns the resulting s_result.
         """
         if (result_stop - result_start) != (stop - start):
-            raise ValueError('Result start/stop range different than stop/start range (%d - %d vs. %d - %d)'.format(result_start, result_stop, start, stop))
+            raise ValueError(
+                'Result start/stop range different than stop/start range (%d - %d vs. %d - %d)'
+                .format(result_start, result_stop, start, stop)
+            )
 
         # Dense data: just copy using numpy's slice notation
         if not self.sparse_serialization:
@@ -775,7 +781,10 @@ class ShardedCorpus(IndexedCorpus):
         # result.
         else:
             if s_result.shape != (result_start, self.dim):
-                raise ValueError('Assuption about sparse s_result shape invalid: {0} expected rows, {1} real rows.'.format(result_start, s_result.shape[0]))
+                raise ValueError(
+                    'Assuption about sparse s_result shape invalid: {0} expected rows, {1} real rows.'
+                    .format(result_start, s_result.shape[0])
+                )
 
             tmp_matrix = self.current_shard[start:stop]
             s_result = sparse.vstack([s_result, tmp_matrix])
@@ -947,7 +956,8 @@ class ShardedCorpus(IndexedCorpus):
         ShardedCorpus(fname, corpus, **kwargs)
 
     @classmethod
-    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None, metadata=False, **kwargs):
+    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None,
+                  labels=None, metadata=False, **kwargs):
         """Iterate through the document stream `corpus`, saving the documents
         as a ShardedCorpus to `fname`.
         

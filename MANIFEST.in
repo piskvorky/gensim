@@ -1,8 +1,4 @@
-recursive-include docs *
 recursive-include gensim/test/test_data *
-recursive-include . *.sh
-prune docs/src*
-prune docs/notebooks/datasets
 include README.md
 include CHANGELOG.md
 include COPYING

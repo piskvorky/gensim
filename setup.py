@@ -224,20 +224,27 @@ Copyright (c) 2009-now Radim Rehurek
 
 """
 
+distributed_env = ['Pyro4 >= 4.27']
 
-test_env = [
-    'testfixtures',
-    'Morfessor == 2.0.2a4',
-    'scikit-learn',
+win_testenv = [
+    'pytest',
+    'pytest-rerunfailures',
+    'cython',
     'pyemd',
+    'testfixtures',
+    'scikit-learn',
+    'Morfessor==2.0.2a4',
+]
+
+linux_testenv = win_testenv + [
     'annoy',
-    'tensorflow >= 1.1.0',
+    'tensorflow <= 1.3.0',
     'keras >= 2.0.4',
 ]
 
 setup(
     name='gensim',
-    version='3.0.1',
+    version='3.1.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -291,11 +298,12 @@ setup(
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
     ],
-    tests_require=test_env,
+    tests_require=linux_testenv,
     extras_require={
-        'distributed': ['Pyro4 >= 4.27'],
-        'test': test_env,
-        'docs': test_env + ['Pyro4 >= 4.27', 'sphinx', 'sphinxcontrib-napoleon', 'annoy'],
+        'distributed': distributed_env,
+        'test-win': win_testenv,
+        'test': linux_testenv,
+        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon'],
     },
 
     include_package_data=True,

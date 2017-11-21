@@ -21,7 +21,8 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
     Base Phrases module
     """
 
-    def __init__(self, min_count=5, threshold=10.0, max_vocab_size=40000000, delimiter=b'_', progress_per=10000):
+    def __init__(self, min_count=5, threshold=10.0, max_vocab_size=40000000,
+                 delimiter=b'_', progress_per=10000, scoring='default'):
         """
         Sklearn wrapper for Phrases model.
         """
@@ -31,6 +32,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         self.max_vocab_size = max_vocab_size
         self.delimiter = delimiter
         self.progress_per = progress_per
+        self.scoring = scoring
 
     def fit(self, X, y=None):
         """
@@ -38,7 +40,8 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         """
         self.gensim_model = models.Phrases(
             sentences=X, min_count=self.min_count, threshold=self.threshold,
-            max_vocab_size=self.max_vocab_size, delimiter=self.delimiter, progress_per=self.progress_per
+            max_vocab_size=self.max_vocab_size, delimiter=self.delimiter,
+            progress_per=self.progress_per, scoring=self.scoring
         )
         return self
 
@@ -47,24 +50,21 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         Return the input documents to return phrase tokens.
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # input as python lists
-        check = lambda x: [x] if isinstance(x[0], string_types) else x
-        docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
-
-        for k, v in enumerate(docs):
-            phrase_tokens = self.gensim_model[v]
-            X[k] = phrase_tokens
-
-        return X
+        if isinstance(docs[0], string_types):
+            docs = [docs]
+        return [self.gensim_model[doc] for doc in docs]
 
     def partial_fit(self, X):
         if self.gensim_model is None:
             self.gensim_model = models.Phrases(
                 sentences=X, min_count=self.min_count, threshold=self.threshold,
-                max_vocab_size=self.max_vocab_size, delimiter=self.delimiter, progress_per=self.progress_per
+                max_vocab_size=self.max_vocab_size, delimiter=self.delimiter,
+                progress_per=self.progress_per, scoring=self.scoring
             )
 
         self.gensim_model.add_vocab(X)

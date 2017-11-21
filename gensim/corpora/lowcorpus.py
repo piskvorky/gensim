@@ -88,7 +88,8 @@ class LowCorpus(IndexedCorpus):
             for doc in self:
                 all_terms.update(word for word, wordCnt in doc)
             all_terms = sorted(all_terms)  # sort the list of all words; rank in that list = word's integer id
-            self.id2word = dict(izip(xrange(len(all_terms)), all_terms))  # build a mapping of word id(int) -> word (string)
+            # build a mapping of word id(int) -> word (string)
+            self.id2word = dict(izip(xrange(len(all_terms)), all_terms))
         else:
             logger.info("using provided word mapping (%i ids)", len(id2word))
             self.id2word = id2word

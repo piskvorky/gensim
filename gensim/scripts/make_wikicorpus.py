@@ -31,7 +31,8 @@ If you have the `pattern` package installed, this script will use a fancy
 lemmatization to get a lemma of each token (instead of plain alphabetic
 tokenizer). The package is available at https://github.com/clips/pattern .
 
-Example: python -m gensim.scripts.make_wikicorpus ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en
+Example:
+  python -m gensim.scripts.make_wikicorpus ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki
 """
 
 
@@ -78,7 +79,8 @@ if __name__ == '__main__':
         dictionary = HashDictionary(id_range=keep_words, debug=debug)
         dictionary.allow_update = True  # start collecting document frequencies
         wiki = WikiCorpus(inp, lemmatize=lemmatize, dictionary=dictionary)
-        MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000)  # ~4h on my macbook pro without lemmatization, 3.1m articles (august 2012)
+        # ~4h on my macbook pro without lemmatization, 3.1m articles (august 2012)
+        MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000)
         # with HashDictionary, the token->id mapping is only fully instantiated now, after `serialize`
         dictionary.filter_extremes(no_below=20, no_above=0.1, keep_n=DEFAULT_DICT_SIZE)
         dictionary.save_as_text(outp + '_wordids.txt.bz2')
