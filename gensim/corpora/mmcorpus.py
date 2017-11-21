@@ -40,16 +40,16 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False):
         """Save a corpus in the Matrix Market format to disk.
-        
+
         This function is automatically called by `MmCorpus.serialize`; don't
         call it directly, call `serialize` instead.
 
         Parameters
         ----------
         fname :
-            
+
         corpus :
-            
+
         id2word :
             (Default value = None)
         progress_cnt :

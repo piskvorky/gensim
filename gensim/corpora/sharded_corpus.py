@@ -48,18 +48,18 @@ class ShardedCorpus(IndexedCorpus):
     on matrices, with a large number of iterations. (It should be faster than
     gensim's other IndexedCorpus implementations for this use case; check the
     `benchmark_datasets.py` script. It should also serialize faster.)
-    
+
     The corpus stores its data in separate files called
     "shards". This is a compromise between speed (keeping the whole dataset
     in memory) and memory footprint (keeping the data on disk and reading from
     it on demand). Persistence is done using the standard gensim load/save methods.
-    
+
     .. note::
-    
+
       The dataset is **read-only**, there is - as opposed to gensim's Similarity
       class, which works similarly - no way of adding documents to the dataset
       (for now).
-    
+
     You can use ShardedCorpus to serialize your data just like any other gensim
     corpus that implements serialization. However, because the data is saved
     as numpy 2-dimensional ndarrays (or scipy sparse matrices), you need to
@@ -76,15 +76,15 @@ class ShardedCorpus(IndexedCorpus):
     is essentially a re-serialization into new-size shards), but note that
     this operation will temporarily take twice as much disk space, because
     the old shards are not deleted until the new shards are safely in place.
-    
+
     After serializing the data, the corpus will then save itself to the file
     `output_prefix`.
-    
+
     On further initialization with the same `output_prefix`, the corpus
     will load the already built dataset unless the `overwrite` option is
     given. (A new object is "cloned" from the one saved to `output_prefix`
     previously.)
-    
+
     To retrieve data, you can load the corpus and use it like a list:
 
     >>> sh_corpus = ShardedCorpus.load(output_prefix)
@@ -98,7 +98,7 @@ class ShardedCorpus(IndexedCorpus):
     >>> batch = sh_corpus[100:150]
 
     The batch now will be a generator of gensim vectors.
-    
+
     Since the corpus needs the data serialized in order to be able to operate,
     it will serialize data right away on initialization. Instead of calling
     `ShardedCorpus.serialize()`, you can just initialize and use the corpus
@@ -130,9 +130,9 @@ class ShardedCorpus(IndexedCorpus):
     of a ShardedCorpus object, you should definitely not touch `
     `sharded_serialization`! Changing the attribute will not miraculously
     re-serialize the data in the requested format.
-    
+
     The CSR format is used for sparse data throughout.
-    
+
     Internally, to retrieve data, the dataset keeps track of which shard is
     currently open and on a `__getitem__` request, either returns an item from
     the current shard, or opens a new one. The shard size is constant, except
@@ -254,9 +254,9 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         output_prefix :
-            
+
         corpus :
-            
+
         shardsize :
              (Default value = 4096)
         dtype :
@@ -331,14 +331,14 @@ class ShardedCorpus(IndexedCorpus):
     def save_shard(self, shard, n=None, filename=None):
         """Pickle the given shard. If `n` is not given, will consider the shard
         a new one.
-        
+
         If `filename` is given, will use that file name instead of generating
         one.
 
         Parameters
         ----------
         shard :
-            
+
         n :
              (Default value = None)
         filename :
@@ -392,13 +392,13 @@ class ShardedCorpus(IndexedCorpus):
         """Determine which shard the given offset belongs to. If the offset
         is greater than the number of available documents, raises a
         `ValueError`.
-        
+
         Assumes that all shards have the same size.
 
         Parameters
         ----------
         offset :
-            
+
 
         Returns
         -------
@@ -419,7 +419,7 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         offset :
-            
+
 
         Returns
         -------
@@ -436,7 +436,7 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         offset :
-            
+
 
         Returns
         -------
@@ -527,7 +527,7 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         n :
-            
+
 
         Returns
         -------
@@ -542,7 +542,7 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         n :
-            
+
 
         Returns
         -------
@@ -556,7 +556,7 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         corpus :
-            
+
 
         Returns
         -------
@@ -633,7 +633,7 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         offset :
-            
+
 
         Returns
         -------
@@ -796,7 +796,7 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         s_result :
-            
+
 
         Returns
         -------
@@ -816,13 +816,13 @@ class ShardedCorpus(IndexedCorpus):
 
     def _getitem_sparse2gensim(self, result):
         """Change given sparse result matrix to gensim sparse vectors.
-        
+
         Uses the internals of the sparse matrix to make this fast.
 
         Parameters
         ----------
         result :
-            
+
 
         Returns
         -------
@@ -834,9 +834,9 @@ class ShardedCorpus(IndexedCorpus):
             Parameters
             ----------
             row_idx :
-                
+
             csr_matrix :
-                
+
 
             Returns
             -------
@@ -856,7 +856,7 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         result :
-            
+
 
         Returns
         -------
@@ -886,9 +886,9 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         *args :
-            
+
         **kwargs :
-            
+
 
         """
         # Can we save to a different file than output_prefix? Well, why not?
@@ -909,7 +909,7 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         fname :
-            
+
         mmap :
              (Default value = None)
 
@@ -923,16 +923,16 @@ class ShardedCorpus(IndexedCorpus):
     def save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False, **kwargs):
         """Implement a serialization interface. Do not call directly;
         use the `serialize` method instead.
-        
+
         Note that you might need some ShardedCorpus init parameters, most
         likely the dimension (`dim`). Again, pass these as `kwargs` to the
         `serialize` method.
-        
+
         All this thing does is initialize a ShardedCorpus from a corpus
         with the `output_prefix` argument set to the `fname` parameter
         of this method. The initialization of a ShardedCorpus takes care of
         serializing the data (in dense form) to shards.
-        
+
         Ignore the parameters id2word, progress_cnt and metadata. They
         currently do nothing and are here only to provide a compatible
         method signature with superclass.
@@ -940,9 +940,9 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         fname :
-            
+
         corpus :
-            
+
         id2word :
              (Default value = None)
         progress_cnt :
@@ -960,12 +960,12 @@ class ShardedCorpus(IndexedCorpus):
                   labels=None, metadata=False, **kwargs):
         """Iterate through the document stream `corpus`, saving the documents
         as a ShardedCorpus to `fname`.
-        
+
         Use this method instead of calling `save_corpus` directly.
         You may need to supply some kwargs that are used upon dataset creation
         (namely: `dim`, unless the dataset can infer the dimension from the
         given corpus).
-        
+
         Ignore the parameters id2word, index_fname, progress_cnt, labels
         and metadata. They currently do nothing and are here only to
         provide a compatible method signature with superclass.
@@ -973,11 +973,11 @@ class ShardedCorpus(IndexedCorpus):
         Parameters
         ----------
         serializer :
-            
+
         fname :
-            
+
         corpus :
-            
+
         id2word :
              (Default value = None)
         index_fname :
@@ -989,7 +989,7 @@ class ShardedCorpus(IndexedCorpus):
         metadata :
              (Default value = False)
         **kwargs :
-            
+
 
         """
         serializer.save_corpus(fname, corpus, id2word=id2word, progress_cnt=progress_cnt, metadata=metadata, **kwargs)

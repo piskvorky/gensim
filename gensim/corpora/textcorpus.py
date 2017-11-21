@@ -49,7 +49,7 @@ def remove_stopwords(tokens, stopwords=STOPWORDS):
     Parameters
     ----------
     tokens :
-        
+
     stopwords :
          (Default value = STOPWORDS)
 
@@ -66,7 +66,7 @@ def remove_short(tokens, minsize=3):
     Parameters
     ----------
     tokens :
-        
+
     minsize :
          (Default value = 3)
 
@@ -83,7 +83,7 @@ def lower_to_unicode(text, encoding='utf8', errors='strict'):
     Parameters
     ----------
     text :
-        
+
     encoding :
          (Default value = 'utf8')
     errors :
@@ -102,7 +102,7 @@ def strip_multiple_whitespaces(s):
     Parameters
     ----------
     s :
-        
+
 
     Returns
     -------
@@ -114,34 +114,34 @@ def strip_multiple_whitespaces(s):
 class TextCorpus(interfaces.CorpusABC):
     """Helper class to simplify the pipeline of getting bag-of-words vectors (= a
     gensim corpus) from plain text.
-    
+
     This is an abstract base class: override the `get_texts()` and `__len__()`
     methods to match your particular input.
-    
+
     Given a filename (or a file-like object) in constructor, the corpus object
     will be automatically initialized with a dictionary in `self.dictionary` and
     will support the `iter` corpus method. You have a few different ways of utilizing
     this class via subclassing or by construction with different preprocessing arguments.
-    
+
     The `iter` method converts the lists of tokens produced by `get_texts` to BoW format
     using `Dictionary.doc2bow`. `get_texts` does the following:
-    
+
     1.  Calls `getstream` to get a generator over the texts. It yields each document in
         turn from the underlying text file or files.
     2.  For each document from the stream, calls `preprocess_text` to produce a list of
         tokens; if metadata is enabled, it yields a 2-`tuple` with the document number as
         the second element.
-    
-    
+
+
     Preprocessing consists of 0+ `character_filters`, a `tokenizer`, and 0+ `token_filters`.
-    
+
     The preprocessing consists of calling each filter in `character_filters` with the document
     text; unicode is not guaranteed, and if desired, the first filter should convert to unicode.
     The output of each character filter should be another string. The output from the final
     filter is fed to the `tokenizer`, which should split the string into a list of tokens (strings).
     Afterwards, the list of tokens is fed through each filter in `token_filters`. The final
     output returned from `preprocess_text` is the output from the final token filter.
-    
+
     So to use this class, you can either pass in different preprocessing functions using the
     `character_filters`, `tokenizer`, and `token_filters` arguments, or you can subclass it.
     If subclassing: override `getstream` to take text from different input sources in different
@@ -149,9 +149,9 @@ class TextCorpus(interfaces.CorpusABC):
     then call the `TextCorpus.preprocess_text` method to apply the normal preprocessing. You
     can also overrride `get_texts` in order to tag the documents (token lists) with different
     metadata.
-    
+
     The default preprocessing consists of:
-    
+
     1.  lowercase and convert to unicode; assumes utf8 encoding
     2.  deaccent (asciifolding)
     3.  collapse multiple whitespaces into a single one
@@ -212,7 +212,7 @@ class TextCorpus(interfaces.CorpusABC):
         Parameters
         ----------
         dictionary :
-            
+
 
         """
         self.dictionary = dictionary if dictionary is not None else Dictionary()
@@ -291,7 +291,7 @@ class TextCorpus(interfaces.CorpusABC):
         Parameters
         ----------
         text :
-            
+
 
         Yields
         ------
@@ -332,7 +332,7 @@ class TextCorpus(interfaces.CorpusABC):
 
     def sample_texts(self, n, seed=None, length=None):
         """Yield n random documents from the corpus without replacement.
-        
+
         Given the number of remaining documents in a corpus, we need to choose n elements.
         The probability for the current element to be chosen is n/remaining.
         If we choose it, we just decrease the n and move to the next element.
@@ -437,7 +437,7 @@ class TextDirectoryCorpus(TextCorpus):
         Parameters
         ----------
         lines_are_documents :
-            
+
 
         """
         self._lines_are_documents = lines_are_documents
@@ -455,7 +455,7 @@ class TextDirectoryCorpus(TextCorpus):
         Parameters
         ----------
         pattern :
-            
+
 
         """
         self._pattern = None if pattern is None else re.compile(pattern)
@@ -491,7 +491,7 @@ class TextDirectoryCorpus(TextCorpus):
         Parameters
         ----------
         min_depth :
-            
+
 
         """
         self._min_depth = min_depth
@@ -509,7 +509,7 @@ class TextDirectoryCorpus(TextCorpus):
         Parameters
         ----------
         max_depth :
-            
+
 
         """
         self._max_depth = max_depth
@@ -538,7 +538,7 @@ class TextDirectoryCorpus(TextCorpus):
         """Yield documents from the underlying plain text collection (of one or more files).
         Each item yielded from this method will be considered a document by subsequent
         preprocessing methods.
-        
+
         If `lines_are_documents` was set to True, items will be lines from files. Otherwise
         there will be one item per file, containing the entire contents of the file.
 
@@ -580,7 +580,7 @@ def walk(top, topdown=True, onerror=None, followlinks=False, depth=0):
     Parameters
     ----------
     top :
-        
+
     topdown :
          (Default value = True)
     onerror :

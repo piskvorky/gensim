@@ -22,14 +22,14 @@ logger = logging.getLogger('gensim.corpora.bleicorpus')
 
 class BleiCorpus(IndexedCorpus):
     """Corpus in Blei's LDA-C format.
-    
+
     The corpus is represented as two files: one describing the documents, and another
     describing the mapping between words and their ids.
-    
+
     Each document is one line::
-    
+
       N fieldId1:fieldValue1 fieldId2:fieldValue2 ... fieldIdN:fieldValueN
-    
+
     The vocabulary is a file with words, one word per line; word at line K has an
     implicit ``id=K``.
 
@@ -106,7 +106,7 @@ class BleiCorpus(IndexedCorpus):
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
         """Save a corpus in the LDA-C format.
-        
+
         There are actually two files saved: `fname` and `fname.vocab`, where
         `fname.vocab` is the vocabulary file.
 
@@ -162,7 +162,7 @@ class BleiCorpus(IndexedCorpus):
         Returns
         -------
         list of (int, float)
-        
+
         """
         with utils.smart_open(self.fname) as f:
             f.seek(offset)

@@ -75,7 +75,7 @@ def filter_wiki(raw):
     Parameters
     ----------
     raw :
-        
+
 
     Returns
     -------
@@ -94,7 +94,7 @@ def remove_markup(text):
     Parameters
     ----------
     text :
-        
+
 
     Returns
     -------
@@ -144,7 +144,7 @@ def remove_template(s):
     Parameters
     ----------
     s :
-        
+
 
     Returns
     -------
@@ -193,7 +193,7 @@ def remove_file(s):
     Parameters
     ----------
     s :
-        
+
 
     Returns
     -------
@@ -210,14 +210,14 @@ def remove_file(s):
 def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
     """Tokenize a piece of text from wikipedia. The input string `content` is
     assumed to be mark-up free (see `filter_wiki()`).
-    
+
     Set `token_min_len`, `token_max_len` as character length (not bytes!)
     thresholds for individual tokens.
 
     Parameters
     ----------
     content :
-        
+
     token_min_len :
          (Default value = TOKEN_MIN_LEN)
     token_max_len :
@@ -242,7 +242,7 @@ def get_namespace(tag):
     Parameters
     ----------
     tag :
-        
+
 
     Returns
     -------
@@ -264,7 +264,7 @@ def extract_pages(f, filter_namespaces=False):
     Parameters
     ----------
     f :
-        
+
     filter_namespaces :
          (Default value = False)
 
@@ -317,14 +317,14 @@ def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
                     token_max_len=TOKEN_MAX_LEN, lower=True):
     """Parse a wikipedia article, returning its content as a list of tokens
     (utf8-encoded strings).
-    
+
     Set `tokenizer_func` (defaults to `tokenize`) parameter for languages like japanese or thai to perform better
     tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower).
 
     Parameters
     ----------
     args :
-        
+
     tokenizer_func :
          (Default value = tokenize)
     token_min_len :
@@ -358,7 +358,7 @@ def _process_article(args):
     Parameters
     ----------
     args :
-        
+
 
     Returns
     -------
@@ -381,7 +381,7 @@ class WikiCorpus(TextCorpus):
 
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
-    
+
     **Note:** "multistream" archives are *not* supported in Python 2 due to
     `limitations in the core bz2 library
     <https://docs.python.org/2/library/bz2.html#de-compression-of-files>`_.
@@ -438,10 +438,10 @@ class WikiCorpus(TextCorpus):
     def get_texts(self):
         """Iterate over the dump, returning text version of each article as a list
         of tokens.
-        
+
         Only articles of sufficient length are returned (short articles & redirects
         etc are ignored). This is control by `article_min_tokens` on the class instance.
-        
+
         Note that this iterates over the **texts**; if you want vectors, just use
         the standard corpus interface instead of this function::
 

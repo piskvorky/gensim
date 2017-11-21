@@ -37,11 +37,11 @@ logger = logging.getLogger(__name__)
 class HashDictionary(utils.SaveLoad, dict):
     """HashDictionary encapsulates the mapping between normalized words and their
     integer ids.
-    
+
     Unlike `Dictionary`, building a `HashDictionary` before using it is not a necessary
     step. The documents can be computed immediately, from an uninitialized `HashDictionary`,
     without seeing the rest of the corpus first.
-    
+
     The main function is `doc2bow`, which converts a collection of words to its
     bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
 
@@ -85,7 +85,7 @@ class HashDictionary(utils.SaveLoad, dict):
         Parameters
         ----------
         token :
-            
+
 
         Returns
         -------
@@ -117,9 +117,9 @@ class HashDictionary(utils.SaveLoad, dict):
         Parameters
         ----------
         *args :
-            
+
         **kwargs :
-            
+
 
         Returns
         -------
@@ -130,7 +130,7 @@ class HashDictionary(utils.SaveLoad, dict):
     def add_documents(self, documents):
         """Build dictionary from a collection of documents. Each document is a list
         of tokens = **tokenized and normalized** utf-8 encoded strings.
-        
+
         This is only a convenience wrapper for calling `doc2bow` on each document
         with `allow_update=True`.
 
@@ -154,7 +154,7 @@ class HashDictionary(utils.SaveLoad, dict):
         **tokenized and normalized** utf-8 encoded string. No further preprocessing
         is done on the words in `document`; apply tokenization, stemming etc. before
         calling this method.
-        
+
         If `allow_update` or `self.allow_update` is set, then also update dictionary
         in the process: update overall corpus statistics and document frequencies.
         For each id appearing in this document, increase its document frequency
@@ -163,7 +163,7 @@ class HashDictionary(utils.SaveLoad, dict):
         Parameters
         ----------
         document :
-            
+
         allow_update :
              (Default value = False)
         return_missing :
@@ -203,13 +203,13 @@ class HashDictionary(utils.SaveLoad, dict):
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000):
         """Remove document frequency statistics for tokens that appear in
-        
+
         1. less than `no_below` documents (absolute number) or
         2. more than `no_above` documents (fraction of total corpus size, *not*
            absolute number).
         3. after (1) and (2), keep only the first `keep_n` most frequent tokens (or
            keep all if `None`).
-        
+
         **Note:** since HashDictionary's id range is fixed and doesn't depend on
         the number of tokens seen, this doesn't really "remove" anything. It only
         clears some supplementary statistics, for easier debugging and a smaller RAM
@@ -245,10 +245,10 @@ class HashDictionary(utils.SaveLoad, dict):
 
     def save_as_text(self, fname):
         """Save this HashDictionary to a text file, for easier debugging.
-        
+
         The format is:
         `id[TAB]document frequency of this id[TAB]tab-separated set of words in UTF8 that map to this id[NEWLINE]`.
-        
+
         Note: use `save`/`load` to store in binary format instead (pickle).
 
         Parameters

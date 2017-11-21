@@ -70,12 +70,12 @@ class UciReader(MmReader):
 
 class UciWriter(MmWriter):
     """Store a corpus in UCI Bag-of-Words format.
-    
+
     This corpus format is identical to MM format, except for
     different file headers. There is no format line, and the first
     three lines of the file contain number_docs, num_terms, and num_nnz,
     one value per line.
-    
+
     This implementation is based on matutils.MmWriter, and works the same way.
 
     """
@@ -99,11 +99,11 @@ class UciWriter(MmWriter):
         Parameters
         ----------
         num_docs :
-            
+
         num_terms :
-            
+
         num_nnz :
-            
+
 
         """
         offset = 0
@@ -123,9 +123,9 @@ class UciWriter(MmWriter):
         Parameters
         ----------
         fname :
-            
+
         corpus :
-            
+
         progress_cnt :
              (Default value = 1000)
         index :
@@ -226,19 +226,19 @@ class UciCorpus(UciReader, IndexedCorpus):
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, progress_cnt=10000, metadata=False):
         """Save a corpus in the UCI Bag-of-Words format.
-        
+
         There are actually two files saved: `fname` and `fname.vocab`, where
         `fname.vocab` is the vocabulary file.
-        
+
         This function is automatically called by `UciCorpus.serialize`; don't
         call it directly, call `serialize` instead.
 
         Parameters
         ----------
         fname :
-            
+
         corpus :
-            
+
         id2word :
              (Default value = None)
         progress_cnt :

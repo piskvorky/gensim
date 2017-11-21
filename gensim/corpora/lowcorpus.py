@@ -28,7 +28,7 @@ def split_on_space(s):
     Parameters
     ----------
     s :
-        
+
 
     Returns
     -------
@@ -39,24 +39,24 @@ def split_on_space(s):
 
 class LowCorpus(IndexedCorpus):
     """List_Of_Words corpus handles input in GibbsLda++ format.
-    
+
     Quoting http://gibbslda.sourceforge.net/#3.2_Input_Data_Format::
-    
+
         Both data for training/estimating the model and new data (i.e., previously
         unseen data) have the same format as follows:
-    
+
         [M]
         [document1]
         [document2]
         ...
         [documentM]
-    
+
         in which the first line is the total number for documents [M]. Each line
         after that is one document. [documenti] is the ith document of the dataset
         that consists of a list of Ni words/terms.
-    
+
         [documenti] = [wordi1] [wordi2] ... [wordiNi]
-    
+
         in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated
         by the blank character.
 
@@ -121,7 +121,7 @@ class LowCorpus(IndexedCorpus):
         Parameters
         ----------
         line :
-            
+
 
         Returns
         -------
@@ -166,16 +166,16 @@ class LowCorpus(IndexedCorpus):
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
         """Save a corpus in the List-of-words format.
-        
+
         This function is automatically called by `LowCorpus.serialize`; don't
         call it directly, call `serialize` instead.
 
         Parameters
         ----------
         fname :
-            
+
         corpus :
-            
+
         id2word :
              (Default value = None)
         metadata :
@@ -216,7 +216,7 @@ class LowCorpus(IndexedCorpus):
         Parameters
         ----------
         offset :
-            
+
 
         Returns
         -------

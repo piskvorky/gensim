@@ -20,10 +20,10 @@ logger = logging.getLogger('gensim.corpora.csvcorpus')
 
 class CsvCorpus(interfaces.CorpusABC):
     """Corpus in CSV format.
-    
+
     The CSV delimiter, headers etc. are guessed automatically based on the
     file content.
-    
+
     All row values are expected to be ints/floats.
 
     """

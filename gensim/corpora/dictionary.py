@@ -37,7 +37,7 @@ logger = logging.getLogger('gensim.corpora.dictionary')
 
 class Dictionary(utils.SaveLoad, Mapping):
     """Mapping between normalized words and their ids.
-    
+
     The main function is `doc2bow`, which converts a collection of words to its
     bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
 
@@ -142,17 +142,17 @@ class Dictionary(utils.SaveLoad, Mapping):
         Returns
         -------
         :class:`Dictionary`
-        
+
         """
         return Dictionary(documents=documents)
 
     def add_documents(self, documents, prune_at=2000000):
         u"""
         Update dictionary from a collection of documents.
-        
+
         Each document is a list of tokens = **tokenized and normalized**
         strings (either utf8 or unicode).
-        
+
         This is a convenience wrapper for calling `doc2bow` on each document
         with `allow_update=True`, which also prunes infrequent words, keeping the
         total number of unique words <= `prune_at`. This is to save memory on very
@@ -187,7 +187,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """Convert document to the bag-of-words format.
-        
+
         Each word is assumed to be a **tokenized and normalized** string (
         either unicode or utf8-encoded). No further preprocessing is done on
         the words in `document`; apply tokenization, stemming etc. before
@@ -196,7 +196,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         Parameters
         ----------
         document : list of str
-            
+
         allow_update : bool
             Whether to update the dictionary in the process
             (Default value = False)
@@ -285,7 +285,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
         """Filter out tokens that appear in
-        
+
         1. less than `no_below` documents (absolute number) or
         2. more than `no_above` documents (fraction of total corpus size, *not*
            absolute number).
@@ -293,9 +293,9 @@ class Dictionary(utils.SaveLoad, Mapping):
            the `no_below` and `no_above` settings
         4. after (1), (2) and (3), keep only the first `keep_n` most frequent tokens (or
            keep all if `None`).
-        
+
         After the pruning, shrink resulting gaps in word ids.
-        
+
         **Note**: Due to the gap shrinking, the same word may have a different
         word id before and after the call to this function!
 
@@ -342,9 +342,9 @@ class Dictionary(utils.SaveLoad, Mapping):
     def filter_n_most_frequent(self, remove_n):
         """Filter out the 'remove_n' most frequent tokens that appear in the
         documents.
-        
+
         After the pruning, shrink resulting gaps in word ids.
-        
+
         **Note**: Due to the gap shrinking, the same word may have a different
         word id before and after the call to this function!
 
@@ -367,7 +367,7 @@ class Dictionary(utils.SaveLoad, Mapping):
     def filter_tokens(self, bad_ids=None, good_ids=None):
         """Remove the selected `bad_ids` tokens from all dictionary mappings,
         or keep selected `good_ids` in the mapping and remove the rest.
-        
+
         `bad_ids` and `good_ids` are collections of word ids to be removed.
 
         Parameters
@@ -390,7 +390,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     def compactify(self):
         """Assign new word ids to all words.
-        
+
         This is done to make the ids more compact, e.g. after some tokens have
         been removed via :func:`filter_tokens` and there are gaps in the id series.
         Calling this method will remove the gaps.
@@ -414,14 +414,14 @@ class Dictionary(utils.SaveLoad, Mapping):
         `num_docs`
         `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`. Sorted by word,
         or by decreasing word frequency.
-        
+
         Note: text format should be use for corpus inspection. Use `save`/`load`
         to store in binary format (pickle) for improved performance.
 
         Parameters
         ----------
         fname :
-            
+
         sort_by_word :
              (Default value = True)
 
@@ -443,9 +443,9 @@ class Dictionary(utils.SaveLoad, Mapping):
         """Merge another dictionary into this dictionary, mapping same tokens to the
         same ids and new tokens to new ids. The purpose is to merge two corpora
         created using two different dictionaries, one from `self` and one from `other`.
-        
+
         `other` can be any id=>word mapping (a dict, a Dictionary object, ...).
-        
+
         Return a transformation object which, when accessed as `result[doc_from_other_corpus]`,
         will convert documents from a corpus built using the `other` dictionary
         into a document using the new, merged dictionary (see :class:`gensim.interfaces.TransformationABC`).
@@ -453,7 +453,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         Parameters
         ----------
         other :
-            
+
 
         Returns
         -------
@@ -499,7 +499,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         Parameters
         ----------
         fname :
-            
+
 
         Returns
         -------
@@ -533,11 +533,11 @@ class Dictionary(utils.SaveLoad, Mapping):
         """Create Dictionary from an existing corpus. This can be useful if you
         only have a term-document BOW matrix (represented by `corpus`),
         but not the original text corpus.
-        
+
         This will scan the term-document count matrix for all word ids that
         appear in it, then construct and return Dictionary which maps each
         `word_id -> id2word[word_id]`.
-        
+
         `id2word` is an optional dictionary that maps the `word_id` to a
         token. In case `id2word` isn't specified the mapping `id2word[
         word_id] = str(word_id)` will be used.
@@ -545,7 +545,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         Parameters
         ----------
         corpus :
-            
+
         id2word :
             (Default value = None)
 

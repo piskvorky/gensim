@@ -63,13 +63,13 @@ class IndexedCorpus(interfaces.CorpusABC):
                   progress_cnt=None, labels=None, metadata=False):
         """Iterate through the document stream `corpus`, saving the documents to
         `fname` and recording byte offset of each document.
-        
+
         Save the resulting index structure to file `index_fname` (or
         `fname`.index is not set).
-        
+
         This relies on the underlying corpus class `serializer` providing (in
         addition to standard iteration)::
-        
+
             * `save_corpus` method that returns a sequence of byte offsets, one for
                each saved document
             * the `docbyoffset(offset)` method, which returns a document
