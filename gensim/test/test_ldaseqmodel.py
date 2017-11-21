@@ -3,17 +3,13 @@
 Tests to check DTM math functions and Topic-Word, Doc-Topic proportions.
 
 """
+import unittest
+import logging
 
 import numpy as np  # for arrays, array broadcasting etc.
 from gensim.models import ldaseqmodel
 from gensim.corpora import Dictionary
-import os.path
-import unittest
-import logging
-
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data/DTM', fname)
+from gensim.test.utils import datapath
 
 
 class TestLdaSeq(unittest.TestCase):
@@ -203,7 +199,7 @@ class TestLdaSeq(unittest.TestCase):
             ['bank', 'loan', 'sell']
         ]
         # initializing using own LDA sufficient statistics so that we get same results each time.
-        sstats = np.loadtxt(datapath('sstats_test.txt'))
+        sstats = np.loadtxt(datapath('DTM/sstats_test.txt'))
         dictionary = Dictionary(texts)
         corpus = [dictionary.doc2bow(text) for text in texts]
         self.ldaseq = ldaseqmodel.LdaSeqModel(
@@ -224,6 +220,21 @@ class TestLdaSeq(unittest.TestCase):
         doc_topic = self.ldaseq.doc_topics(0)
         expected_doc_topic = 0.00066577896138482028
         self.assertAlmostEqual(doc_topic[0], expected_doc_topic, places=2)
+
+    def testDtypeBackwardCompatibility(self):
+        ldaseq_3_0_1_fname = datapath('DTM/ldaseq_3_0_1_model')
+        test_doc = [(547, 1), (549, 1), (552, 1), (555, 1)]
+        expected_topics = [0.99751244, 0.00248756]
+
+        # save model to use in test
+        # self.ldaseq.save(ldaseq_3_0_1_fname)
+
+        # load a model saved using a 3.0.1 version of Gensim
+        model = ldaseqmodel.LdaSeqModel.load(ldaseq_3_0_1_fname)
+
+        # and test it on a predefined document
+        topics = model[test_doc]
+        self.assertTrue(np.allclose(expected_topics, topics))
 
 
 if __name__ == '__main__':

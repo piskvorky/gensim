@@ -12,18 +12,18 @@ Automated tests for similarity algorithms (the similarities package).
 import logging
 import unittest
 import os
-import tempfile
 
 import numpy
 import scipy
 
-from gensim.corpora import Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
 from gensim.models import KeyedVectors
 from gensim.models.wrappers import fasttext
 from gensim import matutils, similarities
 from gensim.models import Word2Vec
+from gensim.test.utils import (datapath, get_tmpfile,
+    common_texts as texts, common_dictionary as dictionary, common_corpus as corpus)
 
 try:
     from pyemd import emd  # noqa:F401
@@ -31,31 +31,7 @@ try:
 except ImportError:
     PYEMD_EXT = False
 
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
-
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
-
 sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(texts)]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_similarities.tst.pkl')
 
 
 class _TestSimilarityABC(object):
@@ -178,7 +154,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -203,7 +179,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -228,7 +204,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -255,7 +231,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -282,7 +258,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -310,7 +286,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -348,7 +324,8 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         if num_best is not None:
             # Sparse array.
             for i, sim in sims:
-                self.assertTrue(numpy.alltrue(sim > 0.0))  # Note that similarities are bigger than zero, as they are the 1/ 1 + distances.
+                # Note that similarities are bigger than zero, as they are the 1/ 1 + distances.
+                self.assertTrue(numpy.alltrue(sim > 0.0))
         else:
             self.assertTrue(sims[0] == 1.0)  # Similarity of a document with itself is 0.0.
             self.assertTrue(numpy.alltrue(sims[1:] > 0.0))
@@ -545,7 +522,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def assertIndexSaved(self, index):
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         index.save(fname)
         self.assertTrue(os.path.exists(fname))
         self.assertTrue(os.path.exists(fname + '.d'))
@@ -553,7 +530,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
     def assertLoadedIndexEqual(self, index, model):
         from gensim.similarities.index import AnnoyIndexer
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         index.save(fname)
 
         index2 = AnnoyIndexer()
@@ -598,7 +575,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def testSave(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         self.index.save(fname)
         self.assertTrue(os.path.exists(fname))
         self.assertTrue(os.path.exists(fname + '.d'))
@@ -612,7 +589,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
     def testSaveLoad(self):
         from gensim.similarities.index import AnnoyIndexer
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         self.index.save(fname)
 
         self.index2 = AnnoyIndexer()

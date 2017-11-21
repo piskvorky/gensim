@@ -17,20 +17,12 @@ from __future__ import with_statement
 
 import logging
 import os
-import tempfile
 import unittest
 
 from gensim import utils, corpora, models, similarities
-
-# sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import datapath, get_tmpfile
 
 logger = logging.getLogger('test_miislita')
-
-
-def get_tmpfile(suffix):
-    return os.path.join(tempfile.gettempdir(), suffix)
 
 
 class CorpusMiislita(corpora.TextCorpus):

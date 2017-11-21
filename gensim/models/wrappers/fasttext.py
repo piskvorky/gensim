@@ -90,7 +90,7 @@ class FastTextKeyedVectors(KeyedVectors):
         if word in self.vocab:
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
         else:
-            word_vec = np.zeros(self.syn0_ngrams.shape[1])
+            word_vec = np.zeros(self.syn0_ngrams.shape[1], dtype=np.float32)
             ngrams = compute_ngrams(word, self.min_n, self.max_n)
             ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:
@@ -123,7 +123,8 @@ class FastTextKeyedVectors(KeyedVectors):
                     self.syn0_ngrams[i, :] /= sqrt((self.syn0_ngrams[i, :] ** 2).sum(-1))
                 self.syn0_ngrams_norm = self.syn0_ngrams
             else:
-                self.syn0_ngrams_norm = (self.syn0_ngrams / sqrt((self.syn0_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
+                self.syn0_ngrams_norm = \
+                    (self.syn0_ngrams / sqrt((self.syn0_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
     def __contains__(self, word):
         """
@@ -252,6 +253,14 @@ class FastText(Word2Vec):
         return model
 
     @classmethod
+    def load(cls, *args, **kwargs):
+        model = super(FastText, cls).load(*args, **kwargs)
+        if hasattr(model.wv, 'syn0_all'):
+            setattr(model.wv, 'syn0_ngrams', model.wv.syn0_all)
+            delattr(model.wv, 'syn0_all')
+        return model
+
+    @classmethod
     def delete_training_files(cls, model_file):
         """Deletes the files created by FastText training"""
         try:
@@ -272,7 +281,8 @@ class FastText(Word2Vec):
         magic, version = self.struct_unpack(file_handle, '@2i')
         if magic == FASTTEXT_FILEFORMAT_MAGIC:  # newer format
             self.new_format = True
-            dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
+            dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = \
+                self.struct_unpack(file_handle, '@12i1d')
         else:  # older format
             self.new_format = False
             dim = magic
@@ -292,8 +302,10 @@ class FastText(Word2Vec):
         self.sample = t
 
     def load_dict(self, file_handle, encoding='utf8'):
-        vocab_size, nwords, _ = self.struct_unpack(file_handle, '@3i')
+        vocab_size, nwords, nlabels = self.struct_unpack(file_handle, '@3i')
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+        if nlabels > 0:
+            raise NotImplementedError("Supervised fastText models are not supported")
         logger.info("loading %s words for fastText model from %s", vocab_size, self.file_name)
 
         self.struct_unpack(file_handle, '@1q')  # number of tokens
@@ -308,16 +320,6 @@ class FastText(Word2Vec):
                 char_byte = file_handle.read(1)
             word = word_bytes.decode(encoding)
             count, _ = self.struct_unpack(file_handle, '@qb')
-
-            if i == nwords and i < vocab_size:
-                # To handle the error in pretrained vector wiki.fr (French).
-                # For more info : https://github.com/facebookresearch/fastText/issues/218
-
-                assert word == "__label__", (
-                    'mismatched vocab_size ({}) and nwords ({}), extra word "{}"'
-                    .format(vocab_size, nwords, word)
-                )
-                continue   # don't add word to vocab
 
             self.wv.vocab[word] = Vocab(index=i, count=count)
             self.wv.index2word.append(word)
