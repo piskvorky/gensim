@@ -941,7 +941,6 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         w2 : str
             Key for second node.
 
-
         Returns
         -------
         float

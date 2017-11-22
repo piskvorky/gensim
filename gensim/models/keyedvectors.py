@@ -279,7 +279,6 @@ class KeyedVectorsBase(utils.SaveLoad):
         """
         raise NotImplementedError
 
-
     def word_vec(self, word):
         """
         Accept a single word as input.
