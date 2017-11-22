@@ -19,17 +19,40 @@ logger = logging.getLogger(__name__)
 
 
 def p_boolean_document(corpus, segmented_topics):
-    """This function performs the boolean document probability estimation.
+    """Perform the boolean document probability estimation.
     Boolean document estimates the probability of a single word as the number
     of documents in which the word occurs divided by the total number of documents.
 
-    Args:
-        corpus : The corpus of documents.
-        segmented_topics : Output from the segmentation of topics. Could be simply topics too.
+    Parameters
+    ----------
+    corpus : list
+        The corpus of documents.
+    segmented_topics : list of lists
+        Output from the segmentation of topics. Could be simply topics too.
 
-    Returns:
-        accumulator : word occurrence accumulator instance that can be used to lookup token
-            frequencies and co-occurrence frequencies.
+    Returns
+    -------
+    accumulator :
+        Word occurrence accumulator instance that can be used to lookup token frequencies and co-occurrence frequencies.
+
+    Examples
+    ---------
+    >>> from gensim.topic_coherence import probability_estimation
+    >>> from gensim.corpora.hashdictionary import HashDictionary
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>> texts = [['human', 'interface', 'computer'],['eps', 'user', 'interface', 'system'],
+    >>> ['system', 'human', 'system', 'eps'],['user', 'response', 'time'],['trees'],['graph', 'trees']]
+    >>> dictionary = HashDictionary(texts)
+    >>> token2id = dictionary.token2id
+    >>> computer_id = token2id['computer']
+    >>> system_id = token2id['system']
+    >>> user_id = token2id['user']
+    >>> graph_id = token2id['graph']
+    >>> segmented_topics = [[(system_id, graph_id),(computer_id, graph_id),(computer_id, system_id)], [
+    >>> (computer_id, graph_id),(user_id, graph_id),(user_id, computer_id)]]
+    >>> corpus = [dictionary.doc2bow(text) for text in texts]
+    >>> probability_estimation.p_boolean_document(corpus, segmented_topics)
+
     """
     top_ids = unique_ids_from_segments(segmented_topics)
     return CorpusAccumulator(top_ids).accumulate(corpus)
