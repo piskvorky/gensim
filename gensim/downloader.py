@@ -154,14 +154,14 @@ def _calculate_md5_checksum(fname):
     return hash_md5.hexdigest()
 
 
-def info(name=None, actual=True):
+def info(name=None, show_only_latest=True):
     """Provide the information related to model/dataset.
 
     Parameters
     ----------
     name : str, optional
         Name of model/dataset.  If not set - shows all available data.
-    actual : bool, optional
+    show_only_latest : bool, optional
         If storage contains different versions for one data/model, this flag allow to hide outdated versions.
         Affects only if `name` is None.
 
@@ -202,12 +202,12 @@ def info(name=None, actual=True):
         else:
             raise ValueError("Incorrect model/corpus name")
 
-    if not actual:
+    if not show_only_latest:
         return information
 
     return {
-        "corpora": {name: data for (name, data) in information['corpora'].items() if data.get("actual", True)},
-        "models": {name: data for (name, data) in information['models'].items() if data.get("actual", True)}
+        "corpora": {name: data for (name, data) in information['corpora'].items() if data.get("latest", True)},
+        "models": {name: data for (name, data) in information['models'].items() if data.get("latest", True)}
     }
 
 
