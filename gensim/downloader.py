@@ -57,10 +57,11 @@ base_dir = os.path.join(user_dir, 'gensim-data')
 logger = logging.getLogger('gensim.api')
 
 DATA_LIST_URL = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
+DOWNLOAD_BASE_URL = "https://github.com/RaRe-Technologies/gensim-data/releases/download"
 
 
 def _progress(chunks_downloaded, chunk_size, total_size, part=1, total_parts=1):
-    """Reporthook for :func:`urllib.urlretrieve`.
+    """Reporthook for :func:`urllib.urlretrieve`, code from [1]_.
 
     Parameters
     ----------
@@ -269,19 +270,17 @@ def _download(name):
         If md5sum on client and in repo are different.
 
     """
-    url_load_file = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/__init__.py".format(f=name)
+    url_load_file = "{base}/{fname}/__init__.py".format(base=DOWNLOAD_BASE_URL, fname=name)
     data_folder_dir = os.path.join(base_dir, name)
     tmp_dir = tempfile.mkdtemp()
     init_path = os.path.join(tmp_dir, "__init__.py")
     urllib.urlretrieve(url_load_file, init_path)
     total_parts = _get_parts(name)
     if total_parts > 1:
-        concatenated_folder_name = "{f}.gz".format(f=name)
+        concatenated_folder_name = "{fname}.gz".format(fname=name)
         concatenated_folder_dir = os.path.join(tmp_dir, concatenated_folder_name)
         for part in range(0, total_parts):
-            url_data = \
-                "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.gz_0{p}" \
-                .format(f=name, p=part)
+            url_data = "{base}/{fname}/{fname}.gz_0{part}".format(base=DOWNLOAD_BASE_URL, fname=name, part=part)
 
             fname = "{f}.gz_0{p}".format(f=name, p=part)
             dst_path = os.path.join(tmp_dir, fname)
@@ -298,14 +297,14 @@ def _download(name):
                 raise Exception("Checksum comparison failed, try again")
         with open(concatenated_folder_dir, 'wb') as wfp:
             for part in range(0, total_parts):
-                part_path = os.path.join(tmp_dir, "{f}.gz_0{p}".format(f=name, p=part))
+                part_path = os.path.join(tmp_dir, "{fname}.gz_0{part}".format(fname=name, part=part))
                 with open(part_path, "rb") as rfp:
                     shutil.copyfileobj(rfp, wfp)
                 os.remove(part_path)
         os.rename(tmp_dir, data_folder_dir)
     else:
-        url_data = "https://github.com/RaRe-Technologies/gensim-data/releases/download/{f}/{f}.gz".format(f=name)
-        fname = "{f}.gz".format(f=name)
+        url_data = "{base}/{fname}/{fname}.gz".format(base=DOWNLOAD_BASE_URL, fname=name)
+        fname = "{fname}.gz".format(fname=name)
         dst_path = os.path.join(tmp_dir, fname)
         urllib.urlretrieve(url_data, dst_path, reporthook=_progress)
         if _calculate_md5_checksum(dst_path) == _get_checksum(name):
