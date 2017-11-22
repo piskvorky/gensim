@@ -270,7 +270,7 @@ class KeyedVectorsBase(utils.SaveLoad):
         """
         raise NotImplementedError
 
-    def distances(self, word_or_vector, other_words=[]):
+    def distances(self, word_or_vector, other_words=()):
         """
         Compute distances from given word or vector to all words in `other_words`.
         If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.
@@ -763,7 +763,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         similarities = dot_products  / (norm * all_norms)
         return similarities
 
-    def distances(self, word_or_vector, other_words=[]):
+    def distances(self, word_or_vector, other_words=()):
         """
         Compute cosine distances from given word or vector to all words in `other_words`.
         If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.

@@ -1022,7 +1022,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             result = result[:topn]
         return result
 
-    def distances(self, word_or_vector, other_words=[]):
+    def distances(self, word_or_vector, other_words=()):
         """
         Compute Poincare distances from given word or vector to all words in `other_words`.
         If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.
