@@ -899,17 +899,6 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             ancestor = self.closest_parent(ancestors[-1])
         return ancestors
 
-    def cluster(self, breaks):
-        all_norms = np.linalg.norm(self.syn0, axis=1)
-        clusters = []
-        breaks[-1] = 1.0
-        for i in range(len(breaks) - 1):
-            lower_bound = breaks[i]
-            upper_bound = breaks[i+1]
-            cluster_indices = np.where((all_norms >= lower_bound) & (all_norms < upper_bound))[0]
-            clusters.append([self.index2word[index] for index in cluster_indices])
-        return clusters
-
     def distance(self, w1, w2):
         """
         Return Poincare distance between vectors for nodes `w1` and `w2`.
