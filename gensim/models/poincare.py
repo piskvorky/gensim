@@ -219,7 +219,7 @@ class PoincareModel(utils.SaveLoad):
                 (self.negative, num_remaining_nodes, self.kv.index2word[node_index])
             )
 
-        positive_fraction = len(node_relations) / len(self.kv.vocab)
+        positive_fraction = float(len(node_relations)) / len(self.kv.vocab)
         if positive_fraction < 0.01:
             # If number of positive relations is a small fraction of total nodes
             # re-sample till no positively connected nodes are chosen
