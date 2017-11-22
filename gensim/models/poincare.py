@@ -1066,10 +1066,10 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             other_vectors = self.syn0[other_indices]
         return self.poincare_distance_batch(input_vector, other_vectors)
 
-    def position_in_hierarchy(self, word_or_vector):
+    def norm(self, word_or_vector):
         """
         Return absolute position in hierarchy of input word or vector.
-        Values range between 0 and 1. A higher value indicates the input word or vector is higher in the hierarchy.
+        Values range between 0 and 1. A lower value indicates the input word or vector is higher in the hierarchy.
 
         Parameters
         ----------
@@ -1084,19 +1084,19 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         Examples
         --------
 
-        >>> model.position_in_hierarchy('mammal.n.01')
+        >>> model.norm('mammal.n.01')
         0.9
 
         Notes
         -----
-        The position in hierarchy is based on the norm of the vector.
+        The position in hierarchy is based on the norm of the vector for the node.
 
         """
         if isinstance(word_or_vector, string_types):
             input_vector = self.word_vec(word_or_vector)
         else:
             input_vector = word_or_vector
-        return 1 - np.linalg.norm(input_vector)
+        return np.linalg.norm(input_vector)
 
     def difference_in_hierarchy(self, word_or_vector_1, word_or_vector_2):
         """
@@ -1131,14 +1131,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         or lower in the hierarchy than `word_or_vector_2`.
 
         """
-        if isinstance(word_or_vector_1, string_types) and isinstance(word_or_vector_2, string_types):
-            vector_1 = self.word_vec(word_or_vector_1)
-            vector_2 = self.word_vec(word_or_vector_2)
-        else:
-            vector_1 = word_or_vector_1
-            vector_2 = word_or_vector_2
-
-        return np.linalg.norm(vector_2) - np.linalg.norm(vector_1)
+        return self.norm(word_or_vector_2) - self.norm(word_or_vector_1)
 
 
 class PoincareRelations(object):
