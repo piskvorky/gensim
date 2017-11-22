@@ -349,7 +349,8 @@ def _strip_word(word):
 
 
 def _get_combined_keywords(_keywords, split_text):
-    """
+    """Returns most scored words (`_keywords`) contained in `split_text` and its
+    combinations.
 
     Parameters
     ----------
@@ -360,8 +361,8 @@ def _get_combined_keywords(_keywords, split_text):
     
     Returns
     -------
-    list
-        .
+    list of str
+        Keywords and/or its combinations.
 
     """
     result = []
@@ -390,7 +391,7 @@ def _get_average_score(concept, _keywords):
 
     Parameters
     ----------
-    text : str
+    concept : str
         Input text.
     _keywords : dict {keywords:scores}
         Keywords and its scores.
@@ -410,14 +411,14 @@ def _get_average_score(concept, _keywords):
 
 
 def _format_results(_keywords, combined_keywords, split, scores):
-    """Formats, sorts and returns combined_keywords in desired format.
+    """Formats, sorts and returns `combined_keywords` in desired format.
 
     Parameters
     ----------
     _keywords : dict {keywords:scores}
         Keywords and its scores.
     combined_keywords : list of str
-        ?.
+        Most ranked words and/or its combinations.
     split : bool
         Whether split result or return string, optional.
     scores : bool
@@ -440,7 +441,7 @@ def _format_results(_keywords, combined_keywords, split, scores):
 
 def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=('NN', 'JJ'),
              lemmatize=False, deacc=True):
-    """.
+    """Returns most ranked word of provided text and/or its combinations .
 
     Parameters
     ----------
@@ -450,11 +451,11 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
         If no "words" option is selected, the number of sentences is
         reduced by the provided ratio, else, the ratio is ignored.
     words : int
-        .
+        Number of returned words.
     split : bool
-        .
+        Whether split keywords, optional.
     scores : bool
-        .
+        Whether score of keyword, optional.
     pos_filter : tuple
         Part of speech filters.
     lemmatize : bool
@@ -464,8 +465,20 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
 
     Returns
     -------
-    Graph
-        Created graph.
+    str or list of str or list of (tuple of str)
+        
+    Example
+    -------
+    >>> from gensim.summarization import keywords
+    >>> text="Challenges in natural language processing frequently involve \
+    >>> speech recognition, natural language understanding, natural language \
+    >>> generation (frequently from formal, machine-readable logical forms), \
+    >>> connecting language and machine perception, dialog systems, or some \
+    >>> combination thereof."
+    >>> print(gensim.summarization.keywords(text))
+    natural language
+    machine
+    frequently
 
     """
 
@@ -504,7 +517,7 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
 
 
 def get_graph(text):
-    """Creates and returns graph with given text. Cleans, tokenizes text 
+    """Creates and returns graph from given text. Cleans, tokenizes text 
     before creating a graph.
 
     Parameters
@@ -516,6 +529,20 @@ def get_graph(text):
     -------
     Graph
         Created graph.
+
+
+    Example
+    -------
+    >>> from gensim.summarization.keywords import get_graph
+    >>> text = "Fly me to the moon \
+    >>> Let me play among the stars \
+    >>> Let me see what spring is like \
+    >>> On a, Jupiter and Mars"
+    >>> g = get_graph(text)
+    >>> print(g.nodes())
+    ['fly', 'moon', 'let', 'plai', 'star', 'spring', 'like', 'jupit', 'mar']
+    >>> print(g.neighbors("let"))
+    ['moon', 'star']
 
     """
     tokens = _clean_text_by_word(text)
