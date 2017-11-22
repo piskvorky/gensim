@@ -206,8 +206,8 @@ def info(name=None, actual=True):
         return information
 
     return {
-        "corpora": [dataset for dataset in information['corpora'] if dataset.get("actual", True)],
-        "models": [model for model in information['models'] if model.get("actual", True)]
+        "corpora": {name: data for (name, data) in information['corpora'].items() if data.get("actual", True)},
+        "models": {name: data for (name, data) in information['models'].items() if data.get("actual", True)}
     }
 
 
