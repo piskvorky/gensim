@@ -270,6 +270,16 @@ class KeyedVectorsBase(utils.SaveLoad):
         """
         raise NotImplementedError
 
+    def distances(self, word_or_vector, other_words=[]):
+        """
+        Compute distances from given word or vector to all words in `other_words`.
+        If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.
+        To be implemented by child class.
+
+        """
+        raise NotImplementedError
+
+
     def word_vec(self, word):
         """
         Accept a single word as input.
@@ -752,6 +762,42 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         dot_products = dot(vectors_all, vector_1)
         similarities = dot_products  / (norm * all_norms)
         return similarities
+
+    def distances(self, word_or_vector, other_words=[]):
+        """
+        Compute cosine distances from given word or vector to all words in `other_words`.
+        If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.
+
+        Parameters
+        ----------
+        word_or_vector : str or numpy.array
+            Word or vector from which distances are to be computed.
+
+        other_words : iterable(str) or None
+            For each word in `other_words` distance from `word_or_vector` is computed.
+            If None or empty, distance of `word_or_vector` from all words in vocab is computed (including itself).
+
+        Returns
+        -------
+        numpy.array
+            Array containing distances to all words in `other_words` from input `word_or_vector`,
+            in the same order as `other_words`.
+
+        Notes
+        -----
+        Raises KeyError if either `word_or_vector` or any word in `other_words` is absent from vocab.
+
+        """
+        if isinstance(word_or_vector, string_types):
+            input_vector = self.word_vec(word_or_vector)
+        else:
+            input_vector = word_or_vector
+        if not other_words:
+            other_vectors = self.syn0
+        else:
+            other_indices = [self.vocab[word].index for word in other_words]
+            other_vectors = self.syn0[other_indices]
+        return 1 - self.cosine_similarities(input_vector, other_vectors)
 
     def distance(self, w1, w2):
         """

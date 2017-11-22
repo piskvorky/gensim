@@ -114,8 +114,8 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
     def test_words_closer_than(self):
         """Test words_closer_than returns expected value for distinct and identical nodes."""
         self.assertEqual(self.vectors.words_closer_than('war', 'war'), [])
-        expected = ['conflict', 'administration']
-        self.assertEqual(self.vectors.words_closer_than('war', 'terrorism'), expected)
+        expected = set(['conflict', 'administration'])
+        self.assertEqual(set(self.vectors.words_closer_than('war', 'terrorism')), expected)
 
     def test_rank(self):
         """Test rank returns expected value for distinct and identical nodes."""

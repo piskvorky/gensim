@@ -351,8 +351,8 @@ class TestPoincareKeyedVectors(unittest.TestCase):
     def test_words_closer_than(self):
         """Test words_closer_than returns expected value for distinct and identical nodes."""
         self.assertEqual(self.vectors.words_closer_than('dog.n.01', 'dog.n.01'), [])
-        expected = ['canine.n.02', 'hunting_dog.n.01']
-        self.assertEqual(self.vectors.words_closer_than('dog.n.01', 'carnivore.n.01'), expected)
+        expected = set(['canine.n.02', 'hunting_dog.n.01'])
+        self.assertEqual(set(self.vectors.words_closer_than('dog.n.01', 'carnivore.n.01')), expected)
 
     def test_rank(self):
         """Test rank returns expected value for distinct and identical nodes."""

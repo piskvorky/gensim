@@ -1022,23 +1022,25 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             result = result[:topn]
         return result
 
-    def distances(self, word_or_vector, words_2=[]):
+    def distances(self, word_or_vector, other_words=[]):
         """
-        Return Poincare distances from given word or vector to all words in `words_2`.
+        Compute Poincare distances from given word or vector to all words in `other_words`.
+        If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.
 
         Parameters
         ----------
         word_or_vector : str or numpy.array
             Word or vector from which distances are to be computed.
 
-        words_2 : iterable(str) or None
-            For each word in `words_2` distance from `word_or_vector` is computed.
+        other_words : iterable(str) or None
+            For each word in `other_words` distance from `word_or_vector` is computed.
             If None or empty, distance of `word_or_vector` from all words in vocab is computed (including itself).
 
         Returns
         -------
         numpy.array
-            Array containing distances to all words in `words_2` from input `word_or_vector`, in the same order as `words_2`.
+            Array containing distances to all words in `other_words` from input `word_or_vector`,
+            in the same order as `other_words`.
 
         Examples
         --------
@@ -1051,19 +1053,19 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Notes
         -----
-        Raises KeyError if either `word_or_vector` or any word in `words_2` is absent from vocab.
+        Raises KeyError if either `word_or_vector` or any word in `other_words` is absent from vocab.
 
         """
         if isinstance(word_or_vector, string_types):
             input_vector = self.word_vec(word_or_vector)
         else:
             input_vector = word_or_vector
-        if not words_2:
-            word_2_vectors = self.syn0
+        if not other_words:
+            other_vectors = self.syn0
         else:
-            word_2_indices = [self.vocab[word].index for word in words_2]
-            word_2_vectors = self.syn0[word_2_indices]
-        return self.poincare_distance_batch(input_vector, word_2_vectors)
+            other_indices = [self.vocab[word].index for word in other_words]
+            other_vectors = self.syn0[other_indices]
+        return self.poincare_distance_batch(input_vector, other_vectors)
 
     def position_in_hierarchy(self, word_or_vector):
         """
