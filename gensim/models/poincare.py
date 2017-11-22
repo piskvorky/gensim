@@ -54,6 +54,12 @@ from smart_open import smart_open
 from gensim import utils, matutils
 from gensim.models.keyedvectors import KeyedVectorsBase, Vocab
 
+try:
+    from autograd import grad  # Only required for optionally verifying gradients while training
+    from autograd import numpy as grad_np
+    AUTOGRAD_PRESENT = True
+except ImportError:
+    AUTOGRAD_PRESENT = False
 
 logger = logging.getLogger(__name__)
 
@@ -266,9 +272,6 @@ class PoincareModel(utils.SaveLoad):
         Only used for autograd gradients, since autograd requires a specific function signature.
 
         """
-        # Loaded only if gradients are to be checked to avoid dependency
-        from autograd import numpy as grad_np
-
         vector_u = matrix[0]
         vectors_v = matrix[1:]
         euclidean_dists = grad_np.linalg.norm(vector_u - vectors_v, axis=1)
@@ -380,10 +383,8 @@ class PoincareModel(utils.SaveLoad):
             List of lists of negative samples for each node_1 in the positive examples.
 
         """
-        try:  # Loaded only if gradients are to be checked to avoid dependency
-            from autograd import grad
-        except ImportError:
-            logger.warning('autograd could not be imported, skipping checking of gradients')
+        if not AUTOGRAD_PRESENT:
+            logger.warning('autograd could not be imported, cannot do gradient checking')
             logger.warning('please install autograd to enable gradient checking')
             return
 
