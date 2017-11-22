@@ -47,7 +47,6 @@ import time
 import numpy as np
 from collections import defaultdict, Counter
 from numpy import random as np_random
-from pygtrie import Trie
 from scipy.stats import spearmanr
 from six import string_types
 from smart_open import smart_open
@@ -1559,6 +1558,12 @@ class LexicalEntailmentEvaluation(object):
             Trie containing vocab terms of the input embedding.
 
         """
+        try:
+            from pygtrie import Trie
+        except ImportError:
+            raise ImportError(
+                'pygtrie could not be imported, please install pygtrie in order to use LexicalEntailmentEvaluation')
+
         vocab_trie = Trie()
         for key in embedding.vocab:
             vocab_trie[key] = True
