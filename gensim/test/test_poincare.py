@@ -293,7 +293,7 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         """Test that poincare_distance_batch returns correct distances."""
         vector_1 = self.vectors['dog.n.01']
         vectors_2 = self.vectors[['mammal.n.01', 'dog.n.01']]
-        distances = self.vectors.poincare_distance_batch(vector_1, vectors_2)
+        distances = self.vectors.vector_distance_batch(vector_1, vectors_2)
         self.assertTrue(np.allclose(distances, [4.5278745, 0]))
 
     def test_poincare_distance(self):
@@ -301,10 +301,10 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         vector_1 = self.vectors['dog.n.01']
         vector_2 = self.vectors['mammal.n.01']
 
-        distance = self.vectors.poincare_distance(vector_1, vector_2)
+        distance = self.vectors.vector_distance(vector_1, vector_2)
         self.assertTrue(np.allclose(distance, 4.5278745))
 
-        distance = self.vectors.poincare_distance(vector_1, vector_1)
+        distance = self.vectors.vector_distance(vector_1, vector_1)
         self.assertTrue(np.allclose(distance, 0))
 
     def test_closest_child(self):

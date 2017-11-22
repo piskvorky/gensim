@@ -749,9 +749,9 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         self.max_distance = 0
 
     @staticmethod
-    def poincare_distance(vector_1, vector_2):
+    def vector_distance(vector_1, vector_2):
         """
-        Return poincare distance between two input vectors. Convenience method over `poincare_distance_batch`.
+        Return poincare distance between two input vectors. Convenience method over `vector_distance_batch`.
 
         Parameters
         ----------
@@ -766,10 +766,10 @@ class PoincareKeyedVectors(KeyedVectorsBase):
             Contains Poincare distance between `vector_1` and `vector_2`.
 
         """
-        return PoincareKeyedVectors.poincare_distance_batch(vector_1, vector_2[np.newaxis, :])[0]
+        return PoincareKeyedVectors.vector_distance_batch(vector_1, vector_2[np.newaxis, :])[0]
 
     @staticmethod
-    def poincare_distance_batch(vector_1, vectors_all):
+    def vector_distance_batch(vector_1, vectors_all):
         """
         Return poincare distances between one vector and a set of other vectors.
 
@@ -939,7 +939,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         """
         vector_1 = self.word_vec(w1)
         vector_2 = self.word_vec(w2)
-        return self.poincare_distance(vector_1, vector_2)
+        return self.vector_distance(vector_1, vector_2)
 
     def similarity(self, w1, w2):
         """
@@ -1064,7 +1064,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         else:
             other_indices = [self.vocab[word].index for word in other_words]
             other_vectors = self.syn0[other_indices]
-        return self.poincare_distance_batch(input_vector, other_vectors)
+        return self.vector_distance_batch(input_vector, other_vectors)
 
     def norm(self, word_or_vector):
         """
