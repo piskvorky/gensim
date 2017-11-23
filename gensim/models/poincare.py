@@ -6,15 +6,15 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Python implementation of Poincare Embeddings [1]_, an embedding that is better at capturing latent hierarchical
-information better than traditional Euclidean embeddings. The method is described in more detail in [1]_.
+"""Python implementation of Poincaré Embeddings [1]_, an embedding that is better at capturing latent hierarchical
+information than traditional Euclidean embeddings. The method is described in more detail in [1]_.
 
 The main use-case is to automatically learn hierarchical representations of nodes from a tree-like structure,
-such as a Directed Acyclic Graph, using the transitive closure of the relations. Representations of nodes in a
-symmetric graph can also be learned, using an iterable of the relations in the graph.
+such as a Directed Acyclic Graph, using a transitive closure of the relations. Representations of nodes in a
+symmetric graph can also be learned, using an iterable of the direct relations in the graph.
 
-This module allows training a Poincare Embedding from a training file containing relations of graph in a
-csv-like format.
+This module allows training a Poincaré Embedding from a training file containing relations of graph in a
+csv-like format, or a Python iterable of relations.
 
 .. [1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
     https://arxiv.org/pdf/1705.08039.pdf
@@ -804,7 +804,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Parameters
         ----------
-        node : str
+        node : str or int
             Key for node for which closest child is to be found.
 
         Returns
@@ -830,7 +830,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Parameters
         ----------
-        node : str
+        node : str or int
             Key for node for which closest parent is to be found.
 
         Returns
@@ -856,7 +856,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Parameters
         ----------
-        node : str
+        node : str or int
             Key for node for which descendants are to be found.
         max_depth : int
             Maximum number of descendants to return.
@@ -882,7 +882,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Parameters
         ----------
-        node : str
+        node : str or int
             Key for node for which ancestors are to be found.
 
         Returns
@@ -905,9 +905,9 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Parameters
         ----------
-        w1 : str
+        w1 : str or int
             Key for first node.
-        w2 : str
+        w2 : str or int
             Key for second node.
 
         Returns
@@ -936,9 +936,9 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Parameters
         ----------
-        w1 : str
+        w1 : str or int
             Key for first node.
-        w2 : str
+        w2 : str or int
             Key for second node.
 
         Returns
@@ -960,26 +960,26 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         """
         return 1 / (1 + self.distance(w1, w2))
 
-    def most_similar(self, word_or_vector, topn=10, restrict_vocab=None):
+    def most_similar(self, node_or_vector, topn=10, restrict_vocab=None):
         """
-        Find the top-N most similar words to the given word or vector, sorted in increasing order of distance.
+        Find the top-N most similar nodes to the given node or vector, sorted in increasing order of distance.
 
         Parameters
         ----------
 
-        word_or_vector : str or numpy.array
-            word or vector for which similar words are to be found.
+        node_or_vector : str/int or numpy.array
+            node key or vector for which similar nodes are to be found.
         topn : int or None, optional
-            number of similar words to return, if `None`, returns all.
+            number of similar nodes to return, if `None`, returns all.
         restrict_vocab : int or None, optional
             Optional integer which limits the range of vectors which are searched for most-similar values.
-            For example, restrict_vocab=10000 would only check the first 10000 word vectors in the vocabulary order.
+            For example, restrict_vocab=10000 would only check the first 10000 node vectors in the vocabulary order.
             This may be meaningful if vocabulary is sorted by descending frequency.
 
         Returns
         --------
         list of tuples (str, float)
-            List of tuples containing (word, distance) pairs in increasing order of distance.
+            List of tuples containing (node, distance) pairs in increasing order of distance.
 
         Examples
         --------
@@ -988,46 +988,46 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         """
         if not restrict_vocab:
-            all_distances = self.distances(word_or_vector)
+            all_distances = self.distances(node_or_vector)
         else:
-            words_to_use = self.index2word[:restrict_vocab]
-            all_distances = self.distances(word_or_vector, words_to_use)
+            nodes_to_use = self.index2word[:restrict_vocab]
+            all_distances = self.distances(node_or_vector, nodes_to_use)
 
-        if isinstance(word_or_vector, string_types):
-            word_index = self.vocab[word_or_vector].index
+        if isinstance(node_or_vector, string_types + (int,)):
+            node_index = self.vocab[node_or_vector].index
         else:
-            word_index = None
+            node_index = None
         if not topn:
             closest_indices = matutils.argsort(all_distances)
         else:
             closest_indices = matutils.argsort(all_distances, topn=1 + topn)
         result = [
             (self.index2word[index], float(all_distances[index]))
-            for index in closest_indices if (not word_index or index != word_index)  # ignore the input word
+            for index in closest_indices if (not node_index or index != node_index)  # ignore the input node
         ]
         if topn:
             result = result[:topn]
         return result
 
-    def distances(self, word_or_vector, other_words=()):
+    def distances(self, node_or_vector, other_nodes=()):
         """
-        Compute Poincare distances from given word or vector to all words in `other_words`.
-        If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.
+        Compute Poincare distances from given node or vector to all nodes in `other_nodes`.
+        If `other_nodes` is empty, return distance between `node_or_vector` and all nodes in vocab.
 
         Parameters
         ----------
-        word_or_vector : str or numpy.array
-            Word or vector from which distances are to be computed.
+        node_or_vector : str/int or numpy.array
+            Node key or vector from which distances are to be computed.
 
-        other_words : iterable(str) or None
-            For each word in `other_words` distance from `word_or_vector` is computed.
-            If None or empty, distance of `word_or_vector` from all words in vocab is computed (including itself).
+        other_nodes : iterable of str/int or None
+            For each node in `other_nodes` distance from `node_or_vector` is computed.
+            If None or empty, distance of `node_or_vector` from all nodes in vocab is computed (including itself).
 
         Returns
         -------
         numpy.array
-            Array containing distances to all words in `other_words` from input `word_or_vector`,
-            in the same order as `other_words`.
+            Array containing distances to all nodes in `other_nodes` from input `node_or_vector`,
+            in the same order as `other_nodes`.
 
         Examples
         --------
@@ -1040,34 +1040,34 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Notes
         -----
-        Raises KeyError if either `word_or_vector` or any word in `other_words` is absent from vocab.
+        Raises KeyError if either `node_or_vector` or any node in `other_nodes` is absent from vocab.
 
         """
-        if isinstance(word_or_vector, string_types):
-            input_vector = self.word_vec(word_or_vector)
+        if isinstance(node_or_vector, string_types):
+            input_vector = self.word_vec(node_or_vector)
         else:
-            input_vector = word_or_vector
-        if not other_words:
+            input_vector = node_or_vector
+        if not other_nodes:
             other_vectors = self.syn0
         else:
-            other_indices = [self.vocab[word].index for word in other_words]
+            other_indices = [self.vocab[node].index for node in other_nodes]
             other_vectors = self.syn0[other_indices]
         return self.vector_distance_batch(input_vector, other_vectors)
 
-    def norm(self, word_or_vector):
+    def norm(self, node_or_vector):
         """
-        Return absolute position in hierarchy of input word or vector.
-        Values range between 0 and 1. A lower value indicates the input word or vector is higher in the hierarchy.
+        Return absolute position in hierarchy of input node or vector.
+        Values range between 0 and 1. A lower value indicates the input node or vector is higher in the hierarchy.
 
         Parameters
         ----------
-        word_or_vector : string or numpy.array
-            Input word or vector for which position in hierarchy is to be returned.
+        node_or_vector : str/int or numpy.array
+            Input node key or vector for which position in hierarchy is to be returned.
 
         Returns
         -------
         float
-            Absolute position in the hierarchy of the input vector or word.
+            Absolute position in the hierarchy of the input vector or node.
 
         Examples
         --------
@@ -1080,29 +1080,29 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         The position in hierarchy is based on the norm of the vector for the node.
 
         """
-        if isinstance(word_or_vector, string_types):
-            input_vector = self.word_vec(word_or_vector)
+        if isinstance(node_or_vector, string_types):
+            input_vector = self.word_vec(node_or_vector)
         else:
-            input_vector = word_or_vector
+            input_vector = node_or_vector
         return np.linalg.norm(input_vector)
 
-    def difference_in_hierarchy(self, word_or_vector_1, word_or_vector_2):
+    def difference_in_hierarchy(self, node_or_vector_1, node_or_vector_2):
         """
-        Relative position in hierarchy of `word_or_vector_1` relative to `word_or_vector_2`.
-        A positive value indicates `word_or_vector_1` is higher in the hierarchy than `word_or_vector_2`.
+        Relative position in hierarchy of `node_or_vector_1` relative to `node_or_vector_2`.
+        A positive value indicates `node_or_vector_1` is higher in the hierarchy than `node_or_vector_2`.
 
         Parameters
         ----------
-        word_or_vector_1 : string or numpy.array
-            Input word or vector.
+        node_or_vector_1 : str/int or numpy.array
+            Input node key or vector.
 
-        word_or_vector_2 : string or numpy.array
-            Input word or vector.
+        node_or_vector_2 : str/int or numpy.array
+            Input node key or vector.
 
         Returns
         -------
         float
-            Relative position in hierarchy of `word_or_vector_1` relative to `word_or_vector_2`.
+            Relative position in hierarchy of `node_or_vector_1` relative to `node_or_vector_2`.
 
         Examples
         --------
@@ -1115,11 +1115,11 @@ class PoincareKeyedVectors(KeyedVectorsBase):
 
         Notes
         -----
-        The returned value can be positive or negative, depending on whether `word_or_vector_1` is higher
-        or lower in the hierarchy than `word_or_vector_2`.
+        The returned value can be positive or negative, depending on whether `node_or_vector_1` is higher
+        or lower in the hierarchy than `node_or_vector_2`.
 
         """
-        return self.norm(word_or_vector_2) - self.norm(word_or_vector_1)
+        return self.norm(node_or_vector_2) - self.norm(node_or_vector_1)
 
 
 class PoincareRelations(object):
