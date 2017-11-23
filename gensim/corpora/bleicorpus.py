@@ -5,7 +5,9 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Blei's LDA-C format."""
+"""
+Blei's LDA-C format.
+"""
 
 from __future__ import with_statement
 
@@ -39,18 +41,11 @@ class BleiCorpus(IndexedCorpus):
         """
         Initialize the corpus from a file.
 
-        Parameters
-        ----------
-        fname : str
-            Serialized corpus's filename
-        fname_vocab : str or None, optional
-            Vocabulary file; takes precedence over
-
-        Raises
-        ------
-        IOError
-            If vocabulary file doesn't exist
-
+        Args:
+            fname (str): serialized corpus's filename
+            fname_vocab (:obj:`str`, optional): vocabulary file; takes precedence over fname.vocab
+        Raises:
+            IOError: If vocabulary file doesn't exist
         """
         IndexedCorpus.__init__(self, fname)
         logger.info("loading corpus from %s", fname)
@@ -75,7 +70,9 @@ class BleiCorpus(IndexedCorpus):
         self.id2word = dict(enumerate(words))
 
     def __iter__(self):
-        """Iterate over the corpus, returning one sparse vector at a time."""
+        """
+        Iterate over the corpus, returning one sparse vector at a time.
+        """
         lineno = -1
         with utils.smart_open(self.fname) as fin:
             for lineno, line in enumerate(fin):
@@ -84,20 +81,12 @@ class BleiCorpus(IndexedCorpus):
 
     def line2doc(self, line):
         """
-        Convert line to document.
-
-        Parameters
-        ----------
-        line : str
-            Document's string representation
-
-        Returns
-        -------
-        list of (int, float)
-            document's list representation
-
-        Raises
-        ------
+        Args:
+            line (str): document's string representation
+        Returns:
+            :obj:`list` of (:obj:`int`, :obj:`float`):
+                document's list representation
+        Raises:
             ValueError: If format is invalid
         """
         parts = utils.to_unicode(line).split()
@@ -115,21 +104,14 @@ class BleiCorpus(IndexedCorpus):
         There are actually two files saved: `fname` and `fname.vocab`, where
         `fname.vocab` is the vocabulary file.
 
-        Parameters
-        ----------
-        fname : str
-            Filename
-        corpus : iterable
-            Iterable of documents
-        id2word : dict of (str, str), optional
-            Transforms id to word
-        metadata : bool
-            Any additional info
-
-        Returns
-        -------
-        list of int
-            Fields' offsets
+        Args:
+            fname (str): filename
+            corpus : yields documents
+            id2word (:obj:`dict` of (:obj:`str`, :obj:`str`), optional):
+                transforms id to word
+            metadata (bool): any additional info
+        Returns:
+            :obj:`list` of :obj:`int`: fields' offsets
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
@@ -160,15 +142,10 @@ class BleiCorpus(IndexedCorpus):
         """
         Return document corresponding to `offset`.
 
-        Parameters
-        ----------
-        offset : int
-            Position of the document in the file
-
-        Returns
-        -------
-        list of (int, float)
-            Document's list representation
+        Args:
+            offset (int): position of the document in the file
+        Returns:
+            :obj:`list` of (:obj:`int`, :obj:`float`): document's list representation
         """
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
