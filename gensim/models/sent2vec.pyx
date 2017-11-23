@@ -31,10 +31,13 @@ You can perform the NLP similarity task with the model::
 
 .. [1] Matteo Pagliardini, Prakhar Gupta, Martin Jaggi. Unsupervised Learning of Sentence Embeddings using Compositional n-Gram Features arXiv.
 """
+
+
 from __future__ import division
+cimport cython
 import logging
+cimport numpy as np
 import numpy as np
-from numpy import dot
 from gensim import utils, matutils
 import sys
 from random import randint
@@ -42,13 +45,18 @@ from gensim.utils import SaveLoad, tokenize
 import time
 from types import GeneratorType
 import os
+from libc.math cimport log, exp
+
 
 logger = logging.getLogger(__name__)
 # Comment out the below statement to avoid printing info logs to console
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
 
 
-class Entry():
+class Entry:
     """
     Class for populating Sent2Vec's dictionary.
     """
@@ -74,13 +82,26 @@ class Entry():
         self.subwords = subwords
 
 
-class ModelDictionary():
+cdef class ModelDictionary:
     """
     Class for maintaining Sent2Vec's vocbulary. Provides functionality for storing and training
     word and character ngrams.
     """
+    
+    cdef int max_vocab_size
+    cdef int max_line_size
+    cdef list words
+    cdef list word2int
+    cdef list pdiscard
+    cdef int tokens
+    cdef int size
+    cdef double t
+    cdef int bucket
+    cdef int maxn
+    cdef int minn
+    cdef int ntokens
 
-    def __init__(self, t, bucket, minn, maxn, max_vocab_size=30000000, max_line_size=1024):
+    def __init__(self, double t, int bucket, int minn, int maxn, int max_vocab_size=30000000, int max_line_size=1024):
         """
         Initialize a sent2vec dictionary.
 
@@ -120,7 +141,7 @@ class ModelDictionary():
         self.maxn = maxn
         self.minn = minn
 
-    def hash_(self, word):
+    cdef int hash_(self, unicode word):
         """
         Compute hash of given word.
 
@@ -135,13 +156,13 @@ class ModelDictionary():
             Hash of the given word.
         """
 
-        h = 2166136261
+        cdef int h = 2166136261
         for i in range(len(word)):
             h = h ^ ord(word[i])
             h = h * 16777619
         return h
 
-    def find(self, word):
+    cdef find(self, unicode word):
         """
         Find hash of given word. The word may or may not be present in the vocabulary.
 
@@ -156,12 +177,12 @@ class ModelDictionary():
             Hash of the given word.
         """
 
-        h = self.hash_(word) % self.max_vocab_size
+        cdef int h = self.hash_(word) % self.max_vocab_size
         while self.word2int[h] != -1 and self.words[self.word2int[h]].word != word:
             h = (h + 1) % self.max_vocab_size
         return h
 
-    def add(self, word):
+    cdef add(self, unicode word):
         """
         Add given word to vocabulary.
 
@@ -171,7 +192,7 @@ class ModelDictionary():
             Actual vocabulary word.
         """
 
-        h = self.find(word)
+        cdef int h = self.find(word)
         self.ntokens += 1
         if self.word2int[h] == -1:
             e = Entry(word=word, count=1)
@@ -181,7 +202,7 @@ class ModelDictionary():
         else:
             self.words[self.word2int[h]].count += 1
 
-    def read(self, sentences, min_count):
+    cdef read(self, sentences, int min_count):
         """
         Process all words present in sentences (where each sentence is a list of unicode strings).
         Initialize discard table to downsample higher frequency words according to given sampling threshold.
@@ -199,7 +220,7 @@ class ModelDictionary():
             Value for thresholding lower frequency words.
         """
 
-        min_threshold = 1
+        cdef int min_threshold = 1
         for sentence in sentences:
             for word in sentence:
                 self.add(word)
@@ -217,7 +238,7 @@ class ModelDictionary():
             logger.error("Empty vocabulary. Try a smaller minCount value.")
             sys.exit()
 
-    def threshold(self, t):
+    cdef threshold(self, double t):
         """
         Remove words from vocabulary having count lower than t.
 
@@ -235,7 +256,7 @@ class ModelDictionary():
             self.word2int[h] = self.size
             self.size += 1
 
-    def init_table_discard(self):
+    cdef init_table_discard(self):
         """
         Downsampling higher frequency words. Initializing discard table according to
         given sampling threshold.
@@ -245,7 +266,7 @@ class ModelDictionary():
             f = self.words[i].count / self.ntokens
             self.pdiscard.append(((self.t / f)**(0.5)) + (self.t / f))
 
-    def init_ngrams(self):
+    cdef init_ngrams(self):
         """
         Initializing character ngrams for all words in the vocabulary.
         """
@@ -265,7 +286,7 @@ class ModelDictionary():
                         h = self.hash_(ngram) % self.bucket
                         self.words[i].subwords.append(self.size + h)
 
-    def add_ngrams_train(self, context, n, k):
+    cdef add_ngrams_train(self, list context, int n, int k):
         """
         Training word ngrams for a given context and target word.
 
@@ -287,10 +308,10 @@ class ModelDictionary():
             List of word and word ngram ids.
         """
 
-        line = list(context)
-        num_discarded = 0
-        line_size = len(line)
-        discard = [False] * line_size
+        cdef list line = list(context)
+        cdef int num_discarded = 0
+        cdef int line_size = len(line)
+        cdef list discard = [False] * line_size
         while num_discarded < k and line_size - num_discarded > 2:
             token_to_discard = randint(0, line_size - 1)
             if discard[token_to_discard] is False:
@@ -307,7 +328,7 @@ class ModelDictionary():
                 line.append(self.size + (h % self.bucket))
         return line
 
-    def add_ngrams(self, context, n):
+    cdef add_ngrams(self, list context, int n):
         """
         Computing word ngrams for given sentence while infering sentence vector.
         n is the number of word ngrams used.
@@ -326,8 +347,8 @@ class ModelDictionary():
             List of word and word ngram ids.
         """
 
-        line = list(context)
-        line_size = len(context)
+        cdef list line = list(context)
+        cdef int line_size = len(context)
         for i in range(line_size):
             h = line[i]
             for j in range(i + 1, line_size):
@@ -337,7 +358,7 @@ class ModelDictionary():
                 line.append(self.size + (h % self.bucket))
         return line
 
-    def get_line(self, sentence):
+    cdef get_line(self, sentence):
         """
         Converting sentence to a list of
         word ids inferred from the dictionary.
@@ -359,9 +380,9 @@ class ModelDictionary():
             List of word ids.
         """
 
-        hashes = []
-        words = []
-        ntokens = 0
+        cdef list hashes = []
+        cdef list words = []
+        cdef int ntokens = 0
         for word in sentence:
             h = self.find(word)
             wid = self.word2int[h]
@@ -376,16 +397,39 @@ class ModelDictionary():
         return ntokens, hashes, words
 
 
-class Sent2Vec(SaveLoad):
+cdef class Sent2VecUtils:
     """
     Class for training and using neural networks described in https://github.com/epfml/sent2vec
-
-    The model can be stored/loaded via its `save()` and `load()` methods.
     """
+    cdef np.ndarray hidden
+    cdef np.ndarray grad
+    cdef np.ndarray wi
+    cdef np.ndarray wo
+    cdef double loss
+    cdef double seed
+    cdef int negpos
+    cdef int nexamples
+    cdef int negative_table_size
+    cdef list negatives
+    cdef int vector_size
+    cdef double lr
+    cdef int lr_update_rate
+    cdef int epochs
+    cdef int min_count
+    cdef int neg
+    cdef int word_ngrams
+    cdef int bucket
+    cdef double t
+    cdef int minn
+    cdef int maxn
+    cdef int dropoutk
+    cdef int token_count
+    cdef str loss_type
+    cdef ModelDictionary dict
 
-    def __init__(self, sentences=None, vector_size=100, lr=0.2, lr_update_rate=100, epochs=5,
-            min_count=5, neg=10, word_ngrams=2, loss_type='ns', bucket=2000000, t=0.0001,
-            minn=3, maxn=6, dropoutk=2, seed=42):
+    def __init__(self, list sentences=None, int vector_size=100, double lr=0.2, int lr_update_rate=100, int epochs=5,
+            int min_count=5, int neg=10, int word_ngrams=2, str loss_type='ns', int bucket=2000000, double t=0.0001,
+            int minn=3, int maxn=6, int dropoutk=2, int seed=42):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -472,7 +516,7 @@ class Sent2Vec(SaveLoad):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.train(sentences)
 
-    def negative_sampling(self, target, lr):
+    cdef negative_sampling(self, int target, double lr):
         """
         Get loss using negative sampling.
 
@@ -490,7 +534,7 @@ class Sent2Vec(SaveLoad):
             Negative sampling loss.
         """
 
-        loss = 0.0
+        cdef double loss = 0.0
         self.grad = np.zeros(self.vector_size)
         for i in range(self.neg + 1):
             if i == 0:
@@ -499,7 +543,7 @@ class Sent2Vec(SaveLoad):
                 loss += self.binary_logistic(self.get_negative(target), False, lr)
         return loss
 
-    def sigmoid(self, val):
+    cdef sigmoid(self, double val):
         """
         Compute sigmoid of a particular value.
 
@@ -514,9 +558,9 @@ class Sent2Vec(SaveLoad):
             Sigmoid of given real number.
         """
 
-        return 1.0 / (1.0 + np.exp(-val))
+        return 1.0 / (1.0 + exp(-val))
 
-    def binary_logistic(self, target, label, lr):
+    cdef binary_logistic(self, int target, int label, double lr):
         """
         Compute loss for given target, label and learning rate using binary logistic regression.
 
@@ -537,16 +581,16 @@ class Sent2Vec(SaveLoad):
             Binary logistic regression loss.
         """
 
-        score = self.sigmoid(np.dot(self.wo[target], self.hidden))
-        alpha = lr * (float(label) - score)
-        self.grad += self.wo[target] * alpha
-        self.wo[target] += self.hidden * alpha
+        cdef double score = self.sigmoid(np.dot(self.wo[target], self.hidden))
+        cdef double alpha = lr * (float(label) - score)
+        self.grad = np.add(self.grad, np.multiply(self.wo[target], alpha))
+        self.wo[target] = np.add(self.wo[target], np.multiply(self.hidden, alpha))
         if label is True:
-            return -np.log(score)
+            return -log(score)
         else:
-            return -np.log(1.0 - score)
+            return -log(1.0 - score)
 
-    def init_table_negatives(self, counts):
+    cdef init_table_negatives(self, list counts):
         """
         Initialise table of negatives for negative sampling.
 
@@ -563,9 +607,9 @@ class Sent2Vec(SaveLoad):
             c = counts[i] ** 0.5
             for j in range(int(c * self.negative_table_size / z) + 1):
                 self.negatives.append(i)
-        np.random.shuffle(self.negatives)
+        self.random.shuffle(self.negatives)
 
-    def get_negative(self, target):
+    cdef get_negative(self, int target):
         """
         Get a negative from the list of negatives for caluculating nagtive sampling loss.
 
@@ -587,7 +631,7 @@ class Sent2Vec(SaveLoad):
                 break
         return negative
 
-    def update(self, input_, target, lr):
+    cdef update(self, list input_, int target, double lr):
         """
         Update model's neural weights for given context, target word and learning rate.
 
@@ -609,15 +653,15 @@ class Sent2Vec(SaveLoad):
             return
         self.hidden = np.zeros(self.vector_size)
         for i in input_:
-            self.hidden += self.wi[i]
-        self.hidden *= (1.0 / len(input_))
+            self.hidden = np.add(self.hidden, self.wi[i])
+        self.hidden = np.multiply(self.hidden, (1.0 / len(input_)))
         self.loss += self.negative_sampling(target, lr)
         self.nexamples += 1
-        self.grad *= (1.0 / len(input_))
+        self.grad = np.multiply(self.grad, (1.0 / len(input_)))
         for i in input_:
-            self.wi[i] += self.grad
+            self.wi[i] = np.add(self.wi[i], self.grad)
 
-    def train(self, sentences):
+    cdef train(self, sentences):
         """
         Update the model's neural weights from a sequence of sentences.
 
@@ -631,17 +675,17 @@ class Sent2Vec(SaveLoad):
 
         logger.info("Creating dictionary...")
         self.dict = ModelDictionary(t=self.t, bucket=self.bucket, maxn=self.maxn, minn=self.minn)
-        self.dict.read(sentences=sentences, min_count=self.min_count)
+        self.dict.read(sentences, self.min_count)
         logger.info("Dictionary created, dictionary size: %i, tokens read: %i", self.dict.size, self.dict.ntokens)
         self.token_count = 0
-        counts = [entry.count for entry in self.dict.words]
-        self.wi = np.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1), (self.dict.size + self.bucket, self.vector_size))
+        cdef list counts = [entry.count for entry in self.dict.words]
+        self.wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1), (self.dict.size + self.bucket, self.vector_size))
         self.wo = np.zeros((self.dict.size, self.vector_size))
-        self.init_table_negatives(counts=counts)
-        ntokens = self.dict.ntokens
-        local_token_count = 0
+        self.init_table_negatives(counts)
+        cdef int ntokens = self.dict.ntokens
+        cdef int local_token_count = 0
         logger.info("Training...")
-        progress = 0
+        cdef double progress = 0
         start_time = time.time()
         for i in range(self.epochs):
             logger.info("Begin epoch %i :", i)
@@ -654,12 +698,12 @@ class Sent2Vec(SaveLoad):
                 local_token_count += ntokens_temp
                 if len(words) > 1:
                     for i in range(len(words)):
-                        if np.random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
+                        if self.random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
                             continue
                         context = list(words)
                         context[i] = 0
-                        context = self.dict.add_ngrams_train(context=context, n=self.word_ngrams, k=self.dropoutk)
-                        self.update(input_=context, target=words[i], lr=lr)
+                        context = self.dict.add_ngrams_train(context, self.word_ngrams, self.dropoutk)
+                        self.update(context, words[i], lr)
                 if local_token_count > self.lr_update_rate:
                     self.token_count += local_token_count
                     local_token_count = 0
@@ -707,7 +751,7 @@ class Sent2Vec(SaveLoad):
             Cosine similarity score between two sentence vectors.
         """
 
-        return dot(matutils.unitvec(self.sentence_vectors(sent1)), matutils.unitvec(self.sentence_vectors(sent2)))
+        return np.dot(matutils.unitvec(self.sentence_vectors(sent1)), matutils.unitvec(self.sentence_vectors(sent2)))
 
 
 class TorontoCorpus():
@@ -733,3 +777,18 @@ class TorontoCorpus():
                 if not sentence:  # don't bother sending out empty sentences
                     continue
                 yield sentence
+
+
+class Sent2Vec(SaveLoad, Sent2VecUtils):
+    """
+    Class for training and using neural networks described in https://github.com/epfml/sent2vec
+
+    The model can be stored/loaded via its `save()` and `load()` methods.
+    """
+
+    def __init__(self, sentences=None, vector_size=100, lr=0.2, lr_update_rate=100, epochs=5,
+            min_count=5, neg=10, word_ngrams=2, loss_type='ns', bucket=2000000, t=0.0001,
+            minn=3, maxn=6, dropoutk=2, seed=42):
+        super(Sent2Vec, self).__init__(sentences=sentences, vector_size=vector_size, lr=lr, lr_update_rate=lr_update_rate, epochs=epochs,
+            min_count=min_count, neg=neg, word_ngrams=word_ngrams, loss_type=loss_type, bucket=bucket, t=t,
+            minn=minn, maxn=maxn, dropoutk=dropoutk, seed=seed)
