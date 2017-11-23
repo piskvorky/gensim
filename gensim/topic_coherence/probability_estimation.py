@@ -27,7 +27,7 @@ def p_boolean_document(corpus, segmented_topics):
     ----------
     corpus : list
         The corpus of documents.
-    segmented_topics : list of lists
+    segmented_topics : list of tuples of (word_id_set1, word_id_set2)
         Output from the segmentation of topics. Could be simply topics too.
 
     Returns
@@ -59,21 +59,47 @@ def p_boolean_document(corpus, segmented_topics):
 
 
 def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, processes=1):
-    """This function performs the boolean sliding window probability estimation.
+    """Perform the boolean sliding window probability estimation.
     Boolean sliding window determines word counts using a sliding window. The window
     moves over  the documents one word token per step. Each step defines a new virtual
     document  by copying the window content. Boolean document is applied to these virtual
     documents to compute word probabilities.
 
-    Args:
-        texts : List of string sentences.
-        segmented_topics : Output from the segmentation of topics. Could be simply topics too.
-        dictionary : Gensim dictionary mapping of the tokens and ids.
-        window_size : Size of the sliding window. 110 found out to be the ideal size for large corpora.
+    Parameters
+    ----------
+    texts : List of strings.
+    segmented_topics : list of tuples of (word_id_set1, word_id_set2)
+        Output from the segmentation of topics. Could be simply topics too.
+    dictionary :
+        Gensim dictionary mapping of the tokens and ids.
+    window_size :
+        Size of the sliding window. 110 found out to be the ideal size for large corpora.
 
-    Returns:
-        accumulator : word occurrence accumulator instance that can be used to lookup token
-            frequencies and co-occurrence frequencies.
+    Returns
+    -------
+    accumulator
+        word occurrence accumulator instance that can be used to lookup token frequencies and co-occurrence frequencies.
+
+    Examples
+    ---------
+    >>> from gensim.topic_coherence import probability_estimation
+    >>> from gensim.corpora.hashdictionary import HashDictionary
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>> texts = [['human', 'interface', 'computer'],['eps', 'user', 'interface', 'system'],
+    >>> ['system', 'human', 'system', 'eps'],['user', 'response', 'time'],['trees'],['graph', 'trees']]
+    >>> dictionary = HashDictionary(texts)
+    >>> token2id = dictionary.token2id
+    >>> computer_id = token2id['computer']
+    >>> system_id = token2id['system']
+    >>> user_id = token2id['user']
+    >>> graph_id = token2id['graph']
+    >>> segmented_topics = [[(system_id, graph_id),(computer_id, graph_id),(computer_id, system_id)], [
+    >>> (computer_id, graph_id),(user_id, graph_id),(user_id, computer_id)]]
+    >>> corpus = [dictionary.doc2bow(text) for text in texts]
+    >>> accumulator = probability_estimation.p_boolean_sliding_window(texts, segmented_topics, dictionary, 2)
+    >>> print accumulator[computer_id], accumulator[user_id], accumulator[graph_id], accumulator[system_id]
+    1 3 1 4
+
     """
     top_ids = unique_ids_from_segments(segmented_topics)
     if processes <= 1:
@@ -86,9 +112,25 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
 
 def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=1, model=None):
     """Train word2vec model on `texts` if model is not None.
-    Returns:
-    ----
-    accumulator: text accumulator with trained context vectors.
+
+    Parameters
+    ----------
+    texts : List of strings.
+    segmented_topics : list of tuples of (word_id_set1, word_id_set2)
+        Output from the segmentation of topics. Could be simply topics too.
+    dictionary :
+        Gensim dictionary mapping of the tokens and ids.
+    window_size :
+        Size of the sliding window.
+    processes:
+        no idea
+    model:
+        no idea
+
+    Returns
+    -------
+    accumulator
+        Text accumulator with trained context vectors.
     """
     top_ids = unique_ids_from_segments(segmented_topics)
     accumulator = WordVectorsAccumulator(
@@ -99,12 +141,17 @@ def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=
 def unique_ids_from_segments(segmented_topics):
     """Return the set of all unique ids in a list of segmented topics.
 
-    Args:
-        segmented_topics: list of tuples of (word_id_set1, word_id_set2). Each word_id_set
-            is either a single integer, or a `numpy.ndarray` of integers.
-    Returns:
-        unique_ids : set of unique ids across all topic segments.
+    Parameters
+    ----------
+    segmented_topics: list of tuples of (word_id_set1, word_id_set2).
+        Each word_id_setis either a single integer, or a `numpy.ndarray` of integers.
+
+    Returns
+    -------
+    set
+        Set of unique ids across all topic segments.
     """
+
     unique_ids = set()  # is a set of all the unique ids contained in topics.
     for s_i in segmented_topics:
         for word_id in itertools.chain.from_iterable(s_i):

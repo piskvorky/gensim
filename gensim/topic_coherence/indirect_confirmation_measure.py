@@ -111,9 +111,7 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
     return topic_coherences
 
 
-def cosine_similarity(
-        segmented_topics, accumulator, topics, measure='nlr', gamma=1,
-        with_std=False, with_support=False):
+def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamma=1,with_std=False, with_support=False):
     r"""Calculate the indirect cosine measure.
 
     Given context vectors :math:`u = V(W') and w = V(W*)` for the
@@ -139,7 +137,7 @@ def cosine_similarity(
     measure : str
         Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
     gamma:
-        Gamma value for computing W', W* vectors; default is 1.
+        Gamma value for computing W', W* vectors.
     with_std : bool
         True to also include standard deviation across topic segment sets in addition to the mean coherence
         for each topic; default is False.
