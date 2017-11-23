@@ -23,16 +23,16 @@ def mz_keywords(text,blocksize=1024,scores=False,split=False,weighted=True,thres
                                            nblocks/(nblocks+1.0)
                                            Use 'auto' with weighted=False)"""
     text=to_unicode(text)
-    words=_tokenize_by_word(text)
+    words=[word for word in _tokenize_by_word(text)]
     vocab=sorted(set(words))
     wordcounts=numpy.array([[words[i:i+blocksize].count(word) for word in vocab]
-                            for i in range(0,len(words),blocksize)])
+                            for i in range(0,len(words),blocksize)]).astype('d')
     nblocks=wordcounts.shape[0]
     totals=wordcounts.sum(axis=0)
     nwords=totals.sum()
     p=wordcounts/totals
-    logp=numpy.nan_to_num(numpy.log2(p),0.0)
-    H=logp.sum(axis=0)
+    logp=numpy.log2(p)
+    H=numpy.nan_to_num((p*logp),0.0).sum(axis=0)
     
     def log_combinations(n,m):
         """Calculates the logarithm of n!/m!(n-m)!"""
@@ -49,14 +49,13 @@ def mz_keywords(text,blocksize=1024,scores=False,split=False,weighted=True,thres
         
     def analytic_entropy(n):
         """Predicted entropy for a word that occurs n times in the document"""
-        m=numpy.arange(1,min(blocksize,n)+1)
+        m=numpy.arange(1,min(blocksize,n)+1).astype('d')
         p=m/n
-        elements=p*numpy.nan_to_num(numpy.log2(p))*marginal(n,m)
+        elements=p*numpy.nan_to_num(numpy.log2(p),0.0)*marginal(n,m)
         return -nblocks*elements.sum()
     
     analytic=numpy.frompyfunc(analytic_entropy,1,1)
-    
-    H+=analytic(totals)
+    H+=analytic(totals).astype('d')
     if weighted:
         H*=totals/nwords
     if threshold=='auto':
