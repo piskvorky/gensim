@@ -74,14 +74,14 @@ class CorpusABC(utils.SaveLoad):
 #        return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
 
     @staticmethod
-    def __save_corpus(fname, corpus, id2word=None, metadata=False):
+    def save_corpus(fname, corpus, id2word=None, metadata=False):
         """
         Save an existing `corpus` to disk.
 
         Some formats also support saving the dictionary (`feature_id->word` mapping),
         which can in this case be provided by the optional `id2word` parameter.
 
-        >>> MmCorpus.__save_corpus('file.mm', corpus)
+        >>> MmCorpus.save_corpus('file.mm', corpus)
 
         Some corpora also support an index of where each document begins, so
         that the documents on disk can be accessed in O(1) time (see the
@@ -102,10 +102,6 @@ class CorpusABC(utils.SaveLoad):
             for doc in corpus:  # iterate over the document stream
                 fmt = str(doc)  # format the document appropriately...
                 fout.write(utils.to_utf8("%s\n" % fmt))  # serialize the formatted document to disk
-
-    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None,
-                  metadata=False):
-        pass
 
 
 class TransformedCorpus(CorpusABC):
