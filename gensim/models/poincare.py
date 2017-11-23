@@ -98,7 +98,7 @@ class PoincareModel(utils.SaveLoad):
         epsilon : float, optional
             Constant used for clipping embeddings below a norm of one.
         regularization_coeff : float, optional
-            Coefficient used for l2-regularization while training.
+            Coefficient used for l2-regularization while training (0 effectively disables regularization).
         burn_in : int, optional
             Number of epochs to use for burn-in initialization (0 means no burn-in).
         burn_in_alpha : float, optional
