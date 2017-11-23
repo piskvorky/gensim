@@ -15,7 +15,6 @@ import logging
 
 from collections import Counter
 import numpy as np
-import plotly.plotly as py
 import plotly.graph_objs as go
 
 from gensim.models.poincare import PoincareKeyedVectors
@@ -77,7 +76,7 @@ def poincare_2d_visualization(model, tree, figure_title, num_nodes=50, show_node
 
     node_out_degrees = Counter(hypernym_pair[1] for hypernym_pair in tree)
     if num_nodes is None:
-        chosen_nodes = list(node_out_dxegrees.keys())
+        chosen_nodes = list(node_out_degrees.keys())
     else:
         chosen_nodes = list(sorted(node_out_degrees.keys(), key=lambda k: -node_out_degrees[k]))[:num_nodes]
 

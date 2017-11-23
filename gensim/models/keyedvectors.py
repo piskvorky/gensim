@@ -759,7 +759,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         norm = np.linalg.norm(vector_1)
         all_norms = np.linalg.norm(vectors_all, axis=1)
         dot_products = dot(vectors_all, vector_1)
-        similarities = dot_products  / (norm * all_norms)
+        similarities = dot_products / (norm * all_norms)
         return similarities
 
     def distances(self, word_or_vector, other_words=()):
@@ -1058,5 +1058,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         )
         return layer
 
+
 # For backward compatibility
 KeyedVectors = EuclideanKeyedVectors
+

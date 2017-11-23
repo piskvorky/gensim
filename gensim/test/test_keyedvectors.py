@@ -10,7 +10,6 @@ Automated tests for checking the poincare module from the models package.
 """
 
 import logging
-import os
 import unittest
 
 import numpy as np
