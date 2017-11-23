@@ -148,7 +148,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         token2id = self.token2id
         if allow_update or return_missing:
-            missing = sorted((x for x in iteritems(counter) if x[0] not in token2id), key=lambda x: x[0])
+            missing = sorted(x for x in iteritems(counter) if x[0] not in token2id)
             if allow_update:
                 for w, _ in missing:
                     # new id = number of ids made so far;
