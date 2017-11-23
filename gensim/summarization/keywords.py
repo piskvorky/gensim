@@ -3,6 +3,45 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+"""This module contains functions to find keywords of the text and building
+graph on tokens from text.
+
+
+Examples
+--------
+>>> from gensim.summarization import keywords
+>>> text="Challenges in natural language processing frequently involve \
+>>> speech recognition, natural language understanding, natural language \
+>>> generation (frequently from formal, machine-readable logical forms), \
+>>> connecting language and machine perception, dialog systems, or some \
+>>> combination thereof."
+>>> print(gensim.summarization.keywords(text))
+natural language
+machine
+frequently
+
+
+>>> from gensim.summarization.keywords import get_graph
+>>> text = "Fly me to the moon \
+>>> Let me play among the stars \
+>>> Let me see what spring is like \
+>>> On a, Jupiter and Mars"
+>>> g = get_graph(text)
+>>> print(g.nodes())
+['fly', 'moon', 'let', 'plai', 'star', 'spring', 'like', 'jupit', 'mar']
+>>> print(g.neighbors("let"))
+['moon', 'star']
+
+
+
+Data:
+-----
+.. data:: WINDOW_SIZE - Size of window, number of consequtive tokens in processing.
+.. data:: INCLUDING_FILTER - including part of speech filters.
+.. data:: EXCLUDING_FILTER - excluding part of speech filters.
+
+"""
+
 from gensim.summarization.pagerank_weighted import pagerank_weighted as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_word as _clean_text_by_word
 from gensim.summarization.textcleaner import tokenize_by_word as _tokenize_by_word
@@ -466,19 +505,6 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
     Returns
     -------
     str or list of str or list of (tuple of str)
-        
-    Example
-    -------
-    >>> from gensim.summarization import keywords
-    >>> text="Challenges in natural language processing frequently involve \
-    >>> speech recognition, natural language understanding, natural language \
-    >>> generation (frequently from formal, machine-readable logical forms), \
-    >>> connecting language and machine perception, dialog systems, or some \
-    >>> combination thereof."
-    >>> print(gensim.summarization.keywords(text))
-    natural language
-    machine
-    frequently
 
     """
 
@@ -529,20 +555,6 @@ def get_graph(text):
     -------
     Graph
         Created graph.
-
-
-    Example
-    -------
-    >>> from gensim.summarization.keywords import get_graph
-    >>> text = "Fly me to the moon \
-    >>> Let me play among the stars \
-    >>> Let me see what spring is like \
-    >>> On a, Jupiter and Mars"
-    >>> g = get_graph(text)
-    >>> print(g.nodes())
-    ['fly', 'moon', 'let', 'plai', 'star', 'spring', 'like', 'jupit', 'mar']
-    >>> print(g.neighbors("let"))
-    ['moon', 'star']
 
     """
     tokens = _clean_text_by_word(text)

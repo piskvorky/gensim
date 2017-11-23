@@ -2,6 +2,18 @@
 # -*- coding: utf-8 -*-
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
+"""
+
+
+Examples
+--------
+
+
+
+"""
+
+
 import numpy
 from numpy import empty as empty_matrix
 from scipy.linalg import eig
@@ -60,6 +72,8 @@ def build_probability_matrix(graph):
 
 
 def principal_eigenvector(a):
+
+
     # Note that we prefer to use `eigs` even for dense matrix
     # because we need only one eigenvector. See #441, #438 for discussion.
 
@@ -74,6 +88,21 @@ def principal_eigenvector(a):
 
 
 def process_results(graph, vec):
+    """Returns `graph` nodes and corresponding modules of provided eigenvectors.
+
+    Parameters
+    ----------
+    graph : Graph
+        .
+    vec : array??
+        .
+
+    Returns
+    -------
+    dict
+        Nodes of graph and adfs
+
+    """
     scores = {}
     for i, node in enumerate(graph.nodes()):
         scores[node] = abs(vec[i])

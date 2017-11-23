@@ -7,8 +7,8 @@
 corpus and helper class `BM25` used in calculations.
 
 
-Example:
---------
+Example
+-------
 >>> import numpy as np
 >>> from gensim.summarization.bm25 import get_bm25_weights
 >>> corpus = [
