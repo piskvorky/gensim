@@ -16,8 +16,12 @@ def mz_keywords(text,blocksize=1024,scores=False,split=False,weighted=True,thres
        :param blocksize: int (size of blocks to use in analysis)
        :params scores: bool (return score with keywords)
        :params split: bool (return results as list)
-       :params weighted: bool (weight scores by word frequency)
-       :params threshold: float or 'auto' (minimum score for returned keywords)"""
+       :params weighted: bool (weight scores by word frequency. 
+                               False is useful for shorter texts)
+       :params threshold: float or 'auto' (minimum score for returned keywords
+                                           'auto' calculates the threshold as 
+                                           nblocks/(nblocks+1.0)
+                                           Use 'auto' with weighted=False)"""
     text=to_unicode(text)
     words=_tokenize_by_word(text)
     vocab=sorted(set(words))
