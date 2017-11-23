@@ -74,14 +74,14 @@ class CorpusABC(utils.SaveLoad):
 #        return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
 
     @staticmethod
-    def _save_corpus(fname, corpus, id2word=None, metadata=False):
+    def __save_corpus(fname, corpus, id2word=None, metadata=False):
         """
         Save an existing `corpus` to disk.
 
         Some formats also support saving the dictionary (`feature_id->word` mapping),
         which can in this case be provided by the optional `id2word` parameter.
 
-        >>> MmCorpus._save_corpus('file.mm', corpus)
+        >>> MmCorpus.__save_corpus('file.mm', corpus)
 
         Some corpora also support an index of where each document begins, so
         that the documents on disk can be accessed in O(1) time (see the
