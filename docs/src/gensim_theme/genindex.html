@@ -4,7 +4,7 @@
 
     Template for an "all-in-one" index.
 
-    :copyright: Copyright 2007-2011 by the Sphinx team, see AUTHORS.
+    :copyright: Copyright 2007-2016 by the Sphinx team, see AUTHORS.
     :license: BSD, see LICENSE for details.
 #}
 {% macro indexentries(firstname, links) %}
@@ -29,7 +29,7 @@
 {% endmacro %}
 
 {% extends "layout.html" %}
-{% set title = _('Index') %}
+{% set title = _('Index') %}	
 {% block body %}
 
 <h1 id="index">{{ _('Index') }}</h1>
@@ -45,8 +45,8 @@
 <h2 id="{{ key }}">{{ key }}</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   {%- for column in entries|slice(2) if column %}
-  <td style="width: 33%" valign="top"><dl>
-    {%- for entryname, (links, subitems) in column %}
+  <td style="width: 33%" vertical-align="top"><dl>
+    {%- for entryname, (links, subitems, _) in column %}
       {{ indexentries(entryname, links) }}
       {%- if subitems %}
       <dd><dl>

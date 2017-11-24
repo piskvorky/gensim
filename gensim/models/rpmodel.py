@@ -6,10 +6,8 @@
 
 
 import logging
-import itertools
 
-import numpy
-import scipy
+import numpy as np
 
 from gensim import interfaces, matutils, utils
 
@@ -36,6 +34,7 @@ class RpModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
+
     def __init__(self, corpus, id2word=None, num_topics=300):
         """
         `id2word` is a mapping from word ids (integers) to words (strings). It is
@@ -47,10 +46,8 @@ class RpModel(interfaces.TransformationABC):
         if corpus is not None:
             self.initialize(corpus)
 
-
     def __str__(self):
         return "RpModel(num_terms=%s, num_topics=%s)" % (self.num_terms, self.num_topics)
-
 
     def initialize(self, corpus):
         """
@@ -64,13 +61,16 @@ class RpModel(interfaces.TransformationABC):
             self.num_terms = 1 + max([-1] + self.id2word.keys())
 
         shape = self.num_topics, self.num_terms
-        logger.info("constructing %s random matrix" % str(shape))
+        logger.info("constructing %s random matrix", str(shape))
         # Now construct the projection matrix itself.
         # Here i use a particular form, derived in "Achlioptas: Database-friendly random projection",
         # and his (1) scenario of Theorem 1.1 in particular (all entries are +1/-1).
-        randmat = 1 - 2 * numpy.random.binomial(1, 0.5, shape) # convert from 0/1 to +1/-1
-        self.projection = numpy.asfortranarray(randmat, dtype=numpy.float32) # convert from int32 to floats, for faster multiplications
-
+        randmat = 1 - 2 * np.random.binomial(1, 0.5, shape)  # convert from 0/1 to +1/-1
+        # convert from int32 to floats, for faster multiplications
+        self.projection = np.asfortranarray(randmat, dtype=np.float32)
+        # TODO: check whether the Fortran-order shenanigans still make sense. In the original
+        # code (~2010), this made a BIG difference for np BLAS implementations; perhaps now the wrappers
+        # are smarter and this is no longer needed?
 
     def __getitem__(self, bow):
         """
@@ -81,19 +81,20 @@ class RpModel(interfaces.TransformationABC):
         if is_corpus:
             return self._apply(bow)
 
-        vec = matutils.sparse2full(bow, self.num_terms).reshape(self.num_terms, 1) / numpy.sqrt(self.num_topics)
-        vec = numpy.asfortranarray(vec, dtype=numpy.float32)
-        topic_dist = numpy.dot(self.projection, vec) # (k, d) * (d, 1) = (k, 1)
-        return [(topicid, float(topicvalue)) for topicid, topicvalue in enumerate(topic_dist.flat)
-                if numpy.isfinite(topicvalue) and not numpy.allclose(topicvalue, 0.0)]
+        if getattr(self, 'freshly_loaded', False):
+            # This is a hack to work around a bug in np, where a FORTRAN-order array
+            # unpickled from disk segfaults on using it.
+            self.freshly_loaded = False
+            self.projection = self.projection.copy('F')  # simply making a fresh copy fixes the broken array
 
+        vec = matutils.sparse2full(bow, self.num_terms).reshape(self.num_terms, 1) / np.sqrt(self.num_topics)
+        vec = np.asfortranarray(vec, dtype=np.float32)
+        topic_dist = np.dot(self.projection, vec)  # (k, d) * (d, 1) = (k, 1)
+        return [
+            (topicid, float(topicvalue)) for topicid, topicvalue in enumerate(topic_dist.flat)
+            if np.isfinite(topicvalue) and not np.allclose(topicvalue, 0.0)
+        ]
 
     def __setstate__(self, state):
-        """
-        This is a hack to work around a bug in numpy, where a FORTRAN-order array
-        unpickled from disk segfaults on using it.
-        """
         self.__dict__ = state
-        if self.projection is not None:
-            self.projection = self.projection.copy('F') # simply making a fresh copy fixes the broken array
-#endclass RpModel
+        self.freshly_loaded = True

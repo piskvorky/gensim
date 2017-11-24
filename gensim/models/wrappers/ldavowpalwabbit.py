@@ -53,21 +53,22 @@ logging to view this.
 .. [2] http://www.cs.princeton.edu/~mdhoffma/
 """
 
-from __future__ import unicode_literals
-from __future__ import print_function
 from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
-import os
 import logging
-import tempfile
+import os
 import shutil
 import subprocess
+import tempfile
 
 import numpy
 
 from gensim import utils, matutils
+from gensim.models.ldamodel import LdaModel
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class LdaVowpalWabbit(utils.SaveLoad):
@@ -75,6 +76,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
     between Vowpal Wabbit and Python takes place by passing around data files
     on disk and calling the 'vw' binary with the subprocess module.
     """
+
     def __init__(self, vw_path, corpus=None, num_topics=100, id2word=None,
                  chunksize=256, passes=1, alpha=0.1, eta=0.1, decay=0.5,
                  offset=1, gamma_threshold=0.001, random_seed=None,
@@ -138,11 +140,10 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         if self.id2word is None:
             if corpus is None:
-                raise ValueError('at least one of corpus/id2word must be '
-                                 'specified, to establish input space '
-                                 'dimensionality')
-            LOG.warning('no word id mapping provided; initializing from '
-                        'corpus, assuming identity')
+                raise ValueError(
+                    "at least one of corpus/id2word must be specified, to establish input space dimensionality"
+                )
+            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         elif len(self.id2word) > 0:
@@ -151,8 +152,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
             self.num_terms = 0
 
         if self.num_terms == 0:
-            raise ValueError('cannot compute LDA over an empty collection '
-                             '(no terms)')
+            raise ValueError("cannot compute LDA over an empty collection (no terms)")
 
         # LDA parameters
         self.num_topics = num_topics
@@ -184,7 +184,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
     def train(self, corpus):
         """Clear any existing model state, and train on given corpus."""
-        LOG.debug('Training new model from corpus')
+        logger.debug('Training new model from corpus')
 
         # reset any existing offset, model, or topics generated
         self.offset = self._initial_offset
@@ -196,7 +196,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         _run_vw_command(cmd)
 
-        # ensure that future updates of this model use correct offset
+        # ensure that future updates of this model use correct offset
         self.offset += corpus_size
 
     def update(self, corpus):
@@ -204,7 +204,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         if not os.path.exists(self._model_filename):
             return self.train(corpus)
 
-        LOG.debug('Updating exiting model from corpus')
+        logger.debug('Updating exiting model from corpus')
 
         # reset any existing topics generated
         self._topics = None
@@ -215,7 +215,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         _run_vw_command(cmd)
 
-        # ensure that future updates of this model use correct offset
+        # ensure that future updates of this model use correct offset
         self.offset += corpus_size
 
     def log_perplexity(self, chunk):
@@ -226,13 +226,20 @@ class LdaVowpalWabbit(utils.SaveLoad):
         vw_data = self._predict(chunk)[1]
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         bound = -vw_data['average_loss']
-        LOG.info("%.3f per-word bound, %.1f perplexity estimate based on a "
-                 "held-out corpus of %i documents with %i words",
-                 bound,
-                 numpy.exp2(-bound),
-                 vw_data['corpus_size'],
-                 corpus_words)
+        logger.info(
+            "%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words",
+            bound, numpy.exp2(-bound), vw_data['corpus_size'], corpus_words
+        )
         return bound
+
+    def get_topics(self):
+        """
+        Returns:
+            np.ndarray: `num_topics` x `vocabulary_size` array of floats which represents
+            the term topic matrix learned during inference.
+        """
+        topics = self._get_topics()
+        return topics / topics.sum(axis=1)[:, None]
 
     def print_topics(self, num_topics=10, num_words=10):
         return self.show_topics(num_topics, num_words, log=True)
@@ -256,7 +263,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
             shown.append(topic)
 
             if log:
-                LOG.info("topic #%i (%.3f): %s", i, self.alpha, topic)
+                logger.info("topic #%i (%.3f): %s", i, self.alpha, topic)
 
         return shown
 
@@ -276,12 +283,12 @@ class LdaVowpalWabbit(utils.SaveLoad):
             # Vowpal Wabbit uses its own binary model file, read this into
             # variable before serialising this object - keeps all data
             # self contained within a single serialised file
-            LOG.debug("Reading model bytes from '%s'", self._model_filename)
+            logger.debug("Reading model bytes from '%s'", self._model_filename)
             with utils.smart_open(self._model_filename, 'rb') as fhandle:
                 self._model_data = fhandle.read()
 
         if os.path.exists(self._topics_filename):
-            LOG.debug("Reading topic bytes from '%s'", self._topics_filename)
+            logger.debug("Reading topic bytes from '%s'", self._topics_filename)
             with utils.smart_open(self._topics_filename, 'rb') as fhandle:
                 self._topics_data = fhandle.read()
 
@@ -299,13 +306,13 @@ class LdaVowpalWabbit(utils.SaveLoad):
         if lda_vw._model_data:
             # Vowpal Wabbit operates on its own binary model file - deserialise
             # to file at load time, making it immediately ready for use
-            LOG.debug("Writing model bytes to '%s'", lda_vw._model_filename)
+            logger.debug("Writing model bytes to '%s'", lda_vw._model_filename)
             with utils.smart_open(lda_vw._model_filename, 'wb') as fhandle:
                 fhandle.write(lda_vw._model_data)
-            lda_vw._model_data = None # no need to keep in memory after this
+            lda_vw._model_data = None  # no need to keep in memory after this
 
         if lda_vw._topics_data:
-            LOG.debug("Writing topic bytes to '%s'", lda_vw._topics_filename)
+            logger.debug("Writing topic bytes to '%s'", lda_vw._topics_filename)
             with utils.smart_open(lda_vw._topics_filename, 'wb') as fhandle:
                 fhandle.write(lda_vw._topics_data)
             lda_vw._topics_data = None
@@ -315,23 +322,25 @@ class LdaVowpalWabbit(utils.SaveLoad):
     def __del__(self):
         """Cleanup the temporary directory used by this wrapper."""
         if self.cleanup_files and self.tmp_dir:
-            LOG.debug("Recursively deleting: %s", self.tmp_dir)
+            logger.debug("Recursively deleting: %s", self.tmp_dir)
             shutil.rmtree(self.tmp_dir)
 
     def _init_temp_dir(self, prefix='tmp'):
         """Create a working temporary directory with given prefix."""
         self.tmp_dir = tempfile.mkdtemp(prefix=prefix)
-        LOG.info('using %s as temp dir', self.tmp_dir)
+        logger.info('using %s as temp dir', self.tmp_dir)
 
     def _get_vw_predict_command(self, corpus_size):
         """Get list of command line arguments for running prediction."""
-        cmd = [self.vw_path,
-               '--testonly', # don't update model with this data
-               '--lda_D', str(corpus_size),
-               '-i', self._model_filename, # load existing binary model
-               '-d', self._corpus_filename,
-               '--learning_rate', '0', # possibly not needed, but harmless
-               '-p', self._predict_filename]
+        cmd = [
+            self.vw_path,
+            '--testonly',  # don't update model with this data
+            '--lda_D', str(corpus_size),
+            '-i', self._model_filename,  # load existing binary model
+            '-d', self._corpus_filename,
+            '--learning_rate', '0',  # possibly not needed, but harmless
+            '-p', self._predict_filename
+        ]
 
         if self.random_seed is not None:
             cmd.extend(['--random_seed', str(self.random_seed)])
@@ -344,27 +353,31 @@ class LdaVowpalWabbit(utils.SaveLoad):
         If 'update' is set to True, this specifies that we're further training
         an existing model.
         """
-        cmd = [self.vw_path,
-               '-d', self._corpus_filename,
-               '--power_t', str(self.decay),
-               '--initial_t', str(self.offset),
-               '--minibatch', str(self.chunksize),
-               '--lda_D', str(corpus_size),
-               '--passes', str(self.passes),
-               '--cache_file', self._cache_filename,
-               '--lda_epsilon', str(self.gamma_threshold),
-               '--readable_model', self._topics_filename,
-               '-k', # clear cache
-               '-f', self._model_filename]
+        cmd = [
+            self.vw_path,
+            '-d', self._corpus_filename,
+            '--power_t', str(self.decay),
+            '--initial_t', str(self.offset),
+            '--minibatch', str(self.chunksize),
+            '--lda_D', str(corpus_size),
+            '--passes', str(self.passes),
+            '--cache_file', self._cache_filename,
+            '--lda_epsilon', str(self.gamma_threshold),
+            '--readable_model', self._topics_filename,
+            '-k',  # clear cache
+            '-f', self._model_filename
+        ]
 
         if update:
             cmd.extend(['-i', self._model_filename])
         else:
             # these params are read from model file if updating
-            cmd.extend(['--lda', str(self.num_topics),
-                        '-b', str(_bit_length(self.num_terms)),
-                        '--lda_alpha', str(self.alpha),
-                        '--lda_rho', str(self.eta)])
+            cmd.extend([
+                '--lda', str(self.num_topics),
+                '-b', str(_bit_length(self.num_terms)),
+                '--lda_alpha', str(self.alpha),
+                '--lda_rho', str(self.eta)
+            ])
 
         if self.random_seed is not None:
             cmd.extend(['--random_seed', str(self.random_seed)])
@@ -382,8 +395,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         of:
         <word_id> <topic_1_gamma> <topic_2_gamma> ...
         """
-        topics = numpy.zeros((self.num_topics, self.num_terms),
-                             dtype=numpy.float32)
+        topics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
 
         with utils.smart_open(self._topics_filename) as topics_file:
             found_data = False
@@ -426,8 +438,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         vw_data = _parse_vw_output(_run_vw_command(cmd))
         vw_data['corpus_size'] = corpus_size
 
-        predictions = numpy.zeros((corpus_size, self.num_topics),
-                                  dtype=numpy.float32)
+        predictions = numpy.zeros((corpus_size, self.num_topics), dtype=numpy.float32)
 
         with utils.smart_open(self._predict_filename) as fhandle:
             for i, line in enumerate(fhandle):
@@ -497,9 +508,9 @@ def corpus_to_vw(corpus):
     character.
 
     E.g.:
-    | 4:7 14:1 22:8 6:3
-    | 14:22 22:4 0:1 1:3
-    | 7:2 8:2
+        | 4:7 14:1 22:8 6:3
+        | 14:22 22:4 0:1 1:3
+        | 7:2 8:2
     """
     for entries in corpus:
         line = ['|']
@@ -513,7 +524,7 @@ def write_corpus_as_vw(corpus, filename):
 
     Returns the number of lines written.
     """
-    LOG.debug("Writing corpus to: %s", filename)
+    logger.debug("Writing corpus to: %s", filename)
 
     corpus_size = 0
     with utils.smart_open(filename, 'wb') as corpus_file:
@@ -541,16 +552,14 @@ def _parse_vw_output(text):
 
 def _run_vw_command(cmd):
     """Execute given Vowpal Wabbit command, log stdout and stderr."""
-    LOG.info("Running Vowpal Wabbit command: %s", ' '.join(cmd))
+    logger.info("Running Vowpal Wabbit command: %s", ' '.join(cmd))
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
     output = proc.communicate()[0].decode('utf-8')
-    LOG.debug("Vowpal Wabbit output: %s", output)
+    logger.debug("Vowpal Wabbit output: %s", output)
 
     if proc.returncode != 0:
-        raise subprocess.CalledProcessError(proc.returncode,
-                                            ' '.join(cmd),
-                                            output=output)
+        raise subprocess.CalledProcessError(proc.returncode, ' '.join(cmd), output=output)
 
     return output
 
@@ -559,3 +568,26 @@ def _run_vw_command(cmd):
 def _bit_length(num):
     """Return number of bits needed to encode given number."""
     return len(bin(num).lstrip('-0b'))
+
+
+def vwmodel2ldamodel(vw_model, iterations=50):
+    """
+    Function to convert vowpal wabbit model to gensim LdaModel. This works by
+    simply copying the training model weights (alpha, beta...) from a trained
+    vwmodel into the gensim model.
+
+    Args:
+        vw_model : Trained vowpal wabbit model.
+        iterations : Number of iterations to be used for inference of the new LdaModel.
+
+    Returns:
+        model_gensim : LdaModel instance; copied gensim LdaModel.
+    """
+    model_gensim = LdaModel(
+        num_topics=vw_model.num_topics, id2word=vw_model.id2word, chunksize=vw_model.chunksize,
+        passes=vw_model.passes, alpha=vw_model.alpha, eta=vw_model.eta, decay=vw_model.decay,
+        offset=vw_model.offset, iterations=iterations, gamma_threshold=vw_model.gamma_threshold,
+        dtype=numpy.float32
+    )
+    model_gensim.expElogbeta[:] = vw_model._get_topics()
+    return model_gensim

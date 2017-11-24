@@ -50,8 +50,8 @@ First, let's import gensim and create a small corpus of nine documents and twelv
 >>>           [(9, 1.0), (10, 1.0), (11, 1.0)],
 >>>           [(8, 1.0), (10, 1.0), (11, 1.0)]]
 
-:dfn:`Corpus` is simply an object which, when iterated over, returns its documents represented
-as sparse vectors. If you're not familiar with the `vector space model <http://en.wikipedia.org/wiki/Vector_space_model>`_, we'll bridge the gap between **raw strings**, **corpora** and **sparse vectors** in the next tutorial on :doc:`tut1`.
+In `gensim` a :dfn:`corpus` is simply an object which, when iterated over, returns its documents represented
+as sparse vectors. In this case we're using a list of list of tuples. If you're not familiar with the `vector space model <http://en.wikipedia.org/wiki/Vector_space_model>`_, we'll bridge the gap between **raw strings**, **corpora** and **sparse vectors** in the next tutorial on :doc:`tut1`.
 
 If you're familiar with the vector space model, you'll probably know that the way you parse your documents and convert them to vectors
 has major impact on the quality of any subsequent applications.
