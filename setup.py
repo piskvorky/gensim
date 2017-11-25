@@ -196,7 +196,7 @@ When `citing gensim in academic papers and theses <https://scholar.google.cz/cit
 
   @inproceedings{rehurek_lrec,
         title = {{Software Framework for Topic Modelling with Large Corpora}},
-        author = {Radim {\v R}eh{\r u}{\v r}ek and Petr Sojka},
+        author = {Radim {\\v R}eh{\\r u}{\\v r}ek and Petr Sojka},
         booktitle = {{Proceedings of the LREC 2010 Workshop on New
              Challenges for NLP Frameworks}},
         pages = {45--50},
