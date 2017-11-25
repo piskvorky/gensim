@@ -4,8 +4,7 @@
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-This module contains functions to compute direct confirmation on a pair of words or word subsets.
+"""This module contains functions to compute direct confirmation on a pair of words or word subsets.
 """
 
 import logging

@@ -4,8 +4,7 @@
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-This module contains functions to perform segmentation on a list of topics.
+"""This module contains functions to perform segmentation on a list of topics.
 """
 
 import itertools
@@ -78,7 +77,7 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
     Returns
     -------
     accumulator
-        word occurrence accumulator instance that can be used to lookup token frequencies and co-occurrence frequencies.
+        Word occurrence accumulator instance that can be used to lookup token frequencies and co-occurrence frequencies.
 
     Examples
     ---------

@@ -4,8 +4,7 @@
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-This module contains classes for analyzing the texts of a corpus to accumulate
+"""This module contains classes for analyzing the texts of a corpus to accumulate
 statistical information about word occurrences.
 """
 
@@ -27,11 +26,24 @@ logger = logging.getLogger(__name__)
 
 def _ids_to_words(ids, dictionary):
     """Convert an iterable of ids to their corresponding words using a dictionary.
-    This function abstracts away the differences between the HashDictionary and the standard one.
+    Abstract away the differences between the HashDictionary and the standard one.
 
-    Args:
-        ids: list of list of tuples, where each tuple contains (token_id, iterable of token_ids).
-            This is the format returned by the topic_coherence.segmentation functions.
+    Parameters
+    ----------
+    ids: list of list of tuples
+        Each tuple contains (token_id, iterable of token_ids).
+        This is the format returned by the :class:`~gensim.topic_coherence` functions.
+    dictionary:
+
+    Returns
+    -------
+    set
+        Corresponding words.
+
+    Examples
+    --------
+    in progress
+
     """
     if not dictionary.id2token:  # may not be initialized in the standard gensim.corpora.Dictionary
         setattr(dictionary, 'id2token', {v: k for k, v in dictionary.token2id.items()})
@@ -300,11 +312,16 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
     def __init__(self, processes, *args, **kwargs):
         """
-        Args:
-            processes : number of processes to use; must be at least two.
-            args : should include `relevant_ids` and `dictionary` (see `UsesDictionary.__init__`).
-            kwargs : can include `batch_size`, which is the number of docs to send to a worker at a
-                time. If not included, it defaults to 64.
+        Parameters
+        ----------
+        processes :
+            Number of processes to use; must be at least two.
+        args :
+            Should include `relevant_ids` and `dictionary` (see :class:`~UsesDictionary.__init__`).
+        kwargs :
+            Can include `batch_size`, which is the number of docs to send to a worker at a time.
+            If not included, it defaults to 64.
+
         """
         super(ParallelWordOccurrenceAccumulator, self).__init__(*args)
         if processes < 2:
@@ -331,10 +348,18 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
     def start_workers(self, window_size):
         """Set up an input and output queue and start processes for each worker.
-
         The input queue is used to transmit batches of documents to the workers.
         The output queue is used by workers to transmit the WordOccurrenceAccumulator instances.
-        Returns: tuple of (list of workers, input queue, output queue).
+
+        Parameters
+        ----------
+        window_size :
+            in progress
+
+        Returns
+        -------
+        tuple
+            Tuple of (list of workers, input queue, output queue).
         """
         input_q = mp.Queue(maxsize=self.processes)
         output_q = mp.Queue()
@@ -348,8 +373,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         return workers, input_q, output_q
 
     def yield_batches(self, texts):
-        """Return a generator over the given texts that yields batches of
-        `batch_size` texts at a time.
+        """Return a generator over the given texts that yields batches of `batch_size` texts at a time.
         """
         batch = []
         for text in self._iter_texts(texts):
@@ -473,12 +497,14 @@ class WordVectorsAccumulator(UsesDictionary):
 
     def __init__(self, relevant_ids, dictionary, model=None, **model_kwargs):
         """
-        Args:
-            model: if None, a new Word2Vec model is trained on the given text corpus.
-                If not None, it should be a pre-trained Word2Vec context vectors
-                (gensim.models.keyedvectors.KeyedVectors instance).
-            model_kwargs: if model is None, these keyword arguments will be passed
-                through to the Word2Vec constructor.
+        Parameters
+        ----------
+        model:
+            If None, a new Word2Vec model is trained on the given text corpus.
+            If not None, it should be a pre-trained Word2Vec context vectors
+            (:class:`~gensim.models.keyedvectors.KeyedVectors` instance).
+        model_kwargs:
+            if model is None, these keyword arguments will be passed through to the Word2Vec constructor.
         """
         super(WordVectorsAccumulator, self).__init__(relevant_ids, dictionary)
         self.model = model

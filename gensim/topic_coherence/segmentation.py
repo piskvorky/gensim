@@ -4,8 +4,7 @@
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-This module contains functions to perform segmentation on a list of topics.
+"""This module contains functions to perform segmentation on a list of topics.
 """
 
 import logging
