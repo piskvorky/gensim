@@ -3,6 +3,53 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+"""This module provides functions for summarizing texts. Summarizing is based on
+ranks of text sentences using BM25 algorithm.
+
+
+
+Data:
+-----
+.. data:: INPUT_MIN_LENGTH - Minimal number of sentences in text
+.. data:: WEIGHT_THRESHOLD - Minimal weight of edge between graph nodes. Smaller
+weights set to zero.
+
+Example
+-------
+
+>>> from gensim.summarization.summarizer import summarize
+>>> text = '''
+>>> Rice Pudding - Poem by Alan Alexander Milne 
+>>> 
+>>> What is the matter with Mary Jane? 
+>>> She's crying with all her might and main, 
+>>> And she won't eat her dinner - rice pudding again - 
+>>> What is the matter with Mary Jane? 
+>>> What is the matter with Mary Jane? 
+>>> I've promised her dolls and a daisy-chain, 
+>>> And a book about animals - all in vain - 
+>>> What is the matter with Mary Jane? 
+>>> What is the matter with Mary Jane? 
+>>> She's perfectly well, and she hasn't a pain; 
+>>> But, look at her, now she's beginning again! - 
+>>> What is the matter with Mary Jane? 
+>>> What is the matter with Mary Jane? 
+>>> I've promised her sweets and a ride in the train, 
+>>> And I've begged her to stop for a bit and explain - 
+>>> What is the matter with Mary Jane? 
+>>> What is the matter with Mary Jane? 
+>>> She's perfectly well and she hasn't a pain, 
+>>> And it's lovely rice pudding for dinner again! 
+>>> What is the matter with Mary Jane?
+>>> '''
+>>> print(summarize(text))
+And she won't eat her dinner - rice pudding again - 
+I've promised her dolls and a daisy-chain, 
+I've promised her sweets and a ride in the train, 
+And it's lovely rice pudding for dinner again!
+
+"""
+
 import logging
 from gensim.summarization.pagerank_weighted import pagerank_weighted as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
@@ -22,6 +69,15 @@ logger = logging.getLogger(__name__)
 
 
 def _set_graph_edge_weights(graph):
+    """Sets weights using BM25 algorithm. Leaves small weights as zeroes. If all
+    weights are fairly small forces all weights to 1. Works inplace.
+
+    Parameters
+    ----------
+    graph : Graph
+        Given graph.
+         
+    """
     documents = graph.nodes()
     weights = _bm25_weights(documents)
 
@@ -48,6 +104,14 @@ def _set_graph_edge_weights(graph):
 
 
 def _create_valid_graph(graph):
+    """Sets all weights of edges for different edges as 1. Works inplace.
+
+    Parameters
+    ----------
+    graph : Graph
+        Given graph.
+         
+    """
     nodes = graph.nodes()
 
     for i in xrange(len(nodes)):
@@ -64,10 +128,42 @@ def _create_valid_graph(graph):
 
 
 def _get_doc_length(doc):
+    """Returns length of (tokenized) document.
+
+    Parameters
+    ----------
+    doc : list of (list of (tuple of int))
+        Given document.
+
+    Returns
+    -------
+    int
+        Length of document.
+
+    """
     return sum([item[1] for item in doc])
 
 
 def _get_similarity(doc1, doc2, vec1, vec2):
+    """Returns similarity of two documents.
+
+    Parameters
+    ----------
+    doc1 : list of (list of (tuple of int))
+        First document.
+    doc2 : list of (list of (tuple of int))
+        Second document.
+    vec1 : array
+        ? of first document.
+    vec1 : array
+        ? of secont document.
+
+    Returns
+    -------
+    float
+        Similarity of two documents.
+
+    """
     numerator = vec1.dot(vec2.transpose()).toarray()[0][0]
     length_1 = _get_doc_length(doc1)
     length_2 = _get_doc_length(doc2)
@@ -78,20 +174,65 @@ def _get_similarity(doc1, doc2, vec1, vec2):
 
 
 def _build_corpus(sentences):
+    """Returns built corpeus from provided sentences.
+
+    Parameters
+    ----------
+    sentences : list of SyntacticUnit
+        Given senteces.
+
+    Returns
+    -------
+    list of (list of (tuple of int))
+        Corpus built from sentences.
+
+    """
     split_tokens = [sentence.token.split() for sentence in sentences]
     dictionary = Dictionary(split_tokens)
     return [dictionary.doc2bow(token) for token in split_tokens]
 
 
 def _get_important_sentences(sentences, corpus, important_docs):
+    """Returns most important sentences.
+
+    Parameters
+    ----------
+    sentences : list of SyntacticUnit
+        Given senteces.
+    corpus : list of (list of (tuple of int))
+        Provided corpus.
+    important_docs : list of (list of (tuple of int))
+        Most important docs of the corpus.
+
+    Returns
+    -------
+    list of SyntacticUnit
+        Most important sentences.
+
+    """
     hashable_corpus = _build_hasheable_corpus(corpus)
     sentences_by_corpus = dict(zip(hashable_corpus, sentences))
     return [sentences_by_corpus[tuple(important_doc)] for important_doc in important_docs]
 
 
 def _get_sentences_with_word_count(sentences, word_count):
-    """ Given a list of sentences, returns a list of sentences with a
-    total word count similar to the word count provided."""
+    """Returns list of sentences. Total number of returned words close to 
+    specified `word_count`.
+
+    Parameters
+    ----------
+    sentences : list of SyntacticUnit
+        Given senteces.
+    word_count : int or None
+        Number of returned words. If None full most important sentences will be
+        returned.
+
+    Returns
+    -------
+    list of SyntacticUnit
+        Most important sentences.
+
+    """
     length = 0
     selected_sentences = []
 
@@ -111,6 +252,26 @@ def _get_sentences_with_word_count(sentences, word_count):
 
 
 def _extract_important_sentences(sentences, corpus, important_docs, word_count):
+    """Returns most important sentences of the `corpus`. 
+
+    Parameters
+    ----------
+    sentences : list of SyntacticUnit
+        Given senteces.
+    corpus : list of (list of (tuple of int))
+        Provided corpus.
+    important_docs : list of (list of (tuple of int))
+        Most important docs of the corpus.
+    word_count : int or None
+        Number of returned words. If None full most important sentences will be
+        returned.
+
+    Returns
+    -------
+    list SyntacticUnit
+        Most important sentences.
+
+    """
     important_sentences = _get_important_sentences(sentences, corpus, important_docs)
 
     # If no "word_count" option is provided, the number of sentences is
@@ -119,29 +280,68 @@ def _extract_important_sentences(sentences, corpus, important_docs, word_count):
 
 
 def _format_results(extracted_sentences, split):
+    """Returns `extracted_sentences` in desired format.
+
+    Parameters
+    ----------
+    extracted_sentences : list of SyntacticUnit
+        Given senteces.
+    split : bool
+        If True senteces will be returned as list. Otherwise senteces will be 
+        merged and returned as string.
+
+    Returns
+    -------
+    str or list of str
+        Formated result.
+
+    """
     if split:
         return [sentence.text for sentence in extracted_sentences]
     return "\n".join([sentence.text for sentence in extracted_sentences])
 
 
 def _build_hasheable_corpus(corpus):
+    """Hashes and returns `corpus`.
+
+    Parameters
+    ----------
+    corpus : list of (list of (tuple of int))
+        Given corpus.
+
+    Returns
+    -------
+    list of (tuple of (tuple of int))
+        Hashable corpus.
+
+    """
     return [tuple(doc) for doc in corpus]
 
 
 def summarize_corpus(corpus, ratio=0.2):
-    """
-    Returns a list of the most important documents of a corpus using a
-    variation of the TextRank algorithm.
-    The input must have at least INPUT_MIN_LENGTH (%d) documents for the
-    summary to make sense.
+    """Returns a list of the most important documents of a corpus using a
+    variation of the TextRank algorithm. The input must have at least 
+    `INPUT_MIN_LENGTH` documents for the summary to make sense.
 
     The length of the output can be specified using the ratio parameter,
     which determines how many documents will be chosen for the summary
-    (defaults at 20%% of the number of documents of the corpus).
+    (defaults at 20% of the number of documents of the corpus).
 
-    The most important documents are returned as a list sorted by the
-    document score, highest first.
-    """ % INPUT_MIN_LENGTH
+    Parameters
+    ----------
+    corpus : list of (list of (tuple of int))
+        Given corpus.
+    ratio : float 
+        Number between 0 and 1 that determines the proportion of the number of 
+        sentences of the original text to be chosen for the summary. Optional.
+
+    Returns
+    -------
+    str or list of str
+        Most important documents of given `corpus` sorted by the document score,
+        highest first.
+
+    """
     hashable_corpus = _build_hasheable_corpus(corpus)
 
     # If the corpus is empty, the function ends.
@@ -171,29 +371,38 @@ def summarize_corpus(corpus, ratio=0.2):
 
 
 def summarize(text, ratio=0.2, word_count=None, split=False):
-    """
-    Returns a summarized version of the given text using a variation of
+    """Returns a summarized version of the given text using a variation of
     the TextRank algorithm (see https://arxiv.org/abs/1602.03606).
 
     The output summary will consist of the most representative sentences
     and will be returned as a string, divided by newlines.
-    If the split parameter is set to True, a list of sentences will be
-    returned instead.
 
     The input should be a string, and must be longer than
-    INPUT_MIN_LENGTH sentences for the summary to make sense. The text
+    `INPUT_MIN_LENGTH` sentences for the summary to make sense. The text
     will be split into sentences using the split_sentences method in the
-    summarization.texcleaner module.
-    Note that newlines divide sentences.
+    summarization.texcleaner module. Note that newlines divide sentences.
 
     The length of the output can be specified using the ratio and
-    word_count parameters:
+    word_count parameters.
 
-        ratio should be a number between 0 and 1 that determines the
-        percentage of the number of sentences of the original text to be
-        chosen for the summary (defaults at 0.2).
-        word_count determines how many words will the output contain.
+    Parameters
+    ----------
+    text : str
+        Given text.
+    ratio : float 
+        Number between 0 and 1 that determines the proportion of the number of 
+        sentences of the original text to be chosen for the summary. Optional.
+    word_count : int 
+        Determines how many words will the output contain.
         If both parameters are provided, the ratio will be ignored.
+    split : bool
+        If True, list of sentences will be returned. Otherwise joined 
+        strings will bwe returned.
+
+    Returns
+    -------
+    str or list of str
+        Most representative sentences of given the text.
 
     """
     # Gets a list of processed sentences.

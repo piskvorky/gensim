@@ -6,10 +6,22 @@
 """
 
 
-Examples
---------
-
-
+Example
+-------
+>>> from gensim.summarization.keywords import get_graph 
+>>> from gensim.summarization.pagerank_weighted import pagerank_weighted
+>>> text = "In graph theory and computer science, an adjacency matrix \
+>>> is a square matrix used to represent a finite graph."
+>>> graph = get_graph(text)
+>>> pagerank_weighted(graph)
+{'adjac': array([ 0.29628575]),
+ 'finit': array([ 0.29628575]),
+ 'graph': array([ 0.56766066]),
+ 'matrix': array([ 0.56766066]),
+ 'repres': array([ 0.04680678]),
+ 'scienc': array([ 0.04680678]),
+ 'squar': array([ 0.29628575]),
+ 'theori': array([ 0.29628575])}
 
 """
 
@@ -30,6 +42,21 @@ except ImportError:
 
 
 def pagerank_weighted(graph, damping=0.85):
+    """Returns dictionary of `graph`'s nodes and its ranks.
+
+    Parameters
+    ----------
+    graph : Graph
+        Given graph.
+    damping : float
+        Damping parameter, optional
+
+    Returns
+    -------
+    dict
+        Keys are `graph` nodes, values are its ranks.
+
+    """
     adjacency_matrix = build_adjacency_matrix(graph)
     probability_matrix = build_probability_matrix(graph)
 
@@ -42,6 +69,19 @@ def pagerank_weighted(graph, damping=0.85):
 
 
 def build_adjacency_matrix(graph):
+    """Returns matrix representation of given `graph`. 
+
+    Parameters
+    ----------
+    graph : Graph
+        Given graph.
+
+    Returns
+    -------
+    csr_matrix (n, n)
+        Adjacency matrix of given `graph`.
+
+    """
     row = []
     col = []
     data = []
@@ -62,6 +102,20 @@ def build_adjacency_matrix(graph):
 
 
 def build_probability_matrix(graph):
+    """Returns square matrix of shape (n, n), where n is number of nodes of the
+    given `graph`.
+
+    Parameters
+    ----------
+    graph : Graph
+        Given graph.
+
+    Returns
+    -------
+    array (n, )
+        Eigenvector of matrix `a`.
+
+    """
     dimension = len(graph.nodes())
     matrix = empty_matrix((dimension, dimension))
 
@@ -72,6 +126,19 @@ def build_probability_matrix(graph):
 
 
 def principal_eigenvector(a):
+    """Returns eigenvector of square matrix `a`.
+
+    Parameters
+    ----------
+    a : array (n, n)
+        Given matrix.
+
+    Returns
+    -------
+    array (n, )
+        Eigenvector of matrix `a`.
+
+    """
 
 
     # Note that we prefer to use `eigs` even for dense matrix
@@ -88,19 +155,20 @@ def principal_eigenvector(a):
 
 
 def process_results(graph, vec):
-    """Returns `graph` nodes and corresponding modules of provided eigenvectors.
+    """Returns `graph` nodes and corresponding absolute values of provided 
+    eigenvector.
 
     Parameters
     ----------
     graph : Graph
-        .
-    vec : array??
-        .
+        Given graph.
+    vec : array
+        Given eigenvector.
 
     Returns
     -------
     dict
-        Nodes of graph and adfs
+        Keys are graph nodes, values are elements of eigenvector.
 
     """
     scores = {}
