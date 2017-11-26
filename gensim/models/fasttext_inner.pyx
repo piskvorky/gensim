@@ -173,9 +173,8 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     for i, item in enumerate(model.random.randint(0, window, effective_words)):
         reduced_windows[i] = item
 
-    for i, word_idx in enumerate(indexes):
-        if i >= effective_words:
-            break
+    for i in range(effective_words):
+        word_idx = indexes[i]
         word_subwords = model.wv.ngrams_word[model.wv.index2word[word_idx]]
         subwords_idx_len[i] = len(word_subwords) + 1
         subwords_idx[i][0] = word_idx
