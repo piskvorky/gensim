@@ -4,7 +4,7 @@ import os
 
 import numpy as np
 import six
-from scipy.special import gammaln, psi  
+from scipy.special import gammaln, psi
 from scipy.special import polygamma
 from six.moves import xrange
 from collections import defaultdict
@@ -17,7 +17,7 @@ try:
     from scipy.special import logsumexp
 except ImportError:
     from scipy.misc import logsumexp
-    
+
 logger = logging.getLogger('gensim.models.sldamodel')
 
 def update_dir_prior(prior, N, logphat, rho):
@@ -26,7 +26,7 @@ def update_dir_prior(prior, N, logphat, rho):
     **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.**
     http://jonathan-huang.org/research/dirichlet/dirichlet.pdf
     """
-    dprior = np.copy(prior)  # TODO: unused var???
+    dprior = np.copy(prior)
     gradf = N * (psi(np.sum(prior)) - psi(prior) + logphat)
 
     c = N * polygamma(1, np.sum(prior))
@@ -43,7 +43,7 @@ def update_dir_prior(prior, N, logphat, rho):
 
     return prior
 
-class sLdaState(utils.SaveLoad):
+class LdaState(utils.SaveLoad):
     """
     Encapsulate information for distributed computation of LdaModel objects.
     Objects of this class are sent over the network, so try to keep them lean to
@@ -70,7 +70,7 @@ class sLdaState(utils.SaveLoad):
         """
         self.sstats += other.sstats
         self.numdocs += other.numdocs
-    
+
     def blend(self, rhot, other, targetsize=None):
         """
         Given sLdaState `other`, merge it with the current state. Stretch both to
@@ -101,7 +101,7 @@ class sLdaState(utils.SaveLoad):
         self.sstats += rhot * scale * other.sstats
 
         self.numdocs = targetsize
-    
+
     def blend2(self, rhot, other, targetsize=None):
         """
         Alternative, more simple blend.
@@ -119,12 +119,12 @@ class sLdaState(utils.SaveLoad):
     def get_Elogbeta(self):
         return dirichlet_expectation(self.get_lambda())
 
-class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    
-    
-    def __init__(self, corpus=None, id2word=None, num_topics=100, 
+class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
+
+
+    def __init__(self, corpus=None, id2word=None, num_topics=100,
                  chunksize=500, passes=1, iterations=50, decay=0.5, offset=1.0,
-                 alpha=0.05, eta=None, update_every=1, 
+                 alpha=0.05, eta=None, update_every=1,
                  eval_every=10, gamma_threshold=0.001, random_state=None):
         distributed = False
         self.dispatcher = None
@@ -134,7 +134,7 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             raise ValueError(
                 "at least one of corpus/id2word must be specified, to establish input space dimensionality"
             )
-        
+
         if self.id2word is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
@@ -148,7 +148,7 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             raise ValueError("cannot compute the author-topic model over an empty collection (no terms)")
 
         logger.info('Vocabulary consists of %d words.', self.num_terms)
-        
+
         self.dtype = np.float64
         self.corpus = corpus
         self.num_topics = int(num_topics)
@@ -156,33 +156,33 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.decay = decay
         self.offset = offset
         self.alpha = np.ascontiguousarray(alpha, self.dtype)
-        self.beta = np.ascontiguousarray(beta, self.dtype)
+        self.eta = np.ascontiguousarray(eta, self.dtype)
         self.iterations = iterations
         self.random_state = utils.get_random_state(random_state)
         self._likelihoods = list()
-        
+
         self.passes = passes
         self.update_every = update_every
         self.eval_every = eval_every
-        
+
         self.iterations = iterations
         self.gamma_threshold = gamma_threshold
-        
+
     def save(self, fname, *args, **kwargs):
         super(sLdaModel, self).save(fname, *args, **kwargs)
-        
+
     def load(self, cls, *args, **kwargs):
         result = super(sLdaModel, cls).load(fname, *args, **kwargs)
-        
+
     def do_estep(self, chunk, state=None):
         if state is None:
             state = self.state
         gamma, sstats = self.inference(chunk, collect_sstats=True)
         state.sstats += sstats
-        state.numdocs += gamma.shape[0]  
+        state.numdocs += gamma.shape[0]
         assert gamma.dtype == self.dtype
         return gamma
-    
+
     def do_mstep(self, rho, other, extra_pass=False):
         logger.debug("updating topics")
         diff = np.log(self.expElogbeta)
@@ -198,10 +198,69 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if not extra_pass:
             self.num_updates += other.numdocs
-    
+
     def inference(self, chunk, collect_sstats=False):
-        raise NotImplementedError
-        
+        try:
+            len(chunk)
+        except TypeError:
+            chunk = list(chunk)
+        if len(chunk) > 1:
+            logger.debug("performing inference on a chunk of %i documents", len(chunk))
+
+        # Initialize the variational distribution q(theta|gamma) for the chunk
+        gamma = self.random_state.gamma(100., 1. / 100., (len(chunk), self.num_topics)).astype(self.dtype, copy=False)
+        Elogtheta = dirichlet_expectation(gamma)
+        expElogtheta = np.exp(Elogtheta)
+
+        assert Elogtheta.dtype == self.dtype
+        assert expElogtheta.dtype == self.dtype
+
+        if collect_sstats:
+            sstats = np.zeros_like(self.expElogbeta, dtype=self.dtype)
+        else:
+            sstats = None
+        converged = 0
+
+        for d, doc in enumerate(chunk):
+            if len(doc) > 0 and not isinstance(doc[0][0], six.integer_types + (np.integer,)):
+                ids = [int(idx) for idx, _ in doc]
+            else:
+                ids = [idx for idx, _ in doc]
+            cts = np.array([cnt for _, cnt in doc], dtype=self.dtype)
+            gammad = gamma[d, :]
+            Elogthetad = Elogtheta[d, :]
+            expElogthetad = expElogtheta[d, :]
+            expElogbetad = self.expElogbeta[:, ids]
+            # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w.
+            # phinorm is the normalizer.
+            phinorm = np.dot(expElogthetad, expElogbetad) + 1e-100
+
+            # Iterate between gamma and phi until convergence
+            for _ in xrange(self.iterations):
+                lastgamma = gammad
+                gammad = self.alpha + expElogthetad * np.dot(cts / phinorm, expElogbetad.T)
+                Elogthetad = dirichlet_expectation(gammad)
+                expElogthetad = np.exp(Elogthetad)
+                phinorm = np.dot(expElogthetad, expElogbetad) + 1e-100
+                meanchange = np.mean(abs(gammad - lastgamma))
+                if meanchange < self.gamma_threshold:
+                    converged += 1
+                    break
+            gamma[d, :] = gammad
+            assert gammad.dtype == self.dtype
+            if collect_sstats:
+                sstats[:, ids] += np.outer(expElogthetad.T, cts / phinorm)
+
+        if len(chunk) > 1:
+            logger.debug("%i/%i documents converged within %i iterations", converged, len(chunk), self.iterations)
+
+        if collect_sstats:
+            sstats *= self.expElogbeta
+            assert sstats.dtype == self.dtype
+
+        assert gamma.dtype == self.dtype
+        return gamma, sstats
+
     def update_eta(self, lambdat, rho):
         """
         Update parameters for the Dirichlet prior on the per-topic
@@ -215,9 +274,9 @@ class sLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         assert self.eta.dtype == self.dtype
         return self.eta
-    
+
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
                gamma_threshold=None, chunks_as_numpy=False):
-        
+
         raise NotImplementedError
