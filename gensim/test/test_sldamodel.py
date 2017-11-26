@@ -17,6 +17,7 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import sldamodel
 from gensim import matutils, utils
 from gensim.test import basetmtests
+from gensim.test.utils import datapath, get_tmpfile, common_texts
 
 dictionary = Dictionary(common_texts)
 corpus = [dictionary.doc2bow(text) for text in common_texts]
