@@ -18,20 +18,19 @@ logger = logging.getLogger(__name__)
 
 
 def p_boolean_document(corpus, segmented_topics):
-    """Perform the boolean document probability estimation.
-    Boolean document estimates the probability of a single word as the number
-    of documents in which the word occurs divided by the total number of documents.
+    """Perform the boolean document probability estimation. Boolean document estimates the probability of a single word
+    as the number of documents in which the word occurs divided by the total number of documents.
 
     Parameters
     ----------
     corpus : list
         The corpus of documents.
-    segmented_topics : list of tuples of (word_id_set1, word_id_set2)
-        Output from the segmentation of topics. Could be simply topics too.
+    segmented_topics : list of tuples
+        Output from the segmentation of topics. Tuples of (word_id_set1, word_id_set2). Could be simply topics too.
 
     Returns
     -------
-    accumulator :
+    accumulator
         Word occurrence accumulator instance that can be used to lookup token frequencies and co-occurrence frequencies.
 
     Examples

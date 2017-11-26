@@ -26,15 +26,14 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
     ----------
     segmented_topics : list
         Output from the segmentation module of the segmented topics. Is a list of list of tuples.
-    accumulator : list
+    accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator from probability_estimation.
     with_std : bool
-        True to also include standard deviation across topic segment
-        sets in addition to the mean coherence for each topic; default is False.
+        True to also include standard deviation across topic segment sets in addition to the mean coherence
+        for each topic.
     with_support : bool
-        True to also include support across topic segments. The
-        support is defined as the number of pairwise similarity comparisons were
-        used to compute the overall topic coherence.
+        True to also include support across topic segments. The support is defined as the number of pairwise
+        similarity comparisons were used to compute the overall topic coherence.
 
     Returns
     -------
@@ -44,13 +43,17 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
     --------
     >>> from gensim.topic_coherence import direct_confirmation_measure,text_analysis
     >>> from collections import namedtuple
+    Now we create dictionary:
     >>> id2token = {1: 'test', 2: 'doc'}
     >>> token2id = {v: k for k, v in id2token.items()}
     >>> dictionary = namedtuple('Dictionary', 'token2id, id2token')(token2id, id2token)
+    Then we will initialize segmented topics:
     >>> segmentation = [[(1, 2)]]
+    And accumulator:
     >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
     >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
     >>> accumulator._num_docs = 5
+    Function call:
     >>> direct_confirmation_measure.log_conditional_probability(segmentation, accumulator)[0]
     Answer should be ~ ln(1 / 2) = -0.693147181
 
@@ -124,7 +127,7 @@ def log_ratio_measure(
     ----------
     segmented_topics : list of (list of tuples)
         Output from the segmentation module of the segmented topics.
-    accumulator: list
+    accumulator: :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator from probability_estimation.
     with_std : bool
         True to also include standard deviation across topic segment
