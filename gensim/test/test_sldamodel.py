@@ -33,7 +33,7 @@ class TestSLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.class_ = sldamodel.SLdaModel
         self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
 
-        def testEta(self):
+    def testEta(self):
         kwargs = dict(id2word=dictionary, num_topics=2, eta=None)
         num_terms = len(dictionary)
         expected_shape = (num_terms,)
