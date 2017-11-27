@@ -35,7 +35,7 @@ def mz_keywords(text,
         minimum score for returned keywords, default 0.0
         'auto' calculates the threshold as nblocks / (nblocks + 1.0) + 1.0e-8
         Use 'auto' with weighted=False)
-    
+
     Returns
     -------
     results: str
@@ -46,13 +46,13 @@ def mz_keywords(text,
         list of (keyword, score) tuples if scores is True
         
     Results are returned in descending order of score regardless of the format.
-    
+
     Notes
     -----
     This algorithm looks for keywords that contribute to the structure of the 
     text on scales of blocksize words of larger. It is suitable for extracting 
     keywords representing the major themes of long texts.
-    
+
     References
     ----------
     [1] Marcello A Montemurro, Damian Zanette,
@@ -61,7 +61,7 @@ def mz_keywords(text,
         Advances in Complex Systems, Volume 13, Issue 2 (2010), pp. 135-153
         DOI: 10.1142/S0219525910002530
         https://arxiv.org/abs/0907.1558
-    
+
     """
     text = to_unicode(text)
     words = [word for word in _tokenize_by_word(text)]
@@ -76,7 +76,7 @@ def mz_keywords(text,
     nwords = totals.sum()
     p = wordcounts / totals
     logp = numpy.log2(p)
-    H = numpy.nan_to_num((p * logp), 0.0).sum(axis=0)
+    H = numpy.nan_to_num(p * logp).sum(axis=0)
     analytic = __analytic_entropy(blocksize, nblocks, nwords)
     H += analytic(totals).astype('d')
     if weighted:
@@ -91,7 +91,6 @@ def mz_keywords(text,
     if not (scores or split):
         result = '\n'.join(result)
     return result
-
 
 def __log_combinations_inner(n, m):
     """Calculates the logarithm of n!/m!(n-m)!"""
