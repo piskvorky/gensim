@@ -44,7 +44,7 @@ cdef REAL_t ONEF = <REAL_t>1.0
 cdef unsigned long long fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
-    const np.uint32_t word_index, const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
+    const np.uint32_t word_index, np.uint32_t *subwords_index, const np.uint32_t subwords_len,
     const REAL_t alpha, REAL_t *work, REAL_t *l1, unsigned long long next_random, REAL_t *word_locks_vocab,
     REAL_t *word_locks_ngrams) nogil:
 
@@ -58,8 +58,7 @@ cdef unsigned long long fast_sentence_sg_neg(
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     memset(l1, 0, size * cython.sizeof(REAL_t))
-    # cdef REAL_t *l1
-    # l1 = <REAL_t *>calloc(size, cython.sizeof(REAL_t))
+
     scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
     for d in range(1, subwords_len):
         subword_row = subwords_index[d] * size
@@ -91,6 +90,42 @@ cdef unsigned long long fast_sentence_sg_neg(
         our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[subwords_index[d]*size], &ONE)
     return next_random
 
+cdef void fast_sentence_sg_hs(
+    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
+    REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
+    np.uint32_t *subwords_index, const np.uint32_t subwords_len, 
+    const REAL_t alpha, REAL_t *work, REAL_t *l1, REAL_t *word_locks_vocab,
+    REAL_t *word_locks_ngrams) nogil:
+
+    cdef long long a, b
+    cdef np.uint32_t word2_index = subwords_index[0]
+    cdef long long row1 = word2_index * size, row2, sgn
+    cdef REAL_t f, g, f_dot, lprob
+
+    memset(work, 0, size * cython.sizeof(REAL_t))
+    memset(l1, 0, size * cython.sizeof(REAL_t))
+
+    scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
+    for d in range(1, subwords_len):
+        subword_row = subwords_index[d] * size
+        our_saxpy(&size, &ONEF, &syn0_ngrams[subword_row], &ONE, l1, &ONE)
+    cdef REAL_t norm_factor = ONEF / subwords_len
+    sscal(&size, &norm_factor, l1 , &ONE)
+
+    for b in range(codelen):
+        row2 = word_point[b] * size
+        f_dot = our_dot(&size, l1, &ONE, &syn1[row2], &ONE)
+        if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
+            continue
+        f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        g = (1 - word_code[b] - f) * alpha
+
+        our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
+        our_saxpy(&size, &g, l1, &ONE, &syn1[row2], &ONE)
+
+    our_saxpy(&size, &word_locks_vocab[word2_index], work, &ONE, &syn0_vocab[row1], &ONE)
+    for d in range(1, subwords_len):
+        our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[subwords_index[d]*size], &ONE)
 
 def train_batch_sg(model, sentences, alpha, _work, _l1):
     cdef int hs = model.hs
@@ -118,6 +153,11 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
 
+    # For hierarchical softmax
+    cdef REAL_t *syn1
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+
     # For negative sampling
     cdef REAL_t *syn1neg
     cdef np.uint32_t *cum_table
@@ -129,6 +169,8 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     cdef np.uint32_t subwords_idx_len[MAX_SENTENCE_LEN]
     cdef np.uint32_t subwords_idx[MAX_SENTENCE_LEN][MAX_SUBWORDS]
 
+    if hs:
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
@@ -140,7 +182,6 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
     l1 = <REAL_t *>np.PyArray_DATA(_l1)
-    # l1 = <REAL_t *>calloc(size, cython.sizeof(REAL_t))
 
     # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.wv.vocab
@@ -155,6 +196,10 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
             if sample and word.sample_int < random_int32(&next_random):
                 continue
             indexes[effective_words] = word.index
+            if hs:
+                codelens[effective_words] = <int>len(word.code)
+                codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
 
             effective_words += 1
             if effective_words == MAX_SENTENCE_LEN:
@@ -195,6 +240,8 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                 for j in range(j, k):
                     if j == i:
                         continue
+                    if hs:
+                        fast_sentence_sg_hs(points[j], codes[j], codelens[j], syn0_vocab, syn0_ngrams, syn1, size, subwords_idx[i], subwords_idx_len[i], _alpha, work, l1, word_locks_vocab, word_locks_ngrams)
                     if negative:
                         next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0_vocab, syn0_ngrams, syn1neg, size, indexes[j], subwords_idx[i], subwords_idx_len[i], _alpha, work, l1, next_random, word_locks_vocab, word_locks_ngrams)
 
