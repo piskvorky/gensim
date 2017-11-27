@@ -232,7 +232,8 @@ def clean_text_by_sentences(text):
 
 def clean_text_by_word(text, deacc=True):
     """Tokenizes a given text into words, applying filters and lemmatizing them.
-    Returns a dictionary of word -> syntacticUnit. 
+    Returns a dictionary of word -> syntacticUnit. Note that different words may
+    lead to same processed unit.
 
     Parameters
     ----------
@@ -245,6 +246,15 @@ def clean_text_by_word(text, deacc=True):
     -------
     dictionary
         Word as key, SyntacticUnit as value of dictionary.
+
+    Example
+    -------
+    >>> from gensim.summarization.textcleaner import clean_text_by_word
+    >>> clean_text_by_word("God helps those who help themselves")
+    {'god': Original unit: 'god' *-*-*-* Processed unit: 'god',
+    'help': Original unit: 'help' *-*-*-* Processed unit: 'help',
+    'helps': Original unit: 'helps' *-*-*-* Processed unit: 'help'}
+
     """
     text_without_acronyms = replace_with_separator(text, "", [AB_ACRONYM_LETTERS])
     original_words = list(tokenize(text_without_acronyms, to_lower=True, deacc=deacc))
@@ -271,6 +281,7 @@ def tokenize_by_word(text):
     -------
     generator
         Words contained in processed text.
+
     """
     text_without_acronyms = replace_with_separator(text, "", [AB_ACRONYM_LETTERS])
     return tokenize(text_without_acronyms, to_lower=True, deacc=True)

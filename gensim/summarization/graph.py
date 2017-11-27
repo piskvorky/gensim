@@ -19,7 +19,7 @@ Create simple graph with 4 nodes.
 >>> g.nodes()
 ['Felidae', 'Lion', 'Tiger', 'Wolf']
 
-Add some edges. Let's check neighbours.
+Add some edges and check neighbours.
 
 >>> g.add_edge(("Felidae", "Lion"))
 >>> g.add_edge(("Felidae", "Tiger"))
@@ -49,7 +49,7 @@ class IGraph(object):
 
         Returns
         -------
-        list of node
+        list of hashable
             Nodes of graph.
 
         """
@@ -62,7 +62,7 @@ class IGraph(object):
 
         Returns
         -------
-        list of (tuple of node)
+        list of (tuple of hashable)
             Edges of graph.
 
         """
@@ -75,12 +75,12 @@ class IGraph(object):
 
         Parameters
         ----------
-        node : str or float
+        node : hashable
             Given node identifier.
 
         Returns
         -------
-        list of node
+        list of hashable
             Nodes directly accessible from given `node`.
 
         """
@@ -92,7 +92,7 @@ class IGraph(object):
 
         Parameters
         ----------
-        node : str or float
+        node : hashable
             Given node identifier.
 
         Returns
@@ -115,9 +115,9 @@ class IGraph(object):
 
         Parameters
         ----------
-        node : float or str
+        node : hashable
             Given node
-        attrs : list
+        attrs : list, optional
             Node attributes specified as (attribute, value)
 
         """
@@ -130,13 +130,13 @@ class IGraph(object):
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable
             Given edge.
-        wt : float
+        wt : float, optional
             Weight of new edge.
-        label : str
+        label : str, optional
             Edge label.
-        attrs : list
+        attrs : list, optional
             Node attributes specified as (attribute, value)
 
         """
@@ -148,7 +148,7 @@ class IGraph(object):
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable
             Given edge. An edge, here, is a tuple of two nodes.
 
         Returns
@@ -165,7 +165,7 @@ class IGraph(object):
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable
             Given edge.
 
         Returns
@@ -178,12 +178,12 @@ class IGraph(object):
 
     @abstractmethod
     def del_node(self, node):
-        """Removes node and its edges from graph.
+        """Removes node and its edges from the graph.
 
         Parameters
         ----------
-        node : float or str
-            Given node.
+        node : hashable
+            Node to delete.
         
         """
         pass
@@ -200,9 +200,9 @@ class Graph(IGraph):
     DEFAULT_WEIGHT : float
         Weight set by default.
     LABEL_ATTRIBUTE_NAME : str
-        Name of attribute.
+        Default name of attribute. Not used.
     DEFAULT_LABEL : str
-        Label set by default.
+        Label set by default. Not used.
 
     """
 
@@ -213,6 +213,8 @@ class Graph(IGraph):
     DEFAULT_LABEL = ""
 
     def __init__(self):
+        """Initializes object."""
+
         # Metadata about edges
         # Mapping: Edge -> Dict mapping, lablel-> str, wt->num
         self.edge_properties = {}
@@ -230,8 +232,8 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of node
-            Given edge. An edge, here, is a tuple of two nodes.
+        edge : tuple of hashable, size = 2
+            Given edge.
 
         Returns
         -------
@@ -247,7 +249,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable, size = 2
             Given edge.
 
         Returns
@@ -263,12 +265,12 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        node : float or str
+        node : hashable
             Given node identifier.
 
         Returns
         -------
-        list of node
+        list of hashable
             Nodes directly accessible from given `node`.
 
         """
@@ -279,8 +281,8 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        node : float or str
-            Given node identifier.
+        node : hashable
+            Given node.
 
         Returns
         -------
@@ -296,13 +298,13 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable, size = 2
             Given edge.
-        wt : float
+        wt : float, optional
             Weight of new edge.
-        label : str
+        label : str, optional
             Edge label.
-        attrs : list
+        attrs : list, optional
             Node attributes specified as (attribute, value).
 
         Raises
@@ -335,9 +337,9 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        node : float or str
+        node : hashable
             Given node.
-        attrs : list
+        attrs : list, optional
             Node attributes specified as (attribute, value)
 
         Raises
@@ -355,33 +357,33 @@ class Graph(IGraph):
             raise ValueError("Node %s already in graph" % node)
 
     def nodes(self):
-        return list(self.node_neighbors.keys())
-        """Returns all nodes of graph.
+        """Returns all nodes of the graph.
 
         Returns
         -------
-        list of node
+        list of hashable
             Nodes of graph.
         
         """
+        return list(self.node_neighbors.keys())
 
     def edges(self):
-        """Returns all edges of graph.
+        """Returns all edges of the graph.
 
         Returns
         -------
-        list of edges (tuple of node)
+        list of (tuple of hashable, size = 2)
             Edges of graph.
         
         """
         return [a for a in self.edge_properties.keys()]
 
     def del_node(self, node):
-        """Removes given node and its edges from graph.
+        """Removes given node and its edges from the graph.
 
         Parameters
         ----------
-        node : float or str
+        node : hashable
             Given node.
         
         """
@@ -397,7 +399,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable, size = 2
             Given edge.
 
         Returns
@@ -414,7 +416,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable, size = 2
             Given edge.
         attrs : list
             Provided attributes to add.
@@ -429,7 +431,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable, size = 2
             Given edge.
 
         attr : object
@@ -447,7 +449,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable, size = 2
             Given edge.
         
         Returns
@@ -467,10 +469,10 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable, size = 2
             Given edge.
 
-        properties : dictionary
+        properties : dict
             Properties to add.
         
         """
@@ -479,11 +481,11 @@ class Graph(IGraph):
             self.edge_properties.setdefault((edge[1], edge[0]), {}).update(properties)
 
     def del_edge(self, edge):
-        """Removes given edges from graph.
+        """Removes given edges from the graph.
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable, size = 2
             Given edge.
         
         """
@@ -495,11 +497,11 @@ class Graph(IGraph):
             self.del_edge_labeling((v, u))
 
     def del_edge_labeling(self, edge):
-        """Removes attributes and properties if given edge.
+        """Removes attributes and properties of given edge.
 
         Parameters
         ----------
-        edge : tuple of node
+        edge : tuple of hashable, size = 2
             Given edge.
         
         """

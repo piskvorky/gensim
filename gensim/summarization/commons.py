@@ -39,7 +39,7 @@ def build_graph(sequence):
 
     Returns
     -------
-    Graph
+    :class:~gensim.summarization.graph.Graph
         Created graph.
 
     """
@@ -55,7 +55,7 @@ def remove_unreachable_nodes(graph):
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
 
     """

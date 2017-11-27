@@ -3,8 +3,14 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains function of computing BM25 scores for documents in 
-corpus and helper class `BM25` used in calculations.
+"""This module contains function of computing rank scores for documents in 
+corpus and helper class `BM25` used in calculations. Original alhorithm 
+descibed in [1]_, also you may check Wikipedia page [2]_.
+
+
+.. [1] Robertson, Stephen; Zaragoza, Hugo (2009).  The Probabilistic Relevance Framework: BM25 and Beyond, http://www.staff.city.ac.uk/~sb317/papers/foundations_bm25_review.pdf
+.. [2] Okapi BM25 on Wikipedia, https://en.wikipedia.org/wiki/Okapi_BM25
+
 
 
 Example
@@ -51,11 +57,14 @@ class BM25(object):
     corpus : list of (list of str)
         Corpus of documents.
     f : list of dict
-        Terms frequencies for each document in `corpus`.
+        Dictionary with terms frequencies for each document in `corpus`. Words 
+        used as keys and frequencies as values.
     df : dict
-        Terms frequencies for whole `corpus`.
+        Dictionary with terms frequencies for whole `corpus`. Words used as keys
+        and frequencies as values.
     idf : dict
-        Inverse document frequency.
+        Dictionary with inversed terms frequencies for whole `corpus`. Words 
+        used as keys and frequencies as values.
 
     """
 
@@ -66,7 +75,7 @@ class BM25(object):
         Parameters
         ----------
         corpus : list of (list of str)
-            Corpus of documents.
+            Given corups.
 
         """
         self.corpus_size = len(corpus)
@@ -79,8 +88,8 @@ class BM25(object):
 
 
     def initialize(self):
-        """Calculates frequncies of terms in documents and in corpus. Also
-        computes inverse document frequncies.
+        """Calculates frequencies of terms in documents and in corpus. Also
+        computes inverse document frequencies.
 
         """
         for document in self.corpus:

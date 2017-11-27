@@ -10,11 +10,11 @@ graph on tokens from text.
 Examples
 --------
 >>> from gensim.summarization import keywords
->>> text="Challenges in natural language processing frequently involve \
->>> speech recognition, natural language understanding, natural language \
->>> generation (frequently from formal, machine-readable logical forms), \
->>> connecting language and machine perception, dialog systems, or some \
->>> combination thereof."
+>>> text='''Challenges in natural language processing frequently involve
+>>> speech recognition, natural language understanding, natural language
+>>> generation (frequently from formal, machine-readable logical forms),
+>>> connecting language and machine perception, dialog systems, or some
+>>> combination thereof.'''
 >>> print(gensim.summarization.keywords(text))
 natural language
 machine
@@ -22,10 +22,10 @@ frequently
 
 
 >>> from gensim.summarization.keywords import get_graph
->>> text = "Fly me to the moon \
->>> Let me play among the stars \
->>> Let me see what spring is like \
->>> On a, Jupiter and Mars"
+>>> text = '''Fly me to the moon
+>>> Let me play among the stars
+>>> Let me see what spring is like
+>>> On a, Jupiter and Mars'''
 >>> g = get_graph(text)
 >>> print(g.nodes())
 ['fly', 'moon', 'let', 'plai', 'star', 'spring', 'like', 'jupit', 'mar']
@@ -83,9 +83,9 @@ def _get_words_for_graph(tokens, pos_filter=None):
 
     Parameters
     ----------
-    tokens : dictionary
-        Input text.
-    pos_filter : tuple
+    tokens : dict
+        Original units (words) as keys and processed units (tokens) as values.
+    pos_filter : tuple of list
         Part of speech filters, optional.
     
     Returns
@@ -117,12 +117,13 @@ def _get_words_for_graph(tokens, pos_filter=None):
 
 
 def _get_first_window(split_text):
-    """Returns first `WINDOW_SIZE` tokens from given splitted text.
+    """Returns first :const:`~gensim.parsing.keywords.WINDOW_SIZE` tokens from 
+    given Splited text.
 
     Parameters
     ----------
     split_text : list
-        Given splitted text.
+        Given Splited text.
     
     Returns
     -------
@@ -134,19 +135,19 @@ def _get_first_window(split_text):
 
 
 def _set_graph_edge(graph, tokens, word_a, word_b):
-    """Sets an edge between nodes word_a and word_b if they exists in `tokens`
-    and `graph`. Works inplace.
+    """Sets an edge between nodes named word_a and word_b if they exists in 
+    `tokens` and `graph`, inplace.
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
-    tokens : Graph
-        Given tokens.
+    tokens : dict
+        Original units (words) as keys and processed units (tokens) as values.
     word_a : str
-        First word.
+        First word, name of first node.
     word_b : str
-        Second word.
+        Second word, name of second node.
         
     """
     if word_a in tokens and word_b in tokens:
@@ -159,17 +160,17 @@ def _set_graph_edge(graph, tokens, word_a, word_b):
 
 
 def _process_first_window(graph, tokens, split_text):
-    """Sets an edges between nodes taken from first `WINDOW_SIZE` words
-    of `split_text` if they exist in `tokens` and `graph`. Works inplace.
+    """Sets an edges between nodes taken from first :const:`~gensim.parsing.keywords.WINDOW_SIZE`
+    words of `split_text` if they exist in `tokens` and `graph`, inplace.
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
-    tokens : Graph
-        Given tokens.
+    tokens : dict
+        Original units (words) as keys and processed units (tokens) as values.
     split_text : list of str
-        First word.
+        Splited text.
         
     """
     first_window = _get_first_window(split_text)
@@ -183,7 +184,7 @@ def _init_queue(split_text):
     Parameters
     ----------
     split_text : list of str
-        Splitted text.
+        Splited text.
 
     Returns
     -------
@@ -204,10 +205,10 @@ def _process_word(graph, tokens, queue, word):
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
-    tokens : Graph
-        Given tokens.
+    tokens : dict
+        Original units (words) as keys and processed units (tokens) as values.
     queue : Queue
         Given queue.
     word : str
@@ -236,16 +237,16 @@ def _update_queue(queue, word):
 def _process_text(graph, tokens, split_text):
     """Processes `split_text` by updating given `graph` with new eges between 
     nodes if they exists in `tokens` and `graph`. Words are taken from 
-    `split_text` with window size `WINDOW_SIZE`.
+    `split_text` with window size :const:`~gensim.parsing.keywords.WINDOW_SIZE`.
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
-    tokens : Graph
-        Given tokens.
+    tokens : dict
+        Original units (words) as keys and processed units (tokens) as values.
     split_text : list of str
-        Splitted text.
+        Splited text.
     """
     queue = _init_queue(split_text)
     for i in xrange(WINDOW_SIZE, len(split_text)):
@@ -278,16 +279,16 @@ def _queue_iterator(queue):
 def _set_graph_edges(graph, tokens, split_text):
     """Updates given `graph` by setting eges between nodes if they exists in 
     `tokens` and `graph`. Words are taken from `split_text` with window size
-    `WINDOW_SIZE`.
+    :const:`~gensim.parsing.keywords.WINDOW_SIZE`.
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
     tokens : dict
-        Given tokens.
+        Original units (words) as keys and processed units (tokens) as values.
     split_text : list of str
-        Splitted text.
+        Splited text.
     """
     _process_first_window(graph, tokens, split_text)
     _process_text(graph, tokens, split_text)
@@ -304,7 +305,7 @@ def _extract_tokens(lemmas, scores, ratio, words):
     scores : dict
         Dictionary with lemmas and its scores.
     ratio : float
-        Proportion of `lemmas` used for final result. 
+        Proportion of lemmas used for final result. 
     words : int
         Number of used words. If no "words" option is selected, the number of 
         sentences is reduced by the provided ratio, else, the ratio is ignored.
@@ -321,17 +322,17 @@ def _extract_tokens(lemmas, scores, ratio, words):
 
 
 def _lemmas_to_words(tokens):
-    """Extracts words and lemmas from given tokens.
+    """Returns words and lemmas from given tokens. Produces "reversed" `tokens`.
 
     Parameters
     ----------
     tokens : dict
-        Given tokens.
+        Original units (words) as keys and processed units (tokens) as values.
 
     Returns
     -------
     dict
-        Keys are lemmas and values are corresponding words.
+        Lemmas as keys and lists corresponding words as values.
          
     """
     lemma_to_word = {}
@@ -358,7 +359,7 @@ def _get_keywords_with_score(extracted_lemmas, lemma_to_word):
     Returns
     -------
     dict
-        Keywords as keys and scores as values.
+        Keywords as keys and its scores as values.
          
     """
 
@@ -393,10 +394,10 @@ def _get_combined_keywords(_keywords, split_text):
 
     Parameters
     ----------
-    _keywords : dict {keywords:scores}
-        Keywords and its scores.
+    _keywords : dict
+        Keywords as keys and its scores as values.
     split_text : list of str
-        Splitted text.
+        Splited text.
     
     Returns
     -------
@@ -432,13 +433,14 @@ def _get_average_score(concept, _keywords):
     ----------
     concept : str
         Input text.
-    _keywords : dict {keywords:scores}
-        Keywords and its scores.
+    _keywords : dict
+        Keywords as keys and its scores as values.
     
     Returns
     -------
     float
         Average score.
+
     """
     word_list = concept.split()
     word_counter = 0
@@ -454,8 +456,8 @@ def _format_results(_keywords, combined_keywords, split, scores):
 
     Parameters
     ----------
-    _keywords : dict {keywords:scores}
-        Keywords and its scores.
+    _keywords : dict
+        Keywords as keys and its scores as values.
     combined_keywords : list of str
         Most ranked words and/or its combinations.
     split : bool
@@ -480,35 +482,33 @@ def _format_results(_keywords, combined_keywords, split, scores):
 
 def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=('NN', 'JJ'),
              lemmatize=False, deacc=True):
-    """Returns most ranked word of provided text and/or its combinations .
+    """Returns most ranked words of provided text and/or its combinations .
 
     Parameters
     ----------
     text : str
         Sequence of values.
-    ratio : float
+    ratio : float, optional
         If no "words" option is selected, the number of sentences is
         reduced by the provided ratio, else, the ratio is ignored.
-    words : int
+    words : int, optional
         Number of returned words.
-    split : bool
-        Whether split keywords, optional.
-    scores : bool
-        Whether score of keyword, optional.
-    pos_filter : tuple
+    split : bool, optional
+        Whether split keywords.
+    scores : bool, optional
+        Whether score of keyword.
+    pos_filter : tuple, optional
         Part of speech filters.
-    lemmatize : bool
-        Lemmatize words, optional.
-    deacc : bool
-        Remove accentuation, optional.
+    lemmatize : bool, optional
+        Lemmatize words.
+    deacc : bool, optional
+        Remove accentuation.
 
     Returns
     -------
     str or list of str or list of (tuple of str)
 
     """
-
-
     # Gets a dict of word -> lemma
     text = to_unicode(text)
     tokens = _clean_text_by_word(text, deacc=deacc)
@@ -543,8 +543,8 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
 
 
 def get_graph(text):
-    """Creates and returns graph from given text. Cleans, tokenizes text 
-    before creating a graph.
+    """Creates and returns graph from given text. Cleans and tokenizes text 
+    before building graph.
 
     Parameters
     ----------
@@ -553,7 +553,7 @@ def get_graph(text):
 
     Returns
     -------
-    Graph
+    :class:~gensim.summarization.graph.Graph
         Created graph.
 
     """
