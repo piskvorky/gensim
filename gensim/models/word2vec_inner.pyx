@@ -70,22 +70,33 @@ cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, con
 cdef void fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
-    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, REAL_t *word_locks) nogil:
+    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, REAL_t *word_locks,
+    const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
 
     cdef long long a, b
-    cdef long long row1 = word2_index * size, row2
-    cdef REAL_t f, g
+    cdef long long row1 = word2_index * size, row2, sgn
+    cdef REAL_t f, g, f_dot, lprob
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     for b in range(codelen):
         row2 = word_point[b] * size
-        f = our_dot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
-        if f <= -MAX_EXP or f >= MAX_EXP:
+        f_dot = our_dot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
+        if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
-        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (1 - word_code[b] - f) * alpha
+
+        if _compute_loss == 1:
+            sgn = (-1)**word_code[b]  # ch function: 0-> 1, 1 -> -1
+            lprob = -1*sgn*f_dot
+            if lprob <= -MAX_EXP or lprob >= MAX_EXP:
+                continue
+            lprob = LOG_TABLE[<int>((lprob + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+            _running_training_loss_param[0] = _running_training_loss_param[0] - lprob
+
         our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1[row2], &ONE)
+
     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
 
 
@@ -111,12 +122,13 @@ cdef unsigned long long fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
-    unsigned long long next_random, REAL_t *word_locks) nogil:
+    unsigned long long next_random, REAL_t *word_locks,
+    const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
 
     cdef long long a
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t f, g, label
+    cdef REAL_t f, g, label, f_dot, log_e_f_dot
     cdef np.uint32_t target_index
     cdef int d
 
@@ -134,11 +146,19 @@ cdef unsigned long long fast_sentence_sg_neg(
             label = <REAL_t>0.0
 
         row2 = target_index * size
-        f = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
-        if f <= -MAX_EXP or f >= MAX_EXP:
+        f_dot = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
+        if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
-        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (label - f) * alpha
+
+        if _compute_loss == 1:
+            f_dot = (f_dot if d == 0  else -f_dot)
+            if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
+                continue
+            log_e_f_dot = LOG_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+            _running_training_loss_param[0] = _running_training_loss_param[0] - log_e_f_dot
+
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
 
@@ -151,11 +171,12 @@ cdef void fast_sentence_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, int cbow_mean, REAL_t *word_locks) nogil:
+    int i, int j, int k, int cbow_mean, REAL_t *word_locks,
+    const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
 
     cdef long long a, b
-    cdef long long row2
-    cdef REAL_t f, g, count, inv_count = 1.0
+    cdef long long row2, sgn
+    cdef REAL_t f, g, count, inv_count = 1.0, f_dot, lprob
     cdef int m
 
     memset(neu1, 0, size * cython.sizeof(REAL_t))
@@ -174,11 +195,20 @@ cdef void fast_sentence_cbow_hs(
     memset(work, 0, size * cython.sizeof(REAL_t))
     for b in range(codelens[i]):
         row2 = word_point[b] * size
-        f = our_dot(&size, neu1, &ONE, &syn1[row2], &ONE)
-        if f <= -MAX_EXP or f >= MAX_EXP:
+        f_dot = our_dot(&size, neu1, &ONE, &syn1[row2], &ONE)
+        if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
-        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (1 - word_code[b] - f) * alpha
+
+        if _compute_loss == 1:
+            sgn = (-1)**word_code[b]  # ch function: 0-> 1, 1 -> -1
+            lprob = -1*sgn*f_dot
+            if lprob <= -MAX_EXP or lprob >= MAX_EXP:
+                continue
+            lprob = LOG_TABLE[<int>((lprob + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+            _running_training_loss_param[0] = _running_training_loss_param[0] - lprob
+
         our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, neu1, &ONE, &syn1[row2], &ONE)
 
@@ -196,12 +226,13 @@ cdef unsigned long long fast_sentence_cbow_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks) nogil:
+    int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks,
+    const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
 
     cdef long long a
     cdef long long row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t f, g, count, inv_count = 1.0, label
+    cdef REAL_t f, g, count, inv_count = 1.0, label, log_e_f_dot, f_dot
     cdef np.uint32_t target_index, word_index
     cdef int d, m
 
@@ -234,11 +265,19 @@ cdef unsigned long long fast_sentence_cbow_neg(
             label = <REAL_t>0.0
 
         row2 = target_index * size
-        f = our_dot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
-        if f <= -MAX_EXP or f >= MAX_EXP:
+        f_dot = our_dot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
+        if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
-        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (label - f) * alpha
+
+        if _compute_loss == 1:
+            f_dot = (f_dot if d == 0  else -f_dot)
+            if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
+                continue
+            log_e_f_dot = LOG_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+            _running_training_loss_param[0] = _running_training_loss_param[0] - log_e_f_dot
+
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
 
@@ -254,12 +293,15 @@ cdef unsigned long long fast_sentence_cbow_neg(
     return next_random
 
 
-def train_batch_sg(model, sentences, alpha, _work):
+def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.sample != 0)
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef int _compute_loss = (1 if compute_loss == True else 0)
+    cdef REAL_t _running_training_loss = model.running_training_loss
+
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
@@ -301,7 +343,7 @@ def train_batch_sg(model, sentences, alpha, _work):
     work = <REAL_t *>np.PyArray_DATA(_work)
 
     # prepare C structures so we can go "full C" and release the Python GIL
-    vlookup = model.vocab
+    vlookup = model.wv.vocab
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
@@ -350,20 +392,24 @@ def train_batch_sg(model, sentences, alpha, _work):
                     if j == i:
                         continue
                     if hs:
-                        fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
+                        fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
                     if negative:
-                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
+                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
 
+    model.running_training_loss = _running_training_loss
     return effective_words
 
 
-def train_batch_cbow(model, sentences, alpha, _work, _neu1):
+def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.sample != 0)
     cdef int cbow_mean = model.cbow_mean
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef int _compute_loss = (1 if compute_loss == True else 0)
+    cdef REAL_t _running_training_loss = model.running_training_loss
+
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
@@ -406,7 +452,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
     # prepare C structures so we can go "full C" and release the Python GIL
-    vlookup = model.vocab
+    vlookup = model.wv.vocab
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
@@ -452,17 +498,18 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
                 if k > idx_end:
                     k = idx_end
                 if hs:
-                    fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks)
+                    fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
                 if negative:
-                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks)
+                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
+    model.running_training_loss = _running_training_loss
     return effective_words
 
 
 # Score is only implemented for hierarchical softmax
 def score_sentence_sg(model, sentence, _work):
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
     cdef REAL_t *work
     cdef int size = model.layer1_size
 
@@ -483,7 +530,7 @@ def score_sentence_sg(model, sentence, _work):
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
 
-    vlookup = model.vocab
+    vlookup = model.wv.vocab
     i = 0
     for token in sentence:
         word = vlookup[token] if token in vlookup else None
@@ -532,7 +579,7 @@ cdef void score_pair_sg_hs(
         row2 = word_point[b] * size
         f = our_dot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
         sgn = (-1)**word_code[b] # ch function: 0-> 1, 1 -> -1
-        f = sgn*f
+        f *= sgn
         if f <= -MAX_EXP or f >= MAX_EXP:
             continue
         f = LOG_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
@@ -542,7 +589,7 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
 
     cdef int cbow_mean = model.cbow_mean
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
     cdef REAL_t *work
     cdef REAL_t *neu1
     cdef int size = model.layer1_size
@@ -566,7 +613,7 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
     work = <REAL_t *>np.PyArray_DATA(_work)
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
-    vlookup = model.vocab
+    vlookup = model.wv.vocab
     i = 0
     for token in sentence:
         word = vlookup[token] if token in vlookup else None
@@ -626,7 +673,7 @@ cdef void score_pair_cbow_hs(
         row2 = word_point[b] * size
         f = our_dot(&size, neu1, &ONE, &syn1[row2], &ONE)
         sgn = (-1)**word_code[b] # ch function: 0-> 1, 1 -> -1
-        f = sgn*f
+        f *= sgn
         if f <= -MAX_EXP or f >= MAX_EXP:
             continue
         f = LOG_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]

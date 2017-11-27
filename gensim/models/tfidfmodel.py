@@ -28,8 +28,7 @@ def precompute_idfs(wglobal, dfs, total_docs):
     """Precompute the inverse document frequency mapping for all terms."""
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
-    return dict((termid, wglobal(df, total_docs))
-                for termid, df in iteritems(dfs))
+    return {termid: wglobal(df, total_docs) for termid, df in iteritems(dfs)}
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -49,6 +48,7 @@ class TfidfModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
+
     def __init__(self, corpus=None, id2word=None, dictionary=None,
                  wlocal=utils.identity, wglobal=df2idf, normalize=True):
         """
@@ -87,11 +87,14 @@ class TfidfModel(interfaces.TransformationABC):
             # statistics we need to construct the IDF mapping. we can skip the
             # step that goes through the corpus (= an optimization).
             if corpus is not None:
-                logger.warning("constructor received both corpus and explicit "
-                               "inverse document frequencies; ignoring the corpus")
+                logger.warning(
+                    "constructor received both corpus and explicit inverse document frequencies; ignoring the corpus"
+                )
             self.num_docs, self.num_nnz = dictionary.num_docs, dictionary.num_nnz
             self.dfs = dictionary.dfs.copy()
             self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
+            if id2word is None:
+                self.id2word = dictionary
         elif corpus is not None:
             self.initialize(corpus)
         else:
@@ -99,10 +102,8 @@ class TfidfModel(interfaces.TransformationABC):
             # be initialized in some other way
             pass
 
-
     def __str__(self):
         return "TfidfModel(num_docs=%s, num_nnz=%s)" % (self.num_docs, self.num_nnz)
-
 
     def initialize(self, corpus):
         """
@@ -114,7 +115,7 @@ class TfidfModel(interfaces.TransformationABC):
         numnnz, docno = 0, -1
         for docno, bow in enumerate(corpus):
             if docno % 10000 == 0:
-                logger.info("PROGRESS: processing document #%i" % docno)
+                logger.info("PROGRESS: processing document #%i", docno)
             numnnz += len(bow)
             for termid, _ in bow:
                 dfs[termid] = dfs.get(termid, 0) + 1
@@ -126,10 +127,11 @@ class TfidfModel(interfaces.TransformationABC):
 
         # and finally compute the idf weights
         n_features = max(dfs) if dfs else 0
-        logger.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
-                     (self.num_docs, n_features, self.num_nnz))
+        logger.info(
+            "calculating IDF weights for %i documents and %i features (%i matrix non-zeros)",
+            self.num_docs, n_features, self.num_nnz
+        )
         self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
-
 
     def __getitem__(self, bow, eps=1e-12):
         """
@@ -142,8 +144,10 @@ class TfidfModel(interfaces.TransformationABC):
 
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
         # as strict application of the IDF formula would dictate)
-        vector = [(termid, self.wlocal(tf) * self.idfs.get(termid))
-                  for termid, tf in bow if self.idfs.get(termid, 0.0) != 0.0]
+        vector = [
+            (termid, self.wlocal(tf) * self.idfs.get(termid))
+            for termid, tf in bow if self.idfs.get(termid, 0.0) != 0.0
+        ]
 
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
@@ -155,4 +159,3 @@ class TfidfModel(interfaces.TransformationABC):
         # make sure there are no explicit zeroes in the vector (must be sparse)
         vector = [(termid, weight) for termid, weight in vector if abs(weight) > eps]
         return vector
-#endclass TfidfModel

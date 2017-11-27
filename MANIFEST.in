@@ -1,14 +1,12 @@
-recursive-include docs *
 recursive-include gensim/test/test_data *
-recursive-include . *.sh
-prune docs/src*
-include README.rst
-include CHANGELOG.txt
+include README.md
+include CHANGELOG.md
 include COPYING
 include COPYING.LESSER
 include ez_setup.py
 include gensim/models/voidptr.h
 include gensim/models/word2vec_inner.c
 include gensim/models/word2vec_inner.pyx
+include gensim/models/word2vec_inner.pxd
 include gensim/models/doc2vec_inner.c
 include gensim/models/doc2vec_inner.pyx

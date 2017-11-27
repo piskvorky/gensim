@@ -30,7 +30,7 @@ def _get_pos_filters():
     return frozenset(INCLUDING_FILTER), frozenset(EXCLUDING_FILTER)
 
 
-def _get_words_for_graph(tokens, pos_filter):
+def _get_words_for_graph(tokens, pos_filter=None):
     if pos_filter is None:
         include_filters, exclude_filters = _get_pos_filters()
     else:
@@ -97,7 +97,7 @@ def _process_text(graph, tokens, split_text):
 
 def _queue_iterator(queue):
     iterations = queue.qsize()
-    for i in xrange(iterations):
+    for _ in xrange(iterations):
         var = queue.get()
         yield var
         queue.put(var)
@@ -164,7 +164,7 @@ def _get_combined_keywords(_keywords, split_text):
                 result.append(word)   # appends last word if keyword and doesn't iterate
             for j in xrange(i + 1, len_text):
                 other_word = _strip_word(split_text[j])
-                if other_word in _keywords and other_word == split_text[j]:
+                if other_word in _keywords and other_word == split_text[j] and other_word not in combined_word:
                     combined_word.append(other_word)
                 else:
                     for keyword in combined_word:
@@ -197,10 +197,11 @@ def _format_results(_keywords, combined_keywords, split, scores):
     return "\n".join(combined_keywords)
 
 
-def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=['NN', 'JJ'], lemmatize=False):
+def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=('NN', 'JJ'),
+             lemmatize=False, deacc=True):
     # Gets a dict of word -> lemma
     text = to_unicode(text)
-    tokens = _clean_text_by_word(text)
+    tokens = _clean_text_by_word(text, deacc=deacc)
     split_text = list(_tokenize_by_word(text))
 
     # Creates the graph and adds the edges

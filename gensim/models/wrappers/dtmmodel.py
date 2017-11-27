@@ -13,7 +13,8 @@ This module allows for DTM and DIM model estimation from a training corpus.
 
 Example:
 
->>> model = gensim.models.wrappers.DtmModel('dtm-win64.exe', my_corpus, my_timeslices, num_topics=20, id2word=dictionary)
+>>> model = gensim.models.wrappers.DtmModel('dtm-win64.exe', my_corpus, my_timeslices,
+...                num_topics=20, id2word=dictionary)
 
 .. [1] https://github.com/magsilva/dtm/tree/master/bin
 
@@ -22,11 +23,11 @@ Example:
 
 import logging
 import random
+import warnings
 import tempfile
 import os
 from subprocess import PIPE
 import numpy as np
-import six
 
 from gensim import utils, corpora, matutils
 from gensim.utils import check_output
@@ -41,9 +42,9 @@ class DtmModel(utils.SaveLoad):
 
     """
 
-    def __init__(
-            self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100, id2word=None, prefix=None,
-            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=False):
+    def __init__(self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100,
+                 id2word=None, prefix=None, lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10,
+                 alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
         """
         `dtm_path` is path to the dtm executable, e.g. `C:/dtm/dtm-win64.exe`.
 
@@ -88,14 +89,19 @@ class DtmModel(utils.SaveLoad):
 
         try:
             lencorpus = len(corpus)
-        except:
+        except TypeError:
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
             raise ValueError("cannot compute DTM over an empty corpus")
+        if model == "fixed" and any(not text for text in corpus):
+            raise ValueError("""There is a text without words in the input corpus.
+                    This breaks method='fixed' (The DIM model).""")
         if lencorpus != sum(time_slices):
-            raise ValueError("mismatched timeslices %{slices} for corpus of len {clen}".format(
-                slices=sum(time_slices), clen=lencorpus))
+            raise ValueError(
+                "mismatched timeslices %{slices} for corpus of len {clen}"
+                .format(slices=sum(time_slices), clen=lencorpus)
+            )
         self.lencorpus = lencorpus
         if prefix is None:
             rand_prefix = hex(random.randint(0, 0xffffff))[2:] + '_'
@@ -168,14 +174,14 @@ class DtmModel(utils.SaveLoad):
         Serialize documents in LDA-C format to a temporary text file,.
 
         """
-        logger.info("serializing temporary corpus to %s" % self.fcorpustxt())
+        logger.info("serializing temporary corpus to %s", self.fcorpustxt())
         # write out the corpus in a file format that DTM understands:
         corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
 
         with utils.smart_open(self.ftimeslices(), 'wb') as fout:
-            fout.write(six.u(str(len(self.time_slices)) + "\n"))
+            fout.write(utils.to_utf8(str(len(self.time_slices)) + "\n"))
             for sl in time_slices:
-                fout.write(six.u(str(sl) + "\n"))
+                fout.write(utils.to_utf8(str(sl) + "\n"))
 
     def train(self, corpus, time_slices, mode, model):
         """
@@ -184,18 +190,26 @@ class DtmModel(utils.SaveLoad):
         """
         self.convert_input(corpus, time_slices)
 
-        arguments = "--ntopics={p0} --model={mofrl}  --mode={p1} --initialize_lda={p2} --corpus_prefix={p3} --outname={p4} --alpha={p5}".format(
-            p0=self.num_topics, mofrl=model, p1=mode, p2=self.initialize_lda, p3=self.fcorpus(), p4=self.foutname(), p5=self.alpha)
+        arguments = \
+            "--ntopics={p0} --model={mofrl}  --mode={p1} --initialize_lda={p2} --corpus_prefix={p3} " \
+            "--outname={p4} --alpha={p5}".format(
+                p0=self.num_topics, mofrl=model, p1=mode, p2=self.initialize_lda,
+                p3=self.fcorpus(), p4=self.foutname(), p5=self.alpha
+            )
 
-        params = "--lda_max_em_iter={p0} --lda_sequence_min_iter={p1}  --lda_sequence_max_iter={p2} --top_chain_var={p3} --rng_seed={p4} ".format(
-            p0=self.lda_max_em_iter, p1=self.lda_sequence_min_iter, p2=self.lda_sequence_max_iter, p3=self.top_chain_var, p4=self.rng_seed)
+        params = \
+            "--lda_max_em_iter={p0} --lda_sequence_min_iter={p1}  --lda_sequence_max_iter={p2} " \
+            "--top_chain_var={p3} --rng_seed={p4} ".format(
+                p0=self.lda_max_em_iter, p1=self.lda_sequence_min_iter, p2=self.lda_sequence_max_iter,
+                p3=self.top_chain_var, p4=self.rng_seed
+            )
 
         arguments = arguments + " " + params
-        logger.info("training DTM with args %s" % arguments)
+        logger.info("training DTM with args %s", arguments)
 
         cmd = [self.dtm_path] + arguments.split()
-        logger.info("Running command %s" % cmd)
-        check_output(cmd, stderr=PIPE)
+        logger.info("Running command %s", cmd)
+        check_output(args=cmd, stderr=PIPE)
 
         self.em_steps = np.loadtxt(self.fem_steps())
         self.init_ss = np.loadtxt(self.flda_ss())
@@ -218,9 +232,9 @@ class DtmModel(utils.SaveLoad):
         self.obs_ = np.zeros((self.num_topics, self.num_terms * len(self.time_slices)))
 
         for t in range(self.num_topics):
-                topic = "%03d" % t
-                self.lambda_[t, :] = np.loadtxt(self.fout_prob().format(i=topic))
-                self.obs_[t, :] = np.loadtxt(self.fout_observations().format(i=topic))
+            topic = "%03d" % t
+            self.lambda_[t, :] = np.loadtxt(self.fout_prob().format(i=topic))
+            self.obs_[t, :] = np.loadtxt(self.fout_observations().format(i=topic))
         # cast to correct shape, lambda[5,10,0] is the proportion of the 10th
         # topic in doc 5 at time 0
         self.lambda_.shape = (self.num_topics, self.num_terms, len(self.time_slices))
@@ -235,30 +249,23 @@ class DtmModel(utils.SaveLoad):
                 # influence[2,5] influence of document 2 on topic 5
                 self.influences_time.append(influence)
 
-    def print_topics(self, topics=10, times=5, topn=10):
-        return self.show_topics(topics, times, topn, log=True)
+    def print_topics(self, num_topics=10, times=5, num_words=10):
+        return self.show_topics(num_topics, times, num_words, log=True)
 
-    def show_topics(self, topics=10, times=5, topn=10, log=False, formatted=True):
+    def show_topics(self, num_topics=10, times=5, num_words=10, log=False, formatted=True):
         """
-        Print the `topn` most probable words for `topics` number of topics at 'times' time slices.
+        Print the `num_words` most probable words for `num_topics` number of topics at 'times' time slices.
         Set `topics=-1` to print all topics.
 
         Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
 
         """
-        if topics < 0 or topics >= self.num_topics:
-            topics = self.num_topics
-            chosen_topics = range(topics)
+        if num_topics < 0 or num_topics >= self.num_topics:
+            num_topics = self.num_topics
+            chosen_topics = range(num_topics)
         else:
-            topics = min(topics, self.num_topics)
-            chosen_topics = range(topics)
-             # add a little random jitter, to randomize results around the same
-            # alpha
-            # sort_alpha = self.alpha + 0.0001 * \
-            #     numpy.random.rand(len(self.alpha))
-            # sorted_topics = list(numpy.argsort(sort_alpha))
-            # chosen_topics = sorted_topics[: topics / 2] + \
-            #     sorted_topics[-topics / 2:]
+            num_topics = min(num_topics, self.num_topics)
+            chosen_topics = range(num_topics)
 
         if times < 0 or times >= len(self.time_slices):
             times = len(self.time_slices)
@@ -271,32 +278,85 @@ class DtmModel(utils.SaveLoad):
         for time in chosen_times:
             for i in chosen_topics:
                 if formatted:
-                    topic = self.print_topic(i, time, topn=topn)
+                    topic = self.print_topic(i, time, num_words=num_words)
                 else:
-                    topic = self.show_topic(i, time, topn=topn)
+                    topic = self.show_topic(i, time, num_words=num_words)
                 shown.append(topic)
-                # if log:
-                # logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i],
-                #     topic))
         return shown
 
-    def show_topic(self, topicid, time, topn=50):
+    def show_topic(self, topicid, time, topn=50, num_words=None):
         """
-        Return `topn` most probable words for the given `topicid`, as a list of
+        Return `num_words` most probable words for the given `topicid`, as a list of
         `(word_probability, word)` 2-tuples.
 
         """
+        if num_words is not None:  # deprecated num_words is used
+            logger.warning(
+                "The parameter num_words for show_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
+            topn = num_words
+
         topics = self.lambda_[:, :, time]
         topic = topics[topicid]
-        # liklihood to probability
+        # likelihood to probability
         topic = np.exp(topic)
         # normalize to probability dist
         topic = topic / topic.sum()
         # sort according to prob
         bestn = matutils.argsort(topic, topn, reverse=True)
-        beststr = [(topic[id], self.id2word[id]) for id in bestn]
+        beststr = [(topic[idx], self.id2word[idx]) for idx in bestn]
         return beststr
 
-    def print_topic(self, topicid, time, topn=10):
+    def print_topic(self, topicid, time, topn=10, num_words=None):
         """Return the given topic, formatted as a string."""
+        if num_words is not None:  # deprecated num_words is used
+            warnings.warn(
+                "The parameter num_words for print_topic() would be deprecated in the updated version. "
+                "Please use topn instead."
+            )
+            topn = num_words
+
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
+
+    def dtm_vis(self, corpus, time):
+        """
+        returns term_frequency, vocab, doc_lengths, topic-term distributions and doc_topic distributions,
+        specified by pyLDAvis format.
+        all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
+        input parameter is the year to do the visualisation.
+        """
+        topic_term = np.exp(self.lambda_[:, :, time]) / np.exp(self.lambda_[:, :, time]).sum()
+        topic_term *= self.num_topics
+
+        doc_topic = self.gamma_
+
+        doc_lengths = [len(doc) for doc_no, doc in enumerate(corpus)]
+
+        term_frequency = np.zeros(len(self.id2word))
+        for doc_no, doc in enumerate(corpus):
+            for pair in doc:
+                term_frequency[pair[0]] += pair[1]
+
+        vocab = [self.id2word[i] for i in range(0, len(self.id2word))]
+        # returns numpy arrays for doc_topic proportions, topic_term proportions, and document_lengths, term_frequency.
+        # these should be passed to the `pyLDAvis.prepare` method to visualise one time-slice of DTM topics.
+        return doc_topic, topic_term, doc_lengths, term_frequency, vocab
+
+    def dtm_coherence(self, time, num_words=20):
+        """
+        returns all topics of a particular time-slice without probabilitiy values for it to be used
+        for either "u_mass" or "c_v" coherence.
+        TODO:
+            because of print format right now can only return for 1st time-slice.
+            should we fix the coherence printing or make changes to the print statements to mirror DTM python?
+        """
+        coherence_topics = []
+        for topic_no in range(0, self.num_topics):
+            topic = self.show_topic(topicid=topic_no, time=time, num_words=num_words)
+            coherence_topic = []
+            for prob, word in topic:
+                coherence_topic.append(word)
+            coherence_topics.append(coherence_topic)
+
+        return coherence_topics

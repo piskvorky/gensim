@@ -21,13 +21,13 @@ except ImportError:
     HAS_PATTERN = False
 
 
-SEPARATOR = r"@"
-RE_SENTENCE = re.compile('(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)  # backup (\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)
-AB_SENIOR = re.compile("([A-Z][a-z]{1,2}\.)\s(\w)", re.UNICODE)
-AB_ACRONYM = re.compile("(\.[a-zA-Z]\.)\s(\w)", re.UNICODE)
-AB_ACRONYM_LETTERS = re.compile("([a-zA-Z])\.([a-zA-Z])\.", re.UNICODE)
-UNDO_AB_SENIOR = re.compile("([A-Z][a-z]{1,2}\.)" + SEPARATOR + "(\w)", re.UNICODE)
-UNDO_AB_ACRONYM = re.compile("(\.[a-zA-Z]\.)" + SEPARATOR + "(\w)", re.UNICODE)
+SEPARATOR = r'@'
+RE_SENTENCE = re.compile(r'(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)
+AB_SENIOR = re.compile(r'([A-Z][a-z]{1,2}\.)\s(\w)', re.UNICODE)
+AB_ACRONYM = re.compile(r'(\.[a-zA-Z]\.)\s(\w)', re.UNICODE)
+AB_ACRONYM_LETTERS = re.compile(r'([a-zA-Z])\.([a-zA-Z])\.', re.UNICODE)
+UNDO_AB_SENIOR = re.compile(r'([A-Z][a-z]{1,2}\.)' + SEPARATOR + r'(\w)', re.UNICODE)
+UNDO_AB_ACRONYM = re.compile(r'(\.[a-zA-Z]\.)' + SEPARATOR + r'(\w)', re.UNICODE)
 
 
 def split_sentences(text):
@@ -86,18 +86,18 @@ def clean_text_by_sentences(text):
     return merge_syntactic_units(original_sentences, filtered_sentences)
 
 
-def clean_text_by_word(text):
+def clean_text_by_word(text, deacc=True):
     """ Tokenizes a given text into words, applying filters and lemmatizing them.
     Returns a dict of word -> syntacticUnit. """
     text_without_acronyms = replace_with_separator(text, "", [AB_ACRONYM_LETTERS])
-    original_words = list(tokenize(text_without_acronyms, to_lower=True, deacc=True))
+    original_words = list(tokenize(text_without_acronyms, to_lower=True, deacc=deacc))
     filtered_words = [join_words(word_list, "") for word_list in preprocess_documents(original_words)]
     if HAS_PATTERN:
         tags = tag(join_words(original_words))  # tag needs the context of the words in the text
     else:
         tags = None
     units = merge_syntactic_units(original_words, filtered_words, tags)
-    return dict((unit.text, unit) for unit in units)
+    return {unit.text: unit for unit in units}
 
 
 def tokenize_by_word(text):

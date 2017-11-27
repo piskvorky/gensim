@@ -31,8 +31,7 @@ from gensim import utils
 from six import iteritems, iterkeys
 
 
-logger = logging.getLogger('gensim.corpora.hashdictionary')
-
+logger = logging.getLogger(__name__)
 
 
 class HashDictionary(utils.SaveLoad, dict):
@@ -54,24 +53,23 @@ class HashDictionary(utils.SaveLoad, dict):
         running out of memory (or are sure you don't need the debug info), set
         `debug=False`.
         """
-        self.myhash = myhash # hash fnc: string->integer
-        self.id_range = id_range # hash range: id = myhash(key) % id_range
+        self.myhash = myhash  # hash fnc: string->integer
+        self.id_range = id_range  # hash range: id = myhash(key) % id_range
         self.debug = debug
 
         # the following (potentially massive!) dictionaries are only formed if `debug` is True
         self.token2id = {}
-        self.id2token = {} # reverse mapping int->set(words)
-        self.dfs = {} # token_id -> how many documents this token_id appeared in
-        self.dfs_debug = {} # token_string->how many documents this word appeared in
+        self.id2token = {}  # reverse mapping int->set(words)
+        self.dfs = {}  # token_id -> how many documents this token_id appeared in
+        self.dfs_debug = {}  # token_string->how many documents this word appeared in
 
-        self.num_docs = 0 # number of documents processed
-        self.num_pos = 0 # total number of corpus positions
-        self.num_nnz = 0 # total number of non-zeroes in the BOW matrix
+        self.num_docs = 0  # number of documents processed
+        self.num_pos = 0  # total number of corpus positions
+        self.num_nnz = 0  # total number of non-zeroes in the BOW matrix
         self.allow_update = True
 
         if documents is not None:
             self.add_documents(documents)
-
 
     def __getitem__(self, tokenid):
         """
@@ -80,7 +78,6 @@ class HashDictionary(utils.SaveLoad, dict):
         Only works if `self.debug` was enabled.
         """
         return self.id2token.get(tokenid, set())
-
 
     def restricted_hash(self, token):
         """
@@ -93,27 +90,22 @@ class HashDictionary(utils.SaveLoad, dict):
             self.id2token.setdefault(h, set()).add(token)
         return h
 
-
     def __len__(self):
         """
         Return the number of distinct ids = the entire dictionary size.
         """
         return self.id_range
 
-
     def keys(self):
         """Return a list of all token ids."""
         return range(len(self))
 
-
     def __str__(self):
-        return ("HashDictionary(%i id range)" % len(self))
-
+        return "HashDictionary(%i id range)" % len(self)
 
     @staticmethod
     def from_documents(*args, **kwargs):
         return HashDictionary(*args, **kwargs)
-
 
     def add_documents(self, documents):
         """
@@ -125,11 +117,12 @@ class HashDictionary(utils.SaveLoad, dict):
         """
         for docno, document in enumerate(documents):
             if docno % 10000 == 0:
-                logger.info("adding document #%i to %s" % (docno, self))
-            _ = self.doc2bow(document, allow_update=True) # ignore the result, here we only care about updating token ids
-        logger.info("built %s from %i documents (total %i corpus positions)" %
-                     (self, self.num_docs, self.num_pos))
-
+                logger.info("adding document #%i to %s", docno, self)
+            self.doc2bow(document, allow_update=True)  # ignore the result, here we only care about updating token ids
+        logger.info(
+            "built %s from %i documents (total %i corpus positions)",
+            self, self.num_docs, self.num_pos
+        )
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """
@@ -147,9 +140,9 @@ class HashDictionary(utils.SaveLoad, dict):
         """
         result = {}
         missing = {}
-        document = sorted(document) # convert the input to plain list (needed below)
+        document = sorted(document)  # convert the input to plain list (needed below)
         for word_norm, group in itertools.groupby(document):
-            frequency = len(list(group)) # how many times does this word appear in the input document
+            frequency = len(list(group))  # how many times does this word appear in the input document
             tokenid = self.restricted_hash(word_norm)
             result[tokenid] = result.get(tokenid, 0) + frequency
             if self.debug:
@@ -173,7 +166,6 @@ class HashDictionary(utils.SaveLoad, dict):
         else:
             return result
 
-
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000):
         """
         Remove document frequency statistics for tokens that appear in
@@ -189,28 +181,23 @@ class HashDictionary(utils.SaveLoad, dict):
         clears some supplementary statistics, for easier debugging and a smaller RAM
         footprint.
         """
-        no_above_abs = int(no_above * self.num_docs) # convert fractional threshold to absolute threshold
-        ok = [item for item in iteritems(self.dfs_debug)
-                   if no_below <= item[1] <= no_above_abs]
-        ok = frozenset(word for word, freq in sorted(ok, key=lambda item: -item[1])[:keep_n])
+        no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
+        ok = [item for item in iteritems(self.dfs_debug) if no_below <= item[1] <= no_above_abs]
+        ok = frozenset(word for word, freq in sorted(ok, key=lambda x: -x[1])[:keep_n])
 
-        self.dfs_debug = dict((word, freq)
-                              for word, freq in iteritems(self.dfs_debug)
-                              if word in ok)
-        self.token2id = dict((token, tokenid)
-                             for token, tokenid in iteritems(self.token2id)
-                             if token in self.dfs_debug)
-        self.id2token = dict((tokenid, set(token for token in tokens
-                                                 if token in self.dfs_debug))
-                             for tokenid, tokens in iteritems(self.id2token))
-        self.dfs = dict((tokenid, freq)
-                        for tokenid, freq in iteritems(self.dfs)
-                        if self.id2token.get(tokenid, set()))
+        self.dfs_debug = {word: freq for word, freq in iteritems(self.dfs_debug) if word in ok}
+        self.token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if token in self.dfs_debug}
+        self.id2token = {
+            tokenid: {token for token in tokens if token in self.dfs_debug}
+            for tokenid, tokens in iteritems(self.id2token)
+        }
+        self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if self.id2token.get(tokenid, set())}
 
         # for word->document frequency
-        logger.info("kept statistics for which were in no less than %i and no more than %i (=%.1f%%) documents" %
-            (no_below, no_above_abs, 100.0 * no_above))
-
+        logger.info(
+            "kept statistics for which were in no less than %i and no more than %i (=%.1f%%) documents",
+            no_below, no_above_abs, 100.0 * no_above
+        )
 
     def save_as_text(self, fname):
         """
@@ -227,7 +214,6 @@ class HashDictionary(utils.SaveLoad, dict):
                 words = sorted(self[tokenid])
                 if words:
                     words_df = [(word, self.dfs_debug.get(word, 0)) for word in words]
-                    words_df = ["%s(%i)" % item for item in sorted(words_df, key=lambda item: -item[1])]
-                    fout.write(utils.to_utf8("%i\t%i\t%s\n" %
-                        (tokenid, self.dfs.get(tokenid, 0), '\t'.join(words_df))))
-#endclass HashDictionary
+                    words_df = ["%s(%i)" % item for item in sorted(words_df, key=lambda x: -x[1])]
+                    words_df = '\t'.join(words_df)
+                    fout.write(utils.to_utf8("%i\t%i\t%s\n" % (tokenid, self.dfs.get(tokenid, 0), words_df)))
