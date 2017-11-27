@@ -51,7 +51,7 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
     ----------
     segmented_topics : list of (list of tuples)
         Output from the segmentation module of the segmented topics.
-    accumulator: list
+    accumulator: :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator from probability_estimation.
     with_std : bool
         True to also include standard deviation across topic segment
@@ -132,11 +132,11 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
     ----------
     segmented_topics: list of (list of tuples)
         Output from the segmentation module of the segmented topics.
-    accumulator: accumulator of word occurrences (see text_analysis module).
+    accumulator: :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Output from the probability_estimation module. Is an topics: Topics obtained from the trained topic model.
     measure : str
         Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
-    gamma:
+    gamma: float
         Gamma value for computing W', W* vectors.
     with_std : bool
         True to also include standard deviation across topic segment sets in addition to the mean coherence
@@ -153,7 +153,7 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
     Examples
     --------
     >>> from gensim.corpora.dictionary import Dictionary
-    >>> from gensim.topic_coherence import indirect_confirmation_measure,text_analysis
+    >>> from gensim.topic_coherence import indirect_confirmation_measure, text_analysis
     >>> import numpy as np
     >>> dictionary = Dictionary()
     >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
@@ -184,20 +184,30 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamm
 
 
 class ContextVectorComputer(object):
-    """Lazily compute context vectors for topic segments."""
+    """Lazily compute context vectors for topic segments.
+
+    Attributes
+    ----------
+    sim_cache: dict
+        Cache similarities between tokens (pairs of word ids), e.g. (1, 2).
+    context_vector_cache: dict
+        Mapping from (segment, topic_words) --> context_vector.
+
+    """
 
     def __init__(self, measure, topics, accumulator, gamma):
         """
         Parameters
         ----------
-        measure: tuple
-            in progress
+        measure: str
+            Confirmation measure.
         topics: list
-            in progress
-        accumulator : list
+            Topics.
+        accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
             Word occurrence accumulator from probability_estimation.
-        gamma:
-            in progress
+        gamma: float
+            Value for computing vectors.
+
         """
         if measure == 'nlr':
             self.similarity = _pair_npmi
@@ -209,28 +219,28 @@ class ContextVectorComputer(object):
         self.vocab_size = len(self.mapping)
         self.accumulator = accumulator
         self.gamma = gamma
-        self.sim_cache = {}  # Cache similarities between tokens (pairs of word ids), e.g. (1, 2)
-        self.context_vector_cache = {}  # mapping from (segment, topic_words) --> context_vector
+        self.sim_cache = {}
+        self.context_vector_cache = {}
 
     def __getitem__(self, idx):
         return self.compute_context_vector(*idx)
 
     def compute_context_vector(self, segment_word_ids, topic_word_ids):
-        """
-        Check if (segment_word_ids, topic_word_ids) context vector has been cached.
-        If yes, return corresponding context vector, else compute, cache, and return.
+        """Check if (segment_word_ids, topic_word_ids) context vector has been cached.
+
 
         Parameters
         ----------
-        segment_word_ids: in progress
+        segment_word_ids: list
 
-        topic_word_ids: in progress
+        topic_word_ids: list
 
         Returns
         -------
-        in progress
+        csr_matrix :class:`~scipy.sparse.csr`
+            If context vector has been cached, then return corresponding context vector, else compute, cache, and return.
 
-        Examples:
+        Example
         ---------
         In progress
 
@@ -256,7 +266,7 @@ class ContextVectorComputer(object):
         csr_matrix :class:`~scipy.sparse.csr`
             Matrix in Compressed Sparse Row format
 
-        Examples:
+        Example
         ---------
         In progress
 
@@ -279,7 +289,19 @@ class ContextVectorComputer(object):
 
 def _pair_npmi(pair, accumulator):
     """Compute normalized pairwise mutual information (NPMI) between a pair of words.
-    The pair is an iterable of (word_id1, word_id2).
+
+    Parameters
+    ----------
+    pair : iterable
+        The pair of words (word_id1, word_id2).
+    accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
+        Word occurrence accumulator from probability_estimation.
+
+    Return
+    ------
+    float
+        NPMI between a pair of words.
+
     """
     return log_ratio_measure([[pair]], accumulator, True)[0]
 

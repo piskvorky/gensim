@@ -148,8 +148,16 @@ def unique_ids_from_segments(segmented_topics):
     -------
     set
         Set of unique ids across all topic segments.
-    """
 
+    Example
+    -------
+    >>> from gensim.topic_coherence import probability_estimation
+    >>> segmentation = [[(1, 2)]]
+    >>> probability_estimation.unique_ids_from_segments(segmentation)
+    set([1, 2])
+
+
+    """
     unique_ids = set()  # is a set of all the unique ids contained in topics.
     for s_i in segmented_topics:
         for word_id in itertools.chain.from_iterable(s_i):

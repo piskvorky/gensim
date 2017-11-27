@@ -37,11 +37,12 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
 
     Returns
     -------
-        list : of log conditional probability measure for each topic.
+    list
+        List of log conditional probability measure for each topic.
 
     Examples
     --------
-    >>> from gensim.topic_coherence import direct_confirmation_measure,text_analysis
+    >>> from gensim.topic_coherence import direct_confirmation_measure, text_analysis
     >>> from collections import namedtuple
     Now we create dictionary:
     >>> id2token = {1: 'test', 2: 'doc'}
@@ -83,8 +84,8 @@ def aggregate_segment_sims(segment_sims, with_std, with_support):
 
     Parameters
     ----------
-    segment_sims : iterable
-        floating point similarity values to aggregate.
+    segment_sims : iterable array
+        Floating point similarity values to aggregate.
     with_std : bool
         Set to True to include standard deviation.
     with_support : bool
@@ -95,9 +96,16 @@ def aggregate_segment_sims(segment_sims, with_std, with_support):
     tuple
         tuple with (mean[, std[, support]])
 
-    Examples:
+    Examples
     ---------
-    in progress
+    >>> import numpy as np
+    >>> from gensim.topic_coherence import direct_confirmation_measure
+    >>> segment_sims = np.array([[1, 2], [3, 4]])
+    >>> direct_confirmation_measure.aggregate_segment_sims(segment_sims,True,True)
+    (2.5, 1.1180339887498949, 2)
+    >>> direct_confirmation_measure.aggregate_segment_sims(segment_sims,False,False)
+    2.5
+
     """
     mean = np.mean(segment_sims)
     stats = [mean]

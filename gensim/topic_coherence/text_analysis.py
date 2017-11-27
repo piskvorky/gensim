@@ -60,7 +60,17 @@ def _ids_to_words(ids, dictionary):
 
 
 class BaseAnalyzer(object):
-    """Base class for corpus and text analyzers."""
+    """Base class for corpus and text analyzers.
+
+    Attributes
+    ----------
+    relevant_ids :
+    _vocab_size :
+    id2contiguous :
+    log_every : int
+    _num_docs : int
+
+    """
 
     def __init__(self, relevant_ids):
         self.relevant_ids = relevant_ids
@@ -180,9 +190,12 @@ class WindowedTextsAnalyzer(UsesDictionary):
 
     def __init__(self, relevant_ids, dictionary):
         """
-        Args:
-            relevant_ids: the set of words that occurrences should be accumulated for.
-            dictionary: Dictionary instance with mappings for the relevant_ids.
+        Parameters
+        ----------
+        relevant_ids: set
+            Set of words that occurrences should be accumulated for.
+        dictionary: tuple
+            Dictionary instance with mappings for the relevant_ids.
         """
         super(WindowedTextsAnalyzer, self).__init__(relevant_ids, dictionary)
         self._none_token = self._vocab_size  # see _iter_texts for use of none token
