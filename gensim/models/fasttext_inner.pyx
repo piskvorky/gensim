@@ -44,7 +44,7 @@ cdef REAL_t ONEF = <REAL_t>1.0
 cdef unsigned long long fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
-    const np.uint32_t word_index, np.uint32_t *subwords_index, const np.uint32_t subwords_len,
+    const np.uint32_t word_index, const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
     const REAL_t alpha, REAL_t *work, REAL_t *l1, unsigned long long next_random, REAL_t *word_locks_vocab,
     REAL_t *word_locks_ngrams) nogil:
 
@@ -93,7 +93,7 @@ cdef unsigned long long fast_sentence_sg_neg(
 cdef void fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
-    np.uint32_t *subwords_index, const np.uint32_t subwords_len, 
+    const np.uint32_t *subwords_index, const np.uint32_t subwords_len, 
     const REAL_t alpha, REAL_t *work, REAL_t *l1, REAL_t *word_locks_vocab,
     REAL_t *word_locks_ngrams) nogil:
 
@@ -166,8 +166,9 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     cdef unsigned long long next_random
 
     # For passing subwords information as C objects for nogil
-    cdef np.uint32_t subwords_idx_len[MAX_SENTENCE_LEN]
-    cdef np.uint32_t subwords_idx[MAX_SENTENCE_LEN][MAX_SUBWORDS]
+    cdef int subwords_idx_len[MAX_SENTENCE_LEN]
+    cdef np.uint32_t *subwords_idx[MAX_SENTENCE_LEN]
+
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
@@ -196,6 +197,12 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
             if sample and word.sample_int < random_int32(&next_random):
                 continue
             indexes[effective_words] = word.index
+
+            subwords = [model.wv.ngrams[subword_i] for subword_i in model.wv.ngrams_word[model.wv.index2word[word.index]]]
+            word_subwords = np.array([word.index] + subwords, dtype=np.uint32)
+            subwords_idx_len[effective_words] = <int>(len(subwords) + 1)
+            subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)
+
             if hs:
                 codelens[effective_words] = <int>len(word.code)
                 codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
@@ -217,14 +224,6 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     # precompute "reduced window" offsets in a single randint() call
     for i, item in enumerate(model.random.randint(0, window, effective_words)):
         reduced_windows[i] = item
-
-    for i in range(effective_words):
-        word_idx = indexes[i]
-        word_subwords = model.wv.ngrams_word[model.wv.index2word[word_idx]]
-        subwords_idx_len[i] = len(word_subwords) + 1
-        subwords_idx[i][0] = word_idx
-        for j, subword in enumerate(word_subwords):
-            subwords_idx[i][j+1] = model.wv.ngrams[subword]
 
     with nogil:
         for sent_idx in range(effective_sentences):
