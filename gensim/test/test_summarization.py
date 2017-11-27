@@ -18,7 +18,7 @@ import unittest
 
 from gensim import utils
 from gensim.corpora import Dictionary
-from gensim.summarization import summarize, summarize_corpus, keywords
+from gensim.summarization import summarize, summarize_corpus, keywords, mz_keywords
 
 
 class TestSummarizationTest(unittest.TestCase):
@@ -144,6 +144,22 @@ class TestSummarizationTest(unittest.TestCase):
 
         kwds_lst = keywords(text, split=True)
         self.assertTrue(len(kwds_lst))
+        
+    def test_mz_keywords(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "head500.noblanks.cor")) as f:
+            text = f.read()
+
+        kwds = mz_keywords(text)
+        self.assertTrue(len(kwds.splitlines()))
+
+        kwds_u = mz_keywords(utils.to_unicode(text))
+        self.assertTrue(len(kwds_u.splitlines()))
+
+        kwds_lst = mz_keywords(text, split=True)
+        self.assertTrue(len(kwds_lst))
+        
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
