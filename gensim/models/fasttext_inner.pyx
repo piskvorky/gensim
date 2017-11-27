@@ -168,7 +168,9 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     # For passing subwords information as C objects for nogil
     cdef int subwords_idx_len[MAX_SENTENCE_LEN]
     cdef np.uint32_t *subwords_idx[MAX_SENTENCE_LEN]
-
+    # dummy dictionary to ensure that the memory locations that subwords_idx point to
+    # are referenced throughout so that it isn't put back to free memory pool by Python's memory manager
+    subword_arrays = {} 
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
@@ -202,6 +204,8 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
             word_subwords = np.array([word.index] + subwords, dtype=np.uint32)
             subwords_idx_len[effective_words] = <int>(len(subwords) + 1)
             subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)
+            # ensures reference count of word_subwords doesn't reach 0
+            subword_arrays[effective_words] = word_subwords
 
             if hs:
                 codelens[effective_words] = <int>len(word.code)
