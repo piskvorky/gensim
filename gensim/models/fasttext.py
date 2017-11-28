@@ -14,12 +14,10 @@ from gensim import matutils
 logger = logging.getLogger(__name__)
 
 try:
-    # TODO : log FAST_VERSION
-    from gensim.models.fasttext_inner import train_batch_sg
+    from gensim.models.fasttext_inner import train_batch_sg, train_batch_cbow
     from gensim.models.fasttext_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
 
 except ImportError:
-    # why falling back - log
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
