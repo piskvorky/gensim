@@ -266,7 +266,7 @@ def init_dir_prior(self, prior, name):
         if not extra_pass:
             self.num_updates += other.numdocs
 
-    def inference(self, chunk, , responses, collect_sstats=False):
+    def inference(self, chunk, responses, collect_sstats=False):
         try:
             len(chunk)
         except TypeError:
