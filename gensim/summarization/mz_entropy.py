@@ -46,14 +46,14 @@ def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True,
 
     Notes
     -----
-    This algorithm looks for keywords that contribute to the structure of the 
-    text on scales of blocksize words of larger. It is suitable for extracting 
+    This algorithm looks for keywords that contribute to the structure of the
+    text on scales of blocksize words of larger. It is suitable for extracting
     keywords representing the major themes of long texts.
 
     References
     ----------
     [1] Marcello A Montemurro, Damian Zanette,
-        "Towards the quantification of the semantic information encoded in 
+        "Towards the quantification of the semantic information encoded in
         written language"
         Advances in Complex Systems, Volume 13, Issue 2 (2010), pp. 135-153
         DOI: 10.1142/S0219525910002530
@@ -81,8 +81,8 @@ def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True,
     if threshold == 'auto':
         threshold = nblocks / (nblocks + 1.0) + 1.0e-8
     weights = [(word, score)
-              for (word, score) in zip(vocab, H)
-              if score > threshold]
+        for (word, score) in zip(vocab, H)
+        if score > threshold]
     weights.sort(key=lambda x: -x[1])
     result = weights if scores else [word for (word, score) in weights]
     if not (scores or split):
@@ -92,12 +92,14 @@ def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True,
 
 def __log_combinations_inner(n, m):
     """Calculates the logarithm of n!/m!(n-m)!"""
-    return -(numpy.log(n + 1)+scipy.special.betaln(n - m + 1, m + 1))
+    return -(numpy.log(n + 1) + scipy.special.betaln(n - m + 1, m + 1))
 
 
-__log_combinations=numpy.frompyfunc(__log_combinations_inner, 2, 1)
+__log_combinations = numpy.frompyfunc(__log_combinations_inner, 2, 1)
+
 
 def __marginal_prob(blocksize, nwords):
+
     def marginal_prob(n, m):
         """Marginal probability of a word that occurs n times in the document
            occurring m times in a given block"""
@@ -105,6 +107,7 @@ def __marginal_prob(blocksize, nwords):
         return numpy.exp(__log_combinations(n, m)
             + __log_combinations(nwords - n, blocksize - m)
             - __log_combinations(nwords, blocksize))
+
     return numpy.frompyfunc(marginal_prob, 2, 1)
 
 
@@ -117,4 +120,5 @@ def __analytic_entropy(blocksize, nblocks, nwords):
         p = m / n
         elements = numpy.nan_to_num(p * numpy.log2(p)) * marginal(n, m)
         return -nblocks * elements.sum()
+ 
     return numpy.frompyfunc(analytic_entropy, 1, 1)
