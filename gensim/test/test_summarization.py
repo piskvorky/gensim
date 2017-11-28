@@ -167,7 +167,7 @@ class TestSummarizationTest(unittest.TestCase):
         kwds_auto = mz_keywords(text, scores=True, weighted=False,
             threshold='auto')
         self.assertTrue(kwds_auto[-1][1] > 329.0 / 330.0)
-        
+
     def test_low_distinct_words_corpus_summarization_is_empty_list(self):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
 

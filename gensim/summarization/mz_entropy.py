@@ -120,5 +120,5 @@ def __analytic_entropy(blocksize, nblocks, nwords):
         p = m / n
         elements = numpy.nan_to_num(p * numpy.log2(p)) * marginal(n, m)
         return -nblocks * elements.sum()
- 
+
     return numpy.frompyfunc(analytic_entropy, 1, 1)
