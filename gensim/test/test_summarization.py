@@ -155,6 +155,8 @@ class TestSummarizationTest(unittest.TestCase):
             text = f.read()
 
         kwds = mz_keywords(text)
+        self.assertTrue(kwds.startswith('film'))
+        self.assertTrue(kwds.endswith('sought'))
         self.assertTrue(len(kwds.splitlines()))
 
         kwds_u = mz_keywords(utils.to_unicode(text))
@@ -162,8 +164,10 @@ class TestSummarizationTest(unittest.TestCase):
 
         kwds_lst = mz_keywords(text, split=True)
         self.assertTrue(len(kwds_lst))
+        kwds_auto = mz_keywords(text, scores=True, weighted=False, 
+            threshold='auto')
+        self.assertTrue(kwds_auto[-1][1] > 329.0 / 330.0)
         
-
     def test_low_distinct_words_corpus_summarization_is_empty_list(self):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
 

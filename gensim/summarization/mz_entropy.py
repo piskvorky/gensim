@@ -9,26 +9,22 @@ from gensim.utils import to_unicode
 import numpy
 import scipy
 
-def mz_keywords(text,
-    blocksize=1024,
-    scores=False,
-    split=False,
-    weighted=True,
+def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True,
     threshold=0.0):
     """Extract keywords from text using the Montemurro and Zanette entropy 
     algorithm. [1]_
 
     Parameters
     ----------
-    text: str 
+    text: str
         document to summarize
-    blocksize: int, optional 
+    blocksize: int, optional
         size of blocks to use in analysis, default is 1024
-    scores: bool, optional 
+    scores: bool, optional
         Whether to return score with keywords, default is False
-    split: bool, optional 
+    split: bool, optional
         Whether to return results as list, default is False
-    weighted: bool, optional 
+    weighted: bool, optional
         Whether to weight scores by word frequency. Default is True.
         False can useful for shorter texts, and allows automatic thresholding
     threshold: float or 'auto', optional
@@ -44,7 +40,7 @@ def mz_keywords(text,
         list of keywords if scores is False OR
     results: list(tuple(str, float))
         list of (keyword, score) tuples if scores is True
-        
+
     Results are returned in descending order of score regardless of the format.
 
     Notes
@@ -85,21 +81,23 @@ def mz_keywords(text,
         threshold = nblocks / (nblocks + 1.0) + 1.0e-8
     weights = [(word, score) 
               for (word, score) in zip(vocab, H)
-              if score>threshold]
-    weights.sort(key = lambda x:-x[1])
+              if score > threshold]
+    weights.sort(key=lambda x: -x[1])
     result = weights if scores else [word for (word, score) in weights]
     if not (scores or split):
         result = '\n'.join(result)
     return result
 
+
 def __log_combinations_inner(n, m):
     """Calculates the logarithm of n!/m!(n-m)!"""
-    return -(numpy.log(n+1)+scipy.special.betaln(n-m+1,m+1))
+    return -(numpy.log(n + 1)+scipy.special.betaln(n - m + 1, m + 1))
+
 
 __log_combinations=numpy.frompyfunc(__log_combinations_inner, 2, 1)
 
 def __marginal_prob(blocksize, nwords):
-    def marginal_prob(n,m):
+    def marginal_prob(n, m):
         """Marginal probability of a word that occurs n times in the document
            occurring m times in a given block"""
         return numpy.exp(__log_combinations(n, m)
@@ -107,12 +105,13 @@ def __marginal_prob(blocksize, nwords):
             - __log_combinations(nwords, blocksize))
     return numpy.frompyfunc(marginal_prob, 2, 1)
 
+
 def __analytic_entropy(blocksize, nblocks, nwords):
-    marginal=__marginal_prob(blocksize, nwords)
+    marginal = __marginal_prob(blocksize, nwords)
     def analytic_entropy(n):
         """Predicted entropy for a word that occurs n times in the document"""
         m = numpy.arange(1, min(blocksize, n) + 1).astype('d')
-        p = m/n
-        elements = p * numpy.nan_to_num(numpy.log2(p), 0.0) * marginal(n,m)
+        p = m / n
+        elements = numpy.nan_to_num(p * numpy.log2(p)) * marginal(n, m)
         return -nblocks * elements.sum()
-    return numpy.frompyfunc(analytic_entropy,1,1)
+    return numpy.frompyfunc(analytic_entropy, 1, 1)
