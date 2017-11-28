@@ -29,7 +29,7 @@ class SyntacticUnit(object):
     index : int
         Index of sytactic unit in corpus, optional.
     score : float
-        Score (BM25) of synctatic unit, optional.
+        Score of synctatic unit, optional.
 
     """
 

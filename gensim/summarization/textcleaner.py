@@ -3,9 +3,7 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Text Cleaner
-
-This module contains functions and processors used for processing text, 
+"""This module contains functions and processors used for processing text, 
 extracting sentences from text, working with acronyms and abbreviations.
 """
 
@@ -49,7 +47,9 @@ and next word"""
 
 def split_sentences(text):
     """Splits and returns list of sentences from given text. It preserves 
-    abbreviations set in `AB_SENIOR` and `AB_ACRONYM`. 
+    abbreviations set in 
+    :const:`~gensim.summarization.textcleaner.AB_SENIOR` and 
+    :const:`~gensim.summarization.textcleaner.AB_ACRONYM`.
 
     Parameters
     ----------
@@ -58,15 +58,26 @@ def split_sentences(text):
     
     Returns
     -------
-    str:
-        List of sentences from text.
+    list of str
+        Sentences of given text.
+
+    Example
+    -------
+    >>> from gensim.summarization.textcleaner import split_sentences
+    >>> text = '''Beautiful is better than ugly. 
+    ... Explicit is better than implicit. Simple is better than complex.'''
+    >>> split_sentences(text)
+    ['Beautiful is better than ugly.',
+    'Explicit is better than implicit.',
+    'Simple is better than complex.']
+
     """
     processed = replace_abbreviations(text)
     return [undo_replacement(sentence) for sentence in get_sentences(processed)]
 
 
 def replace_abbreviations(text):
-    """Replaces blank space to @ separator after abbreviation and next word.
+    """Replaces blank space to '@' separator after abbreviation and next word.
 
     Parameters
     ----------
@@ -75,13 +86,14 @@ def replace_abbreviations(text):
     
     Returns
     -------
-    str:
+    str
         Sentence with changed separator.
         
     Example
     -------
     >>> replace_abbreviations("God bless you, please, Mrs. Robinson")
     God bless you, please, Mrs.@Robinson
+    
     """
     return replace_with_separator(text, SEPARATOR, [AB_SENIOR, AB_ACRONYM])
 
@@ -96,20 +108,21 @@ def undo_replacement(sentence):
     
     Returns
     -------
-    str:
+    str
         Sentence with changed separator.
         
     Example
     -------
     >>> undo_replacement("God bless you, please, Mrs.@Robinson")
     God bless you, please, Mrs. Robinson
+
     """
     return replace_with_separator(sentence, r" ", [UNDO_AB_SENIOR, UNDO_AB_ACRONYM])
 
 
 def replace_with_separator(text, separator, regexs):
     """Returns text with replaced separator if provided regular expressions 
-    were matched.
+    were matched. Used as helper in other reaplcers.
 
     Parameters
     ----------
@@ -117,13 +130,14 @@ def replace_with_separator(text, separator, regexs):
         Input text.
     separator : str
         The separator between words to be replaced.
-    regexs : str
-        List of regular expressions.
+    regexs : list of _sre.SRE_Pattern
+        Regular expressions used in processing text.
     
     Returns
     -------
     str
         Text with replaced separators.
+
     """
     replacement = r"\1" + separator + r"\2"
     result = text
@@ -133,7 +147,8 @@ def replace_with_separator(text, separator, regexs):
 
 
 def get_sentences(text):
-    """Sentence generator from provided text. Sentence pattern set in `RE_SENTENCE`.
+    """Sentence generator from provided text. Sentence pattern set in 
+    :const:`~gensim.summarization.textcleaner.RE_SENTENCE`.
 
     Parameters
     ----------
@@ -147,11 +162,12 @@ def get_sentences(text):
 
     Example
     -------
-    >>> text = "Does this text contains two sentences? Yes, it is."
+    >>> text = "Does this text contains two sentences? Yes, it does."
     >>> for sentence in get_sentences(text):
     >>>     print(sentence)
     Does this text contains two sentences?
-    Yes, it is.
+    Yes, it does.
+
     """
     for match in RE_SENTENCE.finditer(text):
         yield match.group()
@@ -160,7 +176,7 @@ def get_sentences(text):
 def merge_syntactic_units(original_units, filtered_units, tags=None):
     """Processes given sentences and its filtered (tokenized) copies into 
     SyntacticUnit type. Also adds tags if they are provided to produced units.
-    Returns a SyntacticUnit list. 
+    Returns list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit. 
 
     Parameters
     ----------
@@ -168,13 +184,14 @@ def merge_syntactic_units(original_units, filtered_units, tags=None):
         List of original sentences.
     filtered_units : list
         List of tokenized sentences.
-    tags : list
+    tags : list of str, optional
         List of strings used as tags for each unit. None as deafault.
     
     Returns
     -------
-    list
-        SyntacticUnit for each input item.
+    list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
+        List of syntactic units (sentences).
+
     """
     units = []
     for i in xrange(len(original_units)):
@@ -193,36 +210,38 @@ def merge_syntactic_units(original_units, filtered_units, tags=None):
 
 
 def join_words(words, separator=" "):
-    """Merges words to a string using separator (blank space as default).
+    """Concatenates `words` with `separator` between elements.
 
     Parameters
     ----------
-    words : list
-        List of words.
-    separator : str
-        The separator bertween elements. Blank set as default.
+    words : list of str
+        Given words.
+    separator : str, optional
+        The separator between elements. Blank space set as default.
     
     Returns
     -------
     str
-        String of merged words with separator between them.
+        String of merged words with separator between elements.
+
     """
     return separator.join(words)
 
 
 def clean_text_by_sentences(text):
     """Tokenizes a given text into sentences, applying filters and lemmatizing them.
-    Returns a SyntacticUnit list. 
+    Returns a list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit. 
 
     Parameters
     ----------
-    text : list
-        Input text.
+    text : str
+        Given text.
     
     Returns
     -------
-    list
-        SyntacticUnit objects for each sentence.
+    list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
+        Sentences of the given text.
+
     """
     original_sentences = split_sentences(text)
     filtered_sentences = [join_words(sentence) for sentence in preprocess_documents(original_sentences)]
@@ -232,20 +251,20 @@ def clean_text_by_sentences(text):
 
 def clean_text_by_word(text, deacc=True):
     """Tokenizes a given text into words, applying filters and lemmatizing them.
-    Returns a dictionary of word -> syntacticUnit. Note that different words may
-    lead to same processed unit.
+    Returns a dictionary with words as keys and :class:~gensim.summarization.syntactic_unit.SyntacticUnit 
+    as values. Note that different words may lead to same processed units.
 
     Parameters
     ----------
-    text : list
-        Input text.
-    deacc : bool
-        Remove accentuation (default True).
+    text : str
+        Given text.
+    deacc : bool, optional
+        Remove accentuation if True.
     
     Returns
     -------
-    dictionary
-        Word as key, SyntacticUnit as value of dictionary.
+    dict
+        Words as keys, :class:~gensim.summarization.syntactic_unit.SyntacticUnit as values.
 
     Example
     -------
@@ -269,18 +288,30 @@ def clean_text_by_word(text, deacc=True):
 
 def tokenize_by_word(text):
     """Tokenizes input text. Before tokenizing transforms text to lower case and
-    removes accentuation and acronyms set `AB_ACRONYM_LETTERS`. 
+    removes accentuation and acronyms set 
+    :const:`~gensim.summarization.textcleaner.AB_ACRONYM_LETTERS`. 
     Returns generator of words.
 
     Parameters
     ----------
-    text : list
-        Input text.
+    text : str
+        Given text.
     
     Returns
     -------
     generator
-        Words contained in processed text.
+        Generator that yields sequence words of the given text.
+
+    Example
+    -------
+    >>> from gensim.summarization.textcleaner import tokenize_by_word
+    >>> g = tokenize_by_word('Veni. Vedi. Vici.')
+    >>> print(next(g))
+    veni
+    >>> print(next(g))
+    vedi
+    >>> print(next(g))
+    vici
 
     """
     text_without_acronyms = replace_with_separator(text, "", [AB_ACRONYM_LETTERS])

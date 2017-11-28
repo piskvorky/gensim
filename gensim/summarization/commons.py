@@ -30,11 +30,11 @@ from gensim.summarization.graph import Graph
 
 
 def build_graph(sequence):
-    """Creates and returns graph with given sequence of values.
+    """Creates and returns undirected graph with given sequence of values.
 
     Parameters
     ----------
-    sequence : list
+    sequence : list of hashable
         Sequence of values.
 
     Returns
@@ -51,7 +51,7 @@ def build_graph(sequence):
 
 
 def remove_unreachable_nodes(graph):
-    """Removes unreachable nodes (nodes with no edges). Works inplace.
+    """Removes unreachable nodes (nodes with no edges), inplace.
 
     Parameters
     ----------

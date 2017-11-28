@@ -11,10 +11,10 @@ Examples
 --------
 >>> from gensim.summarization import keywords
 >>> text='''Challenges in natural language processing frequently involve
->>> speech recognition, natural language understanding, natural language
->>> generation (frequently from formal, machine-readable logical forms),
->>> connecting language and machine perception, dialog systems, or some
->>> combination thereof.'''
+... speech recognition, natural language understanding, natural language
+... generation (frequently from formal, machine-readable logical forms),
+... connecting language and machine perception, dialog systems, or some
+... combination thereof.'''
 >>> print(gensim.summarization.keywords(text))
 natural language
 machine
@@ -23,9 +23,9 @@ frequently
 
 >>> from gensim.summarization.keywords import get_graph
 >>> text = '''Fly me to the moon
->>> Let me play among the stars
->>> Let me see what spring is like
->>> On a, Jupiter and Mars'''
+... Let me play among the stars
+... Let me see what spring is like
+... On a, Jupiter and Mars'''
 >>> g = get_graph(text)
 >>> print(g.nodes())
 ['fly', 'moon', 'let', 'plai', 'star', 'spring', 'like', 'jupit', 'mar']
@@ -461,7 +461,7 @@ def _format_results(_keywords, combined_keywords, split, scores):
     combined_keywords : list of str
         Most ranked words and/or its combinations.
     split : bool
-        Whether split result or return string, optional.
+        Split result if True or return string otherwise, optional.
     scores : bool
         Whether return `combined_keywords` with scores, optional. If True 
         `split` is ignored.
@@ -494,15 +494,15 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
     words : int, optional
         Number of returned words.
     split : bool, optional
-        Whether split keywords.
+        Whether split keywords if True.
     scores : bool, optional
         Whether score of keyword.
     pos_filter : tuple, optional
         Part of speech filters.
     lemmatize : bool, optional
-        Lemmatize words.
+        Lemmatize words if True.
     deacc : bool, optional
-        Remove accentuation.
+        Remove accentuation if True.
 
     Returns
     -------

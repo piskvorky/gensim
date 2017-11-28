@@ -4,8 +4,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """This module provides functions for summarizing texts. Summarizing is based on
-ranks of text sentences using BM25 algorithm.
-
+ranks of text sentences using a variation of the TextRank algorithm (see [1]_ ).
 
 
 Data:
@@ -18,35 +17,37 @@ Example
 -------
 
 >>> from gensim.summarization.summarizer import summarize
->>> text = '''
->>> Rice Pudding - Poem by Alan Alexander Milne 
->>> 
->>> What is the matter with Mary Jane? 
->>> She's crying with all her might and main, 
->>> And she won't eat her dinner - rice pudding again - 
->>> What is the matter with Mary Jane? 
->>> What is the matter with Mary Jane? 
->>> I've promised her dolls and a daisy-chain, 
->>> And a book about animals - all in vain - 
->>> What is the matter with Mary Jane? 
->>> What is the matter with Mary Jane? 
->>> She's perfectly well, and she hasn't a pain; 
->>> But, look at her, now she's beginning again! - 
->>> What is the matter with Mary Jane? 
->>> What is the matter with Mary Jane? 
->>> I've promised her sweets and a ride in the train, 
->>> And I've begged her to stop for a bit and explain - 
->>> What is the matter with Mary Jane? 
->>> What is the matter with Mary Jane? 
->>> She's perfectly well and she hasn't a pain, 
->>> And it's lovely rice pudding for dinner again! 
->>> What is the matter with Mary Jane?
->>> '''
+>>> text = '''Rice Pudding - Poem by Alan Alexander Milne
+... What is the matter with Mary Jane? 
+... She's crying with all her might and main, 
+... And she won't eat her dinner - rice pudding again - 
+... What is the matter with Mary Jane? 
+... What is the matter with Mary Jane? 
+... I've promised her dolls and a daisy-chain, 
+... And a book about animals - all in vain - 
+... What is the matter with Mary Jane? 
+... What is the matter with Mary Jane? 
+... She's perfectly well, and she hasn't a pain; 
+... But, look at her, now she's beginning again! - 
+... What is the matter with Mary Jane? 
+... What is the matter with Mary Jane? 
+... I've promised her sweets and a ride in the train, 
+... And I've begged her to stop for a bit and explain - 
+... What is the matter with Mary Jane? 
+... What is the matter with Mary Jane? 
+... She's perfectly well and she hasn't a pain, 
+... And it's lovely rice pudding for dinner again! 
+... What is the matter with Mary Jane?'''
 >>> print(summarize(text))
 And she won't eat her dinner - rice pudding again - 
 I've promised her dolls and a daisy-chain, 
 I've promised her sweets and a ride in the train, 
 And it's lovely rice pudding for dinner again!
+
+
+.. [1] Federico Barrios, Federico L´opez, Luis Argerich, Rosita Wachenchauzer (2016).  
+Variations of the Similarity Function of TextRank for Automated Summarization,
+https://arxiv.org/abs/1602.03606
 
 """
 
@@ -70,11 +71,11 @@ logger = logging.getLogger(__name__)
 
 def _set_graph_edge_weights(graph):
     """Sets weights using BM25 algorithm. Leaves small weights as zeroes. If all
-    weights are fairly small forces all weights to 1. Works inplace.
+    weights are fairly small forces all weights to 1, inplace.
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
          
     """
@@ -104,11 +105,11 @@ def _set_graph_edge_weights(graph):
 
 
 def _create_valid_graph(graph):
-    """Sets all weights of edges for different edges as 1. Works inplace.
+    """Sets all weights of edges for different edges as 1, inplace.
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
          
     """
@@ -178,7 +179,7 @@ def _build_corpus(sentences):
 
     Parameters
     ----------
-    sentences : list of SyntacticUnit
+    sentences : list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
         Given senteces.
 
     Returns
@@ -197,16 +198,16 @@ def _get_important_sentences(sentences, corpus, important_docs):
 
     Parameters
     ----------
-    sentences : list of SyntacticUnit
+    sentences : list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
         Given senteces.
     corpus : list of (list of (tuple of int))
         Provided corpus.
     important_docs : list of (list of (tuple of int))
-        Most important docs of the corpus.
+        Most important documents of the corpus.
 
     Returns
     -------
-    list of SyntacticUnit
+    list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
         Most important sentences.
 
     """
@@ -221,7 +222,7 @@ def _get_sentences_with_word_count(sentences, word_count):
 
     Parameters
     ----------
-    sentences : list of SyntacticUnit
+    sentences : list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
         Given senteces.
     word_count : int or None
         Number of returned words. If None full most important sentences will be
@@ -229,7 +230,7 @@ def _get_sentences_with_word_count(sentences, word_count):
 
     Returns
     -------
-    list of SyntacticUnit
+    list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
         Most important sentences.
 
     """
@@ -256,19 +257,19 @@ def _extract_important_sentences(sentences, corpus, important_docs, word_count):
 
     Parameters
     ----------
-    sentences : list of SyntacticUnit
+    sentences : list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
         Given senteces.
     corpus : list of (list of (tuple of int))
         Provided corpus.
     important_docs : list of (list of (tuple of int))
         Most important docs of the corpus.
-    word_count : int or None
+    word_count : int
         Number of returned words. If None full most important sentences will be
         returned.
 
     Returns
     -------
-    list SyntacticUnit
+    list :class:~gensim.summarization.syntactic_unit.SyntacticUnit
         Most important sentences.
 
     """
@@ -284,7 +285,7 @@ def _format_results(extracted_sentences, split):
 
     Parameters
     ----------
-    extracted_sentences : list of SyntacticUnit
+    extracted_sentences : list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
         Given senteces.
     split : bool
         If True senteces will be returned as list. Otherwise senteces will be 
@@ -320,9 +321,11 @@ def _build_hasheable_corpus(corpus):
 
 def summarize_corpus(corpus, ratio=0.2):
     """Returns a list of the most important documents of a corpus using a
-    variation of the TextRank algorithm. The input must have at least 
-    `INPUT_MIN_LENGTH` documents for the summary to make sense.
-
+    variation of the TextRank algorithm. Used as helper for summarize 
+    :func:`~gensim.summarization.summarizer.summarizer`
+    
+    The input must have at least 
+    :const:`~gensim.summarization.summarizer.INPUT_MIN_LENGTH` documents for the summary to make sense.
     The length of the output can be specified using the ratio parameter,
     which determines how many documents will be chosen for the summary
     (defaults at 20% of the number of documents of the corpus).
@@ -333,7 +336,7 @@ def summarize_corpus(corpus, ratio=0.2):
         Given corpus.
     ratio : float 
         Number between 0 and 1 that determines the proportion of the number of 
-        sentences of the original text to be chosen for the summary. Optional.
+        sentences of the original text to be chosen for the summary, optional.
 
     Returns
     -------
@@ -371,19 +374,19 @@ def summarize_corpus(corpus, ratio=0.2):
 
 
 def summarize(text, ratio=0.2, word_count=None, split=False):
-    """Returns a summarized version of the given text using a variation of
-    the TextRank algorithm (see https://arxiv.org/abs/1602.03606).
+    """Returns a summarized version of the given text.
 
     The output summary will consist of the most representative sentences
     and will be returned as a string, divided by newlines.
 
     The input should be a string, and must be longer than
-    `INPUT_MIN_LENGTH` sentences for the summary to make sense. The text
+    :const:`~gensim.summarization.summarizer.INPUT_MIN_LENGTH` sentences for 
+    the summary to make sense. The text
     will be split into sentences using the split_sentences method in the
     summarization.texcleaner module. Note that newlines divide sentences.
 
     The length of the output can be specified using the ratio and
-    word_count parameters.
+    `word_count` parameters.
 
     Parameters
     ----------

@@ -18,10 +18,10 @@ Example
 >>> import numpy as np
 >>> from gensim.summarization.bm25 import get_bm25_weights
 >>> corpus = [
->>>     ["black", "cat", "white", "cat"],
->>>     ["cat", "outer", "space"],
->>>     ["wag", "dog"]
->>> ]
+...     ["black", "cat", "white", "cat"],
+...     ["cat", "outer", "space"],
+...     ["wag", "dog"]
+... ]
 >>> np.round(get_bm25_weights(corpus), 3)
 array([[ 1.282,  0.182,  0.   ],
        [ 0.13 ,  1.113,  0.   ],

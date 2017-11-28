@@ -6,22 +6,26 @@
 """
 
 
-Example
--------
+Examples
+--------
+
 >>> from gensim.summarization.keywords import get_graph 
 >>> from gensim.summarization.pagerank_weighted import pagerank_weighted
->>> text = "In graph theory and computer science, an adjacency matrix \
->>> is a square matrix used to represent a finite graph."
->>> graph = get_graph(text)
+>>> graph = get_graph("The road to hell is paved with good intentions.")
 >>> pagerank_weighted(graph)
-{'adjac': array([ 0.29628575]),
- 'finit': array([ 0.29628575]),
- 'graph': array([ 0.56766066]),
- 'matrix': array([ 0.56766066]),
- 'repres': array([ 0.04680678]),
- 'scienc': array([ 0.04680678]),
- 'squar': array([ 0.29628575]),
- 'theori': array([ 0.29628575])}
+{'good': 0.70432858653171504,
+ 'hell': 0.051128871128006126,
+ 'intent': 0.70432858653171504,
+ 'pave': 0.051128871128006015,
+ 'road': 0.051128871128006237}
+
+>>> from gensim.summarization.pagerank_weighted import build_adjacency_matrix
+>>> build_adjacency_matrix(graph).todense()
+matrix([[ 0.,  0.,  0.,  0.,  0.],
+        [ 0.,  0.,  1.,  0.,  0.],
+        [ 0.,  1.,  0.,  0.,  0.],
+        [ 0.,  0.,  0.,  0.,  0.],
+        [ 0.,  0.,  0.,  0.,  0.]])
 
 """
 
@@ -46,7 +50,7 @@ def pagerank_weighted(graph, damping=0.85):
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
     damping : float
         Damping parameter, optional
@@ -54,7 +58,7 @@ def pagerank_weighted(graph, damping=0.85):
     Returns
     -------
     dict
-        Keys are `graph` nodes, values are its ranks.
+        Nodes of `graph` as keys, its ranks as values.
 
     """
     adjacency_matrix = build_adjacency_matrix(graph)
@@ -73,12 +77,12 @@ def build_adjacency_matrix(graph):
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
 
     Returns
     -------
-    csr_matrix (n, n)
+    :class:scipy.sparse.csr_matrix, shape = [n, n], n is number of nodes
         Adjacency matrix of given `graph`.
 
     """
@@ -107,12 +111,12 @@ def build_probability_matrix(graph):
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
 
     Returns
     -------
-    array (n, )
+    array, shape = [n, n], n is number of nodes of `graph`
         Eigenvector of matrix `a`.
 
     """
@@ -130,17 +134,15 @@ def principal_eigenvector(a):
 
     Parameters
     ----------
-    a : array (n, n)
+    a : array, shape = [n, n]
         Given matrix.
 
     Returns
     -------
-    array (n, )
+    array, shape = [n, ]
         Eigenvector of matrix `a`.
 
     """
-
-
     # Note that we prefer to use `eigs` even for dense matrix
     # because we need only one eigenvector. See #441, #438 for discussion.
 
@@ -156,19 +158,19 @@ def principal_eigenvector(a):
 
 def process_results(graph, vec):
     """Returns `graph` nodes and corresponding absolute values of provided 
-    eigenvector.
+    eigenvector. This function os helper for :func:`~gensim.summarization.pagerank_weighted.pagerank_weighted`
 
     Parameters
     ----------
-    graph : Graph
+    graph : :class:~gensim.summarization.graph.Graph
         Given graph.
-    vec : array
+    vec : array, shape = [n, ], n is number of nodes of `graph`
         Given eigenvector.
 
     Returns
     -------
     dict
-        Keys are graph nodes, values are elements of eigenvector.
+        Graph nodes as keys, corresponding elements of eigenvector as values.
 
     """
     scores = {}
