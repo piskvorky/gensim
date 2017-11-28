@@ -122,10 +122,11 @@ class LdaState(utils.SaveLoad):
 class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
 
-    def __init__(self, corpus=None, id2word=None, num_topics=100,
+    def __init__(self, corpus=None, responses=None, id2word=None, num_topics=100,
                  chunksize=500, passes=1, iterations=50, decay=0.5, offset=1.0,
-                 alpha=0.05, eta=None, update_every=1,
-                 eval_every=10, gamma_threshold=0.001, random_state=None):
+                 alpha='symmetric', eta=None, update_every=1,
+                 eval_every=10, gamma_threshold=0.001, minimum_probability=0.01,
+                 minimum_phi_value=0.01, random_state=None):
         distributed = False
         self.dispatcher = None
         self.numworkers = 1
@@ -133,6 +134,11 @@ class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if corpus is None and self.id2word is None:
             raise ValueError(
                 "at least one of corpus/id2word must be specified, to establish input space dimensionality"
+            )
+
+        if responses is None:
+            raise ValueError(
+                "A response variable must be specified, to establish mapping parameters"
             )
 
         if self.id2word is None:
@@ -151,12 +157,14 @@ class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.dtype = np.float64
         self.corpus = corpus
+        self.responses = np.array(responses)
         self.num_topics = int(num_topics)
         self.chunksize = chunksize
         self.decay = decay
         self.offset = offset
-        self.alpha = np.ascontiguousarray(alpha, self.dtype)
-        self.eta = np.ascontiguousarray(eta, self.dtype)
+        self.minimum_probability = minimum_probability
+        self.num_updates = 0
+
         self.iterations = iterations
         self.random_state = utils.get_random_state(random_state)
         self._likelihoods = list()
@@ -164,12 +172,71 @@ class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.passes = passes
         self.update_every = update_every
         self.eval_every = eval_every
-
-        self.iterations = iterations
+        self.minimum_phi_value = minimum_phi_value
         self.gamma_threshold = gamma_threshold
 
+        self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
+
+        assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
+
+        if isinstance(eta, six.string_types):
+            if eta == 'asymmetric':
+                raise ValueError("The 'asymmetric' option cannot be used for eta")
+
+        self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
+
+def init_dir_prior(self, prior, name):
+    if prior is None:
+        prior = 'symmetric'
+
+    if name == 'alpha':
+        prior_shape = self.num_topics
+    elif name == 'eta':
+        prior_shape = self.num_terms
+    else:
+        raise ValueError("'name' must be 'alpha' or 'eta'")
+
+    is_auto = False
+
+    if isinstance(prior, six.string_types):
+        if prior == 'symmetric':
+            logger.info("using symmetric %s at %s", name, 1.0 / prior_shape)
+            init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)])
+        elif prior == 'asymmetric':
+            init_prior = np.asarray([1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)])
+            init_prior /= init_prior.sum()
+            logger.info("using asymmetric %s %s", name, list(init_prior))
+        elif prior == 'auto':
+            is_auto = True
+            init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)])
+            if name == 'alpha':
+                logger.info("using autotuned %s, starting with %s", name, list(init_prior))
+        else:
+            raise ValueError("Unable to determine proper %s value given '%s'" % (name, prior))
+    elif isinstance(prior, list):
+        init_prior = np.asarray(prior)
+    elif isinstance(prior, np.ndarray):
+        init_prior = prior
+    elif isinstance(prior, np.number) or isinstance(prior, numbers.Real):
+        init_prior = np.asarray([prior] * prior_shape)
+    else:
+        raise ValueError("%s must be either a np array of scalars, list of scalars, or scalar" % name)
+
+    return init_prior, is_auto
+
+
+    def sync_state(self):
+        self.expElogbeta = np.exp(self.state.get_Elogbeta())
+        assert self.expElogbeta.dtype == self.dtype
+
+    def clear(self):
+        """Clear model state (free up some memory). Used in the distributed algo."""
+        self.state = None
+        self.Elogbeta = None
+
     def save(self, fname, *args, **kwargs):
-        super(sLdaModel, self).save(fname, *args, **kwargs)
+        kwargs['mmap'] = kwargs.get('mmap', None)
+        result = super(sLdaModel, self).save(fname, *args, **kwargs)
 
     def load(self, cls, *args, **kwargs):
         result = super(sLdaModel, cls).load(fname, *args, **kwargs)
@@ -199,7 +266,7 @@ class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if not extra_pass:
             self.num_updates += other.numdocs
 
-    def inference(self, chunk, collect_sstats=False):
+    def inference(self, chunk, , responses, collect_sstats=False):
         try:
             len(chunk)
         except TypeError:
@@ -227,6 +294,7 @@ class SLdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             else:
                 ids = [idx for idx, _ in doc]
             cts = np.array([cnt for _, cnt in doc], dtype=self.dtype)
+            y = self.responses[d]
             gammad = gamma[d, :]
             Elogthetad = Elogtheta[d, :]
             expElogthetad = expElogtheta[d, :]
