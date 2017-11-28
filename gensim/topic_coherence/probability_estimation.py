@@ -122,7 +122,7 @@ def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=
         Size of the sliding window.
     processes:
         no idea
-    model:
+    model: word2vec module / some preta
         no idea
 
     Returns

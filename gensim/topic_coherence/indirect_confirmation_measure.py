@@ -208,6 +208,23 @@ class ContextVectorComputer(object):
         gamma: float
             Value for computing vectors.
 
+        Example
+        -------
+        >>> from gensim.corpora.dictionary import Dictionary
+        >>> from gensim.topic_coherence import indirect_confirmation_measure, text_analysis
+        >>> import numpy as np
+        >>> measure = 'nlr'
+        >>> top =  [np.array([1, 2])]
+        >>> dictionary = Dictionary()
+        >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
+        >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
+        >>> accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
+        >>> cont_vect_comp = indirect_confirmation_measure.ContextVectorComputer(measure, top, accumulator,1)
+        >>> cont_vect_comp.mapping
+        {1: 0, 2: 1}
+        >>> cont_vect_comp.vocab_size
+        2
+
         """
         if measure == 'nlr':
             self.similarity = _pair_npmi
@@ -228,13 +245,12 @@ class ContextVectorComputer(object):
     def compute_context_vector(self, segment_word_ids, topic_word_ids):
         """Check if (segment_word_ids, topic_word_ids) context vector has been cached.
 
-
         Parameters
         ----------
         segment_word_ids: list
-
+            Ids of words in segment.
         topic_word_ids: list
-
+            Ids of words in topic.
         Returns
         -------
         csr_matrix :class:`~scipy.sparse.csr`
@@ -257,10 +273,10 @@ class ContextVectorComputer(object):
 
         Parameters
         ----------
-        segment_word_ids :
-
-        topic_word_ids :
-
+        segment_word_ids : list
+            Ids of words in segment.
+        topic_word_ids : list
+            Ids of words in topic.
         Returns
         -------
         csr_matrix :class:`~scipy.sparse.csr`
