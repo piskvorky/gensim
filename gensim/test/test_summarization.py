@@ -147,7 +147,7 @@ class TestSummarizationTest(unittest.TestCase):
 
         kwds_lst = keywords(text, split=True)
         self.assertTrue(len(kwds_lst))
-        
+
     def test_mz_keywords(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
@@ -164,7 +164,7 @@ class TestSummarizationTest(unittest.TestCase):
 
         kwds_lst = mz_keywords(text, split=True)
         self.assertTrue(len(kwds_lst))
-        kwds_auto = mz_keywords(text, scores=True, weighted=False, 
+        kwds_auto = mz_keywords(text, scores=True, weighted=False,
             threshold='auto')
         self.assertTrue(kwds_auto[-1][1] > 329.0 / 330.0)
         

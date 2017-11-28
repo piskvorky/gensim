@@ -9,6 +9,7 @@ from gensim.utils import to_unicode
 import numpy
 import scipy
 
+
 def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True,
     threshold=0.0):
     """Extract keywords from text using the Montemurro and Zanette entropy 
@@ -62,7 +63,7 @@ def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True,
     text = to_unicode(text)
     words = [word for word in _tokenize_by_word(text)]
     vocab = sorted(set(words))
-    wordcounts = numpy.array([[words[i:i+blocksize].count(word) 
+    wordcounts = numpy.array([[words[i:i + blocksize].count(word)
             for word in vocab]
         for i in range(0,
             len(words),
@@ -79,7 +80,7 @@ def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True,
         H *= totals / nwords
     if threshold == 'auto':
         threshold = nblocks / (nblocks + 1.0) + 1.0e-8
-    weights = [(word, score) 
+    weights = [(word, score)
               for (word, score) in zip(vocab, H)
               if score > threshold]
     weights.sort(key=lambda x: -x[1])
@@ -100,6 +101,7 @@ def __marginal_prob(blocksize, nwords):
     def marginal_prob(n, m):
         """Marginal probability of a word that occurs n times in the document
            occurring m times in a given block"""
+
         return numpy.exp(__log_combinations(n, m)
             + __log_combinations(nwords - n, blocksize - m)
             - __log_combinations(nwords, blocksize))
@@ -108,6 +110,7 @@ def __marginal_prob(blocksize, nwords):
 
 def __analytic_entropy(blocksize, nblocks, nwords):
     marginal = __marginal_prob(blocksize, nwords)
+
     def analytic_entropy(n):
         """Predicted entropy for a word that occurs n times in the document"""
         m = numpy.arange(1, min(blocksize, n) + 1).astype('d')
