@@ -17,7 +17,6 @@ import warnings
 import ez_setup
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
-import numpy
 
 if sys.version_info[:2] < (2, 7) or (sys.version_info[:1] == 3 and sys.version_info[:2] < (3, 5)):
     raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
@@ -249,10 +248,9 @@ setup(
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
             include_dirs=[model_dir]),
-        Extension("gensim.models.sent2vec_inner",
-              ["./gensim/models/sent2vec_inner.c"], include_dirs=[numpy.get_include()],
-              libraries=["m"],
-              extra_compile_args = ["-ffast-math"])
+        Extension('gensim.models.sent2vec_inner',
+            sources=['./gensim/models/sent2vec_inner.c'],
+            include_dirs=[model_dir])
     ],
     cmdclass=cmdclass,
     packages=find_packages(),
