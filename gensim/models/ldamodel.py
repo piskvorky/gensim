@@ -47,14 +47,26 @@ from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jense
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
 
-# log(sum(exp(x))) that tries to avoid overflow
-try:
-    from scipy.special import logsumexp
-except ImportError:
-    from scipy.misc import logsumexp
-
 
 logger = logging.getLogger('gensim.models.ldamodel')
+
+
+def logsumexp(x):
+    """
+    barebones log-sum-exp that tries to avoid overflows
+
+    Args:
+        x: 1d ndarray
+
+    Note:
+        does not support NaNs
+
+    """
+    x_max = np.max(x)
+    x = np.log(np.sum(np.exp(x - x_max)))
+    x += x_max
+
+    return x
 
 
 def update_dir_prior(prior, N, logphat, rho):
