@@ -65,8 +65,7 @@ cdef unsigned long long fast_sentence_sg_neg(
 
     scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
     for d in range(1, subwords_len):
-        subword_row = subwords_index[d] * size
-        our_saxpy(&size, &ONEF, &syn0_ngrams[subword_row], &ONE, l1, &ONE)
+        our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_index[d] * size], &ONE, l1, &ONE)
     cdef REAL_t norm_factor = ONEF / subwords_len
     sscal(&size, &norm_factor, l1 , &ONE)
 
@@ -112,8 +111,7 @@ cdef void fast_sentence_sg_hs(
 
     scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
     for d in range(1, subwords_len):
-        subword_row = subwords_index[d] * size
-        our_saxpy(&size, &ONEF, &syn0_ngrams[subword_row], &ONE, l1, &ONE)
+        our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_index[d] * size], &ONE, l1, &ONE)
     cdef REAL_t norm_factor = ONEF / subwords_len
     sscal(&size, &norm_factor, l1 , &ONE)
 
@@ -157,7 +155,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
         else:
             count += ONEF
             our_saxpy(&size, &ONEF, &syn0_vocab[indexes[m] * size], &ONE, neu1, &ONE)
-            for d in range(1, subwords_idx_len[m]):
+            for d in range(subwords_idx_len[m]):
                 count += ONEF
                 our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_idx[m][d] * size], &ONE, neu1, &ONE)
 
@@ -197,7 +195,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
             continue
         else:
             our_saxpy(&size, &word_locks_vocab[indexes[m]], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
-            for d in range(1, subwords_idx_len[m]):
+            for d in range(subwords_idx_len[m]):
                 our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
 
     return next_random
@@ -223,7 +221,7 @@ cdef void fast_sentence_cbow_hs(
         else:
             count += ONEF
             our_saxpy(&size, &ONEF, &syn0_vocab[indexes[m] * size], &ONE, neu1, &ONE)
-            for d in range(1, subwords_idx_len[m]):
+            for d in range(subwords_idx_len[m]):
                 count += ONEF
                 our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_idx[m][d] * size], &ONE, neu1, &ONE)
     if count > (<REAL_t>0.5):
@@ -251,7 +249,7 @@ cdef void fast_sentence_cbow_hs(
             continue
         else:
             our_saxpy(&size, &word_locks_vocab[indexes[m]], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
-            for d in range(1, subwords_idx_len[m]):
+            for d in range(subwords_idx_len[m]):
                 our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
 
 
@@ -452,8 +450,8 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
             indexes[effective_words] = word.index
 
             subwords = [model.wv.ngrams[subword_i] for subword_i in model.wv.ngrams_word[model.wv.index2word[word.index]]]
-            word_subwords = np.array([word.index] + subwords, dtype=np.uint32)
-            subwords_idx_len[effective_words] = <int>(len(subwords) + 1)
+            word_subwords = np.array(subwords, dtype=np.uint32)
+            subwords_idx_len[effective_words] = <int>len(subwords)
             subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)
             # ensures reference count of word_subwords doesn't reach 0
             subword_arrays[effective_words] = word_subwords
