@@ -152,21 +152,20 @@ class TestSummarizationTest(unittest.TestCase):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
         with utils.smart_open(os.path.join(pre_path, "head500.noblanks.cor")) as f:
-            text = f.read()
-
+            text = utils.to_unicode(f.read())
+        text=u' '.join(text.split()[:10240])
         kwds = mz_keywords(text)
-        self.assertTrue(kwds.startswith('film'))
-        self.assertTrue(kwds.endswith('sought'))
+        self.assertTrue(kwds.startswith('autism'))
+        self.assertTrue(kwds.endswith('uk'))
         self.assertTrue(len(kwds.splitlines()))
-
-        kwds_u = mz_keywords(utils.to_unicode(text))
-        self.assertTrue(len(kwds_u.splitlines()))
 
         kwds_lst = mz_keywords(text, split=True)
         self.assertTrue(len(kwds_lst))
+        # Automatic thresholding selects words with nblocks/nblocks+1
+        # bits of entropy. For this text, nblocks=10
         kwds_auto = mz_keywords(text, scores=True, weighted=False,
             threshold='auto')
-        self.assertTrue(kwds_auto[-1][1] > 329.0 / 330.0)
+        self.assertTrue(kwds_auto[-1][1] > 10.0 / 11.0)
 
     def test_low_distinct_words_corpus_summarization_is_empty_list(self):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
