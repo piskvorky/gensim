@@ -30,7 +30,7 @@ def p_boolean_document(corpus, segmented_topics):
 
     Returns
     -------
-    accumulator
+    :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator instance that can be used to lookup token frequencies and co-occurrence frequencies.
 
     Examples
@@ -75,7 +75,7 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
 
     Returns
     -------
-    accumulator
+    :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator instance that can be used to lookup token frequencies and co-occurrence frequencies.
 
     Examples
@@ -120,15 +120,36 @@ def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=
         Gensim dictionary mapping of the tokens and ids.
     window_size :
         Size of the sliding window.
-    processes:
-        no idea
-    model: word2vec module / some preta
-        no idea
+    processes: int
+        Number of processes to use.
+    model: model: Word2Vec (:class:`~gensim.models.keyedvectors.KeyedVectors`)
+        If None, a new Word2Vec model is trained on the given text corpus. Otherwise,
+        it should be a pre-trained Word2Vec context vectors.
 
     Returns
     -------
-    accumulator
+    :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Text accumulator with trained context vectors.
+
+    Examples
+    --------
+    >>> from gensim.topic_coherence import probability_estimation
+    >>> from gensim.corpora.hashdictionary import HashDictionary
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>> texts = [['human', 'interface', 'computer'],['eps', 'user', 'interface', 'system'],
+    >>> ['system', 'human', 'system', 'eps'],['user', 'response', 'time'],['trees'],['graph', 'trees']]
+    >>> dictionary = HashDictionary(texts)
+    >>> token2id = dictionary.token2id
+    >>> computer_id = token2id['computer']
+    >>> system_id = token2id['system']
+    >>> user_id = token2id['user']
+    >>> graph_id = token2id['graph']
+    >>> segmented_topics = [[(system_id, graph_id),(computer_id, graph_id),(computer_id, system_id)], [
+    >>> (computer_id, graph_id),(user_id, graph_id),(user_id, computer_id)]]
+    >>> corpus = [dictionary.doc2bow(text) for text in texts]
+    >>> accumulator = probability_estimation.p_word2vec(texts, segmented_topics, dictionary, 2)
+    >>> print accumulator[computer_id], accumulator[user_id], accumulator[graph_id], accumulator[system_id]
+    1 3 1 4
     """
     top_ids = unique_ids_from_segments(segmented_topics)
     accumulator = WordVectorsAccumulator(

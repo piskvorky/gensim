@@ -327,7 +327,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         """
         Parameters
         ----------
-        processes :
+        processes : int
             Number of processes to use; must be at least two.
         args :
             Should include `relevant_ids` and `dictionary` (see :class:`~UsesDictionary.__init__`).
@@ -512,10 +512,9 @@ class WordVectorsAccumulator(UsesDictionary):
         """
         Parameters
         ----------
-        model:
-            If None, a new Word2Vec model is trained on the given text corpus.
-            If not None, it should be a pre-trained Word2Vec context vectors
-            (:class:`~gensim.models.keyedvectors.KeyedVectors` instance).
+        model: Word2Vec (:class:`~gensim.models.keyedvectors.KeyedVectors`)
+            If None, a new Word2Vec model is trained on the given text corpus. Otherwise,
+            it should be a pre-trained Word2Vec context vectors.
         model_kwargs:
             if model is None, these keyword arguments will be passed through to the Word2Vec constructor.
         """

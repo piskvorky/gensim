@@ -282,12 +282,7 @@ class ContextVectorComputer(object):
         csr_matrix :class:`~scipy.sparse.csr`
             Matrix in Compressed Sparse Row format
 
-        Example
-        ---------
-        In progress
-
         """
-
         context_vector = sps.lil_matrix((self.vocab_size, 1))
         if not hasattr(segment_word_ids, '__iter__'):
             segment_word_ids = (segment_word_ids,)
