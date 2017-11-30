@@ -136,7 +136,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
     REAL_t *neu1,  REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t *subwords_idx[MAX_SENTENCE_LEN],
     const int subwords_idx_len[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks_ngrams, REAL_t *word_locks_vocab) nogil:
+    int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks_vocab, REAL_t *word_locks_ngrams) nogil:
 
     cdef long long a
     cdef long long row2
@@ -206,7 +206,7 @@ cdef void fast_sentence_cbow_hs(
     REAL_t *neu1, REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t *subwords_idx[MAX_SENTENCE_LEN],
     const int subwords_idx_len[MAX_SENTENCE_LEN],const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, int cbow_mean, REAL_t *word_locks_ngrams, REAL_t *word_locks_vocab) nogil:
+    int i, int j, int k, int cbow_mean, REAL_t *word_locks_vocab, REAL_t *word_locks_ngrams) nogil:
 
     cdef long long a, b
     cdef long long row2, sgn
