@@ -165,7 +165,7 @@ class TestSummarizationTest(unittest.TestCase):
         # bits of entropy. For this text, n_blocks=10
         n_blocks = 10.
         kwds_auto = mz_keywords(text, scores=True, weighted=False, threshold='auto')
-        self.assertTrue(kwds_auto[-1][1] > (n_blocks / n_blocks + 1.))
+        self.assertTrue(kwds_auto[-1][1] > (n_blocks / (n_blocks + 1.)))
 
     def test_low_distinct_words_corpus_summarization_is_empty_list(self):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
