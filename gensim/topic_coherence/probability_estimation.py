@@ -135,6 +135,7 @@ def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=
     --------
     >>> from gensim.topic_coherence import probability_estimation
     >>> from gensim.corpora.hashdictionary import HashDictionary
+    >>> from gensim.models import word2vec
     >>> from gensim.corpora.dictionary import Dictionary
     >>> texts = [['human', 'interface', 'computer'],['eps', 'user', 'interface', 'system'],
     >>> ['system', 'human', 'system', 'eps'],['user', 'response', 'time'],['trees'],['graph', 'trees']]
@@ -147,9 +148,11 @@ def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=
     >>> segmented_topics = [[(system_id, graph_id),(computer_id, graph_id),(computer_id, system_id)], [
     >>> (computer_id, graph_id),(user_id, graph_id),(user_id, computer_id)]]
     >>> corpus = [dictionary.doc2bow(text) for text in texts]
-    >>> accumulator = probability_estimation.p_word2vec(texts, segmented_topics, dictionary, 2)
+    >>> sentences = [['human', 'interface', 'computer'],['survey', 'user', 'computer', 'system', 'response', 'time']]
+    >>> model = word2vec.Word2Vec(sentences, size=100, window=5, min_count=5, workers=4) #TODO Ivan fix this holy shield
+    >>> accumulator = probability_estimation.p_word2vec(texts, segmented_topics, dictionary, 2, 1, model)
     >>> print accumulator[computer_id], accumulator[user_id], accumulator[graph_id], accumulator[system_id]
-    1 3 1 4
+    1 3 1 4 # example for model = None
     """
     top_ids = unique_ids_from_segments(segmented_topics)
     accumulator = WordVectorsAccumulator(

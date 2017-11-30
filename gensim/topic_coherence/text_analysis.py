@@ -33,7 +33,7 @@ def _ids_to_words(ids, dictionary):
     ids: list of list of tuples
         Each tuple contains (token_id, iterable of token_ids).
         This is the format returned by the :class:`~gensim.topic_coherence` functions.
-    dictionary:
+    dictionary: dict
 
     Returns
     -------
@@ -42,7 +42,13 @@ def _ids_to_words(ids, dictionary):
 
     Examples
     --------
-    in progress
+    >>> from gensim.corpora.hashdictionary import HashDictionary
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>> from gensim.topic_coherence import text_analysis
+    >>> ids = [[('1','a'), ('2','b')],[('3','c')]]
+    >>> texts = [['human', 'interface', 'computer'],['eps', 'user', 'interface', 'system'],['graph', 'trees']]
+    >>> dictionary = HashDictionary(texts)
+    >>> text_analysis._ids_to_words(ids, dictionary)
 
     """
     if not dictionary.id2token:  # may not be initialized in the standard gensim.corpora.Dictionary
