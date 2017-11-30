@@ -66,7 +66,7 @@ def logsumexp(x):
 
     Notes
     -----
-        for performance, does not support NaNs or > 1d arrays like 
+        for performance, does not support NaNs or > 1d arrays like
         scipy.special.logsumexp()
 
     """
