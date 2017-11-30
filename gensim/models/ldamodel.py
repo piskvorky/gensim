@@ -52,16 +52,25 @@ logger = logging.getLogger('gensim.models.ldamodel')
 
 
 def logsumexp(x):
+    """Log of sum of exponentials
+
+    Parameters
+    ----------
+    x : array_like
+        Input data
+
+    Returns
+    -------
+    float
+        log of sum of exponentials of elements in `x`
+
+    Notes
+    -----
+        for performance, does not support NaNs or > 1d arrays like 
+        scipy.special.logsumexp()
+
     """
-    barebones log-sum-exp that tries to avoid overflows
 
-    Args:
-        x: 1d ndarray
-
-    Note:
-        does not support NaNs
-
-    """
     x_max = np.max(x)
     x = np.log(np.sum(np.exp(x - x_max)))
     x += x_max
