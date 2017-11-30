@@ -10,8 +10,7 @@ import numpy
 import scipy
 
 
-def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True,
-    threshold=0.0):
+def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True, threshold=0.0):
     """Extract keywords from text using the Montemurro and Zanette entropy
     algorithm. [1]_
 
@@ -30,17 +29,17 @@ def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True,
         False can useful for shorter texts, and allows automatic thresholding
     threshold: float or 'auto', optional
         minimum score for returned keywords, default 0.0
-        'auto' calculates the threshold as nblocks / (nblocks + 1.0) + 1.0e-8
+        'auto' calculates the threshold as n_blocks / (n_blocks + 1.0) + 1.0e-8
         Use 'auto' with weighted=False)
 
     Returns
     -------
     results: str
-        newline separated keywords if split is False OR
+        newline separated keywords if `split` == False OR
     results: list(str)
-        list of keywords if scores is False OR
+        list of keywords if `scores` == False OR
     results: list(tuple(str, float))
-        list of (keyword, score) tuples if scores is True
+        list of (keyword, score) tuples if `scores` == True
 
     Results are returned in descending order of score regardless of the format.
 
@@ -63,26 +62,25 @@ def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True,
     text = to_unicode(text)
     words = [word for word in _tokenize_by_word(text)]
     vocab = sorted(set(words))
-    wordcounts = numpy.array([[words[i:i + blocksize].count(word)
-            for word in vocab]
-        for i in range(0,
-            len(words),
-            blocksize)]).astype('d')
-    nblocks = wordcounts.shape[0]
-    totals = wordcounts.sum(axis=0)
-    nwords = totals.sum()
-    p = wordcounts / totals
-    logp = numpy.log2(p)
-    H = numpy.nan_to_num(p * logp).sum(axis=0)
-    analytic = __analytic_entropy(blocksize, nblocks, nwords)
-    H += analytic(totals).astype('d')
+    word_counts = numpy.array(
+        [
+            [words[i:i + blocksize].count(word) for word in vocab]
+            for i in range(0, len(words), blocksize)
+        ]
+    ).astype('d')
+    n_blocks = word_counts.shape[0]
+    totals = word_counts.sum(axis=0)
+    n_words = totals.sum()
+    p = word_counts / totals
+    log_p = numpy.log2(p)
+    h = numpy.nan_to_num(p * log_p).sum(axis=0)
+    analytic = __analytic_entropy(blocksize, n_blocks, n_words)
+    h += analytic(totals).astype('d')
     if weighted:
-        H *= totals / nwords
+        h *= totals / n_words
     if threshold == 'auto':
-        threshold = nblocks / (nblocks + 1.0) + 1.0e-8
-    weights = [(word, score)
-        for (word, score) in zip(vocab, H)
-        if score > threshold]
+        threshold = n_blocks / (n_blocks + 1.0) + 1.0e-8
+    weights = [(word, score) for (word, score) in zip(vocab, h) if score > threshold]
     weights.sort(key=lambda x: -x[1])
     result = weights if scores else [word for (word, score) in weights]
     if not (scores or split):
@@ -98,27 +96,29 @@ def __log_combinations_inner(n, m):
 __log_combinations = numpy.frompyfunc(__log_combinations_inner, 2, 1)
 
 
-def __marginal_prob(blocksize, nwords):
+def __marginal_prob(blocksize, n_words):
 
     def marginal_prob(n, m):
         """Marginal probability of a word that occurs n times in the document
            occurring m times in a given block"""
 
-        return numpy.exp(__log_combinations(n, m)
-            + __log_combinations(nwords - n, blocksize - m)
-            - __log_combinations(nwords, blocksize))
+        return numpy.exp(
+            __log_combinations(n, m) +
+            __log_combinations(n_words - n, blocksize - m) -
+            __log_combinations(n_words, blocksize)
+        )
 
     return numpy.frompyfunc(marginal_prob, 2, 1)
 
 
-def __analytic_entropy(blocksize, nblocks, nwords):
-    marginal = __marginal_prob(blocksize, nwords)
+def __analytic_entropy(blocksize, n_blocks, n_words):
+    marginal = __marginal_prob(blocksize, n_words)
 
     def analytic_entropy(n):
         """Predicted entropy for a word that occurs n times in the document"""
         m = numpy.arange(1, min(blocksize, n) + 1).astype('d')
         p = m / n
         elements = numpy.nan_to_num(p * numpy.log2(p)) * marginal(n, m)
-        return -nblocks * elements.sum()
+        return -n_blocks * elements.sum()
 
     return numpy.frompyfunc(analytic_entropy, 1, 1)
