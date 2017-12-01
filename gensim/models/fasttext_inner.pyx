@@ -186,10 +186,9 @@ cdef unsigned long long fast_sentence_cbow_neg(
     for m in range(j,k):
         if m == i:
             continue
-        else:
-            our_saxpy(&size, &word_locks_vocab[indexes[m]], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
-            for d in range(subwords_idx_len[m]):
-                our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
+        our_saxpy(&size, &word_locks_vocab[indexes[m]], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
+        for d in range(subwords_idx_len[m]):
+            our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
 
     return next_random
 
@@ -543,3 +542,4 @@ def init():
 
 FAST_VERSION = init()  # initialize the module
 MAX_WORDS_IN_BATCH = MAX_SENTENCE_LEN
+
