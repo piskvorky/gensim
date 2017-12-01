@@ -11,10 +11,6 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset
-from libc.stdio cimport printf
-from libc.stdlib cimport calloc, free
-from gensim import matutils
-
 
 # scipy <= 0.15
 try:
@@ -33,7 +29,6 @@ REAL = np.float32
 
 DEF MAX_SENTENCE_LEN = 10000
 DEF MAX_SUBWORDS = 1000
-from word2vec import FAST_VERSION
 
 DEF EXP_TABLE_SIZE = 1000
 DEF MAX_EXP = 6
@@ -152,17 +147,16 @@ cdef unsigned long long fast_sentence_cbow_neg(
     for m in range(j, k):
         if m == i:
             continue
-        else:
+        count += ONEF
+        our_saxpy(&size, &ONEF, &syn0_vocab[indexes[m] * size], &ONE, neu1, &ONE)
+        for d in range(subwords_idx_len[m]):
             count += ONEF
-            our_saxpy(&size, &ONEF, &syn0_vocab[indexes[m] * size], &ONE, neu1, &ONE)
-            for d in range(subwords_idx_len[m]):
-                count += ONEF
-                our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_idx[m][d] * size], &ONE, neu1, &ONE)
+            our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_idx[m][d] * size], &ONE, neu1, &ONE)
 
     if count > (<REAL_t>0.5):
-        inv_count = ONEF/count
+        inv_count = ONEF / count
     if cbow_mean:
-        sscal(&size, &inv_count, neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
+        sscal(&size, &inv_count, neu1, &ONE)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
 
@@ -170,12 +164,11 @@ cdef unsigned long long fast_sentence_cbow_neg(
         if d == 0:
             target_index = word_index
             label = ONEF
-        else:
-            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
-            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
-            if target_index == word_index:
-                continue
-            label = <REAL_t>0.0
+        target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
+        next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
+        if target_index == word_index:
+            continue
+        label = <REAL_t>0.0
 
         row2 = target_index * size
         f_dot = our_dot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
@@ -188,7 +181,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
         our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
 
     if not cbow_mean:  # divide error over summed window vectors
-        sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
+        sscal(&size, &inv_count, work, &ONE)
 
     for m in range(j,k):
         if m == i:
@@ -218,16 +211,15 @@ cdef void fast_sentence_cbow_hs(
     for m in range(j, k):
         if m == i:
             continue
-        else:
+        count += ONEF
+        our_saxpy(&size, &ONEF, &syn0_vocab[indexes[m] * size], &ONE, neu1, &ONE)
+        for d in range(subwords_idx_len[m]):
             count += ONEF
-            our_saxpy(&size, &ONEF, &syn0_vocab[indexes[m] * size], &ONE, neu1, &ONE)
-            for d in range(subwords_idx_len[m]):
-                count += ONEF
-                our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_idx[m][d] * size], &ONE, neu1, &ONE)
+            our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_idx[m][d] * size], &ONE, neu1, &ONE)
     if count > (<REAL_t>0.5):
-        inv_count = ONEF/count
+        inv_count = ONEF / count
     if cbow_mean:
-        sscal(&size, &inv_count, neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
+        sscal(&size, &inv_count, neu1, &ONE)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     for b in range(codelens[i]):
@@ -242,15 +234,14 @@ cdef void fast_sentence_cbow_hs(
         our_saxpy(&size, &g, neu1, &ONE, &syn1[row2], &ONE)
 
     if not cbow_mean:  # divide error over summed window vectors
-        sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
+        sscal(&size, &inv_count, work, &ONE)
 
     for m in range(j,k):
         if m == i:
             continue
-        else:
-            our_saxpy(&size, &word_locks_vocab[indexes[m]], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
-            for d in range(subwords_idx_len[m]):
-                our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
+        our_saxpy(&size, &word_locks_vocab[indexes[m]], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
+        for d in range(subwords_idx_len[m]):
+            our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
 
 
 def train_batch_sg(model, sentences, alpha, _work, _l1):
@@ -340,7 +331,7 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
 
             effective_words += 1
             if effective_words == MAX_SENTENCE_LEN:
-                break  # TODO: log warning, tally overflow?
+                break
 
         # keep track of which words go into which sentence, so we don't train
         # across sentence boundaries.
@@ -349,7 +340,7 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
         sentence_idx[effective_sentences] = effective_words
 
         if effective_words == MAX_SENTENCE_LEN:
-            break  # TODO: log warning, tally overflow?
+            break
 
     # precompute "reduced window" offsets in a single randint() call
     for i, item in enumerate(model.random.randint(0, window, effective_words)):
@@ -370,9 +361,15 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                     if j == i:
                         continue
                     if hs:
-                        fast_sentence_sg_hs(points[j], codes[j], codelens[j], syn0_vocab, syn0_ngrams, syn1, size, subwords_idx[i], subwords_idx_len[i], _alpha, work, l1, word_locks_vocab, word_locks_ngrams)
+                        fast_sentence_sg_hs(
+                            points[j], codes[j], codelens[j], syn0_vocab, syn0_ngrams, syn1, size,
+                            subwords_idx[i], subwords_idx_len[i], _alpha, work, l1, word_locks_vocab,
+                            word_locks_ngrams)
                     if negative:
-                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0_vocab, syn0_ngrams, syn1neg, size, indexes[j], subwords_idx[i], subwords_idx_len[i], _alpha, work, l1, next_random, word_locks_vocab, word_locks_ngrams)
+                        next_random = fast_sentence_sg_neg(
+                            negative, cum_table, cum_table_len, syn0_vocab, syn0_ngrams, syn1neg, size,
+                            indexes[j], subwords_idx[i], subwords_idx_len[i], _alpha, work, l1,
+                            next_random, word_locks_vocab, word_locks_ngrams)
 
     return effective_words
 
@@ -462,7 +459,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
                 points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
             effective_words += 1
             if effective_words == MAX_SENTENCE_LEN:
-                break  # TODO: log warning, tally overflow?
+                break
 
         # keep track of which words go into which sentence, so we don't train
         # across sentence boundaries.
@@ -471,7 +468,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
         sentence_idx[effective_sentences] = effective_words
 
         if effective_words == MAX_SENTENCE_LEN:
-            break  # TODO: log warning, tally overflow?
+            break
 
     # precompute "reduced window" offsets in a single randint() call
     for i, item in enumerate(model.random.randint(0, window, effective_words)):
@@ -491,11 +488,15 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
                     k = idx_end
 
                 if hs:
-                    fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0_vocab, syn0_ngrams, syn1, size, indexes,subwords_idx,
-                     subwords_idx_len,_alpha, work, i, j, k, cbow_mean, word_locks_vocab, word_locks_ngrams)
+                    fast_sentence_cbow_hs(
+                        points[i], codes[i], codelens, neu1, syn0_vocab, syn0_ngrams, syn1, size,indexes,
+                        subwords_idx,subwords_idx_len,_alpha, work, i, j, k, cbow_mean, word_locks_vocab,
+                        word_locks_ngrams)
                 if negative:
-                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0_vocab, syn0_ngrams, syn1neg, size, indexes, subwords_idx, 
-                        subwords_idx_len, _alpha, work, i, j, k, cbow_mean, next_random, word_locks_vocab, word_locks_ngrams)
+                    next_random = fast_sentence_cbow_neg(
+                        negative, cum_table, cum_table_len, codelens, neu1, syn0_vocab, syn0_ngrams,
+                        syn1neg, size, indexes, subwords_idx, subwords_idx_len, _alpha, work, i, j, k,
+                        cbow_mean, next_random, word_locks_vocab, word_locks_ngrams)
 
     return effective_words
 
