@@ -111,7 +111,7 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
     if output_file is None:
         outfile = sys.stdout
     else:
-        outfile = smart_open(output_file, 'wb')
+        outfile = smart_open(output_file, 'w')
 
     try:
         article_stream = segment_all_articles(file_path, min_article_character, workers=workers)
