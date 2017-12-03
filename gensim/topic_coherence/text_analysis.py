@@ -30,10 +30,9 @@ def _ids_to_words(ids, dictionary):
 
     Parameters
     ----------
-    ids: list of list of tuples
-        Each tuple contains (token_id, iterable of token_ids).
-        This is the format returned by the :class:`~gensim.topic_coherence` functions.
-    dictionary: dict
+    ids: dict
+        Dictionary of ids and their words.
+    dictionary: :class:`~gensim.corpora.dictionary`
 
     Returns
     -------
@@ -42,13 +41,13 @@ def _ids_to_words(ids, dictionary):
 
     Examples
     --------
-    >>> from gensim.corpora.hashdictionary import HashDictionary
     >>> from gensim.corpora.dictionary import Dictionary
     >>> from gensim.topic_coherence import text_analysis
-    >>> ids = [[('1','a'), ('2','b')],[('3','c')]]
-    >>> texts = [['human', 'interface', 'computer'],['eps', 'user', 'interface', 'system'],['graph', 'trees']]
-    >>> dictionary = HashDictionary(texts)
+    >>> dictionary = Dictionary()
+    >>> ids = {1: 'fake', 4: 'cats'}
+    >>> dictionary.id2token = {1: 'fake', 2: 'tokens', 3: 'rabbids', 4: 'cats'}
     >>> text_analysis._ids_to_words(ids, dictionary)
+    set(['cats', 'fake'])
 
     """
     if not dictionary.id2token:  # may not be initialized in the standard gensim.corpora.Dictionary
@@ -70,14 +69,24 @@ class BaseAnalyzer(object):
 
     Attributes
     ----------
-    relevant_ids :
-    _vocab_size :
-    id2contiguous :
+    relevant_ids : dict
+    _vocab_size : int
+        Size of vocabulary.
+    id2contiguous : dict
+
     log_every : int
+        Interval for logging.
     _num_docs : int
 
-    """
+    Examples
+    --------
+    >>> from gensim.topic_coherence import text_analysis
+    >>> ids = {1: 'fake', 4: 'cats'}
+    >>> base = text_analysis.BaseAnalyzer(ids)
+    >>> print base.relevant_ids, base._vocab_size, base.id2contiguous, base.log_every, base._num_docs
+    {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
 
+    """
     def __init__(self, relevant_ids):
         self.relevant_ids = relevant_ids
         self._vocab_size = len(self.relevant_ids)
@@ -125,6 +134,28 @@ class UsesDictionary(BaseAnalyzer):
     """A BaseAnalyzer that uses a Dictionary, hence can translate tokens to counts.
     The standard BaseAnalyzer can only deal with token ids since it doesn't have the token2id
     mapping.
+
+    Attributes
+    ----------
+    relevant_words : set
+        Set of words.
+    dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
+    token2id : dict
+        token2id from :class:`~gensim.corpora.dictionary`
+
+    Examples
+    --------
+    >>> from gensim.topic_coherence import text_analysis
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>> ids = {1: 'fake', 4: 'cats'}
+    >>> dictionary = Dictionary()
+    >>> dictionary.id2token = {1: 'fake', 2: 'tokens', 3: 'rabbids', 4: 'cats'}
+    >>> usesdict = text_analysis.UsesDictionary(ids, dictionary)
+    >>> print usesdict.relevant_words, usesdict.dictionary, usesdict.token2id
+    set(['cats', 'fake']) Dictionary(0 unique tokens: []) {}
+
+    #TODO: Looks like we need to use HashDictionary, but it doesn't work (Ivan, help please)
+
     """
 
     def __init__(self, relevant_ids, dictionary):
@@ -156,8 +187,18 @@ class UsesDictionary(BaseAnalyzer):
 
 
 class InvertedIndexBased(BaseAnalyzer):
-    """Analyzer that builds up an inverted index to accumulate stats."""
+    """Analyzer that builds up an inverted index to accumulate stats.
 
+    Examples
+    --------
+    >>> from gensim.topic_coherence import text_analysis
+    >>> ininb = text_analysis.InvertedIndexBased([1,2])
+    >>> print ininb._inverted_index
+    [set([]) set([])]
+
+    """
+
+    # TODO : *args value have no impact on ininb._inverted_index
     def __init__(self, *args):
         super(InvertedIndexBased, self).__init__(*args)
         self._inverted_index = np.array([set() for _ in range(self._vocab_size)])
@@ -176,7 +217,9 @@ class InvertedIndexBased(BaseAnalyzer):
 
 
 class CorpusAccumulator(InvertedIndexBased):
-    """Gather word occurrence stats from a corpus by iterating over its BoW representation."""
+    """Gather word occurrence stats from a corpus by iterating over its BoW representation.
+
+    """
 
     def analyze_text(self, text, doc_num=None):
         doc_words = frozenset(x[0] for x in text)
