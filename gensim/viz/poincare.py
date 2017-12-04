@@ -23,26 +23,28 @@ from gensim.models.poincare import PoincareKeyedVectors
 logger = logging.getLogger(__name__)
 
 
-def poincare_2d_visualization(model, tree, figure_title, num_nodes=50, show_node_labels=[]):
-    """Method to create a 2-d plot of the nodes and edges of a 2-d poincare embedding.
+def poincare_2d_visualization(model, tree, figure_title, num_nodes=50, show_node_labels=()):
+    """Create a 2-d plot of the nodes and edges of a 2-d poincare embedding.
 
     Parameters
     ----------
-    model : PoincareModel instance
+    model : :class:`~gensim.models.poincare.PoincareModel`
         The model to visualize, model size must be 2.
     tree : set
         Set of tuples containing the direct edges present in the original dataset.
     figure_title : str
         Title of the plotted figure.
     num_nodes : int or None
-        Number of nodes for which edges are to be plotted. If None, all edges are plotted.
+        Number of nodes for which edges are to be plotted.
+        If `None`, all edges are plotted.
         Helpful to limit this in case the data is too large to avoid a messy plot.
-    show_node_labels : list/iterable
-        List of nodes for which to show labels by default.
+    show_node_labels : iterable
+        Iterable of nodes for which to show labels by default.
 
     Returns
     -------
-    plotly.graph_objs.Figure instance
+    :class:`plotly.graph_objs.Figure`
+        Plotly figure that contains plot.
 
     """
     vectors = model.kv.syn0
@@ -98,12 +100,9 @@ def poincare_2d_visualization(model, tree, figure_title, num_nodes=50, show_node
     return go.Figure(data=[edges, nodes, nodes_with_labels], layout=layout)
 
 
-def poincare_distance_heatmap(
-    origin_point, x_range=(-1.0, 1.0), y_range=(-1.0, 1.0), num_points=100):
-    """
-    Creates a heatmap of Poincare distances from `origin_point` for each point (x, y),
-    where x and y lie in `x_range` and `y_range` respectively, with `num_points` points
-    chosen uniformly in both ranges.
+def poincare_distance_heatmap(origin_point, x_range=(-1.0, 1.0), y_range=(-1.0, 1.0), num_points=100):
+    """Create a heatmap of Poincare distances from `origin_point` for each point (x, y),
+    where x and y lie in `x_range` and `y_range` respectively, with `num_points` points chosen uniformly in both ranges.
 
     Parameters
     ----------
@@ -116,14 +115,15 @@ def poincare_distance_heatmap(
     num_points : int
         Number of points to choose from `x_range` and `y_range`.
 
-    Returns
-    -------
-    plotly.graph_objs.Figure instance
-
     Notes
     -----
     Points outside the unit circle are ignored, since the Poincare distance is defined
     only for points inside the circle boundaries (exclusive of the boundary).
+
+    Returns
+    -------
+    :class:`plotly.graph_objs.Figure`
+        Plotly figure that contains plot
 
     """
     epsilon = 1e-8  # Can't choose (-1.0, -1.0) or (1.0, 1.0), distance undefined
