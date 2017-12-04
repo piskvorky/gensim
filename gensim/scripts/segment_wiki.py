@@ -270,7 +270,7 @@ class _WikiSectionsCorpus(WikiCorpus):
         skipped_namespace, skipped_length, skipped_redirect = 0, 0, 0
         total_articles, total_sections = 0, 0
         page_xmls = extract_page_xmls(self.fileobj)
-        pool = multiprocessing.Pool(self.processes)            
+        pool = multiprocessing.Pool(self.processes)
         for article_title, sections in pool.imap_unordered(segment, page_xmls, chunksize=10):
             # article redirects are pruned here
             if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):  # filter non-articles
