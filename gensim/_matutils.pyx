@@ -5,6 +5,7 @@ DTYPE = np.double
 ctypedef np.double_t DTYPE_t
 from libc.math cimport log, exp
 cimport cython
+from cython.parallel import prange
 
 
 def digamma(DTYPE_t x):
@@ -79,6 +80,27 @@ cpdef dirichlet_expectation_1d(DTYPE_t[:] alpha):
     psi_sum_alpha = _digamma(sum_alpha)
 
     for i in range(I):
+        result[i] = _digamma(alpha[i]) - psi_sum_alpha
+
+    return result
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cpdef dirichlet_expectation_1d_p(DTYPE_t[:] alpha):
+    cdef DTYPE_t sum_alpha
+    cdef DTYPE_t psi_sum_alpha
+    cdef size_t i
+    cdef size_t I = alpha.shape[0]
+
+    cdef np.ndarray[DTYPE_t, ndim=1] result = np.zeros([I], dtype=DTYPE)    
+
+    for i in range(I):
+        sum_alpha += alpha[i]
+
+    psi_sum_alpha = _digamma(sum_alpha)
+
+    for i in prange(I, nogil=True, schedule='static'):
         result[i] = _digamma(alpha[i]) - psi_sum_alpha
 
     return result
