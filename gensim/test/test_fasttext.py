@@ -457,6 +457,13 @@ class TestFastTextModel(unittest.TestCase):
         )
         self.online_sanity(model)
 
+    def test_get_vocab_word_vecs(self):
+        model = FT_gensim(size=10, min_count=1, seed=42)
+        model.build_vocab(sentences)
+        original_syn0_vocab = np.copy(model.wv.syn0_vocab)
+        model.get_vocab_word_vecs()
+        self.assertTrue(np.all(np.equal(model.wv.syn0_vocab, original_syn0_vocab)))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
