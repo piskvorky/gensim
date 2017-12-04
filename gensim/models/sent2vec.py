@@ -506,6 +506,7 @@ class Sent2Vec(SaveLoad):
             for j in range(int(c * self.negative_table_size / z) + 1):
                 self.negatives.append(i)
         self.random.shuffle(self.negatives)
+        self.negatives = np.array(self.negatives)
 
     def get_negative(self, target):
         """
@@ -571,8 +572,9 @@ class Sent2Vec(SaveLoad):
         logger.info("Dictionary created, dictionary size: %i, tokens read: %i", self.dict.size, self.dict.ntokens)
         self.token_count = 0
         counts = [entry.count for entry in self.dict.words]
-        self.wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1), (self.dict.size + self.bucket, self.vector_size))
-        self.wo = np.zeros((self.dict.size, self.vector_size))
+        self.wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1),
+                                      (self.dict.size + self.bucket, self.vector_size)).astype(np.float32)
+        self.wo = np.zeros((self.dict.size, self.vector_size), dtype=np.float32)
         self.init_table_negatives(counts=counts)
         ntokens = self.dict.ntokens
         local_token_count = 0
@@ -588,6 +590,7 @@ class Sent2Vec(SaveLoad):
                 lr = self.lr * (1.0 - progress)
                 ntokens_temp, hashes, words = self.dict.get_line(sentence)
                 local_token_count += ntokens_temp
+                #print sentence
                 if len(words) > 1:
                     for i in range(len(words)):
                         if self.random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
@@ -595,6 +598,7 @@ class Sent2Vec(SaveLoad):
                         context = list(words)
                         context[i] = 0
                         context = self.dict.add_ngrams_train(context=context, n=self.word_ngrams, k=self.dropoutk)
+                        context = np.array(context)
                         if FAST_VERSION == -1:
                             self.update(input_=context, target=words[i], lr=lr)
                         else:
