@@ -463,8 +463,8 @@ class TestFastTextModel(unittest.TestCase):
         model.wv.save_word2vec_format(tmpf, binary=True)
         loaded_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
         self.assertEqual(len(model.wv.vocab), len(loaded_model_kv.vocab))
-        self.assertTrue((model.wv.syn0 == loaded_model_kv.syn0).all())
-        self.assertRaises(NotImplementedError, FT_gensim.load_word2vec_format, tmpf)
+        self.assertTrue(np.allclose(model['human'], loaded_model_kv['human']))
+        self.assertRaises(DeprecationWarning, FT_gensim.load_word2vec_format, tmpf)
         self.assertRaises(NotImplementedError, FastTextKeyedVectors.load_word2vec_format, tmpf)
 
 if __name__ == '__main__':
