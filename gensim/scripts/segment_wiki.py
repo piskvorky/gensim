@@ -108,10 +108,8 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
         Number of parallel workers, max(1, multiprocessing.cpu_count() - 1) if None.
 
     """
-    if output_file is None:
-        outfile = sys.stdout
-    else:
-        outfile = smart_open(output_file, 'w')
+    if output_file is not None:
+        outfile = smart_open(output_file, 'wb')
 
     try:
         article_stream = segment_all_articles(file_path, min_article_character, workers=workers)
@@ -122,9 +120,14 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
                 output_data["section_texts"].append(section_content)
             if (idx + 1) % 100000 == 0:
                 logger.info("processed #%d articles (at %r now)", idx + 1, article_title)
-            outfile.write(json.dumps(output_data) + "\n")
+                
+            if output_file is None:
+                sys.stdout.write(json.dumps(output_data) + "\n")
+            else:
+                outfile.write((json.dumps(output_data) + "\n").encode())
     finally:
-        outfile.close()
+        if output_file is not None:
+            outfile.close()
 
 
 def extract_page_xmls(f):
