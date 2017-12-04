@@ -17,7 +17,7 @@ This module allows training a Poincaré Embedding from a training file containin
 csv-like format, or a Python iterable of relations.
 
 .. [1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
-    https://arxiv.org/pdf/1705.08039.pdf
+    https://arxiv.org/abs/1705.08039
 
 Examples:
 ---------
@@ -684,17 +684,19 @@ class PoincareBatch(object):
         self.compute_distances()
         self.compute_distance_gradients()
 
-        gradients_v = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_v  # (1 + neg_size, dim, batch_size)
+        # (1 + neg_size, dim, batch_size)
+        gradients_v = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_v
         gradients_v /= self.Z  # (1 + neg_size, dim, batch_size)
         gradients_v[0] += self.distance_gradients_v[0]
 
-        gradients_u = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_u  # (1 + neg_size, dim, batch_size)
+        # (1 + neg_size, dim, batch_size)
+        gradients_u = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_u
         gradients_u /= self.Z  # (1 + neg_size, dim, batch_size)
         gradients_u = gradients_u.sum(axis=0)  # (dim, batch_size)
         gradients_u += self.distance_gradients_u[0]
 
-        assert(not np.isnan(gradients_u).any())
-        assert(not np.isnan(gradients_v).any())
+        assert not np.isnan(gradients_u).any()
+        assert not np.isnan(gradients_v).any()
         self.gradients_u = gradients_u
         self.gradients_v = gradients_v
 
@@ -707,8 +709,10 @@ class PoincareBatch(object):
         self.compute_distances()
 
         euclidean_dists_squared = self.euclidean_dists ** 2  # (1 + neg_size, batch_size)
-        c_ = (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis, :]  # (1 + neg_size, 1, batch_size)
-        u_coeffs = ((euclidean_dists_squared + self.alpha) / self.alpha)[:, np.newaxis, :]  # (1 + neg_size, 1, batch_size)
+        # (1 + neg_size, 1, batch_size)
+        c_ = (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis, :]
+        # (1 + neg_size, 1, batch_size)
+        u_coeffs = ((euclidean_dists_squared + self.alpha) / self.alpha)[:, np.newaxis, :]
         distance_gradients_u = u_coeffs * self.vectors_u - self.vectors_v  # (1 + neg_size, dim, batch_size)
         distance_gradients_u *= c_  # (1 + neg_size, dim, batch_size)
 
@@ -717,7 +721,8 @@ class PoincareBatch(object):
             distance_gradients_u.swapaxes(1, 2)[nan_gradients] = 0
         self.distance_gradients_u = distance_gradients_u
 
-        v_coeffs = ((euclidean_dists_squared + self.beta) / self.beta)[:, np.newaxis, :]  # (1 + neg_size, 1, batch_size)
+        # (1 + neg_size, 1, batch_size)
+        v_coeffs = ((euclidean_dists_squared + self.beta) / self.beta)[:, np.newaxis, :]
         distance_gradients_v = v_coeffs * self.vectors_v - self.vectors_u  # (1 + neg_size, dim, batch_size)
         distance_gradients_v *= c_  # (1 + neg_size, dim, batch_size)
 
@@ -763,7 +768,7 @@ class PoincareKeyedVectors(KeyedVectorsBase):
         Returns
         -------
         numpy.float
-            Contains Poincare distance between `vector_1` and `vector_2`.
+            Poincare distance between `vector_1` and `vector_2`.
 
         """
         return PoincareKeyedVectors.vector_distance_batch(vector_1, vector_2[np.newaxis, :])[0]
