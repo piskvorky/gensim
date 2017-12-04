@@ -6,18 +6,18 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Python implementation of Poincare Embeddings [1]_, an embedding that is better at capturing latent hierarchical
-information better than traditional Euclidean embeddings. The method is described in more detail in [1]_.
+"""Python implementation of Poincaré Embeddings [1]_, an embedding that is better at capturing latent hierarchical
+information than traditional Euclidean embeddings. The method is described in more detail in [1]_.
 
 The main use-case is to automatically learn hierarchical representations of nodes from a tree-like structure,
-such as a Directed Acyclic Graph, using the transitive closure of the relations. Representations of nodes in a
-symmetric graph can also be learned, using an iterable of the relations in the graph.
+such as a Directed Acyclic Graph, using a transitive closure of the relations. Representations of nodes in a
+symmetric graph can also be learned, using an iterable of the direct relations in the graph.
 
-This module allows training a Poincare Embedding from a training file containing relations of graph in a
-csv-like format.
+This module allows training a Poincaré Embedding from a training file containing relations of graph in a
+csv-like format, or a Python iterable of relations.
 
 .. [1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
-    https://arxiv.org/pdf/1705.08039.pdf
+    https://arxiv.org/abs/1705.08039
 
 Examples:
 ---------
@@ -47,10 +47,12 @@ import time
 import numpy as np
 from collections import defaultdict, Counter
 from numpy import random as np_random
+from scipy.stats import spearmanr
+from six import string_types
 from smart_open import smart_open
 
-from gensim import utils
-from gensim.models.keyedvectors import KeyedVectors, Vocab
+from gensim import utils, matutils
+from gensim.models.keyedvectors import KeyedVectorsBase, Vocab
 
 
 logger = logging.getLogger(__name__)
@@ -61,7 +63,7 @@ class PoincareModel(utils.SaveLoad):
 
     The model can be stored/loaded via its :meth:`~gensim.models.poincare.PoincareModel.save`
     and :meth:`~gensim.models.poincare.PoincareModel.load` methods, or stored/loaded in the word2vec format
-    via `model.kv.save_word2vec_format` and :meth:`~gensim.models.keyedvectors.KeyedVectors.load_word2vec_format`.
+    via `model.kv.save_word2vec_format` and :meth:`~gensim.models.poincare.PoincareKeyedVectors.load_word2vec_format`.
 
     Note that training cannot be resumed from a model loaded via `load_word2vec_format`, if you wish to train further,
     use :meth:`~gensim.models.poincare.PoincareModel.save` and :meth:`~gensim.models.poincare.PoincareModel.load`
@@ -120,7 +122,7 @@ class PoincareModel(utils.SaveLoad):
 
         """
         self.train_data = train_data
-        self.kv = KeyedVectors()
+        self.kv = PoincareKeyedVectors()
         self.size = size
         self.train_alpha = alpha  # Learning rate for training
         self.burn_in_alpha = burn_in_alpha  # Learning rate for burn-in
@@ -160,7 +162,7 @@ class PoincareModel(utils.SaveLoad):
             node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
             all_relations.append(relation)
-        logger.info("Loaded %d relations from train data, %d unique terms", len(all_relations), len(vocab))
+        logger.info("Loaded %d relations from train data, %d nodes", len(all_relations), len(vocab))
         self.kv.vocab = vocab
         self.kv.index2word = index2word
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
@@ -217,7 +219,7 @@ class PoincareModel(utils.SaveLoad):
                 (self.negative, num_remaining_nodes, self.kv.index2word[node_index])
             )
 
-        positive_fraction = len(node_relations) / len(self.kv.vocab)
+        positive_fraction = float(len(node_relations)) / len(self.kv.vocab)
         if positive_fraction < 0.01:
             # If number of positive relations is a small fraction of total nodes
             # re-sample till no positively connected nodes are chosen
@@ -514,6 +516,8 @@ class PoincareModel(utils.SaveLoad):
         """
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
+        # Some divide-by-zero results are handled explicitly
+        old_settings = np.seterr(divide='ignore', invalid='ignore')
 
         logger.info(
             "training model of size %d with %d workers on %d relations for %d epochs and %d burn-in epochs, "
@@ -537,6 +541,8 @@ class PoincareModel(utils.SaveLoad):
             epochs=epochs, batch_size=batch_size, print_every=print_every,
             check_gradients_every=check_gradients_every)
         logger.info("Training finished")
+
+        np.seterr(**old_settings)
 
     def _train_batchwise(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
         """Trains Poincare embeddings using specified parameters.
@@ -678,17 +684,19 @@ class PoincareBatch(object):
         self.compute_distances()
         self.compute_distance_gradients()
 
-        gradients_v = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_v  # (1 + neg_size, dim, batch_size)
+        # (1 + neg_size, dim, batch_size)
+        gradients_v = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_v
         gradients_v /= self.Z  # (1 + neg_size, dim, batch_size)
         gradients_v[0] += self.distance_gradients_v[0]
 
-        gradients_u = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_u  # (1 + neg_size, dim, batch_size)
+        # (1 + neg_size, dim, batch_size)
+        gradients_u = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_u
         gradients_u /= self.Z  # (1 + neg_size, dim, batch_size)
         gradients_u = gradients_u.sum(axis=0)  # (dim, batch_size)
         gradients_u += self.distance_gradients_u[0]
 
-        assert(not np.isnan(gradients_u).any())
-        assert(not np.isnan(gradients_v).any())
+        assert not np.isnan(gradients_u).any()
+        assert not np.isnan(gradients_v).any()
         self.gradients_u = gradients_u
         self.gradients_v = gradients_v
 
@@ -701,8 +709,10 @@ class PoincareBatch(object):
         self.compute_distances()
 
         euclidean_dists_squared = self.euclidean_dists ** 2  # (1 + neg_size, batch_size)
-        c_ = (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis, :]  # (1 + neg_size, 1, batch_size)
-        u_coeffs = ((euclidean_dists_squared + self.alpha) / self.alpha)[:, np.newaxis, :]  # (1 + neg_size, 1, batch_size)
+        # (1 + neg_size, 1, batch_size)
+        c_ = (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis, :]
+        # (1 + neg_size, 1, batch_size)
+        u_coeffs = ((euclidean_dists_squared + self.alpha) / self.alpha)[:, np.newaxis, :]
         distance_gradients_u = u_coeffs * self.vectors_u - self.vectors_v  # (1 + neg_size, dim, batch_size)
         distance_gradients_u *= c_  # (1 + neg_size, dim, batch_size)
 
@@ -711,7 +721,8 @@ class PoincareBatch(object):
             distance_gradients_u.swapaxes(1, 2)[nan_gradients] = 0
         self.distance_gradients_u = distance_gradients_u
 
-        v_coeffs = ((euclidean_dists_squared + self.beta) / self.beta)[:, np.newaxis, :]  # (1 + neg_size, 1, batch_size)
+        # (1 + neg_size, 1, batch_size)
+        v_coeffs = ((euclidean_dists_squared + self.beta) / self.beta)[:, np.newaxis, :]
         distance_gradients_v = v_coeffs * self.vectors_v - self.vectors_u  # (1 + neg_size, dim, batch_size)
         distance_gradients_v *= c_  # (1 + neg_size, dim, batch_size)
 
@@ -731,27 +742,389 @@ class PoincareBatch(object):
         self._loss_computed = True
 
 
-class PoincareKeyedVectors(KeyedVectors):
+class PoincareKeyedVectors(KeyedVectorsBase):
     """Class to contain vectors and vocab for the :class:`~gensim.models.poincare.PoincareModel` training class.
 
     Used to perform operations on the vectors such as vector lookup, distance etc.
 
     """
+
+    def __init__(self):
+        super(PoincareKeyedVectors, self).__init__()
+        self.max_distance = 0
+
     @staticmethod
-    def poincare_dist(vector_1, vector_2):
-        """Return poincare distance between two vectors."""
-        norm_1 = np.linalg.norm(vector_1)
-        norm_2 = np.linalg.norm(vector_2)
-        euclidean_dist = np.linalg.norm(vector_1 - vector_2)
-        if euclidean_dist == 0.0:
-            return 0.0
-        else:
-            return np.arccosh(
-                1 + 2 * (
-                    (euclidean_dist ** 2) / ((1 - norm_1 ** 2) * (1 - norm_2 ** 2))
-                )
+    def vector_distance(vector_1, vector_2):
+        """
+        Return poincare distance between two input vectors. Convenience method over `vector_distance_batch`.
+
+        Parameters
+        ----------
+        vector_1 : numpy.array
+            input vector
+        vector_2 : numpy.array
+            input vector
+
+        Returns
+        -------
+        numpy.float
+            Poincare distance between `vector_1` and `vector_2`.
+
+        """
+        return PoincareKeyedVectors.vector_distance_batch(vector_1, vector_2[np.newaxis, :])[0]
+
+    @staticmethod
+    def vector_distance_batch(vector_1, vectors_all):
+        """
+        Return poincare distances between one vector and a set of other vectors.
+
+        Parameters
+        ----------
+        vector_1 : numpy.array
+            vector from which Poincare distances are to be computed.
+            expected shape (dim,)
+        vectors_all : numpy.array
+            for each row in vectors_all, distance from vector_1 is computed.
+            expected shape (num_vectors, dim)
+
+        Returns
+        -------
+        numpy.array
+            Contains Poincare distance between vector_1 and each row in vectors_all.
+            shape (num_vectors,)
+
+        """
+        euclidean_dists = np.linalg.norm(vector_1 - vectors_all, axis=1)
+        norm = np.linalg.norm(vector_1)
+        all_norms = np.linalg.norm(vectors_all, axis=1)
+        return np.arccosh(
+            1 + 2 * (
+                (euclidean_dists ** 2) / ((1 - norm ** 2) * (1 - all_norms ** 2))
             )
-    # TODO: Add other KeyedVector supported methods - most_similar, etc.
+        )
+
+    def closest_child(self, node):
+        """
+        Returns the node closest to `node` that is lower in the hierarchy than `node`.
+
+        Parameters
+        ----------
+        node : str or int
+            Key for node for which closest child is to be found.
+
+        Returns
+        -------
+        str or None
+            Node closest to `node` that is lower in the hierarchy than `node`.
+            If there are no nodes lower in the hierarchy, None is returned.
+
+        """
+        all_distances = self.distances(node)
+        all_norms = np.linalg.norm(self.syn0, axis=1)
+        node_norm = all_norms[self.vocab[node].index]
+        mask = node_norm >= all_norms
+        if mask.all():  # No nodes lower in the hierarchy
+            return None
+        all_distances = np.ma.array(all_distances, mask=mask)
+        closest_child_index = np.ma.argmin(all_distances)
+        return self.index2word[closest_child_index]
+
+    def closest_parent(self, node):
+        """
+        Returns the node closest to `node` that is higher in the hierarchy than `node`.
+
+        Parameters
+        ----------
+        node : str or int
+            Key for node for which closest parent is to be found.
+
+        Returns
+        -------
+        str or None
+            Node closest to `node` that is higher in the hierarchy than `node`.
+            If there are no nodes higher in the hierarchy, None is returned.
+
+        """
+        all_distances = self.distances(node)
+        all_norms = np.linalg.norm(self.syn0, axis=1)
+        node_norm = all_norms[self.vocab[node].index]
+        mask = node_norm <= all_norms
+        if mask.all():  # No nodes higher in the hierarchy
+            return None
+        all_distances = np.ma.array(all_distances, mask=mask)
+        closest_child_index = np.ma.argmin(all_distances)
+        return self.index2word[closest_child_index]
+
+    def descendants(self, node, max_depth=5):
+        """
+        Returns the list of recursively closest children from the given node, upto a max depth of `max_depth`.
+
+        Parameters
+        ----------
+        node : str or int
+            Key for node for which descendants are to be found.
+        max_depth : int
+            Maximum number of descendants to return.
+
+        Returns
+        -------
+        list (str)
+            Descendant nodes from the node `node`.
+
+        """
+        depth = 0
+        descendants = []
+        current_node = node
+        while depth < max_depth:
+            descendants.append(self.closest_child(current_node))
+            current_node = descendants[-1]
+            depth += 1
+        return descendants
+
+    def ancestors(self, node):
+        """
+        Returns the list of recursively closest parents from the given node.
+
+        Parameters
+        ----------
+        node : str or int
+            Key for node for which ancestors are to be found.
+
+        Returns
+        -------
+        list (str)
+            Ancestor nodes of the node `node`.
+
+        """
+        ancestors = []
+        current_node = node
+        ancestor = self.closest_parent(current_node)
+        while ancestor is not None:
+            ancestors.append(ancestor)
+            ancestor = self.closest_parent(ancestors[-1])
+        return ancestors
+
+    def distance(self, w1, w2):
+        """
+        Return Poincare distance between vectors for nodes `w1` and `w2`.
+
+        Parameters
+        ----------
+        w1 : str or int
+            Key for first node.
+        w2 : str or int
+            Key for second node.
+
+        Returns
+        -------
+        float
+            Poincare distance between the vectors for nodes `w1` and `w2`.
+
+        Examples
+        --------
+
+        >>> model.distance('mammal.n.01', 'carnivore.n.01')
+        2.13
+
+        Notes
+        -----
+        Raises KeyError if either of `w1` and `w2` is absent from vocab.
+
+        """
+        vector_1 = self.word_vec(w1)
+        vector_2 = self.word_vec(w2)
+        return self.vector_distance(vector_1, vector_2)
+
+    def similarity(self, w1, w2):
+        """
+        Return similarity based on Poincare distance between vectors for nodes `w1` and `w2`.
+
+        Parameters
+        ----------
+        w1 : str or int
+            Key for first node.
+        w2 : str or int
+            Key for second node.
+
+        Returns
+        -------
+        float
+            Similarity between the between the vectors for nodes `w1` and `w2` (between 0 and 1).
+
+        Examples
+        --------
+
+        >>> model.similarity('mammal.n.01', 'carnivore.n.01')
+        0.73
+
+        Notes
+        -----
+        Raises KeyError if either of `w1` and `w2` is absent from vocab.
+        Similarity lies between 0 and 1.
+
+        """
+        return 1 / (1 + self.distance(w1, w2))
+
+    def most_similar(self, node_or_vector, topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar nodes to the given node or vector, sorted in increasing order of distance.
+
+        Parameters
+        ----------
+
+        node_or_vector : str/int or numpy.array
+            node key or vector for which similar nodes are to be found.
+        topn : int or None, optional
+            number of similar nodes to return, if `None`, returns all.
+        restrict_vocab : int or None, optional
+            Optional integer which limits the range of vectors which are searched for most-similar values.
+            For example, restrict_vocab=10000 would only check the first 10000 node vectors in the vocabulary order.
+            This may be meaningful if vocabulary is sorted by descending frequency.
+
+        Returns
+        --------
+        list of tuples (str, float)
+            List of tuples containing (node, distance) pairs in increasing order of distance.
+
+        Examples
+        --------
+        >>> vectors.most_similar('lion.n.01')
+        [('lion_cub.n.01', 0.4484), ('lionet.n.01', 0.6552), ...]
+
+        """
+        if not restrict_vocab:
+            all_distances = self.distances(node_or_vector)
+        else:
+            nodes_to_use = self.index2word[:restrict_vocab]
+            all_distances = self.distances(node_or_vector, nodes_to_use)
+
+        if isinstance(node_or_vector, string_types + (int,)):
+            node_index = self.vocab[node_or_vector].index
+        else:
+            node_index = None
+        if not topn:
+            closest_indices = matutils.argsort(all_distances)
+        else:
+            closest_indices = matutils.argsort(all_distances, topn=1 + topn)
+        result = [
+            (self.index2word[index], float(all_distances[index]))
+            for index in closest_indices if (not node_index or index != node_index)  # ignore the input node
+        ]
+        if topn:
+            result = result[:topn]
+        return result
+
+    def distances(self, node_or_vector, other_nodes=()):
+        """
+        Compute Poincare distances from given node or vector to all nodes in `other_nodes`.
+        If `other_nodes` is empty, return distance between `node_or_vector` and all nodes in vocab.
+
+        Parameters
+        ----------
+        node_or_vector : str/int or numpy.array
+            Node key or vector from which distances are to be computed.
+
+        other_nodes : iterable of str/int or None
+            For each node in `other_nodes` distance from `node_or_vector` is computed.
+            If None or empty, distance of `node_or_vector` from all nodes in vocab is computed (including itself).
+
+        Returns
+        -------
+        numpy.array
+            Array containing distances to all nodes in `other_nodes` from input `node_or_vector`,
+            in the same order as `other_nodes`.
+
+        Examples
+        --------
+
+        >>> model.distances('mammal.n.01', ['carnivore.n.01', 'dog.n.01'])
+        np.array([2.1199, 2.0710]
+
+        >>> model.distances('mammal.n.01')
+        np.array([0.43753847, 3.67973852, ..., 6.66172886])
+
+        Notes
+        -----
+        Raises KeyError if either `node_or_vector` or any node in `other_nodes` is absent from vocab.
+
+        """
+        if isinstance(node_or_vector, string_types):
+            input_vector = self.word_vec(node_or_vector)
+        else:
+            input_vector = node_or_vector
+        if not other_nodes:
+            other_vectors = self.syn0
+        else:
+            other_indices = [self.vocab[node].index for node in other_nodes]
+            other_vectors = self.syn0[other_indices]
+        return self.vector_distance_batch(input_vector, other_vectors)
+
+    def norm(self, node_or_vector):
+        """
+        Return absolute position in hierarchy of input node or vector.
+        Values range between 0 and 1. A lower value indicates the input node or vector is higher in the hierarchy.
+
+        Parameters
+        ----------
+        node_or_vector : str/int or numpy.array
+            Input node key or vector for which position in hierarchy is to be returned.
+
+        Returns
+        -------
+        float
+            Absolute position in the hierarchy of the input vector or node.
+
+        Examples
+        --------
+
+        >>> model.norm('mammal.n.01')
+        0.9
+
+        Notes
+        -----
+        The position in hierarchy is based on the norm of the vector for the node.
+
+        """
+        if isinstance(node_or_vector, string_types):
+            input_vector = self.word_vec(node_or_vector)
+        else:
+            input_vector = node_or_vector
+        return np.linalg.norm(input_vector)
+
+    def difference_in_hierarchy(self, node_or_vector_1, node_or_vector_2):
+        """
+        Relative position in hierarchy of `node_or_vector_1` relative to `node_or_vector_2`.
+        A positive value indicates `node_or_vector_1` is higher in the hierarchy than `node_or_vector_2`.
+
+        Parameters
+        ----------
+        node_or_vector_1 : str/int or numpy.array
+            Input node key or vector.
+
+        node_or_vector_2 : str/int or numpy.array
+            Input node key or vector.
+
+        Returns
+        -------
+        float
+            Relative position in hierarchy of `node_or_vector_1` relative to `node_or_vector_2`.
+
+        Examples
+        --------
+
+        >>> model.difference_in_hierarchy('mammal.n.01', 'dog.n.01')
+        0.51
+
+        >>> model.difference_in_hierarchy('dog.n.01', 'mammal.n.01')
+        -0.51
+
+        Notes
+        -----
+        The returned value can be positive or negative, depending on whether `node_or_vector_1` is higher
+        or lower in the hierarchy than `node_or_vector_2`.
+
+        """
+        return self.norm(node_or_vector_2) - self.norm(node_or_vector_1)
 
 
 class PoincareRelations(object):
@@ -784,16 +1157,17 @@ class PoincareRelations(object):
             Relation from input file.
 
         """
-        if sys.version_info[0] < 3:
-            lines = smart_open(self.file_path, 'rb')
-        else:
-            lines = (l.decode(self.encoding) for l in smart_open(self.file_path, 'rb'))
-        # csv.reader requires bytestring input in python2, unicode input in python3
-        reader = csv.reader(lines, delimiter=self.delimiter)
-        for row in reader:
+        with smart_open(self.file_path) as file_obj:
             if sys.version_info[0] < 3:
-                row = [value.decode(self.encoding) for value in row]
-            yield tuple(row)
+                lines = file_obj
+            else:
+                lines = (l.decode(self.encoding) for l in file_obj)
+            # csv.reader requires bytestring input in python2, unicode input in python3
+            reader = csv.reader(lines, delimiter=self.delimiter)
+            for row in reader:
+                if sys.version_info[0] < 3:
+                    row = [value.decode(self.encoding) for value in row]
+                yield tuple(row)
 
 
 class NegativesBuffer(object):
@@ -829,7 +1203,7 @@ class NegativesBuffer(object):
         Parameters
         ----------
         num_items : int
-            number of items to fetch.
+            Number of items to fetch.
 
         Returns
         -------
@@ -846,3 +1220,369 @@ class NegativesBuffer(object):
         end_index = start_index + num_items
         self._current_index += num_items
         return self._items[start_index:end_index]
+
+
+class ReconstructionEvaluation(object):
+    """Evaluating reconstruction on given network for given embedding."""
+
+    def __init__(self, file_path, embedding):
+        """Initialize evaluation instance with tsv file containing relation pairs and embedding to be evaluated.
+
+        Parameters
+        ----------
+        file_path : str
+            Path to tsv file containing relation pairs.
+        embedding : PoincareKeyedVectors instance
+            Embedding to be evaluated.
+
+        """
+        items = set()
+        embedding_vocab = embedding.vocab
+        relations = defaultdict(set)
+        with smart_open(file_path, 'r') as f:
+            reader = csv.reader(f, delimiter='\t')
+            for row in reader:
+                assert len(row) == 2, 'Hypernym pair has more than two items'
+                item_1_index = embedding_vocab[row[0]].index
+                item_2_index = embedding_vocab[row[1]].index
+                relations[item_1_index].add(item_2_index)
+                items.update([item_1_index, item_2_index])
+        self.items = items
+        self.relations = relations
+        self.embedding = embedding
+
+    @staticmethod
+    def get_positive_relation_ranks_and_avg_prec(all_distances, positive_relations):
+        """
+        Given a numpy array of all distances from an item and indices of its positive relations,
+        compute ranks and Average Precision of positive relations.
+
+        Parameters
+        ----------
+        all_distances : numpy.array (float)
+            Array of all distances (floats) for a specific item.
+        positive_relations : list
+            List of indices of positive relations for the item.
+
+        Returns
+        -------
+        tuple (list, float)
+            The list contains ranks (int) of positive relations in the same order as `positive_relations`.
+            The float is the Average Precision of the ranking.
+            e.g. ([1, 2, 3, 20], 0.610).
+
+        """
+        positive_relation_distances = all_distances[positive_relations]
+        negative_relation_distances = np.ma.array(all_distances, mask=False)
+        negative_relation_distances.mask[positive_relations] = True
+        # Compute how many negative relation distances are less than each positive relation distance, plus 1 for rank
+        ranks = (negative_relation_distances < positive_relation_distances[:, np.newaxis]).sum(axis=1) + 1
+        map_ranks = np.sort(ranks) + np.arange(len(ranks))
+        avg_precision = ((np.arange(1, len(map_ranks) + 1) / np.sort(map_ranks)).mean())
+        return list(ranks), avg_precision
+
+    def evaluate(self, max_n=None):
+        """Evaluate all defined metrics for the reconstruction task.
+
+        Parameters
+        ----------
+        max_n : int or None
+            Maximum number of positive relations to evaluate, all if `max_n` is None.
+
+        Returns
+        -------
+        dict
+            Contains (metric_name, metric_value) pairs.
+            e.g. {'mean_rank': 50.3, 'MAP': 0.31}.
+
+        """
+        mean_rank, map_ = self.evaluate_mean_rank_and_map(max_n)
+        return {'mean_rank': mean_rank, 'MAP': map_}
+
+    def evaluate_mean_rank_and_map(self, max_n=None):
+        """Evaluate mean rank and MAP for reconstruction.
+
+        Parameters
+        ----------
+        max_n : int or None
+            Maximum number of positive relations to evaluate, all if `max_n` is None.
+
+        Returns
+        -------
+        tuple (float, float)
+            Contains (mean_rank, MAP).
+            e.g (50.3, 0.31)
+
+        """
+        ranks = []
+        avg_precision_scores = []
+        for i, item in enumerate(self.items, start=1):
+            if item not in self.relations:
+                continue
+            item_relations = list(self.relations[item])
+            item_term = self.embedding.index2word[item]
+            item_distances = self.embedding.distances(item_term)
+            positive_relation_ranks, avg_precision = self.get_positive_relation_ranks_and_avg_prec(item_distances, item_relations)
+            ranks += positive_relation_ranks
+            avg_precision_scores.append(avg_precision)
+            if max_n is not None and i > max_n:
+                break
+        return np.mean(ranks), np.mean(avg_precision_scores)
+
+
+class LinkPredictionEvaluation(object):
+    """Evaluating reconstruction on given network for given embedding."""
+
+    def __init__(self, train_path, test_path, embedding):
+        """Initialize evaluation instance with tsv file containing relation pairs and embedding to be evaluated.
+
+        Parameters
+        ----------
+        train_path : str
+            Path to tsv file containing relation pairs used for training.
+        test_path : str
+            Path to tsv file containing relation pairs to evaluate.
+        embedding : PoincareKeyedVectors instance
+            Embedding to be evaluated.
+
+        """
+        items = set()
+        embedding_vocab = embedding.vocab
+        relations = {'known': defaultdict(set), 'unknown': defaultdict(set)}
+        data_files = {'known': train_path, 'unknown': test_path}
+        for relation_type, data_file in data_files.items():
+            with smart_open(data_file, 'r') as f:
+                reader = csv.reader(f, delimiter='\t')
+                for row in reader:
+                    assert len(row) == 2, 'Hypernym pair has more than two items'
+                    item_1_index = embedding_vocab[row[0]].index
+                    item_2_index = embedding_vocab[row[1]].index
+                    relations[relation_type][item_1_index].add(item_2_index)
+                    items.update([item_1_index, item_2_index])
+        self.items = items
+        self.relations = relations
+        self.embedding = embedding
+
+    @staticmethod
+    def get_unknown_relation_ranks_and_avg_prec(all_distances, unknown_relations, known_relations):
+        """
+        Given a numpy array of distances and indices of known and unknown positive relations,
+        compute ranks and Average Precision of unknown positive relations.
+
+        Parameters
+        ----------
+        all_distances : numpy.array (float)
+            Array of all distances for a specific item.
+        unknown_relations : list
+            List of indices of unknown positive relations.
+        known_relations : list
+            List of indices of known positive relations.
+
+        Returns
+        -------
+        tuple (list, float)
+            The list contains ranks (int) of positive relations in the same order as `positive_relations`.
+            The float is the Average Precision of the ranking.
+            e.g. ([1, 2, 3, 20], 0.610).
+
+        """
+        unknown_relation_distances = all_distances[unknown_relations]
+        negative_relation_distances = np.ma.array(all_distances, mask=False)
+        negative_relation_distances.mask[unknown_relations] = True
+        negative_relation_distances.mask[known_relations] = True
+        # Compute how many negative relation distances are less than each unknown relation distance, plus 1 for rank
+        ranks = (negative_relation_distances < unknown_relation_distances[:, np.newaxis]).sum(axis=1) + 1
+        map_ranks = np.sort(ranks) + np.arange(len(ranks))
+        avg_precision = ((np.arange(1, len(map_ranks) + 1) / np.sort(map_ranks)).mean())
+        return list(ranks), avg_precision
+
+    def evaluate(self, max_n=None):
+        """Evaluate all defined metrics for the link prediction task.
+
+        Parameters
+        ----------
+        max_n : int or None
+            Maximum number of positive relations to evaluate, all if `max_n` is None.
+
+        Returns
+        -------
+        dict
+            Contains (metric_name, metric_value) pairs.
+            e.g. {'mean_rank': 50.3, 'MAP': 0.31}.
+
+        """
+        mean_rank, map_ = self.evaluate_mean_rank_and_map(max_n)
+        return {'mean_rank': mean_rank, 'MAP': map_}
+
+    def evaluate_mean_rank_and_map(self, max_n=None):
+        """Evaluate mean rank and MAP for link prediction.
+
+        Parameters
+        ----------
+        max_n : int or None
+            Maximum number of positive relations to evaluate, all if `max_n` is None.
+
+        Returns
+        -------
+        tuple (float, float)
+            Contains (mean_rank, MAP).
+            e.g (50.3, 0.31).
+
+        """
+        ranks = []
+        avg_precision_scores = []
+        for i, item in enumerate(self.items, start=1):
+            if item not in self.relations['unknown']:  # No positive relations to predict for this node
+                continue
+            unknown_relations = list(self.relations['unknown'][item])
+            known_relations = list(self.relations['known'][item])
+            item_term = self.embedding.index2word[item]
+            item_distances = self.embedding.distances(item_term)
+            unknown_relation_ranks, avg_precision = self.get_unknown_relation_ranks_and_avg_prec(item_distances, unknown_relations, known_relations)
+            ranks += unknown_relation_ranks
+            avg_precision_scores.append(avg_precision)
+            if max_n is not None and i > max_n:
+                break
+        return np.mean(ranks), np.mean(avg_precision_scores)
+
+
+class LexicalEntailmentEvaluation(object):
+    """Evaluating reconstruction on given network for any embedding."""
+
+    def __init__(self, filepath):
+        """Initialize evaluation instance with HyperLex text file containing relation pairs.
+
+        Parameters
+        ----------
+        filepath : str
+            Path to HyperLex text file.
+
+        """
+        expected_scores = {}
+        with smart_open(filepath, 'r') as f:
+            reader = csv.DictReader(f, delimiter=' ')
+            for row in reader:
+                word_1, word_2 = row['WORD1'], row['WORD2']
+                expected_scores[(word_1, word_2)] = float(row['AVG_SCORE'])
+        self.scores = expected_scores
+        self.alpha = 1000
+
+    def score_function(self, embedding, trie, term_1, term_2):
+        """
+        Given an embedding and two terms, return the predicted score for them -
+        extent to which `term_1` is a type of `term_2`.
+
+        Parameters
+        ----------
+        embedding : PoincareKeyedVectors instance
+            Embedding to use for computing predicted score.
+        trie : pygtrie.Trie instance
+            Trie to use for finding matching vocab terms for input terms.
+        term_1 : str
+            Input term.
+        term_2 : str
+            Input term.
+
+        Returns
+        -------
+        float
+            Predicted score (the extent to which `term_1` is a type of `term_2`).
+
+        """
+        try:
+            word_1_terms = self.find_matching_terms(trie, term_1)
+            word_2_terms = self.find_matching_terms(trie, term_2)
+        except KeyError:
+            raise ValueError("No matching terms found for either %s or %s" % (term_1, term_2))
+        min_distance = np.inf
+        min_term_1, min_term_2 = None, None
+        for term_1 in word_1_terms:
+            for term_2 in word_2_terms:
+                distance = embedding.distance(term_1, term_2)
+                if distance < min_distance:
+                    min_term_1, min_term_2 = term_1, term_2
+                    min_distance = distance
+        assert min_term_1 is not None and min_term_2 is not None
+        vector_1, vector_2 = embedding.word_vec(min_term_1), embedding.word_vec(min_term_2)
+        norm_1, norm_2 = np.linalg.norm(vector_1), np.linalg.norm(vector_2)
+        return -1 * (1 + self.alpha * (norm_2 - norm_1)) * distance
+
+    @staticmethod
+    def find_matching_terms(trie, word):
+        """
+        Given a trie and a word, find terms in the trie beginning with the word.
+
+        Parameters
+        ----------
+        trie : pygtrie.Trie instance
+            Trie to use for finding matching terms.
+        word : str
+            Input word to use for prefix search.
+
+        Returns
+        -------
+        list (str)
+            List of matching terms.
+
+        """
+        matches = trie.items('%s.' % word)
+        matching_terms = [''.join(key_chars) for key_chars, value in matches]
+        return matching_terms
+
+    @staticmethod
+    def create_vocab_trie(embedding):
+        """Create trie with vocab terms of the given embedding to enable quick prefix searches.
+
+        Parameters
+        ----------
+        embedding : PoincareKeyedVectors instance
+            Embedding for which trie is to be created.
+
+        Returns
+        -------
+        pygtrie.Trie instance
+            Trie containing vocab terms of the input embedding.
+
+        """
+        try:
+            from pygtrie import Trie
+        except ImportError:
+            raise ImportError(
+                'pygtrie could not be imported, please install pygtrie in order to use LexicalEntailmentEvaluation')
+
+        vocab_trie = Trie()
+        for key in embedding.vocab:
+            vocab_trie[key] = True
+        return vocab_trie
+
+    def evaluate_spearman(self, embedding):
+        """Evaluate spearman scores for lexical entailment for given embedding.
+
+        Parameters
+        ----------
+        embedding : PoincareKeyedVectors instance
+            Embedding for which evaluation is to be done.
+
+        Returns
+        -------
+        float
+            Spearman correlation score for the task for input embedding.
+
+        """
+        predicted_scores = []
+        expected_scores = []
+        skipped = 0
+        count = 0
+        vocab_trie = self.create_vocab_trie(embedding)
+        for (word_1, word_2), expected_score in self.scores.items():
+            try:
+                predicted_score = self.score_function(embedding, vocab_trie, word_1, word_2)
+            except ValueError:
+                skipped += 1
+                continue
+            count += 1
+            predicted_scores.append(predicted_score)
+            expected_scores.append(expected_score)
+        print('Skipped pairs: %d out of %d' % (skipped, len(self.scores)))
+        spearman = spearmanr(expected_scores, predicted_scores)
+        return spearman.correlation

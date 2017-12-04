@@ -91,3 +91,4 @@ Modules:
     summarization/summariser
     summarization/syntactic_unit
     summarization/textcleaner
+    viz/poincare

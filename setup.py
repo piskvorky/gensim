@@ -296,7 +296,7 @@ setup(
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
         'test': test_env,
-        'docs': test_env + ['Pyro4 >= 4.27', 'sphinx', 'sphinxcontrib-napoleon', 'annoy'],
+        'docs': test_env + ['Pyro4 >= 4.27', 'sphinx', 'sphinxcontrib-napoleon', 'annoy', 'plotly'],
     },
 
     include_package_data=True,
