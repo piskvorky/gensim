@@ -494,6 +494,11 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
                     model.scoring = npmi_scorer
                 else:
                     raise ValueError('failed to load Phrases model with unknown scoring setting %s' % (model.scoring))
+        # if there is non common_terms attribute, inizialize
+        if not hasattr(model, "common_terms"):
+            logger.info('older version of Phrases loaded without common_terms attribute')
+            logger.info('setting common_terms to empty set')
+            model.common_terms = frozenset()
         return model
 
 

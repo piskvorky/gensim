@@ -335,7 +335,7 @@ class TestPhrasesModel(PhrasesData, PhrasesCommon, unittest.TestCase):
 # endclass TestPhrasesModel
 
 
-class TestPhrasesScoringPersistence(PhrasesData, unittest.TestCase):
+class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
 
     def testSaveLoadCustomScorer(self):
         """ saving and loading a Phrases object with a custom scorer """
@@ -419,6 +419,23 @@ class TestPhrasesScoringPersistence(PhrasesData, unittest.TestCase):
                 3.444  # score for human interface
             ])
 
+        finally:
+            if os.path.exists("test_phrases_testSaveLoadNoScoring_temp_save.pkl"):
+                os.remove("test_phrases_testSaveLoadNoScoring_temp_save.pkl")
+
+    def testSaveLoadNoCommonTerms(self):
+        """ Saving and loading a Phrases objects without common_terms
+        This should ensure backwards compatibility with old versions of Phrases"""
+
+        try:
+            bigram = Phrases(self.sentences, min_count=1, threshold=1)
+            del(bigram.common_terms)
+            bigram.save("test_phrases_testSaveLoadNoScoring_temp_save.pkl")
+            bigram_loaded = Phrases.load("test_phrases_testSaveLoadNoScoring_temp_save.pkl")
+            self.assertEqual(bigram_loaded.common_terms, frozenset())
+            # can make a phraser, cf #1751
+            phraser = Phraser(bigram_loaded)  # does not raise
+            phraser["some terms"]  # does not raise
         finally:
             if os.path.exists("test_phrases_testSaveLoadNoScoring_temp_save.pkl"):
                 os.remove("test_phrases_testSaveLoadNoScoring_temp_save.pkl")
