@@ -419,6 +419,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(all(['terrorism' not in l for l in others]))
         model.build_vocab(others)
         model.train(others, total_examples=model.corpus_count, epochs=model.iter)
+        # checks that `syn0` is different from `syn0_vocab`
+        self.assertFalse(np.all(np.equal(model.wv.syn0, model.wv.syn0_vocab)))
         self.assertFalse('terrorism' in model.wv.vocab)
         self.assertFalse('orism>' in model.wv.ngrams)
         model.build_vocab(terro, update=True)  # update vocab
