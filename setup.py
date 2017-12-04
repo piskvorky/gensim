@@ -229,6 +229,7 @@ distributed_env = ['Pyro4 >= 4.27']
 win_testenv = [
     'pytest',
     'pytest-rerunfailures',
+    'mock',
     'cython',
     'pyemd',
     'testfixtures',
