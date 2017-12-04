@@ -103,7 +103,7 @@ class DmlSource(ArticleSource):
         for line in xml:
             if line.find('</article>') >= 0:  # end of <article>, we're done
                 break
-            p = re.search(PAT_TAG, line)  # HAX assumes one element = one line; proper xml parsing probably better... but who cares
+            p = re.search(PAT_TAG, line)
             if p:
                 name, cont = p.groups()
                 name = name.split()[0]
@@ -202,7 +202,8 @@ class DmlCzSource(DmlSource):
             logger.info('missing dspace_id in %s', path)
             return False
         # and contain either fulltext.txt or fulltext_dspace.txt file
-        if not (os.path.exists(os.path.join(path, 'fulltext.txt')) or os.path.exists(os.path.join(path, 'fulltext-dspace.txt'))):
+        if not (os.path.exists(os.path.join(path, 'fulltext.txt'))
+                or os.path.exists(os.path.join(path, 'fulltext-dspace.txt'))):
             logger.info('missing fulltext in %s', path)
             return False
         # and contain the meta.xml file
@@ -264,7 +265,9 @@ class ArxmlivSource(ArticleSource):
         def characters(self, text):
             # for text, we only care about tokens directly within the <p> tag
             if self.path[-1] == 'p':
-                tokens = [token.encode('utf8') for token in utils.tokenize(text, errors='ignore') if not token.isdigit()]
+                tokens = [
+                    token.encode('utf8') for token in utils.tokenize(text, errors='ignore') if not token.isdigit()
+                ]
                 self.tokens.extend(tokens)
     # endclass ArxmlivHandler
 

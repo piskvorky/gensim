@@ -26,7 +26,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
 
     def __init__(self, num_topics=100, id2word=None, chunksize=2000, passes=1, update_every=1, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01, random_state=None, scorer='perplexity'):
+                 minimum_probability=0.01, random_state=None, scorer='perplexity', dtype=np.float32):
         """
         Sklearn wrapper for LDA model. See gensim.model.LdaModel for parameter details.
 
@@ -50,6 +50,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         self.minimum_probability = minimum_probability
         self.random_state = random_state
         self.scorer = scorer
+        self.dtype = dtype
 
     def fit(self, X, y=None):
         """
@@ -57,7 +58,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         Calls gensim.models.LdaModel
         """
         if sparse.issparse(X):
-            corpus = matutils.Sparse2Corpus(X)
+            corpus = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
         else:
             corpus = X
 
@@ -67,7 +68,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
             alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
             eval_every=self.eval_every, iterations=self.iterations,
             gamma_threshold=self.gamma_threshold, minimum_probability=self.minimum_probability,
-            random_state=self.random_state
+            random_state=self.random_state, dtype=self.dtype
         )
         return self
 
@@ -76,16 +77,21 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         Takes a list of documents as input ('docs').
         Returns a matrix of topic distribution for the given document bow, where a_ij
         indicates (topic_i, topic_probability_j).
-        The input `docs` should be in BOW format and can be a list of documents like : [ [(4, 1), (7, 1)], [(9, 1), (13, 1)], [(2, 1), (6, 1)] ]
+        The input `docs` should be in BOW format and can be a list of documents like
+        [[(4, 1), (7, 1)],
+        [(9, 1), (13, 1)], [(2, 1), (6, 1)]]
         or a single document like : [(4, 1), (7, 1)]
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # The input as array of array
         if isinstance(docs[0], tuple):
             docs = [docs]
-        # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
+        # returning dense representation for compatibility with sklearn
+        # but we should go back to sparse representation in the future
         distribution = [matutils.sparse2full(self.gensim_model[doc], self.num_topics) for doc in docs]
         return np.reshape(np.array(distribution), (len(docs), self.num_topics))
 
@@ -101,7 +107,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
 
         """
         if sparse.issparse(X):
-            X = matutils.Sparse2Corpus(X)
+            X = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
 
         if self.gensim_model is None:
             self.gensim_model = models.LdaModel(
@@ -109,7 +115,8 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
                 chunksize=self.chunksize, passes=self.passes, update_every=self.update_every,
                 alpha=self.alpha, eta=self.eta, decay=self.decay, offset=self.offset,
                 eval_every=self.eval_every, iterations=self.iterations, gamma_threshold=self.gamma_threshold,
-                minimum_probability=self.minimum_probability, random_state=self.random_state
+                minimum_probability=self.minimum_probability, random_state=self.random_state,
+                dtype=self.dtype
             )
 
         self.gensim_model.update(corpus=X)
@@ -122,8 +129,9 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         if self.scorer == 'perplexity':
             corpus_words = sum(cnt for document in X for _, cnt in document)
             subsample_ratio = 1.0
-            perwordbound = self.gensim_model.bound(X, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
-            return -1 * np.exp2(-perwordbound)  # returning (-1*perplexity) to select model with minimum perplexity value
+            perwordbound = \
+                self.gensim_model.bound(X, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
+            return -1 * np.exp2(-perwordbound)  # returning (-1*perplexity) to select model with minimum value
         elif self.scorer == 'u_mass':
             goodcm = models.CoherenceModel(model=self.gensim_model, corpus=X, coherence=self.scorer, topn=3)
             return goodcm.get_coherence()

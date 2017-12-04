@@ -30,7 +30,7 @@ class TestWordrank(unittest.TestCase):
             return
         self.test_model = wordrank.Wordrank.train(
             self.wr_path, self.corpus_file, self.out_name, iter=6,
-            dump_period=5, period=5, np=2, cleanup_files=True
+            dump_period=5, period=5, np=4, cleanup_files=True
         )
 
     def testLoadWordrankFormat(self):

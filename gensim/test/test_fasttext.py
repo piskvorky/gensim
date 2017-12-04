@@ -255,7 +255,9 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(self.test_model.n_similarity(['the'], ['and']), self.test_model.n_similarity(['and'], ['the']))
         # Out of vocab check
         self.assertTrue(np.allclose(self.test_model.n_similarity(['night', 'nights'], ['nights', 'night']), 1.0))
-        self.assertEqual(self.test_model.n_similarity(['night'], ['nights']), self.test_model.n_similarity(['nights'], ['night']))
+        self.assertEqual(
+            self.test_model.n_similarity(['night'], ['nights']), self.test_model.n_similarity(['nights'], ['night'])
+        )
 
     def test_similarity(self):
         # In vocab, sanity check
@@ -440,12 +442,17 @@ class TestFastTextModel(unittest.TestCase):
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_hs_online(self):
-        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1)
+        model = FT_gensim(
+            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1
+        )
         self.online_sanity(model)
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_neg_online(self):
-        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=5, min_count=5, iter=1, seed=42, workers=1, sample=0)
+        model = FT_gensim(
+            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=5,
+            min_count=5, iter=1, seed=42, workers=1, sample=0
+        )
         self.online_sanity(model)
 
 

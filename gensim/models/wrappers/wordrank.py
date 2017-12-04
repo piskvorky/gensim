@@ -54,18 +54,21 @@ class Wordrank(KeyedVectors):
         `wr_path` is the absolute path to the Wordrank directory.
         `corpus_file` is the filename of the text file to be used for training the Wordrank model.
         Expects file to contain space-separated tokens in a single line
-        `out_name` is name of the directory which will be created (in wordrank folder) to save embeddings and training data.
+        `out_name` is name of the directory which will be created (in wordrank folder)
+        to save embeddings and training data.
         It will contain following contents:
 
             Word Embeddings saved after every dump_period and stored in a file model_word_current\ iter.txt
             Context Embeddings saved after every dump_period and stored in a file model_context_current\ iter.txt
-            A meta directory which contain: 'vocab.txt' - vocab words, 'wiki.toy' - word-word coccurence values, 'meta' - vocab and coccurence lengths
+            A meta directory which contain: 'vocab.txt' - vocab words,
+            'wiki.toy' - word-word coccurence values, 'meta' - vocab and coccurence lengths
 
         `size` is the dimensionality of the feature vectors.
         `window` is the number of context words to the left (and to the right, if symmetric = 1).
         `symmetric` if 0, only use left context words, else use left and right both.
         `min_count` = ignore all words with total frequency lower than this.
-        `max_vocab_size` upper bound on vocabulary size, i.e. keep the <int> most frequent words. Default is 0 for no limit.
+        `max_vocab_size` upper bound on vocabulary size, i.e. keep the <int> most frequent words.
+        Default is 0 for no limit.
         `sgd_num` number of SGD taken for each data point.
         `lrate` is the learning rate (too high diverges, give Nan).
         `period` is the period of xi variable updates
@@ -78,7 +81,8 @@ class Wordrank(KeyedVectors):
         `loss` = name of the loss (logistic, hinge).
         `memory` = soft limit for memory consumption, in GB.
         `np` number of copies to execute. (mpirun option)
-        `cleanup_files` if True, delete directory and files used by this wrapper, setting to False can be useful for debugging
+        `cleanup_files` if True, delete directory and files used by this wrapper,
+        setting to False can be useful for debugging
         `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before assigning word indexes.
         `ensemble` = 0 (default), use ensemble of word and context vectors
         """
@@ -140,8 +144,10 @@ class Wordrank(KeyedVectors):
             iter += 1
         else:
             logger.warning(
-                "Resultant embedding will be from %d iterations rather than the input %d iterations, as wordrank dumps the embedding only at dump_period intervals. "
-                "Input an appropriate combination of parameters (iter, dump_period) such that \"iter mod dump_period\" is zero.",
+                "Resultant embedding will be from %d iterations rather than the input %d iterations, "
+                "as wordrank dumps the embedding only at dump_period intervals. "
+                "Input an appropriate combination of parameters (iter, dump_period) "
+                "such that \"iter mod dump_period\" is zero.",
                 iter - (iter % dump_period), iter
             )
 

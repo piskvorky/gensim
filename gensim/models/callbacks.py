@@ -53,8 +53,8 @@ class CoherenceMetric(Metric):
             texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator,
             dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present,
                 this is not needed. If both are provided, dictionary will be used.
-            window_size : Is the size of the window to be used for coherence measures using boolean sliding window as their
-                probability estimator. For 'u_mass' this doesn't matter.
+            window_size : Is the size of the window to be used for coherence measures using boolean
+                sliding window as their probability estimator. For 'u_mass' this doesn't matter.
                 If left 'None' the default window sizes are used which are:
 
                     'c_v' : 110
@@ -148,7 +148,8 @@ class DiffMetric(Metric):
                 `hellinger`
                 `jaccard`
             num_words : is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
-            n_ann_terms : max quantity of words in intersection/symmetric difference between topics (used for annotation)
+            n_ann_terms : max quantity of words in intersection/symmetric difference
+                          between topics (used for annotation)
             diagonal : difference between  identical topic no.s
             annotation : intersection or difference of words between topics
             normed (bool) : If `true`, matrix/array Z will be normalized
@@ -195,7 +196,8 @@ class ConvergenceMetric(Metric):
                 `hellinger`
                 `jaccard`
             num_words : is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
-            n_ann_terms : max quantity of words in intersection/symmetric difference between topics (used for annotation)
+            n_ann_terms : max quantity of words in intersection/symmetric difference
+                          between topics (used for annotation)
             diagonal : difference between  identical topic no.s
             annotation : intersection or difference of words between topics
             normed (bool) : If `true`, matrix/array Z will be normalized
