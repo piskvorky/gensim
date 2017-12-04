@@ -14,7 +14,8 @@ import os
 import sys
 
 from gensim import utils
-from gensim.models.phrases import SentenceAnalyzer, Phrases, Phraser, pseudocorpus
+from gensim.models.phrases import SentenceAnalyzer, Phrases, Phraser
+from gensim.models.phrases import pseudocorpus, original_scorer
 from gensim.test.utils import common_texts
 
 if sys.version_info[0] >= 3:
@@ -439,6 +440,80 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
         finally:
             if os.path.exists("test_phrases_testSaveLoadNoScoring_temp_save.pkl"):
                 os.remove("test_phrases_testSaveLoadNoScoring_temp_save.pkl")
+
+
+class TestPhraserPersistence(PhrasesData, unittest.TestCase):
+
+    def testSaveLoadCustomScorer(self):
+        """Saving and loading a Phraser object with a custom scorer """
+
+        try:
+            bigram = Phraser(
+                Phrases(self.sentences, min_count=1, threshold=.001, scoring=dumb_scorer))
+            bigram.save("test_Phraser_testSaveLoadCustomScorer_temp_save.pkl")
+            bigram_loaded = Phraser.load("test_Phraser_testSaveLoadCustomScorer_temp_save.pkl")
+            # we do not much with scoring, just verify its the one expected
+            self.assertEqual(bigram_loaded.scoring, dumb_scorer)
+        finally:
+            if os.path.exists("test_phrases_testSaveLoadNoScoring_temp_save.pkl"):
+                os.remove("test_phrases_testSaveLoadNoScoring_temp_save.pkl")
+
+    def testSaveLoad(self):
+        """ Saving and loading a Phraser object."""
+        try:
+            bigram = Phraser(Phrases(self.sentences, min_count=1, threshold=1))
+            bigram.save("test_Phraser_testSaveLoad_temp_save.pkl")
+            bigram_loaded = Phraser.load("test_Phraser_testSaveLoad_temp_save.pkl")
+            self.assertEqual(
+                bigram_loaded[['graph', 'minors', 'survey', 'human', 'interface', 'system']],
+                ['graph_minors', 'survey', 'human_interface', 'system'])
+        finally:
+            if os.path.exists("test_Phraser_testSaveLoad_temp_save.pkl"):
+                os.remove("test_Phraser_testSaveLoad_temp_save.pkl")
+
+    def testSaveLoadStringScoring(self):
+        """ Saving and loading a Phraser object with a string scoring parameter.
+        This should ensure backwards compatibility with the previous version of Phraser"""
+
+        try:
+            bigram = Phraser(Phrases(self.sentences, min_count=1, threshold=1))
+            bigram.scoring = "default"
+            bigram.save("test_Phraser_testSaveLoadStringScoring_temp_save.pkl")
+            bigram_loaded = Phraser.load("test_Phraser_testSaveLoadStringScoring_temp_save.pkl")
+            # we do not much with scoring, just verify its the one expected
+            self.assertEqual(bigram_loaded.scoring, original_scorer)
+        finally:
+            if os.path.exists("test_Phraser_testSaveLoadStringScoring_temp_save.pkl"):
+                os.remove("test_Phraser_testSaveLoadStringScoring_temp_save.pkl")
+
+    def testSaveLoadNoScoring(self):
+        """ Saving and loading a Phraser object with no scoring parameter.
+        This should ensure backwards compatibility with old versions of Phraser"""
+
+        try:
+            bigram = Phraser(Phrases(self.sentences, min_count=1, threshold=1))
+            del(bigram.scoring)
+            bigram.save("test_Phraser_testSaveLoadNoScoring_temp_save.pkl")
+            bigram_loaded = Phraser.load("test_Phraser_testSaveLoadNoScoring_temp_save.pkl")
+            # we do not much with scoring, just verify its the one expected
+            self.assertEqual(bigram_loaded.scoring, original_scorer)
+        finally:
+            if os.path.exists("test_Phraser_testSaveLoadNoScoring_temp_save.pkl"):
+                os.remove("test_Phraser_testSaveLoadNoScoring_temp_save.pkl")
+
+    def testSaveLoadNoCommonTerms(self):
+        """ Saving and loading a Phraser objects without common_terms
+        This should ensure backwards compatibility with old versions of Phraser"""
+
+        try:
+            bigram = Phraser(Phrases(self.sentences, min_count=1, threshold=1))
+            del(bigram.common_terms)
+            bigram.save("test_Phraser_testSaveLoadNoScoring_temp_save.pkl")
+            bigram_loaded = Phraser.load("test_Phraser_testSaveLoadNoScoring_temp_save.pkl")
+            self.assertEqual(bigram_loaded.common_terms, frozenset())
+        finally:
+            if os.path.exists("test_Phraser_testSaveLoadNoScoring_temp_save.pkl"):
+                os.remove("test_Phraser_testSaveLoadNoScoring_temp_save.pkl")
 
 
 class TestPhraserModel(PhrasesData, PhrasesCommon, unittest.TestCase):

@@ -178,7 +178,61 @@ class SentenceAnalyzer(object):
                     yield (word, None)
 
 
-class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
+class PhrasesTransformation(interfaces.TransformationABC):
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """
+        Load a previously saved Phrases class. Handles backwards compatibility from
+            older Phrases versions which did not support  pluggable scoring functions.
+            Otherwise, relies on utils.load
+        """
+
+        # for python 2 and 3 compatibility. basestring is used to check if model.scoring is a string
+        try:
+            basestring
+        except NameError:
+            basestring = str
+
+        model = super(PhrasesTransformation, cls).load(*args, **kwargs)
+        # update older models
+        # if no scoring parameter, use default scoring
+        if not hasattr(model, 'scoring'):
+            logger.info('older version of %s loaded without scoring function', cls.__name__)
+            logger.info('setting pluggable scoring method to original_scorer for compatibility')
+            model.scoring = original_scorer
+        # if there is a scoring parameter, and it's a text value, load the proper scoring function
+        if hasattr(model, 'scoring'):
+            if isinstance(model.scoring, basestring):
+                if model.scoring == 'default':
+                    logger.info(
+                        'older version of %s loaded with "default" scoring parameter',
+                        cls.__name__)
+                    logger.info(
+                        'setting scoring method to original_scorer pluggable scoring method ' +
+                        'for compatibility')
+                    model.scoring = original_scorer
+                elif model.scoring == 'npmi':
+                    logger.info(
+                        'older version of %s loaded with "npmi" scoring parameter',
+                        cls.__name__)
+                    logger.info(
+                        'setting scoring method to npmi_scorer pluggable scoring method ' +
+                        'for compatibility')
+                    model.scoring = npmi_scorer
+                else:
+                    raise ValueError(
+                        'failed to load %s model with unknown scoring setting %s' %
+                        (cls.__name__, model.scoring))
+        # if there is non common_terms attribute, inizialize
+        if not hasattr(model, "common_terms"):
+            logger.info('older version of %s loaded without common_terms attribute', cls.__name__)
+            logger.info('setting common_terms to empty set')
+            model.common_terms = frozenset()
+        return model
+
+
+class Phrases(SentenceAnalyzer, PhrasesTransformation):
     """
     Detect phrases, based on collected collocation counts. Adjacent words that appear
     together more frequently than expected are joined together with the `_` character.
@@ -461,46 +515,6 @@ class Phrases(SentenceAnalyzer, interfaces.TransformationABC):
 
         return [utils.to_unicode(w) for w in new_s]
 
-    @classmethod
-    def load(cls, *args, **kwargs):
-        """
-        Load a previously saved Phrases class. Handles backwards compatibility from
-            older Phrases versions which did not support  pluggable scoring functions. Otherwise, relies on utils.load
-        """
-
-        # for python 2 and 3 compatibility. basestring is used to check if model.scoring is a string
-        try:
-            basestring
-        except NameError:
-            basestring = str
-
-        model = super(Phrases, cls).load(*args, **kwargs)
-        # update older models
-        # if no scoring parameter, use default scoring
-        if not hasattr(model, 'scoring'):
-            logger.info('older version of Phrases loaded without scoring function')
-            logger.info('setting pluggable scoring method to original_scorer for compatibility')
-            model.scoring = original_scorer
-        # if there is a scoring parameter, and it's a text value, load the proper scoring function
-        if hasattr(model, 'scoring'):
-            if isinstance(model.scoring, basestring):
-                if model.scoring == 'default':
-                    logger.info('older version of Phrases loaded with "default" scoring parameter')
-                    logger.info('setting scoring method to original_scorer pluggable scoring method for compatibility')
-                    model.scoring = original_scorer
-                elif model.scoring == 'npmi':
-                    logger.info('older version of Phrases loaded with "npmi" scoring parameter')
-                    logger.info('setting scoring method to npmi_scorer pluggable scoring method for compatibility')
-                    model.scoring = npmi_scorer
-                else:
-                    raise ValueError('failed to load Phrases model with unknown scoring setting %s' % (model.scoring))
-        # if there is non common_terms attribute, inizialize
-        if not hasattr(model, "common_terms"):
-            logger.info('older version of Phrases loaded without common_terms attribute')
-            logger.info('setting common_terms to empty set')
-            model.common_terms = frozenset()
-        return model
-
 
 # these two built-in scoring methods don't cast everything to float because the casting is done in the call
 # to the scoring method in __getitem__ and export_phrases.
@@ -535,7 +549,7 @@ def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
                 yield components
 
 
-class Phraser(SentenceAnalyzer, interfaces.TransformationABC):
+class Phraser(SentenceAnalyzer, PhrasesTransformation):
     """
     Minimal state & functionality to apply results of a Phrases model to tokens.
 
