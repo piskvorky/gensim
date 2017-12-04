@@ -1061,4 +1061,3 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
 # For backward compatibility
 KeyedVectors = EuclideanKeyedVectors
-
