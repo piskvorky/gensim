@@ -11,18 +11,16 @@ Automated tests for checking transformation algorithms (the models package).
 import contextlib
 import logging
 import os
-import sys
 import shutil
 import tempfile
 import unittest
+
+import six
 
 from gensim import utils
 from gensim.models.phrases import SentenceAnalyzer, Phrases, Phraser
 from gensim.models.phrases import pseudocorpus, original_scorer
 from gensim.test.utils import common_texts
-
-if sys.version_info[0] >= 3:
-    unicode = str
 
 
 @contextlib.contextmanager
@@ -244,7 +242,7 @@ class PhrasesCommon:
         self.assertEqual(self.bigram_unicode[self.sentences[1]], expected)
 
         transformed = ' '.join(self.bigram_utf8[self.sentences[1]])
-        self.assertTrue(isinstance(transformed, unicode))
+        self.assertTrue(isinstance(transformed, six.text_type))
 
 
 # scorer for testCustomScorer
@@ -557,7 +555,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
         self.assertEqual(self.bigram_unicode[self.sentences[1]], expected)
 
         transformed = ' '.join(self.bigram_utf8[self.sentences[1]])
-        self.assertTrue(isinstance(transformed, unicode))
+        self.assertTrue(isinstance(transformed, six.text_type))
 
     def testMultipleBigramsSingleEntry(self):
         """ a single entry should produce multiple bigrams. """
@@ -664,7 +662,7 @@ class TestPhraserModelCommonTerms(CommonTermsPhrasesData, TestPhraserModel):
         self.assertEqual(self.bigram_unicode[self.sentences[1]], expected)
 
         transformed = ' '.join(self.bigram_utf8[self.sentences[1]])
-        self.assertTrue(isinstance(transformed, unicode))
+        self.assertTrue(isinstance(transformed, six.text_type))
 
 
 if __name__ == '__main__':

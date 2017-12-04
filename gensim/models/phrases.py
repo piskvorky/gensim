@@ -188,12 +188,6 @@ class PhrasesTransformation(interfaces.TransformationABC):
             Otherwise, relies on utils.load
         """
 
-        # for python 2 and 3 compatibility. basestring is used to check if model.scoring is a string
-        try:
-            basestring
-        except NameError:
-            basestring = str
-
         model = super(PhrasesTransformation, cls).load(*args, **kwargs)
         # update older models
         # if no scoring parameter, use default scoring
@@ -203,7 +197,7 @@ class PhrasesTransformation(interfaces.TransformationABC):
             model.scoring = original_scorer
         # if there is a scoring parameter, and it's a text value, load the proper scoring function
         if hasattr(model, 'scoring'):
-            if isinstance(model.scoring, basestring):
+            if isinstance(model.scoring, six.string_types):
                 if model.scoring == 'default':
                     logger.info(
                         'older version of %s loaded with "default" scoring parameter',
@@ -224,7 +218,7 @@ class PhrasesTransformation(interfaces.TransformationABC):
                     raise ValueError(
                         'failed to load %s model with unknown scoring setting %s' %
                         (cls.__name__, model.scoring))
-        # if there is non common_terms attribute, inizialize
+        # if there is non common_terms attribute, initialize
         if not hasattr(model, "common_terms"):
             logger.info('older version of %s loaded without common_terms attribute', cls.__name__)
             logger.info('setting common_terms to empty set')
