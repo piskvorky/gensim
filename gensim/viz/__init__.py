@@ -1,3 +1,3 @@
 """
-This package contains functions to visualize different models from `gensim.models`.
+This package contains functions to visualize different models from :mod:`gensim.models`.
 """
