@@ -120,7 +120,6 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
                 output_data["section_texts"].append(section_content)
             if (idx + 1) % 100000 == 0:
                 logger.info("processed #%d articles (at %r now)", idx + 1, article_title)
-                
             if output_file is None:
                 sys.stdout.write(json.dumps(output_data) + "\n")
             else:
