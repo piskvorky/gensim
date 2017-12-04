@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
-# Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
+# Authors: Chinmaya Pancholi <chinmayapancholi13@gmail.com>, Shiva Manne <s.manne@rare-technologies.com>
+# Copyright (C) 2017 RaRe Technologies s.r.o.
 
-"""
-Learn word representations via fasttext's "skip-gram and CBOW models", using either
+"""Learn word representations via fasttext's "skip-gram and CBOW models", using either
 hierarchical softmax or negative sampling [1]_.
 
 NOTE: There are more ways to get word vectors in Gensim than just FastText.
@@ -13,7 +12,7 @@ See wrappers for VarEmbed and WordRank or Word2Vec
 This module allows training a word embedding from a training corpus with the additional ability
 to obtain word vectors for out-of-vocabulary words.
 
-For a tutorial on gensim's native fasttext, refer the noteboook --
+For a tutorial on gensim's native fasttext, refer to the noteboook --
 https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled) fasttext training**
@@ -46,8 +45,7 @@ except ImportError:
     MAX_WORDS_IN_BATCH = 10000
 
     def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
-        """
-        Update CBOW model by training on a sequence of sentences.
+        """Update CBOW model by training on a sequence of sentences.
 
         Each sentence is a list of string tokens, which are looked up in the model's
         vocab dictionary. Called internally from `FastText.train()`.
@@ -56,7 +54,6 @@ except ImportError:
         will use the optimized version from fasttext_inner instead.
 
         """
-
         result = 0
         for sentence in sentences:
             word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
@@ -86,13 +83,13 @@ except ImportError:
                 if (subwords_indices[0] or subwords_indices[1]) and model.cbow_mean:
                     l1 /= (len(subwords_indices[0]) + len(subwords_indices[1]))
 
-                train_cbow_pair(model, word, subwords_indices, l1, alpha, is_ft=True)  # train on the sliding window for target word
+                # train on the sliding window for target word
+                train_cbow_pair(model, word, subwords_indices, l1, alpha, is_ft=True)
             result += len(word_vocabs)
         return result
 
     def train_batch_sg(model, sentences, alpha, work=None, neu1=None):
-        """
-        Update skip-gram model by training on a sequence of sentences.
+        """Update skip-gram model by training on a sequence of sentences.
 
         Each sentence is a list of string tokens, which are looked up in the model's
         vocab dictionary. Called internally from `FastText.train()`.
@@ -101,7 +98,6 @@ except ImportError:
         will use the optimized version from fasttext_inner instead.
 
         """
-
         result = 0
         for sentence in sentences:
             word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
@@ -126,22 +122,19 @@ except ImportError:
 
 
 class FastText(Word2Vec):
-    """
-    Class for training, using and evaluating word representations learned using method described in
+    """Class for training, using and evaluating word representations learned using method described in
     `Enriching Word Vectors with Subword Information` aka Fasttext.
 
     The model can be stored/loaded via its `save()` and `load()` methods, or loaded in a format
     compatible with the original fasttext implementation via `load_fasttext_format()`.
 
     """
-
     def __init__(
             self, sentences=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-            negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1, bucket=2000000,
-            trim_rule=None, batch_words=MAX_WORDS_IN_BATCH):
-        """
-        Initialize the model from an iterable of `sentences`. Each sentence is a
+            negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1,
+            bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH):
+        """Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
 
         The `sentences` iterable can be simply a list, but for larger corpora,
@@ -216,8 +209,15 @@ class FastText(Word2Vec):
         `bucket` = Word and character ngram features are hashed into a fixed number of buckets, in order to limit the
         memory usage of the model. This option specifies the number of buckets used by the model. Default: 2000000
 
-        """
+        Example
+        -------
+        Initialize and train a `FastText` model:
 
+        >>> model = FastText(sg=1, hs=0,window=2, negative=5, iter=4)
+        >>> model.build_vocab(sentences)
+        >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
+
+        """
         # fastText specific params
         self.bucket = bucket
         self.word_ngrams = word_ngrams
@@ -238,11 +238,9 @@ class FastText(Word2Vec):
         self.wv.max_n = self.max_n
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
-        """
-        Build vocabulary from a sequence of sentences (can be a once-only generator stream).
+        """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
         """
-
         if update:
             if not len(self.wv.vocab):
                 raise RuntimeError(
@@ -257,13 +255,11 @@ class FastText(Word2Vec):
         self.init_ngrams(update=update)
 
     def init_ngrams(self, update=False):
-        """
-        Computes ngrams of all words present in vocabulary and stores vectors for only those ngrams.
+        """Computes ngrams of all words present in vocabulary and stores vectors for only those ngrams.
         Vectors for other ngrams are initialized with a random uniform distribution in FastText.
         If `update` is `True`, the new vocab words and their new ngrams word vectors are initialized
         with random uniform distribution and updated/added to the exisiting vocab word and ngram vectors.
         """
-
         if not update:
             self.wv.ngrams = {}
             self.wv.syn0_vocab = empty((len(self.wv.vocab), self.vector_size), dtype=REAL)
@@ -339,21 +335,21 @@ class FastText(Word2Vec):
             self.syn0_ngrams_lockf = vstack([self.syn0_ngrams_lockf, new_ngram_lockf_rows])
 
     def reset_ngram_weights(self):
-        """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary and their ngrams."""
-
+        """Reset all projection weights to an initial (untrained) state, but keep the
+        existing vocabulary and their ngrams."""
         rand_obj = np.random
         rand_obj.seed(self.seed)
         for index in range(len(self.wv.vocab)):
-            self.wv.syn0_vocab[index] = rand_obj.uniform(-1.0 / self.vector_size, 1.0 / self.vector_size, self.vector_size)
+            self.wv.syn0_vocab[index] = rand_obj.uniform(-1.0 / self.vector_size, 1.0 / self.vector_size,
+                                                         self.vector_size)
         for index in range(len(self.wv.hash2index)):
-            self.wv.syn0_ngrams[index] = rand_obj.uniform(-1.0 / self.vector_size, 1.0 / self.vector_size, self.vector_size)
+            self.wv.syn0_ngrams[index] = rand_obj.uniform(-1.0 / self.vector_size, 1.0 / self.vector_size,
+                                                          self.vector_size)
 
     def _do_train_job(self, sentences, alpha, inits):
-        """
-        Train a single batch of sentences. Return 2-tuple `(effective word count after
+        """Train a single batch of sentences. Return 2-tuple `(effective word count after
         ignoring unknown words and sentence length trimming, total word count)`.
         """
-
         work, neu1 = inits
         tally = 0
         if self.sg:
@@ -366,8 +362,7 @@ class FastText(Word2Vec):
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
               word_count=0, queue_factor=2, report_delay=1.0):
-        """
-        Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
+        """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For FastText, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
 
         To support linear learning-rate decay from (initial) alpha to min_alpha, and accurate
@@ -380,7 +375,6 @@ class FastText(Word2Vec):
         explicit `epochs` argument MUST be provided. In the common and recommended case, where `train()`
         is only called once, the model's cached `iter` value should be supplied as `epochs` value.
         """
-
         self.neg_labels = []
         if self.negative > 0:
                 # precompute negative labels optimization for pure-python training
@@ -405,20 +399,19 @@ class FastText(Word2Vec):
             self.wv.syn0[v.index] = word_vec
 
     def word_vec(self, word, use_norm=False):
-        """
-        Accept a single word as input.
+        """Accept a single word as input.
         Returns the word's representations in vector space, as a 1D numpy array.
 
         The word can be out-of-vocabulary as long as ngrams for the word are present.
         For words with all ngrams absent, a KeyError is raised.
 
-        Example::
+        Example
+        -------
 
           >>> trained_model['office']
           array([ -1.40128313e-02, ...])
 
         """
-
         return FastTextKeyedVectors.word_vec(self.wv, word, use_norm=use_norm)
 
     @classmethod
