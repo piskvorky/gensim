@@ -44,7 +44,7 @@ def poincare_2d_visualization(model, tree, figure_title, num_nodes=50, show_node
     Returns
     -------
     :class:`plotly.graph_objs.Figure`
-        Plotly figure that contains plot
+        Plotly figure that contains plot.
 
     """
     vectors = model.kv.syn0

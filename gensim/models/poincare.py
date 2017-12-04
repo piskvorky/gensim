@@ -54,6 +54,12 @@ from smart_open import smart_open
 from gensim import utils, matutils
 from gensim.models.keyedvectors import KeyedVectorsBase, Vocab
 
+try:
+    from autograd import grad  # Only required for optionally verifying gradients while training
+    from autograd import numpy as grad_np
+    AUTOGRAD_PRESENT = True
+except ImportError:
+    AUTOGRAD_PRESENT = False
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +76,7 @@ class PoincareModel(utils.SaveLoad):
     methods instead.
 
     """
-    def __init__(self, train_data, size=50, alpha=0.1, negative=10, workers=1, epsilon=1e-5,
+    def __init__(self, train_data, size=50, alpha=0.1, negative=10, workers=1, epsilon=1e-5, regularization_coeff=1.0,
                  burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), dtype=np.float64, seed=0):
         """Initialize and train a Poincare embedding model from an iterable of relations.
 
@@ -91,6 +97,8 @@ class PoincareModel(utils.SaveLoad):
             Number of threads to use for training the model.
         epsilon : float, optional
             Constant used for clipping embeddings below a norm of one.
+        regularization_coeff : float, optional
+            Coefficient used for l2-regularization while training (0 effectively disables regularization).
         burn_in : int, optional
             Number of epochs to use for burn-in initialization (0 means no burn-in).
         burn_in_alpha : float, optional
@@ -130,6 +138,7 @@ class PoincareModel(utils.SaveLoad):
         self.negative = negative
         self.workers = workers
         self.epsilon = epsilon
+        self.regularization_coeff = regularization_coeff
         self.burn_in = burn_in
         self._burn_in_done = False
         self.dtype = dtype
@@ -243,13 +252,15 @@ class PoincareModel(utils.SaveLoad):
         return list(indices)
 
     @staticmethod
-    def _loss_fn(matrix):
+    def _loss_fn(matrix, regularization_coeff=1.0):
         """Given a numpy array with vectors for u, v and negative samples, computes loss value.
 
         Parameters
         ----------
         matrix : numpy.array
             Array containing vectors for u, v and negative samples, of shape (2 + negative_size, dim).
+        regularization_coeff : float
+            Coefficient to use for l2-regularization
 
         Returns
         -------
@@ -261,9 +272,6 @@ class PoincareModel(utils.SaveLoad):
         Only used for autograd gradients, since autograd requires a specific function signature.
 
         """
-        # Loaded only if gradients are to be checked to avoid dependency
-        from autograd import numpy as grad_np
-
         vector_u = matrix[0]
         vectors_v = matrix[1:]
         euclidean_dists = grad_np.linalg.norm(vector_u - vectors_v, axis=1)
@@ -275,7 +283,8 @@ class PoincareModel(utils.SaveLoad):
             )
         )
         exp_negative_distances = grad_np.exp(-poincare_dists)
-        return -grad_np.log(exp_negative_distances[0] / (exp_negative_distances.sum()))
+        regularization_term = regularization_coeff * grad_np.linalg.norm(vectors_v[0]) ** 2
+        return -grad_np.log(exp_negative_distances[0] / (exp_negative_distances.sum())) + regularization_term
 
     @staticmethod
     def _clip_vectors(vectors, epsilon):
@@ -353,7 +362,7 @@ class PoincareModel(utils.SaveLoad):
         vectors_u = self.kv.syn0[indices_u]
         vectors_v = self.kv.syn0[indices_v].reshape((batch_size, 1 + self.negative, self.size))
         vectors_v = vectors_v.swapaxes(0, 1).swapaxes(1, 2)
-        batch = PoincareBatch(vectors_u, vectors_v, indices_u, indices_v)
+        batch = PoincareBatch(vectors_u, vectors_v, indices_u, indices_v, self.regularization_coeff)
         batch.compute_all()
 
         if check_gradients:
@@ -374,10 +383,8 @@ class PoincareModel(utils.SaveLoad):
             List of lists of negative samples for each node_1 in the positive examples.
 
         """
-        try:  # Loaded only if gradients are to be checked to avoid dependency
-            from autograd import grad
-        except ImportError:
-            logger.warning('autograd could not be imported, skipping checking of gradients')
+        if not AUTOGRAD_PRESENT:
+            logger.warning('autograd could not be imported, cannot do gradient checking')
             logger.warning('please install autograd to enable gradient checking')
             return
 
@@ -387,7 +394,8 @@ class PoincareModel(utils.SaveLoad):
         max_diff = 0.0
         for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
             u, v = relation
-            auto_gradients = self._loss_grad(np.vstack((self.kv.syn0[u], self.kv.syn0[[v] + negatives])))
+            auto_gradients = self._loss_grad(
+                np.vstack((self.kv.syn0[u], self.kv.syn0[[v] + negatives])), self.regularization_coeff)
             computed_gradients = np.vstack((batch.gradients_u[:, i], batch.gradients_v[:, :, i]))
             diff = np.abs(auto_gradients - computed_gradients).max()
             if diff > max_diff:
@@ -595,7 +603,7 @@ class PoincareBatch(object):
     and storing intermediate state to avoid recomputing multiple times.
 
     """
-    def __init__(self, vectors_u, vectors_v, indices_u, indices_v):
+    def __init__(self, vectors_u, vectors_v, indices_u, indices_v, regularization_coeff=1.0):
         """
         Initialize instance with sets of vectors for which distances are to be computed.
 
@@ -613,12 +621,15 @@ class PoincareBatch(object):
         indices_v : list
             Nested list of lists, each of which is a  list of node indices
             for each of the vectors in `vectors_v` for a specific node `u`.
+        regularization_coeff : float
+            Coefficient to use for l2-regularization
 
         """
         self.vectors_u = vectors_u.T[np.newaxis, :, :]  # (1, dim, batch_size)
         self.vectors_v = vectors_v  # (1 + neg_size, dim, batch_size)
         self.indices_u = indices_u
         self.indices_v = indices_v
+        self.regularization_coeff = regularization_coeff
 
         self.poincare_dists = None
         self.euclidean_dists = None
@@ -688,6 +699,7 @@ class PoincareBatch(object):
         gradients_v = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_v
         gradients_v /= self.Z  # (1 + neg_size, dim, batch_size)
         gradients_v[0] += self.distance_gradients_v[0]
+        gradients_v[0] += self.regularization_coeff * 2 * self.vectors_v[0]
 
         # (1 + neg_size, dim, batch_size)
         gradients_u = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_u
