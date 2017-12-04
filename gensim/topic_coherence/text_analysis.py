@@ -147,14 +147,11 @@ class UsesDictionary(BaseAnalyzer):
     --------
     >>> from gensim.topic_coherence import text_analysis
     >>> from gensim.corpora.dictionary import Dictionary
-    >>> ids = {1: 'fake', 4: 'cats'}
-    >>> dictionary = Dictionary()
-    >>> dictionary.id2token = {1: 'fake', 2: 'tokens', 3: 'rabbids', 4: 'cats'}
+    >>> ids = {1: 'foo', 2: 'bar'}
+    >>> dictionary = Dictionary([['foo','bar','baz'], ['foo','bar','bar','baz']])
     >>> usesdict = text_analysis.UsesDictionary(ids, dictionary)
     >>> print usesdict.relevant_words, usesdict.dictionary, usesdict.token2id
-    set(['cats', 'fake']) Dictionary(0 unique tokens: []) {}
-
-    #TODO: Looks like we need to use HashDictionary, but it doesn't work (Ivan, help please)
+    set([u'foo', u'baz']) Dictionary(3 unique tokens: [u'baz', u'foo', u'bar']) {u'baz': 2, u'foo': 1, u'bar': 0}
 
     """
 
@@ -555,7 +552,13 @@ class AccumulatingWorker(mp.Process):
 
 
 class WordVectorsAccumulator(UsesDictionary):
-    """Accumulate context vectors for words using word vector embeddings."""
+    """Accumulate context vectors for words using word vector embeddings.
+
+    Examples
+    --------
+
+
+    """
 
     def __init__(self, relevant_ids, dictionary, model=None, **model_kwargs):
         """
