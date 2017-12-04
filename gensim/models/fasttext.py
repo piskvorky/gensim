@@ -243,14 +243,6 @@ class FastText(Word2Vec):
     def load_fasttext_format(cls, *args, **kwargs):
         return Ft_Wrapper.load_fasttext_format(*args, **kwargs)
 
-    @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                             limit=None, datatype=REAL):
-        """Not suppported. Use gensim.models.KeyedVectors.load_word2vec_format instead."""
-        return FastTextKeyedVectors.load_word2vec_format(
-            fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
-            limit=limit, datatype=datatype)
-
     def save(self, *args, **kwargs):
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_vocab_norm', 'syn0_ngrams_norm'])
         super(FastText, self).save(*args, **kwargs)
