@@ -422,6 +422,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse('terrorism' in model.wv.vocab)
         self.assertFalse('orism>' in model.wv.ngrams)
         model.build_vocab(terro, update=True)  # update vocab
+        self.assertTrue(model.wv.syn0_ngrams.dtype == 'float32')
         self.assertTrue('terrorism' in model.wv.vocab)
         self.assertTrue('orism>' in model.wv.ngrams)
         orig0_all = np.copy(model.wv.syn0_ngrams)
