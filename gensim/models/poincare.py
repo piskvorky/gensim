@@ -1334,7 +1334,8 @@ class ReconstructionEvaluation(object):
             item_relations = list(self.relations[item])
             item_term = self.embedding.index2word[item]
             item_distances = self.embedding.distances(item_term)
-            positive_relation_ranks, avg_precision = self.get_positive_relation_ranks_and_avg_prec(item_distances, item_relations)
+            positive_relation_ranks, avg_precision = \
+                self.get_positive_relation_ranks_and_avg_prec(item_distances, item_relations)
             ranks += positive_relation_ranks
             avg_precision_scores.append(avg_precision)
             if max_n is not None and i > max_n:
@@ -1450,7 +1451,8 @@ class LinkPredictionEvaluation(object):
             known_relations = list(self.relations['known'][item])
             item_term = self.embedding.index2word[item]
             item_distances = self.embedding.distances(item_term)
-            unknown_relation_ranks, avg_precision = self.get_unknown_relation_ranks_and_avg_prec(item_distances, unknown_relations, known_relations)
+            unknown_relation_ranks, avg_precision = \
+                self.get_unknown_relation_ranks_and_avg_prec(item_distances, unknown_relations, known_relations)
             ranks += unknown_relation_ranks
             avg_precision_scores.append(avg_precision)
             if max_n is not None and i > max_n:
