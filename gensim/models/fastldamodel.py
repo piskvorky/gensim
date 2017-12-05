@@ -42,9 +42,9 @@ from six.moves import xrange
 from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
-from gensim._matutils import dirichlet_expectation_1d, dirichlet_expectation_2d
-from gensim._matutils import logsumexp_2d as logsumexp
-from gensim._matutils import mean_absolute_difference
+from gensim.models._fastldamodel import dirichlet_expectation_1d, dirichlet_expectation_2d
+from gensim.models._fastldamodel import logsumexp_2d as logsumexp
+from gensim.models._fastldamodel import mean_absolute_difference
 
 from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jensen_shannon
 from gensim.models import basemodel, CoherenceModel
