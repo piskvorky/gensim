@@ -492,7 +492,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 expElogthetad = np.exp(Elogthetad)
                 phinorm = np.dot(expElogthetad, expElogbetad) + 1e-100
                 # If gamma hasn't changed much, we're done.
-                meanchange = mean_absolute_difference_threshold(gammad, lastgamma, self.gamma_threshold)
+                meanchange = mean_absolute_difference(gammad, lastgamma)
                 if meanchange < self.gamma_threshold:
                     converged += 1
                     break
