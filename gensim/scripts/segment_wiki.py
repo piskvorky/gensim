@@ -123,7 +123,7 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
             if output_file is None:
                 sys.stdout.write(json.dumps(output_data) + "\n")
             else:
-                outfile.write((json.dumps(output_data) + "\n").encode())
+                outfile.write((json.dumps(output_data) + "\n").encode('utf-8'))
     finally:
         if output_file is not None:
             outfile.close()
