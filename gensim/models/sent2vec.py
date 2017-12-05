@@ -419,6 +419,8 @@ class Sent2Vec(SaveLoad):
         self.minn = minn
         self.maxn = maxn
         self.dropoutk = dropoutk
+        self.hidden = np.zeros(vector_size, dtype=np.float32)
+        self.grad = np.zeros(vector_size, dtype=np.float32)
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
