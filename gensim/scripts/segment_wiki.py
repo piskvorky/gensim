@@ -109,7 +109,7 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
 
     """
     if output_file is None:
-        outfile = getattr(sys.stdout, 'buffer', sys.stdout)
+        outfile = getattr(sys.stdout, 'buffer', sys.stdout)  # we want write bytes, so for py3 we used 'buffer'
     else:
         outfile = smart_open(output_file, 'wb')
 
