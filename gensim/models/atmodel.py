@@ -35,6 +35,8 @@ https://github.com/RaRe-Technologies/gensim/tree/develop/docs/notebooks/atmodel_
 # are included in the code where this is the case, for example in the log_perplexity
 # and do_estep methods.
 
+# TODO: allow inferring topics over an new/unseen author.
+
 import logging
 import numpy as np  # for arrays, array broadcasting etc.
 from copy import deepcopy
