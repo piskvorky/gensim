@@ -47,14 +47,35 @@ from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jense
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
 
-# log(sum(exp(x))) that tries to avoid overflow
-try:
-    from scipy.special import logsumexp
-except ImportError:
-    from scipy.misc import logsumexp
-
 
 logger = logging.getLogger('gensim.models.ldamodel')
+
+
+def logsumexp(x):
+    """Log of sum of exponentials
+
+    Parameters
+    ----------
+    x : array_like
+        Input data
+
+    Returns
+    -------
+    float
+        log of sum of exponentials of elements in `x`
+
+    Notes
+    -----
+        for performance, does not support NaNs or > 1d arrays like
+        scipy.special.logsumexp()
+
+    """
+
+    x_max = np.max(x)
+    x = np.log(np.sum(np.exp(x - x_max)))
+    x += x_max
+
+    return x
 
 
 def update_dir_prior(prior, N, logphat, rho):
