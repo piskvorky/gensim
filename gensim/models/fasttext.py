@@ -139,8 +139,8 @@ class FastText(Word2Vec):
 
         The `sentences` iterable can be simply a list, but for larger corpora,
         consider an iterable that streams the sentences directly from disk/network.
-        See :Word2Vec:`BrownCorpus`, :Word2Vec:`Text8Corpus` or :Word2Vec:`LineSentence` in
-        this module for such examples.
+        See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+        or :class:`~gensim.models.word2vec.LineSentence` in this module for such examples.
 
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
