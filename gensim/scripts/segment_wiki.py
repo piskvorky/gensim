@@ -109,7 +109,7 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
 
     """
     if output_file is None:
-        outfile = sys.stdout.buffer
+        outfile = getattr(sys.stdout, 'buffer', sys.stdout)
     else:
         outfile = smart_open(output_file, 'wb')
 
