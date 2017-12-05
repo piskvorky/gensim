@@ -48,10 +48,14 @@ class SvmLightCorpus(IndexedCorpus):
         """
         Initialize the corpus from a file.
 
-        Although vector labels (~SVM target class) are not used in gensim in any way,
-        they are parsed and stored in `self.labels` for convenience. Set `store_labels=False`
-        to skip storing these labels (e.g. if there are too many vectors to store
-        the self.labels array in memory).
+        Parameters
+        ----------
+        fname: str
+            Corpus filename
+        store_labels : bool
+            Whether to store labels (~SVM target class). They currently have
+            no application but stored in `self.labels` for convenience by
+            default.
 
         """
         IndexedCorpus.__init__(self, fname)
@@ -65,6 +69,11 @@ class SvmLightCorpus(IndexedCorpus):
     def __iter__(self):
         """
         Iterate over the corpus, returning one sparse vector at a time.
+
+        Yields
+        ------
+        list of (int, float)
+
         """
         lineno = -1
         self.labels = []
@@ -84,24 +93,22 @@ class SvmLightCorpus(IndexedCorpus):
         The SVMlight `<target>` class tag is taken from the `labels` array, or set
         to 0 for all documents if `labels` is not supplied.
 
-        This function is automatically called by `SvmLightCorpus.serialize`; don't
-        call it directly, call `serialize` instead.
-
         Parameters
         ----------
-        fname :
-
-        corpus :
-
-        id2word :
-             (Default value = None)
-        labels :
-             (Default value = False)
-        metadata :
-             (Default value = False)
+        fname : str
+            Corpus filename
+        corpus : iterable
+            Iterable of documents
+        id2word : dict of (str, str), optional
+            Transforms id to word (Default value = None)
+        labels : list or False
+            An SVMlight `<target>` class tags or False if not present
+        metadata : bool
+            Any additional info (Default value = False)
 
         Returns
         -------
+        list of int
 
         """
         logger.info("converting corpus to SVMlight format: %s", fname)
@@ -119,28 +126,30 @@ class SvmLightCorpus(IndexedCorpus):
 
         Parameters
         ----------
-        offset :
-
+        offset : int
+            Document's position
 
         Returns
         -------
-
+        tuple of (int, float)
 
         """
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())[0]
+            #TODO: it brokes if gets None from line2doc
 
     def line2doc(self, line):
-        """Create a document from a single line (string) in SVMlight format
+        """Create a document from a single line (string) in SVMlight format.
 
         Parameters
         ----------
-        line :
-
+        line : str
+            Line in SVMLight format
 
         Returns
         -------
+        (tuple of (int, float)) or None
 
         """
         line = utils.to_unicode(line)
@@ -157,17 +166,20 @@ class SvmLightCorpus(IndexedCorpus):
 
     @staticmethod
     def doc2line(doc, label=0):
-        """Output the document in SVMlight format, as a string. Inverse function to `line2doc`.
+        """Output the document in SVMlight format, as a string.
+
+        Inverse function to `line2doc`.
 
         Parameters
         ----------
-        doc :
-
-        label :
-             (Default value = 0)
+        doc : tuple of (int, float)
+            Document
+        label : int
+            (Default value = 0)
 
         Returns
         -------
+        str
 
         """
         pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc)  # +1 to convert 0-base to 1-base
