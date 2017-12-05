@@ -8,11 +8,8 @@ Automated tests for checking transformation algorithms (the models package).
 """
 
 
-import contextlib
 import logging
 import os
-import shutil
-import tempfile
 import unittest
 
 import six
@@ -20,17 +17,10 @@ import six
 from gensim import utils
 from gensim.models.phrases import SentenceAnalyzer, Phrases, Phraser
 from gensim.models.phrases import pseudocorpus, original_scorer
-from gensim.test.utils import common_texts
+from gensim.test.utils import common_texts, temporary_file
 
 
-@contextlib.contextmanager
-def temporary_file(name):
-    # note : when dropping python2.7 support, we can use tempfile.TemporaryDirectory
-    tmp = tempfile.mkdtemp()
-    try:
-        yield os.path.join(tmp, name)
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+TEST_DATA = os.path.join(os.path.dirname(__file__), 'test_data')
 
 
 class TestUtils(unittest.TestCase):
@@ -384,54 +374,39 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
     def testSaveLoadStringScoring(self):
         """ Saving and loading a Phrases object with a string scoring parameter.
         This should ensure backwards compatibility with the previous version of Phrases"""
+        bigram_loaded = Phrases.load(os.path.join(TEST_DATA, "phrases-scoring-str.pkl"))
+        seen_scores = set()
+        test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
+        for phrase, score in bigram_loaded.export_phrases(test_sentences):
+            seen_scores.add(round(score, 3))
 
-        with temporary_file("test.pkl") as fpath:
-            bigram = Phrases(self.sentences, min_count=1, threshold=1)
-            bigram.scoring = "default"
-            bigram.save(fpath)
-            bigram_loaded = Phrases.load(fpath)
-            seen_scores = set()
-            test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
-            for phrase, score in bigram_loaded.export_phrases(test_sentences):
-                seen_scores.add(round(score, 3))
-
-            assert seen_scores == set([
-                5.167,  # score for graph minors
-                3.444  # score for human interface
-            ])
+        assert seen_scores == set([
+            5.167,  # score for graph minors
+            3.444  # score for human interface
+        ])
 
     def testSaveLoadNoScoring(self):
         """ Saving and loading a Phrases object with no scoring parameter.
         This should ensure backwards compatibility with old versions of Phrases"""
 
-        with temporary_file("test.pkl") as fpath:
-            bigram = Phrases(self.sentences, min_count=1, threshold=1)
-            del(bigram.scoring)
-            bigram.save(fpath)
-            bigram_loaded = Phrases.load(fpath)
-            seen_scores = set()
-            test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
-            for phrase, score in bigram_loaded.export_phrases(test_sentences):
-                seen_scores.add(round(score, 3))
+        bigram_loaded = Phrases.load(os.path.join(TEST_DATA, "phrases-no-scoring.pkl"))
+        seen_scores = set()
+        test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
+        for phrase, score in bigram_loaded.export_phrases(test_sentences):
+            seen_scores.add(round(score, 3))
 
-            assert seen_scores == set([
-                5.167,  # score for graph minors
-                3.444  # score for human interface
-            ])
+        assert seen_scores == set([
+            5.167,  # score for graph minors
+            3.444  # score for human interface
+        ])
 
     def testSaveLoadNoCommonTerms(self):
-        """ Saving and loading a Phrases objects without common_terms
-        This should ensure backwards compatibility with old versions of Phrases"""
-
-        with temporary_file("test.pkl") as fpath:
-            bigram = Phrases(self.sentences, min_count=1, threshold=1)
-            del(bigram.common_terms)
-            bigram.save(fpath)
-            bigram_loaded = Phrases.load(fpath)
-            self.assertEqual(bigram_loaded.common_terms, frozenset())
-            # can make a phraser, cf #1751
-            phraser = Phraser(bigram_loaded)  # does not raise
-            phraser["some terms"]  # does not raise
+        """ Ensure backwards compatibility with old versions of Phrases, before common_terms"""
+        bigram_loaded = Phrases.load(os.path.join(TEST_DATA, "phrases-no-common-terms.pkl"))
+        self.assertEqual(bigram_loaded.common_terms, frozenset())
+        # can make a phraser, cf #1751
+        phraser = Phraser(bigram_loaded)  # does not raise
+        phraser[["human", "interface", "survey"]]  # does not raise
 
 
 class TestPhraserPersistence(PhrasesData, unittest.TestCase):
@@ -460,37 +435,21 @@ class TestPhraserPersistence(PhrasesData, unittest.TestCase):
     def testSaveLoadStringScoring(self):
         """ Saving and loading a Phraser object with a string scoring parameter.
         This should ensure backwards compatibility with the previous version of Phraser"""
-
-        with temporary_file("test.pkl") as fpath:
-            bigram = Phraser(Phrases(self.sentences, min_count=1, threshold=1))
-            bigram.scoring = "default"
-            bigram.save(fpath)
-            bigram_loaded = Phraser.load(fpath)
-            # we do not much with scoring, just verify its the one expected
-            self.assertEqual(bigram_loaded.scoring, original_scorer)
+        bigram_loaded = Phraser.load(os.path.join(TEST_DATA, "phraser-scoring-str.pkl"))
+        # we do not much with scoring, just verify its the one expected
+        self.assertEqual(bigram_loaded.scoring, original_scorer)
 
     def testSaveLoadNoScoring(self):
         """ Saving and loading a Phraser object with no scoring parameter.
         This should ensure backwards compatibility with old versions of Phraser"""
-
-        with temporary_file("test.pkl") as fpath:
-            bigram = Phraser(Phrases(self.sentences, min_count=1, threshold=1))
-            del(bigram.scoring)
-            bigram.save(fpath)
-            bigram_loaded = Phraser.load(fpath)
-            # we do not much with scoring, just verify its the one expected
-            self.assertEqual(bigram_loaded.scoring, original_scorer)
+        bigram_loaded = Phraser.load(os.path.join(TEST_DATA, "phraser-no-scoring.pkl"))
+        # we do not much with scoring, just verify its the one expected
+        self.assertEqual(bigram_loaded.scoring, original_scorer)
 
     def testSaveLoadNoCommonTerms(self):
-        """ Saving and loading a Phraser objects without common_terms
-        This should ensure backwards compatibility with old versions of Phraser"""
-
-        with temporary_file("test.pkl") as fpath:
-            bigram = Phraser(Phrases(self.sentences, min_count=1, threshold=1))
-            del(bigram.common_terms)
-            bigram.save(fpath)
-            bigram_loaded = Phraser.load(fpath)
-            self.assertEqual(bigram_loaded.common_terms, frozenset())
+        """ Ensure backwards compatibility with old versions of Phraser, before common_terms"""
+        bigram_loaded = Phraser.load(os.path.join(TEST_DATA, "phraser-no-common-terms.pkl"))
+        self.assertEqual(bigram_loaded.common_terms, frozenset())
 
 
 class TestPhraserModel(PhrasesData, PhrasesCommon, unittest.TestCase):

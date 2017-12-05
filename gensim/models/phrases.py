@@ -183,8 +183,8 @@ class PhrasesTransformation(interfaces.TransformationABC):
     @classmethod
     def load(cls, *args, **kwargs):
         """
-        Load a previously saved Phrases class. Handles backwards compatibility from
-            older Phrases versions which did not support  pluggable scoring functions.
+        Load a previously saved Phrases/Phraser class. Handles backwards compatibility from
+            older Phrases/Phraser versions which did not support  pluggable scoring functions.
             Otherwise, relies on utils.load
         """
 
@@ -199,25 +199,15 @@ class PhrasesTransformation(interfaces.TransformationABC):
         if hasattr(model, 'scoring'):
             if isinstance(model.scoring, six.string_types):
                 if model.scoring == 'default':
-                    logger.info(
-                        'older version of %s loaded with "default" scoring parameter',
-                        cls.__name__)
-                    logger.info(
-                        'setting scoring method to original_scorer pluggable scoring method ' +
-                        'for compatibility')
+                    logger.info('older version of %s loaded with "default" scoring parameter', cls.__name__)
+                    logger.info('setting scoring method to original_scorer pluggable scoring method for compatibility')
                     model.scoring = original_scorer
                 elif model.scoring == 'npmi':
-                    logger.info(
-                        'older version of %s loaded with "npmi" scoring parameter',
-                        cls.__name__)
-                    logger.info(
-                        'setting scoring method to npmi_scorer pluggable scoring method ' +
-                        'for compatibility')
+                    logger.info('older version of %s loaded with "npmi" scoring parameter', cls.__name__)
+                    logger.info('setting scoring method to npmi_scorer pluggable scoring method for compatibility')
                     model.scoring = npmi_scorer
                 else:
-                    raise ValueError(
-                        'failed to load %s model with unknown scoring setting %s' %
-                        (cls.__name__, model.scoring))
+                    raise ValueError('failed to load %s model with unknown scoring setting %s' % (cls.__name__, model.scoring))
         # if there is non common_terms attribute, initialize
         if not hasattr(model, "common_terms"):
             logger.info('older version of %s loaded without common_terms attribute', cls.__name__)
@@ -350,6 +340,19 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         if sentences is not None:
             self.add_vocab(sentences)
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """
+        Load a previously saved Phrases class. Handles backwards compatibility from
+            older Phrases versions which did not support  pluggable scoring functions.
+        """
+        model = super(Phrases, cls).load(*args, **kwargs)
+        if not hasattr(model, 'corpus_word_count'):
+            logger.info('older version of %s loaded without corpus_word_count', cls.__name__)
+            logger.info('Setting it to 0, do not use it in your scoring function.')
+            model.corpus_word_count = 0
+        return model
 
     def __str__(self):
         """Get short string representation of this phrase detector."""
