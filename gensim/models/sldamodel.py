@@ -268,8 +268,65 @@ def init_dir_prior(self, prior, name):
         assert self.eta.dtype == self.dtype
         return self.eta
 
+    def log_perplexity(self, chunk, total_docs=None):
+        """
+        Calculate and return per-word likelihood bound, using the `chunk` of
+        documents as evaluation corpus. Also output the calculated statistics. incl.
+        perplexity=2^(-bound), to log at INFO level.
+
+        """
+        if total_docs is None:
+            total_docs = len(chunk)
+        corpus_words = sum(cnt for document in chunk for _, cnt in document)
+        subsample_ratio = 1.0 * total_docs / len(chunk)
+        perwordbound = self.bound(chunk, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
+        logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
+                    (perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words))
+        return perwordbound
+
+
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None, chunks_as_numpy=False):
+               gamma_threshold=None, chunks_as_numpy=False, responses):
 
-        raise NotImplementedError
+        # use parameters given in constructor, unless user explicitly overrode them
+        if decay is None:
+            decay = self.decay
+        if offset is None:
+            offset = self.offset
+        if passes is None:
+            passes = self.passes
+        if update_every is None:
+            update_every = self.update_every
+        if eval_every is None:
+            eval_every = self.eval_every
+        if iterations is None:
+            iterations = self.iterations
+        if gamma_threshold is None:
+            gamma_threshold = self.gamma_threshold
+
+        try:
+            lencorpus = len(corpus)
+        except:
+            logger.warning("input corpus stream has no len(); counting documents")
+            lencorpus = sum(1 for _ in corpus)
+        if lencorpus == 0:
+            logger.warning("LdaModel.update() called with an empty corpus")
+            return
+
+        if chunksize is None:
+            chunksize = min(lencorpus, self.chunksize)
+
+        self.state.numdocs += lencorpus
+
+        if update_every:
+            updatetype = "online"
+            if passes == 1:
+                updatetype += " (single-pass)"
+            else:
+                updatetype += " (multi-pass)"
+            updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
+        else:
+            updatetype = "batch"
+            updateafter = lencorpus
+        evalafter = min(lencorpus, (eval_every or 0) * self.numworkers * chunksize)
