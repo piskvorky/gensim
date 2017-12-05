@@ -164,11 +164,12 @@ cdef unsigned long long fast_sentence_cbow_neg(
         if d == 0:
             target_index = word_index
             label = ONEF
-        target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
-        next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
-        if target_index == word_index:
-            continue
-        label = <REAL_t>0.0
+        else:
+            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
+            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
+            if target_index == word_index:
+                continue
+            label = <REAL_t>0.0
 
         row2 = target_index * size
         f_dot = our_dot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
