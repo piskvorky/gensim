@@ -867,7 +867,7 @@ typedef struct {
 #endif
 
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":743
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":743
  * # in Cython to enable them only on the right systems.
  * 
  * ctypedef npy_int8       int8_t             # <<<<<<<<<<<<<<
@@ -876,7 +876,7 @@ typedef struct {
  */
 typedef npy_int8 __pyx_t_5numpy_int8_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":744
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":744
  * 
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t             # <<<<<<<<<<<<<<
@@ -885,7 +885,7 @@ typedef npy_int8 __pyx_t_5numpy_int8_t;
  */
 typedef npy_int16 __pyx_t_5numpy_int16_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":745
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":745
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t             # <<<<<<<<<<<<<<
@@ -894,7 +894,7 @@ typedef npy_int16 __pyx_t_5numpy_int16_t;
  */
 typedef npy_int32 __pyx_t_5numpy_int32_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":746
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":746
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t
  * ctypedef npy_int64      int64_t             # <<<<<<<<<<<<<<
@@ -903,7 +903,7 @@ typedef npy_int32 __pyx_t_5numpy_int32_t;
  */
 typedef npy_int64 __pyx_t_5numpy_int64_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":750
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":750
  * #ctypedef npy_int128     int128_t
  * 
  * ctypedef npy_uint8      uint8_t             # <<<<<<<<<<<<<<
@@ -912,7 +912,7 @@ typedef npy_int64 __pyx_t_5numpy_int64_t;
  */
 typedef npy_uint8 __pyx_t_5numpy_uint8_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":751
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":751
  * 
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t             # <<<<<<<<<<<<<<
@@ -921,7 +921,7 @@ typedef npy_uint8 __pyx_t_5numpy_uint8_t;
  */
 typedef npy_uint16 __pyx_t_5numpy_uint16_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":752
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":752
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t             # <<<<<<<<<<<<<<
@@ -930,7 +930,7 @@ typedef npy_uint16 __pyx_t_5numpy_uint16_t;
  */
 typedef npy_uint32 __pyx_t_5numpy_uint32_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":753
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":753
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t
  * ctypedef npy_uint64     uint64_t             # <<<<<<<<<<<<<<
@@ -939,7 +939,7 @@ typedef npy_uint32 __pyx_t_5numpy_uint32_t;
  */
 typedef npy_uint64 __pyx_t_5numpy_uint64_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":757
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":757
  * #ctypedef npy_uint128    uint128_t
  * 
  * ctypedef npy_float32    float32_t             # <<<<<<<<<<<<<<
@@ -948,7 +948,7 @@ typedef npy_uint64 __pyx_t_5numpy_uint64_t;
  */
 typedef npy_float32 __pyx_t_5numpy_float32_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":758
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":758
  * 
  * ctypedef npy_float32    float32_t
  * ctypedef npy_float64    float64_t             # <<<<<<<<<<<<<<
@@ -957,7 +957,7 @@ typedef npy_float32 __pyx_t_5numpy_float32_t;
  */
 typedef npy_float64 __pyx_t_5numpy_float64_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":767
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":767
  * # The int types are mapped a bit surprising --
  * # numpy.int corresponds to 'l' and numpy.long to 'q'
  * ctypedef npy_long       int_t             # <<<<<<<<<<<<<<
@@ -966,7 +966,7 @@ typedef npy_float64 __pyx_t_5numpy_float64_t;
  */
 typedef npy_long __pyx_t_5numpy_int_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":768
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":768
  * # numpy.int corresponds to 'l' and numpy.long to 'q'
  * ctypedef npy_long       int_t
  * ctypedef npy_longlong   long_t             # <<<<<<<<<<<<<<
@@ -975,7 +975,7 @@ typedef npy_long __pyx_t_5numpy_int_t;
  */
 typedef npy_longlong __pyx_t_5numpy_long_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":769
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":769
  * ctypedef npy_long       int_t
  * ctypedef npy_longlong   long_t
  * ctypedef npy_longlong   longlong_t             # <<<<<<<<<<<<<<
@@ -984,7 +984,7 @@ typedef npy_longlong __pyx_t_5numpy_long_t;
  */
 typedef npy_longlong __pyx_t_5numpy_longlong_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":771
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":771
  * ctypedef npy_longlong   longlong_t
  * 
  * ctypedef npy_ulong      uint_t             # <<<<<<<<<<<<<<
@@ -993,7 +993,7 @@ typedef npy_longlong __pyx_t_5numpy_longlong_t;
  */
 typedef npy_ulong __pyx_t_5numpy_uint_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":772
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":772
  * 
  * ctypedef npy_ulong      uint_t
  * ctypedef npy_ulonglong  ulong_t             # <<<<<<<<<<<<<<
@@ -1002,7 +1002,7 @@ typedef npy_ulong __pyx_t_5numpy_uint_t;
  */
 typedef npy_ulonglong __pyx_t_5numpy_ulong_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":773
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":773
  * ctypedef npy_ulong      uint_t
  * ctypedef npy_ulonglong  ulong_t
  * ctypedef npy_ulonglong  ulonglong_t             # <<<<<<<<<<<<<<
@@ -1011,7 +1011,7 @@ typedef npy_ulonglong __pyx_t_5numpy_ulong_t;
  */
 typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":775
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":775
  * ctypedef npy_ulonglong  ulonglong_t
  * 
  * ctypedef npy_intp       intp_t             # <<<<<<<<<<<<<<
@@ -1020,7 +1020,7 @@ typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
  */
 typedef npy_intp __pyx_t_5numpy_intp_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":776
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":776
  * 
  * ctypedef npy_intp       intp_t
  * ctypedef npy_uintp      uintp_t             # <<<<<<<<<<<<<<
@@ -1029,7 +1029,7 @@ typedef npy_intp __pyx_t_5numpy_intp_t;
  */
 typedef npy_uintp __pyx_t_5numpy_uintp_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":778
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":778
  * ctypedef npy_uintp      uintp_t
  * 
  * ctypedef npy_double     float_t             # <<<<<<<<<<<<<<
@@ -1038,7 +1038,7 @@ typedef npy_uintp __pyx_t_5numpy_uintp_t;
  */
 typedef npy_double __pyx_t_5numpy_float_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":779
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":779
  * 
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t             # <<<<<<<<<<<<<<
@@ -1047,7 +1047,7 @@ typedef npy_double __pyx_t_5numpy_float_t;
  */
 typedef npy_double __pyx_t_5numpy_double_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":780
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":780
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t
  * ctypedef npy_longdouble longdouble_t             # <<<<<<<<<<<<<<
@@ -1095,7 +1095,7 @@ struct __pyx_MemviewEnum_obj;
 struct __pyx_memoryview_obj;
 struct __pyx_memoryviewslice_obj;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":782
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":782
  * ctypedef npy_longdouble longdouble_t
  * 
  * ctypedef npy_cfloat      cfloat_t             # <<<<<<<<<<<<<<
@@ -1104,7 +1104,7 @@ struct __pyx_memoryviewslice_obj;
  */
 typedef npy_cfloat __pyx_t_5numpy_cfloat_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":783
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":783
  * 
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t             # <<<<<<<<<<<<<<
@@ -1113,7 +1113,7 @@ typedef npy_cfloat __pyx_t_5numpy_cfloat_t;
  */
 typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":784
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":784
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t
  * ctypedef npy_clongdouble clongdouble_t             # <<<<<<<<<<<<<<
@@ -1122,7 +1122,7 @@ typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
  */
 typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":786
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":786
  * ctypedef npy_clongdouble clongdouble_t
  * 
  * ctypedef npy_cdouble     complex_t             # <<<<<<<<<<<<<<
@@ -1339,6 +1339,32 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_GetAttrStr(PyObject* obj, PyObject
 /* GetBuiltinName.proto */
 static PyObject *__Pyx_GetBuiltinName(PyObject *name);
 
+/* MemviewSliceInit.proto */
+#define __Pyx_BUF_MAX_NDIMS %(BUF_MAX_NDIMS)d
+#define __Pyx_MEMVIEW_DIRECT   1
+#define __Pyx_MEMVIEW_PTR      2
+#define __Pyx_MEMVIEW_FULL     4
+#define __Pyx_MEMVIEW_CONTIG   8
+#define __Pyx_MEMVIEW_STRIDED  16
+#define __Pyx_MEMVIEW_FOLLOW   32
+#define __Pyx_IS_C_CONTIG 1
+#define __Pyx_IS_F_CONTIG 2
+static int __Pyx_init_memviewslice(
+                struct __pyx_memoryview_obj *memview,
+                int ndim,
+                __Pyx_memviewslice *memviewslice,
+                int memview_is_new_reference);
+static CYTHON_INLINE int __pyx_add_acquisition_count_locked(
+    __pyx_atomic_int *acquisition_count, PyThread_type_lock lock);
+static CYTHON_INLINE int __pyx_sub_acquisition_count_locked(
+    __pyx_atomic_int *acquisition_count, PyThread_type_lock lock);
+#define __pyx_get_slice_count_pointer(memview) (memview->acquisition_count_aligned_p)
+#define __pyx_get_slice_count(memview) (*__pyx_get_slice_count_pointer(memview))
+#define __PYX_INC_MEMVIEW(slice, have_gil) __Pyx_INC_MEMVIEW(slice, have_gil, __LINE__)
+#define __PYX_XDEC_MEMVIEW(slice, have_gil) __Pyx_XDEC_MEMVIEW(slice, have_gil, __LINE__)
+static CYTHON_INLINE void __Pyx_INC_MEMVIEW(__Pyx_memviewslice *, int, int);
+static CYTHON_INLINE void __Pyx_XDEC_MEMVIEW(__Pyx_memviewslice *, int, int);
+
 /* PyObjectCall.proto */
 #if CYTHON_COMPILING_IN_CPYTHON
 static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw);
@@ -1399,32 +1425,6 @@ static int __Pyx_ParseOptionalKeywords(PyObject *kwds, PyObject **argnames[],\
 
 /* None.proto */
 static CYTHON_INLINE void __Pyx_RaiseUnboundLocalError(const char *varname);
-
-/* MemviewSliceInit.proto */
-#define __Pyx_BUF_MAX_NDIMS %(BUF_MAX_NDIMS)d
-#define __Pyx_MEMVIEW_DIRECT   1
-#define __Pyx_MEMVIEW_PTR      2
-#define __Pyx_MEMVIEW_FULL     4
-#define __Pyx_MEMVIEW_CONTIG   8
-#define __Pyx_MEMVIEW_STRIDED  16
-#define __Pyx_MEMVIEW_FOLLOW   32
-#define __Pyx_IS_C_CONTIG 1
-#define __Pyx_IS_F_CONTIG 2
-static int __Pyx_init_memviewslice(
-                struct __pyx_memoryview_obj *memview,
-                int ndim,
-                __Pyx_memviewslice *memviewslice,
-                int memview_is_new_reference);
-static CYTHON_INLINE int __pyx_add_acquisition_count_locked(
-    __pyx_atomic_int *acquisition_count, PyThread_type_lock lock);
-static CYTHON_INLINE int __pyx_sub_acquisition_count_locked(
-    __pyx_atomic_int *acquisition_count, PyThread_type_lock lock);
-#define __pyx_get_slice_count_pointer(memview) (memview->acquisition_count_aligned_p)
-#define __pyx_get_slice_count(memview) (*__pyx_get_slice_count_pointer(memview))
-#define __PYX_INC_MEMVIEW(slice, have_gil) __Pyx_INC_MEMVIEW(slice, have_gil, __LINE__)
-#define __PYX_XDEC_MEMVIEW(slice, have_gil) __Pyx_XDEC_MEMVIEW(slice, have_gil, __LINE__)
-static CYTHON_INLINE void __Pyx_INC_MEMVIEW(__Pyx_memviewslice *, int, int);
-static CYTHON_INLINE void __Pyx_XDEC_MEMVIEW(__Pyx_memviewslice *, int, int);
 
 /* GetModuleGlobalName.proto */
 static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name);
@@ -2131,6 +2131,7 @@ static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_strided_and_direct[] = "<strided and direct>";
 static const char __pyx_k_strided_and_indirect[] = "<strided and indirect>";
 static const char __pyx_k_contiguous_and_direct[] = "<contiguous and direct>";
+static const char __pyx_k_dirichlet_expectation[] = "dirichlet_expectation";
 static const char __pyx_k_MemoryView_of_r_object[] = "<MemoryView of %r object>";
 static const char __pyx_k_MemoryView_of_r_at_0x_x[] = "<MemoryView of %r at 0x%x>";
 static const char __pyx_k_contiguous_and_indirect[] = "<contiguous and indirect>";
@@ -2200,6 +2201,7 @@ static PyObject *__pyx_kp_s_contiguous_and_direct;
 static PyObject *__pyx_kp_s_contiguous_and_indirect;
 static PyObject *__pyx_n_s_dict;
 static PyObject *__pyx_n_s_digamma;
+static PyObject *__pyx_n_s_dirichlet_expectation;
 static PyObject *__pyx_n_s_dtype;
 static PyObject *__pyx_n_s_dtype_is_object;
 static PyObject *__pyx_n_s_encode;
@@ -2267,11 +2269,12 @@ static PyObject *__pyx_n_s_unpack;
 static PyObject *__pyx_n_s_update;
 static PyObject *__pyx_n_s_x;
 static PyObject *__pyx_n_s_zeros;
-static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_digamma(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_x); /* proto */
-static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_2mean_absolute_difference(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_a, __Pyx_memviewslice __pyx_v_b); /* proto */
-static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_4logsumexp_2d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_data); /* proto */
-static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_6dirichlet_expectation_1d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_alpha); /* proto */
-static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_8dirichlet_expectation_2d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_alpha); /* proto */
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_dirichlet_expectation(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_x); /* proto */
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_2digamma(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_x); /* proto */
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_4mean_absolute_difference(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_a, __Pyx_memviewslice __pyx_v_b); /* proto */
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_6logsumexp_2d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_data); /* proto */
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_8dirichlet_expectation_1d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_alpha); /* proto */
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_10dirichlet_expectation_2d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_alpha); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array___cinit__(struct __pyx_array_obj *__pyx_v_self, PyObject *__pyx_v_shape, Py_ssize_t __pyx_v_itemsize, PyObject *__pyx_v_format, PyObject *__pyx_v_mode, int __pyx_v_allocate_buffer); /* proto */
@@ -2355,15 +2358,136 @@ static PyObject *__pyx_tuple__28;
 static PyObject *__pyx_tuple__29;
 static PyObject *__pyx_tuple__30;
 static PyObject *__pyx_tuple__32;
-static PyObject *__pyx_tuple__33;
 static PyObject *__pyx_tuple__34;
 static PyObject *__pyx_tuple__35;
 static PyObject *__pyx_tuple__36;
 static PyObject *__pyx_tuple__37;
+static PyObject *__pyx_tuple__38;
+static PyObject *__pyx_tuple__39;
 static PyObject *__pyx_codeobj__31;
-static PyObject *__pyx_codeobj__38;
+static PyObject *__pyx_codeobj__33;
+static PyObject *__pyx_codeobj__40;
 
 /* "gensim/models/_fastldamodel.pyx":11
+ * 
+ * 
+ * def dirichlet_expectation(x):             # <<<<<<<<<<<<<<
+ *     """
+ *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_1dirichlet_expectation(PyObject *__pyx_self, PyObject *__pyx_v_x); /*proto*/
+static char __pyx_doc_6gensim_6models_13_fastldamodel_dirichlet_expectation[] = "\n    Expected value of log(theta) where theta is drawn from a Dirichlet distribution\n    \n    Parameters\n    ----------\n    alpha : array_like\n        Dirichlet parameter vector.  \n        If 2d, each row is treated as a separate parameter vector\n    \n    Returns\n    -------\n    array_like\n        log of expected values\n\n    ";
+static PyMethodDef __pyx_mdef_6gensim_6models_13_fastldamodel_1dirichlet_expectation = {"dirichlet_expectation", (PyCFunction)__pyx_pw_6gensim_6models_13_fastldamodel_1dirichlet_expectation, METH_O, __pyx_doc_6gensim_6models_13_fastldamodel_dirichlet_expectation};
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_1dirichlet_expectation(PyObject *__pyx_self, PyObject *__pyx_v_x) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("dirichlet_expectation (wrapper)", 0);
+  __pyx_r = __pyx_pf_6gensim_6models_13_fastldamodel_dirichlet_expectation(__pyx_self, ((PyObject *)__pyx_v_x));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_dirichlet_expectation(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_x) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  int __pyx_t_3;
+  __Pyx_memviewslice __pyx_t_4 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  __Pyx_memviewslice __pyx_t_5 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  __Pyx_RefNannySetupContext("dirichlet_expectation", 0);
+
+  /* "gensim/models/_fastldamodel.pyx":28
+ *     """
+ * 
+ *     if x.ndim > 1:             # <<<<<<<<<<<<<<
+ *         return dirichlet_expectation_2d(x)
+ *     else:
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_ndim); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 28, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_int_1, Py_GT); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 28, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 28, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (__pyx_t_3) {
+
+    /* "gensim/models/_fastldamodel.pyx":29
+ * 
+ *     if x.ndim > 1:
+ *         return dirichlet_expectation_2d(x)             # <<<<<<<<<<<<<<
+ *     else:
+ *         return dirichlet_expectation_1d(x)
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __pyx_t_4 = __Pyx_PyObject_to_MemoryviewSlice_dsds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(__pyx_v_x);
+    if (unlikely(!__pyx_t_4.memview)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __pyx_t_2 = __pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2d(__pyx_t_4, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __PYX_XDEC_MEMVIEW(&__pyx_t_4, 1);
+    __pyx_t_4.memview = NULL;
+    __pyx_t_4.data = NULL;
+    __pyx_r = __pyx_t_2;
+    __pyx_t_2 = 0;
+    goto __pyx_L0;
+
+    /* "gensim/models/_fastldamodel.pyx":28
+ *     """
+ * 
+ *     if x.ndim > 1:             # <<<<<<<<<<<<<<
+ *         return dirichlet_expectation_2d(x)
+ *     else:
+ */
+  }
+
+  /* "gensim/models/_fastldamodel.pyx":31
+ *         return dirichlet_expectation_2d(x)
+ *     else:
+ *         return dirichlet_expectation_1d(x)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  /*else*/ {
+    __Pyx_XDECREF(__pyx_r);
+    __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_ds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(__pyx_v_x);
+    if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 31, __pyx_L1_error)
+    __pyx_t_2 = __pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1d(__pyx_t_5, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 31, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __PYX_XDEC_MEMVIEW(&__pyx_t_5, 1);
+    __pyx_t_5.memview = NULL;
+    __pyx_t_5.data = NULL;
+    __pyx_r = __pyx_t_2;
+    __pyx_t_2 = 0;
+    goto __pyx_L0;
+  }
+
+  /* "gensim/models/_fastldamodel.pyx":11
+ * 
+ * 
+ * def dirichlet_expectation(x):             # <<<<<<<<<<<<<<
+ *     """
+ *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_4, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_5, 1);
+  __Pyx_AddTraceback("gensim.models._fastldamodel.dirichlet_expectation", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "gensim/models/_fastldamodel.pyx":34
  * 
  * 
  * def digamma(DTYPE_t x):             # <<<<<<<<<<<<<<
@@ -2372,16 +2496,16 @@ static PyObject *__pyx_codeobj__38;
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_1digamma(PyObject *__pyx_self, PyObject *__pyx_arg_x); /*proto*/
-static char __pyx_doc_6gensim_6models_13_fastldamodel_digamma[] = "\n    Digamma function for positive floats\n\n    Parameters\n    ----------\n    x : float32\n\n    Returns\n    -------\n    digamma : float32\n    \n    ";
-static PyMethodDef __pyx_mdef_6gensim_6models_13_fastldamodel_1digamma = {"digamma", (PyCFunction)__pyx_pw_6gensim_6models_13_fastldamodel_1digamma, METH_O, __pyx_doc_6gensim_6models_13_fastldamodel_digamma};
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_1digamma(PyObject *__pyx_self, PyObject *__pyx_arg_x) {
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_3digamma(PyObject *__pyx_self, PyObject *__pyx_arg_x); /*proto*/
+static char __pyx_doc_6gensim_6models_13_fastldamodel_2digamma[] = "\n    Digamma function for positive floats\n\n    Parameters\n    ----------\n    x : float32\n\n    Returns\n    -------\n    digamma : float32\n    \n    ";
+static PyMethodDef __pyx_mdef_6gensim_6models_13_fastldamodel_3digamma = {"digamma", (PyCFunction)__pyx_pw_6gensim_6models_13_fastldamodel_3digamma, METH_O, __pyx_doc_6gensim_6models_13_fastldamodel_2digamma};
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_3digamma(PyObject *__pyx_self, PyObject *__pyx_arg_x) {
   __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_x;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("digamma (wrapper)", 0);
   assert(__pyx_arg_x); {
-    __pyx_v_x = __pyx_PyFloat_AsFloat(__pyx_arg_x); if (unlikely((__pyx_v_x == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(0, 11, __pyx_L3_error)
+    __pyx_v_x = __pyx_PyFloat_AsFloat(__pyx_arg_x); if (unlikely((__pyx_v_x == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(0, 34, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -2389,20 +2513,20 @@ static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_1digamma(PyObject *__p
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6gensim_6models_13_fastldamodel_digamma(__pyx_self, ((__pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t)__pyx_v_x));
+  __pyx_r = __pyx_pf_6gensim_6models_13_fastldamodel_2digamma(__pyx_self, ((__pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t)__pyx_v_x));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_digamma(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_x) {
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_2digamma(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_x) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("digamma", 0);
 
-  /* "gensim/models/_fastldamodel.pyx":25
+  /* "gensim/models/_fastldamodel.pyx":48
  *     """
  * 
  *     return _digamma(x)             # <<<<<<<<<<<<<<
@@ -2410,13 +2534,13 @@ static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_digamma(CYTHON_UNUSED 
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_f_6gensim_6models_13_fastldamodel__digamma(__pyx_v_x)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_f_6gensim_6models_13_fastldamodel__digamma(__pyx_v_x)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 48, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/_fastldamodel.pyx":11
+  /* "gensim/models/_fastldamodel.pyx":34
  * 
  * 
  * def digamma(DTYPE_t x):             # <<<<<<<<<<<<<<
@@ -2435,7 +2559,7 @@ static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_digamma(CYTHON_UNUSED 
   return __pyx_r;
 }
 
-/* "gensim/models/_fastldamodel.pyx":29
+/* "gensim/models/_fastldamodel.pyx":52
  * 
  * @cython.cdivision(True)
  * cdef inline DTYPE_t _digamma (DTYPE_t x,) nogil:             # <<<<<<<<<<<<<<
@@ -2452,7 +2576,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
   __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_r;
   int __pyx_t_1;
 
-  /* "gensim/models/_fastldamodel.pyx":51
+  /* "gensim/models/_fastldamodel.pyx":74
  *     """
  * 
  *     cdef DTYPE_t c = 8.5;             # <<<<<<<<<<<<<<
@@ -2461,7 +2585,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  */
   __pyx_v_c = 8.5;
 
-  /* "gensim/models/_fastldamodel.pyx":52
+  /* "gensim/models/_fastldamodel.pyx":75
  * 
  *     cdef DTYPE_t c = 8.5;
  *     cdef DTYPE_t euler_mascheroni = 0.57721566490153286060;             # <<<<<<<<<<<<<<
@@ -2470,7 +2594,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  */
   __pyx_v_euler_mascheroni = 0.57721566490153286060;
 
-  /* "gensim/models/_fastldamodel.pyx":57
+  /* "gensim/models/_fastldamodel.pyx":80
  *     cdef DTYPE_t x2;
  * 
  *     if ( x <= 0.000001 ):             # <<<<<<<<<<<<<<
@@ -2480,7 +2604,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
   __pyx_t_1 = ((__pyx_v_x <= 0.000001) != 0);
   if (__pyx_t_1) {
 
-    /* "gensim/models/_fastldamodel.pyx":58
+    /* "gensim/models/_fastldamodel.pyx":81
  * 
  *     if ( x <= 0.000001 ):
  *         value = - euler_mascheroni - 1.0 / x + 1.6449340668482264365 * x;             # <<<<<<<<<<<<<<
@@ -2489,7 +2613,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  */
     __pyx_v_value = (((-__pyx_v_euler_mascheroni) - (1.0 / ((double)__pyx_v_x))) + (1.6449340668482264365 * __pyx_v_x));
 
-    /* "gensim/models/_fastldamodel.pyx":59
+    /* "gensim/models/_fastldamodel.pyx":82
  *     if ( x <= 0.000001 ):
  *         value = - euler_mascheroni - 1.0 / x + 1.6449340668482264365 * x;
  *         return value;             # <<<<<<<<<<<<<<
@@ -2499,7 +2623,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
     __pyx_r = __pyx_v_value;
     goto __pyx_L0;
 
-    /* "gensim/models/_fastldamodel.pyx":57
+    /* "gensim/models/_fastldamodel.pyx":80
  *     cdef DTYPE_t x2;
  * 
  *     if ( x <= 0.000001 ):             # <<<<<<<<<<<<<<
@@ -2508,7 +2632,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  */
   }
 
-  /* "gensim/models/_fastldamodel.pyx":62
+  /* "gensim/models/_fastldamodel.pyx":85
  * 
  *     # Reduce to DIGAMA(X + N).
  *     value = 0.0;             # <<<<<<<<<<<<<<
@@ -2517,7 +2641,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  */
   __pyx_v_value = 0.0;
 
-  /* "gensim/models/_fastldamodel.pyx":63
+  /* "gensim/models/_fastldamodel.pyx":86
  *     # Reduce to DIGAMA(X + N).
  *     value = 0.0;
  *     x2 = x;             # <<<<<<<<<<<<<<
@@ -2526,7 +2650,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  */
   __pyx_v_x2 = __pyx_v_x;
 
-  /* "gensim/models/_fastldamodel.pyx":64
+  /* "gensim/models/_fastldamodel.pyx":87
  *     value = 0.0;
  *     x2 = x;
  *     while ( x2 < c ):             # <<<<<<<<<<<<<<
@@ -2537,7 +2661,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
     __pyx_t_1 = ((__pyx_v_x2 < __pyx_v_c) != 0);
     if (!__pyx_t_1) break;
 
-    /* "gensim/models/_fastldamodel.pyx":65
+    /* "gensim/models/_fastldamodel.pyx":88
  *     x2 = x;
  *     while ( x2 < c ):
  *         value = value - 1.0 / x2;             # <<<<<<<<<<<<<<
@@ -2546,7 +2670,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  */
     __pyx_v_value = (__pyx_v_value - (1.0 / ((double)__pyx_v_x2)));
 
-    /* "gensim/models/_fastldamodel.pyx":66
+    /* "gensim/models/_fastldamodel.pyx":89
  *     while ( x2 < c ):
  *         value = value - 1.0 / x2;
  *         x2 = x2 + 1.0;             # <<<<<<<<<<<<<<
@@ -2556,7 +2680,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
     __pyx_v_x2 = (__pyx_v_x2 + 1.0);
   }
 
-  /* "gensim/models/_fastldamodel.pyx":69
+  /* "gensim/models/_fastldamodel.pyx":92
  * 
  *     # Use Stirling's (actually de Moivre's) expansion.
  *     r = 1.0 / x2;             # <<<<<<<<<<<<<<
@@ -2565,7 +2689,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  */
   __pyx_v_r = (1.0 / ((double)__pyx_v_x2));
 
-  /* "gensim/models/_fastldamodel.pyx":70
+  /* "gensim/models/_fastldamodel.pyx":93
  *     # Use Stirling's (actually de Moivre's) expansion.
  *     r = 1.0 / x2;
  *     value = value + log ( x2 ) - 0.5 * r;             # <<<<<<<<<<<<<<
@@ -2574,7 +2698,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  */
   __pyx_v_value = ((__pyx_v_value + log(__pyx_v_x2)) - (0.5 * __pyx_v_r));
 
-  /* "gensim/models/_fastldamodel.pyx":72
+  /* "gensim/models/_fastldamodel.pyx":95
  *     value = value + log ( x2 ) - 0.5 * r;
  * 
  *     r = r * r;             # <<<<<<<<<<<<<<
@@ -2583,7 +2707,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  */
   __pyx_v_r = (__pyx_v_r * __pyx_v_r);
 
-  /* "gensim/models/_fastldamodel.pyx":75
+  /* "gensim/models/_fastldamodel.pyx":98
  * 
  *     value = value \
  *         - r * ( 1.0 / 12.0  \             # <<<<<<<<<<<<<<
@@ -2592,7 +2716,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  */
   __pyx_v_value = (__pyx_v_value - (__pyx_v_r * ((1.0 / 12.0) - (__pyx_v_r * ((1.0 / 120.0) - (__pyx_v_r * ((1.0 / 252.0) - (__pyx_v_r * ((1.0 / 240.0) - (__pyx_v_r * (1.0 / 132.0)))))))))));
 
-  /* "gensim/models/_fastldamodel.pyx":81
+  /* "gensim/models/_fastldamodel.pyx":104
  *         - r * ( 1.0 / 132.0 ) ) ) ) )
  * 
  *     return value;             # <<<<<<<<<<<<<<
@@ -2602,7 +2726,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
   __pyx_r = __pyx_v_value;
   goto __pyx_L0;
 
-  /* "gensim/models/_fastldamodel.pyx":29
+  /* "gensim/models/_fastldamodel.pyx":52
  * 
  * @cython.cdivision(True)
  * cdef inline DTYPE_t _digamma (DTYPE_t x,) nogil:             # <<<<<<<<<<<<<<
@@ -2615,7 +2739,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
   return __pyx_r;
 }
 
-/* "gensim/models/_fastldamodel.pyx":87
+/* "gensim/models/_fastldamodel.pyx":110
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cpdef mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b):             # <<<<<<<<<<<<<<
@@ -2623,7 +2747,7 @@ static CYTHON_INLINE __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_f_6ge
  *     Mean absolute difference between two arrays
  */
 
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_3mean_absolute_difference(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_5mean_absolute_difference(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
 static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_difference(__Pyx_memviewslice __pyx_v_a, __Pyx_memviewslice __pyx_v_b, CYTHON_UNUSED int __pyx_skip_dispatch) {
   __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_result;
   size_t __pyx_v_i;
@@ -2639,7 +2763,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_differenc
   size_t __pyx_t_6;
   __Pyx_RefNannySetupContext("mean_absolute_difference", 0);
 
-  /* "gensim/models/_fastldamodel.pyx":103
+  /* "gensim/models/_fastldamodel.pyx":126
  *     """
  * 
  *     cdef DTYPE_t result = 0.0             # <<<<<<<<<<<<<<
@@ -2648,7 +2772,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_differenc
  */
   __pyx_v_result = 0.0;
 
-  /* "gensim/models/_fastldamodel.pyx":107
+  /* "gensim/models/_fastldamodel.pyx":130
  *     cdef size_t j
  * 
  *     cdef size_t I = a.shape[0]             # <<<<<<<<<<<<<<
@@ -2657,7 +2781,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_differenc
  */
   __pyx_v_I = (__pyx_v_a.shape[0]);
 
-  /* "gensim/models/_fastldamodel.pyx":108
+  /* "gensim/models/_fastldamodel.pyx":131
  * 
  *     cdef size_t I = a.shape[0]
  *     cdef size_t N = I             # <<<<<<<<<<<<<<
@@ -2666,7 +2790,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_differenc
  */
   __pyx_v_N = __pyx_v_I;
 
-  /* "gensim/models/_fastldamodel.pyx":110
+  /* "gensim/models/_fastldamodel.pyx":133
  *     cdef size_t N = I
  * 
  *     if (a.shape[0] != b.shape[0]):             # <<<<<<<<<<<<<<
@@ -2676,20 +2800,20 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_differenc
   __pyx_t_1 = (((__pyx_v_a.shape[0]) != (__pyx_v_b.shape[0])) != 0);
   if (__pyx_t_1) {
 
-    /* "gensim/models/_fastldamodel.pyx":111
+    /* "gensim/models/_fastldamodel.pyx":134
  * 
  *     if (a.shape[0] != b.shape[0]):
  *         raise ValueError("a and b must have same shape")             # <<<<<<<<<<<<<<
  * 
  *     for i in range(I):
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 111, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 134, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 111, __pyx_L1_error)
+    __PYX_ERR(0, 134, __pyx_L1_error)
 
-    /* "gensim/models/_fastldamodel.pyx":110
+    /* "gensim/models/_fastldamodel.pyx":133
  *     cdef size_t N = I
  * 
  *     if (a.shape[0] != b.shape[0]):             # <<<<<<<<<<<<<<
@@ -2698,7 +2822,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_differenc
  */
   }
 
-  /* "gensim/models/_fastldamodel.pyx":113
+  /* "gensim/models/_fastldamodel.pyx":136
  *         raise ValueError("a and b must have same shape")
  * 
  *     for i in range(I):             # <<<<<<<<<<<<<<
@@ -2709,7 +2833,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_differenc
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "gensim/models/_fastldamodel.pyx":114
+    /* "gensim/models/_fastldamodel.pyx":137
  * 
  *     for i in range(I):
  *         result += fabs(a[i] - b[i])             # <<<<<<<<<<<<<<
@@ -2721,7 +2845,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_differenc
     __pyx_v_result = (__pyx_v_result + fabs(((*((__pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t *) ( /* dim=0 */ (__pyx_v_a.data + __pyx_t_5 * __pyx_v_a.strides[0]) ))) - (*((__pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t *) ( /* dim=0 */ (__pyx_v_b.data + __pyx_t_6 * __pyx_v_b.strides[0]) ))))));
   }
 
-  /* "gensim/models/_fastldamodel.pyx":115
+  /* "gensim/models/_fastldamodel.pyx":138
  *     for i in range(I):
  *         result += fabs(a[i] - b[i])
  *     result /= N             # <<<<<<<<<<<<<<
@@ -2730,7 +2854,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_differenc
  */
   __pyx_v_result = (__pyx_v_result / __pyx_v_N);
 
-  /* "gensim/models/_fastldamodel.pyx":117
+  /* "gensim/models/_fastldamodel.pyx":140
  *     result /= N
  * 
  *     return result             # <<<<<<<<<<<<<<
@@ -2738,13 +2862,13 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_differenc
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_v_result); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_v_result); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 140, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/_fastldamodel.pyx":87
+  /* "gensim/models/_fastldamodel.pyx":110
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cpdef mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b):             # <<<<<<<<<<<<<<
@@ -2764,9 +2888,9 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_differenc
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_3mean_absolute_difference(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_6gensim_6models_13_fastldamodel_2mean_absolute_difference[] = "\n    Mean absolute difference between two arrays\n\n    Parameters\n    ----------\n    a : array_like of float32\n    b : array_like of float32\n\n    Returns\n    -------\n    float32\n        mean(abs(a - b))\n    \n    ";
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_3mean_absolute_difference(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_5mean_absolute_difference(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_6gensim_6models_13_fastldamodel_4mean_absolute_difference[] = "\n    Mean absolute difference between two arrays\n\n    Parameters\n    ----------\n    a : array_like of float32\n    b : array_like of float32\n\n    Returns\n    -------\n    float32\n        mean(abs(a - b))\n    \n    ";
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_5mean_absolute_difference(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   __Pyx_memviewslice __pyx_v_a = { 0, 0, { 0 }, { 0 }, { 0 } };
   __Pyx_memviewslice __pyx_v_b = { 0, 0, { 0 }, { 0 }, { 0 } };
   PyObject *__pyx_r = 0;
@@ -2795,11 +2919,11 @@ static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_3mean_absolute_differe
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_b)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("mean_absolute_difference", 1, 2, 2, 1); __PYX_ERR(0, 87, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("mean_absolute_difference", 1, 2, 2, 1); __PYX_ERR(0, 110, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "mean_absolute_difference") < 0)) __PYX_ERR(0, 87, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "mean_absolute_difference") < 0)) __PYX_ERR(0, 110, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -2807,33 +2931,33 @@ static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_3mean_absolute_differe
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
     }
-    __pyx_v_a = __Pyx_PyObject_to_MemoryviewSlice_ds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(values[0]); if (unlikely(!__pyx_v_a.memview)) __PYX_ERR(0, 87, __pyx_L3_error)
-    __pyx_v_b = __Pyx_PyObject_to_MemoryviewSlice_ds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(values[1]); if (unlikely(!__pyx_v_b.memview)) __PYX_ERR(0, 87, __pyx_L3_error)
+    __pyx_v_a = __Pyx_PyObject_to_MemoryviewSlice_ds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(values[0]); if (unlikely(!__pyx_v_a.memview)) __PYX_ERR(0, 110, __pyx_L3_error)
+    __pyx_v_b = __Pyx_PyObject_to_MemoryviewSlice_ds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(values[1]); if (unlikely(!__pyx_v_b.memview)) __PYX_ERR(0, 110, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("mean_absolute_difference", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 87, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("mean_absolute_difference", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 110, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim.models._fastldamodel.mean_absolute_difference", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6gensim_6models_13_fastldamodel_2mean_absolute_difference(__pyx_self, __pyx_v_a, __pyx_v_b);
+  __pyx_r = __pyx_pf_6gensim_6models_13_fastldamodel_4mean_absolute_difference(__pyx_self, __pyx_v_a, __pyx_v_b);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_2mean_absolute_difference(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_a, __Pyx_memviewslice __pyx_v_b) {
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_4mean_absolute_difference(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_a, __Pyx_memviewslice __pyx_v_b) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("mean_absolute_difference", 0);
   __Pyx_XDECREF(__pyx_r);
-  if (unlikely(!__pyx_v_a.memview)) { __Pyx_RaiseUnboundLocalError("a"); __PYX_ERR(0, 87, __pyx_L1_error) }
-  if (unlikely(!__pyx_v_b.memview)) { __Pyx_RaiseUnboundLocalError("b"); __PYX_ERR(0, 87, __pyx_L1_error) }
-  __pyx_t_1 = __pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_difference(__pyx_v_a, __pyx_v_b, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 87, __pyx_L1_error)
+  if (unlikely(!__pyx_v_a.memview)) { __Pyx_RaiseUnboundLocalError("a"); __PYX_ERR(0, 110, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_b.memview)) { __Pyx_RaiseUnboundLocalError("b"); __PYX_ERR(0, 110, __pyx_L1_error) }
+  __pyx_t_1 = __pyx_f_6gensim_6models_13_fastldamodel_mean_absolute_difference(__pyx_v_a, __pyx_v_b, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 110, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -2852,7 +2976,7 @@ static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_2mean_absolute_differe
   return __pyx_r;
 }
 
-/* "gensim/models/_fastldamodel.pyx":122
+/* "gensim/models/_fastldamodel.pyx":145
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef logsumexp_2d(DTYPE_t[:, :] data):             # <<<<<<<<<<<<<<
@@ -2860,7 +2984,7 @@ static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_2mean_absolute_differe
  *     Log of sum of exponentials for 2d array
  */
 
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_5logsumexp_2d(PyObject *__pyx_self, PyObject *__pyx_arg_data); /*proto*/
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_7logsumexp_2d(PyObject *__pyx_self, PyObject *__pyx_arg_data); /*proto*/
 static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memviewslice __pyx_v_data, CYTHON_UNUSED int __pyx_skip_dispatch) {
   __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_max_val;
   __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_result;
@@ -2886,7 +3010,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
   PyObject *__pyx_t_14 = NULL;
   __Pyx_RefNannySetupContext("logsumexp_2d", 0);
 
-  /* "gensim/models/_fastldamodel.pyx":137
+  /* "gensim/models/_fastldamodel.pyx":160
  *     """
  * 
  *     cdef DTYPE_t max_val = data[0, 0]             # <<<<<<<<<<<<<<
@@ -2897,7 +3021,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
   __pyx_t_2 = 0;
   __pyx_v_max_val = (*((__pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_1 * __pyx_v_data.strides[0]) ) + __pyx_t_2 * __pyx_v_data.strides[1]) )));
 
-  /* "gensim/models/_fastldamodel.pyx":138
+  /* "gensim/models/_fastldamodel.pyx":161
  * 
  *     cdef DTYPE_t max_val = data[0, 0]
  *     cdef DTYPE_t result = 0.0             # <<<<<<<<<<<<<<
@@ -2906,7 +3030,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
  */
   __pyx_v_result = 0.0;
 
-  /* "gensim/models/_fastldamodel.pyx":142
+  /* "gensim/models/_fastldamodel.pyx":165
  *     cdef size_t j
  * 
  *     cdef size_t I = data.shape[0]             # <<<<<<<<<<<<<<
@@ -2915,7 +3039,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
  */
   __pyx_v_I = (__pyx_v_data.shape[0]);
 
-  /* "gensim/models/_fastldamodel.pyx":143
+  /* "gensim/models/_fastldamodel.pyx":166
  * 
  *     cdef size_t I = data.shape[0]
  *     cdef size_t J = data.shape[1]             # <<<<<<<<<<<<<<
@@ -2924,7 +3048,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
  */
   __pyx_v_J = (__pyx_v_data.shape[1]);
 
-  /* "gensim/models/_fastldamodel.pyx":145
+  /* "gensim/models/_fastldamodel.pyx":168
  *     cdef size_t J = data.shape[1]
  * 
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -2939,7 +3063,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
       #endif
       /*try:*/ {
 
-        /* "gensim/models/_fastldamodel.pyx":146
+        /* "gensim/models/_fastldamodel.pyx":169
  * 
  *     with nogil:
  *         for i in range(I):             # <<<<<<<<<<<<<<
@@ -2950,7 +3074,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
         for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
           __pyx_v_i = __pyx_t_4;
 
-          /* "gensim/models/_fastldamodel.pyx":147
+          /* "gensim/models/_fastldamodel.pyx":170
  *     with nogil:
  *         for i in range(I):
  *             for j in range(J):             # <<<<<<<<<<<<<<
@@ -2961,7 +3085,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
           for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
             __pyx_v_j = __pyx_t_6;
 
-            /* "gensim/models/_fastldamodel.pyx":148
+            /* "gensim/models/_fastldamodel.pyx":171
  *         for i in range(I):
  *             for j in range(J):
  *                 if data[i, j] > max_val:             # <<<<<<<<<<<<<<
@@ -2973,7 +3097,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
             __pyx_t_9 = (((*((__pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_7 * __pyx_v_data.strides[0]) ) + __pyx_t_8 * __pyx_v_data.strides[1]) ))) > __pyx_v_max_val) != 0);
             if (__pyx_t_9) {
 
-              /* "gensim/models/_fastldamodel.pyx":149
+              /* "gensim/models/_fastldamodel.pyx":172
  *             for j in range(J):
  *                 if data[i, j] > max_val:
  *                     max_val = data[i, j]             # <<<<<<<<<<<<<<
@@ -2984,7 +3108,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
               __pyx_t_11 = __pyx_v_j;
               __pyx_v_max_val = (*((__pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_10 * __pyx_v_data.strides[0]) ) + __pyx_t_11 * __pyx_v_data.strides[1]) )));
 
-              /* "gensim/models/_fastldamodel.pyx":148
+              /* "gensim/models/_fastldamodel.pyx":171
  *         for i in range(I):
  *             for j in range(J):
  *                 if data[i, j] > max_val:             # <<<<<<<<<<<<<<
@@ -2995,7 +3119,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
           }
         }
 
-        /* "gensim/models/_fastldamodel.pyx":151
+        /* "gensim/models/_fastldamodel.pyx":174
  *                     max_val = data[i, j]
  * 
  *         for i in range(I):             # <<<<<<<<<<<<<<
@@ -3006,7 +3130,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
         for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
           __pyx_v_i = __pyx_t_4;
 
-          /* "gensim/models/_fastldamodel.pyx":152
+          /* "gensim/models/_fastldamodel.pyx":175
  * 
  *         for i in range(I):
  *             for j in range(J):             # <<<<<<<<<<<<<<
@@ -3017,7 +3141,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
           for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
             __pyx_v_j = __pyx_t_6;
 
-            /* "gensim/models/_fastldamodel.pyx":153
+            /* "gensim/models/_fastldamodel.pyx":176
  *         for i in range(I):
  *             for j in range(J):
  *                 result += exp(data[i, j] - max_val)             # <<<<<<<<<<<<<<
@@ -3030,7 +3154,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
           }
         }
 
-        /* "gensim/models/_fastldamodel.pyx":155
+        /* "gensim/models/_fastldamodel.pyx":178
  *                 result += exp(data[i, j] - max_val)
  * 
  *         result = log(result) + max_val             # <<<<<<<<<<<<<<
@@ -3040,7 +3164,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
         __pyx_v_result = (log(__pyx_v_result) + __pyx_v_max_val);
       }
 
-      /* "gensim/models/_fastldamodel.pyx":145
+      /* "gensim/models/_fastldamodel.pyx":168
  *     cdef size_t J = data.shape[1]
  * 
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -3059,7 +3183,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
       }
   }
 
-  /* "gensim/models/_fastldamodel.pyx":157
+  /* "gensim/models/_fastldamodel.pyx":180
  *         result = log(result) + max_val
  * 
  *     return result             # <<<<<<<<<<<<<<
@@ -3067,13 +3191,13 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_14 = PyFloat_FromDouble(__pyx_v_result); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 157, __pyx_L1_error)
+  __pyx_t_14 = PyFloat_FromDouble(__pyx_v_result); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 180, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_14);
   __pyx_r = __pyx_t_14;
   __pyx_t_14 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/_fastldamodel.pyx":122
+  /* "gensim/models/_fastldamodel.pyx":145
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef logsumexp_2d(DTYPE_t[:, :] data):             # <<<<<<<<<<<<<<
@@ -3093,15 +3217,15 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__Pyx_memv
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_5logsumexp_2d(PyObject *__pyx_self, PyObject *__pyx_arg_data); /*proto*/
-static char __pyx_doc_6gensim_6models_13_fastldamodel_4logsumexp_2d[] = "\n    Log of sum of exponentials for 2d array\n    \n    Parameters\n    ----------\n    x : array_like of float32_t\n    \n    Returns\n    -------\n    float\n        log of sum of exponentials of elements in `x`\n \n    ";
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_5logsumexp_2d(PyObject *__pyx_self, PyObject *__pyx_arg_data) {
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_7logsumexp_2d(PyObject *__pyx_self, PyObject *__pyx_arg_data); /*proto*/
+static char __pyx_doc_6gensim_6models_13_fastldamodel_6logsumexp_2d[] = "\n    Log of sum of exponentials for 2d array\n    \n    Parameters\n    ----------\n    x : array_like of float32_t\n    \n    Returns\n    -------\n    float\n        log of sum of exponentials of elements in `x`\n \n    ";
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_7logsumexp_2d(PyObject *__pyx_self, PyObject *__pyx_arg_data) {
   __Pyx_memviewslice __pyx_v_data = { 0, 0, { 0 }, { 0 }, { 0 } };
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("logsumexp_2d (wrapper)", 0);
   assert(__pyx_arg_data); {
-    __pyx_v_data = __Pyx_PyObject_to_MemoryviewSlice_dsds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(__pyx_arg_data); if (unlikely(!__pyx_v_data.memview)) __PYX_ERR(0, 122, __pyx_L3_error)
+    __pyx_v_data = __Pyx_PyObject_to_MemoryviewSlice_dsds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(__pyx_arg_data); if (unlikely(!__pyx_v_data.memview)) __PYX_ERR(0, 145, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -3109,21 +3233,21 @@ static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_5logsumexp_2d(PyObject
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6gensim_6models_13_fastldamodel_4logsumexp_2d(__pyx_self, __pyx_v_data);
+  __pyx_r = __pyx_pf_6gensim_6models_13_fastldamodel_6logsumexp_2d(__pyx_self, __pyx_v_data);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_4logsumexp_2d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_data) {
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_6logsumexp_2d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_data) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("logsumexp_2d", 0);
   __Pyx_XDECREF(__pyx_r);
-  if (unlikely(!__pyx_v_data.memview)) { __Pyx_RaiseUnboundLocalError("data"); __PYX_ERR(0, 122, __pyx_L1_error) }
-  __pyx_t_1 = __pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__pyx_v_data, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 122, __pyx_L1_error)
+  if (unlikely(!__pyx_v_data.memview)) { __Pyx_RaiseUnboundLocalError("data"); __PYX_ERR(0, 145, __pyx_L1_error) }
+  __pyx_t_1 = __pyx_f_6gensim_6models_13_fastldamodel_logsumexp_2d(__pyx_v_data, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -3141,7 +3265,7 @@ static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_4logsumexp_2d(CYTHON_U
   return __pyx_r;
 }
 
-/* "gensim/models/_fastldamodel.pyx":162
+/* "gensim/models/_fastldamodel.pyx":185
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef dirichlet_expectation_1d(DTYPE_t[:] alpha):             # <<<<<<<<<<<<<<
@@ -3149,7 +3273,7 @@ static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_4logsumexp_2d(CYTHON_U
  *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
  */
 
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_7dirichlet_expectation_1d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha); /*proto*/
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_9dirichlet_expectation_1d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha); /*proto*/
 static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1d(__Pyx_memviewslice __pyx_v_alpha, CYTHON_UNUSED int __pyx_skip_dispatch) {
   __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_sum_alpha;
   __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_psi_sum_alpha;
@@ -3176,7 +3300,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
   __pyx_pybuffernd_result.data = NULL;
   __pyx_pybuffernd_result.rcbuffer = &__pyx_pybuffer_result;
 
-  /* "gensim/models/_fastldamodel.pyx":178
+  /* "gensim/models/_fastldamodel.pyx":201
  *     """
  * 
  *     cdef DTYPE_t sum_alpha = 0.0             # <<<<<<<<<<<<<<
@@ -3185,7 +3309,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
  */
   __pyx_v_sum_alpha = 0.0;
 
-  /* "gensim/models/_fastldamodel.pyx":179
+  /* "gensim/models/_fastldamodel.pyx":202
  * 
  *     cdef DTYPE_t sum_alpha = 0.0
  *     cdef DTYPE_t psi_sum_alpha = 0.0             # <<<<<<<<<<<<<<
@@ -3194,7 +3318,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
  */
   __pyx_v_psi_sum_alpha = 0.0;
 
-  /* "gensim/models/_fastldamodel.pyx":181
+  /* "gensim/models/_fastldamodel.pyx":204
  *     cdef DTYPE_t psi_sum_alpha = 0.0
  *     cdef size_t i
  *     cdef size_t I = alpha.shape[0]             # <<<<<<<<<<<<<<
@@ -3203,48 +3327,48 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
  */
   __pyx_v_I = (__pyx_v_alpha.shape[0]);
 
-  /* "gensim/models/_fastldamodel.pyx":183
+  /* "gensim/models/_fastldamodel.pyx":206
  *     cdef size_t I = alpha.shape[0]
  * 
  *     cdef np.ndarray[DTYPE_t, ndim=1] result = np.zeros([I], dtype=DTYPE)             # <<<<<<<<<<<<<<
  * 
  *     for i in range(I):
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 183, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 206, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 183, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 206, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_I); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 183, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_I); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 206, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyList_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 183, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 206, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
   PyList_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 183, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 206, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_3);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_3);
   __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 183, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 206, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_DTYPE); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 183, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_DTYPE); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 206, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_4) < 0) __PYX_ERR(0, 183, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_4) < 0) __PYX_ERR(0, 206, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 183, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 206, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 183, __pyx_L1_error)
+  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 206, __pyx_L1_error)
   __pyx_t_5 = ((PyArrayObject *)__pyx_t_4);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_result.rcbuffer->pybuffer, (PyObject*)__pyx_t_5, &__Pyx_TypeInfo_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_result = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_result.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 183, __pyx_L1_error)
+      __PYX_ERR(0, 206, __pyx_L1_error)
     } else {__pyx_pybuffernd_result.diminfo[0].strides = __pyx_pybuffernd_result.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_result.diminfo[0].shape = __pyx_pybuffernd_result.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -3252,7 +3376,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
   __pyx_v_result = ((PyArrayObject *)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "gensim/models/_fastldamodel.pyx":185
+  /* "gensim/models/_fastldamodel.pyx":208
  *     cdef np.ndarray[DTYPE_t, ndim=1] result = np.zeros([I], dtype=DTYPE)
  * 
  *     for i in range(I):             # <<<<<<<<<<<<<<
@@ -3263,7 +3387,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
   for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
     __pyx_v_i = __pyx_t_7;
 
-    /* "gensim/models/_fastldamodel.pyx":186
+    /* "gensim/models/_fastldamodel.pyx":209
  * 
  *     for i in range(I):
  *         sum_alpha += alpha[i]             # <<<<<<<<<<<<<<
@@ -3274,7 +3398,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
     __pyx_v_sum_alpha = (__pyx_v_sum_alpha + (*((__pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t *) ( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_8 * __pyx_v_alpha.strides[0]) ))));
   }
 
-  /* "gensim/models/_fastldamodel.pyx":188
+  /* "gensim/models/_fastldamodel.pyx":211
  *         sum_alpha += alpha[i]
  * 
  *     psi_sum_alpha = _digamma(sum_alpha)             # <<<<<<<<<<<<<<
@@ -3283,7 +3407,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
  */
   __pyx_v_psi_sum_alpha = __pyx_f_6gensim_6models_13_fastldamodel__digamma(__pyx_v_sum_alpha);
 
-  /* "gensim/models/_fastldamodel.pyx":190
+  /* "gensim/models/_fastldamodel.pyx":213
  *     psi_sum_alpha = _digamma(sum_alpha)
  * 
  *     for i in range(I):             # <<<<<<<<<<<<<<
@@ -3294,7 +3418,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
   for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
     __pyx_v_i = __pyx_t_7;
 
-    /* "gensim/models/_fastldamodel.pyx":191
+    /* "gensim/models/_fastldamodel.pyx":214
  * 
  *     for i in range(I):
  *         result[i] = _digamma(alpha[i]) - psi_sum_alpha             # <<<<<<<<<<<<<<
@@ -3306,7 +3430,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
     *__Pyx_BufPtrStrided1d(__pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t *, __pyx_pybuffernd_result.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_result.diminfo[0].strides) = (__pyx_f_6gensim_6models_13_fastldamodel__digamma((*((__pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t *) ( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_9 * __pyx_v_alpha.strides[0]) )))) - __pyx_v_psi_sum_alpha);
   }
 
-  /* "gensim/models/_fastldamodel.pyx":193
+  /* "gensim/models/_fastldamodel.pyx":216
  *         result[i] = _digamma(alpha[i]) - psi_sum_alpha
  * 
  *     return result             # <<<<<<<<<<<<<<
@@ -3318,7 +3442,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
   __pyx_r = ((PyObject *)__pyx_v_result);
   goto __pyx_L0;
 
-  /* "gensim/models/_fastldamodel.pyx":162
+  /* "gensim/models/_fastldamodel.pyx":185
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef dirichlet_expectation_1d(DTYPE_t[:] alpha):             # <<<<<<<<<<<<<<
@@ -3351,15 +3475,15 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_7dirichlet_expectation_1d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha); /*proto*/
-static char __pyx_doc_6gensim_6models_13_fastldamodel_6dirichlet_expectation_1d[] = "\n    Expected value of log(theta) where theta is drawn from a Dirichlet distribution\n    \n    Parameters\n    ----------\n    alpha : 1d array_like\n        Dirichlet parameter vector\n    \n    Returns\n    -------\n    1d array_like\n        log of expected values\n\n    ";
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_7dirichlet_expectation_1d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha) {
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_9dirichlet_expectation_1d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha); /*proto*/
+static char __pyx_doc_6gensim_6models_13_fastldamodel_8dirichlet_expectation_1d[] = "\n    Expected value of log(theta) where theta is drawn from a Dirichlet distribution\n    \n    Parameters\n    ----------\n    alpha : 1d array_like\n        Dirichlet parameter vector\n    \n    Returns\n    -------\n    1d array_like\n        log of expected values\n\n    ";
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_9dirichlet_expectation_1d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha) {
   __Pyx_memviewslice __pyx_v_alpha = { 0, 0, { 0 }, { 0 }, { 0 } };
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("dirichlet_expectation_1d (wrapper)", 0);
   assert(__pyx_arg_alpha); {
-    __pyx_v_alpha = __Pyx_PyObject_to_MemoryviewSlice_ds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(__pyx_arg_alpha); if (unlikely(!__pyx_v_alpha.memview)) __PYX_ERR(0, 162, __pyx_L3_error)
+    __pyx_v_alpha = __Pyx_PyObject_to_MemoryviewSlice_ds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(__pyx_arg_alpha); if (unlikely(!__pyx_v_alpha.memview)) __PYX_ERR(0, 185, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -3367,21 +3491,21 @@ static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_7dirichlet_expectation
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6gensim_6models_13_fastldamodel_6dirichlet_expectation_1d(__pyx_self, __pyx_v_alpha);
+  __pyx_r = __pyx_pf_6gensim_6models_13_fastldamodel_8dirichlet_expectation_1d(__pyx_self, __pyx_v_alpha);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_6dirichlet_expectation_1d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_alpha) {
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_8dirichlet_expectation_1d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_alpha) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("dirichlet_expectation_1d", 0);
   __Pyx_XDECREF(__pyx_r);
-  if (unlikely(!__pyx_v_alpha.memview)) { __Pyx_RaiseUnboundLocalError("alpha"); __PYX_ERR(0, 162, __pyx_L1_error) }
-  __pyx_t_1 = __pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1d(__pyx_v_alpha, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)
+  if (unlikely(!__pyx_v_alpha.memview)) { __Pyx_RaiseUnboundLocalError("alpha"); __PYX_ERR(0, 185, __pyx_L1_error) }
+  __pyx_t_1 = __pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_1d(__pyx_v_alpha, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 185, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -3399,7 +3523,7 @@ static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_6dirichlet_expectation
   return __pyx_r;
 }
 
-/* "gensim/models/_fastldamodel.pyx":198
+/* "gensim/models/_fastldamodel.pyx":221
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef dirichlet_expectation_2d(DTYPE_t[:, :] alpha):             # <<<<<<<<<<<<<<
@@ -3407,7 +3531,7 @@ static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_6dirichlet_expectation
  *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
  */
 
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_9dirichlet_expectation_2d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha); /*proto*/
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_11dirichlet_expectation_2d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha); /*proto*/
 static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2d(__Pyx_memviewslice __pyx_v_alpha, CYTHON_UNUSED int __pyx_skip_dispatch) {
   __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_sum_alpha;
   __pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t __pyx_v_psi_sum_alpha;
@@ -3441,7 +3565,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
   __pyx_pybuffernd_result.data = NULL;
   __pyx_pybuffernd_result.rcbuffer = &__pyx_pybuffer_result;
 
-  /* "gensim/models/_fastldamodel.pyx":215
+  /* "gensim/models/_fastldamodel.pyx":238
  *     """
  * 
  *     cdef DTYPE_t sum_alpha = 0.0             # <<<<<<<<<<<<<<
@@ -3450,7 +3574,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
  */
   __pyx_v_sum_alpha = 0.0;
 
-  /* "gensim/models/_fastldamodel.pyx":216
+  /* "gensim/models/_fastldamodel.pyx":239
  * 
  *     cdef DTYPE_t sum_alpha = 0.0
  *     cdef DTYPE_t psi_sum_alpha = 0.0             # <<<<<<<<<<<<<<
@@ -3459,7 +3583,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
  */
   __pyx_v_psi_sum_alpha = 0.0;
 
-  /* "gensim/models/_fastldamodel.pyx":218
+  /* "gensim/models/_fastldamodel.pyx":241
  *     cdef DTYPE_t psi_sum_alpha = 0.0
  *     cdef size_t i, j
  *     cdef size_t I = alpha.shape[0]             # <<<<<<<<<<<<<<
@@ -3468,7 +3592,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
  */
   __pyx_v_I = (__pyx_v_alpha.shape[0]);
 
-  /* "gensim/models/_fastldamodel.pyx":219
+  /* "gensim/models/_fastldamodel.pyx":242
  *     cdef size_t i, j
  *     cdef size_t I = alpha.shape[0]
  *     cdef size_t J = alpha.shape[1]             # <<<<<<<<<<<<<<
@@ -3477,23 +3601,23 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
  */
   __pyx_v_J = (__pyx_v_alpha.shape[1]);
 
-  /* "gensim/models/_fastldamodel.pyx":221
+  /* "gensim/models/_fastldamodel.pyx":244
  *     cdef size_t J = alpha.shape[1]
  * 
  *     cdef np.ndarray[DTYPE_t, ndim=2] result = np.zeros([I, J], dtype=DTYPE)             # <<<<<<<<<<<<<<
  * 
  *     for i in range(I):
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 221, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_I); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_I); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyInt_FromSize_t(__pyx_v_J); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 221, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_FromSize_t(__pyx_v_J); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyList_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 221, __pyx_L1_error)
+  __pyx_t_4 = PyList_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_1);
   PyList_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
@@ -3501,29 +3625,29 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
   PyList_SET_ITEM(__pyx_t_4, 1, __pyx_t_3);
   __pyx_t_1 = 0;
   __pyx_t_3 = 0;
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 221, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 221, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_DTYPE); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_DTYPE); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_1) < 0) __PYX_ERR(0, 221, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_1) < 0) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 221, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 244, __pyx_L1_error)
   __pyx_t_5 = ((PyArrayObject *)__pyx_t_1);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_result.rcbuffer->pybuffer, (PyObject*)__pyx_t_5, &__Pyx_TypeInfo_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_result = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_result.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 221, __pyx_L1_error)
+      __PYX_ERR(0, 244, __pyx_L1_error)
     } else {__pyx_pybuffernd_result.diminfo[0].strides = __pyx_pybuffernd_result.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_result.diminfo[0].shape = __pyx_pybuffernd_result.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_result.diminfo[1].strides = __pyx_pybuffernd_result.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_result.diminfo[1].shape = __pyx_pybuffernd_result.rcbuffer->pybuffer.shape[1];
     }
   }
@@ -3531,7 +3655,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
   __pyx_v_result = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gensim/models/_fastldamodel.pyx":223
+  /* "gensim/models/_fastldamodel.pyx":246
  *     cdef np.ndarray[DTYPE_t, ndim=2] result = np.zeros([I, J], dtype=DTYPE)
  * 
  *     for i in range(I):             # <<<<<<<<<<<<<<
@@ -3542,7 +3666,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
   for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
     __pyx_v_i = __pyx_t_7;
 
-    /* "gensim/models/_fastldamodel.pyx":224
+    /* "gensim/models/_fastldamodel.pyx":247
  * 
  *     for i in range(I):
  *         sum_alpha = 0.0             # <<<<<<<<<<<<<<
@@ -3551,7 +3675,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
  */
     __pyx_v_sum_alpha = 0.0;
 
-    /* "gensim/models/_fastldamodel.pyx":225
+    /* "gensim/models/_fastldamodel.pyx":248
  *     for i in range(I):
  *         sum_alpha = 0.0
  *         for j in range(J):             # <<<<<<<<<<<<<<
@@ -3562,7 +3686,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
     for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
       __pyx_v_j = __pyx_t_9;
 
-      /* "gensim/models/_fastldamodel.pyx":226
+      /* "gensim/models/_fastldamodel.pyx":249
  *         sum_alpha = 0.0
  *         for j in range(J):
  *             sum_alpha += alpha[i, j]             # <<<<<<<<<<<<<<
@@ -3574,7 +3698,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
       __pyx_v_sum_alpha = (__pyx_v_sum_alpha + (*((__pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_10 * __pyx_v_alpha.strides[0]) ) + __pyx_t_11 * __pyx_v_alpha.strides[1]) ))));
     }
 
-    /* "gensim/models/_fastldamodel.pyx":228
+    /* "gensim/models/_fastldamodel.pyx":251
  *             sum_alpha += alpha[i, j]
  * 
  *         psi_sum_alpha = _digamma(sum_alpha)             # <<<<<<<<<<<<<<
@@ -3583,7 +3707,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
  */
     __pyx_v_psi_sum_alpha = __pyx_f_6gensim_6models_13_fastldamodel__digamma(__pyx_v_sum_alpha);
 
-    /* "gensim/models/_fastldamodel.pyx":230
+    /* "gensim/models/_fastldamodel.pyx":253
  *         psi_sum_alpha = _digamma(sum_alpha)
  * 
  *         for j in range(J):             # <<<<<<<<<<<<<<
@@ -3594,7 +3718,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
     for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
       __pyx_v_j = __pyx_t_9;
 
-      /* "gensim/models/_fastldamodel.pyx":231
+      /* "gensim/models/_fastldamodel.pyx":254
  * 
  *         for j in range(J):
  *             result[i, j] = _digamma(alpha[i, j]) - psi_sum_alpha             # <<<<<<<<<<<<<<
@@ -3609,7 +3733,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
     }
   }
 
-  /* "gensim/models/_fastldamodel.pyx":233
+  /* "gensim/models/_fastldamodel.pyx":256
  *             result[i, j] = _digamma(alpha[i, j]) - psi_sum_alpha
  * 
  *     return result             # <<<<<<<<<<<<<<
@@ -3619,7 +3743,7 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
   __pyx_r = ((PyObject *)__pyx_v_result);
   goto __pyx_L0;
 
-  /* "gensim/models/_fastldamodel.pyx":198
+  /* "gensim/models/_fastldamodel.pyx":221
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef dirichlet_expectation_2d(DTYPE_t[:, :] alpha):             # <<<<<<<<<<<<<<
@@ -3652,15 +3776,15 @@ static PyObject *__pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_9dirichlet_expectation_2d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha); /*proto*/
-static char __pyx_doc_6gensim_6models_13_fastldamodel_8dirichlet_expectation_2d[] = "\n    Expected value of log(theta) where theta is drawn from a Dirichlet distribution\n    \n    Parameters\n    ----------\n    alpha : 2d array_like\n        Dirichlet parameter vector.  \n        Each row is treated as a parameter vector for its own Dirichlet\n    \n    Returns\n    -------\n    2d array_like\n        log of expected values\n\n    ";
-static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_9dirichlet_expectation_2d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha) {
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_11dirichlet_expectation_2d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha); /*proto*/
+static char __pyx_doc_6gensim_6models_13_fastldamodel_10dirichlet_expectation_2d[] = "\n    Expected value of log(theta) where theta is drawn from a Dirichlet distribution\n    \n    Parameters\n    ----------\n    alpha : 2d array_like\n        Dirichlet parameter vector.  \n        Each row is treated as a parameter vector for its own Dirichlet\n    \n    Returns\n    -------\n    2d array_like\n        log of expected values\n\n    ";
+static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_11dirichlet_expectation_2d(PyObject *__pyx_self, PyObject *__pyx_arg_alpha) {
   __Pyx_memviewslice __pyx_v_alpha = { 0, 0, { 0 }, { 0 }, { 0 } };
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("dirichlet_expectation_2d (wrapper)", 0);
   assert(__pyx_arg_alpha); {
-    __pyx_v_alpha = __Pyx_PyObject_to_MemoryviewSlice_dsds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(__pyx_arg_alpha); if (unlikely(!__pyx_v_alpha.memview)) __PYX_ERR(0, 198, __pyx_L3_error)
+    __pyx_v_alpha = __Pyx_PyObject_to_MemoryviewSlice_dsds_nn___pyx_t_6gensim_6models_13_fastldamodel_DTYPE_t(__pyx_arg_alpha); if (unlikely(!__pyx_v_alpha.memview)) __PYX_ERR(0, 221, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -3668,21 +3792,21 @@ static PyObject *__pyx_pw_6gensim_6models_13_fastldamodel_9dirichlet_expectation
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6gensim_6models_13_fastldamodel_8dirichlet_expectation_2d(__pyx_self, __pyx_v_alpha);
+  __pyx_r = __pyx_pf_6gensim_6models_13_fastldamodel_10dirichlet_expectation_2d(__pyx_self, __pyx_v_alpha);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_8dirichlet_expectation_2d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_alpha) {
+static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_10dirichlet_expectation_2d(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_alpha) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("dirichlet_expectation_2d", 0);
   __Pyx_XDECREF(__pyx_r);
-  if (unlikely(!__pyx_v_alpha.memview)) { __Pyx_RaiseUnboundLocalError("alpha"); __PYX_ERR(0, 198, __pyx_L1_error) }
-  __pyx_t_1 = __pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2d(__pyx_v_alpha, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 198, __pyx_L1_error)
+  if (unlikely(!__pyx_v_alpha.memview)) { __Pyx_RaiseUnboundLocalError("alpha"); __PYX_ERR(0, 221, __pyx_L1_error) }
+  __pyx_t_1 = __pyx_f_6gensim_6models_13_fastldamodel_dirichlet_expectation_2d(__pyx_v_alpha, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -3700,7 +3824,7 @@ static PyObject *__pyx_pf_6gensim_6models_13_fastldamodel_8dirichlet_expectation
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":214
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":214
  *         # experimental exception made for __getbuffer__ and __releasebuffer__
  *         # -- the details of this may change.
  *         def __getbuffer__(ndarray self, Py_buffer* info, int flags):             # <<<<<<<<<<<<<<
@@ -3747,7 +3871,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __Pyx_GIVEREF(__pyx_v_info->obj);
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":220
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":220
  *             # of flags
  * 
  *             if info == NULL: return             # <<<<<<<<<<<<<<
@@ -3760,7 +3884,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     goto __pyx_L0;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":223
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":223
  * 
  *             cdef int copy_shape, i, ndim
  *             cdef int endian_detector = 1             # <<<<<<<<<<<<<<
@@ -3769,7 +3893,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_endian_detector = 1;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":224
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":224
  *             cdef int copy_shape, i, ndim
  *             cdef int endian_detector = 1
  *             cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)             # <<<<<<<<<<<<<<
@@ -3778,7 +3902,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_little_endian = ((((char *)(&__pyx_v_endian_detector))[0]) != 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":226
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":226
  *             cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)
  * 
  *             ndim = PyArray_NDIM(self)             # <<<<<<<<<<<<<<
@@ -3787,7 +3911,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_ndim = PyArray_NDIM(__pyx_v_self);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":228
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":228
  *             ndim = PyArray_NDIM(self)
  * 
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):             # <<<<<<<<<<<<<<
@@ -3797,7 +3921,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_t_1 = (((sizeof(npy_intp)) != (sizeof(Py_ssize_t))) != 0);
   if (__pyx_t_1) {
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":229
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":229
  * 
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):
  *                 copy_shape = 1             # <<<<<<<<<<<<<<
@@ -3806,7 +3930,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     __pyx_v_copy_shape = 1;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":228
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":228
  *             ndim = PyArray_NDIM(self)
  * 
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):             # <<<<<<<<<<<<<<
@@ -3816,7 +3940,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     goto __pyx_L4;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":231
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":231
  *                 copy_shape = 1
  *             else:
  *                 copy_shape = 0             # <<<<<<<<<<<<<<
@@ -3828,7 +3952,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
   __pyx_L4:;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":233
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":233
  *                 copy_shape = 0
  * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)             # <<<<<<<<<<<<<<
@@ -3842,7 +3966,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     goto __pyx_L6_bool_binop_done;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":234
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":234
  * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):             # <<<<<<<<<<<<<<
@@ -3853,7 +3977,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_t_1 = __pyx_t_2;
   __pyx_L6_bool_binop_done:;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":233
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":233
  *                 copy_shape = 0
  * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)             # <<<<<<<<<<<<<<
@@ -3862,7 +3986,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   if (__pyx_t_1) {
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":235
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":235
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not C contiguous")             # <<<<<<<<<<<<<<
@@ -3875,7 +3999,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __PYX_ERR(1, 235, __pyx_L1_error)
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":233
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":233
  *                 copy_shape = 0
  * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)             # <<<<<<<<<<<<<<
@@ -3884,7 +4008,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":237
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":237
  *                 raise ValueError(u"ndarray is not C contiguous")
  * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)             # <<<<<<<<<<<<<<
@@ -3898,7 +4022,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     goto __pyx_L9_bool_binop_done;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":238
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":238
  * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):             # <<<<<<<<<<<<<<
@@ -3909,7 +4033,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_t_1 = __pyx_t_2;
   __pyx_L9_bool_binop_done:;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":237
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":237
  *                 raise ValueError(u"ndarray is not C contiguous")
  * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)             # <<<<<<<<<<<<<<
@@ -3918,7 +4042,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   if (__pyx_t_1) {
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":239
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":239
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not Fortran contiguous")             # <<<<<<<<<<<<<<
@@ -3931,7 +4055,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __PYX_ERR(1, 239, __pyx_L1_error)
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":237
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":237
  *                 raise ValueError(u"ndarray is not C contiguous")
  * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)             # <<<<<<<<<<<<<<
@@ -3940,7 +4064,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":241
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":241
  *                 raise ValueError(u"ndarray is not Fortran contiguous")
  * 
  *             info.buf = PyArray_DATA(self)             # <<<<<<<<<<<<<<
@@ -3949,7 +4073,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_info->buf = PyArray_DATA(__pyx_v_self);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":242
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":242
  * 
  *             info.buf = PyArray_DATA(self)
  *             info.ndim = ndim             # <<<<<<<<<<<<<<
@@ -3958,7 +4082,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_info->ndim = __pyx_v_ndim;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":243
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":243
  *             info.buf = PyArray_DATA(self)
  *             info.ndim = ndim
  *             if copy_shape:             # <<<<<<<<<<<<<<
@@ -3968,7 +4092,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_t_1 = (__pyx_v_copy_shape != 0);
   if (__pyx_t_1) {
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":246
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":246
  *                 # Allocate new buffer for strides and shape info.
  *                 # This is allocated as one block, strides first.
  *                 info.strides = <Py_ssize_t*>PyObject_Malloc(sizeof(Py_ssize_t) * 2 * <size_t>ndim)             # <<<<<<<<<<<<<<
@@ -3977,7 +4101,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     __pyx_v_info->strides = ((Py_ssize_t *)PyObject_Malloc((((sizeof(Py_ssize_t)) * 2) * ((size_t)__pyx_v_ndim))));
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":247
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":247
  *                 # This is allocated as one block, strides first.
  *                 info.strides = <Py_ssize_t*>PyObject_Malloc(sizeof(Py_ssize_t) * 2 * <size_t>ndim)
  *                 info.shape = info.strides + ndim             # <<<<<<<<<<<<<<
@@ -3986,7 +4110,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     __pyx_v_info->shape = (__pyx_v_info->strides + __pyx_v_ndim);
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":248
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":248
  *                 info.strides = <Py_ssize_t*>PyObject_Malloc(sizeof(Py_ssize_t) * 2 * <size_t>ndim)
  *                 info.shape = info.strides + ndim
  *                 for i in range(ndim):             # <<<<<<<<<<<<<<
@@ -3997,7 +4121,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
       __pyx_v_i = __pyx_t_5;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":249
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":249
  *                 info.shape = info.strides + ndim
  *                 for i in range(ndim):
  *                     info.strides[i] = PyArray_STRIDES(self)[i]             # <<<<<<<<<<<<<<
@@ -4006,7 +4130,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
       (__pyx_v_info->strides[__pyx_v_i]) = (PyArray_STRIDES(__pyx_v_self)[__pyx_v_i]);
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":250
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":250
  *                 for i in range(ndim):
  *                     info.strides[i] = PyArray_STRIDES(self)[i]
  *                     info.shape[i] = PyArray_DIMS(self)[i]             # <<<<<<<<<<<<<<
@@ -4016,7 +4140,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       (__pyx_v_info->shape[__pyx_v_i]) = (PyArray_DIMS(__pyx_v_self)[__pyx_v_i]);
     }
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":243
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":243
  *             info.buf = PyArray_DATA(self)
  *             info.ndim = ndim
  *             if copy_shape:             # <<<<<<<<<<<<<<
@@ -4026,7 +4150,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     goto __pyx_L11;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":252
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":252
  *                     info.shape[i] = PyArray_DIMS(self)[i]
  *             else:
  *                 info.strides = <Py_ssize_t*>PyArray_STRIDES(self)             # <<<<<<<<<<<<<<
@@ -4036,7 +4160,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   /*else*/ {
     __pyx_v_info->strides = ((Py_ssize_t *)PyArray_STRIDES(__pyx_v_self));
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":253
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":253
  *             else:
  *                 info.strides = <Py_ssize_t*>PyArray_STRIDES(self)
  *                 info.shape = <Py_ssize_t*>PyArray_DIMS(self)             # <<<<<<<<<<<<<<
@@ -4047,7 +4171,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
   __pyx_L11:;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":254
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":254
  *                 info.strides = <Py_ssize_t*>PyArray_STRIDES(self)
  *                 info.shape = <Py_ssize_t*>PyArray_DIMS(self)
  *             info.suboffsets = NULL             # <<<<<<<<<<<<<<
@@ -4056,7 +4180,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_info->suboffsets = NULL;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":255
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":255
  *                 info.shape = <Py_ssize_t*>PyArray_DIMS(self)
  *             info.suboffsets = NULL
  *             info.itemsize = PyArray_ITEMSIZE(self)             # <<<<<<<<<<<<<<
@@ -4065,7 +4189,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_info->itemsize = PyArray_ITEMSIZE(__pyx_v_self);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":256
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":256
  *             info.suboffsets = NULL
  *             info.itemsize = PyArray_ITEMSIZE(self)
  *             info.readonly = not PyArray_ISWRITEABLE(self)             # <<<<<<<<<<<<<<
@@ -4074,7 +4198,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_info->readonly = (!(PyArray_ISWRITEABLE(__pyx_v_self) != 0));
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":259
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":259
  * 
  *             cdef int t
  *             cdef char* f = NULL             # <<<<<<<<<<<<<<
@@ -4083,7 +4207,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_f = NULL;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":260
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":260
  *             cdef int t
  *             cdef char* f = NULL
  *             cdef dtype descr = self.descr             # <<<<<<<<<<<<<<
@@ -4095,7 +4219,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_v_descr = ((PyArray_Descr *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":263
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":263
  *             cdef int offset
  * 
  *             cdef bint hasfields = PyDataType_HASFIELDS(descr)             # <<<<<<<<<<<<<<
@@ -4104,7 +4228,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_hasfields = PyDataType_HASFIELDS(__pyx_v_descr);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":265
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":265
  *             cdef bint hasfields = PyDataType_HASFIELDS(descr)
  * 
  *             if not hasfields and not copy_shape:             # <<<<<<<<<<<<<<
@@ -4122,7 +4246,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_L15_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":267
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":267
  *             if not hasfields and not copy_shape:
  *                 # do not call releasebuffer
  *                 info.obj = None             # <<<<<<<<<<<<<<
@@ -4135,7 +4259,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __Pyx_DECREF(__pyx_v_info->obj);
     __pyx_v_info->obj = Py_None;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":265
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":265
  *             cdef bint hasfields = PyDataType_HASFIELDS(descr)
  * 
  *             if not hasfields and not copy_shape:             # <<<<<<<<<<<<<<
@@ -4145,7 +4269,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     goto __pyx_L14;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":270
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":270
  *             else:
  *                 # need to call releasebuffer
  *                 info.obj = self             # <<<<<<<<<<<<<<
@@ -4161,7 +4285,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
   __pyx_L14:;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":272
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":272
  *                 info.obj = self
  * 
  *             if not hasfields:             # <<<<<<<<<<<<<<
@@ -4171,7 +4295,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_t_1 = ((!(__pyx_v_hasfields != 0)) != 0);
   if (__pyx_t_1) {
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":273
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":273
  * 
  *             if not hasfields:
  *                 t = descr.type_num             # <<<<<<<<<<<<<<
@@ -4181,7 +4305,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __pyx_t_4 = __pyx_v_descr->type_num;
     __pyx_v_t = __pyx_t_4;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":274
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":274
  *             if not hasfields:
  *                 t = descr.type_num
  *                 if ((descr.byteorder == c'>' and little_endian) or             # <<<<<<<<<<<<<<
@@ -4201,7 +4325,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     }
     __pyx_L20_next_or:;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":275
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":275
  *                 t = descr.type_num
  *                 if ((descr.byteorder == c'>' and little_endian) or
  *                     (descr.byteorder == c'<' and not little_endian)):             # <<<<<<<<<<<<<<
@@ -4218,7 +4342,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __pyx_t_1 = __pyx_t_2;
     __pyx_L19_bool_binop_done:;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":274
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":274
  *             if not hasfields:
  *                 t = descr.type_num
  *                 if ((descr.byteorder == c'>' and little_endian) or             # <<<<<<<<<<<<<<
@@ -4227,7 +4351,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     if (__pyx_t_1) {
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":276
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":276
  *                 if ((descr.byteorder == c'>' and little_endian) or
  *                     (descr.byteorder == c'<' and not little_endian)):
  *                     raise ValueError(u"Non-native byte order not supported")             # <<<<<<<<<<<<<<
@@ -4240,7 +4364,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       __PYX_ERR(1, 276, __pyx_L1_error)
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":274
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":274
  *             if not hasfields:
  *                 t = descr.type_num
  *                 if ((descr.byteorder == c'>' and little_endian) or             # <<<<<<<<<<<<<<
@@ -4249,7 +4373,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     }
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":277
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":277
  *                     (descr.byteorder == c'<' and not little_endian)):
  *                     raise ValueError(u"Non-native byte order not supported")
  *                 if   t == NPY_BYTE:        f = "b"             # <<<<<<<<<<<<<<
@@ -4261,7 +4385,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"b");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":278
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":278
  *                     raise ValueError(u"Non-native byte order not supported")
  *                 if   t == NPY_BYTE:        f = "b"
  *                 elif t == NPY_UBYTE:       f = "B"             # <<<<<<<<<<<<<<
@@ -4272,7 +4396,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"B");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":279
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":279
  *                 if   t == NPY_BYTE:        f = "b"
  *                 elif t == NPY_UBYTE:       f = "B"
  *                 elif t == NPY_SHORT:       f = "h"             # <<<<<<<<<<<<<<
@@ -4283,7 +4407,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"h");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":280
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":280
  *                 elif t == NPY_UBYTE:       f = "B"
  *                 elif t == NPY_SHORT:       f = "h"
  *                 elif t == NPY_USHORT:      f = "H"             # <<<<<<<<<<<<<<
@@ -4294,7 +4418,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"H");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":281
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":281
  *                 elif t == NPY_SHORT:       f = "h"
  *                 elif t == NPY_USHORT:      f = "H"
  *                 elif t == NPY_INT:         f = "i"             # <<<<<<<<<<<<<<
@@ -4305,7 +4429,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"i");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":282
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":282
  *                 elif t == NPY_USHORT:      f = "H"
  *                 elif t == NPY_INT:         f = "i"
  *                 elif t == NPY_UINT:        f = "I"             # <<<<<<<<<<<<<<
@@ -4316,7 +4440,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"I");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":283
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":283
  *                 elif t == NPY_INT:         f = "i"
  *                 elif t == NPY_UINT:        f = "I"
  *                 elif t == NPY_LONG:        f = "l"             # <<<<<<<<<<<<<<
@@ -4327,7 +4451,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"l");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":284
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":284
  *                 elif t == NPY_UINT:        f = "I"
  *                 elif t == NPY_LONG:        f = "l"
  *                 elif t == NPY_ULONG:       f = "L"             # <<<<<<<<<<<<<<
@@ -4338,7 +4462,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"L");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":285
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":285
  *                 elif t == NPY_LONG:        f = "l"
  *                 elif t == NPY_ULONG:       f = "L"
  *                 elif t == NPY_LONGLONG:    f = "q"             # <<<<<<<<<<<<<<
@@ -4349,7 +4473,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"q");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":286
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":286
  *                 elif t == NPY_ULONG:       f = "L"
  *                 elif t == NPY_LONGLONG:    f = "q"
  *                 elif t == NPY_ULONGLONG:   f = "Q"             # <<<<<<<<<<<<<<
@@ -4360,7 +4484,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"Q");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":287
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":287
  *                 elif t == NPY_LONGLONG:    f = "q"
  *                 elif t == NPY_ULONGLONG:   f = "Q"
  *                 elif t == NPY_FLOAT:       f = "f"             # <<<<<<<<<<<<<<
@@ -4371,7 +4495,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"f");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":288
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":288
  *                 elif t == NPY_ULONGLONG:   f = "Q"
  *                 elif t == NPY_FLOAT:       f = "f"
  *                 elif t == NPY_DOUBLE:      f = "d"             # <<<<<<<<<<<<<<
@@ -4382,7 +4506,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"d");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":289
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":289
  *                 elif t == NPY_FLOAT:       f = "f"
  *                 elif t == NPY_DOUBLE:      f = "d"
  *                 elif t == NPY_LONGDOUBLE:  f = "g"             # <<<<<<<<<<<<<<
@@ -4393,7 +4517,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"g");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":290
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":290
  *                 elif t == NPY_DOUBLE:      f = "d"
  *                 elif t == NPY_LONGDOUBLE:  f = "g"
  *                 elif t == NPY_CFLOAT:      f = "Zf"             # <<<<<<<<<<<<<<
@@ -4404,7 +4528,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"Zf");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":291
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":291
  *                 elif t == NPY_LONGDOUBLE:  f = "g"
  *                 elif t == NPY_CFLOAT:      f = "Zf"
  *                 elif t == NPY_CDOUBLE:     f = "Zd"             # <<<<<<<<<<<<<<
@@ -4415,7 +4539,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"Zd");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":292
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":292
  *                 elif t == NPY_CFLOAT:      f = "Zf"
  *                 elif t == NPY_CDOUBLE:     f = "Zd"
  *                 elif t == NPY_CLONGDOUBLE: f = "Zg"             # <<<<<<<<<<<<<<
@@ -4426,7 +4550,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = ((char *)"Zg");
       break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":293
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":293
  *                 elif t == NPY_CDOUBLE:     f = "Zd"
  *                 elif t == NPY_CLONGDOUBLE: f = "Zg"
  *                 elif t == NPY_OBJECT:      f = "O"             # <<<<<<<<<<<<<<
@@ -4438,7 +4562,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       break;
       default:
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":295
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":295
  *                 elif t == NPY_OBJECT:      f = "O"
  *                 else:
  *                     raise ValueError(u"unknown dtype code in numpy.pxd (%d)" % t)             # <<<<<<<<<<<<<<
@@ -4464,7 +4588,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       break;
     }
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":296
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":296
  *                 else:
  *                     raise ValueError(u"unknown dtype code in numpy.pxd (%d)" % t)
  *                 info.format = f             # <<<<<<<<<<<<<<
@@ -4473,7 +4597,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     __pyx_v_info->format = __pyx_v_f;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":297
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":297
  *                     raise ValueError(u"unknown dtype code in numpy.pxd (%d)" % t)
  *                 info.format = f
  *                 return             # <<<<<<<<<<<<<<
@@ -4483,7 +4607,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __pyx_r = 0;
     goto __pyx_L0;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":272
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":272
  *                 info.obj = self
  * 
  *             if not hasfields:             # <<<<<<<<<<<<<<
@@ -4492,7 +4616,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":299
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":299
  *                 return
  *             else:
  *                 info.format = <char*>PyObject_Malloc(_buffer_format_string_len)             # <<<<<<<<<<<<<<
@@ -4502,7 +4626,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   /*else*/ {
     __pyx_v_info->format = ((char *)PyObject_Malloc(0xFF));
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":300
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":300
  *             else:
  *                 info.format = <char*>PyObject_Malloc(_buffer_format_string_len)
  *                 info.format[0] = c'^' # Native data types, manual alignment             # <<<<<<<<<<<<<<
@@ -4511,7 +4635,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     (__pyx_v_info->format[0]) = '^';
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":301
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":301
  *                 info.format = <char*>PyObject_Malloc(_buffer_format_string_len)
  *                 info.format[0] = c'^' # Native data types, manual alignment
  *                 offset = 0             # <<<<<<<<<<<<<<
@@ -4520,7 +4644,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     __pyx_v_offset = 0;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":302
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":302
  *                 info.format[0] = c'^' # Native data types, manual alignment
  *                 offset = 0
  *                 f = _util_dtypestring(descr, info.format + 1,             # <<<<<<<<<<<<<<
@@ -4530,7 +4654,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __pyx_t_7 = __pyx_f_5numpy__util_dtypestring(__pyx_v_descr, (__pyx_v_info->format + 1), (__pyx_v_info->format + 0xFF), (&__pyx_v_offset)); if (unlikely(__pyx_t_7 == ((char *)NULL))) __PYX_ERR(1, 302, __pyx_L1_error)
     __pyx_v_f = __pyx_t_7;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":305
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":305
  *                                       info.format + _buffer_format_string_len,
  *                                       &offset)
  *                 f[0] = c'\0' # Terminate format string             # <<<<<<<<<<<<<<
@@ -4540,7 +4664,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     (__pyx_v_f[0]) = '\x00';
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":214
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":214
  *         # experimental exception made for __getbuffer__ and __releasebuffer__
  *         # -- the details of this may change.
  *         def __getbuffer__(ndarray self, Py_buffer* info, int flags):             # <<<<<<<<<<<<<<
@@ -4572,7 +4696,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":307
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":307
  *                 f[0] = c'\0' # Terminate format string
  * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):             # <<<<<<<<<<<<<<
@@ -4596,7 +4720,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__releasebuffer__", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":308
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":308
  * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):
  *             if PyArray_HASFIELDS(self):             # <<<<<<<<<<<<<<
@@ -4606,7 +4730,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
   __pyx_t_1 = (PyArray_HASFIELDS(__pyx_v_self) != 0);
   if (__pyx_t_1) {
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":309
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":309
  *         def __releasebuffer__(ndarray self, Py_buffer* info):
  *             if PyArray_HASFIELDS(self):
  *                 PyObject_Free(info.format)             # <<<<<<<<<<<<<<
@@ -4615,7 +4739,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
  */
     PyObject_Free(__pyx_v_info->format);
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":308
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":308
  * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):
  *             if PyArray_HASFIELDS(self):             # <<<<<<<<<<<<<<
@@ -4624,7 +4748,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
  */
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":310
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":310
  *             if PyArray_HASFIELDS(self):
  *                 PyObject_Free(info.format)
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):             # <<<<<<<<<<<<<<
@@ -4634,7 +4758,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
   __pyx_t_1 = (((sizeof(npy_intp)) != (sizeof(Py_ssize_t))) != 0);
   if (__pyx_t_1) {
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":311
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":311
  *                 PyObject_Free(info.format)
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):
  *                 PyObject_Free(info.strides)             # <<<<<<<<<<<<<<
@@ -4643,7 +4767,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
  */
     PyObject_Free(__pyx_v_info->strides);
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":310
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":310
  *             if PyArray_HASFIELDS(self):
  *                 PyObject_Free(info.format)
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):             # <<<<<<<<<<<<<<
@@ -4652,7 +4776,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
  */
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":307
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":307
  *                 f[0] = c'\0' # Terminate format string
  * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):             # <<<<<<<<<<<<<<
@@ -4664,7 +4788,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
   __Pyx_RefNannyFinishContext();
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":788
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":788
  * ctypedef npy_cdouble     complex_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -4678,7 +4802,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew1", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":789
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":789
  * 
  * cdef inline object PyArray_MultiIterNew1(a):
  *     return PyArray_MultiIterNew(1, <void*>a)             # <<<<<<<<<<<<<<
@@ -4692,7 +4816,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":788
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":788
  * ctypedef npy_cdouble     complex_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -4711,7 +4835,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":791
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":791
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -4725,7 +4849,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew2", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":792
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":792
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)             # <<<<<<<<<<<<<<
@@ -4739,7 +4863,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":791
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":791
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -4758,7 +4882,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":794
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":794
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -4772,7 +4896,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew3", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":795
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":795
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)             # <<<<<<<<<<<<<<
@@ -4786,7 +4910,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":794
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":794
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -4805,7 +4929,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":797
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":797
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -4819,7 +4943,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew4", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":798
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":798
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)             # <<<<<<<<<<<<<<
@@ -4833,7 +4957,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":797
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":797
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -4852,7 +4976,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":800
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":800
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -4866,7 +4990,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew5", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":801
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":801
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)             # <<<<<<<<<<<<<<
@@ -4880,7 +5004,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":800
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":800
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -4899,7 +5023,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":803
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":803
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):             # <<<<<<<<<<<<<<
@@ -4913,7 +5037,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("PyDataType_SHAPE", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":804
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":804
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):             # <<<<<<<<<<<<<<
@@ -4923,7 +5047,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   __pyx_t_1 = (PyDataType_HASSUBARRAY(__pyx_v_d) != 0);
   if (__pyx_t_1) {
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":805
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":805
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):
  *         return <tuple>d.subarray.shape             # <<<<<<<<<<<<<<
@@ -4935,7 +5059,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
     __pyx_r = ((PyObject*)__pyx_v_d->subarray->shape);
     goto __pyx_L0;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":804
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":804
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):             # <<<<<<<<<<<<<<
@@ -4944,7 +5068,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
  */
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":807
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":807
  *         return <tuple>d.subarray.shape
  *     else:
  *         return ()             # <<<<<<<<<<<<<<
@@ -4958,7 +5082,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
     goto __pyx_L0;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":803
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":803
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):             # <<<<<<<<<<<<<<
@@ -4973,7 +5097,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":809
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":809
  *         return ()
  * 
  * cdef inline char* _util_dtypestring(dtype descr, char* f, char* end, int* offset) except NULL:             # <<<<<<<<<<<<<<
@@ -5002,7 +5126,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
   char *__pyx_t_9;
   __Pyx_RefNannySetupContext("_util_dtypestring", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":814
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":814
  * 
  *     cdef dtype child
  *     cdef int endian_detector = 1             # <<<<<<<<<<<<<<
@@ -5011,7 +5135,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
   __pyx_v_endian_detector = 1;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":815
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":815
  *     cdef dtype child
  *     cdef int endian_detector = 1
  *     cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)             # <<<<<<<<<<<<<<
@@ -5020,7 +5144,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
   __pyx_v_little_endian = ((((char *)(&__pyx_v_endian_detector))[0]) != 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":818
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":818
  *     cdef tuple fields
  * 
  *     for childname in descr.names:             # <<<<<<<<<<<<<<
@@ -5043,7 +5167,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __Pyx_XDECREF_SET(__pyx_v_childname, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":819
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":819
  * 
  *     for childname in descr.names:
  *         fields = descr.fields[childname]             # <<<<<<<<<<<<<<
@@ -5060,7 +5184,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __Pyx_XDECREF_SET(__pyx_v_fields, ((PyObject*)__pyx_t_3));
     __pyx_t_3 = 0;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":820
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":820
  *     for childname in descr.names:
  *         fields = descr.fields[childname]
  *         child, new_offset = fields             # <<<<<<<<<<<<<<
@@ -5099,7 +5223,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __Pyx_XDECREF_SET(__pyx_v_new_offset, __pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":822
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":822
  *         child, new_offset = fields
  * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:             # <<<<<<<<<<<<<<
@@ -5116,7 +5240,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __pyx_t_6 = ((((__pyx_v_end - __pyx_v_f) - ((int)__pyx_t_5)) < 15) != 0);
     if (__pyx_t_6) {
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":823
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":823
  * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")             # <<<<<<<<<<<<<<
@@ -5129,7 +5253,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       __PYX_ERR(1, 823, __pyx_L1_error)
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":822
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":822
  *         child, new_offset = fields
  * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:             # <<<<<<<<<<<<<<
@@ -5138,7 +5262,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
     }
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":825
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":825
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")
  * 
  *         if ((child.byteorder == c'>' and little_endian) or             # <<<<<<<<<<<<<<
@@ -5158,7 +5282,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     }
     __pyx_L8_next_or:;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":826
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":826
  * 
  *         if ((child.byteorder == c'>' and little_endian) or
  *             (child.byteorder == c'<' and not little_endian)):             # <<<<<<<<<<<<<<
@@ -5175,7 +5299,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __pyx_t_6 = __pyx_t_7;
     __pyx_L7_bool_binop_done:;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":825
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":825
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")
  * 
  *         if ((child.byteorder == c'>' and little_endian) or             # <<<<<<<<<<<<<<
@@ -5184,7 +5308,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
     if (__pyx_t_6) {
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":827
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":827
  *         if ((child.byteorder == c'>' and little_endian) or
  *             (child.byteorder == c'<' and not little_endian)):
  *             raise ValueError(u"Non-native byte order not supported")             # <<<<<<<<<<<<<<
@@ -5197,7 +5321,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       __PYX_ERR(1, 827, __pyx_L1_error)
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":825
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":825
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")
  * 
  *         if ((child.byteorder == c'>' and little_endian) or             # <<<<<<<<<<<<<<
@@ -5206,7 +5330,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
     }
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":837
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":837
  * 
  *         # Output padding bytes
  *         while offset[0] < new_offset:             # <<<<<<<<<<<<<<
@@ -5222,7 +5346,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       if (!__pyx_t_6) break;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":838
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":838
  *         # Output padding bytes
  *         while offset[0] < new_offset:
  *             f[0] = 120 # "x"; pad byte             # <<<<<<<<<<<<<<
@@ -5231,7 +5355,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
       (__pyx_v_f[0]) = 0x78;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":839
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":839
  *         while offset[0] < new_offset:
  *             f[0] = 120 # "x"; pad byte
  *             f += 1             # <<<<<<<<<<<<<<
@@ -5240,7 +5364,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
       __pyx_v_f = (__pyx_v_f + 1);
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":840
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":840
  *             f[0] = 120 # "x"; pad byte
  *             f += 1
  *             offset[0] += 1             # <<<<<<<<<<<<<<
@@ -5251,7 +5375,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       (__pyx_v_offset[__pyx_t_8]) = ((__pyx_v_offset[__pyx_t_8]) + 1);
     }
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":842
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":842
  *             offset[0] += 1
  * 
  *         offset[0] += child.itemsize             # <<<<<<<<<<<<<<
@@ -5261,7 +5385,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __pyx_t_8 = 0;
     (__pyx_v_offset[__pyx_t_8]) = ((__pyx_v_offset[__pyx_t_8]) + __pyx_v_child->elsize);
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":844
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":844
  *         offset[0] += child.itemsize
  * 
  *         if not PyDataType_HASFIELDS(child):             # <<<<<<<<<<<<<<
@@ -5271,7 +5395,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __pyx_t_6 = ((!(PyDataType_HASFIELDS(__pyx_v_child) != 0)) != 0);
     if (__pyx_t_6) {
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":845
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":845
  * 
  *         if not PyDataType_HASFIELDS(child):
  *             t = child.type_num             # <<<<<<<<<<<<<<
@@ -5283,7 +5407,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       __Pyx_XDECREF_SET(__pyx_v_t, __pyx_t_4);
       __pyx_t_4 = 0;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":846
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":846
  *         if not PyDataType_HASFIELDS(child):
  *             t = child.type_num
  *             if end - f < 5:             # <<<<<<<<<<<<<<
@@ -5293,7 +5417,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       __pyx_t_6 = (((__pyx_v_end - __pyx_v_f) < 5) != 0);
       if (__pyx_t_6) {
 
-        /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":847
+        /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":847
  *             t = child.type_num
  *             if end - f < 5:
  *                 raise RuntimeError(u"Format string allocated too short.")             # <<<<<<<<<<<<<<
@@ -5306,7 +5430,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
         __PYX_ERR(1, 847, __pyx_L1_error)
 
-        /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":846
+        /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":846
  *         if not PyDataType_HASFIELDS(child):
  *             t = child.type_num
  *             if end - f < 5:             # <<<<<<<<<<<<<<
@@ -5315,7 +5439,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":850
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":850
  * 
  *             # Until ticket #99 is fixed, use integers to avoid warnings
  *             if   t == NPY_BYTE:        f[0] =  98 #"b"             # <<<<<<<<<<<<<<
@@ -5333,7 +5457,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":851
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":851
  *             # Until ticket #99 is fixed, use integers to avoid warnings
  *             if   t == NPY_BYTE:        f[0] =  98 #"b"
  *             elif t == NPY_UBYTE:       f[0] =  66 #"B"             # <<<<<<<<<<<<<<
@@ -5351,7 +5475,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":852
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":852
  *             if   t == NPY_BYTE:        f[0] =  98 #"b"
  *             elif t == NPY_UBYTE:       f[0] =  66 #"B"
  *             elif t == NPY_SHORT:       f[0] = 104 #"h"             # <<<<<<<<<<<<<<
@@ -5369,7 +5493,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":853
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":853
  *             elif t == NPY_UBYTE:       f[0] =  66 #"B"
  *             elif t == NPY_SHORT:       f[0] = 104 #"h"
  *             elif t == NPY_USHORT:      f[0] =  72 #"H"             # <<<<<<<<<<<<<<
@@ -5387,7 +5511,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":854
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":854
  *             elif t == NPY_SHORT:       f[0] = 104 #"h"
  *             elif t == NPY_USHORT:      f[0] =  72 #"H"
  *             elif t == NPY_INT:         f[0] = 105 #"i"             # <<<<<<<<<<<<<<
@@ -5405,7 +5529,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":855
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":855
  *             elif t == NPY_USHORT:      f[0] =  72 #"H"
  *             elif t == NPY_INT:         f[0] = 105 #"i"
  *             elif t == NPY_UINT:        f[0] =  73 #"I"             # <<<<<<<<<<<<<<
@@ -5423,7 +5547,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":856
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":856
  *             elif t == NPY_INT:         f[0] = 105 #"i"
  *             elif t == NPY_UINT:        f[0] =  73 #"I"
  *             elif t == NPY_LONG:        f[0] = 108 #"l"             # <<<<<<<<<<<<<<
@@ -5441,7 +5565,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":857
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":857
  *             elif t == NPY_UINT:        f[0] =  73 #"I"
  *             elif t == NPY_LONG:        f[0] = 108 #"l"
  *             elif t == NPY_ULONG:       f[0] = 76  #"L"             # <<<<<<<<<<<<<<
@@ -5459,7 +5583,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":858
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":858
  *             elif t == NPY_LONG:        f[0] = 108 #"l"
  *             elif t == NPY_ULONG:       f[0] = 76  #"L"
  *             elif t == NPY_LONGLONG:    f[0] = 113 #"q"             # <<<<<<<<<<<<<<
@@ -5477,7 +5601,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":859
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":859
  *             elif t == NPY_ULONG:       f[0] = 76  #"L"
  *             elif t == NPY_LONGLONG:    f[0] = 113 #"q"
  *             elif t == NPY_ULONGLONG:   f[0] = 81  #"Q"             # <<<<<<<<<<<<<<
@@ -5495,7 +5619,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":860
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":860
  *             elif t == NPY_LONGLONG:    f[0] = 113 #"q"
  *             elif t == NPY_ULONGLONG:   f[0] = 81  #"Q"
  *             elif t == NPY_FLOAT:       f[0] = 102 #"f"             # <<<<<<<<<<<<<<
@@ -5513,7 +5637,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":861
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":861
  *             elif t == NPY_ULONGLONG:   f[0] = 81  #"Q"
  *             elif t == NPY_FLOAT:       f[0] = 102 #"f"
  *             elif t == NPY_DOUBLE:      f[0] = 100 #"d"             # <<<<<<<<<<<<<<
@@ -5531,7 +5655,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":862
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":862
  *             elif t == NPY_FLOAT:       f[0] = 102 #"f"
  *             elif t == NPY_DOUBLE:      f[0] = 100 #"d"
  *             elif t == NPY_LONGDOUBLE:  f[0] = 103 #"g"             # <<<<<<<<<<<<<<
@@ -5549,7 +5673,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":863
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":863
  *             elif t == NPY_DOUBLE:      f[0] = 100 #"d"
  *             elif t == NPY_LONGDOUBLE:  f[0] = 103 #"g"
  *             elif t == NPY_CFLOAT:      f[0] = 90; f[1] = 102; f += 1 # Zf             # <<<<<<<<<<<<<<
@@ -5569,7 +5693,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":864
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":864
  *             elif t == NPY_LONGDOUBLE:  f[0] = 103 #"g"
  *             elif t == NPY_CFLOAT:      f[0] = 90; f[1] = 102; f += 1 # Zf
  *             elif t == NPY_CDOUBLE:     f[0] = 90; f[1] = 100; f += 1 # Zd             # <<<<<<<<<<<<<<
@@ -5589,7 +5713,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":865
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":865
  *             elif t == NPY_CFLOAT:      f[0] = 90; f[1] = 102; f += 1 # Zf
  *             elif t == NPY_CDOUBLE:     f[0] = 90; f[1] = 100; f += 1 # Zd
  *             elif t == NPY_CLONGDOUBLE: f[0] = 90; f[1] = 103; f += 1 # Zg             # <<<<<<<<<<<<<<
@@ -5609,7 +5733,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":866
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":866
  *             elif t == NPY_CDOUBLE:     f[0] = 90; f[1] = 100; f += 1 # Zd
  *             elif t == NPY_CLONGDOUBLE: f[0] = 90; f[1] = 103; f += 1 # Zg
  *             elif t == NPY_OBJECT:      f[0] = 79 #"O"             # <<<<<<<<<<<<<<
@@ -5627,7 +5751,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":868
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":868
  *             elif t == NPY_OBJECT:      f[0] = 79 #"O"
  *             else:
  *                 raise ValueError(u"unknown dtype code in numpy.pxd (%d)" % t)             # <<<<<<<<<<<<<<
@@ -5651,7 +5775,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       }
       __pyx_L15:;
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":869
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":869
  *             else:
  *                 raise ValueError(u"unknown dtype code in numpy.pxd (%d)" % t)
  *             f += 1             # <<<<<<<<<<<<<<
@@ -5660,7 +5784,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
       __pyx_v_f = (__pyx_v_f + 1);
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":844
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":844
  *         offset[0] += child.itemsize
  * 
  *         if not PyDataType_HASFIELDS(child):             # <<<<<<<<<<<<<<
@@ -5670,7 +5794,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       goto __pyx_L13;
     }
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":873
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":873
  *             # Cython ignores struct boundary information ("T{...}"),
  *             # so don't output it
  *             f = _util_dtypestring(child, f, end, offset)             # <<<<<<<<<<<<<<
@@ -5683,7 +5807,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     }
     __pyx_L13:;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":818
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":818
  *     cdef tuple fields
  * 
  *     for childname in descr.names:             # <<<<<<<<<<<<<<
@@ -5693,7 +5817,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":874
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":874
  *             # so don't output it
  *             f = _util_dtypestring(child, f, end, offset)
  *     return f             # <<<<<<<<<<<<<<
@@ -5703,7 +5827,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
   __pyx_r = __pyx_v_f;
   goto __pyx_L0;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":809
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":809
  *         return ()
  * 
  * cdef inline char* _util_dtypestring(dtype descr, char* f, char* end, int* offset) except NULL:             # <<<<<<<<<<<<<<
@@ -5728,7 +5852,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":990
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":990
  * 
  * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
@@ -5743,7 +5867,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   int __pyx_t_2;
   __Pyx_RefNannySetupContext("set_array_base", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":992
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":992
  * cdef inline void set_array_base(ndarray arr, object base):
  *      cdef PyObject* baseptr
  *      if base is None:             # <<<<<<<<<<<<<<
@@ -5754,7 +5878,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":993
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":993
  *      cdef PyObject* baseptr
  *      if base is None:
  *          baseptr = NULL             # <<<<<<<<<<<<<<
@@ -5763,7 +5887,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
     __pyx_v_baseptr = NULL;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":992
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":992
  * cdef inline void set_array_base(ndarray arr, object base):
  *      cdef PyObject* baseptr
  *      if base is None:             # <<<<<<<<<<<<<<
@@ -5773,7 +5897,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
     goto __pyx_L3;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":995
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":995
  *          baseptr = NULL
  *      else:
  *          Py_INCREF(base) # important to do this before decref below!             # <<<<<<<<<<<<<<
@@ -5783,7 +5907,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   /*else*/ {
     Py_INCREF(__pyx_v_base);
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":996
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":996
  *      else:
  *          Py_INCREF(base) # important to do this before decref below!
  *          baseptr = <PyObject*>base             # <<<<<<<<<<<<<<
@@ -5794,7 +5918,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   }
   __pyx_L3:;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":997
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":997
  *          Py_INCREF(base) # important to do this before decref below!
  *          baseptr = <PyObject*>base
  *      Py_XDECREF(arr.base)             # <<<<<<<<<<<<<<
@@ -5803,7 +5927,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
   Py_XDECREF(__pyx_v_arr->base);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":998
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":998
  *          baseptr = <PyObject*>base
  *      Py_XDECREF(arr.base)
  *      arr.base = baseptr             # <<<<<<<<<<<<<<
@@ -5812,7 +5936,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
   __pyx_v_arr->base = __pyx_v_baseptr;
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":990
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":990
  * 
  * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
@@ -5824,7 +5948,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   __Pyx_RefNannyFinishContext();
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1000
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1000
  *      arr.base = baseptr
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -5838,7 +5962,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("get_array_base", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1001
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1001
  * 
  * cdef inline object get_array_base(ndarray arr):
  *     if arr.base is NULL:             # <<<<<<<<<<<<<<
@@ -5848,7 +5972,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   __pyx_t_1 = ((__pyx_v_arr->base == NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1002
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1002
  * cdef inline object get_array_base(ndarray arr):
  *     if arr.base is NULL:
  *         return None             # <<<<<<<<<<<<<<
@@ -5860,7 +5984,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
     __pyx_r = Py_None;
     goto __pyx_L0;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1001
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1001
  * 
  * cdef inline object get_array_base(ndarray arr):
  *     if arr.base is NULL:             # <<<<<<<<<<<<<<
@@ -5869,7 +5993,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
  */
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1004
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1004
  *         return None
  *     else:
  *         return <object>arr.base             # <<<<<<<<<<<<<<
@@ -5883,7 +6007,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
     goto __pyx_L0;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1000
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1000
  *      arr.base = baseptr
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -5898,7 +6022,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1009
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1009
  * # Versions of the import_* functions which are more suitable for
  * # Cython code.
  * cdef inline int import_array() except -1:             # <<<<<<<<<<<<<<
@@ -5919,7 +6043,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
   PyObject *__pyx_t_8 = NULL;
   __Pyx_RefNannySetupContext("import_array", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1010
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1010
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -5935,7 +6059,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1011
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1011
  * cdef inline int import_array() except -1:
  *     try:
  *         _import_array()             # <<<<<<<<<<<<<<
@@ -5944,7 +6068,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
  */
       __pyx_t_4 = _import_array(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 1011, __pyx_L3_error)
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1010
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1010
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -5958,7 +6082,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1012
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1012
  *     try:
  *         _import_array()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -5973,7 +6097,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GOTREF(__pyx_t_7);
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1013
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1013
  *         _import_array()
  *     except Exception:
  *         raise ImportError("numpy.core.multiarray failed to import")             # <<<<<<<<<<<<<<
@@ -5989,7 +6113,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     goto __pyx_L5_except_error;
     __pyx_L5_except_error:;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1010
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1010
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6004,7 +6128,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1009
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1009
  * # Versions of the import_* functions which are more suitable for
  * # Cython code.
  * cdef inline int import_array() except -1:             # <<<<<<<<<<<<<<
@@ -6027,7 +6151,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1015
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1015
  *         raise ImportError("numpy.core.multiarray failed to import")
  * 
  * cdef inline int import_umath() except -1:             # <<<<<<<<<<<<<<
@@ -6048,7 +6172,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
   PyObject *__pyx_t_8 = NULL;
   __Pyx_RefNannySetupContext("import_umath", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1016
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1016
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6064,7 +6188,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1017
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1017
  * cdef inline int import_umath() except -1:
  *     try:
  *         _import_umath()             # <<<<<<<<<<<<<<
@@ -6073,7 +6197,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
  */
       __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 1017, __pyx_L3_error)
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1016
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1016
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6087,7 +6211,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1018
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1018
  *     try:
  *         _import_umath()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -6102,7 +6226,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GOTREF(__pyx_t_7);
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1019
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1019
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
@@ -6118,7 +6242,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     goto __pyx_L5_except_error;
     __pyx_L5_except_error:;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1016
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1016
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6133,7 +6257,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1015
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1015
  *         raise ImportError("numpy.core.multiarray failed to import")
  * 
  * cdef inline int import_umath() except -1:             # <<<<<<<<<<<<<<
@@ -6156,7 +6280,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
   return __pyx_r;
 }
 
-/* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1021
+/* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1021
  *         raise ImportError("numpy.core.umath failed to import")
  * 
  * cdef inline int import_ufunc() except -1:             # <<<<<<<<<<<<<<
@@ -6177,7 +6301,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
   PyObject *__pyx_t_8 = NULL;
   __Pyx_RefNannySetupContext("import_ufunc", 0);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1022
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1022
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6193,7 +6317,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1023
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1023
  * cdef inline int import_ufunc() except -1:
  *     try:
  *         _import_umath()             # <<<<<<<<<<<<<<
@@ -6202,7 +6326,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
  */
       __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 1023, __pyx_L3_error)
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1022
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1022
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6216,7 +6340,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1024
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1024
  *     try:
  *         _import_umath()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -6230,7 +6354,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GOTREF(__pyx_t_7);
 
-      /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1025
+      /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1025
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
@@ -6244,7 +6368,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     goto __pyx_L5_except_error;
     __pyx_L5_except_error:;
 
-    /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1022
+    /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1022
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6259,7 +6383,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1021
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1021
  *         raise ImportError("numpy.core.umath failed to import")
  * 
  * cdef inline int import_ufunc() except -1:             # <<<<<<<<<<<<<<
@@ -19761,10 +19885,10 @@ static PyTypeObject __pyx_type___pyx_memoryviewslice = {
 };
 
 static PyMethodDef __pyx_methods[] = {
-  {"mean_absolute_difference", (PyCFunction)__pyx_pw_6gensim_6models_13_fastldamodel_3mean_absolute_difference, METH_VARARGS|METH_KEYWORDS, __pyx_doc_6gensim_6models_13_fastldamodel_2mean_absolute_difference},
-  {"logsumexp_2d", (PyCFunction)__pyx_pw_6gensim_6models_13_fastldamodel_5logsumexp_2d, METH_O, __pyx_doc_6gensim_6models_13_fastldamodel_4logsumexp_2d},
-  {"dirichlet_expectation_1d", (PyCFunction)__pyx_pw_6gensim_6models_13_fastldamodel_7dirichlet_expectation_1d, METH_O, __pyx_doc_6gensim_6models_13_fastldamodel_6dirichlet_expectation_1d},
-  {"dirichlet_expectation_2d", (PyCFunction)__pyx_pw_6gensim_6models_13_fastldamodel_9dirichlet_expectation_2d, METH_O, __pyx_doc_6gensim_6models_13_fastldamodel_8dirichlet_expectation_2d},
+  {"mean_absolute_difference", (PyCFunction)__pyx_pw_6gensim_6models_13_fastldamodel_5mean_absolute_difference, METH_VARARGS|METH_KEYWORDS, __pyx_doc_6gensim_6models_13_fastldamodel_4mean_absolute_difference},
+  {"logsumexp_2d", (PyCFunction)__pyx_pw_6gensim_6models_13_fastldamodel_7logsumexp_2d, METH_O, __pyx_doc_6gensim_6models_13_fastldamodel_6logsumexp_2d},
+  {"dirichlet_expectation_1d", (PyCFunction)__pyx_pw_6gensim_6models_13_fastldamodel_9dirichlet_expectation_1d, METH_O, __pyx_doc_6gensim_6models_13_fastldamodel_8dirichlet_expectation_1d},
+  {"dirichlet_expectation_2d", (PyCFunction)__pyx_pw_6gensim_6models_13_fastldamodel_11dirichlet_expectation_2d, METH_O, __pyx_doc_6gensim_6models_13_fastldamodel_10dirichlet_expectation_2d},
   {0, 0, 0, 0}
 };
 
@@ -19841,6 +19965,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_contiguous_and_indirect, __pyx_k_contiguous_and_indirect, sizeof(__pyx_k_contiguous_and_indirect), 0, 0, 1, 0},
   {&__pyx_n_s_dict, __pyx_k_dict, sizeof(__pyx_k_dict), 0, 0, 1, 1},
   {&__pyx_n_s_digamma, __pyx_k_digamma, sizeof(__pyx_k_digamma), 0, 0, 1, 1},
+  {&__pyx_n_s_dirichlet_expectation, __pyx_k_dirichlet_expectation, sizeof(__pyx_k_dirichlet_expectation), 0, 0, 1, 1},
   {&__pyx_n_s_dtype, __pyx_k_dtype, sizeof(__pyx_k_dtype), 0, 0, 1, 1},
   {&__pyx_n_s_dtype_is_object, __pyx_k_dtype_is_object, sizeof(__pyx_k_dtype_is_object), 0, 0, 1, 1},
   {&__pyx_n_s_encode, __pyx_k_encode, sizeof(__pyx_k_encode), 0, 0, 1, 1},
@@ -19911,8 +20036,8 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(0, 111, __pyx_L1_error)
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 113, __pyx_L1_error)
+  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 136, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(1, 823, __pyx_L1_error)
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 1013, __pyx_L1_error)
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(2, 146, __pyx_L1_error)
@@ -19930,18 +20055,18 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "gensim/models/_fastldamodel.pyx":111
+  /* "gensim/models/_fastldamodel.pyx":134
  * 
  *     if (a.shape[0] != b.shape[0]):
  *         raise ValueError("a and b must have same shape")             # <<<<<<<<<<<<<<
  * 
  *     for i in range(I):
  */
-  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_a_and_b_must_have_same_shape); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 111, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_a_and_b_must_have_same_shape); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 134, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":235
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":235
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not C contiguous")             # <<<<<<<<<<<<<<
@@ -19952,7 +20077,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":239
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":239
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not Fortran contiguous")             # <<<<<<<<<<<<<<
@@ -19963,7 +20088,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":276
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":276
  *                 if ((descr.byteorder == c'>' and little_endian) or
  *                     (descr.byteorder == c'<' and not little_endian)):
  *                     raise ValueError(u"Non-native byte order not supported")             # <<<<<<<<<<<<<<
@@ -19974,7 +20099,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__4);
   __Pyx_GIVEREF(__pyx_tuple__4);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":823
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":823
  * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")             # <<<<<<<<<<<<<<
@@ -19985,7 +20110,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":827
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":827
  *         if ((child.byteorder == c'>' and little_endian) or
  *             (child.byteorder == c'<' and not little_endian)):
  *             raise ValueError(u"Non-native byte order not supported")             # <<<<<<<<<<<<<<
@@ -19996,7 +20121,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__6);
   __Pyx_GIVEREF(__pyx_tuple__6);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":847
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":847
  *             t = child.type_num
  *             if end - f < 5:
  *                 raise RuntimeError(u"Format string allocated too short.")             # <<<<<<<<<<<<<<
@@ -20007,7 +20132,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1013
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1013
  *         _import_array()
  *     except Exception:
  *         raise ImportError("numpy.core.multiarray failed to import")             # <<<<<<<<<<<<<<
@@ -20018,7 +20143,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__8);
   __Pyx_GIVEREF(__pyx_tuple__8);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1019
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1019
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
@@ -20029,7 +20154,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
 
-  /* "../../../../../../../anaconda3/envs/gensim-dev/lib/python3.5/site-packages/Cython/Includes/numpy/__init__.pxd":1025
+  /* "../../../../../Anaconda3/envs/gensim-performance/lib/site-packages/Cython/Includes/numpy/__init__.pxd":1025
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
@@ -20244,14 +20369,26 @@ static int __Pyx_InitCachedConstants(void) {
   /* "gensim/models/_fastldamodel.pyx":11
  * 
  * 
+ * def dirichlet_expectation(x):             # <<<<<<<<<<<<<<
+ *     """
+ *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
+ */
+  __pyx_tuple__30 = PyTuple_Pack(1, __pyx_n_s_x); if (unlikely(!__pyx_tuple__30)) __PYX_ERR(0, 11, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__30);
+  __Pyx_GIVEREF(__pyx_tuple__30);
+  __pyx_codeobj__31 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__30, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_fastldamodel_pyx, __pyx_n_s_dirichlet_expectation, 11, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__31)) __PYX_ERR(0, 11, __pyx_L1_error)
+
+  /* "gensim/models/_fastldamodel.pyx":34
+ * 
+ * 
  * def digamma(DTYPE_t x):             # <<<<<<<<<<<<<<
  *     """
  *     Digamma function for positive floats
  */
-  __pyx_tuple__30 = PyTuple_Pack(2, __pyx_n_s_x, __pyx_n_s_x); if (unlikely(!__pyx_tuple__30)) __PYX_ERR(0, 11, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__30);
-  __Pyx_GIVEREF(__pyx_tuple__30);
-  __pyx_codeobj__31 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__30, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_fastldamodel_pyx, __pyx_n_s_digamma, 11, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__31)) __PYX_ERR(0, 11, __pyx_L1_error)
+  __pyx_tuple__32 = PyTuple_Pack(2, __pyx_n_s_x, __pyx_n_s_x); if (unlikely(!__pyx_tuple__32)) __PYX_ERR(0, 34, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__32);
+  __Pyx_GIVEREF(__pyx_tuple__32);
+  __pyx_codeobj__33 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__32, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_fastldamodel_pyx, __pyx_n_s_digamma, 34, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__33)) __PYX_ERR(0, 34, __pyx_L1_error)
 
   /* "View.MemoryView":284
  *         return self.name
@@ -20260,9 +20397,9 @@ static int __Pyx_InitCachedConstants(void) {
  * cdef strided = Enum("<strided and direct>") # default
  * cdef indirect = Enum("<strided and indirect>")
  */
-  __pyx_tuple__32 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct_or_indirect); if (unlikely(!__pyx_tuple__32)) __PYX_ERR(2, 284, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__32);
-  __Pyx_GIVEREF(__pyx_tuple__32);
+  __pyx_tuple__34 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct_or_indirect); if (unlikely(!__pyx_tuple__34)) __PYX_ERR(2, 284, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__34);
+  __Pyx_GIVEREF(__pyx_tuple__34);
 
   /* "View.MemoryView":285
  * 
@@ -20271,9 +20408,9 @@ static int __Pyx_InitCachedConstants(void) {
  * cdef indirect = Enum("<strided and indirect>")
  * 
  */
-  __pyx_tuple__33 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct); if (unlikely(!__pyx_tuple__33)) __PYX_ERR(2, 285, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__33);
-  __Pyx_GIVEREF(__pyx_tuple__33);
+  __pyx_tuple__35 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct); if (unlikely(!__pyx_tuple__35)) __PYX_ERR(2, 285, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__35);
+  __Pyx_GIVEREF(__pyx_tuple__35);
 
   /* "View.MemoryView":286
  * cdef generic = Enum("<strided and direct or indirect>")
@@ -20282,9 +20419,9 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  * 
  */
-  __pyx_tuple__34 = PyTuple_Pack(1, __pyx_kp_s_strided_and_indirect); if (unlikely(!__pyx_tuple__34)) __PYX_ERR(2, 286, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__34);
-  __Pyx_GIVEREF(__pyx_tuple__34);
+  __pyx_tuple__36 = PyTuple_Pack(1, __pyx_kp_s_strided_and_indirect); if (unlikely(!__pyx_tuple__36)) __PYX_ERR(2, 286, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__36);
+  __Pyx_GIVEREF(__pyx_tuple__36);
 
   /* "View.MemoryView":289
  * 
@@ -20293,9 +20430,9 @@ static int __Pyx_InitCachedConstants(void) {
  * cdef indirect_contiguous = Enum("<contiguous and indirect>")
  * 
  */
-  __pyx_tuple__35 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_direct); if (unlikely(!__pyx_tuple__35)) __PYX_ERR(2, 289, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__35);
-  __Pyx_GIVEREF(__pyx_tuple__35);
+  __pyx_tuple__37 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_direct); if (unlikely(!__pyx_tuple__37)) __PYX_ERR(2, 289, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__37);
+  __Pyx_GIVEREF(__pyx_tuple__37);
 
   /* "View.MemoryView":290
  * 
@@ -20304,19 +20441,19 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  * 
  */
-  __pyx_tuple__36 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_indirect); if (unlikely(!__pyx_tuple__36)) __PYX_ERR(2, 290, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__36);
-  __Pyx_GIVEREF(__pyx_tuple__36);
+  __pyx_tuple__38 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_indirect); if (unlikely(!__pyx_tuple__38)) __PYX_ERR(2, 290, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__38);
+  __Pyx_GIVEREF(__pyx_tuple__38);
 
   /* "(tree fragment)":1
  * def __pyx_unpickle_Enum(__pyx_type, long __pyx_checksum, __pyx_state):             # <<<<<<<<<<<<<<
  *     if __pyx_checksum != 0xb068931:
  *         from pickle import PickleError as __pyx_PickleError
  */
-  __pyx_tuple__37 = PyTuple_Pack(5, __pyx_n_s_pyx_type, __pyx_n_s_pyx_checksum, __pyx_n_s_pyx_state, __pyx_n_s_pyx_PickleError, __pyx_n_s_pyx_result); if (unlikely(!__pyx_tuple__37)) __PYX_ERR(2, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__37);
-  __Pyx_GIVEREF(__pyx_tuple__37);
-  __pyx_codeobj__38 = (PyObject*)__Pyx_PyCode_New(3, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__37, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_pyx_unpickle_Enum, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__38)) __PYX_ERR(2, 1, __pyx_L1_error)
+  __pyx_tuple__39 = PyTuple_Pack(5, __pyx_n_s_pyx_type, __pyx_n_s_pyx_checksum, __pyx_n_s_pyx_state, __pyx_n_s_pyx_PickleError, __pyx_n_s_pyx_result); if (unlikely(!__pyx_tuple__39)) __PYX_ERR(2, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__39);
+  __Pyx_GIVEREF(__pyx_tuple__39);
+  __pyx_codeobj__40 = (PyObject*)__Pyx_PyCode_New(3, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__39, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_pyx_unpickle_Enum, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__40)) __PYX_ERR(2, 1, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -20569,13 +20706,25 @@ static int __pyx_pymod_exec__fastldamodel(PyObject *__pyx_pyinit_module)
   /* "gensim/models/_fastldamodel.pyx":11
  * 
  * 
+ * def dirichlet_expectation(x):             # <<<<<<<<<<<<<<
+ *     """
+ *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_13_fastldamodel_1dirichlet_expectation, NULL, __pyx_n_s_gensim_models__fastldamodel); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 11, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_dirichlet_expectation, __pyx_t_2) < 0) __PYX_ERR(0, 11, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "gensim/models/_fastldamodel.pyx":34
+ * 
+ * 
  * def digamma(DTYPE_t x):             # <<<<<<<<<<<<<<
  *     """
  *     Digamma function for positive floats
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_13_fastldamodel_1digamma, NULL, __pyx_n_s_gensim_models__fastldamodel); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 11, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_13_fastldamodel_3digamma, NULL, __pyx_n_s_gensim_models__fastldamodel); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_digamma, __pyx_t_2) < 0) __PYX_ERR(0, 11, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_digamma, __pyx_t_2) < 0) __PYX_ERR(0, 34, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "gensim/models/_fastldamodel.pyx":1
@@ -20608,7 +20757,7 @@ static int __pyx_pymod_exec__fastldamodel(PyObject *__pyx_pyinit_module)
  * cdef strided = Enum("<strided and direct>") # default
  * cdef indirect = Enum("<strided and indirect>")
  */
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__32, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(2, 284, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__34, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(2, 284, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_XGOTREF(generic);
   __Pyx_DECREF_SET(generic, __pyx_t_2);
@@ -20622,7 +20771,7 @@ static int __pyx_pymod_exec__fastldamodel(PyObject *__pyx_pyinit_module)
  * cdef indirect = Enum("<strided and indirect>")
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__33, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(2, 285, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__35, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(2, 285, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_XGOTREF(strided);
   __Pyx_DECREF_SET(strided, __pyx_t_2);
@@ -20636,7 +20785,7 @@ static int __pyx_pymod_exec__fastldamodel(PyObject *__pyx_pyinit_module)
  * 
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__34, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(2, 286, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__36, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(2, 286, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_XGOTREF(indirect);
   __Pyx_DECREF_SET(indirect, __pyx_t_2);
@@ -20650,7 +20799,7 @@ static int __pyx_pymod_exec__fastldamodel(PyObject *__pyx_pyinit_module)
  * cdef indirect_contiguous = Enum("<contiguous and indirect>")
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__35, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(2, 289, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__37, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(2, 289, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_XGOTREF(contiguous);
   __Pyx_DECREF_SET(contiguous, __pyx_t_2);
@@ -20664,7 +20813,7 @@ static int __pyx_pymod_exec__fastldamodel(PyObject *__pyx_pyinit_module)
  * 
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__36, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(2, 290, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__38, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(2, 290, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_XGOTREF(indirect_contiguous);
   __Pyx_DECREF_SET(indirect_contiguous, __pyx_t_2);
@@ -20796,6 +20945,144 @@ static PyObject *__Pyx_GetBuiltinName(PyObject *name) {
 #endif
     }
     return result;
+}
+
+/* MemviewSliceInit */
+static int
+__Pyx_init_memviewslice(struct __pyx_memoryview_obj *memview,
+                        int ndim,
+                        __Pyx_memviewslice *memviewslice,
+                        int memview_is_new_reference)
+{
+    __Pyx_RefNannyDeclarations
+    int i, retval=-1;
+    Py_buffer *buf = &memview->view;
+    __Pyx_RefNannySetupContext("init_memviewslice", 0);
+    if (!buf) {
+        PyErr_SetString(PyExc_ValueError,
+            "buf is NULL.");
+        goto fail;
+    } else if (memviewslice->memview || memviewslice->data) {
+        PyErr_SetString(PyExc_ValueError,
+            "memviewslice is already initialized!");
+        goto fail;
+    }
+    if (buf->strides) {
+        for (i = 0; i < ndim; i++) {
+            memviewslice->strides[i] = buf->strides[i];
+        }
+    } else {
+        Py_ssize_t stride = buf->itemsize;
+        for (i = ndim - 1; i >= 0; i--) {
+            memviewslice->strides[i] = stride;
+            stride *= buf->shape[i];
+        }
+    }
+    for (i = 0; i < ndim; i++) {
+        memviewslice->shape[i]   = buf->shape[i];
+        if (buf->suboffsets) {
+            memviewslice->suboffsets[i] = buf->suboffsets[i];
+        } else {
+            memviewslice->suboffsets[i] = -1;
+        }
+    }
+    memviewslice->memview = memview;
+    memviewslice->data = (char *)buf->buf;
+    if (__pyx_add_acquisition_count(memview) == 0 && !memview_is_new_reference) {
+        Py_INCREF(memview);
+    }
+    retval = 0;
+    goto no_fail;
+fail:
+    memviewslice->memview = 0;
+    memviewslice->data = 0;
+    retval = -1;
+no_fail:
+    __Pyx_RefNannyFinishContext();
+    return retval;
+}
+#ifndef Py_NO_RETURN
+#define Py_NO_RETURN
+#endif
+static void __pyx_fatalerror(const char *fmt, ...) Py_NO_RETURN {
+    va_list vargs;
+    char msg[200];
+#ifdef HAVE_STDARG_PROTOTYPES
+    va_start(vargs, fmt);
+#else
+    va_start(vargs);
+#endif
+    vsnprintf(msg, 200, fmt, vargs);
+    va_end(vargs);
+    Py_FatalError(msg);
+}
+static CYTHON_INLINE int
+__pyx_add_acquisition_count_locked(__pyx_atomic_int *acquisition_count,
+                                   PyThread_type_lock lock)
+{
+    int result;
+    PyThread_acquire_lock(lock, 1);
+    result = (*acquisition_count)++;
+    PyThread_release_lock(lock);
+    return result;
+}
+static CYTHON_INLINE int
+__pyx_sub_acquisition_count_locked(__pyx_atomic_int *acquisition_count,
+                                   PyThread_type_lock lock)
+{
+    int result;
+    PyThread_acquire_lock(lock, 1);
+    result = (*acquisition_count)--;
+    PyThread_release_lock(lock);
+    return result;
+}
+static CYTHON_INLINE void
+__Pyx_INC_MEMVIEW(__Pyx_memviewslice *memslice, int have_gil, int lineno)
+{
+    int first_time;
+    struct __pyx_memoryview_obj *memview = memslice->memview;
+    if (!memview || (PyObject *) memview == Py_None)
+        return;
+    if (__pyx_get_slice_count(memview) < 0)
+        __pyx_fatalerror("Acquisition count is %d (line %d)",
+                         __pyx_get_slice_count(memview), lineno);
+    first_time = __pyx_add_acquisition_count(memview) == 0;
+    if (first_time) {
+        if (have_gil) {
+            Py_INCREF((PyObject *) memview);
+        } else {
+            PyGILState_STATE _gilstate = PyGILState_Ensure();
+            Py_INCREF((PyObject *) memview);
+            PyGILState_Release(_gilstate);
+        }
+    }
+}
+static CYTHON_INLINE void __Pyx_XDEC_MEMVIEW(__Pyx_memviewslice *memslice,
+                                             int have_gil, int lineno) {
+    int last_time;
+    struct __pyx_memoryview_obj *memview = memslice->memview;
+    if (!memview ) {
+        return;
+    } else if ((PyObject *) memview == Py_None) {
+        memslice->memview = NULL;
+        return;
+    }
+    if (__pyx_get_slice_count(memview) <= 0)
+        __pyx_fatalerror("Acquisition count is %d (line %d)",
+                         __pyx_get_slice_count(memview), lineno);
+    last_time = __pyx_sub_acquisition_count(memview) == 1;
+    memslice->data = NULL;
+    if (last_time) {
+        if (have_gil) {
+            Py_CLEAR(memslice->memview);
+        } else {
+            PyGILState_STATE _gilstate = PyGILState_Ensure();
+            Py_CLEAR(memslice->memview);
+            PyGILState_Release(_gilstate);
+        }
+    } else {
+        memslice->memview = NULL;
+    }
 }
 
 /* PyObjectCall */
@@ -21146,144 +21433,6 @@ bad:
 /* None */
 static CYTHON_INLINE void __Pyx_RaiseUnboundLocalError(const char *varname) {
     PyErr_Format(PyExc_UnboundLocalError, "local variable '%s' referenced before assignment", varname);
-}
-
-/* MemviewSliceInit */
-static int
-__Pyx_init_memviewslice(struct __pyx_memoryview_obj *memview,
-                        int ndim,
-                        __Pyx_memviewslice *memviewslice,
-                        int memview_is_new_reference)
-{
-    __Pyx_RefNannyDeclarations
-    int i, retval=-1;
-    Py_buffer *buf = &memview->view;
-    __Pyx_RefNannySetupContext("init_memviewslice", 0);
-    if (!buf) {
-        PyErr_SetString(PyExc_ValueError,
-            "buf is NULL.");
-        goto fail;
-    } else if (memviewslice->memview || memviewslice->data) {
-        PyErr_SetString(PyExc_ValueError,
-            "memviewslice is already initialized!");
-        goto fail;
-    }
-    if (buf->strides) {
-        for (i = 0; i < ndim; i++) {
-            memviewslice->strides[i] = buf->strides[i];
-        }
-    } else {
-        Py_ssize_t stride = buf->itemsize;
-        for (i = ndim - 1; i >= 0; i--) {
-            memviewslice->strides[i] = stride;
-            stride *= buf->shape[i];
-        }
-    }
-    for (i = 0; i < ndim; i++) {
-        memviewslice->shape[i]   = buf->shape[i];
-        if (buf->suboffsets) {
-            memviewslice->suboffsets[i] = buf->suboffsets[i];
-        } else {
-            memviewslice->suboffsets[i] = -1;
-        }
-    }
-    memviewslice->memview = memview;
-    memviewslice->data = (char *)buf->buf;
-    if (__pyx_add_acquisition_count(memview) == 0 && !memview_is_new_reference) {
-        Py_INCREF(memview);
-    }
-    retval = 0;
-    goto no_fail;
-fail:
-    memviewslice->memview = 0;
-    memviewslice->data = 0;
-    retval = -1;
-no_fail:
-    __Pyx_RefNannyFinishContext();
-    return retval;
-}
-#ifndef Py_NO_RETURN
-#define Py_NO_RETURN
-#endif
-static void __pyx_fatalerror(const char *fmt, ...) Py_NO_RETURN {
-    va_list vargs;
-    char msg[200];
-#ifdef HAVE_STDARG_PROTOTYPES
-    va_start(vargs, fmt);
-#else
-    va_start(vargs);
-#endif
-    vsnprintf(msg, 200, fmt, vargs);
-    va_end(vargs);
-    Py_FatalError(msg);
-}
-static CYTHON_INLINE int
-__pyx_add_acquisition_count_locked(__pyx_atomic_int *acquisition_count,
-                                   PyThread_type_lock lock)
-{
-    int result;
-    PyThread_acquire_lock(lock, 1);
-    result = (*acquisition_count)++;
-    PyThread_release_lock(lock);
-    return result;
-}
-static CYTHON_INLINE int
-__pyx_sub_acquisition_count_locked(__pyx_atomic_int *acquisition_count,
-                                   PyThread_type_lock lock)
-{
-    int result;
-    PyThread_acquire_lock(lock, 1);
-    result = (*acquisition_count)--;
-    PyThread_release_lock(lock);
-    return result;
-}
-static CYTHON_INLINE void
-__Pyx_INC_MEMVIEW(__Pyx_memviewslice *memslice, int have_gil, int lineno)
-{
-    int first_time;
-    struct __pyx_memoryview_obj *memview = memslice->memview;
-    if (!memview || (PyObject *) memview == Py_None)
-        return;
-    if (__pyx_get_slice_count(memview) < 0)
-        __pyx_fatalerror("Acquisition count is %d (line %d)",
-                         __pyx_get_slice_count(memview), lineno);
-    first_time = __pyx_add_acquisition_count(memview) == 0;
-    if (first_time) {
-        if (have_gil) {
-            Py_INCREF((PyObject *) memview);
-        } else {
-            PyGILState_STATE _gilstate = PyGILState_Ensure();
-            Py_INCREF((PyObject *) memview);
-            PyGILState_Release(_gilstate);
-        }
-    }
-}
-static CYTHON_INLINE void __Pyx_XDEC_MEMVIEW(__Pyx_memviewslice *memslice,
-                                             int have_gil, int lineno) {
-    int last_time;
-    struct __pyx_memoryview_obj *memview = memslice->memview;
-    if (!memview ) {
-        return;
-    } else if ((PyObject *) memview == Py_None) {
-        memslice->memview = NULL;
-        return;
-    }
-    if (__pyx_get_slice_count(memview) <= 0)
-        __pyx_fatalerror("Acquisition count is %d (line %d)",
-                         __pyx_get_slice_count(memview), lineno);
-    last_time = __pyx_sub_acquisition_count(memview) == 1;
-    memslice->data = NULL;
-    if (last_time) {
-        if (have_gil) {
-            Py_CLEAR(memslice->memview);
-        } else {
-            PyGILState_STATE _gilstate = PyGILState_Ensure();
-            Py_CLEAR(memslice->memview);
-            PyGILState_Release(_gilstate);
-        }
-    } else {
-        memslice->memview = NULL;
-    }
 }
 
 /* GetModuleGlobalName */

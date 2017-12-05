@@ -42,7 +42,7 @@ from six.moves import xrange
 from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
-from gensim.models._fastldamodel import dirichlet_expectation_1d, dirichlet_expectation_2d
+from gensim.models._fastldamodel import dirichlet_expectation
 from gensim.models._fastldamodel import logsumexp_2d as logsumexp
 from gensim.models._fastldamodel import mean_absolute_difference
 
@@ -51,12 +51,6 @@ from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
 
 logger = logging.getLogger('gensim.models.ldamodel')
-
-def dirichlet_expectation(x):
-    if x.ndim > 1:
-        return dirichlet_expectation_2d(x)
-    else:
-        return dirichlet_expectation_1d(x)
 
 
 def update_dir_prior(prior, N, logphat, rho):

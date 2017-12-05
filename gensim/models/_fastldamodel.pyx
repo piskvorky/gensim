@@ -8,6 +8,29 @@ cimport cython
 from cython.parallel import prange
 
 
+def dirichlet_expectation(x):
+    """
+    Expected value of log(theta) where theta is drawn from a Dirichlet distribution
+    
+    Parameters
+    ----------
+    alpha : array_like
+        Dirichlet parameter vector.  
+        If 2d, each row is treated as a separate parameter vector
+    
+    Returns
+    -------
+    array_like
+        log of expected values
+
+    """
+
+    if x.ndim > 1:
+        return dirichlet_expectation_2d(x)
+    else:
+        return dirichlet_expectation_1d(x)
+
+
 def digamma(DTYPE_t x):
     """
     Digamma function for positive floats
