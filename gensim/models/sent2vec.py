@@ -18,7 +18,8 @@ The sentence vectors are stored in a numpy array::
 You can perform the NLP similarity task with the model::
   >>> model.similarity(['This', 'is', 'an', 'awesome', 'gift'], ['This', 'present', 'is', 'great'])
   0.792567220458
-.. [1] Matteo Pagliardini, Prakhar Gupta, Martin Jaggi. Unsupervised Learning of Sentence Embeddings using Compositional n-Gram Features arXiv.
+.. [1] Matteo Pagliardini, Prakhar Gupta, Martin Jaggi.
+Unsupervised Learning of Sentence Embeddings using Compositional n-Gram Features arXiv.
 """
 from __future__ import division
 import logging
@@ -592,7 +593,6 @@ class Sent2Vec(SaveLoad):
                 lr = self.lr * (1.0 - progress)
                 ntokens_temp, hashes, words = self.dict.get_line(sentence)
                 local_token_count += ntokens_temp
-                #print sentence
                 if len(words) > 1:
                     for i in range(len(words)):
                         if self.random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
