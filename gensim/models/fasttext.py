@@ -228,7 +228,7 @@ class FastText(Word2Vec):
 
     def get_vocab_word_vecs(self):
         for w, v in self.wv.vocab.items():
-            word_vec = self.wv.syn0_vocab[v.index]
+            word_vec = np.copy(self.wv.syn0_vocab[v.index])
             ngrams = self.wv.ngrams_word[w]
             ngram_weights = self.wv.syn0_ngrams
             for ngram in ngrams:
