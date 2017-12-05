@@ -207,7 +207,8 @@ class PhrasesTransformation(interfaces.TransformationABC):
                     logger.info('setting scoring method to npmi_scorer pluggable scoring method for compatibility')
                     model.scoring = npmi_scorer
                 else:
-                    raise ValueError('failed to load %s model with unknown scoring setting %s' % (cls.__name__, model.scoring))
+                    raise ValueError(
+                        'failed to load %s model with unknown scoring setting %s' % (cls.__name__, model.scoring))
         # if there is non common_terms attribute, initialize
         if not hasattr(model, "common_terms"):
             logger.info('older version of %s loaded without common_terms attribute', cls.__name__)
