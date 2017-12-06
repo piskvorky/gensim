@@ -19,8 +19,8 @@ csv-like format, or a Python iterable of relations.
 .. [1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
     https://arxiv.org/abs/1705.08039
 
-Examples:
----------
+Examples
+--------
 Initialize and train a model from a list:
 
 >>> from gensim.models.poincare import PoincareModel
@@ -193,7 +193,7 @@ class PoincareModel(utils.SaveLoad):
         """Returns candidate negatives of size `self.negative` from the negative examples buffer.
 
         Returns
-        --------
+        -------
         numpy.array
             Array of shape (`self.negative`,) containing indices of negative nodes.
 
@@ -215,7 +215,7 @@ class PoincareModel(utils.SaveLoad):
             Index of the positive node for which negative samples are to be returned.
 
         Returns
-        --------
+        -------
         numpy.array
             Array of shape (self.negative,) containing indices of negative nodes for the given node index.
 
