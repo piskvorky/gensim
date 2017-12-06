@@ -34,6 +34,7 @@ A tutorial can be found at https://github.com/RaRe-Technologies/gensim/tree/deve
 # and do_estep methods.
 
 import logging
+import traceback
 import numpy as np  # for arrays, array broadcasting etc.
 from copy import deepcopy
 from shutil import copyfile
@@ -881,6 +882,98 @@ class AuthorTopicModel(LdaModel):
         """
 
         raise NotImplementedError('Method "get_document_topics" is not valid for the author-topic model. Use the "get_author_topics" method.')
+
+    def get_new_author_topics(self, corpus, minimum_probability=None):
+        """
+        Infers a topic distribution for a new author over the passed corpus of docs,
+        assuming that all documents are from this single new author.
+
+        Args:
+            corpus (list): Bag-of-words representation of the documents to get topics for.
+            minimum_probability (float): Ignore topics with probability below this value
+                (None by default). If set to None, a value of 1e-8 is used to prevent 0s.
+        Returns:
+            topic distribution for the given list of documents `corpus` in bow format,
+            as a list of `(topic_id, topic_probability)` 2-tuples.
+        """
+
+        #use the training hyperparameters from the model initialization
+        passes = self.passes
+
+        #TODO: how should this function look like for get_new_author_topics?
+        def rho():
+            return pow(self.offset + 1 + 1, -self.decay)
+
+        #wrap in fuction to avoid code duplication
+        def rollback_new_author_chages():
+            self.state.gamma = self.state.gamma[0:-1]
+            for doc in corpus:
+                self.corpus.remove(doc)
+
+            del self.author2doc[new_author_name]
+            a_id = self.author2id[new_author_name]
+            del self.id2author[a_id]
+            del self.author2id[new_author_name]
+
+            for new_doc_id in corpus_doc_idx:
+                del self.doc2author[new_doc_id]
+
+            self.total_docs -= len_input_corpus
+            self.num_authors -= num_new_authors
+
+        try:
+            len_input_corpus = len(corpus)
+        except TypeError:
+            logger.warning("input corpus stream has no len(); counting documents")
+            len_input_corpus = sum(1 for _ in corpus)
+        if len_input_corpus == 0:
+            logger.warning("AuthorTopicModel.get_new_author_topics() called with an empty corpus")
+            return
+        if not len_input_corpus < self.chunksize:
+            logger.warning("AuthorTopicModel.get_new_author_topics() called with to many documents. Use update().")
+            return
+
+        new_author_name = "placeholder_name"
+
+        # Add new documents in corpus to self.corpus.
+        self.extend_corpus(corpus)
+
+        corpus_doc_idx = list(range(self.total_docs, len_input_corpus+self.total_docs))
+        #increment number of total docs
+        self.total_docs += len_input_corpus
+
+        # Add the new placeholder author to author2id/id2author dictionaries.
+        num_new_authors = 1
+        author_id = 0
+        self.author2id[new_author_name] = author_id + self.num_authors
+        self.id2author[author_id + self.num_authors] = new_author_name
+
+        # Increment the number of total authors seen.
+        self.num_authors += num_new_authors
+
+        #add new author in author2doc and doc into doc2author
+        self.author2doc[new_author_name] = corpus_doc_idx
+        for new_doc_id in corpus_doc_idx:
+            self.doc2author[new_doc_id] = [new_author_name]
+
+        gamma_new = self.random_state.gamma(100., 1. / 100., (num_new_authors, self.num_topics))
+        self.state.gamma = np.vstack([self.state.gamma, gamma_new])
+
+        # should not record the sstats, as we are goint to delete the new author after calculated
+        try:
+            gammat, _ = self.inference(
+                corpus, self.author2doc, self.doc2author, rho(),
+                collect_sstats=False, chunk_doc_idx=corpus_doc_idx
+            )
+        except Exception as e:
+            #something went wrong! Rollback temporary changes in object and log
+            rollback_new_author_chages()
+            logging.error(traceback.format_exc())
+            return
+
+        new_author_topics = self.get_author_topics(new_author_name, minimum_probability)
+        rollback_new_author_chages()
+        return new_author_topics
 
     def get_author_topics(self, author_name, minimum_probability=None):
         """
