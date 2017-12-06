@@ -138,8 +138,7 @@ class FastTextKeyedVectors(KeyedVectors):
             return any(ng in self.ngrams for ng in char_ngrams)
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                             limit=None, datatype=REAL):
+    def load_word2vec_format(cls, *args, **kwargs):
         """Not suppported. Use gensim.models.KeyedVectors.load_word2vec_format instead."""
         raise NotImplementedError("Not supported. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
 
