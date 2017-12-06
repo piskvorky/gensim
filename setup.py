@@ -229,6 +229,7 @@ distributed_env = ['Pyro4 >= 4.27']
 win_testenv = [
     'pytest',
     'pytest-rerunfailures',
+    'mock',
     'cython',
     'pyemd',
     'testfixtures',
@@ -303,7 +304,7 @@ setup(
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon'],
+        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly'],
     },
 
     include_package_data=True,

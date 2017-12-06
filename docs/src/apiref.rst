@@ -45,6 +45,7 @@ Modules:
     models/doc2vec
     models/fasttext
     models/phrases
+    models/poincare
     models/coherencemodel
     models/basemodel
     models/callbacks
@@ -91,3 +92,4 @@ Modules:
     summarization/summariser
     summarization/syntactic_unit
     summarization/textcleaner
+    viz/poincare
