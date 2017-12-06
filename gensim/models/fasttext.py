@@ -173,12 +173,12 @@ class FastText(Word2Vec):
             new_vocab_rows = rand_obj.uniform(
                 -1.0 / self.vector_size, 1.0 / self.vector_size,
                 (len(self.wv.vocab) - self.old_vocab_len, self.vector_size)
-            )
+            ).astype(REAL)
             new_vocab_lockf_rows = ones((len(self.wv.vocab) - self.old_vocab_len, self.vector_size), dtype=REAL)
             new_ngram_rows = rand_obj.uniform(
                 -1.0 / self.vector_size, 1.0 / self.vector_size,
                 (len(self.wv.hash2index) - self.old_hash2index_len, self.vector_size)
-            )
+            ).astype(REAL)
             new_ngram_lockf_rows = ones(
                 (len(self.wv.hash2index) - self.old_hash2index_len, self.vector_size), dtype=REAL
             )
@@ -194,11 +194,11 @@ class FastText(Word2Vec):
         for index in range(len(self.wv.vocab)):
             self.wv.syn0_vocab[index] = rand_obj.uniform(
                 -1.0 / self.vector_size, 1.0 / self.vector_size, self.vector_size
-            )
+            ).astype(REAL)
         for index in range(len(self.wv.hash2index)):
             self.wv.syn0_ngrams[index] = rand_obj.uniform(
                 -1.0 / self.vector_size, 1.0 / self.vector_size, self.vector_size
-            )
+            ).astype(REAL)
 
     def _do_train_job(self, sentences, alpha, inits):
         work, neu1 = inits
@@ -228,7 +228,7 @@ class FastText(Word2Vec):
 
     def get_vocab_word_vecs(self):
         for w, v in self.wv.vocab.items():
-            word_vec = self.wv.syn0_vocab[v.index]
+            word_vec = np.copy(self.wv.syn0_vocab[v.index])
             ngrams = self.wv.ngrams_word[w]
             ngram_weights = self.wv.syn0_ngrams
             for ngram in ngrams:
