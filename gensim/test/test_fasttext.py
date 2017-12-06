@@ -9,6 +9,7 @@ import struct
 import numpy as np
 
 from gensim import utils
+from gensim.models import keyedvectors
 from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
@@ -464,6 +465,17 @@ class TestFastTextModel(unittest.TestCase):
         original_syn0_vocab = np.copy(model.wv.syn0_vocab)
         model.get_vocab_word_vecs()
         self.assertTrue(np.all(np.equal(model.wv.syn0_vocab, original_syn0_vocab)))
+
+    def test_persistence_word2vec_format(self):
+        """Test storing/loading the model in word2vec format."""
+        tmpf = get_tmpfile('gensim_fasttext_w2v_format.tst')
+        model = FT_gensim(sentences, min_count=1, size=10)
+        model.wv.save_word2vec_format(tmpf, binary=True)
+        loaded_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
+        self.assertEqual(len(model.wv.vocab), len(loaded_model_kv.vocab))
+        self.assertTrue(np.allclose(model['human'], loaded_model_kv['human']))
+        self.assertRaises(DeprecationWarning, FT_gensim.load_word2vec_format, tmpf)
+        self.assertRaises(NotImplementedError, FastTextKeyedVectors.load_word2vec_format, tmpf)
 
 
 if __name__ == '__main__':
