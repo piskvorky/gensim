@@ -53,6 +53,24 @@ except ImportError:
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from fasttext_inner instead.
 
+        Parameters
+        ----------
+        model : :class:`~gensim.models.fasttext.FastText`
+            instance of class `FastText`.
+        sentences : iterator or list
+            list or an iterable that streams the sentences directly from disk/network.
+        alpha : float
+            learning rate
+        work : `ndarray`
+            private working memory for each worker.
+        neu1 : `ndarray`
+            private working memory for each worker.
+
+        Returns
+        -------
+        int
+            effective number of words trained.
+
         """
         result = 0
         for sentence in sentences:
@@ -96,6 +114,24 @@ except ImportError:
 
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from fasttext_inner instead.
+
+        Parameters
+        ----------
+        model : :class:`~gensim.models.fasttext.FastText`
+            instance of class `FastText`.
+        sentences : iterator or list
+            list or an iterable that streams the sentences directly from disk/network.
+        alpha : float
+            learning rate
+        work : `ndarray`
+            private working memory for each worker.
+        neu1 : `ndarray`
+            private working memory for each worker.
+
+        Returns
+        -------
+        int
+            effective number of words trained.
 
         """
         result = 0
@@ -145,69 +181,72 @@ class FastText(Word2Vec):
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
 
-        `sg` defines the training algorithm. By default (`sg=0`), CBOW is used.
-        Otherwise (`sg=1`), skip-gram is employed.
-
-        `size` is the dimensionality of the feature vectors.
-
-        `window` is the maximum distance between the current and predicted word within a sentence.
-
-        `alpha` is the initial learning rate (will linearly drop to `min_alpha` as training progresses).
-
-        `seed` = for the random number generator. Initial vectors for each
-        word are seeded with a hash of the concatenation of word + str(seed).
-        Note that for a fully deterministically-reproducible run, you must also limit the model to
-        a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
-        3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
-        environment variable to control hash randomization.)
-
-        `min_count` = ignore all words with total frequency lower than this.
-
-        `max_vocab_size` = limit RAM during vocabulary building; if there are more unique
-        words than this, then prune the infrequent ones. Every 10 million word types
-        need about 1GB of RAM. Set to `None` for no limit (default).
-
-        `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
+        Parameters
+        ----------
+        sg : int {1,0}
+            Defines the training algorithm. By default (`sg=0`), CBOW is used.
+            Otherwise (`sg=1`), skip-gram is employed.
+        size : int
+            Dimensionality of the feature vectors.
+        window : int
+            The maximum distance between the current and predicted word within a sentence.
+        alpha : float
+            The initial learning rate (will linearly drop to `min_alpha` as training progresses).
+        seed : int
+            Seed for the random number generator. Initial vectors for each
+            word are seeded with a hash of the concatenation of word + str(seed).
+            Note that for a fully deterministically-reproducible run, you must also limit the model to
+            a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
+            3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
+            environment variable to control hash randomization.)
+        min_count : int
+            Ignores all words with total frequency lower than this.
+        max_vocab_size : int
+            Limits the RAM during vocabulary building; if there are more unique
+            words than this, then prune the infrequent ones. Every 10 million word types
+            need about 1GB of RAM. Set to `None` for no limit (default).
+        sample : float
+            The threshold for configuring which higher-frequency words are randomly downsampled;
             default is 1e-3, useful range is (0, 1e-5).
-
-        `workers` = use this many worker threads to train the model (=faster training with multicore machines).
-
-        `hs` = if 1, hierarchical softmax will be used for model training.
-        If set to 0 (default), and `negative` is non-zero, negative sampling will be used.
-
-        `negative` = if > 0, negative sampling will be used, the int for negative
-        specifies how many "noise words" should be drawn (usually between 5-20).
-        Default is 5. If set to 0, no negative samping is used.
-
-        `cbow_mean` = if 0, use the sum of the context word vectors. If 1 (default), use the mean.
-        Only applies when cbow is used.
-
-        `hashfxn` = hash function to use to randomly initialize weights, for increased
-        training reproducibility. Default is Python's rudimentary built in hash function.
-
-        `iter` = number of iterations (epochs) over the corpus. Default is 5.
-
-        `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
-        in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
-        Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
-        returns either `utils.RULE_DISCARD`, `utils.RULE_KEEP` or `utils.RULE_DEFAULT`.
-        Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
-        of the model.
-
-        `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
-        assigning word indexes.
-
-        `batch_words` = target size (in words) for batches of examples passed to worker threads (and
-        thus cython routines). Default is 10000. (Larger batches will be passed if individual
-        texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
-
-        `min_n` = min length of char ngrams to be used for training word representations. Default is 3.
-
-        `max_n` = max length of char ngrams to be used for training word representations. Set `max_n` to be
-        lesser than `min_n` to avoid char ngrams being used. Default is 6.
-
-        `bucket` = Word and character ngram features are hashed into a fixed number of buckets, in order to limit the
-        memory usage of the model. This option specifies the number of buckets used by the model. Default: 2000000
+        workers : int
+            Use these many worker threads to train the model (=faster training with multicore machines).
+        hs : int {1,0}
+            If 1, hierarchical softmax will be used for model training.
+            If set to 0 (default), and `negative` is non-zero, negative sampling will be used.
+        negative : int
+            If > 0, negative sampling will be used, the int for negative
+            specifies how many "noise words" should be drawn (usually between 5-20).
+            Default is 5. If set to 0, no negative samping is used.
+        cbow_mean : int {1,0}
+            If 0, use the sum of the context word vectors. If 1 (default), use the mean.
+            Only applies when cbow is used.
+        hashfxn : :func:
+            Hash function to use to randomly initialize weights, for increased
+            training reproducibility. Default is Python's rudimentary built in hash function.
+        iter : int
+            Number of iterations (epochs) over the corpus. Default is 5.
+        trim_rule : :func:
+            Vocabulary trimming rule, specifies whether certain words should remain
+            in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
+            Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+            returns either `utils.RULE_DISCARD`, `utils.RULE_KEEP` or `utils.RULE_DEFAULT`.
+            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+            of the model.
+        sorted_vocab : int {1,0}
+            If 1 (default), sort the vocabulary by descending frequency before
+            assigning word indexes.
+        batch_words : int
+            Target size (in words) for batches of examples passed to worker threads (and
+            thus cython routines). Default is 10000. (Larger batches will be passed if individual
+            texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
+        min_n : int
+            Min length of char ngrams to be used for training word representations. Default is 3.
+        max_n : int
+            Max length of char ngrams to be used for training word representations. Set `max_n` to be
+            lesser than `min_n` to avoid char ngrams being used. Default is 6.
+        bucket : long
+            Word and character ngram features are hashed into a fixed number of buckets, in order to limit the
+            memory usage of the model. This option specifies the number of buckets used by the model. Default: 2000000
 
         Example
         -------
@@ -334,7 +373,8 @@ class FastText(Word2Vec):
 
     def reset_ngram_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the
-        existing vocabulary and their ngrams."""
+        existing vocabulary and their ngrams.
+        """
         rand_obj = np.random
         rand_obj.seed(self.seed)
         for index in range(len(self.wv.vocab)):
