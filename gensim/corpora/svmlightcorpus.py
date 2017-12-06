@@ -137,7 +137,7 @@ class SvmLightCorpus(IndexedCorpus):
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())[0]
-            # TODO: it brokes if gets None from line2doc
+            # TODO: it brakes if gets None from line2doc
 
     def line2doc(self, line):
         """Create a document from a single line (string) in SVMlight format.
