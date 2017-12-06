@@ -14,13 +14,10 @@ import unittest
 
 import six
 
-from gensim import utils
+from gensim.utils import to_unicode
 from gensim.models.phrases import SentenceAnalyzer, Phrases, Phraser
 from gensim.models.phrases import pseudocorpus, original_scorer
-from gensim.test.utils import common_texts, temporary_file
-
-
-TEST_DATA = os.path.join(os.path.dirname(__file__), 'test_data')
+from gensim.test.utils import common_texts, temporary_file, datapath
 
 
 class TestUtils(unittest.TestCase):
@@ -140,7 +137,7 @@ class PhrasesData:
     sentences = common_texts + [
         ['graph', 'minors', 'survey', 'human', 'interface']
     ]
-    unicode_sentences = [[utils.to_unicode(w) for w in sentence] for sentence in sentences]
+    unicode_sentences = [[to_unicode(w) for w in sentence] for sentence in sentences]
     common_terms = frozenset()
 
     bigram1 = u'response_time'
@@ -374,7 +371,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
     def testSaveLoadStringScoring(self):
         """ Saving and loading a Phrases object with a string scoring parameter.
         This should ensure backwards compatibility with the previous version of Phrases"""
-        bigram_loaded = Phrases.load(os.path.join(TEST_DATA, "phrases-scoring-str.pkl"))
+        bigram_loaded = Phrases.load(datapath("phrases-scoring-str.pkl"))
         seen_scores = set()
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
         for phrase, score in bigram_loaded.export_phrases(test_sentences):
@@ -389,7 +386,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
         """ Saving and loading a Phrases object with no scoring parameter.
         This should ensure backwards compatibility with old versions of Phrases"""
 
-        bigram_loaded = Phrases.load(os.path.join(TEST_DATA, "phrases-no-scoring.pkl"))
+        bigram_loaded = Phrases.load(datapath("phrases-no-scoring.pkl"))
         seen_scores = set()
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
         for phrase, score in bigram_loaded.export_phrases(test_sentences):
@@ -402,7 +399,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
 
     def testSaveLoadNoCommonTerms(self):
         """ Ensure backwards compatibility with old versions of Phrases, before common_terms"""
-        bigram_loaded = Phrases.load(os.path.join(TEST_DATA, "phrases-no-common-terms.pkl"))
+        bigram_loaded = Phrases.load(datapath("phrases-no-common-terms.pkl"))
         self.assertEqual(bigram_loaded.common_terms, frozenset())
         # can make a phraser, cf #1751
         phraser = Phraser(bigram_loaded)  # does not raise
@@ -435,20 +432,20 @@ class TestPhraserPersistence(PhrasesData, unittest.TestCase):
     def testSaveLoadStringScoring(self):
         """ Saving and loading a Phraser object with a string scoring parameter.
         This should ensure backwards compatibility with the previous version of Phraser"""
-        bigram_loaded = Phraser.load(os.path.join(TEST_DATA, "phraser-scoring-str.pkl"))
+        bigram_loaded = Phraser.load(datapath("phraser-scoring-str.pkl"))
         # we do not much with scoring, just verify its the one expected
         self.assertEqual(bigram_loaded.scoring, original_scorer)
 
     def testSaveLoadNoScoring(self):
         """ Saving and loading a Phraser object with no scoring parameter.
         This should ensure backwards compatibility with old versions of Phraser"""
-        bigram_loaded = Phraser.load(os.path.join(TEST_DATA, "phraser-no-scoring.pkl"))
+        bigram_loaded = Phraser.load(datapath("phraser-no-scoring.pkl"))
         # we do not much with scoring, just verify its the one expected
         self.assertEqual(bigram_loaded.scoring, original_scorer)
 
     def testSaveLoadNoCommonTerms(self):
         """ Ensure backwards compatibility with old versions of Phraser, before common_terms"""
-        bigram_loaded = Phraser.load(os.path.join(TEST_DATA, "phraser-no-common-terms.pkl"))
+        bigram_loaded = Phraser.load(datapath("phraser-no-common-terms.pkl"))
         self.assertEqual(bigram_loaded.common_terms, frozenset())
 
 
@@ -489,7 +486,7 @@ class CommonTermsPhrasesData:
         ['data', 'and', 'graph', 'survey'],
         ['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']  # test bigrams within same sentence
     ]
-    unicode_sentences = [[utils.to_unicode(w) for w in sentence] for sentence in sentences]
+    unicode_sentences = [[to_unicode(w) for w in sentence] for sentence in sentences]
     common_terms = ['of', 'and', 'for']
 
     bigram1 = u'lack_of_interest'
