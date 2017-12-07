@@ -501,7 +501,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w.
             # phinorm is the normalizer.
             # TODO treat zeros explicitly, instead of adding 1e-100?
-            eps = 1e-100 if self.dtype == np.float64 else (1e-35 if self.dtype == np.float32 else 1e-5)
+            dtype_to_eps = {
+                np.float16: 1e-5,
+                np.float32: 1e-35,
+                np.float64: 1e-100,
+            }
+            eps = dtype_to_eps[self.dtype]
             phinorm = np.dot(expElogthetad, expElogbetad) + eps
 
             # Iterate between gamma and phi until convergence
