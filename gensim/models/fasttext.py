@@ -138,7 +138,7 @@ class FastText(Word2Vec):
             ngram_indices = []
             new_hash_count = 0
             for i, ngram in enumerate(all_ngrams):
-                ngram_hash = ft_hash(ngram)
+                ngram_hash = ft_hash(ngram) % self.bucket
                 if ngram_hash in self.wv.hash2index:
                     self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
                 else:
@@ -160,7 +160,7 @@ class FastText(Word2Vec):
             logger.info("Number of new ngrams is %d", len(new_ngrams))
             new_hash_count = 0
             for i, ngram in enumerate(new_ngrams):
-                ngram_hash = ft_hash(ngram)
+                ngram_hash = ft_hash(ngram) % self.bucket
                 if ngram_hash not in self.wv.hash2index:
                     self.wv.hash2index[ngram_hash] = new_hash_count + self.old_hash2index_len
                     self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]

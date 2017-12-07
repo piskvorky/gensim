@@ -477,6 +477,13 @@ class TestFastTextModel(unittest.TestCase):
         self.assertRaises(DeprecationWarning, FT_gensim.load_word2vec_format, tmpf)
         self.assertRaises(NotImplementedError, FastTextKeyedVectors.load_word2vec_format, tmpf)
 
+    def test_bucket_ngrams(self):
+        model = FT_gensim(size=10, min_count=1, bucket=20)
+        model.build_vocab(sentences)
+        self.assertEqual(model.wv.syn0_ngrams.shape, (20, 10))
+        model.build_vocab(new_sentences, update=True)
+        self.assertEqual(model.wv.syn0_ngrams.shape, (20, 10))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
