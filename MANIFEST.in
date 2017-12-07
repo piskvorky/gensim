@@ -10,3 +10,5 @@ include gensim/models/word2vec_inner.pyx
 include gensim/models/word2vec_inner.pxd
 include gensim/models/doc2vec_inner.c
 include gensim/models/doc2vec_inner.pyx
+include gensim/models/fasttext_inner.c
+include gensim/models/fasttext_inner.pyx
