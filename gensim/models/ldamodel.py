@@ -286,6 +286,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> lda = LdaModel(corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
+        if dtype not in {np.float16, np.float32, np.float64}:
+            raise ValueError("Incorrect 'dtype', please choice one of numpy.float16, numpy.float32 or numpy.float64")
+
         self.dtype = dtype
 
         # store user-supplied parameters
@@ -498,7 +501,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w.
             # phinorm is the normalizer.
             # TODO treat zeros explicitly, instead of adding 1e-100?
-            phinorm = np.dot(expElogthetad, expElogbetad) + 1e-100
+            eps = 1e-100 if self.dtype == np.float64 else (1e-35 if self.dtype == np.float32 else 1e-5)
+            phinorm = np.dot(expElogthetad, expElogbetad) + eps
 
             # Iterate between gamma and phi until convergence
             for _ in xrange(self.iterations):
@@ -509,7 +513,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 gammad = self.alpha + expElogthetad * np.dot(cts / phinorm, expElogbetad.T)
                 Elogthetad = dirichlet_expectation(gammad)
                 expElogthetad = np.exp(Elogthetad)
-                phinorm = np.dot(expElogthetad, expElogbetad) + 1e-100
+                phinorm = np.dot(expElogthetad, expElogbetad) + eps
                 # If gamma hasn't changed much, we're done.
                 meanchange = np.mean(abs(gammad - lastgamma))
                 if meanchange < self.gamma_threshold:
