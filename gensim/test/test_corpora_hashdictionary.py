@@ -9,35 +9,17 @@ Unit tests for the `corpora.HashDictionary` class.
 
 
 import logging
-import tempfile
 import unittest
 import os
 import zlib
 
 from gensim.corpora.hashdictionary import HashDictionary
-
-
-# sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
-
-
-def get_tmpfile(suffix):
-    return os.path.join(tempfile.gettempdir(), suffix)
+from gensim.test.utils import get_tmpfile, common_texts
 
 
 class TestHashDictionary(unittest.TestCase):
     def setUp(self):
-        self.texts = [
-                ['human', 'interface', 'computer'],
-                ['survey', 'user', 'computer', 'system', 'response', 'time'],
-                ['eps', 'user', 'interface', 'system'],
-                ['system', 'human', 'system', 'eps'],
-                ['user', 'response', 'time'],
-                ['trees'],
-                ['graph', 'trees'],
-                ['graph', 'minors', 'trees'],
-                ['graph', 'minors', 'survey']
-        ]
+        self.texts = common_texts
 
     def testDocFreqOneDoc(self):
         texts = [['human', 'interface', 'computer']]

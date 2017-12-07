@@ -7,7 +7,7 @@
 
 """
 Deep learning via the distributed memory and distributed bag of words models from
-[1]_, using either hierarchical softmax or negative sampling [2]_ [3]_. See [tutorial]_
+[1]_, using either hierarchical softmax or negative sampling [2]_ [3]_. See [#tutorial]_
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled)
 doc2vec training** (70x speedup [blog]_).
@@ -29,13 +29,16 @@ to trim unneeded model memory = use (much) less RAM.
 
 
 
-.. [1] Quoc Le and Tomas Mikolov. Distributed Representations of Sentences and Documents. http://arxiv.org/pdf/1405.4053v2.pdf
-.. [2] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
-.. [3] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
-       In Proceedings of NIPS, 2013.
+.. [1] Quoc Le and Tomas Mikolov. Distributed Representations of Sentences and Documents.
+       http://arxiv.org/pdf/1405.4053v2.pdf
+.. [2] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean.
+       Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
+.. [3] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean.
+       Distributed Representations of Words and Phrases and their Compositionality. In Proceedings of NIPS, 2013.
 .. [blog] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
 
-.. [tutorial] Doc2vec in gensim tutorial, https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
+.. [#tutorial] Doc2vec in gensim tutorial,
+               https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
 
 
 
@@ -43,7 +46,6 @@ to trim unneeded model memory = use (much) less RAM.
 
 import logging
 import os
-import warnings
 
 try:
     from queue import Queue
@@ -58,7 +60,7 @@ from numpy import zeros, sum as np_sum, add as np_add, concatenate, \
     sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide, integer
 
 
-from gensim.utils import call_on_class_only
+from gensim.utils import call_on_class_only, deprecated
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg
 from gensim.models.keyedvectors import KeyedVectors
@@ -259,9 +261,9 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
 
 
 # for compatibility
+@deprecated("Class will be removed in 4.0.0, use TaggedDocument instead")
 class LabeledSentence(TaggedDocument):
-    def __init__(self, *args, **kwargs):
-        warnings.warn('LabeledSentence has been replaced by TaggedDocument', DeprecationWarning)
+    pass
 
 
 class DocvecsArray(utils.SaveLoad):
@@ -326,9 +328,9 @@ class DocvecsArray(utils.SaveLoad):
         else:
             return self.max_rawint + 1 + self.doctags[index].offset
 
+    @deprecated("Method will be removed in 4.0.0, use self.index_to_doctag instead")
     def _key_index(self, i_index, missing=None):
         """Return string index for given int index, if available"""
-        warnings.warn("use DocvecsArray.index_to_doctag", DeprecationWarning)
         return self.index_to_doctag(i_index)
 
     def index_to_doctag(self, i_index):
@@ -383,8 +385,12 @@ class DocvecsArray(utils.SaveLoad):
     def reset_weights(self, model):
         length = max(len(self.doctags), self.count)
         if self.mapfile_path:
-            self.doctag_syn0 = np_memmap(self.mapfile_path + '.doctag_syn0', dtype=REAL, mode='w+', shape=(length, model.vector_size))
-            self.doctag_syn0_lockf = np_memmap(self.mapfile_path + '.doctag_syn0_lockf', dtype=REAL, mode='w+', shape=(length,))
+            self.doctag_syn0 = np_memmap(
+                self.mapfile_path + '.doctag_syn0', dtype=REAL, mode='w+', shape=(length, model.vector_size)
+            )
+            self.doctag_syn0_lockf = np_memmap(
+                self.mapfile_path + '.doctag_syn0_lockf', dtype=REAL, mode='w+', shape=(length,)
+            )
             self.doctag_syn0_lockf.fill(1.0)
         else:
             self.doctag_syn0 = empty((length, model.vector_size), dtype=REAL)
@@ -589,7 +595,7 @@ class Doc2Vec(Word2Vec):
         need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-                default is 1e-3, values of 1e-5 (or lower) may also be useful, value 0. disable downsampling.
+                default is 1e-3, values of 1e-5 (or lower) may also be useful, set to 0.0 to disable downsampling.
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
@@ -626,7 +632,10 @@ class Doc2Vec(Word2Vec):
         """
 
         if 'sentences' in kwargs:
-            raise DeprecationWarning("'sentences' in doc2vec was renamed to 'documents'. Please use documents parameter.")
+            raise DeprecationWarning(
+                "Parameter 'sentences' was renamed to 'documents', and will be removed in 4.0.0, "
+                "use 'documents' instead."
+            )
 
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
@@ -688,7 +697,8 @@ class Doc2Vec(Word2Vec):
             if not checked_string_types:
                 if isinstance(document.words, string_types):
                     logger.warning(
-                        "Each 'words' should be a list of words (usually unicode strings). First 'words' here is instead plain %s.",
+                        "Each 'words' should be a list of words (usually unicode strings). "
+                        "First 'words' here is instead plain %s.",
                         type(document.words)
                     )
                 checked_string_types += 1

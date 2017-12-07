@@ -56,7 +56,10 @@ class CorpusABC(utils.SaveLoad):
 
     def save(self, *args, **kwargs):
         import warnings
-        warnings.warn("corpus.save() stores only the (tiny) iteration object; to serialize the actual corpus content, use e.g. MmCorpus.serialize(corpus)")
+        warnings.warn(
+            "corpus.save() stores only the (tiny) iteration object; "
+            "to serialize the actual corpus content, use e.g. MmCorpus.serialize(corpus)"
+        )
         super(CorpusABC, self).save(*args, **kwargs)
 
     def __len__(self):
@@ -104,7 +107,8 @@ class CorpusABC(utils.SaveLoad):
 class TransformedCorpus(CorpusABC):
     def __init__(self, obj, corpus, chunksize=None, **kwargs):
         self.obj, self.corpus, self.chunksize = obj, corpus, chunksize
-        for key, value in kwargs.items():  # add the new parameters like per_word_topics to base class object of LdaModel
+        # add the new parameters like per_word_topics to base class object of LdaModel
+        for key, value in kwargs.items():
             setattr(self.obj, key, value)
         self.metadata = False
 

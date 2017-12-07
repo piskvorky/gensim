@@ -51,7 +51,7 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
         Calls gensim.models.HdpModel
         """
         if sparse.issparse(X):
-            corpus = matutils.Sparse2Corpus(X)
+            corpus = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
         else:
             corpus = X
 
@@ -68,7 +68,9 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
         Takes a list of documents as input ('docs').
         Returns a matrix of topic distribution for the given document bow, where a_ij
         indicates (topic_i, topic_probability_j).
-        The input `docs` should be in BOW format and can be a list of documents like : [ [(4, 1), (7, 1)], [(9, 1), (13, 1)], [(2, 1), (6, 1)] ]
+        The input `docs` should be in BOW format and can be a list of documents like
+        [[(4, 1), (7, 1)],
+        [(9, 1), (13, 1)], [(2, 1), (6, 1)]]
         or a single document like : [(4, 1), (7, 1)]
         """
         if self.gensim_model is None:
@@ -77,28 +79,26 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
             )
 
         # The input as array of array
-        check = lambda x: [x] if isinstance(x[0], tuple) else x
-        docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
+        if isinstance(docs[0], tuple):
+            docs = [docs]
+        distribution, max_num_topics = [], 0
 
-        max_num_topics = 0
-        for k, v in enumerate(docs):
-            X[k] = self.gensim_model[v]
-            max_num_topics = max(max_num_topics, max(x[0] for x in X[k]) + 1)
+        for doc in docs:
+            topicd = self.gensim_model[doc]
+            distribution.append(topicd)
+            max_num_topics = max(max_num_topics, max(topic[0] for topic in topicd) + 1)
 
-        for k, v in enumerate(X):
-            # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
-            dense_vec = matutils.sparse2full(v, max_num_topics)
-            X[k] = dense_vec
-
-        return np.reshape(np.array(X), (len(docs), max_num_topics))
+        # returning dense representation for compatibility with sklearn
+        # but we should go back to sparse representation in the future
+        distribution = [matutils.sparse2full(t, max_num_topics) for t in distribution]
+        return np.reshape(np.array(distribution), (len(docs), max_num_topics))
 
     def partial_fit(self, X):
         """
         Train model over X.
         """
         if sparse.issparse(X):
-            X = matutils.Sparse2Corpus(X)
+            X = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
 
         if self.gensim_model is None:
             self.gensim_model = models.HdpModel(

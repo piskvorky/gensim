@@ -18,7 +18,7 @@ import unittest
 
 from gensim import utils
 from gensim.corpora import Dictionary
-from gensim.summarization import summarize, summarize_corpus, keywords
+from gensim.summarization import summarize, summarize_corpus, keywords, mz_keywords
 
 
 class TestSummarizationTest(unittest.TestCase):
@@ -99,13 +99,13 @@ class TestSummarizationTest(unittest.TestCase):
         self.assertNotEqual(summarize_corpus(corpus), [])
 
     def test_empty_text_summarization_is_empty_string(self):
-        self.assertEquals(summarize(""), u"")
+        self.assertEqual(summarize(""), u"")
 
     def test_empty_text_summarization_with_split_is_empty_list(self):
-        self.assertEquals(summarize("", split=True), [])
+        self.assertEqual(summarize("", split=True), [])
 
     def test_empty_corpus_summarization_is_empty_list(self):
-        self.assertEquals(summarize_corpus([]), [])
+        self.assertEqual(summarize_corpus([]), [])
 
     def test_corpus_summarization_ratio(self):
         text = self._get_text_from_test_data("mihalcea_tarau.txt")
@@ -148,6 +148,25 @@ class TestSummarizationTest(unittest.TestCase):
         kwds_lst = keywords(text, split=True)
         self.assertTrue(len(kwds_lst))
 
+    def test_mz_keywords(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "head500.noblanks.cor")) as f:
+            text = utils.to_unicode(f.read())
+        text = u' '.join(text.split()[:10240])
+        kwds = mz_keywords(text)
+        self.assertTrue(kwds.startswith('autism'))
+        self.assertTrue(kwds.endswith('uk'))
+        self.assertTrue(len(kwds.splitlines()))
+
+        kwds_lst = mz_keywords(text, split=True)
+        self.assertTrue(len(kwds_lst))
+        # Automatic thresholding selects words with n_blocks / n_blocks+1
+        # bits of entropy. For this text, n_blocks=10
+        n_blocks = 10.
+        kwds_auto = mz_keywords(text, scores=True, weighted=False, threshold='auto')
+        self.assertTrue(kwds_auto[-1][1] > (n_blocks / (n_blocks + 1.)))
+
     def test_low_distinct_words_corpus_summarization_is_empty_list(self):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
 
@@ -157,15 +176,16 @@ class TestSummarizationTest(unittest.TestCase):
         dictionary = Dictionary(tokens)
         corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
 
-        self.assertEquals(summarize_corpus(corpus), [])
+        self.assertEqual(summarize_corpus(corpus), [])
 
     def test_low_distinct_words_summarization_is_empty_string(self):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
-        self.assertEquals(summarize(text), u"")
+        self.assertEqual(summarize(text), u"")
 
     def test_low_distinct_words_summarization_with_split_is_empty_list(self):
         text = self._get_text_from_test_data("testlowdistinctwords.txt")
-        self.assertEquals(summarize(text, split=True), [])
+        self.assertEqual(summarize(text, split=True), [])
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

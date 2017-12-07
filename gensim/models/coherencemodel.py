@@ -110,7 +110,8 @@ class CoherenceModel(interfaces.TransformationABC):
 
         topics = [['human', 'computer', 'system', 'interface'],
                   ['graph', 'minors', 'trees', 'eps']]
-        cm = CoherenceModel(topics=topics, corpus=corpus, dictionary=dictionary, coherence='u_mass') # note that a dictionary has to be provided.
+        # note that a dictionary has to be provided.
+        cm = CoherenceModel(topics=topics, corpus=corpus, dictionary=dictionary, coherence='u_mass')
         cm.get_coherence()
 
     Model persistency is achieved via its load/save methods.
@@ -142,8 +143,8 @@ class CoherenceModel(interfaces.TransformationABC):
             corpus : Gensim document corpus.
             dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present,
                 this is not needed. If both are provided, dictionary will be used.
-            window_size : Is the size of the window to be used for coherence measures using boolean sliding window as their
-                probability estimator. For 'u_mass' this doesn't matter.
+            window_size : Is the size of the window to be used for coherence measures using boolean sliding window
+                as their probability estimator. For 'u_mass' this doesn't matter.
                 If left 'None' the default window sizes are used which are:
 
                     'c_v' : 110
@@ -215,7 +216,7 @@ class CoherenceModel(interfaces.TransformationABC):
         self._topics = None
         self.topics = topics
 
-        self.processes = processes if processes > 1 else max(1, mp.cpu_count() - 1)
+        self.processes = processes if processes >= 1 else max(1, mp.cpu_count() - 1)
 
     @classmethod
     def for_models(cls, models, dictionary, topn=20, **kwargs):

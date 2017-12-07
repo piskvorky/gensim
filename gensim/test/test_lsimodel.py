@@ -10,50 +10,21 @@ Automated tests for checking transformation algorithms (the models package).
 
 
 import logging
-import os
-import os.path
-import tempfile
 import unittest
 
 import numpy as np
 import scipy.linalg
 
 from gensim import matutils
-from gensim.corpora import mmcorpus, Dictionary
+from gensim.corpora.mmcorpus import MmCorpus
 from gensim.models import lsimodel
 from gensim.test import basetmtests
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-
-
-def datapath(fname):
-    return os.path.join(module_path, 'test_data', fname)
-
-
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.corpus = MmCorpus(datapath('testcorpus.mm'))
         self.model = lsimodel.LsiModel(self.corpus, num_topics=2)
 
     def testTransform(self):
@@ -72,6 +43,25 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         expected = np.array([-0.6594664, 0.142115444])  # scaled LSI version
         # expected = np.array([-0.1973928, 0.05591352])  # non-scaled LSI version
         self.assertTrue(np.allclose(abs(vec), abs(expected)))  # transformed entries must be equal up to sign
+
+    def testTransformFloat32(self):
+        """Test lsi[vector] transformation."""
+        # create the transformation model
+        model = lsimodel.LsiModel(self.corpus, num_topics=2, dtype=np.float32)
+
+        # make sure the decomposition is enough accurate
+        u, s, vt = scipy.linalg.svd(matutils.corpus2dense(self.corpus, self.corpus.num_terms), full_matrices=False)
+        self.assertTrue(np.allclose(s[:2], model.projection.s))  # singular values must match
+        self.assertEqual(model.projection.u.dtype, np.float32)
+        self.assertEqual(model.projection.s.dtype, np.float32)
+
+        # transform one document
+        doc = list(self.corpus)[0]
+        transformed = model[doc]
+        vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
+        expected = np.array([-0.6594664, 0.142115444])  # scaled LSI version
+        # transformed entries must be equal up to sign
+        self.assertTrue(np.allclose(abs(vec), abs(expected), atol=1.e-5))
 
     def testCorpusTransform(self):
         """Test lsi[corpus] transformation."""
@@ -96,7 +86,8 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         # create the transformation model
         model2 = lsimodel.LsiModel(corpus=corpus, num_topics=5)  # compute everything at once
-        model = lsimodel.LsiModel(corpus=None, id2word=model2.id2word, num_topics=5)  # start with no documents, we will add them later
+        # start with no documents, we will add them later
+        model = lsimodel.LsiModel(corpus=None, id2word=model2.id2word, num_topics=5)
 
         # train model on a single document
         model.add_documents([corpus[0]])
@@ -122,10 +113,11 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # make sure the final transformation is the same as if we had decomposed the whole corpus at once
         vec1 = matutils.sparse2full(model[doc], model.num_topics)
         vec2 = matutils.sparse2full(model2[doc], model2.num_topics)
-        self.assertTrue(np.allclose(abs(vec1), abs(vec2), atol=1e-5))  # the two LSI representations must equal up to sign
+        # the two LSI representations must equal up to sign
+        self.assertTrue(np.allclose(abs(vec1), abs(vec2), atol=1e-5))
 
     def testPersistence(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_lsi.tst')
         model = self.model
         model.save(fname)
         model2 = lsimodel.LsiModel.load(fname)
@@ -136,7 +128,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testPersistenceCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_lsi.tst.gz')
         model = self.model
         model.save(fname)
         model2 = lsimodel.LsiModel.load(fname, mmap=None)
@@ -147,7 +139,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testLargeMmap(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_models_lsi.tst')
         model = self.model
 
         # test storing the internal arrays into separate files
@@ -164,7 +156,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     def testLargeMmapCompressed(self):
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_models_lsi.tst.gz')
         model = self.model
 
         # test storing the internal arrays into separate files

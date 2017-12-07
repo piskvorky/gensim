@@ -13,78 +13,51 @@ environment:
       secure: qXqY3dFmLOqvxa3Om2gQi/BjotTOK+EP2IPLolBNo0c61yDtNWxbmE4wH3up72Be
 
   matrix:
-    - PYTHON: "C:\\Python27"
-      PYTHON_VERSION: "2.7.12"
-      PYTHON_ARCH: "32"
-
     - PYTHON: "C:\\Python27-x64"
       PYTHON_VERSION: "2.7.12"
       PYTHON_ARCH: "64"
-
-    - PYTHON: "C:\\Python35"
-      PYTHON_VERSION: "3.5.2"
-      PYTHON_ARCH: "32"
+      TOXENV: "py27-win"
 
     - PYTHON: "C:\\Python35-x64"
       PYTHON_VERSION: "3.5.2"
       PYTHON_ARCH: "64"
-      
-    - PYTHON: "C:\\Python36"
-      PYTHON_VERSION: "3.6.0"
-      PYTHON_ARCH: "32"
+      TOXENV: "py35-win"
 
     - PYTHON: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6.0"
       PYTHON_ARCH: "64"
+      TOXENV: "py36-win"
 
+init:
+  - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
+  - "ECHO \"%APPVEYOR_SCHEDULED_BUILD%\""
+  # If there is a newer build queued for the same PR, cancel this one.
+  # The AppVeyor 'rollout builds' option is supposed to serve the same
+  # purpose but it is problematic because it tends to cancel builds pushed
+  # directly to master instead of just PR builds (or the converse).
+  # credits: JuliaLang developers.
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+          Write-Host "There are newer queued builds for this pull request, skipping build."
+          Exit-AppveyorBuild
+        }
 
 install:
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
   - "powershell ./continuous_integration/appveyor/install.ps1"
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - "python -m pip install -U pip"
+  - "python -m pip install -U pip tox"
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  # Install the build and runtime dependencies of the project.
-  - "%CMD_IN_ENV% pip install --timeout=60 --trusted-host 28daf2247a33ed269873-7b1aad3fab3cc330e1fd9d109892382a.r6.cf2.rackcdn.com -r continuous_integration/appveyor/requirements.txt"
-  - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
-  - ps: "ls dist"
-
-  # Install the genreated wheel package to test it
-  - "pip install --pre --no-index --find-links dist/ gensim"
-
-# Not a .NET project, we build scikit-learn in the install step instead
 build: false
 
 test_script:
-  # Change to a non-source folder to make sure we run the tests on the
-  # installed library.
-  - "mkdir empty_folder"
-  - "cd empty_folder"
-  - "pip install pyemd testfixtures sklearn Morfessor==2.0.2a4"
-  - "pip freeze"
-  - "python -c \"import nose; nose.main()\" -s -v gensim"
-  # Move back to the project folder
-  - "cd .."
-
-artifacts:
-  # Archive the generated wheel package in the ci.appveyor.com build report.
-  - path: dist\*
-on_success:
-  # Upload the generated wheel package to Rackspace
-  # On Windows, Apache Libcloud cannot find a standard CA cert bundle so we
-  # disable the ssl checks.
-  - "python -m wheelhouse_uploader upload --no-ssl-check --local-folder=dist gensim-windows-wheels"
-
-notifications:
-  - provider: Webhook
-    url: https://webhooks.gitter.im/e/62c44ad26933cd7ed7e8
-    on_build_success: false
-    on_build_failure: True
+  - tox -vv
 
 cache:
   # Use the appveyor cache to avoid re-downloading large archives such

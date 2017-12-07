@@ -8,9 +8,11 @@
 """
 USAGE:
     $ python -m gensim.scripts.glove2word2vec --input <GloVe vector file> --output <Word2vec vector file>
+
 Where:
-    <GloVe vector file>: Input GloVe .txt file
-    <Word2vec vector file>: Desired name of output Word2vec .txt file
+
+* <GloVe vector file>: Input GloVe .txt file.
+* <Word2vec vector file>: Desired name of output Word2vec .txt file.
 
 This script is used to convert GloVe vectors in text format into the word2vec text format.
 The only difference between the two formats is an extra header line in word2vec,
@@ -54,7 +56,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", required=True, help="Input file, in gloVe format (read-only).")
-    parser.add_argument("-o", "--output", required=True, help="Output file, in word2vec text format (will be overwritten).")
+    parser.add_argument(
+        "-o", "--output", required=True, help="Output file, in word2vec text format (will be overwritten)."
+    )
     args = parser.parse_args()
 
     # do the actual conversion
