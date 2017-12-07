@@ -8,7 +8,7 @@ import cython
 import numpy as np
 from numpy import zeros, float32 as REAL
 cimport numpy as np
-from libc.math cimport log, exp
+#from libc.math cimport log, exp
 from libc.string cimport memset
 from libc.stdlib cimport calloc, free
 
@@ -22,7 +22,7 @@ except ImportError:
 from word2vec_inner cimport bisect_left, random_int32, \
      scopy, saxpy, sdot, dsdot, snrm2, sscal, \
      REAL_t, EXP_TABLE, \
-     our_dot, our_saxpy, \
+     LOG_TABLE, our_dot, our_saxpy, \
      our_dot_double, our_dot_float, our_dot_noblas, our_saxpy_noblas
 
 from word2vec import FAST_VERSION
@@ -34,7 +34,7 @@ DEF MAX_EXP = 6
 
 cdef float negative_sampling(const int target, const float lr, float *grad, float *wo, float *hidden,
                               const int vector_size, const int neg, int *negatives,
-                              int *negpos, const int negatives_len):
+                              int *negpos, const int negatives_len)nogil:
 
     cdef float loss
     loss = <float> 0.0
@@ -51,31 +51,38 @@ cdef float negative_sampling(const int target, const float lr, float *grad, floa
     return loss
 
 
-cdef float sigmoid(const float val):
-    return ONEF / (ONEF + exp(-val))
+cdef float sigmoid(const float val)nogil:
+    if val < -MAX_EXP:
+        return 0.0
+    elif val > MAX_EXP:
+        return 1.0
+    else:
+        return EXP_TABLE[<int>((val + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+    
+
+cdef float log(const float val)nogil:
+    if val > 1.0:
+        return 0.0
+    else:
+        return LOG_TABLE[<int>(val * EXP_TABLE_SIZE)]
 
 
 cdef float binary_logistic(const int target, const int label, const float lr,
-                            const int vector_size, float *wo, float *grad, float *hidden):
+                            const int vector_size, float *wo, float *grad, float *hidden)nogil:
 
     cdef float temp = our_dot(&vector_size, &wo[target], &ONE, hidden, &ONE)
-    if temp <= -MAX_EXP or temp >= MAX_EXP:
-        return 0.0
-    cdef float score = EXP_TABLE[<int>((temp + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-    #cdef float score = sigmoid(temp)
+    cdef float score = sigmoid(temp)
     cdef float alpha = lr * (<float>label - score)
     our_saxpy(&vector_size, &alpha, &wo[target], &ONE, grad, &ONE)
     our_saxpy(&vector_size, &alpha, hidden, &ONE, &wo[target], &ONE)
     if label == 1:
-        #return -LOG_TABLE[<int>score]
         return -log(score)
     else:
-        #return -LOG_TABLE[<int>(ONEF - score)]
         return -log(ONEF - score)
     
 
 cdef int get_negative(const int target, int *negatives,
-                              int *negpos, const int negatives_len):
+                              int *negpos, const int negatives_len)nogil:
 
     cdef int negative
     while True:
@@ -86,9 +93,9 @@ cdef int get_negative(const int target, int *negatives,
     return negative
 
 
-def update(model, context_, target_, lr_):
+def update(model, context_, target_, lr_, hidden_, grad_):
 
-    cdef float loss = <float> model.loss
+    cdef float loss
     cdef float lr = <float> lr_
     cdef int vector_size = <int> model.vector_size
     cdef int *context = <int *> np.PyArray_DATA(context_)
@@ -102,8 +109,8 @@ def update(model, context_, target_, lr_):
     cdef int context_len = <int> len(context_)
     #hidden_ = zeros(vector_size, dtype=REAL)
     #grad_ = zeros(vector_size, dtype=REAL)
-    cdef REAL_t *hidden = <REAL_t *> np.PyArray_DATA(model.hidden)
-    cdef REAL_t *grad = <REAL_t *> np.PyArray_DATA(model.grad)
+    cdef REAL_t *hidden = <REAL_t *> np.PyArray_DATA(hidden_)
+    cdef REAL_t *grad = <REAL_t *> np.PyArray_DATA(grad_)
     memset(hidden, 0, vector_size)
     memset(grad, 0, vector_size)
     #cdef REAL_t *hidden, *grad
@@ -111,16 +118,18 @@ def update(model, context_, target_, lr_):
     #grad = <REAL_t *>calloc(vector_size, cython.sizeof(REAL_t))
 
     cdef np.int32_t i
-    for i from 0 <= i < context_len:
-        our_saxpy(&vector_size, &ONEF, &wi[context[i]], &ONE, hidden, &ONE)
     cdef float alpha = ONEF / <float>(context_len)
-    sscal(&vector_size, &alpha, hidden, &ONE)
-    loss += negative_sampling(target, lr, grad, wo, hidden, vector_size, neg, negatives, &negpos, negatives_len)
-    model.nexamples += 1
-    sscal(&vector_size, &alpha, grad, &ONE)
-    for i from 0 <= i < context_len:
-        our_saxpy(&vector_size, &ONEF, grad, &ONE, &wi[context[i]], &ONE)
-    model.loss = loss
+
+    with nogil:
+        for i from 0 <= i < context_len:
+            our_saxpy(&vector_size, &ONEF, &wi[context[i]], &ONE, hidden, &ONE)
+        sscal(&vector_size, &alpha, hidden, &ONE)
+        loss = negative_sampling(target, lr, grad, wo, hidden, vector_size, neg, negatives, &negpos, negatives_len)
+        sscal(&vector_size, &alpha, grad, &ONE)
+        for i from 0 <= i < context_len:
+            our_saxpy(&vector_size, &ONEF, grad, &ONE, &wi[context[i]], &ONE)
+
     model.negpos = negpos
     #free(hidden)
     #free(grad)
+    return loss

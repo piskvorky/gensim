@@ -30,6 +30,7 @@ cdef sscal_ptr sscal
 DEF EXP_TABLE_SIZE = 1000
 DEF MAX_EXP = 6
 cdef REAL_t[EXP_TABLE_SIZE] EXP_TABLE
+cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 
 # function implementations swapped based on BLAS detected in word2vec_inner.pyx init()
 ctypedef REAL_t (*our_dot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil

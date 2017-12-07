@@ -40,10 +40,11 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 try:
     from gensim.models.sent2vec_inner import update
     from gensim.models.word2vec_inner import FAST_VERSION
+    logger.debug('Fast version of %s is being used', __name__)
 except ImportError:
     # failed... fall back to plain numpy
     FAST_VERSION = -1
-    logger.warning('Plain python/numpy version being used')
+    logger.warning('Slow version of %s is being used', __name__)
 
 
 class Entry():
