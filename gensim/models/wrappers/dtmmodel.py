@@ -291,10 +291,7 @@ class DtmModel(utils.SaveLoad):
 
         """
         if num_words is not None:  # deprecated num_words is used
-            logger.warning(
-                "The parameter num_words for show_topic() would be deprecated in the updated version. "
-                "Please use topn instead."
-            )
+            warnings.warn("The parameter `num_words` deprecated, will be removed in 4.0.0, use `topn` instead.")
             topn = num_words
 
         topics = self.lambda_[:, :, time]
@@ -311,10 +308,7 @@ class DtmModel(utils.SaveLoad):
     def print_topic(self, topicid, time, topn=10, num_words=None):
         """Return the given topic, formatted as a string."""
         if num_words is not None:  # deprecated num_words is used
-            warnings.warn(
-                "The parameter num_words for print_topic() would be deprecated in the updated version. "
-                "Please use topn instead."
-            )
+            warnings.warn("The parameter `num_words` deprecated, will be removed in 4.0.0, use `topn` instead.")
             topn = num_words
 
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
