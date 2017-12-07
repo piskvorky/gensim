@@ -267,7 +267,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     def show_topic(self, topicid, topn=10, num_words=None):
         if num_words is not None:  # deprecated num_words is used
-            warnings.warn("The parameter `num_words` deprecated, will be removed in 4.0.0, use `topn` instead.")
+            warnings.warn("The parameter `num_words` is deprecated, will be removed in 4.0.0, use `topn` instead.")
             topn = num_words
 
         if self.word_topics is None:
