@@ -50,6 +50,12 @@ from gensim.models.callbacks import Callback
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
+DTYPE_TO_EPS = {
+    np.float16: 1e-5,
+    np.float32: 1e-35,
+    np.float64: 1e-100,
+}
+
 
 def logsumexp(x):
     """Log of sum of exponentials
@@ -275,6 +281,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         `callbacks` a list of metric callbacks to log/visualize evaluation metrics of topic model during training.
 
         `dtype` is data-type to use during calculations inside model. All inputs are also converted to this dtype.
+        Available types: `numpy.float16`, `numpy.float32`, `numpy.float64`.
 
         Example:
 
@@ -286,7 +293,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> lda = LdaModel(corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
-        if dtype not in {np.float16, np.float32, np.float64}:
+        if dtype not in DTYPE_TO_EPS:
             raise ValueError("Incorrect 'dtype', please choose one of numpy.float16, numpy.float32 or numpy.float64")
 
         self.dtype = dtype
@@ -500,13 +507,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w.
             # phinorm is the normalizer.
-            # TODO treat zeros explicitly, instead of adding 1e-100?
-            dtype_to_eps = {
-                np.float16: 1e-5,
-                np.float32: 1e-35,
-                np.float64: 1e-100,
-            }
-            eps = dtype_to_eps[self.dtype]
+            # TODO treat zeros explicitly, instead of adding eps?
+            eps = DTYPE_TO_EPS[self.dtype]
             phinorm = np.dot(expElogthetad, expElogbetad) + eps
 
             # Iterate between gamma and phi until convergence
