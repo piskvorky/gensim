@@ -44,7 +44,6 @@ import struct
 import numpy as np
 from numpy import float32 as REAL, sqrt, newaxis
 from gensim import utils
-from gensim.utils import deprecated
 from gensim.models.keyedvectors import KeyedVectors, Vocab
 from gensim.models.word2vec import Word2Vec
 
