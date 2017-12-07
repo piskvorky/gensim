@@ -1366,7 +1366,7 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
         logger.info("merged %d vectors into %s matrix from %s", overlap_count, self.wv.syn0.shape, fname)
 
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.most_similar() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar() instead")
     def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
         """
         Deprecated. Use self.wv.most_similar() instead.
@@ -1374,7 +1374,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return self.wv.most_similar(positive, negative, topn, restrict_vocab, indexer)
 
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.wmdistance() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.wmdistance() instead")
     def wmdistance(self, document1, document2):
         """
         Deprecated. Use self.wv.wmdistance() instead.
@@ -1382,7 +1382,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return self.wv.wmdistance(document1, document2)
 
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.most_similar_cosmul() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar_cosmul() instead")
     def most_similar_cosmul(self, positive=None, negative=None, topn=10):
         """
         Deprecated. Use self.wv.most_similar_cosmul() instead.
@@ -1390,7 +1390,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return self.wv.most_similar_cosmul(positive, negative, topn)
 
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.similar_by_word() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.similar_by_word() instead")
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
         """
         Deprecated. Use self.wv.similar_by_word() instead.
@@ -1398,7 +1398,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return self.wv.similar_by_word(word, topn, restrict_vocab)
 
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.similar_by_vector() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.similar_by_vector() instead")
     def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
         """
         Deprecated. Use self.wv.similar_by_vector() instead.
@@ -1406,7 +1406,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return self.wv.similar_by_vector(vector, topn, restrict_vocab)
 
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.doesnt_match() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.doesnt_match() instead")
     def doesnt_match(self, words):
         """
         Deprecated. Use self.wv.doesnt_match() instead.
@@ -1414,7 +1414,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return self.wv.doesnt_match(words)
 
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.__getitem__() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.__getitem__() instead")
     def __getitem__(self, words):
         """
         Deprecated. Use self.wv.__getitem__() instead.
@@ -1422,7 +1422,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return self.wv.__getitem__(words)
 
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.__contains__() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.__contains__() instead")
     def __contains__(self, word):
         """
         Deprecated. Use self.wv.__contains__() instead.
@@ -1430,7 +1430,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return self.wv.__contains__(word)
 
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.similarity() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.similarity() instead")
     def similarity(self, w1, w2):
         """
         Deprecated. Use self.wv.similarity() instead.
@@ -1438,7 +1438,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return self.wv.similarity(w1, w2)
 
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.n_similarity() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.n_similarity() instead")
     def n_similarity(self, ws1, ws2):
         """
         Deprecated. Use self.wv.n_similarity() instead.
@@ -1510,7 +1510,7 @@ class Word2Vec(utils.SaveLoad):
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
 
     @staticmethod
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.log_evaluate_word_pairs() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.log_evaluate_word_pairs() instead")
     def log_evaluate_word_pairs(pearson, spearman, oov, pairs):
         """
         Deprecated. Use self.wv.log_evaluate_word_pairs() instead.
@@ -1518,7 +1518,7 @@ class Word2Vec(utils.SaveLoad):
         """
         return KeyedVectors.log_evaluate_word_pairs(pearson, spearman, oov, pairs)
 
-    @deprecated("Method will be removed in 4.0.0. Use self.wv.evaluate_word_pairs() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.evaluate_word_pairs() instead")
     def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
                             case_insensitive=True, dummy4unknown=False):
         """
@@ -1533,7 +1533,7 @@ class Word2Vec(utils.SaveLoad):
         )
 
     @deprecated(
-        "Method will be removed in 4.0.0. Keep just_word_vectors = model.wv to retain just the KeyedVectors instance"
+        "Method will be removed in 4.0.0, keep just_word_vectors = model.wv to retain just the KeyedVectors instance"
     )
     def _minimize_model(self, save_syn1=False, save_syn1neg=False, save_syn0_lockf=False):
         if save_syn1 and save_syn1neg and save_syn0_lockf:
@@ -1601,13 +1601,13 @@ class Word2Vec(utils.SaveLoad):
             self.wv = wv
 
     @classmethod
-    @deprecated("Method will be removed in 4.0.0. Use gensim.models.KeyedVectors.load_word2vec_format instead")
+    @deprecated("Method will be removed in 4.0.0, use gensim.models.KeyedVectors.load_word2vec_format instead")
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
                          limit=None, datatype=REAL):
         """Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead."""
         raise DeprecationWarning("Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
 
-    @deprecated("Method will be removed in 4.0.0. Use model.wv.save_word2vec_format instead")
+    @deprecated("Method will be removed in 4.0.0, use model.wv.save_word2vec_format instead")
     def save_word2vec_format(self, fname, fvocab=None, binary=False):
         """Deprecated. Use model.wv.save_word2vec_format instead."""
         raise DeprecationWarning("Deprecated. Use model.wv.save_word2vec_format instead.")

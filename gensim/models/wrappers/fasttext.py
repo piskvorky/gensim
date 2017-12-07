@@ -144,7 +144,7 @@ class FastTextKeyedVectors(KeyedVectors):
         raise NotImplementedError("Not supported. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
 
 
-@deprecated("This class will be removed in 4.0.0, use gensim.models.FastText instead"
+@deprecated("This class will be removed in 4.0.0, use gensim.models.FastText instead")
 class FastText(Word2Vec):
     """
     Class for word vector training using FastText. Communication between FastText and Python
