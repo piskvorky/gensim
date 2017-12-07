@@ -294,7 +294,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         if dtype not in DTYPE_TO_EPS:
-            raise ValueError("Incorrect 'dtype', please choose one of numpy.float16, numpy.float32 or numpy.float64")
+            raise ValueError(
+                "Incorrect 'dtype', please choose one of {}".format(
+                    ", ".join("numpy.{}".format(tp.__name__) for tp in sorted(DTYPE_TO_EPS))))
 
         self.dtype = dtype
 
@@ -507,7 +509,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w.
             # phinorm is the normalizer.
-            # TODO treat zeros explicitly, instead of adding eps?
+            # TODO treat zeros explicitly, instead of adding epsilon?
             eps = DTYPE_TO_EPS[self.dtype]
             phinorm = np.dot(expElogthetad, expElogbetad) + eps
 
