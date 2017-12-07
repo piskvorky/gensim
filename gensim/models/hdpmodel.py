@@ -446,10 +446,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         if num_words is not None:  # deprecated num_words is used
-            logger.warning(
-                "The parameter num_words for show_topic() would be deprecated in the updated version. "
-                "Please use topn instead."
-            )
+            warnings.warn("The parameter `num_words` deprecated, will be removed in 4.0.0, please use `topn` instead.")
             topn = num_words
 
         if not self.m_status_up_to_date:
@@ -630,20 +627,14 @@ class HdpTopicFormatter(object):
 
     def print_topic(self, topic_id, topn=None, num_words=None):
         if num_words is not None:  # deprecated num_words is used
-            warnings.warn(
-                "The parameter num_words for print_topic() would be deprecated in the updated version. "
-                "Please use topn instead."
-            )
+            warnings.warn("The parameter `num_words` deprecated, will be removed in 4.0.0, please use `topn` instead.")
             topn = num_words
 
         return self.show_topic(topic_id, topn, formatted=True)
 
     def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words=None,):
         if num_words is not None:  # deprecated num_words is used
-            warnings.warn(
-                "The parameter num_words for show_topic() would be deprecated in the updated version. "
-                "Please use topn instead."
-            )
+            warnings.warn("The parameter `num_words` deprecated, will be removed in 4.0.0, please use `topn` instead.")
             topn = num_words
 
         lambdak = list(self.data[topic_id, :])
