@@ -173,25 +173,26 @@ class FastText(Word2Vec):
         """Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
 
-        The `sentences` iterable can be simply a list, but for larger corpora,
-        consider an iterable that streams the sentences directly from disk/network.
-        See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-        or :class:`~gensim.models.word2vec.LineSentence` in this module for such examples.
-
-        If you don't supply `sentences`, the model is left uninitialized -- use if
-        you plan to initialize it in some other way.
-
         Parameters
         ----------
+        sentences : iterator or list
+            The `sentences` iterable can be simply a list, but for larger corpora,
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+            or :class:`~gensim.models.word2vec.LineSentence` in `~gensim.models.word2vec` module for such examples.
+            If you don't supply `sentences`, the model is left uninitialized -- use if
+            you plan to initialize it in some other way.
         sg : int {1,0}
-            Defines the training algorithm. By default (`sg=0`), CBOW is used.
-            Otherwise (`sg=1`), skip-gram is employed.
+            Defines the training algorithm. If 1, CBOW is used.
+            Otherwise, skip-gram is employed.
         size : int
             Dimensionality of the feature vectors.
         window : int
             The maximum distance between the current and predicted word within a sentence.
         alpha : float
-            The initial learning rate (will linearly drop to `min_alpha` as training progresses).
+            The initial learning rate.
+        min_alpha : float
+            Learning rate will linearly drop to `min_alpha` as training progresses.
         seed : int
             Seed for the random number generator. Initial vectors for each
             word are seeded with a hash of the concatenation of word + str(seed).
@@ -204,27 +205,27 @@ class FastText(Word2Vec):
         max_vocab_size : int
             Limits the RAM during vocabulary building; if there are more unique
             words than this, then prune the infrequent ones. Every 10 million word types
-            need about 1GB of RAM. Set to `None` for no limit (default).
+            need about 1GB of RAM. Set to `None` for no limit.
         sample : float
             The threshold for configuring which higher-frequency words are randomly downsampled;
-            default is 1e-3, useful range is (0, 1e-5).
+            Useful range is (0, 1e-5).
         workers : int
             Use these many worker threads to train the model (=faster training with multicore machines).
         hs : int {1,0}
             If 1, hierarchical softmax will be used for model training.
-            If set to 0 (default), and `negative` is non-zero, negative sampling will be used.
+            If set to 0, and `negative` is non-zero, negative sampling will be used.
         negative : int
             If > 0, negative sampling will be used, the int for negative
             specifies how many "noise words" should be drawn (usually between 5-20).
-            Default is 5. If set to 0, no negative samping is used.
+            If set to 0, no negative samping is used.
         cbow_mean : int {1,0}
-            If 0, use the sum of the context word vectors. If 1 (default), use the mean.
+            If 0, use the sum of the context word vectors. If 1, use the mean.
             Only applies when cbow is used.
         hashfxn : :func:
             Hash function to use to randomly initialize weights, for increased
             training reproducibility. Default is Python's rudimentary built in hash function.
         iter : int
-            Number of iterations (epochs) over the corpus. Default is 5.
+            Number of iterations (epochs) over the corpus.
         trim_rule : :func:
             Vocabulary trimming rule, specifies whether certain words should remain
             in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
@@ -233,22 +234,25 @@ class FastText(Word2Vec):
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
         sorted_vocab : int {1,0}
-            If 1 (default), sort the vocabulary by descending frequency before
+            If 1, sort the vocabulary by descending frequency before
             assigning word indexes.
         batch_words : int
             Target size (in words) for batches of examples passed to worker threads (and
-            thus cython routines). Default is 10000. (Larger batches will be passed if individual
+            thus cython routines).(Larger batches will be passed if individual
             texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
         min_n : int
-            Min length of char ngrams to be used for training word representations. Default is 3.
+            Min length of char ngrams to be used for training word representations.
         max_n : int
             Max length of char ngrams to be used for training word representations. Set `max_n` to be
-            lesser than `min_n` to avoid char ngrams being used. Default is 6.
+            lesser than `min_n` to avoid char ngrams being used.
+        word_ngrams : int {1,0}
+            If 1, uses enriches word vectors with subword(ngrams) information.
+            If 0, this is equivalent to word2vec.
         bucket : long
             Word and character ngram features are hashed into a fixed number of buckets, in order to limit the
-            memory usage of the model. This option specifies the number of buckets used by the model. Default: 2000000
+            memory usage of the model. This option specifies the number of buckets used by the model.
 
-        Example
+        examples
         -------
         Initialize and train a `FastText` model:
 
@@ -272,6 +276,8 @@ class FastText(Word2Vec):
             trim_rule=trim_rule, sorted_vocab=sorted_vocab, batch_words=batch_words)
 
     def initialize_word_vectors(self):
+        """Initializes FastTextKeyedVectors instance to store all vocab/ngram vectors for the model.
+        """
         self.wv = FastTextKeyedVectors()
         self.wv.min_n = self.min_n
         self.wv.max_n = self.max_n
@@ -279,6 +285,38 @@ class FastText(Word2Vec):
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
+
+        Parameters
+        ----------
+        sentences : iterator or list
+            The `sentences` iterable can be simply a list, but for larger corpora,
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+            or :class:`~gensim.models.word2vec.LineSentence` in `~gensim.models.word2vec` module for such examples.
+        keep_raw_vocab : bool
+            If not true, delete the raw vocabulary after the scaling is done and free up RAM.
+        trim_rule : :func:
+            Vocabulary trimming rule, specifies whether certain words should remain
+            in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
+            Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+            returns either `utils.RULE_DISCARD`, `utils.RULE_KEEP` or `utils.RULE_DEFAULT`.
+            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+            of the model.
+        progress_per : int
+            Indicates how many words to process before showing/updateing the progress.
+        update: bool
+            If true, the new words in `sentences` will be added to model's vocab.
+
+        Example
+        -------
+        Train a model and update vocab for online training:
+
+            >>> model = FastText(sg=1, hs=0,window=2, negative=5, iter=4)
+            >>> model.build_vocab(sentences1)
+            >>> model.train(sentences1, total_examples=model.corpus_count, epochs=model.iter)
+            >>> model.build_vocab(sentences2, update=True)
+            >>> model.train(sentences2, total_examples=model.corpus_count, epochs=model.iter)
+
         """
         if update:
             if not len(self.wv.vocab):
@@ -294,10 +332,15 @@ class FastText(Word2Vec):
         self.init_ngrams(update=update)
 
     def init_ngrams(self, update=False):
-        """Computes ngrams of all words present in vocabulary and stores vectors for only those ngrams.
+        """Compute ngrams of all words present in vocabulary and stores vectors for only those ngrams.
         Vectors for other ngrams are initialized with a random uniform distribution in FastText.
-        If `update` is `True`, the new vocab words and their new ngrams word vectors are initialized
-        with random uniform distribution and updated/added to the exisiting vocab word and ngram vectors.
+
+        Parameters
+        ----------
+        update : bool
+            If True, the new vocab words and their new ngrams word vectors are initialized
+            with random uniform distribution and updated/added to the exisiting vocab word and ngram vectors.
+
         """
         if not update:
             self.wv.ngrams = {}
@@ -389,6 +432,24 @@ class FastText(Word2Vec):
     def _do_train_job(self, sentences, alpha, inits):
         """Train a single batch of sentences. Return 2-tuple `(effective word count after
         ignoring unknown words and sentence length trimming, total word count)`.
+
+        Parameters
+        ----------
+        sentences : iterator or list
+            The `sentences` iterable can be simply a list, but for larger corpora,
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+            or :class:`~gensim.models.word2vec.LineSentence` in `~gensim.models.word2vec` module for such examples.
+        alpha : float
+            The current learning rate.
+        inits : tuple
+            Each worker's private work memory.
+
+        Returns
+        -------
+        tuple
+            Tuple of (effective word count after ignoring unknown words and sentence length trimming, total word count)
+
         """
         work, neu1 = inits
         tally = 0
@@ -414,6 +475,38 @@ class FastText(Word2Vec):
         To avoid common mistakes around the model's ability to do multiple training passes itself, an
         explicit `epochs` argument MUST be provided. In the common and recommended case, where `train()`
         is only called once, the model's cached `iter` value should be supplied as `epochs` value.
+
+        Parameters
+        ----------
+        sentences : iterator or list
+            The `sentences` iterable can be simply a list, but for larger corpora,
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+            or :class:`~gensim.models.word2vec.LineSentence` in `~gensim.models.word2vec` module for such examples.
+        total_examples : int
+            Count of sentences.
+        total_words : int
+            Count of raw words in sentences.
+        epochs : int
+            Number of iterations (epochs) over the corpus.
+        start_alpha : float
+            Initial learning rate.
+        end_alpha : float
+            Final learning rate. Drops linearly from `start_alpha`.
+        word_count : int
+            Count of words already trained. Set this to 0 for the usual
+            case of training on all words in sentences.
+        queue_factor : int
+            Multiplier for size of queue (number of workers * queue_factor).
+        report_delay : float
+            Seconds to wait before reporting progress.
+
+        Example
+        -------
+        >>> model = FastText(sg=1, hs=0,window=2, negative=5, iter=4)
+        >>> model.build_vocab(sentences)
+        >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
+
         """
         self.neg_labels = []
         if self.negative > 0:
@@ -429,6 +522,8 @@ class FastText(Word2Vec):
         return self.word_vec(word)
 
     def get_vocab_word_vecs(self):
+        """Calculate vectors for words in vocabulary and stores them in `wv.syn0`.
+        """
         for w, v in self.wv.vocab.items():
             word_vec = np.copy(self.wv.syn0_vocab[v.index])
             ngrams = self.wv.ngrams_word[w]
@@ -439,11 +534,24 @@ class FastText(Word2Vec):
             self.wv.syn0[v.index] = word_vec
 
     def word_vec(self, word, use_norm=False):
-        """Accept a single word as input.
-        Returns the word's representations in vector space, as a 1D numpy array.
+        """Return the word's representations in vector space, as a 1D numpy array.
 
-        The word can be out-of-vocabulary as long as ngrams for the word are present.
-        For words with all ngrams absent, a KeyError is raised.
+        Parameters
+        ----------
+        words : str
+            A single word whose vector needs to be returned.
+        use_norm : bool
+            If True, returns normalized vector.
+
+        Returns
+        -------
+        `ndarray`
+            The word's representations in vector space, as a 1D numpy array.
+
+        Raises
+        ------
+        KeyError
+            For words with all ngrams absent, a KeyError is raised.
 
         Example
         -------
@@ -456,8 +564,31 @@ class FastText(Word2Vec):
 
     @classmethod
     def load_fasttext_format(cls, *args, **kwargs):
+        """Load a :class:`~gensim.models.fasttext.FastText` model from a format compatible with
+        the original fasttext implementation.
+
+        Parameters
+        ----------
+        fname : str
+            path to the file
+
+        """
         return Ft_Wrapper.load_fasttext_format(*args, **kwargs)
 
     def save(self, *args, **kwargs):
+        """Save the model. This saved model can be loaded again using :func:`~gensim.models.fasttext.FastText.load`,
+        which supports online training and getting vectors for out-of-vocabulary words.
+
+        Parameters
+        ----------
+        fname : str
+            path to the file
+
+        Example
+        -------
+        >>> model_gensim.save('saved_model_gensim')
+        >>> loaded_model = FastText.load('saved_model_gensim')
+
+        """
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_vocab_norm', 'syn0_ngrams_norm'])
         super(FastText, self).save(*args, **kwargs)
