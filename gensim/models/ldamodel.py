@@ -287,7 +287,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         if dtype not in {np.float16, np.float32, np.float64}:
-            raise ValueError("Incorrect 'dtype', please choice one of numpy.float16, numpy.float32 or numpy.float64")
+            raise ValueError("Incorrect 'dtype', please choose one of numpy.float16, numpy.float32 or numpy.float64")
 
         self.dtype = dtype
 
