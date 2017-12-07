@@ -6,6 +6,17 @@
 
 """This module contains classes for analyzing the texts of a corpus to accumulate
 statistical information about word occurrences.
+
+Example for UsesDictionary
+--------------------------
+>>> from gensim.topic_coherence import text_analysis
+>>> from gensim.corpora.dictionary import Dictionary
+>>> ids = {1: 'foo', 2: 'bar'}
+>>> dictionary = Dictionary([['foo','bar','baz'], ['foo','bar','bar','baz']])
+>>> usesdict = text_analysis.UsesDictionary(ids, dictionary)
+>>> print usesdict.relevant_words, usesdict.dictionary, usesdict.token2id
+set([u'foo', u'baz']) Dictionary(3 unique tokens: [u'baz', u'foo', u'bar']) {u'baz': 2, u'foo': 1, u'bar': 0}
+
 """
 
 import itertools
@@ -138,7 +149,7 @@ class UsesDictionary(BaseAnalyzer):
     Attributes
     ----------
     relevant_words : set
-        Set of words.
+        Set of words that occurrences should be accumulated for.
     dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
     token2id : dict
         token2id from :class:`~gensim.corpora.dictionary`
@@ -189,13 +200,14 @@ class InvertedIndexBased(BaseAnalyzer):
     Examples
     --------
     >>> from gensim.topic_coherence import text_analysis
-    >>> ininb = text_analysis.InvertedIndexBased([1,2])
+    >>> ids = {1: 'fake', 4: 'cats'}
+    >>> ininb = text_analysis.InvertedIndexBased(ids)
     >>> print ininb._inverted_index
     [set([]) set([])]
 
     """
 
-    # TODO : *args value have no impact on ininb._inverted_index
+
     def __init__(self, *args):
         super(InvertedIndexBased, self).__init__(*args)
         self._inverted_index = np.array([set() for _ in range(self._vocab_size)])
@@ -214,11 +226,24 @@ class InvertedIndexBased(BaseAnalyzer):
 
 
 class CorpusAccumulator(InvertedIndexBased):
-    """Gather word occurrence stats from a corpus by iterating over its BoW representation.
-
-    """
+    """Gather word occurrence stats from a corpus by iterating over its BoW representation."""
 
     def analyze_text(self, text, doc_num=None):
+        """
+
+
+        Examples
+        --------
+        >> > from gensim.topic_coherence import text_analysis
+        >> > ids = {1: 'fake', 4: 'cats'}
+        >> > corac = text_analysis.CorpusAccumulator(ids)
+        >> > texts = [['human', 'interface', 'computer'], ['eps', 'user', 'interface', 'system']]
+        >> > corac.analyze_text(texts)
+        >> > print
+        corac._inverted_index
+
+        # Doesn't work
+        """
         doc_words = frozenset(x[0] for x in text)
         top_ids_in_doc = self.relevant_ids.intersection(doc_words)
         for word_id in top_ids_in_doc:
@@ -232,17 +257,17 @@ class CorpusAccumulator(InvertedIndexBased):
 
 
 class WindowedTextsAnalyzer(UsesDictionary):
-    """Gather some stats about relevant terms of a corpus by iterating over windows of texts."""
+    """Gather some stats about relevant terms of a corpus by iterating over windows of texts.
+
+    Attributes
+    ----------
+    relevant_words : set
+        Set of words.
+    dictionary: tuple
+        Dictionary instance with mappings for the relevant_ids.
+    """
 
     def __init__(self, relevant_ids, dictionary):
-        """
-        Parameters
-        ----------
-        relevant_ids: set
-            Set of words that occurrences should be accumulated for.
-        dictionary: tuple
-            Dictionary instance with mappings for the relevant_ids.
-        """
         super(WindowedTextsAnalyzer, self).__init__(relevant_ids, dictionary)
         self._none_token = self._vocab_size  # see _iter_texts for use of none token
 
@@ -367,21 +392,20 @@ class PatchedWordOccurrenceAccumulator(WordOccurrenceAccumulator):
 
 
 class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
-    """Accumulate word occurrences in parallel."""
+    """Accumulate word occurrences in parallel.
+
+    Attributes
+    ----------
+    processes : int
+        Number of processes to use; must be at least two.
+    args :
+        Should include `relevant_ids` and `dictionary` (see :class:`~UsesDictionary.__init__`).
+    kwargs :
+        Can include `batch_size`, which is the number of docs to send to a worker at a time.
+        If not included, it defaults to 64.
+    """
 
     def __init__(self, processes, *args, **kwargs):
-        """
-        Parameters
-        ----------
-        processes : int
-            Number of processes to use; must be at least two.
-        args :
-            Should include `relevant_ids` and `dictionary` (see :class:`~UsesDictionary.__init__`).
-        kwargs :
-            Can include `batch_size`, which is the number of docs to send to a worker at a time.
-            If not included, it defaults to 64.
-
-        """
         super(ParallelWordOccurrenceAccumulator, self).__init__(*args)
         if processes < 2:
             raise ValueError(
@@ -412,8 +436,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
         Parameters
         ----------
-        window_size :
-            in progress
+        window_size : int
 
         Returns
         -------
@@ -554,22 +577,16 @@ class AccumulatingWorker(mp.Process):
 class WordVectorsAccumulator(UsesDictionary):
     """Accumulate context vectors for words using word vector embeddings.
 
-    Examples
-    --------
-
-
+    Attributes
+    ----------
+    model: Word2Vec (:class:`~gensim.models.keyedvectors.KeyedVectors`)
+        If None, a new Word2Vec model is trained on the given text corpus. Otherwise,
+        it should be a pre-trained Word2Vec context vectors.
+    model_kwargs:
+        if model is None, these keyword arguments will be passed through to the Word2Vec constructor.
     """
 
     def __init__(self, relevant_ids, dictionary, model=None, **model_kwargs):
-        """
-        Parameters
-        ----------
-        model: Word2Vec (:class:`~gensim.models.keyedvectors.KeyedVectors`)
-            If None, a new Word2Vec model is trained on the given text corpus. Otherwise,
-            it should be a pre-trained Word2Vec context vectors.
-        model_kwargs:
-            if model is None, these keyword arguments will be passed through to the Word2Vec constructor.
-        """
         super(WordVectorsAccumulator, self).__init__(relevant_ids, dictionary)
         self.model = model
         self.model_kwargs = model_kwargs
