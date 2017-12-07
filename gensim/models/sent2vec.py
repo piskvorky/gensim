@@ -29,9 +29,15 @@ from gensim import utils, matutils
 import sys
 from random import randint
 from gensim.utils import SaveLoad, tokenize
-import time
 from types import GeneratorType
 import os
+import threading
+from timeit import default_timer
+
+try:
+    from queue import Queue, Empty
+except ImportError:
+    from Queue import Queue, Empty
 
 logger = logging.getLogger(__name__)
 # Comment out the below statement to avoid printing info logs to console
@@ -355,7 +361,7 @@ class Sent2Vec(SaveLoad):
 
     def __init__(self, sentences=None, vector_size=100, lr=0.2, lr_update_rate=100, epochs=5,
             min_count=5, neg=10, word_ngrams=2, loss_type='ns', bucket=2000000, t=0.0001,
-            minn=3, maxn=6, dropoutk=2, seed=42):
+            minn=3, maxn=6, dropoutk=2, seed=42, min_lr=0.001, batch_words=10000, workers=3):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -399,13 +405,19 @@ class Sent2Vec(SaveLoad):
             Max length of char ngrams. Default is 6.
         dropoutk : int
             Number of ngrams dropped when training a sent2vec model. Default is 2.
+        batch_words : int
+            Target size (in words) for batches of examples passed to worker threads (and
+            thus cython routines). Default is 10000. (Larger batches will be passed if individual
+            texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
+        workers : int
+            Use this many worker threads to train the model (=faster training with multicore machines).
+            Default is 3.
         """
 
         self.seed = seed
         self.random = np.random.RandomState(seed)
         self.negpos = 1
         self.loss = 0.0
-        self.nexamples = 1
         self.negative_table_size = 10000000
         self.negatives = []
         self.vector_size = vector_size
@@ -421,11 +433,17 @@ class Sent2Vec(SaveLoad):
         self.minn = minn
         self.maxn = maxn
         self.dropoutk = dropoutk
-        self.hidden = np.zeros(vector_size, dtype=np.float32)
-        self.grad = np.zeros(vector_size, dtype=np.float32)
+        self.dict = None
+        self.min_lr = min_lr
+        self.min_lr_yet_reached = lr
+        self.batch_words = batch_words
+        self.train_count = 0
+        self.workers = workers
+        self.total_train_time = 0
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+            self.build_vocab(sentences)
             self.train(sentences)
 
     def negative_sampling(self, target, lr):
@@ -553,66 +571,197 @@ class Sent2Vec(SaveLoad):
         for i in input_:
             self.hidden += self.wi[i]
         self.hidden *= (1.0 / len(input_))
-        self.loss += self.negative_sampling(target, lr)
-        self.nexamples += 1
+        loss = self.negative_sampling(target, lr)
         self.grad *= (1.0 / len(input_))
         for i in input_:
             self.wi[i] += self.grad
+        return loss
 
-    def train(self, sentences):
-        """
-        Update the model's neural weights from a sequence of sentences.
-        Parameters
-        ----------
-        sentences : iterable or list
-            For larger corpora (like the Toronto corpus),
-            consider an iterable that streams the sentences directly from disk/network.
-            See :class:`TorontoCorpus` in this module for such examples.
-        """
-
+    def build_vocab(self, sentences):
         logger.info("Creating dictionary...")
         self.dict = ModelDictionary(t=self.t, bucket=self.bucket, maxn=self.maxn, minn=self.minn)
         self.dict.read(sentences=sentences, min_count=self.min_count)
         logger.info("Dictionary created, dictionary size: %i, tokens read: %i", self.dict.size, self.dict.ntokens)
-        self.token_count = 0
         counts = [entry.count for entry in self.dict.words]
         self.wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1),
                                       (self.dict.size + self.bucket, self.vector_size)).astype(np.float32)
         self.wo = np.zeros((self.dict.size, self.vector_size), dtype=np.float32)
         self.init_table_negatives(counts=counts)
-        ntokens = self.dict.ntokens
+
+    def _do_train_job(self, sentences, lr, hidden, grad):
         local_token_count = 0
-        logger.info("Training...")
-        progress = 0
-        start_time = time.time()
-        for i in range(self.epochs):
-            logger.info("Begin epoch %i :", i)
-            for sentence in sentences:
-                progress = self.token_count / (self.epochs * ntokens)
-                if progress >= 1:
-                    break
-                lr = self.lr * (1.0 - progress)
-                ntokens_temp, hashes, words = self.dict.get_line(sentence)
-                local_token_count += ntokens_temp
-                if len(words) > 1:
-                    for i in range(len(words)):
-                        if self.random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
-                            continue
-                        context = list(words)
-                        context[i] = 0
-                        context = self.dict.add_ngrams_train(context=context, n=self.word_ngrams, k=self.dropoutk)
-                        context = np.array(context)
-                        if FAST_VERSION == -1:
-                            self.update(input_=context, target=words[i], lr=lr)
-                        else:
-                            update(self, context, words[i], lr)
-                if local_token_count > self.lr_update_rate:
-                    self.token_count += local_token_count
-                    local_token_count = 0
-                if self.token_count >= self.epochs * ntokens:
-                    break
-            logger.info("Progress: %.2f, lr: %.4f, loss: %.4f", progress * 100, lr, self.loss / self.nexamples)
-        logger.info("Total training time: %s seconds", (time.time() - start_time))
+        nexamples = 0
+        loss = 0.0
+        for sentence in sentences:
+            ntokens_temp, hashes, words = self.dict.get_line(sentence)
+            local_token_count += ntokens_temp
+            if len(words) > 1:
+                for i in range(len(words)):
+                    if self.random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
+                        continue
+                    context = list(words)
+                    context[i] = 0
+                    context = self.dict.add_ngrams_train(context=context, n=self.word_ngrams, k=self.dropoutk)
+                    context = np.array(context)
+                    if FAST_VERSION == -1:
+                        loss += self.update(input_=context, target=words[i], lr=lr)
+                    else:
+                        loss += update(self, context, words[i], lr, hidden, grad)
+                    nexamples += 1
+        return local_token_count, nexamples, loss
+
+    def train(self, sentences, queue_factor=2, report_delay=1.0):
+        if FAST_VERSION < 0:
+            logger.warning(
+                "C extension not loaded for Word2Vec, training will be slow. "
+                "Install a C compiler and reinstall gensim for fast training."
+            )
+
+        logger.info(
+            "training model with %i workers on %i vocabulary and %i features",
+            self.workers, self.dict.size, self.vector_size)
+
+        if not self.dict:
+            raise RuntimeError("you must first build vocabulary before training the model")
+
+        start_lr = self.lr
+        end_lr = self.min_lr
+
+        job_tally = 0
+        nexamples = 0
+
+        if self.epochs > 1:
+            total_words = self.dict.ntokens * self.epochs
+            sentences = utils.RepeatCorpusNTimes(sentences, self.epochs)
+
+        def worker_loop():
+            """Train the model, lifting lists of sentences from the job_queue."""
+            hidden = np.zeros(self.vector_size, dtype=np.float32)  # per-thread private work memory
+            grad = np.zeros(self.vector_size, dtype=np.float32)
+            jobs_processed = 0
+            while True:
+                job = job_queue.get()
+                if job is None:
+                    progress_queue.put(None)
+                    break  # no more jobs => quit this worker
+                sentences, lr = job
+                tally, nexamples, loss = self._do_train_job(sentences, lr, hidden, grad)
+                progress_queue.put((np.sum(len(sentence) for sentence in sentences), tally, nexamples, loss))  # report back progress
+                jobs_processed += 1
+            logger.debug("worker exiting, processed %i jobs", jobs_processed)
+
+        def job_producer():
+            """Fill jobs queue using the input `sentences` iterator."""
+            job_batch, batch_size = [], 0
+            pushed_words = 0
+            next_lr = start_lr
+            if next_lr > self.min_lr_yet_reached:
+                logger.warning("Effective learning rate higher than previous training cycles")
+            self.min_lr_yet_reached = next_lr
+            job_no = 0
+
+            for sent_idx, sentence in enumerate(sentences):
+                sentence_length = len(sentence)
+
+                # can we fit this sentence into the existing job batch?
+                if batch_size + sentence_length <= self.batch_words:
+                    # yes => add it to the current job
+                    job_batch.append(sentence)
+                    batch_size += sentence_length
+                else:
+                    # no => submit the existing job
+                    logger.debug(
+                        "queueing job #%i (%i words, %i sentences) at alpha %.05f",
+                        job_no, batch_size, len(job_batch), next_lr
+                    )
+                    job_no += 1
+                    job_queue.put((job_batch, next_lr))
+
+                    # update the learning rate for the next job
+                    if end_lr < next_lr:
+                        pushed_words += len(job_batch)
+                        progress = 1.0 * pushed_words / total_words
+                        next_lr = start_lr - (start_lr - end_lr) * progress
+                        next_lr = max(end_lr, next_lr)
+
+                    # add the sentence that didn't fit as the first item of a new job
+                    job_batch, batch_size = [sentence], sentence_length
+
+            # add the last job too (may be significantly smaller than batch_words)
+            if job_batch:
+                logger.debug(
+                    "queueing job #%i (%i words, %i sentences) at alpha %.05f",
+                    job_no, batch_size, len(job_batch), next_lr
+                )
+                job_no += 1
+                job_queue.put((job_batch, next_lr))
+
+            if job_no == 0 and self.train_count == 0:
+                logger.warning(
+                    "train() called with an empty iterator (if not intended, "
+                    "be sure to provide a corpus that offers restartable iteration = an iterable)."
+                )
+
+            # give the workers heads up that they can finish -- no more work!
+            for _ in xrange(self.workers):
+                job_queue.put(None)
+            logger.debug("job loop exiting, total %i jobs", job_no)
+
+        # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
+        job_queue = Queue(maxsize=queue_factor * self.workers)
+        progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
+
+        workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
+        unfinished_worker_count = len(workers)
+        workers.append(threading.Thread(target=job_producer))
+
+        for thread in workers:
+            thread.daemon = True  # make interrupting the process with ctrl+c easier
+            thread.start()
+
+        trained_word_count, raw_word_count, self.loss = 0, 0, 0.0
+        start, next_report = default_timer() - 0.00001, 1.0
+
+        while unfinished_worker_count > 0:
+            report = progress_queue.get()  # blocks if workers too slow
+            if report is None:  # a thread reporting that it finished
+                unfinished_worker_count -= 1
+                logger.info("worker thread finished; awaiting finish of %i more threads", unfinished_worker_count)
+                continue
+            raw_words, trained_words, nexamples_temp, loss_temp = report
+            job_tally += 1
+
+            # update progress stats
+            trained_word_count += trained_words  # only words in vocab
+            raw_word_count += raw_words
+            nexamples += nexamples_temp
+            self.loss += loss_temp
+
+            # log progress once every report_delay seconds
+            elapsed = default_timer() - start
+            if elapsed >= next_report:
+                # words-based progress %
+                logger.info(
+                "PROGRESS: at %.2f%% words, %.0f words/s",
+                100.0 * raw_word_count / total_words, trained_word_count / elapsed)
+                next_report = elapsed + report_delay
+
+        # all done; report the final stats
+        elapsed = default_timer() - start
+        logger.info(
+            "training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
+            raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
+        )
+        if job_tally < 10 * self.workers:
+            logger.warning("under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay")
+
+        # check that the input corpus hasn't changed during iteration
+        if total_words != raw_word_count:
+            logger.warning("supplied raw word count (%i) did not equal expected count (%i)", raw_word_count, total_words)
+
+        self.train_count += 1  # number of times train() has been called
+        self.total_train_time += elapsed
+        return trained_word_count
 
     def sentence_vectors(self, sentence):
         """
