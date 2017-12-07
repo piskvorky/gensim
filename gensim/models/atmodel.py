@@ -883,7 +883,7 @@ class AuthorTopicModel(LdaModel):
         raise NotImplementedError('Method "get_document_topics" is not valid for the author-topic model. Use the "get_author_topics" method.')
 
     def get_new_author_topics(self, corpus, minimum_probability=None):
-        """Inference topics for new author.
+        """Infers topics for new author.
 
         Infers a topic distribution for a new author over the passed corpus of docs,
         assuming that all documents are from this single new author.
