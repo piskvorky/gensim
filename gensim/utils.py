@@ -1294,13 +1294,11 @@ def deprecated(reason):
 
             @wraps(func)
             def new_func1(*args, **kwargs):
-                warnings.simplefilter('always', DeprecationWarning)
                 warnings.warn(
                     fmt.format(name=func.__name__, reason=reason),
                     category=DeprecationWarning,
                     stacklevel=2
                 )
-                warnings.simplefilter('default', DeprecationWarning)
                 return func(*args, **kwargs)
 
             return new_func1
@@ -1312,13 +1310,11 @@ def deprecated(reason):
 
         @wraps(func)
         def new_func2(*args, **kwargs):
-            warnings.simplefilter('always', DeprecationWarning)
             warnings.warn(
                 fmt.format(name=func.__name__),
                 category=DeprecationWarning,
                 stacklevel=2
             )
-            warnings.simplefilter('default', DeprecationWarning)
             return func(*args, **kwargs)
         return new_func2
 
