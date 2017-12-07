@@ -29,11 +29,12 @@ import os
 import random
 import itertools
 import tempfile
-from functools import wraps  # for `synchronous` function lock
+from functools import wraps
 import multiprocessing
 import shutil
 import sys
 import subprocess
+import inspect
 
 import numpy as np
 import numbers
@@ -1280,3 +1281,46 @@ def lazy_flatten(nested_list):
                 yield sub
         else:
             yield el
+
+
+def deprecated(reason):
+    """Decorator which can be used to mark functions as deprecated. It will result in a warning being emitted
+    when the function is used, base code from https://stackoverflow.com/a/40301488/8001386.
+
+    """
+    if isinstance(reason, string_types):
+        def decorator(func):
+            fmt = "Call to deprecated `{name}` ({reason})."
+
+            @wraps(func)
+            def new_func1(*args, **kwargs):
+                warnings.simplefilter('always', DeprecationWarning)
+                warnings.warn(
+                    fmt.format(name=func.__name__, reason=reason),
+                    category=DeprecationWarning,
+                    stacklevel=2
+                )
+                warnings.simplefilter('default', DeprecationWarning)
+                return func(*args, **kwargs)
+
+            return new_func1
+        return decorator
+
+    elif inspect.isclass(reason) or inspect.isfunction(reason):
+        func = reason
+        fmt = "Call to deprecated `{name}`."
+
+        @wraps(func)
+        def new_func2(*args, **kwargs):
+            warnings.simplefilter('always', DeprecationWarning)
+            warnings.warn(
+                fmt.format(name=func.__name__),
+                category=DeprecationWarning,
+                stacklevel=2
+            )
+            warnings.simplefilter('default', DeprecationWarning)
+            return func(*args, **kwargs)
+        return new_func2
+
+    else:
+        raise TypeError(repr(type(reason)))
