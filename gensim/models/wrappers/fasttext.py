@@ -7,6 +7,13 @@
 
 
 """
+Warnings
+--------
+.. deprecated:: 3.2.0
+   Use :class:`gensim.models.fasttext.FastText` instead of :class:`gensim.models.wrappers.fasttext.FastText`.
+
+
+
 Python wrapper around word representation learning from FastText, a library for efficient learning
 of word representations and sentence classification [1].
 
@@ -23,6 +30,8 @@ Example:
 >>> print model['forests']  # prints vector for given out-of-vocabulary word
 
 .. [1] https://github.com/facebookresearch/fastText#enriching-word-vectors-with-subword-information
+
+
 
 """
 
@@ -144,7 +153,6 @@ class FastTextKeyedVectors(KeyedVectors):
         raise NotImplementedError("Not supported. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
 
 
-@deprecated("This class will be removed in 4.0.0, use gensim.models.FastText instead")
 class FastText(Word2Vec):
     """
     Class for word vector training using FastText. Communication between FastText and Python
@@ -153,6 +161,12 @@ class FastText(Word2Vec):
     Implements functionality similar to [fasttext.py](https://github.com/salestock/fastText.py),
     improving speed and scope of functionality like `most_similar`, `similarity` by extracting vectors
     into numpy matrix.
+
+    Warnings
+    --------
+    .. deprecated:: 3.2.0
+       Use :class:`gensim.models.fasttext.FastText` instead of :class:`gensim.models.wrappers.fasttext.FastText`.
+
 
     """
 
