@@ -626,6 +626,7 @@ def get_my_ip():
     import socket
     try:
         import Pyro4
+        import Pyro4.naming
         # we know the nameserver must exist, so use it as our anchor point
         ns = Pyro4.naming.locateNS()
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
