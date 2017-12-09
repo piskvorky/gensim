@@ -12,16 +12,11 @@ Automated tests for checking processing/storing large inputs.
 import logging
 import unittest
 import os
-import tempfile
 
 import numpy as np
 
 import gensim
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_big.tst')
+from gensim.test.utils import get_tmpfile
 
 
 class BigCorpus(object):
@@ -50,24 +45,27 @@ if os.environ.get('GENSIM_BIG', False):
 
         def testWord2Vec(self):
             corpus = BigCorpus(words_only=True, num_docs=100000, num_terms=3000000, doc_len=200)
+            tmpf = get_tmpfile('gensim_big.tst')
             model = gensim.models.Word2Vec(corpus, size=300, workers=4)
-            model.save(testfile(), ignore=['syn1'])
+            model.save(tmpf, ignore=['syn1'])
             del model
-            gensim.models.Word2Vec.load(testfile())
+            gensim.models.Word2Vec.load(tmpf)
 
         def testLsiModel(self):
             corpus = BigCorpus(num_docs=50000)
+            tmpf = get_tmpfile('gensim_big.tst')
             model = gensim.models.LsiModel(corpus, num_topics=500, id2word=corpus.dictionary)
-            model.save(testfile())
+            model.save(tmpf)
             del model
-            gensim.models.LsiModel.load(testfile())
+            gensim.models.LsiModel.load(tmpf)
 
         def testLdaModel(self):
             corpus = BigCorpus(num_docs=5000)
+            tmpf = get_tmpfile('gensim_big.tst')
             model = gensim.models.LdaModel(corpus, num_topics=500, id2word=corpus.dictionary)
-            model.save(testfile())
+            model.save(tmpf)
             del model
-            gensim.models.LdaModel.load(testfile())
+            gensim.models.LdaModel.load(tmpf)
 
 
 if __name__ == '__main__':

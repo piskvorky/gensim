@@ -24,7 +24,8 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
     Base LSI module
     """
 
-    def __init__(self, num_topics=200, id2word=None, chunksize=20000, decay=1.0, onepass=True, power_iters=2, extra_samples=100):
+    def __init__(self, num_topics=200, id2word=None, chunksize=20000,
+                 decay=1.0, onepass=True, power_iters=2, extra_samples=100):
         """
         Sklearn wrapper for LSI model. See gensim.model.LsiModel for parameter details.
         """
@@ -43,7 +44,7 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
         Calls gensim.models.LsiModel
         """
         if sparse.issparse(X):
-            corpus = matutils.Sparse2Corpus(X)
+            corpus = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
         else:
             corpus = X
 
@@ -58,7 +59,9 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
         Takes a list of documents as input ('docs').
         Returns a matrix of topic distribution for the given document bow, where a_ij
         indicates (topic_i, topic_probability_j).
-        The input `docs` should be in BOW format and can be a list of documents like : [ [(4, 1), (7, 1)], [(9, 1), (13, 1)], [(2, 1), (6, 1)] ]
+        The input `docs` should be in BOW format and can be a list of documents like
+        [[(4, 1), (7, 1)],
+        [(9, 1), (13, 1)], [(2, 1), (6, 1)]]
         or a single document like : [(4, 1), (7, 1)]
         """
         if self.gensim_model is None:
@@ -67,22 +70,19 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
             )
 
         # The input as array of array
-        check = lambda x: [x] if isinstance(x[0], tuple) else x
-        docs = check(docs)
-        X = [[] for i in range(0, len(docs))]
-        for k, v in enumerate(docs):
-            doc_topics = self.gensim_model[v]
-            # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
-            probs_docs = matutils.sparse2full(doc_topics, self.num_topics)
-            X[k] = probs_docs
-        return np.reshape(np.array(X), (len(docs), self.num_topics))
+        if isinstance(docs[0], tuple):
+            docs = [docs]
+        # returning dense representation for compatibility with sklearn
+        # but we should go back to sparse representation in the future
+        distribution = [matutils.sparse2full(self.gensim_model[doc], self.num_topics) for doc in docs]
+        return np.reshape(np.array(distribution), (len(docs), self.num_topics))
 
     def partial_fit(self, X):
         """
         Train model over X.
         """
         if sparse.issparse(X):
-            X = matutils.Sparse2Corpus(X)
+            X = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
 
         if self.gensim_model is None:
             self.gensim_model = models.LsiModel(

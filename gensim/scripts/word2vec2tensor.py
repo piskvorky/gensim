@@ -6,7 +6,8 @@
 # Copyright (C) 2016 Radim Rehurek <radim@rare-technologies.com>
 
 """
-USAGE: $ python -m gensim.scripts.word2vec2tensor --input <Word2Vec model file> --output <TSV tensor filename prefix> [--binary] <Word2Vec binary flag>
+USAGE: $ python -m gensim.scripts.word2vec2tensor --input <Word2Vec model file> --output <TSV tensor filename prefix> \
+        [--binary] <Word2Vec binary flag>
 
 Where:
 
@@ -18,7 +19,8 @@ Output:
     The script will create two TSV files. A 2d tensor format file, and a Word Embedding metadata file. Both files will
     use the --output file name as prefix.
 
-This script is used to convert the word2vec format to Tensorflow 2D tensor and metadata formats for Embedding Visualization
+This script is used to convert the word2vec format to Tensorflow 2D tensor
+and metadata formats for Embedding Visualization.
 To use the generated TSV 2D tensor and metadata file in the Projector Visualizer, please
 
 1) Open http://projector.tensorflow.org/.
@@ -73,7 +75,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", required=True, help="Input word2vec model")
     parser.add_argument("-o", "--output", required=True, help="Output tensor file name prefix")
-    parser.add_argument("-b", "--binary", required=False, help="If word2vec model in binary format, set True, else False")
+    parser.add_argument(
+        "-b", "--binary", required=False, help="If word2vec model in binary format, set True, else False"
+    )
     args = parser.parse_args()
 
     word2vec2tensor(args.input, args.output, args.binary)

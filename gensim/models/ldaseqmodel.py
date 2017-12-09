@@ -57,19 +57,21 @@ class LdaSeqModel(utils.SaveLoad):
 
         `time_slice` as described above is a list which contains the number of documents in each time-slice
 
-        `id2word` is a mapping from word ids (integers) to words (strings). It is used to determine the vocabulary size and printing topics.
+        `id2word` is a mapping from word ids (integers) to words (strings).
+        It is used to determine the vocabulary size and printing topics.
 
         `alphas`  is a prior of your choice and should be a double or float value. default is 0.01
 
         `num_topics` is the number of requested latent topics to be extracted from the training corpus.
 
         `initalize` allows the user to decide how he wants to initialise the DTM model. Default is through gensim LDA.
-        You can use your own sstats of an LDA model previously trained as well by specifying 'own' and passing a np matrix through sstats.
+        You can use your own sstats of an LDA model previously trained as well by specifying 'own'
+        and passing a np matrix through sstats.
         If you wish to just pass a previously used LDA model, pass it through `lda_model`
         Shape of sstats is (vocab_len, num_topics)
 
-        `chain_variance` is a constant which dictates how the beta values evolve - it is a gaussian parameter defined in the
-        beta distribution.
+        `chain_variance` is a constant which dictates how the beta values evolve - it is a gaussian parameter
+        defined in the beta distribution.
 
         `passes` is the number of passes of the initial LdaModel.
 
@@ -77,7 +79,9 @@ class LdaSeqModel(utils.SaveLoad):
         """
         self.id2word = id2word
         if corpus is None and self.id2word is None:
-            raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
+            raise ValueError(
+                'at least one of corpus/id2word must be specified, to establish input space dimensionality'
+            )
 
         if self.id2word is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
@@ -109,8 +113,10 @@ class LdaSeqModel(utils.SaveLoad):
         self.num_time_slices = len(time_slice)
         self.alphas = np.full(num_topics, alphas)
 
-        # topic_chains contains for each topic a 'state space language model' object which in turn has information about each topic
-        # the sslm class is described below and contains information on topic-word probabilities and doc-topic probabilities.
+        # topic_chains contains for each topic a 'state space language model' object
+        # which in turn has information about each topic
+        # the sslm class is described below and contains information
+        # on topic-word probabilities and doc-topic probabilities.
         self.topic_chains = []
         for topic in range(0, num_topics):
             sslm_ = sslm(
@@ -130,7 +136,8 @@ class LdaSeqModel(utils.SaveLoad):
             if initialize == 'gensim':
                 lda_model = ldamodel.LdaModel(
                     corpus, id2word=self.id2word, num_topics=self.num_topics,
-                    passes=passes, alpha=self.alphas, random_state=random_state
+                    passes=passes, alpha=self.alphas, random_state=random_state,
+                    dtype=np.float64
                 )
                 self.sstats = np.transpose(lda_model.state.sstats)
             if initialize == 'ldamodel':
@@ -203,7 +210,8 @@ class LdaSeqModel(utils.SaveLoad):
             lhoods = np.resize(np.zeros(corpus_len * num_topics + 1), (corpus_len, num_topics + 1))
             # compute the likelihood of a sequential corpus under an LDA
             # seq model and find the evidence lower bound. This is the E - Step
-            bound, gammas = self.lda_seq_infer(corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter, chunksize)
+            bound, gammas = \
+                self.lda_seq_infer(corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter, chunksize)
             self.gammas = gammas
 
             logger.info("M Step")
@@ -244,7 +252,7 @@ class LdaSeqModel(utils.SaveLoad):
         vocab_len = self.vocab_len
         bound = 0.0
 
-        lda = ldamodel.LdaModel(num_topics=num_topics, alpha=self.alphas, id2word=self.id2word)
+        lda = ldamodel.LdaModel(num_topics=num_topics, alpha=self.alphas, id2word=self.id2word, dtype=np.float64)
         lda.topics = np.array(np.split(np.zeros(vocab_len * num_topics), vocab_len))
         ldapost = LdaPost(max_doc_len=self.max_doc_len, num_topics=num_topics, lda=lda)
 
@@ -380,14 +388,18 @@ class LdaSeqModel(utils.SaveLoad):
 
     def dtm_vis(self, time, corpus):
         """
-        returns term_frequency, vocab, doc_lengths, topic-term distributions and doc_topic distributions, specified by pyLDAvis format.
+        returns term_frequency, vocab, doc_lengths, topic-term distributions and doc_topic distributions,
+        specified by pyLDAvis format.
         all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
         input parameter is the year to do the visualisation.
         """
         doc_topic = np.copy(self.gammas)
         doc_topic /= doc_topic.sum(axis=1)[:, np.newaxis]
 
-        topic_term = [np.exp(np.transpose(chain.e_log_prob)[time]) / np.exp(np.transpose(chain.e_log_prob)[time]).sum() for k, chain in enumerate(self.topic_chains)]
+        topic_term = [
+            np.exp(np.transpose(chain.e_log_prob)[time]) / np.exp(np.transpose(chain.e_log_prob)[time]).sum()
+            for k, chain in enumerate(self.topic_chains)
+        ]
 
         doc_lengths = [len(doc) for doc_no, doc in enumerate(corpus)]
 
@@ -419,7 +431,8 @@ class LdaSeqModel(utils.SaveLoad):
         """
         Similar to the LdaModel __getitem__ function, it returns topic proportions of a document passed.
         """
-        lda_model = ldamodel.LdaModel(num_topics=self.num_topics, alpha=self.alphas, id2word=self.id2word)
+        lda_model = \
+            ldamodel.LdaModel(num_topics=self.num_topics, alpha=self.alphas, id2word=self.id2word, dtype=np.float64)
         lda_model.topics = np.array(np.split(np.zeros(self.vocab_len * self.num_topics), self.vocab_len))
         ldapost = LdaPost(num_topics=self.num_topics, max_doc_len=len(doc), lda=lda_model, doc=doc)
 
@@ -474,7 +487,8 @@ class sslm(utils.SaveLoad):
     def update_zeta(self):
         """
         Updates the Zeta Variational Parameter.
-        Zeta is described in the appendix and is equal to sum (exp(mean[word] + Variance[word] / 2)), over every time-slice.
+        Zeta is described in the appendix and is equal
+        to sum (exp(mean[word] + Variance[word] / 2)), over every time-slice.
         It is the value of variational parameter zeta which maximizes the lower bound.
         """
         for j, val in enumerate(self.zeta):
@@ -483,17 +497,23 @@ class sslm(utils.SaveLoad):
 
     def compute_post_variance(self, word, chain_variance):
         """
-        Based on the Variational Kalman Filtering approach for Approximate Inference [https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf]
-        This function accepts the word to compute variance for, along with the associated sslm class object, and returns variance and fwd_variance
+        Based on the  Variational Kalman Filtering approach for Approximate Inference
+        [https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf]
+        This function accepts the word to compute variance for, along with the associated sslm class object,
+        and returns variance and fwd_variance
         Computes Var[\beta_{t,w}] for t = 1:T
 
         :math::
 
-            fwd\_variance[t] \equiv E((beta_{t,w}-mean_{t,w})^2 |beta_{t}\ for\ 1:t) = (obs\_variance / fwd\_variance[t - 1] + chain\_variance + obs\_variance ) * (fwd\_variance[t - 1] + obs\_variance)
+            fwd\_variance[t] \equiv E((beta_{t,w}-mean_{t,w})^2 |beta_{t}\ for\ 1:t) =
+             (obs\_variance / fwd\_variance[t - 1] + chain\_variance + obs\_variance ) *
+             (fwd\_variance[t - 1] + obs\_variance)
 
         :math::
 
-            variance[t] \equiv E((beta_{t,w}-mean\_cap_{t,w})^2 |beta\_cap_{t}\ for\ 1:t) = fwd\_variance[t - 1] + (fwd\_variance[t - 1] / fwd\_variance[t - 1] + obs\_variance)^2 * (variance[t - 1] - (fwd\_variance[t-1] + obs\_variance))
+            variance[t] \equiv E((beta_{t,w}-mean\_cap_{t,w})^2 |beta\_cap_{t}\ for\ 1:t) =
+            fwd\_variance[t - 1] + (fwd\_variance[t - 1] / fwd\_variance[t - 1] + obs\_variance)^2 *
+            (variance[t - 1] - (fwd\_variance[t-1] + obs\_variance))
 
         """
         INIT_VARIANCE_CONST = 1000
@@ -523,15 +543,19 @@ class sslm(utils.SaveLoad):
 
     def compute_post_mean(self, word, chain_variance):
         """
-        Based on the Variational Kalman Filtering approach for Approximate Inference [https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf]
-        This function accepts the word to compute mean for, along with the associated sslm class object, and returns mean and fwd_mean
+        Based on the Variational Kalman Filtering approach for Approximate Inference
+        [https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf]
+        This function accepts the word to compute mean for, along with the associated sslm class object,
+        and returns mean and fwd_mean
         Essentially a forward-backward to compute E[\beta_{t,w}] for t = 1:T.
 
         Fwd_Mean(t) ≡  E(beta_{t,w} | beta_ˆ 1:t )
-        = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * fwd_mean[t - 1] + (1 - (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance)) * beta
+        = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * fwd_mean[t - 1] +
+        (1 - (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance)) * beta
 
         Mean(t) ≡ E(beta_{t,w} | beta_ˆ 1:T )
-        = fwd_mean[t - 1] + (obs_variance / fwd_variance[t - 1] + obs_variance) + (1 - obs_variance / fwd_variance[t - 1] + obs_variance)) * mean[t]
+        = fwd_mean[t - 1] + (obs_variance / fwd_variance[t - 1] + obs_variance) +
+        (1 - obs_variance / fwd_variance[t - 1] + obs_variance)) * mean[t]
 
         """
         T = self.num_time_slices
@@ -560,7 +584,8 @@ class sslm(utils.SaveLoad):
         """
         Compute the expected log probability given values of m.
         The appendix describes the Expectation of log-probabilities in equation 5 of the DTM paper;
-        The below implementation is the result of solving the equation and is as implemented in the original Blei DTM code.
+        The below implementation is the result of solving the equation and is as implemented
+        in the original Blei DTM code.
         """
         for (w, t), val in np.ndenumerate(self.e_log_prob):
             self.e_log_prob[w][t] = self.mean[w][t + 1] - np.log(self.zeta[t])
@@ -569,7 +594,8 @@ class sslm(utils.SaveLoad):
     def sslm_counts_init(self, obs_variance, chain_variance, sstats):
         """
         Initialize State Space Language Model with LDA sufficient statistics.
-        Called for each topic-chain and initializes intial mean, variance and Topic-Word probabilities for the first time-slice.
+        Called for each topic-chain and initializes intial mean, variance and Topic-Word probabilities
+        for the first time-slice.
         """
         W = self.vocab_len
         T = self.num_time_slices
@@ -609,7 +635,8 @@ class sslm(utils.SaveLoad):
         converged = sslm_fit_threshold + 1
 
         # computing variance, fwd_variance
-        self.variance, self.fwd_variance = (np.array(x) for x in list(zip(*[self.compute_post_variance(w, self.chain_variance) for w in range(0, W)])))
+        self.variance, self.fwd_variance = \
+            (np.array(x) for x in list(zip(*[self.compute_post_variance(w, self.chain_variance) for w in range(0, W)])))
 
         # column sum of sstats
         totals = sstats.sum(axis=0)
@@ -656,7 +683,8 @@ class sslm(utils.SaveLoad):
 
         chain_variance = self.chain_variance
         # computing mean, fwd_mean
-        self.mean, self.fwd_mean = (np.array(x) for x in zip(*[self.compute_post_mean(w, self.chain_variance) for w in range(0, w)]))
+        self.mean, self.fwd_mean = \
+            (np.array(x) for x in zip(*[self.compute_post_mean(w, self.chain_variance) for w in range(0, w)]))
         self.zeta = self.update_zeta()
 
         for w in range(0, w):
@@ -678,9 +706,11 @@ class sslm(utils.SaveLoad):
                 # w_phi_l is only used in Document Influence Model; the values are aleays zero in this case
                 # w_phi_l = sslm.w_phi_l[w][t - 1]
                 # exp_i = np.exp(-prev_m)
-                # term_1 += (np.power(m - prev_m - (w_phi_l * exp_i), 2) / (2 * chain_variance)) - (v / chain_variance) - np.log(chain_variance)
+                # term_1 += (np.power(m - prev_m - (w_phi_l * exp_i), 2) / (2 * chain_variance)) -
+                # (v / chain_variance) - np.log(chain_variance)
 
-                term_1 += (np.power(m - prev_m, 2) / (2 * chain_variance)) - (v / chain_variance) - np.log(chain_variance)
+                term_1 += \
+                    (np.power(m - prev_m, 2) / (2 * chain_variance)) - (v / chain_variance) - np.log(chain_variance)
                 term_2 += sstats[w][t - 1] * m
                 ent += np.log(v) / 2  # note the 2pi's cancel with term1 (see doc)
 
@@ -876,7 +906,8 @@ class LdaPost(utils.SaveLoad):
         This is done based on the original Blei-LDA paper, where:
         log_phi := beta * exp(Ψ(gamma)), over every topic for every word.
 
-        TODO: incorporate lee-sueng trick used in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
+        TODO: incorporate lee-sueng trick used in
+        **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
         """
         num_topics = self.lda.num_topics
         # digamma values
@@ -954,15 +985,19 @@ class LdaPost(utils.SaveLoad):
             # below code only to be used in DIM mode
             # if ldapost.doc_weight is not None and (model == "DIM" or model == "fixed"):
             #     influence_topic = ldapost.doc_weight[k]
-            #     influence_term = - ((influence_topic * influence_topic + sigma_l * sigma_l) / 2.0 / (sigma_d * sigma_d))
+            #     influence_term = \
+            #           - ((influence_topic * influence_topic + sigma_l * sigma_l) / 2.0 / (sigma_d * sigma_d))
 
             e_log_theta_k = digamma(self.gamma[k]) - digsum
-            lhood_term = (self.lda.alpha[k] - self.gamma[k]) * e_log_theta_k + gammaln(self.gamma[k]) - gammaln(self.lda.alpha[k])
+            lhood_term = \
+                (self.lda.alpha[k] - self.gamma[k]) * e_log_theta_k + \
+                gammaln(self.gamma[k]) - gammaln(self.lda.alpha[k])
             # TODO: check why there's an IF
             n = 0
             for word_id, count in self.doc:
                 if self.phi[n][k] > 0:
-                    lhood_term += count * self.phi[n][k] * (e_log_theta_k + self.lda.topics[word_id][k] - self.log_phi[n][k])
+                    lhood_term += \
+                        count * self.phi[n][k] * (e_log_theta_k + self.lda.topics[word_id][k] - self.log_phi[n][k])
                 n += 1
             self.lhood[k] = lhood_term
             lhood += lhood_term

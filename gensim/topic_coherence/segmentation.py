@@ -24,7 +24,8 @@ def s_one_pre(topics):
         [[(2, 1), (3, 1), (3, 2)], [(5, 4), (6, 4), (6, 5)]]
 
     Args:
-        topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
+        topics : list of topics obtained from an algorithm such as LDA.
+        Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
 
     Returns:
         s_one_pre_res : list of list of (W', W*) tuples for all unique topic ids
@@ -52,7 +53,8 @@ def s_one_one(topics):
         [[(1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2)], [(4, 5), (4, 6), (5, 4), (5, 6), (6, 4), (6, 5)]]
 
     Args:
-        topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
+        topics : list of topics obtained from an algorithm such as LDA.
+        Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
 
     Returns:
         s_one_one_res : list of list of (W', W*) tuples for all unique topic ids
@@ -84,7 +86,8 @@ def s_one_set(topics):
           (7, array([ 9, 10,  7]))]]
 
     Args:
-        topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
+        topics : list of topics obtained from an algorithm such as LDA.
+         Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
 
     Returns:
         s_one_set_res : list of list of (W', W*) tuples for all unique topic ids.

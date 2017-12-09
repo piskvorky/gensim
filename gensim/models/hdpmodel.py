@@ -391,7 +391,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_rhot = rhot
 
         # Update appropriate columns of lambda based on documents.
-        self.m_lambda[:, word_list] = self.m_lambda[:, word_list] * (1 - rhot) + rhot * self.m_D * sstats.m_var_beta_ss / sstats.m_chunksize
+        self.m_lambda[:, word_list] = \
+            self.m_lambda[:, word_list] * (1 - rhot) + rhot * self.m_D * sstats.m_var_beta_ss / sstats.m_chunksize
         self.m_lambda_sum = (1 - rhot) * self.m_lambda_sum + \
             rhot * self.m_D * np.sum(sstats.m_var_beta_ss, axis=1) / sstats.m_chunksize
 
@@ -399,7 +400,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_timestamp[word_list] = self.m_updatect
         self.m_r.append(self.m_r[-1] + np.log(1 - rhot))
 
-        self.m_varphi_ss = (1.0 - rhot) * self.m_varphi_ss + rhot * sstats.m_var_sticks_ss * self.m_D / sstats.m_chunksize
+        self.m_varphi_ss = \
+            (1.0 - rhot) * self.m_varphi_ss + rhot * sstats.m_var_sticks_ss * self.m_D / sstats.m_chunksize
 
         if opt_o:
             self.optimal_ordering()
@@ -429,7 +431,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         for w in xrange(self.m_W):
             self.m_lambda[:, w] *= np.exp(self.m_r[-1] - self.m_r[self.m_timestamp[w]])
-        self.m_Elogbeta = psi(self.m_eta + self.m_lambda) - psi(self.m_W * self.m_eta + self.m_lambda_sum[:, np.newaxis])
+        self.m_Elogbeta = \
+            psi(self.m_eta + self.m_lambda) - psi(self.m_W * self.m_eta + self.m_lambda_sum[:, np.newaxis])
 
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
@@ -443,9 +446,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         if num_words is not None:  # deprecated num_words is used
-            logger.warning(
-                "The parameter num_words for show_topic() would be deprecated in the updated version. "
-                "Please use topn instead."
+            warnings.warn(
+                "The parameter `num_words` is deprecated, will be removed in 4.0.0, please use `topn` instead."
             )
             topn = num_words
 
@@ -538,7 +540,9 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         The num_topics is m_T (default is 150) so as to preserve the matrice shapes when we assign alpha and beta.
         """
         alpha, beta = self.hdp_to_lda()
-        ldam = ldamodel.LdaModel(num_topics=self.m_T, alpha=alpha, id2word=self.id2word, random_state=self.random_state)
+        ldam = ldamodel.LdaModel(
+            num_topics=self.m_T, alpha=alpha, id2word=self.id2word, random_state=self.random_state, dtype=np.float64
+        )
         ldam.expElogbeta[:] = beta
         return ldam
 
@@ -626,8 +630,7 @@ class HdpTopicFormatter(object):
     def print_topic(self, topic_id, topn=None, num_words=None):
         if num_words is not None:  # deprecated num_words is used
             warnings.warn(
-                "The parameter num_words for print_topic() would be deprecated in the updated version. "
-                "Please use topn instead."
+                "The parameter `num_words` is deprecated, will be removed in 4.0.0, please use `topn` instead."
             )
             topn = num_words
 
@@ -636,8 +639,7 @@ class HdpTopicFormatter(object):
     def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words=None,):
         if num_words is not None:  # deprecated num_words is used
             warnings.warn(
-                "The parameter num_words for show_topic() would be deprecated in the updated version. "
-                "Please use topn instead."
+                "The parameter `num_words` is deprecated, will be removed in 4.0.0, please use `topn` instead."
             )
             topn = num_words
 

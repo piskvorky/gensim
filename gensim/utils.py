@@ -29,11 +29,12 @@ import os
 import random
 import itertools
 import tempfile
-from functools import wraps  # for `synchronous` function lock
+from functools import wraps
 import multiprocessing
 import shutil
 import sys
 import subprocess
+import inspect
 
 import numpy as np
 import numbers
@@ -288,10 +289,11 @@ class SaveLoad(object):
         opportunity to recursively included SaveLoad instances.
 
         """
-        mmap_error = lambda x, y: IOError(
-            'Cannot mmap compressed object %s in file %s. ' % (x, y) +
-            'Use `load(fname, mmap=None)` or uncompress files manually.'
-        )
+        def mmap_error(obj, filename):
+            return IOError(
+                'Cannot mmap compressed object %s in file %s. ' % (obj, filename) +
+                'Use `load(fname, mmap=None)` or uncompress files manually.'
+            )
 
         for attrib in getattr(self, '__recursive_saveloads', []):
             cfname = '.'.join((fname, attrib))
@@ -336,13 +338,8 @@ class SaveLoad(object):
     @staticmethod
     def _adapt_by_suffix(fname):
         """Give appropriate compress setting and filename formula"""
-        if fname.endswith('.gz') or fname.endswith('.bz2'):
-            compress = True
-            subname = lambda *args: '.'.join(list(args) + ['npz'])
-        else:
-            compress = False
-            subname = lambda *args: '.'.join(list(args) + ['npy'])
-        return compress, subname
+        compress, suffix = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
+        return compress, lambda *args: '.'.join(args + (suffix,))
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
         """
@@ -606,7 +603,9 @@ def is_corpus(obj):
             doc1 = next(iter(obj))  # empty corpus is resolved to False here
         if len(doc1) == 0:  # sparse documents must have a __len__ function (list, tuple...)
             return True, obj  # the first document is empty=>assume this is a corpus
-        id1, val1 = next(iter(doc1))  # if obj is a 1D numpy array(scalars) instead of 2-tuples, it resolves to False here
+
+        # if obj is a 1D numpy array(scalars) instead of 2-tuples, it resolves to False here
+        id1, val1 = next(iter(doc1))
         id1, val1 = int(id1), float(val1)  # must be a 2-tuple (integer, float)
     except Exception:
         return False, obj
@@ -761,7 +760,8 @@ def decode_htmlentities(text):
     """
     Decode HTML entities in text, coded as hex, decimal or named.
 
-    Adapted from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
+    Adapted
+    from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
 
     >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
     >>> print(decode_htmlentities(u).encode('UTF-8'))
@@ -1059,7 +1059,9 @@ def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
 
     """
     if not has_pattern():
-        raise ImportError("Pattern library is not installed. Pattern library is needed in order to use lemmatize function")
+        raise ImportError(
+            "Pattern library is not installed. Pattern library is needed in order to use lemmatize function"
+        )
     from pattern.en import parse
 
     if light:
@@ -1116,7 +1118,10 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
         if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
-    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)", old_len - len(vocab), min_reduce, old_len, len(vocab))
+    logger.info(
+        "pruned out %i tokens with count <=%i (before %i, after %i)",
+        old_len - len(vocab), min_reduce, old_len, len(vocab)
+    )
     return result
 
 
@@ -1276,3 +1281,42 @@ def lazy_flatten(nested_list):
                 yield sub
         else:
             yield el
+
+
+def deprecated(reason):
+    """Decorator which can be used to mark functions as deprecated. It will result in a warning being emitted
+    when the function is used, base code from https://stackoverflow.com/a/40301488/8001386.
+
+    """
+    if isinstance(reason, string_types):
+        def decorator(func):
+            fmt = "Call to deprecated `{name}` ({reason})."
+
+            @wraps(func)
+            def new_func1(*args, **kwargs):
+                warnings.warn(
+                    fmt.format(name=func.__name__, reason=reason),
+                    category=DeprecationWarning,
+                    stacklevel=2
+                )
+                return func(*args, **kwargs)
+
+            return new_func1
+        return decorator
+
+    elif inspect.isclass(reason) or inspect.isfunction(reason):
+        func = reason
+        fmt = "Call to deprecated `{name}`."
+
+        @wraps(func)
+        def new_func2(*args, **kwargs):
+            warnings.warn(
+                fmt.format(name=func.__name__),
+                category=DeprecationWarning,
+                stacklevel=2
+            )
+            return func(*args, **kwargs)
+        return new_func2
+
+    else:
+        raise TypeError(repr(type(reason)))

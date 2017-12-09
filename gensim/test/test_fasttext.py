@@ -3,20 +3,19 @@
 
 import logging
 import unittest
-import tempfile
 import os
 import struct
 
 import numpy as np
 
 from gensim import utils
+from gensim.models import keyedvectors
 from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as FT_wrapper
+from gensim.test.utils import datapath, get_tmpfile, common_texts as sentences
 
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 logger = logging.getLogger(__name__)
 
 IS_WIN32 = (os.name == "nt") and (struct.calcsize('P') * 8 == 32)
@@ -31,18 +30,6 @@ class LeeCorpus(object):
 
 list_corpus = list(LeeCorpus())
 
-sentences = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-
 new_sentences = [
     ['computer', 'artificial', 'intelligence'],
     ['artificial', 'trees'],
@@ -51,11 +38,6 @@ new_sentences = [
     ['intelligence'],
     ['artificial', 'intelligence', 'system']
 ]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_fasttext.tst')
 
 
 class TestFastTextModel(unittest.TestCase):
@@ -113,29 +95,31 @@ class TestFastTextModel(unittest.TestCase):
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_persistence(self):
+        tmpf = get_tmpfile('gensim_fasttext.tst')
         model = FT_gensim(sentences, min_count=1)
-        model.save(testfile())
-        self.models_equal(model, FT_gensim.load(testfile()))
+        model.save(tmpf)
+        self.models_equal(model, FT_gensim.load(tmpf))
         #  test persistence of the KeyedVectors of a model
         wv = model.wv
-        wv.save(testfile())
-        loaded_wv = FastTextKeyedVectors.load(testfile())
+        wv.save(tmpf)
+        loaded_wv = FastTextKeyedVectors.load(tmpf)
         self.assertTrue(np.allclose(wv.syn0_ngrams, loaded_wv.syn0_ngrams))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
         self.assertEqual(len(wv.ngrams), len(loaded_wv.ngrams))
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_norm_vectors_not_saved(self):
+        tmpf = get_tmpfile('gensim_fasttext.tst')
         model = FT_gensim(sentences, min_count=1)
         model.init_sims()
-        model.save(testfile())
-        loaded_model = FT_gensim.load(testfile())
+        model.save(tmpf)
+        loaded_model = FT_gensim.load(tmpf)
         self.assertTrue(loaded_model.wv.syn0norm is None)
         self.assertTrue(loaded_model.wv.syn0_ngrams_norm is None)
 
         wv = model.wv
-        wv.save(testfile())
-        loaded_kv = FastTextKeyedVectors.load(testfile())
+        wv.save(tmpf)
+        loaded_kv = FastTextKeyedVectors.load(tmpf)
         self.assertTrue(loaded_kv.syn0norm is None)
         self.assertTrue(loaded_kv.syn0_ngrams_norm is None)
 
@@ -272,7 +256,9 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(self.test_model.n_similarity(['the'], ['and']), self.test_model.n_similarity(['and'], ['the']))
         # Out of vocab check
         self.assertTrue(np.allclose(self.test_model.n_similarity(['night', 'nights'], ['nights', 'night']), 1.0))
-        self.assertEqual(self.test_model.n_similarity(['night'], ['nights']), self.test_model.n_similarity(['nights'], ['night']))
+        self.assertEqual(
+            self.test_model.n_similarity(['night'], ['nights']), self.test_model.n_similarity(['nights'], ['night'])
+        )
 
     def test_similarity(self):
         # In vocab, sanity check
@@ -362,8 +348,9 @@ class TestFastTextModel(unittest.TestCase):
             logger.info("FT_HOME env variable not set, skipping test")
             return
 
+        tmpf = get_tmpfile('gensim_fasttext.tst')
         model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=datapath('lee_background.cor'),
-            output_file=testfile(), model='cbow', size=50, alpha=0.05, window=5, min_count=5, word_ngrams=1,
+            output_file=tmpf, model='cbow', size=50, alpha=0.05, window=5, min_count=5, word_ngrams=1,
             loss='hs', sample=1e-3, negative=0, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12)
 
         model_gensim = FT_gensim(size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
@@ -382,8 +369,9 @@ class TestFastTextModel(unittest.TestCase):
             logger.info("FT_HOME env variable not set, skipping test")
             return
 
+        tmpf = get_tmpfile('gensim_fasttext.tst')
         model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=datapath('lee_background.cor'),
-            output_file=testfile(), model='skipgram', size=50, alpha=0.025, window=5, min_count=5, word_ngrams=1,
+            output_file=tmpf, model='skipgram', size=50, alpha=0.025, window=5, min_count=5, word_ngrams=1,
             loss='hs', sample=1e-3, negative=0, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12)
 
         model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
@@ -411,9 +399,10 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue('tif' in model_hs.wv.ngrams)  # ngram added because of the word `artificial`
 
     def test_online_learning_after_save(self):
+        tmpf = get_tmpfile('gensim_fasttext.tst')
         model_neg = FT_gensim(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
-        model_neg.save(testfile())
-        model_neg = FT_gensim.load(testfile())
+        model_neg.save(tmpf)
+        model_neg = FT_gensim.load(tmpf)
         self.assertTrue(len(model_neg.wv.vocab), 12)
         self.assertTrue(len(model_neg.wv.ngrams), 202)
         model_neg.build_vocab(new_sentences, update=True)  # update vocab
@@ -431,9 +420,12 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(all(['terrorism' not in l for l in others]))
         model.build_vocab(others)
         model.train(others, total_examples=model.corpus_count, epochs=model.iter)
+        # checks that `syn0` is different from `syn0_vocab`
+        self.assertFalse(np.all(np.equal(model.wv.syn0, model.wv.syn0_vocab)))
         self.assertFalse('terrorism' in model.wv.vocab)
         self.assertFalse('orism>' in model.wv.ngrams)
         model.build_vocab(terro, update=True)  # update vocab
+        self.assertTrue(model.wv.syn0_ngrams.dtype == 'float32')
         self.assertTrue('terrorism' in model.wv.vocab)
         self.assertTrue('orism>' in model.wv.ngrams)
         orig0_all = np.copy(model.wv.syn0_ngrams)
@@ -454,13 +446,43 @@ class TestFastTextModel(unittest.TestCase):
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_hs_online(self):
-        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1)
+        model = FT_gensim(
+            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1
+        )
         self.online_sanity(model)
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_neg_online(self):
-        model = FT_gensim(sg=0, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=5, min_count=5, iter=1, seed=42, workers=1, sample=0)
+        model = FT_gensim(
+            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=5,
+            min_count=5, iter=1, seed=42, workers=1, sample=0
+        )
         self.online_sanity(model)
+
+    def test_get_vocab_word_vecs(self):
+        model = FT_gensim(size=10, min_count=1, seed=42)
+        model.build_vocab(sentences)
+        original_syn0_vocab = np.copy(model.wv.syn0_vocab)
+        model.get_vocab_word_vecs()
+        self.assertTrue(np.all(np.equal(model.wv.syn0_vocab, original_syn0_vocab)))
+
+    def test_persistence_word2vec_format(self):
+        """Test storing/loading the model in word2vec format."""
+        tmpf = get_tmpfile('gensim_fasttext_w2v_format.tst')
+        model = FT_gensim(sentences, min_count=1, size=10)
+        model.wv.save_word2vec_format(tmpf, binary=True)
+        loaded_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
+        self.assertEqual(len(model.wv.vocab), len(loaded_model_kv.vocab))
+        self.assertTrue(np.allclose(model['human'], loaded_model_kv['human']))
+        self.assertRaises(DeprecationWarning, FT_gensim.load_word2vec_format, tmpf)
+        self.assertRaises(NotImplementedError, FastTextKeyedVectors.load_word2vec_format, tmpf)
+
+    def test_bucket_ngrams(self):
+        model = FT_gensim(size=10, min_count=1, bucket=20)
+        model.build_vocab(sentences)
+        self.assertEqual(model.wv.syn0_ngrams.shape, (20, 10))
+        model.build_vocab(new_sentences, update=True)
+        self.assertEqual(model.wv.syn0_ngrams.shape, (20, 10))
 
 
 if __name__ == '__main__':
