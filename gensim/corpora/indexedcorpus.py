@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Base Indexed Corpus class"""
+"""Base Indexed Corpus class."""
 
 import logging
 import six
@@ -18,16 +18,22 @@ logger = logging.getLogger('gensim.corpora.indexedcorpus')
 
 
 class IndexedCorpus(interfaces.CorpusABC):
+    """Indexed corpus is a mechanism for random-accessing corpora.
+
+    While the standard corpus interface in gensim allows iterating over
+    corpus with `for doc in corpus: pass`, indexed corpus allows accessing
+    the documents with `corpus[docno]` (in O(1) look-up time).
+
+    Notes
+    -----
+    This functionality is achieved by storing an extra file (by default
+    named the same as the '{corpus name}.index') that stores the byte
+    offset of the beginning of each document.
+
+    """
+
     def __init__(self, fname, index_fname=None):
-        """Indexed corpus is a mechanism for random-accessing corpora.
-
-        While the standard corpus interface in gensim allows iterating over
-        corpus with `for doc in corpus: pass`, indexed corpus allows accessing
-        the documents with `corpus[docno]` (in O(1) look-up time).
-
-        This functionality is achieved by storing an extra file (by default
-        named the same as the '{corpus name}.index') that stores the byte
-        offset of the beginning of each document.
+        """Initialize the corpus.
 
         Parameters
         ----------
@@ -61,21 +67,10 @@ class IndexedCorpus(interfaces.CorpusABC):
     @classmethod
     def serialize(serializer, fname, corpus, id2word=None, index_fname=None,
                   progress_cnt=None, labels=None, metadata=False):
-        """Iterate through the document stream `corpus`, saving the documents to
+        """Iterate through the document stream `corpus`.
+
+        Saving the documents to
         `fname` and recording byte offset of each document.
-
-        Save the resulting index structure to file `index_fname` (or
-        `fname`.index is not set).
-
-        This relies on the underlying corpus class `serializer` providing (in
-        addition to standard iteration)::
-
-            * `save_corpus` method that returns a sequence of byte offsets, one for
-               each saved document
-            * the `docbyoffset(offset)` method, which returns a document
-              positioned at `offset` bytes within the persistent storage (file)
-            * metadata if set to true will ensure that serialize will write out
-            article titles to a pickle file.
 
         Parameters
         ----------
@@ -86,13 +81,14 @@ class IndexedCorpus(interfaces.CorpusABC):
         id2word : dict of (str, str), optional
             Transforms id to word (Default value = None)
         index_fname : str
-             (Default value = None)
+             Where to save resulting index. Saved to `fname`.index if None.
         progress_cnt : int
-             (Default value = None)
-        labels :
-             (Default value = None)
+            Number of documents after which progress info is printed
+        labels : bool
+             Whether to skip the first column (class labels)
         metadata : bool
-            Any additional info (Default value = False)
+            If True will ensure that serialize will write out
+            article titles to a pickle file. (Default value = False)
 
         Examples
         --------
@@ -134,6 +130,11 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         If the corpus is not indexed, also count corpus length and cache this
         value.
+
+        Returns
+        -------
+        int
+
         """
         if self.index is not None:
             return len(self.index)
@@ -143,11 +144,24 @@ class IndexedCorpus(interfaces.CorpusABC):
         return self.length
 
     def __getitem__(self, docno):
+        """Return certain document.
+
+        Parameters
+        ----------
+        docno : int
+            Document number
+
+        Returns
+        -------
+        `utils.SlicedCorpus`
+
+        """
         if self.index is None:
             raise RuntimeError("Cannot call corpus[docid] without an index")
         if isinstance(docno, (slice, list, numpy.ndarray)):
             return utils.SlicedCorpus(self, docno)
         elif isinstance(docno, six.integer_types + (numpy.integer,)):
             return self.docbyoffset(self.index[docno])
+            # TODO: no `docbyoffset` method, should be defined in this class
         else:
             raise ValueError('Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')
