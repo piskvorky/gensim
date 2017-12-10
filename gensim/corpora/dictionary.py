@@ -5,8 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-This module implements the concept of Dictionary -- a mapping between words and
+"""This module implements the concept of Dictionary -- a mapping between words and
 their integer ids.
 
 Dictionaries can be created from a corpus and can later be pruned according to
@@ -36,16 +35,42 @@ logger = logging.getLogger('gensim.corpora.dictionary')
 
 
 class Dictionary(utils.SaveLoad, Mapping):
-    """
-    Dictionary encapsulates the mapping between normalized words and their integer ids.
-
+    """Dictionary encapsulates the mapping between normalized words and their integer ids.
     The main function is `doc2bow`, which converts a collection of words to its
     bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
+
+    Parameters
+    ----------
+    documents : list of (list of str), optional
+        If `documents` are given, use them to initialize Dictionary (see `add_documents()`).
+    prune_at : int, optional
+        Total number of unique words <= `prune_at`.
+
+    Attributes
+    ---------
+    token2id : dict
+        token -> tokenId.
+    id2token : dict
+        Reverse mapping for token2id; only formed on request, to save memory.
+    dfs : dict
+        Document frequencies: tokenId -> in how many documents this token appeared.
+    num_docs : int
+        Number of documents processed.
+    num_pos : int
+        Total number of corpus positions.
+    num_nnz : int
+        Total number of non-zeroes in the BOW matrix.
+
+    Examples
+    --------
+    >>> from gensim.corpora import dictionary
+    >>> texts = [['human', 'interface', 'computer']]
+    >>> d = dictionary.Dictionary(texts)
+    >>> print d.token2id, d.id2token, d.dfs, d.num_docs, d.num_pos, d.num_nnz
+    {u'interface': 0, u'computer': 1, u'human': 2} {} {0: 1, 1: 1, 2: 1} 1 3 3
+
     """
     def __init__(self, documents=None, prune_at=2000000):
-        """
-        If `documents` are given, use them to initialize Dictionary (see `add_documents()`).
-        """
         self.token2id = {}  # token -> tokenId
         self.id2token = {}  # reverse mapping for token2id; only formed on request, to save memory
         self.dfs = {}  # document frequencies: tokenId -> in how many documents this token appeared
@@ -78,12 +103,19 @@ class Dictionary(utils.SaveLoad, Mapping):
             return self.values()
 
     def keys(self):
-        """Return a list of all token ids."""
+        """Returns
+        ----------
+        list
+            List of all token ids.
+
+        """
         return list(self.token2id.values())
 
     def __len__(self):
-        """
-        Return the number of token->id mappings in the dictionary.
+        """Returns
+        int
+            The number of token->id mappings in the dictionary.
+
         """
         return len(self.token2id)
 
