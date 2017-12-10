@@ -45,12 +45,12 @@ class IndexedCorpus(interfaces.CorpusABC):
         Examples
         --------
         >>> # save corpus in SvmLightCorpus format with an index
-            >>> corpus = [[(1, 0.5)], [(0, 1.0), (1, 2.0)]]
-            >>> gensim.corpora.SvmLightCorpus.serialize('testfile.svmlight', corpus)
-            >>> # load back as a document stream (*not* plain Python list)
-            >>> corpus_with_random_access = gensim.corpora.SvmLightCorpus('tstfile.svmlight')
-            >>> print(corpus_with_random_access[1])
-            [(0, 1.0), (1, 2.0)]
+        >>> corpus = [[(1, 0.5)], [(0, 1.0), (1, 2.0)]]
+        >>> gensim.corpora.SvmLightCorpus.serialize('testfile.svmlight', corpus)
+        >>> # load back as a document stream (*not* plain Python list)
+        >>> corpus_with_random_access = gensim.corpora.SvmLightCorpus('tstfile.svmlight')
+        >>> print(corpus_with_random_access[1])
+        [(0, 1.0), (1, 2.0)]
 
         """
         try:

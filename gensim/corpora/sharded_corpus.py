@@ -145,8 +145,10 @@ class ShardedCorpus(IndexedCorpus):
         """Initializes the dataset. If `output_prefix` is not found,
         builds the shards.
 
-        :type output_prefix: str
-        :param output_prefix: The absolute path to the file from which shard
+        Parameters
+        ----------
+        output_prefix :
+            The absolute path to the file from which shard
             filenames should be derived. The individual shards will be saved
             as `output_prefix.0`, `output_prefix.1`, etc.
 
@@ -164,53 +166,44 @@ class ShardedCorpus(IndexedCorpus):
 
             Of course, you can save your corpus separately as well using
             the `save()` method.
-
-        :type corpus: gensim.interfaces.CorpusABC
-        :param corpus: The source corpus from which to build the dataset.
-
-        :type dim: int
-        :param dim: Specify beforehand what the dimension of a dataset item
+        corpus :
+            The source corpus from which to build the dataset.
+        dim :
+            Specify beforehand what the dimension of a dataset item
             should be. This is useful when initializing from a corpus that
             doesn't advertise its dimension, or when it does and you want to
             check that the corpus matches the expected dimension. **If `dim`
             is left unused and `corpus` does not provide its dimension in
-            an expected manner, initialization will fail.**
-
-        :type shardsize: int
-        :param shardsize: How many data points should be in one shard. More
+            an expected manner, initialization will fail.** (Default value = None)
+        shardsize :
+            How many data points should be in one shard. More
             data per shard means less shard reloading but higher memory usage
-            and vice versa.
-
-        :type overwrite: bool
-        :param overwrite: If set, will build dataset from given corpus even
-            if `output_prefix` already exists.
-
-        :type sparse_serialization: bool
-        :param sparse_serialization: If set, will save the data in a sparse
+            and vice versa. (Default value = 4096)
+        overwrite :
+            If set, will build dataset from given corpus even
+            if `output_prefix` already exists. (Default value = False)
+        sparse_serialization :
+            If set, will save the data in a sparse
             form (as csr matrices). This is to speed up retrieval when you
             know you will be using sparse matrices.
 
-            ..note::
-
-                This property **should not change** during the lifetime of
-                the dataset. (If you find out you need to change from a sparse
-                to a dense representation, the best practice is to create
-                another ShardedCorpus object.)
-
-        :type sparse_retrieval: bool
-        :param sparse_retrieval: If set, will retrieve data as sparse vectors
+            This property **should not change** during the lifetime of
+            the dataset. (If you find out you need to change from a sparse
+            to a dense representation, the best practice is to create
+            another ShardedCorpus object.) (Default value = False)
+        sparse_retrieval :
+            If set, will retrieve data as sparse vectors
             (numpy csr matrices). If unset, will return ndarrays.
 
             Note that retrieval speed for this option depends on how the dataset
             was serialized. If `sparse_serialization` was set, then setting
             `sparse_retrieval` will be faster. However, if the two settings
             do not correspond, the conversion on the fly will slow the dataset
-            down.
-
-        :type gensim: bool
-        :param gensim: If set, will convert the output to gensim
+            down. (Default value = False)
+        gensim :
+            If set, will convert the output to gensim
             sparse vectors (list of tuples (id, value)) to make it behave like
-            any other gensim corpus. This **will** slow the dataset down.
+            any other gensim corpus. This **will** slow the dataset down. (Default value = False)
 
         """
         self.output_prefix = output_prefix
@@ -236,7 +229,7 @@ class ShardedCorpus(IndexedCorpus):
 
         logger.info('Initializing sharded corpus with prefix %s', output_prefix)
         if (not os.path.isfile(output_prefix)) or overwrite:
-            logger.info('Building from corpus...')
+            # logger.info('Building from corpus...')
             self.init_shards(output_prefix, corpus, shardsize)
 
             # Save automatically, to facilitate re-loading
@@ -644,8 +637,15 @@ class ShardedCorpus(IndexedCorpus):
         return result
 
     def __getitem__(self, offset):
-        """
-        Retrieve the given row of the dataset. Supports slice notation.
+        """Retrieve the given row of the dataset. Supports slice notation.
+
+        Parameters
+        ----------
+        offset :
+
+
+        Returns
+        -------
 
         """
         if isinstance(offset, list):
@@ -753,8 +753,7 @@ class ShardedCorpus(IndexedCorpus):
             return s_result
 
     def __add_to_slice(self, s_result, result_start, result_stop, start, stop):
-        """
-        Add the rows of the current shard from `start` to `stop`
+        """Add the rows of the current shard from `start` to `stop`
         into rows `result_start` to `result_stop` of `s_result`.
 
         Operation is based on the self.sparse_serialize setting. If the shard
@@ -764,6 +763,23 @@ class ShardedCorpus(IndexedCorpus):
         and we should add them up to `result_stop`.
 
         Returns the resulting s_result.
+
+        Parameters
+        ----------
+        s_result :
+
+        result_start :
+
+        result_stop :
+
+        start :
+
+        stop :
+
+
+        Returns
+        -------
+
         """
         if (result_stop - result_start) != (stop - start):
             raise ValueError(
@@ -871,10 +887,7 @@ class ShardedCorpus(IndexedCorpus):
 
     # Overriding the IndexedCorpus and other corpus superclass methods
     def __iter__(self):
-        """
-        Yield dataset items one by one (generator).
-
-        """
+        """Yield dataset items one by one (generator)."""
         for i in xrange(len(self)):
             yield self[i]
 

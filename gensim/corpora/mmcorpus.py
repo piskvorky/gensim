@@ -53,7 +53,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         id2word :
             (Default value = None)
         progress_cnt :
-            (Default value = 1000)
+            Number of documents after which progress info is printed
         metadata :
             (Default value = False)
 
