@@ -14,25 +14,23 @@ descibed in [1]_, also you may check Wikipedia page [2]_.
 
 
 
-Example
--------
->>> import numpy as np
+Examples
+--------
 >>> from gensim.summarization.bm25 import get_bm25_weights
 >>> corpus = [
 ...     ["black", "cat", "white", "cat"],
 ...     ["cat", "outer", "space"],
 ...     ["wag", "dog"]
 ... ]
->>> np.round(get_bm25_weights(corpus), 3)
-array([[ 1.282,  0.182,  0.   ],
-       [ 0.13 ,  1.113,  0.   ],
-       [ 0.   ,  0.   ,  1.022]])
+>>> result = get_bm25_weights(corpus)
+
 
 Data:
 -----
-.. data:: PARAM_K1 - free smoothing parameter for BM25.
-.. data:: PARAM_B - free smoothing parameter for BM25.
-.. data:: EPSILON - constant used for negative idf of document in corpus.
+.. data:: PARAM_K1 - Free smoothing parameter for BM25.
+.. data:: PARAM_B - Free smoothing parameter for BM25.
+.. data:: EPSILON - Constant used for negative idf of document in corpus.
+
 """
 
 
@@ -55,27 +53,23 @@ class BM25(object):
         Size of corpus (number of documents).
     avgdl : float
         Average length of document in `corpus`.
-    corpus : list of (list of str)
+    corpus : list of list of str
         Corpus of documents.
-    f : list of dict
-        Dictionary with terms frequencies for each document in `corpus`. Words
-        used as keys and frequencies as values.
+    f : list of dicts of int
+        Dictionary with terms frequencies for each document in `corpus`. Words used as keys and frequencies as values.
     df : dict
-        Dictionary with terms frequencies for whole `corpus`. Words used as keys
-        and frequencies as values.
+        Dictionary with terms frequencies for whole `corpus`. Words used as keys and frequencies as values.
     idf : dict
-        Dictionary with inversed terms frequencies for whole `corpus`. Words
-        used as keys and frequencies as values.
+        Dictionary with inversed terms frequencies for whole `corpus`. Words used as keys and frequencies as values.
 
     """
 
     def __init__(self, corpus):
-        """Presets atributes and runs initialize() function.
-
+        """
         Parameters
         ----------
-        corpus : list of (list of str)
-            Given corups.
+        corpus : list of list of str
+            Given corpus.
 
         """
         self.corpus_size = len(corpus)
@@ -87,10 +81,7 @@ class BM25(object):
         self.initialize()
 
     def initialize(self):
-        """Calculates frequencies of terms in documents and in corpus. Also
-        computes inverse document frequencies.
-
-        """
+        """Calculates frequencies of terms in documents and in corpus. Also computes inverse document frequencies."""
         for document in self.corpus:
             frequencies = {}
             for word in document:
@@ -108,14 +99,13 @@ class BM25(object):
             self.idf[word] = math.log(self.corpus_size - freq + 0.5) - math.log(freq + 0.5)
 
     def get_score(self, document, index, average_idf):
-        """Computes BM25 score of given `document` in relation to item of corpus
-        selected by `index`.
+        """Computes BM25 score of given `document` in relation to item of corpus selected by `index`.
 
         Parameters
         ----------
         document : list of str
             Document to be scored.
-        index : integer
+        index : int
             Index of document in corpus selected to score with `document`.
         average_idf : float
             Average idf in corpus.
@@ -160,18 +150,28 @@ class BM25(object):
 
 
 def get_bm25_weights(corpus):
-    """Returns BM25 scores (weights) of documents in corpus. Each document
-    has to be weighted with every document in given corpus.
+    """Returns BM25 scores (weights) of documents in corpus.
+    Each document has to be weighted with every document in given corpus.
 
     Parameters
     ----------
-    corpus : list of (list of str)
+    corpus : list of list of str
         Corpus of documents.
 
     Returns
     -------
-    list of (list of float)
+    list of list of float
         BM25 scores.
+
+    Examples
+    --------
+    >>> from gensim.summarization.bm25 import get_bm25_weights
+    >>> corpus = [
+    ...     ["black", "cat", "white", "cat"],
+    ...     ["cat", "outer", "space"],
+    ...     ["wag", "dog"]
+    ... ]
+    >>> result = get_bm25_weights(corpus)
 
     """
     bm25 = BM25(corpus)
