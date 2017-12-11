@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %} - Home {% endblock %}
+
+{% block content %}
+
+<header class="navbar navbar-inverse hero" role="banner">
+    {% include "partials/navbar.html" %}
+</header>
+{% include "partials/hero.html" %}
+
+<div class="container">
+    <div class="row">
+
+        <div class="col-md-6">
+            {% include "partials/commits.html" %}
+        </div>
+
+        <div class="col-md-6">
+            {% include "partials/news.html" %}
+        </div>
+
+    </div>
+</div>
+
+<hr>
+
+<div class="container pt">
+    <div class="row">
+        <div class="col-md-8 col-md-offset-2 centered">
+            <h1>About Gensim</h1>
+            <div class="md" data-type="md" data-url="/docs/ABOUT.md">
+                <div class="md-container" style="text-align:justify"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<div class="container pt">
+    <h1>What's going on?</h1>
+    <div class="row">
+        <div class="col-md-4">
+            <h2>GSoC 2016</h2>
+            <p align="justify">
+            text
+            </p>
+        </div>
+
+        <div class="col-md-4">
+            <h2>New Website</h2>
+            <p align="justify">
+            text
+            </p>
+        </div>
+
+        <div class="col-md-4">
+            <h2>New examples</h2>
+            <p align="justify">
+            text
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

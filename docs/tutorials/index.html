@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Gensim: Topic Modelling For Humans - Tutorials </title>
+
+    
+      <link rel="stylesheet" type="text/css" href="/gensim/static/gen/all.css?7a740fe3">
+      <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    
+
+    
+      <script type="text/javascript" src="/gensim/static/gen/packed.js?1b43f2bf"></script>
+      <script async defer id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
+    
+  </head>
+
+  <body>
+    <div class="overlay-bg">
+    <div class="overlay-header">
+      <a class="overlay-new" href="#" target="_new">Open in new window</a>
+    </div>
+
+    <div class="overlay-content">
+      <div class="overlay-close"><a href="#"></a></div>
+      <iframe class="overlay-iframe"></iframe>
+   </div>
+</div>
+
+    <div class="page">
+      <div class="content">
+        
+
+<header class="navbar navbar-inverse normal" role="banner">
+    <a href="https://github.com/RaRe-Technologies/gensim/" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+<div class="container">
+  <div class="navbar-header">
+    <a href="/" class="navbar-brand">Gensim</a>
+  </div>
+  <ul class="nav navbar-nav navbar-right">
+    <li><a href="/gensim">home</a></li>
+    <li><a href="/gensim/tutorials/index.html">tutorials</a></li>
+    <li><a href="/install">install</a></li>
+    <li><a href="/gensim/showroom/index.html">showroom</a></li>
+    <li><a href="https://github.com/RaRe-Technologies/gensim/wiki" target="_blank">dev wiki</a></li>
+    <li><a href="/gensim/apiref/index.html">API</a></li>
+    <li><a href="#footer" class="smooth-scroll">contact</a></li>
+  </ul>
+</div>
+</header>
+
+<div class="container pt">
+<h3 id="tutorials">Tutorials</h3>
+<h5 id="quick-start">Quick-start</h5>
+<ul>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim%20Quick%20Start.ipynb">Getting Started with gensim</a></li>
+</ul>
+<h5 id="text-to-vectors">Text to Vectors</h5>
+<ul>
+<li>We first need to transform text to vectors</li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb">String to vectors tutorial</a>
+<ul>
+<li>Create a dictionary first that maps words to ids</li>
+<li>Transform the text into vectors through <code>dictionary.doc2bow(texts)</code></li>
+</ul></li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb">Corpus streaming tutorial</a> (For very large corpuses)</li>
+</ul>
+<h5 id="models-and-transformation">Models and Transformation</h5>
+<ul>
+<li>Models (e.g. LsiModel, Word2Vec) are built / trained from a corpus</li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Topics_and_Transformations.ipynb">Transformation interface tutorial</a></li>
+</ul>
+<h5 id="tf-idf-model">TF-IDF (Model)</h5>
+<ul>
+<li><a href="https://radimrehurek.com/gensim/models/tfidfmodel.html">Docs</a>, <a href="https://github.com/piskvorky/gensim/blob/develop/gensim/models/tfidfmodel.py">Source</a></li>
+<li><a href="http://stackoverflow.com/questions/9470479/how-is-tf-idf-implemented-in-gensim-tool-in-python">tf-idf scores are normalized</a> (sum of squares of scores = 1)</li>
+</ul>
+<h5 id="phrases-model">Phrases (Model)</h5>
+<ul>
+<li>Detects words that belong in a phrase, useful for models like Word2Vec (&quot;new&quot;, &quot;york&quot; -&gt; &quot;new york&quot;)</li>
+<li><a href="https://radimrehurek.com/gensim/models/phrases.html">Docs</a>, <a href="https://github.com/piskvorky/gensim/blob/develop/gensim/models/phrases.py">Source</a> (uses bigram detectors underneath)</li>
+<li><a href="http://www.markhneedham.com/blog/2015/02/12/pythongensim-creating-bigrams-over-how-i-met-your-mother-transcripts/">Phrases example on How I Met Your Mother</a></li>
+</ul>
+<h4 id="topic-modeling">Topic Modeling</h4>
+<h5 id="lsi-model">LSI (Model)</h5>
+<ul>
+<li><a href="https://radimrehurek.com/gensim/models/lsimodel.html">Docs</a>, <a href="https://github.com/piskvorky/gensim/blob/develop/gensim/models/lsimodel.py">Source</a> (very standard LSI implementation)</li>
+<li><a href="https://www.researchgate.net/post/LSA_SVD_How_to_statistically_interpret_negative_values_in_U_and_Vt">How to interpret negative LSI values</a></li>
+<li><a href="https://radimrehurek.com/gensim/models/rpmodel.html">Random Projection</a> (used as an option to speed up LSI)</li>
+</ul>
+<h5 id="lda-model">LDA (Model)</h5>
+<ul>
+<li><a href="https://radimrehurek.com/gensim/models/ldamodel.html">Docs</a>, <a href="https://github.com/piskvorky/gensim/blob/develop/gensim/models/ldamodel.py">Source</a></li>
+<li><a href="http://christop.club/2014/05/06/using-gensim-for-lda/">Example with Android issue reports</a>, <a href="https://rstudio-pubs-static.s3.amazonaws.com/79360_850b2a69980c4488b1db95987a24867a.html">Another example</a>, <a href="http://brandonrose.org/clustering#Latent-Dirichlet-Allocation">Another example</a></li>
+</ul>
+<h5 id="topic-model-tuning">Topic Model Tuning</h5>
+<ul>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb">Colouring words by topic in a document, print words in a topics</a></li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb">Topic Coherence, a metric that correlates that human judgement on topic quality.</a></li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distance_metrics.ipynb">Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities</a></li>
+<li><a href="https://speakerdeck.com/tmylk/americas-next-topic-model?slide=6">America's Next Topic Model slides</a> -- How to choose your next topic model, presented at Pydata London 5 July 2016 by Lev Konstantinovsky</li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim_news_classification.ipynb">Classification of News Articles using Topic Modeling</a></li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/lda_training_tips.ipynb">LDA: pre-processing and training tips</a></li>
+</ul>
+<h5 id="query-similarities">Query Similarities</h5>
+<ul>
+<li>Tool to get the most similar documents for LDA, LSI</li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Similarity_Queries.ipynb">Similarity queries tutorial</a></li>
+</ul>
+<h5 id="dynamic-topic-modeling">Dynamic Topic Modeling</h5>
+<ul>
+<li>Model evolution of topics through time</li>
+<li><a href="http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/">Easy intro to DTM. Evolution of Voldemort topic through the 7 Harry Potter books.</a></li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb">Dynamic Topic Modeling and Dynamic Influence Model Tutorial</a></li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/ldaseqmodel.ipynb">Python Dynamic Topic Modelling Theory and Tutorial</a></li>
+</ul>
+<h4 id="word-embeddings">Word Embeddings</h4>
+<h5 id="word2vec-model">Word2Vec (Model)</h5>
+<ul>
+<li><a href="https://radimrehurek.com/gensim/models/word2vec.html">Docs</a>, <a href="https://github.com/piskvorky/gensim/blob/develop/gensim/models/word2vec.py">Source</a> (very simple interface)</li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/word2vec.ipynb">Simple word2vec tutorial</a> (examples of <code>most_similar, similarity, doesnt_match</code>)</li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/ba1ce894a5192fc493a865c535202695bb3c0424/docs/notebooks/Word2Vec_FastText_Comparison.ipynb">Comparison of FastText and Word2Vec</a></li>
+</ul>
+<h5 id="doc2vec-model">Doc2Vec (Model)</h5>
+<ul>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb">Doc2vec Quick Start on Lee Corpus</a></li>
+<li><a href="https://radimrehurek.com/gensim/models/doc2vec.html">Docs</a>, <a href="https://github.com/piskvorky/gensim/blob/develop/gensim/models/doc2vec.py">Source</a> (Docs are not very good)</li>
+<li>Doc2Vec requires a non-standard corpus (need sentiment label for each document)</li>
+<li><a href="https://linanqiu.github.io/2015/10/07/word2vec-sentiment/">Great illustration of corpus preparation</a>, <a href="https://github.com/linanqiu/word2vec-sentiments">Code</a> (<a href="https://medium.com/@klintcho/doc2vec-tutorial-using-gensim-ab3ac03d3a1#.nv2lxvbj1">Alternative</a>, <a href="https://districtdatalabs.silvrback.com/modern-methods-for-sentiment-analysis">Alternative 2</a>)</li>
+<li><a href="http://multithreaded.stitchfix.com/blog/2015/03/11/word-is-worth-a-thousand-vectors/">Doc2Vec on customer review</a> (example)</li>
+<li><a href="https://www.zybuluo.com/HaomingJiang/note/462804">Doc2Vec on Airline Tweets Sentiment Analysis</a></li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-IMDB.ipynb">Doc2vec to predict IMDB review star rating. Reproducing the Google paper</a></li>
+</ul>
+<h5 id="similarity-queries">Similarity Queries</h5>
+<ul>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/annoytutorial.ipynb">Similarity queries using Annoy with word2vec and doc2vec</a></li>
+</ul>
+<h5 id="word-movers-distance">Word Movers Distance</h5>
+<ul>
+<li>Tool to get the most similar documents for word2vec</li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb">Word Movers Distance for Yelp Reviews tutorial</a></li>
+</ul>
+<h5 id="deep-inverse-regression">Deep Inverse Regression</h5>
+<ul>
+<li>Document Classification using Bayesian Inversion and several word2vec models(one for each class)</li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/deepir.ipynb">Deep Inverse Regression with Yelp Reviews</a></li>
+</ul>
+<h4 id="other-techniques">Other techniques</h4>
+<h5 id="summarization">Summarization</h5>
+<ul>
+<li>Extract most important keywords and sentences from the text</li>
+<li><a href="https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/summarization_tutorial.ipynb">Tutorial on TextRank summarisation</a></li>
+</ul>
+<h5 id="overviews">Overviews</h5>
+<ul>
+<li>Tutorial showing API for document classification with various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec</li>
+<li><a href="https://github.com/RaRe-Technologies/movie-plots-by-genre">Movie plots by genre</a></li>
+</ul>
+<h3 id="videos">Videos</h3>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=vU4TlwZzTfU">Radim Řehůřek - Faster than Google? Optimization lessons in Python.</a></li>
+<li><a href="https://www.youtube.com/watch?v=wTp3P2UnTfQ">MLMU.cz - Radim Řehůřek - Word2vec &amp; friends (7.1.2015)</a></li>
+<li><a href="https://www.youtube.com/watch?v=oSSnDeOXTZQ">Making an Impact with NLP</a> -- Pycon 2016 Tutorial by Hobsons Lane</li>
+<li><a href="https://www.youtube.com/watch?v=itKNpCPHq3I">NLP with NLTK and Gensim</a> -- Pycon 2016 Tutorial by Tony Ojeda, Benjamin Bengfort, Laura Lorenz from District Data Labs</li>
+<li><a href="https://www.youtube.com/watch?v=lfqW46u0UKc">Word Embeddings for Fun and Profit</a> -- Talk at PyData London 2016 talk by Lev Konstantinovskiy. See accompanying <a href="https://github.com/RaRe-Technologies/movie-plots-by-genre">repo</a></li>
+</ul>
+<h1 id="credits">Credits</h1>
+<p>Based on wonderful <a href="https://github.com/jxieeducation/DIY-Data-Science/blob/master/frameworks/gensim.md">resource</a> by Jason Xie.</p>
+</div>
+
+      </div>
+    </div>
+
+    
+
+<div id="footer">
+  <div class="container-fluid">
+
+    <div class="row">
+
+      <div class="col-md-4">
+        <h4>Mailing List</h4>
+        <p>
+          <a href="https://groups.google.com/forum/#!forum/gensim" target="_blank">Post</a><br/>
+        </p>
+      </div>
+    
+          <div class="col-md-4">
+        <h4>HELP?!?</h4>
+        <p>
+          Report problems on <a href="https://github.com/RaRe-Technologies/gensim/issues" target="_blank">GitHub</a><br>
+          Join our <a href="https://gitter.im/RaRe-Technologies/gensim" target="_blank">gitter chatroom.</a>
+        </p>
+      </div>
+
+      <div class="col-md-4">
+        <h4>Citing Gensim</h4>
+        <p>
+        </p>
+          When citing gensim in academic papers and theses, <a href="https://github.com/RaRe-Technologies/gensim#citing-gensim" target="_blank"> please use this BibTeX entry.</a>.
+      </div>
+
+    <hr>
+
+    <div class="row">
+      <div class="col-md-8 col-md-offset-2">
+        <p align="justify">
+          Gensim is licensed under the the LGPLv2.1. 
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+    <!-- smooth scroll to anchor script -->
+    <script type='text/javascript'>
+    $(function() {
+      $('a.smooth-scroll').click(function() {
+        if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
+          var target = $(this.hash);
+          target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+          if (target.length) {
+            $('html,body').animate({
+              scrollTop: target.offset().top
+            }, 1000);
+            return false;
+          }
+        }
+      });
+    });
+    </script>
+  </body>
+</html>

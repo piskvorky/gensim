@@ -1,0 +1,119 @@
+/* Titles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: $montserrat;
+  font-weight: 700;
+  color: $color-black;
+}
+
+h1 {
+  font-size: 35px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid $color-lye-gray;
+  margin: 1em 0;
+  padding: 0;
+}
+
+
+body {
+  background-color: $color-white;
+  font-family: $montserrat;
+  font-weight: 400;
+  font-size: 14px;
+  color: $color-black;
+
+  -webkit-font-smoothing: antialiased;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Paragraph & Typographic */
+p {
+  line-height: 28px;
+  margin-bottom: 25px;
+  font-size: 16px;
+}
+
+.centered {
+  text-align: center;
+}
+
+/* Links */
+a {
+  color: $color-true-red;
+  word-wrap: break-word;
+
+  -webkit-transition: color 0.1s ease-in, background 0.1s ease-in;
+  -moz-transition: color 0.1s ease-in, background 0.1s ease-in;
+  -ms-transition: color 0.1s ease-in, background 0.1s ease-in;
+  -o-transition: color 0.1s ease-in, background 0.1s ease-in;
+  transition: color 0.1s ease-in, background 0.1s ease-in;
+
+  &:hover, :focus {
+    color: $color-lye-gray;
+    text-decoration: none;
+    outline: 0;
+  }
+
+  &:before, &:after {
+    -webkit-transition: color 0.1s ease-in, background 0.1s ease-in;
+    -moz-transition: color 0.1s ease-in, background 0.1s ease-in;
+    -ms-transition: color 0.1s ease-in, background 0.1s ease-in;
+    -o-transition: color 0.1s ease-in, background 0.1s ease-in;
+    transition: color 0.1s ease-in, background 0.1s ease-in;
+  }
+}
+
+.button {
+  -webkit-font-smoothing: antialiased;
+  display: inline-block;
+  vertical-align: middle;
+  zoom: 1;
+  padding: 13px 32px;
+  font-weight: 400;
+  font-size: 17px;
+  color: #fff !important;
+  text-shadow: rgba(0,0,0,0.2) 0 -1px 0;
+  border: 0px;
+  border-radius: 5px;
+  box-shadow: rgba(0, 0, 0, 0.3) 0 1px 2px, inset rgba(255, 255, 255, 0.88) 0px 1px 3px -1px;
+  background-color: #182659;
+  @include background-gradient(#243359, #2A3B6C);
+
+  @include transition(all 0.2s linear);
+
+  &:hover {
+    color: #fff;
+    text-decoration: none;
+  }
+  &:active {
+    box-shadow: inset 0px 3px 3px rgba(0, 0, 0, 0.29);
+  }
+}
+.button-outline {
+  -webkit-font-smoothing: antialiased;
+  display: inline-block;
+  vertical-align: middle;
+  zoom: 1;
+  color: #fff;
+  padding: 12px 31px;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 400;
+  background: rgba(0, 0, 0, 0.15);
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+
+  @include transition(all 0.2s linear);
+
+  &:hover {
+    text-decoration: none;
+    color: #ddd;
+    border-color: #ddd;
+  }
+}

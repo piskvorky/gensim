@@ -1,0 +1,40 @@
+<div class="row">
+    <div class="col-md-1">
+        <i class="fa fa-twitter fa-3x" style="line-height: inherit"></i>
+    </div>
+
+    <div class="col-md-8 col-md-offset-1">
+        <h3>News</h3>
+    </div>
+</div>
+
+<hr>
+
+<div class="news-panel">
+    <div align="center">
+        <!-- https://about.twitter.com/resources/buttons -->
+        <a href="https://twitter.com/gensim_py" class="twitter-follow-button" data-show-count="false"
+           data-size="large">Follow
+            @gensim_py</a>
+    </div>
+
+    <!-- https://twitter.com/settings/widgets -->
+    <!-- https://dev.twitter.com/web/embedded-timelines#customization -->
+    <a class="twitter-timeline" href="https://twitter.com/gensim_py"
+       data-widget-id="twitterid"
+       data-chrome="noheader nofooter noborders transparent"
+       data-tweet-limit="3"
+    >
+        Tweets by @gensim_py
+    </a>
+</div>
+
+<script>!function (d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https';
+    if (!d.getElementById(id)) {
+        js = d.createElement(s);
+        js.id = id;
+        js.src = p + '://platform.twitter.com/widgets.js';
+        fjs.parentNode.insertBefore(js, fjs);
+    }
+}(document, 'script', 'twitter-wjs');</script>

@@ -1,0 +1,233 @@
+@import url(http://fonts.googleapis.com/css?family=Montserrat:400,700);
+$montserrat: 'Montserrat', sans-serif;
+
+$color-true-red: #8F1D21;
+$color-red: #BD0000;
+$color-lye-gray: #7F6B5D;
+$color-ink-gray:  #393432;
+$color-black: #171412;
+$color-white: #FFFFFF;
+
+@import "elements";
+@import "gallery";
+@import "overlay";
+@import "github_commits";
+@import "navbar";
+
+#hero {
+  overflow: hidden;
+  background: $color-ink-gray;
+  background-size: cover;
+  background-position: center 50%;
+  height: 400px;
+  position: relative;
+  top: -60px;
+  padding-top: 80px;
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.4);
+
+  @media (max-width: 991px) {
+    padding-top: 100px;
+  }
+
+  @media (max-width: 767px) {
+    height: 550px;
+  }
+
+  &:before {
+    position: absolute;
+    content: '';
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: -webkit-linear-gradient(right, rgba(255, 255, 255, 0) 0%, rgba(0, 0, 0, 0) 1%, rgba(0, 0, 0, 0.1) 26%, rgba(0, 0, 0, 0.35) 71%, rgba(0, 0, 0, 0.5) 100%);
+    background: -moz-linear-gradient(right, rgba(255, 255, 255, 0) 0%, rgba(0, 0, 0, 0) 1%, rgba(0, 0, 0, 0.1) 26%, rgba(0, 0, 0, 0.35) 71%, rgba(0, 0, 0, 0.5) 100%);
+      background: -o-linear-gradient(right, rgba(255, 255, 255, 0) 0%, rgba(0, 0, 0, 0) 1%, rgba(0, 0, 0, 0.1) 26%, rgba(0, 0, 0, 0.35) 71%, rgba(0, 0, 0, 0.5) 100%);
+      background: linear-gradient(right, rgba(255, 255, 255, 0) 0%, rgba(0, 0, 0, 0) 1%, rgba(0, 0, 0, 0.1) 26%, rgba(0, 0, 0, 0.35) 71%, rgba(0, 0, 0, 0.5) 100%);
+  }
+
+  &:after {
+    position: absolute;
+    content: '';
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: $color-ink-gray;
+  }
+
+  .container {
+    position: relative;
+    z-index: 33;
+  }
+
+  h1.hero-text {
+    font-family: $montserrat;
+    line-height: 52px;
+    padding-top: 30px;
+    text-align: center;
+    font-size: 37px;
+    font-weight: 300;
+    letter-spacing: .3px;
+    color: #FFF;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+
+    -webkit-animation-duration: 1s;
+
+    @media (max-width: 767px) {
+      font-size: 25px;
+      line-height: 38px;
+      margin-top: 0;
+      text-align: center;
+    }
+  }
+
+  h5.hero-text {
+    font-family: $montserrat;
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: .3px;
+    color: #e5e5e5;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+    padding-left: 53px;
+
+    -webkit-animation-duration: 1s;
+
+    @media (max-width: 767px) {
+      font-size: 25px;
+      line-height: 38px;
+      margin-top: 0;
+      text-align: center;
+    }
+  }
+
+  .cta {
+    @include animationDelay(0.6s);
+    margin-top: 25px;
+    text-align: center;
+
+    @media (max-width: 767px) {
+      text-align: center;
+    }
+
+    a {
+      margin-right: 20px;
+      padding: 15px 31px;
+
+      @media (max-width: 767px) {
+        font-size: 14px;
+        padding: 12px 25px;
+        margin: 0px 15px 15px 0px;
+      }
+    }
+
+    p {
+      color: #FFF;
+      text-align: center;
+    }
+  }
+}
+
+#footer {
+  background-color: $color-ink-gray;
+  padding-top: 40px;
+  padding-bottom: 20px;
+
+  .container-fluid {
+    padding-right: 40px;
+    padding-left: 40px;
+  }
+
+  p {
+    color: white;
+  }
+
+  .citation {
+    line-height: 15px;
+    font-size: 10px;
+    padding-right: 10px;
+    padding-left: 10px;
+    margin-top: -15px;
+  }
+
+  a {
+    color: $color-red;
+
+    -webkit-transition: color 0.1s ease-in, background 0.1s ease-in;
+    -moz-transition: color 0.1s ease-in, background 0.1s ease-in;
+    -ms-transition: color 0.1s ease-in, background 0.1s ease-in;
+    -o-transition: color 0.1s ease-in, background 0.1s ease-in;
+    transition: color 0.1s ease-in, background 0.1s ease-in;
+
+    &:hover, :focus {
+      color: $color-lye-gray;
+      text-decoration: none;
+      outline: 0;
+    }
+
+    &:before, &:after {
+      -webkit-transition: color 0.1s ease-in, background 0.1s ease-in;
+      -moz-transition: color 0.1s ease-in, background 0.1s ease-in;
+      -ms-transition: color 0.1s ease-in, background 0.1s ease-in;
+      -o-transition: color 0.1s ease-in, background 0.1s ease-in;
+      transition: color 0.1s ease-in, background 0.1s ease-in;
+    }
+  }
+
+  h4 {
+    color: white;
+    text-transform: uppercase;
+    padding-bottom: 10px;
+  }
+}
+
+/* Helpers */
+
+.mt {
+  padding-bottom: 50px;
+}
+
+.pt {
+  padding-top: 50px;
+  padding-bottom: 50px;
+}
+
+/* glyphicon Configuration */
+
+.glyphicon {
+  font-size: 40px;
+  color: $color-lye-gray;
+}
+
+/* Development / News panels */
+.news-panel {
+  overflow: auto;
+  max-height: 500px;
+}
+
+.notebook-panel {
+  height: 250px;
+  border: 1px solid #cecece;
+  margin-bottom: 10px;
+  padding: 0 !important;
+}
+
+.notebook-panel > .image {
+  width: 100%;
+  line-height: 125px;
+  margin: 0 !important;
+}
+
+.notebook-panel > .image img {
+  vertical-align: middle;
+  max-height: 125px;
+}
+
+.notebook-panel .abstract {
+  padding: 10px;
+  position: absolute;
+  bottom: 0;
+  background-color: #f0f0f0;
+  width: 100%;
+  height: 125px;
+}

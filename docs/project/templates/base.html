@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Gensim: Topic Modelling For Humans{% block title %}{% endblock %}</title>
+
+    {% assets "css_all" %}
+      <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
+      <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    {% endassets %}
+
+    {% assets "js_all" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+      <script async defer id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
+    {% endassets %}
+  </head>
+
+  <body>
+    {% include "partials/overlay.html" %}
+
+    <div class="page">
+      <div class="content">
+        {% block content %}
+        {% endblock %}
+      </div>
+    </div>
+
+    {% include "partials/footer.html" %}
+
+    <!-- smooth scroll to anchor script -->
+    <script type='text/javascript'>
+    $(function() {
+      $('a.smooth-scroll').click(function() {
+        if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
+          var target = $(this.hash);
+          target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+          if (target.length) {
+            $('html,body').animate({
+              scrollTop: target.offset().top
+            }, 1000);
+            return false;
+          }
+        }
+      });
+    });
+    </script>
+  </body>
+</html>

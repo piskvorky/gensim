@@ -1,0 +1,56 @@
+.overlay-bg {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height:100%;
+    width: 100%;
+    background: #000; /* fallback */
+    background: rgba(0,0,0,0.75);
+    z-index: 1001;
+}
+
+.overlay-content {
+    z-index: 4;
+    top: 5%;
+    left: 5%;
+    width:90%;
+    height: 90%;
+    position: fixed;
+    background:#FFF;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.9);
+    overflow: auto;
+}
+
+.overlay-iframe {width: 100%; height: 100%; position: absolute; border: none; }
+
+/* close button positioned on upper right corner */
+.overlay-close {
+    z-index: 5;
+    background-image:url(/gensim/static/images/close.png);
+    position:fixed;
+    left: 5%;
+    top: 5%;
+    cursor:pointer;
+    margin-top: -17px;
+    margin-left: -17px;
+    height:35px;
+    width:35px;
+}
+
+.overlay-header {
+    z-index: 6;
+    position: absolute;
+    top: 5%;
+    margin-top: -2em;
+    margin-left: -12em;
+    left: 50%;
+    width:26em;
+    height: 2em;
+    padding: 5px 5px;
+    background-color:#FFF;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.9);
+    text-align: center;
+}
