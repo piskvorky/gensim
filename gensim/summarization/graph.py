@@ -106,7 +106,7 @@ class IGraph(object):
     @abstractmethod
     def add_node(self, node, attrs=None):
         """Adds given node to the graph.
-        
+
         Note
         ----
         While nodes can be of any type, it's strongly recommended
@@ -125,7 +125,7 @@ class IGraph(object):
 
     @abstractmethod
     def add_edge(self, edge, wt=1, label='', attrs=None):
-        """Adds an edge to the graph connecting two nodes. An edge, here, 
+        """Adds an edge to the graph connecting two nodes. An edge, here,
         is a tuple of two nodes.
 
         Parameters
@@ -184,7 +184,7 @@ class IGraph(object):
         ----------
         node : hashable
             Node to delete.
-        
+
         """
         pass
 
@@ -293,7 +293,7 @@ class Graph(IGraph):
         return node in self.node_neighbors
 
     def add_edge(self, edge, wt=1, label='', attrs=None):
-        """Adds an edge to the graph connecting two nodes. An edge, here, 
+        """Adds an edge to the graph connecting two nodes. An edge, here,
         is a tuple of two nodes.
 
         Parameters
@@ -328,7 +328,7 @@ class Graph(IGraph):
 
     def add_node(self, node, attrs=None):
         """Adds given node to the graph.
-        
+
         Note
         ----
         While nodes can be of any type, it's strongly recommended
@@ -363,7 +363,7 @@ class Graph(IGraph):
         -------
         list of hashable
             Nodes of graph.
-        
+
         """
         return list(self.node_neighbors.keys())
 
@@ -374,7 +374,7 @@ class Graph(IGraph):
         -------
         list of (tuple of hashable, size = 2)
             Edges of graph.
-        
+
         """
         return [a for a in self.edge_properties.keys()]
 
@@ -385,7 +385,7 @@ class Graph(IGraph):
         ----------
         node : hashable
             Given node.
-        
+
         """
         for each in list(self.neighbors(node)):
             if each != node:
@@ -394,7 +394,7 @@ class Graph(IGraph):
         del self.node_attr[node]
 
     def get_edge_properties(self, edge):
-        """Returns properties of given given edge. If edge doesn't exist 
+        """Returns properties of given given edge. If edge doesn't exist
         empty dictionary will be returned.
 
         Parameters
@@ -406,12 +406,12 @@ class Graph(IGraph):
         -------
         dict
             Properties of graph.
-        
+
         """
         return self.edge_properties.setdefault(edge, {})
 
     def add_edge_attributes(self, edge, attrs):
-        """Adds attributes `attrs`to given edge. Order of nodes in edge doesn't 
+        """Adds attributes `attrs`to given edge. Order of nodes in edge doesn't
         matter.
 
         Parameters
@@ -420,13 +420,13 @@ class Graph(IGraph):
             Given edge.
         attrs : list
             Provided attributes to add.
-        
+
         """
         for attr in attrs:
             self.add_edge_attribute(edge, attr)
 
     def add_edge_attribute(self, edge, attr):
-        """Adds attribute `attr`to given edge. Order of nodes in edge doesn't 
+        """Adds attribute `attr`to given edge. Order of nodes in edge doesn't
         matter.
 
         Parameters
@@ -436,7 +436,7 @@ class Graph(IGraph):
 
         attr : object
             Provided attribute to add.
-        
+
         """
         self.edge_attr[edge] = self.edge_attributes(edge) + [attr]
 
@@ -444,19 +444,19 @@ class Graph(IGraph):
             self.edge_attr[(edge[1], edge[0])] = self.edge_attributes((edge[1], edge[0])) + [attr]
 
     def edge_attributes(self, edge):
-        """Returns attributes of given edge. In case of non existing edge 
+        """Returns attributes of given edge. In case of non existing edge
         returns empty list.
 
         Parameters
         ----------
         edge : tuple of hashable, size = 2
             Given edge.
-        
+
         Returns
         -------
         list
             Attributes of given edge.
-        
+
         """
         try:
             return self.edge_attr[edge]
@@ -464,7 +464,7 @@ class Graph(IGraph):
             return []
 
     def set_edge_properties(self, edge, **properties):
-        """Adds `properties` to given edge. Order of nodes in edge doesn't 
+        """Adds `properties` to given edge. Order of nodes in edge doesn't
         matter.
 
         Parameters
@@ -474,7 +474,7 @@ class Graph(IGraph):
 
         properties : dict
             Properties to add.
-        
+
         """
         self.edge_properties.setdefault(edge, {}).update(properties)
         if edge[0] != edge[1]:
@@ -487,7 +487,7 @@ class Graph(IGraph):
         ----------
         edge : tuple of hashable, size = 2
             Given edge.
-        
+
         """
         u, v = edge
         self.node_neighbors[u].remove(v)
@@ -503,7 +503,7 @@ class Graph(IGraph):
         ----------
         edge : tuple of hashable, size = 2
             Given edge.
-        
+
         """
         keys = [edge, edge[::-1]]
 

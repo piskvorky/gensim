@@ -9,7 +9,7 @@
 Examples
 --------
 
->>> from gensim.summarization.keywords import get_graph 
+>>> from gensim.summarization.keywords import get_graph
 >>> from gensim.summarization.pagerank_weighted import pagerank_weighted
 >>> graph = get_graph("The road to hell is paved with good intentions.")
 >>> pagerank_weighted(graph)
@@ -73,7 +73,7 @@ def pagerank_weighted(graph, damping=0.85):
 
 
 def build_adjacency_matrix(graph):
-    """Returns matrix representation of given `graph`. 
+    """Returns matrix representation of given `graph`.
 
     Parameters
     ----------
@@ -157,7 +157,7 @@ def principal_eigenvector(a):
 
 
 def process_results(graph, vec):
-    """Returns `graph` nodes and corresponding absolute values of provided 
+    """Returns `graph` nodes and corresponding absolute values of provided
     eigenvector. This function os helper for :func:`~gensim.summarization.pagerank_weighted.pagerank_weighted`
 
     Parameters

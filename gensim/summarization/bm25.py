@@ -3,12 +3,13 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains function of computing rank scores for documents in 
-corpus and helper class `BM25` used in calculations. Original alhorithm 
+"""This module contains function of computing rank scores for documents in
+corpus and helper class `BM25` used in calculations. Original alhorithm
 descibed in [1]_, also you may check Wikipedia page [2]_.
 
 
-.. [1] Robertson, Stephen; Zaragoza, Hugo (2009).  The Probabilistic Relevance Framework: BM25 and Beyond, http://www.staff.city.ac.uk/~sb317/papers/foundations_bm25_review.pdf
+.. [1] Robertson, Stephen; Zaragoza, Hugo (2009).  The Probabilistic Relevance Framework: BM25 and Beyond,
+       http://www.staff.city.ac.uk/~sb317/papers/foundations_bm25_review.pdf
 .. [2] Okapi BM25 on Wikipedia, https://en.wikipedia.org/wiki/Okapi_BM25
 
 
@@ -57,17 +58,16 @@ class BM25(object):
     corpus : list of (list of str)
         Corpus of documents.
     f : list of dict
-        Dictionary with terms frequencies for each document in `corpus`. Words 
+        Dictionary with terms frequencies for each document in `corpus`. Words
         used as keys and frequencies as values.
     df : dict
         Dictionary with terms frequencies for whole `corpus`. Words used as keys
         and frequencies as values.
     idf : dict
-        Dictionary with inversed terms frequencies for whole `corpus`. Words 
+        Dictionary with inversed terms frequencies for whole `corpus`. Words
         used as keys and frequencies as values.
 
     """
-
 
     def __init__(self, corpus):
         """Presets atributes and runs initialize() function.
@@ -85,7 +85,6 @@ class BM25(object):
         self.df = {}
         self.idf = {}
         self.initialize()
-
 
     def initialize(self):
         """Calculates frequencies of terms in documents and in corpus. Also
@@ -107,7 +106,6 @@ class BM25(object):
 
         for word, freq in iteritems(self.df):
             self.idf[word] = math.log(self.corpus_size - freq + 0.5) - math.log(freq + 0.5)
-
 
     def get_score(self, document, index, average_idf):
         """Computes BM25 score of given `document` in relation to item of corpus
@@ -137,10 +135,9 @@ class BM25(object):
                       / (self.f[index][word] + PARAM_K1 * (1 - PARAM_B + PARAM_B * len(document) / self.avgdl)))
         return score
 
-
     def get_scores(self, document, average_idf):
-        """Computes and returns BM25 scores of given `document` in relation to 
-        every item in corpus. 
+        """Computes and returns BM25 scores of given `document` in relation to
+        every item in corpus.
 
         Parameters
         ----------
@@ -164,7 +161,7 @@ class BM25(object):
 
 def get_bm25_weights(corpus):
     """Returns BM25 scores (weights) of documents in corpus. Each document
-    has to be weighted with every document in given corpus. 
+    has to be weighted with every document in given corpus.
 
     Parameters
     ----------

@@ -18,34 +18,34 @@ Example
 
 >>> from gensim.summarization.summarizer import summarize
 >>> text = '''Rice Pudding - Poem by Alan Alexander Milne
-... What is the matter with Mary Jane? 
-... She's crying with all her might and main, 
-... And she won't eat her dinner - rice pudding again - 
-... What is the matter with Mary Jane? 
-... What is the matter with Mary Jane? 
-... I've promised her dolls and a daisy-chain, 
-... And a book about animals - all in vain - 
-... What is the matter with Mary Jane? 
-... What is the matter with Mary Jane? 
-... She's perfectly well, and she hasn't a pain; 
-... But, look at her, now she's beginning again! - 
-... What is the matter with Mary Jane? 
-... What is the matter with Mary Jane? 
-... I've promised her sweets and a ride in the train, 
-... And I've begged her to stop for a bit and explain - 
-... What is the matter with Mary Jane? 
-... What is the matter with Mary Jane? 
-... She's perfectly well and she hasn't a pain, 
-... And it's lovely rice pudding for dinner again! 
+... What is the matter with Mary Jane?
+... She's crying with all her might and main,
+... And she won't eat her dinner - rice pudding again -
+... What is the matter with Mary Jane?
+... What is the matter with Mary Jane?
+... I've promised her dolls and a daisy-chain,
+... And a book about animals - all in vain -
+... What is the matter with Mary Jane?
+... What is the matter with Mary Jane?
+... She's perfectly well, and she hasn't a pain;
+... But, look at her, now she's beginning again! -
+... What is the matter with Mary Jane?
+... What is the matter with Mary Jane?
+... I've promised her sweets and a ride in the train,
+... And I've begged her to stop for a bit and explain -
+... What is the matter with Mary Jane?
+... What is the matter with Mary Jane?
+... She's perfectly well and she hasn't a pain,
+... And it's lovely rice pudding for dinner again!
 ... What is the matter with Mary Jane?'''
 >>> print(summarize(text))
-And she won't eat her dinner - rice pudding again - 
-I've promised her dolls and a daisy-chain, 
-I've promised her sweets and a ride in the train, 
+And she won't eat her dinner - rice pudding again -
+I've promised her dolls and a daisy-chain,
+I've promised her sweets and a ride in the train,
 And it's lovely rice pudding for dinner again!
 
 
-.. [1] Federico Barrios, Federico L´opez, Luis Argerich, Rosita Wachenchauzer (2016).  
+.. [1] Federico Barrios, Federico L´opez, Luis Argerich, Rosita Wachenchauzer (2016).
 Variations of the Similarity Function of TextRank for Automated Summarization,
 https://arxiv.org/abs/1602.03606
 
@@ -77,7 +77,7 @@ def _set_graph_edge_weights(graph):
     ----------
     graph : :class:~gensim.summarization.graph.Graph
         Given graph.
-         
+
     """
     documents = graph.nodes()
     weights = _bm25_weights(documents)
@@ -111,7 +111,7 @@ def _create_valid_graph(graph):
     ----------
     graph : :class:~gensim.summarization.graph.Graph
         Given graph.
-         
+
     """
     nodes = graph.nodes()
 
@@ -217,7 +217,7 @@ def _get_important_sentences(sentences, corpus, important_docs):
 
 
 def _get_sentences_with_word_count(sentences, word_count):
-    """Returns list of sentences. Total number of returned words close to 
+    """Returns list of sentences. Total number of returned words close to
     specified `word_count`.
 
     Parameters
@@ -253,7 +253,7 @@ def _get_sentences_with_word_count(sentences, word_count):
 
 
 def _extract_important_sentences(sentences, corpus, important_docs, word_count):
-    """Returns most important sentences of the `corpus`. 
+    """Returns most important sentences of the `corpus`.
 
     Parameters
     ----------
@@ -290,7 +290,7 @@ def _format_results(extracted_sentences, split):
     extracted_sentences : list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
         Given senteces.
     split : bool
-        If True senteces will be returned as list. Otherwise senteces will be 
+        If True senteces will be returned as list. Otherwise senteces will be
         merged and returned as string.
 
     Returns
@@ -323,10 +323,10 @@ def _build_hasheable_corpus(corpus):
 
 def summarize_corpus(corpus, ratio=0.2):
     """Returns a list of the most important documents of a corpus using a
-    variation of the TextRank algorithm. Used as helper for summarize 
+    variation of the TextRank algorithm. Used as helper for summarize
     :func:`~gensim.summarization.summarizer.summarizer`
-    
-    The input must have at least 
+
+    The input must have at least
     :const:`~gensim.summarization.summarizer.INPUT_MIN_LENGTH` documents for the summary to make sense.
     The length of the output can be specified using the ratio parameter,
     which determines how many documents will be chosen for the summary
@@ -336,8 +336,8 @@ def summarize_corpus(corpus, ratio=0.2):
     ----------
     corpus : list of (list of (tuple of int))
         Given corpus.
-    ratio : float 
-        Number between 0 and 1 that determines the proportion of the number of 
+    ratio : float
+        Number between 0 and 1 that determines the proportion of the number of
         sentences of the original text to be chosen for the summary, optional.
 
     Returns
@@ -382,7 +382,7 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
     and will be returned as a string, divided by newlines.
 
     The input should be a string, and must be longer than
-    :const:`~gensim.summarization.summarizer.INPUT_MIN_LENGTH` sentences for 
+    :const:`~gensim.summarization.summarizer.INPUT_MIN_LENGTH` sentences for
     the summary to make sense. The text
     will be split into sentences using the split_sentences method in the
     summarization.texcleaner module. Note that newlines divide sentences.
@@ -394,14 +394,14 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
     ----------
     text : str
         Given text.
-    ratio : float 
-        Number between 0 and 1 that determines the proportion of the number of 
+    ratio : float
+        Number between 0 and 1 that determines the proportion of the number of
         sentences of the original text to be chosen for the summary. Optional.
-    word_count : int 
+    word_count : int
         Determines how many words will the output contain.
         If both parameters are provided, the ratio will be ignored.
     split : bool
-        If True, list of sentences will be returned. Otherwise joined 
+        If True, list of sentences will be returned. Otherwise joined
         strings will bwe returned.
 
     Returns
