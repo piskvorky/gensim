@@ -5,6 +5,18 @@
 
 """This module contains functions and processors used for processing text,
 extracting sentences from text, working with acronyms and abbreviations.
+
+Data
+----
+
+.. data:: SEPARATOR - Special separator used in abbreviations.
+.. data:: RE_SENTENCE - Pattern to split text to sentences.
+.. data:: AB_SENIOR - Pattern for detecting abbreviations (example: Sgt. Pepper).
+.. data:: AB_ACRONYM - Pattern for detecting acronyms.
+.. data:: AB_ACRONYM_LETTERS - Pattern for detecting acronyms (example: P.S. I love you).
+.. data:: UNDO_AB_SENIOR - Pattern like AB_SENIOR but with SEPARATOR between abbreviation and next word.
+.. data:: UNDO_AB_ACRONYM - Pattern like AB_ACRONYM but with SEPARATOR between abbreviation and next word.
+
 """
 
 
@@ -15,7 +27,7 @@ from six.moves import xrange
 import re
 import logging
 
-logger = logging.getLogger('summa.preprocessing.cleaner')
+logger = logging.getLogger('summarizer.preprocessing.cleaner')
 
 try:
     from pattern.en import tag
@@ -27,19 +39,12 @@ except ImportError:
 
 
 SEPARATOR = r'@'
-"""str: special separator used in abbreviations."""
 RE_SENTENCE = re.compile(r'(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)
-"""SRE_Pattern: pattern to split text to sentences."""
 AB_SENIOR = re.compile(r'([A-Z][a-z]{1,2}\.)\s(\w)', re.UNICODE)
-"""SRE_Pattern: pattern for detecting abbreviations. (Example: Sgt. Pepper)"""
 AB_ACRONYM = re.compile(r'(\.[a-zA-Z]\.)\s(\w)', re.UNICODE)
-"""SRE_Pattern: one more pattern for detecting acronyms."""
 AB_ACRONYM_LETTERS = re.compile(r'([a-zA-Z])\.([a-zA-Z])\.', re.UNICODE)
-"""SRE_Pattern: one more pattern for detecting acronyms. (Example: P.S. I love you)"""
 UNDO_AB_SENIOR = re.compile(r'([A-Z][a-z]{1,2}\.)' + SEPARATOR + r'(\w)', re.UNICODE)
-"""SRE_Pattern: Pattern like AB_SENIOR but with SEPARATOR between abbreviation and next word"""
 UNDO_AB_ACRONYM = re.compile(r'(\.[a-zA-Z]\.)' + SEPARATOR + r'(\w)', re.UNICODE)
-"""SRE_Pattern: Pattern like AB_ACRONYM but with SEPARATOR between abbreviation and next word"""
 
 
 def split_sentences(text):

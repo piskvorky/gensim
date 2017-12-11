@@ -411,8 +411,7 @@ class Graph(IGraph):
         return self.edge_properties.setdefault(edge, {})
 
     def add_edge_attributes(self, edge, attrs):
-        """Adds attributes `attrs`to given edge. Order of nodes in edge doesn't
-        matter.
+        """Adds attributes `attrs` to given edge. Order of nodes in edge doesn't matter.
 
         Parameters
         ----------
@@ -426,8 +425,7 @@ class Graph(IGraph):
             self.add_edge_attribute(edge, attr)
 
     def add_edge_attribute(self, edge, attr):
-        """Adds attribute `attr`to given edge. Order of nodes in edge doesn't
-        matter.
+        """Adds attribute `attr` to given edge. Order of nodes in edge doesn't matter.
 
         Parameters
         ----------
@@ -444,8 +442,7 @@ class Graph(IGraph):
             self.edge_attr[(edge[1], edge[0])] = self.edge_attributes((edge[1], edge[0])) + [attr]
 
     def edge_attributes(self, edge):
-        """Returns attributes of given edge. In case of non existing edge
-        returns empty list.
+        """Returns attributes of given edge. In case of non existing edge returns empty list.
 
         Parameters
         ----------

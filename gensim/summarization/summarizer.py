@@ -6,12 +6,16 @@
 """This module provides functions for summarizing texts. Summarizing is based on
 ranks of text sentences using a variation of the TextRank algorithm (see [1]_ ).
 
+.. [1] Federico Barrios, Federico L´opez, Luis Argerich, Rosita Wachenchauzer (2016).
+       Variations of the Similarity Function of TextRank for Automated Summarization,
+       https://arxiv.org/abs/1602.03606
 
-Data:
------
+
+Data
+----
+
 .. data:: INPUT_MIN_LENGTH - Minimal number of sentences in text
-.. data:: WEIGHT_THRESHOLD - Minimal weight of edge between graph nodes. Smaller
-weights set to zero.
+.. data:: WEIGHT_THRESHOLD - Minimal weight of edge between graph nodes. Smaller weights set to zero.
 
 Example
 -------
@@ -43,11 +47,6 @@ And she won't eat her dinner - rice pudding again -
 I've promised her dolls and a daisy-chain,
 I've promised her sweets and a ride in the train,
 And it's lovely rice pudding for dinner again!
-
-
-.. [1] Federico Barrios, Federico L´opez, Luis Argerich, Rosita Wachenchauzer (2016).
-Variations of the Similarity Function of TextRank for Automated Summarization,
-https://arxiv.org/abs/1602.03606
 
 """
 
