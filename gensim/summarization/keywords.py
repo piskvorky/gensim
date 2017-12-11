@@ -449,8 +449,12 @@ def _format_results(_keywords, combined_keywords, split, scores):
 
     Returns
     -------
-    list of (str, float) If `scores` **OR** list of str if `split` **OR** str
-        Keywords in needed format.
+    result: list of (str, float)
+        If `scores`, keywords with scores **OR**
+    result: list of str
+        If `split`, keywords only **OR**
+    result: str
+        Keywords, joined by endl.
 
     """
     combined_keywords.sort(key=lambda w: _get_average_score(w, _keywords), reverse=True)
@@ -488,8 +492,12 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
 
     Returns
     -------
-    list of (str, float) If `scores` **OR** list of str if `split` **OR** str
-        Keywords in needed format.
+    result: list of (str, float)
+        If `scores`, keywords with scores **OR**
+    result: list of str
+        If `split`, keywords only **OR**
+    result: str
+        Keywords, joined by endl.
 
     """
     # Gets a dict of word -> lemma
