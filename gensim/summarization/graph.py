@@ -16,7 +16,7 @@ Create simple graph with 4 nodes.
 >>> g.add_node('Lion')
 >>> g.add_node('Tiger')
 >>> g.add_node('Wolf')
->>> g.nodes()
+>>> sorted(g.nodes())
 ['Felidae', 'Lion', 'Tiger', 'Wolf']
 
 Add some edges and check neighbours.
@@ -44,8 +44,7 @@ class IGraph(object):
 
     @abstractmethod
     def nodes(self):
-        """
-        Returns all nodes of graph.
+        """Returns all nodes of graph.
 
         Returns
         -------
@@ -57,12 +56,11 @@ class IGraph(object):
 
     @abstractmethod
     def edges(self):
-        """
-        Returns all edges of graph.
+        """Returns all edges of graph.
 
         Returns
         -------
-        list of (tuple of hashable)
+        list of (hashable, hashable)
             Edges of graph.
 
         """
@@ -70,8 +68,7 @@ class IGraph(object):
 
     @abstractmethod
     def neighbors(self, node):
-        """
-        Return all nodes that are directly accessible from given node.
+        """Return all nodes that are directly accessible from given node.
 
         Parameters
         ----------
@@ -109,9 +106,8 @@ class IGraph(object):
 
         Note
         ----
-        While nodes can be of any type, it's strongly recommended
-        to use only numbers and single-line strings as node identifiers if you
-        intend to use write().
+        While nodes can be of any type, it's strongly recommended to use only numbers and single-line strings
+        as node identifiers if you intend to use write().
 
         Parameters
         ----------
@@ -130,7 +126,7 @@ class IGraph(object):
 
         Parameters
         ----------
-        edge : tuple of hashable
+        edge : (hashable, hashable)
             Given edge.
         wt : float, optional
             Weight of new edge.
@@ -148,8 +144,8 @@ class IGraph(object):
 
         Parameters
         ----------
-        edge : tuple of hashable
-            Given edge. An edge, here, is a tuple of two nodes.
+        edge : (hashable, hashable)
+            Given edge.
 
         Returns
         -------
@@ -165,7 +161,7 @@ class IGraph(object):
 
         Parameters
         ----------
-        edge : tuple of hashable
+        edge : (hashable, hashable)
             Given edge.
 
         Returns
@@ -195,13 +191,13 @@ class Graph(IGraph):
 
     Attributes
     ----------
-    WEIGHT_ATTRIBUTE_NAME : str
+    Graph.WEIGHT_ATTRIBUTE_NAME : str
         Name of weight attribute in graph.
-    DEFAULT_WEIGHT : float
+    Graph.DEFAULT_WEIGHT : float
         Weight set by default.
-    LABEL_ATTRIBUTE_NAME : str
+    Graph.LABEL_ATTRIBUTE_NAME : str
         Default name of attribute. Not used.
-    DEFAULT_LABEL : str
+    Graph.DEFAULT_LABEL : str
         Label set by default. Not used.
 
     """
@@ -232,7 +228,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of hashable, size = 2
+        edge : (hashable, hashable)
             Given edge.
 
         Returns
@@ -245,11 +241,11 @@ class Graph(IGraph):
         return (u, v) in self.edge_properties and (v, u) in self.edge_properties
 
     def edge_weight(self, edge):
-        """Returns weigth of given edge.
+        """Returns weight of given edge.
 
         Parameters
         ----------
-        edge : tuple of hashable, size = 2
+        edge : (hashable, hashable)
             Given edge.
 
         Returns
@@ -293,12 +289,11 @@ class Graph(IGraph):
         return node in self.node_neighbors
 
     def add_edge(self, edge, wt=1, label='', attrs=None):
-        """Adds an edge to the graph connecting two nodes. An edge, here,
-        is a tuple of two nodes.
+        """Adds an edge to the graph connecting two nodes.
 
         Parameters
         ----------
-        edge : tuple of hashable, size = 2
+        edge : (hashable, hashable)
             Given edge.
         wt : float, optional
             Weight of new edge.
@@ -339,7 +334,7 @@ class Graph(IGraph):
         ----------
         node : hashable
             Given node.
-        attrs : list, optional
+        attrs : list of (hashable, hashable), optional
             Node attributes specified as (attribute, value)
 
         Raises
@@ -372,7 +367,7 @@ class Graph(IGraph):
 
         Returns
         -------
-        list of (tuple of hashable, size = 2)
+        list of (hashable, hashable)
             Edges of graph.
 
         """
@@ -399,7 +394,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of hashable, size = 2
+        edge : (hashable, hashable)
             Given edge.
 
         Returns
@@ -411,11 +406,11 @@ class Graph(IGraph):
         return self.edge_properties.setdefault(edge, {})
 
     def add_edge_attributes(self, edge, attrs):
-        """Adds attributes `attrs` to given edge. Order of nodes in edge doesn't matter.
+        """Adds attributes `attrs` to given edge, order of nodes in edge doesn't matter.
 
         Parameters
         ----------
-        edge : tuple of hashable, size = 2
+        edge : (hashable, hashable)
             Given edge.
         attrs : list
             Provided attributes to add.
@@ -425,7 +420,7 @@ class Graph(IGraph):
             self.add_edge_attribute(edge, attr)
 
     def add_edge_attribute(self, edge, attr):
-        """Adds attribute `attr` to given edge. Order of nodes in edge doesn't matter.
+        """Adds attribute `attr` to given edge, order of nodes in edge doesn't matter.
 
         Parameters
         ----------
@@ -442,7 +437,11 @@ class Graph(IGraph):
             self.edge_attr[(edge[1], edge[0])] = self.edge_attributes((edge[1], edge[0])) + [attr]
 
     def edge_attributes(self, edge):
-        """Returns attributes of given edge. In case of non existing edge returns empty list.
+        """Returns attributes of given edge.
+
+        Note
+        ----
+        In case of non existing edge returns empty list.
 
         Parameters
         ----------
@@ -461,8 +460,7 @@ class Graph(IGraph):
             return []
 
     def set_edge_properties(self, edge, **properties):
-        """Adds `properties` to given edge. Order of nodes in edge doesn't
-        matter.
+        """Adds `properties` to given edge, order of nodes in edge doesn't matter.
 
         Parameters
         ----------
