@@ -4,8 +4,7 @@
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains functions to perform aggregation on a list of values
-obtained from the confirmation measure."""
+"""This module contains functions to perform aggregation on a list of values obtained from the confirmation measure."""
 
 import logging
 import numpy as np
@@ -20,12 +19,12 @@ def arithmetic_mean(confirmed_measures):
 
     Parameters
     ----------
-    confirmed_measures : list
+    confirmed_measures : list of float
         List of calculated confirmation measure on each set in the segmented topics.
 
     Returns
     -------
-    numpy.float
+    `numpy.float`
         Arithmetic mean of all the values contained in confirmation measures.
 
     Examples
