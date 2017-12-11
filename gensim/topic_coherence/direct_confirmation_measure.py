@@ -24,8 +24,7 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
     ----------
     segmented_topics : list of lists of (int, int)
         Output from the :func:`~gensim.topic_coherence.segmentation.s_one_pre`,
-        :func:`~gensim.topic_coherence.segmentation.s_one_one`, and so on from the
-        :mod:`gensim.topic_coherence.segmentation` module.
+        :func:`~gensim.topic_coherence.segmentation.s_one_one`.
     accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator from :mod:`gensim.topic_coherence.probability_estimation`.
     with_std : bool
@@ -127,8 +126,7 @@ def log_ratio_measure(segmented_topics, accumulator, normalize=False, with_std=F
     ----------
     segmented_topics : list of lists of (int, int)
         Output from the :func:`~gensim.topic_coherence.segmentation.s_one_pre`,
-        :func:`~gensim.topic_coherence.segmentation.s_one_one`, and so on from the
-        :mod:`gensim.topic_coherence.segmentation` module.
+        :func:`~gensim.topic_coherence.segmentation.s_one_one`.
     accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator from :mod:`gensim.topic_coherence.probability_estimation`.
     normalize : bool
