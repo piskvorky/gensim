@@ -6,28 +6,25 @@
 
 r"""This module contains functions to compute confirmation on a pair of words or word subsets.
 
-Notes
------
-The advantage of indirect confirmation measure is that it computes similarity of words in W' and
-W* with respect to direct confirmations to all words. Eg. Suppose x and z are both competing
+The advantage of indirect confirmation measure is that it computes similarity of words in :math:`W'` and
+:math:`W^{*}` with respect to direct confirmations to all words. Eg. Suppose `x` and `z` are both competing
 brands of cars, which semantically support each other. However, both brands are seldom mentioned
 together in documents in the reference corpus. But their confirmations to other words like “road”
 or “speed” do strongly correlate. This would be reflected by an indirect confirmation measure.
 Thus, indirect confirmation measures may capture semantic support that direct measures would miss.
 
 The formula used to compute indirect confirmation measure is
+
 .. math::
 
-    m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
+    \widetilde{m}_{sim(m, \gamma)}(W', W^{*}) = s_{sim}(\vec{v}^{\,}_{m,\gamma}(W'), \vec{v}^{\,}_{m,\gamma}(W^{*}))
 
-where s_sim can be cosine, dice or jaccard similarity and
+
+where :math:`s_{sim}` can be cosine, dice or jaccard similarity and
+
 .. math::
 
-    \vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
-
-Attributes:
------------
-m: direct confirmation measure.
+    \vec{v}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
 
 """
 
@@ -37,49 +34,48 @@ import logging
 import numpy as np
 import scipy.sparse as sps
 
-from gensim.topic_coherence.direct_confirmation_measure import (
-    aggregate_segment_sims, log_ratio_measure)
+from gensim.topic_coherence.direct_confirmation_measure import aggregate_segment_sims, log_ratio_measure
 
 logger = logging.getLogger(__name__)
 
 
 def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_support=False):
     """For each topic segmentation, compute average cosine similarity using a
-    WordVectorsAccumulator.
+    :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator`.
 
     Parameters
     ----------
-    segmented_topics : list of (list of tuples)
-        Output from the segmentation module of the segmented topics.
-    accumulator: :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
-        Word occurrence accumulator from probability_estimation.
+    segmented_topics : list of lists of (int, `numpy.ndarray`)
+        Output from the :func:`~gensim.topic_coherence.segmentation.s_one_set`.
+    accumulator : :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator`
+        Word occurrence accumulator.
     with_std : bool
-        True to also include standard deviation across topic segment
-        sets in addition to the mean coherence for each topic; default is False.
+        True to also include standard deviation across topic segment sets
+        in addition to the mean coherence for each topic.
     with_support : bool
-        True to also include support across topic segments. The
-        support is defined as the number of pairwise similarity comparisons were
-        used to compute the overall topic coherence.
+        True to also include support across topic segments. The support is defined as
+        the number of pairwise similarity comparisons were used to compute the overall topic coherence.
 
     Returns
     -------
-    list
-        List of word2vec cosine similarities per topic.
+    list of (float[, float[, int]])
+        Сosine word2vec similarities per topic (with std/support if `with_std`, `with_support`).
 
     Examples
     --------
-    >>> from gensim.corpora.dictionary import Dictionary
     >>> import numpy as np
+    >>> from gensim.corpora.dictionary import Dictionary
     >>> from gensim.topic_coherence import indirect_confirmation_measure
     >>> from gensim.topic_coherence import text_analysis
+    >>>
     >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
     >>> dictionary = Dictionary()
     >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
     >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
     >>> accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
+    >>>
+    >>> # should be (0.726752426218 0.00695475919227)
     >>> mean, std = indirect_confirmation_measure.word2vec_similarity(segmentation, accumulator, with_std=True)[0]
-    >>> print mean, std
-    0.726752426218 0.00695475919227
 
     """
     topic_coherences = []
@@ -113,21 +109,7 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
 
 def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
                       gamma=1, with_std=False, with_support=False):
-    r"""Calculate the indirect cosine measure.
-
-    Given context vectors :math:`u = V(W') and w = V(W*)` for the
-    word sets of a pair  :math:`S_i = (W', W*)` indirect cosine measure
-    is computed as the cosine similarity between u and w.
-
-    The formula used is
-    .. math::
-
-        m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
-
-    where each vector
-    .. math::
-
-        \vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
+    """Calculate the indirect cosine measure.
 
     Parameters
     ----------
@@ -301,11 +283,11 @@ class ContextVectorComputer(object):
 
 
 def _pair_npmi(pair, accumulator):
-    """Compute normalized pairwise mutual information (NPMI) between a pair of words.
+    """Compute normalized pairwise mutual information (**NPMI**) between a pair of words.
 
     Parameters
     ----------
-    pair : iterable
+    pair : iterable of
         The pair of words (word_id1, word_id2).
     accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator from probability_estimation.
