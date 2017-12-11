@@ -3,8 +3,7 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module provides functions of creating graph from sequence of values and
-removing of unreachable nodes.
+"""This module provides functions of creating graph from sequence of values and removing of unreachable nodes.
 
 
 Examples
@@ -15,13 +14,13 @@ Create simple graph and add edges. Let's take a look at nodes.
 >>> gg = build_graph(['Felidae', 'Lion', 'Tiger', 'Wolf'])
 >>> gg.add_edge(("Felidae", "Lion"))
 >>> gg.add_edge(("Felidae", "Tiger"))
->>> gg.nodes()
+>>> sorted(gg.nodes())
 ['Felidae', 'Lion', 'Tiger', 'Wolf']
 
 Remove nodes with no edges.
 
 >>> remove_unreachable_nodes(gg)
->>> gg.nodes()
+>>> sorted(gg.nodes())
 ['Felidae', 'Lion', 'Tiger']
 
 """
@@ -39,7 +38,7 @@ def build_graph(sequence):
 
     Returns
     -------
-    :class:~gensim.summarization.graph.Graph
+    :class:`~gensim.summarization.graph.Graph`
         Created graph.
 
     """
@@ -55,7 +54,7 @@ def remove_unreachable_nodes(graph):
 
     Parameters
     ----------
-    graph : :class:~gensim.summarization.graph.Graph
+    graph : :class:`~gensim.summarization.graph.Graph`
         Given graph.
 
     """
