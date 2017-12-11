@@ -48,7 +48,7 @@ def buildDmlCorpus(config):
     dml.buildDictionary()
     dml.dictionary.filterExtremes(noBelow=5, noAbove=0.3)  # ignore too (in)frequent words
 
-    dml.save(config.resultFile('.pkl'))  # save the mappings as binary data (actual documents are not saved, only their URIs)
+    dml.save(config.resultFile('.pkl'))
     dml.saveAsText()  # save id mappings and documents as text data (matrix market format)
     return dml
 

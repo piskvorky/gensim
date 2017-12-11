@@ -60,7 +60,7 @@ def generateSimilar(corpus, index, method):
 
         articles = []  # collect similars in this list
         for docNo2, score in topSims:  # for each most similar article
-            if score > MIN_SCORE and docNo != docNo2:  # if similarity is above MIN_SCORE and not identity (=always maximum similarity, boring)
+            if score > MIN_SCORE and docNo != docNo2:
                 source, (intId, pathId) = corpus.documents[docNo2]
                 meta = corpus.getMeta(docNo2)
                 suffix, author, title = '', meta.get('author', ''), meta.get('title', '')
@@ -106,7 +106,8 @@ if __name__ == '__main__':
 
     corpus = dmlcorpus.DmlCorpus.load(config.resultFile('.pkl'))
     input = MmCorpus(config.resultFile('_%s.mm' % method))
-    assert len(input) == len(corpus), "corpus size mismatch (%i vs %i): run ./gensim_genmodel.py again" % (len(input), len(corpus))
+    assert len(input) == len(corpus), \
+        "corpus size mismatch (%i vs %i): run ./gensim_genmodel.py again" % (len(input), len(corpus))
 
     # initialize structure for similarity queries
     if method == 'lsi' or method == 'rp':  # for these methods, use dense vectors
@@ -114,7 +115,7 @@ if __name__ == '__main__':
     else:
         index = SparseMatrixSimilarity(input, num_best=MAX_SIMILAR + 1)
 
-    index.normalize = False  # do not normalize query vectors during similarity queries (the index is already built normalized, so it would be a no-op)
-    generateSimilar(corpus, index, method)  # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz specific format
+    index.normalize = False
+    generateSimilar(corpus, index, method)
 
     logging.info("finished running %s", program)

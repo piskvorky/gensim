@@ -115,7 +115,9 @@ def _extract_important_sentences(sentences, corpus, important_docs, word_count):
 
     # If no "word_count" option is provided, the number of sentences is
     # reduced by the provided ratio. Else, the ratio is ignored.
-    return important_sentences if word_count is None else _get_sentences_with_word_count(important_sentences, word_count)
+    return important_sentences \
+        if word_count is None \
+        else _get_sentences_with_word_count(important_sentences, word_count)
 
 
 def _format_results(extracted_sentences, split):
@@ -173,14 +175,18 @@ def summarize_corpus(corpus, ratio=0.2):
 def summarize(text, ratio=0.2, word_count=None, split=False):
     """
     Returns a summarized version of the given text using a variation of
-    the TextRank algorithm.
-    The input must be longer than INPUT_MIN_LENGTH sentences for the
-    summary to make sense and must be given as a string.
+    the TextRank algorithm (see https://arxiv.org/abs/1602.03606).
 
     The output summary will consist of the most representative sentences
-    and will also be returned as a string, divided by newlines. If the
-    split parameter is set to True, a list of sentences will be
-    returned.
+    and will be returned as a string, divided by newlines.
+    If the split parameter is set to True, a list of sentences will be
+    returned instead.
+
+    The input should be a string, and must be longer than
+    INPUT_MIN_LENGTH sentences for the summary to make sense. The text
+    will be split into sentences using the split_sentences method in the
+    summarization.texcleaner module.
+    Note that newlines divide sentences.
 
     The length of the output can be specified using the ratio and
     word_count parameters:
