@@ -424,7 +424,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of hashable, size = 2
+        edge : (hashable, hashable)
             Given edge.
 
         attr : object
@@ -445,7 +445,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of hashable, size = 2
+        edge : (hashable, hashable)
             Given edge.
 
         Returns
@@ -464,7 +464,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of hashable, size = 2
+        edge : (hashable, hashable)
             Given edge.
 
         properties : dict
@@ -480,7 +480,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of hashable, size = 2
+        edge : (hashable, hashable)
             Given edge.
 
         """
@@ -496,7 +496,7 @@ class Graph(IGraph):
 
         Parameters
         ----------
-        edge : tuple of hashable, size = 2
+        edge : (hashable, hashable)
             Given edge.
 
         """
