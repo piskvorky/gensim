@@ -66,7 +66,8 @@ class RpModel(interfaces.TransformationABC):
         # Here i use a particular form, derived in "Achlioptas: Database-friendly random projection",
         # and his (1) scenario of Theorem 1.1 in particular (all entries are +1/-1).
         randmat = 1 - 2 * np.random.binomial(1, 0.5, shape)  # convert from 0/1 to +1/-1
-        self.projection = np.asfortranarray(randmat, dtype=np.float32)  # convert from int32 to floats, for faster multiplications
+        # convert from int32 to floats, for faster multiplications
+        self.projection = np.asfortranarray(randmat, dtype=np.float32)
         # TODO: check whether the Fortran-order shenanigans still make sense. In the original
         # code (~2010), this made a BIG difference for np BLAS implementations; perhaps now the wrappers
         # are smarter and this is no longer needed?

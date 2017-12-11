@@ -56,7 +56,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", required=True, help="Input file, in gloVe format (read-only).")
-    parser.add_argument("-o", "--output", required=True, help="Output file, in word2vec text format (will be overwritten).")
+    parser.add_argument(
+        "-o", "--output", required=True, help="Output file, in word2vec text format (will be overwritten)."
+    )
     args = parser.parse_args()
 
     # do the actual conversion

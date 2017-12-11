@@ -324,7 +324,8 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         if num_best is not None:
             # Sparse array.
             for i, sim in sims:
-                self.assertTrue(numpy.alltrue(sim > 0.0))  # Note that similarities are bigger than zero, as they are the 1/ 1 + distances.
+                # Note that similarities are bigger than zero, as they are the 1/ 1 + distances.
+                self.assertTrue(numpy.alltrue(sim > 0.0))
         else:
             self.assertTrue(sims[0] == 1.0)  # Similarity of a document with itself is 0.0.
             self.assertTrue(numpy.alltrue(sims[1:] > 0.0))

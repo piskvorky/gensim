@@ -36,7 +36,7 @@ class DmlConfig(object):
 
     def __init__(self, configId, resultDir, acceptLangs=None):
         self.resultDir = resultDir  # output files will be stored in this directory
-        self.configId = configId  # configId is a string that is used as filename prefix for all files, so keep it simple
+        self.configId = configId
         self.sources = {}  # all article sources; see sources.DmlSource class for an example of source
 
         if acceptLangs is None:  # which languages to accept
@@ -48,7 +48,7 @@ class DmlConfig(object):
         return os.path.join(self.resultDir, self.configId + '_' + fname)
 
     def acceptArticle(self, metadata):
-        lang = metadata.get('language', 'unk')  # if there was no language field in the article metadata, set language to 'unk' = unknown
+        lang = metadata.get('language', 'unk')
         if 'any' not in self.acceptLangs and lang not in self.acceptLangs:
             return False
         return True
@@ -118,7 +118,10 @@ class DmlCorpus(interfaces.CorpusABC):
 
             # convert to bag-of-words, but ignore the result -- here we only care about updating token ids
             _ = self.dictionary.doc2bow(words, allowUpdate=True)  # noqa:F841
-        logger.info("built %s from %i documents (total %i corpus positions)", self.dictionary, len(self.documents), numPositions)
+        logger.info(
+            "built %s from %i documents (total %i corpus positions)",
+            self.dictionary, len(self.documents), numPositions
+        )
 
     def processConfig(self, config, shuffle=False):
         """

@@ -90,7 +90,8 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             # output of the model slightly.
             vec = matutils.sparse2full(jill_topics, 2)  # convert to dense vector, for easier equality tests
             expected = [0.91, 0.08]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
+            # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)
             if passed:
                 break
             logging.warning(
@@ -240,7 +241,8 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             # output of the model slightly.
             vec = matutils.sparse2full(jill_topics, 2)  # convert to dense vector, for easier equality tests
             expected = [0.91, 0.08]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
+            # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)
 
             # Delete the MmCorpus used for serialization inside the author-topic model.
             remove(datapath('testcorpus_serialization.mm'))
@@ -540,6 +542,20 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, self.class_.load, fname, mmap='r')
+
+    def testDtypeBackwardCompatibility(self):
+        atmodel_3_0_1_fname = datapath('atmodel_3_0_1_model')
+        expected_topics = [(0, 0.068200842977296727), (1, 0.93179915702270333)]
+
+        # save model to use in test
+        # self.model.save(atmodel_3_0_1_fname)
+
+        # load a model saved using a 3.0.1 version of Gensim
+        model = self.class_.load(atmodel_3_0_1_fname)
+
+        # and test it on a predefined document
+        topics = model['jane']
+        self.assertTrue(np.allclose(expected_topics, topics))
 
 
 if __name__ == '__main__':

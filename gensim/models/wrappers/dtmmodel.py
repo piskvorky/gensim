@@ -13,7 +13,8 @@ This module allows for DTM and DIM model estimation from a training corpus.
 
 Example:
 
->>> model = gensim.models.wrappers.DtmModel('dtm-win64.exe', my_corpus, my_timeslices, num_topics=20, id2word=dictionary)
+>>> model = gensim.models.wrappers.DtmModel('dtm-win64.exe', my_corpus, my_timeslices,
+...                num_topics=20, id2word=dictionary)
 
 .. [1] https://github.com/magsilva/dtm/tree/master/bin
 
@@ -290,10 +291,7 @@ class DtmModel(utils.SaveLoad):
 
         """
         if num_words is not None:  # deprecated num_words is used
-            logger.warning(
-                "The parameter num_words for show_topic() would be deprecated in the updated version. "
-                "Please use topn instead."
-            )
+            warnings.warn("The parameter `num_words` is deprecated, will be removed in 4.0.0, use `topn` instead.")
             topn = num_words
 
         topics = self.lambda_[:, :, time]
@@ -310,17 +308,15 @@ class DtmModel(utils.SaveLoad):
     def print_topic(self, topicid, time, topn=10, num_words=None):
         """Return the given topic, formatted as a string."""
         if num_words is not None:  # deprecated num_words is used
-            warnings.warn(
-                "The parameter num_words for print_topic() would be deprecated in the updated version. "
-                "Please use topn instead."
-            )
+            warnings.warn("The parameter `num_words` is deprecated, will be removed in 4.0.0, use `topn` instead.")
             topn = num_words
 
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
 
     def dtm_vis(self, corpus, time):
         """
-        returns term_frequency, vocab, doc_lengths, topic-term distributions and doc_topic distributions, specified by pyLDAvis format.
+        returns term_frequency, vocab, doc_lengths, topic-term distributions and doc_topic distributions,
+        specified by pyLDAvis format.
         all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
         input parameter is the year to do the visualisation.
         """

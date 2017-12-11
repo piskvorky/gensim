@@ -142,7 +142,10 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(model.docvecs['_*0'].shape, (100,))
         self.assertTrue(all(model.docvecs['_*0'] == model.docvecs[0]))
         self.assertTrue(max(d.offset for d in model.docvecs.doctags.values()) < len(model.docvecs.doctags))
-        self.assertTrue(max(model.docvecs._int_index(str_key) for str_key in model.docvecs.doctags.keys()) < len(model.docvecs.doctag_syn0))
+        self.assertTrue(
+            max(model.docvecs._int_index(str_key) for str_key in model.docvecs.doctags.keys())
+            < len(model.docvecs.doctag_syn0)
+        )
         # verify docvecs.most_similar() returns string doctags rather than indexes
         self.assertEqual(model.docvecs.offset2doctag[0], model.docvecs.most_similar([model.docvecs[0]])[0][0])
 
@@ -161,7 +164,10 @@ class TestDoc2VecModel(unittest.TestCase):
 
         model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
-        self.assertTrue(model.docvecs.similarity_unseen_docs(model, rome_str, rome_str) > model.docvecs.similarity_unseen_docs(model, rome_str, car_str))
+        self.assertTrue(
+            model.docvecs.similarity_unseen_docs(model, rome_str, rome_str) >
+            model.docvecs.similarity_unseen_docs(model, rome_str, car_str)
+        )
 
     def model_sanity(self, model, keep_training=True):
         """Any non-trivial model on DocsLeeCorpus can pass these sanity checks"""
@@ -189,7 +195,8 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(list(zip(*sims))[1], list(zip(*sims2))[1]))  # close-enough dists
 
         # sim results should be in clip range if given
-        clip_sims = model.docvecs.most_similar(fire1, clip_start=len(model.docvecs) // 2, clip_end=len(model.docvecs) * 2 // 3)
+        clip_sims = \
+            model.docvecs.most_similar(fire1, clip_start=len(model.docvecs) // 2, clip_end=len(model.docvecs) * 2 // 3)
         sims_doc_id = [docid for docid, sim in clip_sims]
         for s_id in sims_doc_id:
             self.assertTrue(len(model.docvecs) // 2 <= s_id <= len(model.docvecs) * 2 // 3)

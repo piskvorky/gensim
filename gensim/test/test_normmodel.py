@@ -136,7 +136,8 @@ class TestNormModel(unittest.TestCase):
         model2 = normmodel.NormModel.load(fname)
         self.assertTrue(model.norms == model2.norms)
         tstvec = []
-        self.assertTrue(np.allclose(model.normalize(tstvec), model2.normalize(tstvec)))  # try projecting an empty vector
+        # try projecting an empty vector
+        self.assertTrue(np.allclose(model.normalize(tstvec), model2.normalize(tstvec)))
 
     def testPersistenceCompressed(self):
         fname = get_tmpfile('gensim_models.tst.gz')
@@ -145,7 +146,8 @@ class TestNormModel(unittest.TestCase):
         model2 = normmodel.NormModel.load(fname, mmap=None)
         self.assertTrue(model.norms == model2.norms)
         tstvec = []
-        self.assertTrue(np.allclose(model.normalize(tstvec), model2.normalize(tstvec)))  # try projecting an empty vector
+        # try projecting an empty vector
+        self.assertTrue(np.allclose(model.normalize(tstvec), model2.normalize(tstvec)))
 
 
 if __name__ == '__main__':
