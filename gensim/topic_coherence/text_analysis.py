@@ -207,7 +207,6 @@ class InvertedIndexBased(BaseAnalyzer):
 
     """
 
-
     def __init__(self, *args):
         super(InvertedIndexBased, self).__init__(*args)
         self._inverted_index = np.array([set() for _ in range(self._vocab_size)])

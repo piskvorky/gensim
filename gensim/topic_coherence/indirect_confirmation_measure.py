@@ -111,7 +111,8 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
     return topic_coherences
 
 
-def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr', gamma=1,with_std=False, with_support=False):
+def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
+                      gamma=1, with_std=False, with_support=False):
     r"""Calculate the indirect cosine measure.
 
     Given context vectors :math:`u = V(W') and w = V(W*)` for the
@@ -254,7 +255,8 @@ class ContextVectorComputer(object):
         Returns
         -------
         csr_matrix :class:`~scipy.sparse.csr`
-            If context vector has been cached, then return corresponding context vector, else compute, cache, and return.
+            If context vector has been cached, then return corresponding context vector,
+            else compute, cache, and return.
 
         Example
         ---------
