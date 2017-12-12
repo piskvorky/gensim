@@ -3,21 +3,23 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
+"""This module calculate PageRank [1]_ based on wordgraph.
 
+
+.. [1] https://en.wikipedia.org/wiki/PageRank
 
 Examples
 --------
 
+Calculate Pagerank for words
+
 >>> from gensim.summarization.keywords import get_graph
 >>> from gensim.summarization.pagerank_weighted import pagerank_weighted
 >>> graph = get_graph("The road to hell is paved with good intentions.")
->>> pagerank_weighted(graph)
-{'good': 0.70432858653171504,
- 'hell': 0.051128871128006126,
- 'intent': 0.70432858653171504,
- 'pave': 0.051128871128006015,
- 'road': 0.051128871128006237}
+>>> # result will looks like {'good': 0.70432858653171504, 'hell': 0.051128871128006126, ...}
+>>> result = pagerank_weighted(graph)
+
+Build matrix from graph
 
 >>> from gensim.summarization.pagerank_weighted import build_adjacency_matrix
 >>> build_adjacency_matrix(graph).todense()
@@ -37,20 +39,13 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import eigs
 from six.moves import xrange
 
-try:
-    from numpy import VisibleDeprecationWarning
-    import warnings
-    warnings.filterwarnings("ignore", category=VisibleDeprecationWarning)
-except ImportError:
-    pass
-
 
 def pagerank_weighted(graph, damping=0.85):
-    """Returns dictionary of `graph`'s nodes and its ranks.
+    """Get dictionary of `graph` nodes and its ranks.
 
     Parameters
     ----------
-    graph : :class:~gensim.summarization.graph.Graph
+    graph : :class:`~gensim.summarization.graph.Graph`
         Given graph.
     damping : float
         Damping parameter, optional
@@ -73,17 +68,17 @@ def pagerank_weighted(graph, damping=0.85):
 
 
 def build_adjacency_matrix(graph):
-    """Returns matrix representation of given `graph`.
+    """Get matrix representation of given `graph`.
 
     Parameters
     ----------
-    graph : :class:~gensim.summarization.graph.Graph
+    graph : :class:`~gensim.summarization.graph.Graph`
         Given graph.
 
     Returns
     -------
-    :class:scipy.sparse.csr_matrix, shape = [n, n], n is number of nodes
-        Adjacency matrix of given `graph`.
+    :class:`scipy.sparse.csr_matrix`, shape = [n, n]
+        Adjacency matrix of given `graph`, n is number of nodes.
 
     """
     row = []
@@ -106,18 +101,18 @@ def build_adjacency_matrix(graph):
 
 
 def build_probability_matrix(graph):
-    """Returns square matrix of shape (n, n), where n is number of nodes of the
+    """Get square matrix of shape (n, n), where n is number of nodes of the
     given `graph`.
 
     Parameters
     ----------
-    graph : :class:~gensim.summarization.graph.Graph
+    graph : :class:`~gensim.summarization.graph.Graph`
         Given graph.
 
     Returns
     -------
-    array, shape = [n, n], n is number of nodes of `graph`
-        Eigenvector of matrix `a`.
+    numpy.ndarray, shape = [n, n]
+        Eigenvector of matrix `a`, n is number of nodes of `graph`.
 
     """
     dimension = len(graph.nodes())
@@ -130,16 +125,16 @@ def build_probability_matrix(graph):
 
 
 def principal_eigenvector(a):
-    """Returns eigenvector of square matrix `a`.
+    """Get eigenvector of square matrix `a`.
 
     Parameters
     ----------
-    a : array, shape = [n, n]
+    a : numpy.ndarray, shape = [n, n]
         Given matrix.
 
     Returns
     -------
-    array, shape = [n, ]
+    numpy.ndarray, shape = [n, ]
         Eigenvector of matrix `a`.
 
     """
@@ -157,15 +152,15 @@ def principal_eigenvector(a):
 
 
 def process_results(graph, vec):
-    """Returns `graph` nodes and corresponding absolute values of provided
-    eigenvector. This function os helper for :func:`~gensim.summarization.pagerank_weighted.pagerank_weighted`
+    """Get `graph` nodes and corresponding absolute values of provided eigenvector.
+    This function is helper for :func:`~gensim.summarization.pagerank_weighted.pagerank_weighted`
 
     Parameters
     ----------
-    graph : :class:~gensim.summarization.graph.Graph
+    graph : :class:`~gensim.summarization.graph.Graph`
         Given graph.
-    vec : array, shape = [n, ], n is number of nodes of `graph`
-        Given eigenvector.
+    vec : numpy.ndarray, shape = [n, ]
+        Given eigenvector, n is number of nodes of `graph`.
 
     Returns
     -------
