@@ -25,7 +25,7 @@ def p_boolean_document(corpus, segmented_topics):
     ----------
     corpus : list
         The corpus of documents.
-    segmented_topics : list of tuples
+    segmented_topics : list of list of (str,str)
         Output from the segmentation of topics. Tuples of (word_id_set1, word_id_set2). Could be simply topics too.
 
     Returns
@@ -58,20 +58,23 @@ def p_boolean_document(corpus, segmented_topics):
 
 def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, processes=1):
     """Perform the boolean sliding window probability estimation.
+
+    Parameters
+    ----------
+    texts : List of str
+    segmented_topics : list of tuples of (word_id_set1, word_id_set2)
+        Output from the segmentation of topics. Could be simply topics too.
+    dictionary : :class:`~gensim.corpora.dictionary`
+        Gensim dictionary mapping of the tokens and ids.
+    window_size : int
+        Size of the sliding window. 110 found out to be the ideal size for large corpora.
+
+    Notes
+    -----
     Boolean sliding window determines word counts using a sliding window. The window
     moves over  the documents one word token per step. Each step defines a new virtual
     document  by copying the window content. Boolean document is applied to these virtual
     documents to compute word probabilities.
-
-    Parameters
-    ----------
-    texts : List of strings.
-    segmented_topics : list of tuples of (word_id_set1, word_id_set2)
-        Output from the segmentation of topics. Could be simply topics too.
-    dictionary :
-        Gensim dictionary mapping of the tokens and ids.
-    window_size :
-        Size of the sliding window. 110 found out to be the ideal size for large corpora.
 
     Returns
     -------
@@ -113,16 +116,16 @@ def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=
 
     Parameters
     ----------
-    texts : List of strings.
+    texts : List of str
     segmented_topics : list of tuples of (word_id_set1, word_id_set2)
         Output from the segmentation of topics. Could be simply topics too.
-    dictionary :
+    dictionary : :class:`~gensim.corpora.dictionary`
         Gensim dictionary mapping of the tokens and ids.
-    window_size :
+    window_size : int
         Size of the sliding window.
     processes: int
         Number of processes to use.
-    model: model: Word2Vec (:class:`~gensim.models.keyedvectors.KeyedVectors`)
+    model: Word2Vec (:class:`~gensim.models.keyedvectors.KeyedVectors`)
         If None, a new Word2Vec model is trained on the given text corpus. Otherwise,
         it should be a pre-trained Word2Vec context vectors.
 

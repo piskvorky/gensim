@@ -13,21 +13,20 @@ logger = logging.getLogger(__name__)
 
 
 def s_one_pre(topics):
-    """
-    Performs s_one_pre segmentation on a list of topics.
+    """Performs s_one_pre segmentation on a list of topics.
 
     s_one_pre segmentation is defined as: s_one_pre = {(W', W*) | W' = {w_i}; W* = {w_j}; w_i, w_j belongs to W; i > j}
 
     Parameters
     ----------
-    topics : list of topics
+    topics : list of np.array
         list of topics obtained from an algorithm such as LDA. Is a list such as
         [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
 
     Returns
     -------
-    list of list of (W', W*) tuples
-        For all unique topic ids.
+    list of list of (str, str).
+        (W', W*) for all unique topic ids.
 
     Examples
     --------
@@ -51,20 +50,19 @@ def s_one_pre(topics):
 
 
 def s_one_one(topics):
-    """
-    Perform s_one_one segmentation on a list of topics.
+    """Perform s_one_one segmentation on a list of topics.
     s_one_one segmentation is defined as: s_one_one = {(W', W*) | W' = {w_i}; W* = {w_j}; w_i, w_j belongs to W; i != j}
 
     Parameters
     ----------
-    topics : list of topics
-        List of topics obtained from an algorithm such as LDA. Is a list such as
-        [array([ 9, 10, 11]), array([ 9, 10,  7]), ...].
+    topics : list of np.array
+        List of topics obtained from an algorithm such as LDA.
+        Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...].
 
     Returns
     -------
-    list of list of (W', W*) tuples
-        For all unique topic ids.
+    list of list of (str, str).
+        (W', W*) for all unique topic ids.
 
     Examples
     -------
@@ -91,20 +89,19 @@ def s_one_one(topics):
 
 
 def s_one_set(topics):
-    """
-    Perform s_one_set segmentation on a list of topics.
+    """Perform s_one_set segmentation on a list of topics.
     s_one_set segmentation is defined as: s_one_set = {(W', W*) | W' = {w_i}; w_i belongs to W; W* = W}
 
     Parameters
     ----------
-    topics : list of topics
+    topics : list of np.array
         List of topics obtained from an algorithm such as LDA. Is a list such as
         [array([ 9, 10, 11]), array([ 9, 10,  7]), ...].
 
     Returns
     -------
-    list of list of (W', W*) tuples
-        For all unique topic ids.
+    list of list of (str, str).
+        (W', W*) for all unique topic ids.
 
     Examples
     --------
