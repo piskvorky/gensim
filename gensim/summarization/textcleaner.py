@@ -48,10 +48,8 @@ UNDO_AB_ACRONYM = re.compile(r'(\.[a-zA-Z]\.)' + SEPARATOR + r'(\w)', re.UNICODE
 
 
 def split_sentences(text):
-    """Splits and returns list of sentences from given text. It preserves
-    abbreviations set in
-    :const:`~gensim.summarization.textcleaner.AB_SENIOR` and
-    :const:`~gensim.summarization.textcleaner.AB_ACRONYM`.
+    """Split and get list of sentences from given text. It preserves abbreviations set in
+    :const:`~gensim.summarization.textcleaner.AB_SENIOR` and :const:`~gensim.summarization.textcleaner.AB_ACRONYM`.
 
     Parameters
     ----------
@@ -79,11 +77,11 @@ def split_sentences(text):
 
 
 def replace_abbreviations(text):
-    """Replaces blank space to '@' separator after abbreviation and next word.
+    """Replace blank space to '@' separator after abbreviation and next word.
 
     Parameters
     ----------
-    sentence : str
+    text : str
         Input sentence.
 
     Returns
@@ -101,7 +99,7 @@ def replace_abbreviations(text):
 
 
 def undo_replacement(sentence):
-    """Replaces `@` separator back to blank space after each abbreviation.
+    """Replace `@` separator back to blank space after each abbreviation.
 
     Parameters
     ----------
@@ -123,8 +121,7 @@ def undo_replacement(sentence):
 
 
 def replace_with_separator(text, separator, regexs):
-    """Returns text with replaced separator if provided regular expressions
-    were matched. Used as helper in other reaplcers.
+    """Get text with replaced separator if provided regular expressions were matched.
 
     Parameters
     ----------
@@ -132,7 +129,7 @@ def replace_with_separator(text, separator, regexs):
         Input text.
     separator : str
         The separator between words to be replaced.
-    regexs : list of _sre.SRE_Pattern
+    regexs : list of `_sre.SRE_Pattern`
         Regular expressions used in processing text.
 
     Returns
@@ -149,8 +146,8 @@ def replace_with_separator(text, separator, regexs):
 
 
 def get_sentences(text):
-    """Sentence generator from provided text. Sentence pattern set in
-    :const:`~gensim.summarization.textcleaner.RE_SENTENCE`.
+    """Sentence generator from provided text. Sentence pattern set
+    in :const:`~gensim.summarization.textcleaner.RE_SENTENCE`.
 
     Parameters
     ----------
@@ -176,9 +173,8 @@ def get_sentences(text):
 
 
 def merge_syntactic_units(original_units, filtered_units, tags=None):
-    """Processes given sentences and its filtered (tokenized) copies into
-    SyntacticUnit type. Also adds tags if they are provided to produced units.
-    Returns list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit.
+    """Process given sentences and its filtered (tokenized) copies into
+    :class:`~gensim.summarization.syntactic_unit.SyntacticUnit`. Also adds tags if they are provided to produced units.
 
     Parameters
     ----------
@@ -219,7 +215,7 @@ def join_words(words, separator=" "):
     words : list of str
         Given words.
     separator : str, optional
-        The separator between elements. Blank space set as default.
+        The separator between elements.
 
     Returns
     -------
@@ -231,8 +227,7 @@ def join_words(words, separator=" "):
 
 
 def clean_text_by_sentences(text):
-    """Tokenizes a given text into sentences, applying filters and lemmatizing them.
-    Returns a list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit.
+    """Tokenize a given text into sentences, applying filters and lemmatize them.
 
     Parameters
     ----------
@@ -241,7 +236,7 @@ def clean_text_by_sentences(text):
 
     Returns
     -------
-    list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
+    list of :class:`~gensim.summarization.syntactic_unit.SyntacticUnit`
         Sentences of the given text.
 
     """
@@ -252,9 +247,7 @@ def clean_text_by_sentences(text):
 
 
 def clean_text_by_word(text, deacc=True):
-    """Tokenizes a given text into words, applying filters and lemmatizing them.
-    Returns a dictionary with words as keys and :class:~gensim.summarization.syntactic_unit.SyntacticUnit
-    as values. Note that different words may lead to same processed units.
+    """Tokenize a given text into words, applying filters and lemmatize them.
 
     Parameters
     ----------
@@ -266,7 +259,7 @@ def clean_text_by_word(text, deacc=True):
     Returns
     -------
     dict
-        Words as keys, :class:~gensim.summarization.syntactic_unit.SyntacticUnit as values.
+        Words as keys, :class:`~gensim.summarization.syntactic_unit.SyntacticUnit` as values.
 
     Example
     -------
@@ -289,10 +282,8 @@ def clean_text_by_word(text, deacc=True):
 
 
 def tokenize_by_word(text):
-    """Tokenizes input text. Before tokenizing transforms text to lower case and
-    removes accentuation and acronyms set
+    """Tokenize input text. Before tokenizing transforms text to lower case and removes accentuation and acronyms set
     :const:`~gensim.summarization.textcleaner.AB_ACRONYM_LETTERS`.
-    Returns generator of words.
 
     Parameters
     ----------
