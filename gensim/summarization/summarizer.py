@@ -4,7 +4,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """This module provides functions for summarizing texts. Summarizing is based on
-ranks of text sentences using a variation of the TextRank algorithm (see [1]_ ).
+ranks of text sentences using a variation of the TextRank algorithm [1]_.
 
 .. [1] Federico Barrios, Federico L´opez, Luis Argerich, Rosita Wachenchauzer (2016).
        Variations of the Similarity Function of TextRank for Automated Summarization,
@@ -51,6 +51,7 @@ And it's lovely rice pudding for dinner again!
 """
 
 import logging
+from gensim.utils import deprecated
 from gensim.summarization.pagerank_weighted import pagerank_weighted as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
 from gensim.summarization.commons import build_graph as _build_graph
@@ -69,12 +70,12 @@ logger = logging.getLogger(__name__)
 
 
 def _set_graph_edge_weights(graph):
-    """Sets weights using BM25 algorithm. Leaves small weights as zeroes. If all
-    weights are fairly small forces all weights to 1, inplace.
+    """Sets weights using BM25 algorithm. Leaves small weights as zeroes. If all weights are fairly small,
+     forces all weights to 1, inplace.
 
     Parameters
     ----------
-    graph : :class:~gensim.summarization.graph.Graph
+    graph : :class:`~gensim.summarization.graph.Graph`
         Given graph.
 
     """
@@ -108,7 +109,7 @@ def _create_valid_graph(graph):
 
     Parameters
     ----------
-    graph : :class:~gensim.summarization.graph.Graph
+    graph : :class:`~gensim.summarization.graph.Graph`
         Given graph.
 
     """
@@ -127,8 +128,9 @@ def _create_valid_graph(graph):
             graph.add_edge(edge, 1)
 
 
+@deprecated("Function will be removed in 4.0.0")
 def _get_doc_length(doc):
-    """Returns length of (tokenized) document.
+    """Get length of (tokenized) document.
 
     Parameters
     ----------
@@ -144,6 +146,7 @@ def _get_doc_length(doc):
     return sum([item[1] for item in doc])
 
 
+@deprecated("Function will be removed in 4.0.0")
 def _get_similarity(doc1, doc2, vec1, vec2):
     """Returns similarity of two documents.
 
@@ -174,16 +177,16 @@ def _get_similarity(doc1, doc2, vec1, vec2):
 
 
 def _build_corpus(sentences):
-    """Returns built corpeus from provided sentences.
+    """Construct corpus from provided sentences.
 
     Parameters
     ----------
-    sentences : list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
-        Given senteces.
+    sentences : list of :class:`~gensim.summarization.syntactic_unit.SyntacticUnit`
+        Given sentences.
 
     Returns
     -------
-    list of (list of (tuple of int))
+    list of list of (int, int)
         Corpus built from sentences.
 
     """
@@ -193,20 +196,20 @@ def _build_corpus(sentences):
 
 
 def _get_important_sentences(sentences, corpus, important_docs):
-    """Returns most important sentences.
+    """Get most important sentences.
 
     Parameters
     ----------
-    sentences : list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
-        Given senteces.
-    corpus : list of (list of (tuple of int))
+    sentences : list of :class:`~gensim.summarization.syntactic_unit.SyntacticUnit`
+        Given sentences.
+    corpus : list of list of (int, int)
         Provided corpus.
-    important_docs : list of (list of (tuple of int))
+    important_docs : list of list of (int, int)
         Most important documents of the corpus.
 
     Returns
     -------
-    list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
+    list of :class:`~gensim.summarization.syntactic_unit.SyntacticUnit`
         Most important sentences.
 
     """
@@ -216,20 +219,18 @@ def _get_important_sentences(sentences, corpus, important_docs):
 
 
 def _get_sentences_with_word_count(sentences, word_count):
-    """Returns list of sentences. Total number of returned words close to
-    specified `word_count`.
+    """Get list of sentences. Total number of returned words close to specified `word_count`.
 
     Parameters
     ----------
-    sentences : list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
-        Given senteces.
+    sentences : list of :class:`~gensim.summarization.syntactic_unit.SyntacticUnit`
+        Given sentences.
     word_count : int or None
-        Number of returned words. If None full most important sentences will be
-        returned.
+        Number of returned words. If None full most important sentences will be returned.
 
     Returns
     -------
-    list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
+    list of :class:`~gensim.summarization.syntactic_unit.SyntacticUnit`
         Most important sentences.
 
     """
@@ -252,23 +253,22 @@ def _get_sentences_with_word_count(sentences, word_count):
 
 
 def _extract_important_sentences(sentences, corpus, important_docs, word_count):
-    """Returns most important sentences of the `corpus`.
+    """Get most important sentences of the `corpus`.
 
     Parameters
     ----------
-    sentences : list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
-        Given senteces.
-    corpus : list of (list of (tuple of int))
+    sentences : list of :class:`~gensim.summarization.syntactic_unit.SyntacticUnit`
+        Given sentences.
+    corpus : list of list of (int, int)
         Provided corpus.
-    important_docs : list of (list of (tuple of int))
+    important_docs : list of list of (int, int)
         Most important docs of the corpus.
     word_count : int
-        Number of returned words. If None full most important sentences will be
-        returned.
+        Number of returned words. If None full most important sentences will be returned.
 
     Returns
     -------
-    list :class:~gensim.summarization.syntactic_unit.SyntacticUnit
+    list of :class:`~gensim.summarization.syntactic_unit.SyntacticUnit`
         Most important sentences.
 
     """
@@ -287,15 +287,16 @@ def _format_results(extracted_sentences, split):
     Parameters
     ----------
     extracted_sentences : list of :class:~gensim.summarization.syntactic_unit.SyntacticUnit
-        Given senteces.
+        Given sentences.
     split : bool
-        If True senteces will be returned as list. Otherwise senteces will be
-        merged and returned as string.
+        If True sentences will be returned as list. Otherwise sentences will be merged and returned as string.
 
     Returns
     -------
-    str or list of str
-        Formated result.
+    list of str
+        If `split` **OR**
+    str
+        Formatted result.
 
     """
     if split:
@@ -304,16 +305,16 @@ def _format_results(extracted_sentences, split):
 
 
 def _build_hasheable_corpus(corpus):
-    """Hashes and returns `corpus`.
+    """Hashes and get `corpus`.
 
     Parameters
     ----------
-    corpus : list of (list of (tuple of int))
+    corpus : list of list of (int, int)
         Given corpus.
 
     Returns
     -------
-    list of (tuple of (tuple of int))
+    list of list of (int, int)
         Hashable corpus.
 
     """
@@ -321,29 +322,27 @@ def _build_hasheable_corpus(corpus):
 
 
 def summarize_corpus(corpus, ratio=0.2):
-    """Returns a list of the most important documents of a corpus using a
-    variation of the TextRank algorithm. Used as helper for summarize
-    :func:`~gensim.summarization.summarizer.summarizer`
+    """Get a list of the most important documents of a corpus using a variation of the TextRank algorithm [1]_.
+     Used as helper for summarize :func:`~gensim.summarization.summarizer.summarizer`
 
-    The input must have at least
-    :const:`~gensim.summarization.summarizer.INPUT_MIN_LENGTH` documents for the summary to make sense.
-    The length of the output can be specified using the ratio parameter,
-    which determines how many documents will be chosen for the summary
-    (defaults at 20% of the number of documents of the corpus).
+    Note
+    ----
+    The input must have at least :const:`~gensim.summarization.summarizer.INPUT_MIN_LENGTH` documents for the summary
+    to make sense.
+
 
     Parameters
     ----------
-    corpus : list of (list of (tuple of int))
+    corpus : list of list of (int, int)
         Given corpus.
-    ratio : float
+    ratio : float, optional
         Number between 0 and 1 that determines the proportion of the number of
         sentences of the original text to be chosen for the summary, optional.
 
     Returns
     -------
-    str or list of str
-        Most important documents of given `corpus` sorted by the document score,
-        highest first.
+    list of str
+        Most important documents of given `corpus` sorted by the document score, highest first.
 
     """
     hashable_corpus = _build_hasheable_corpus(corpus)
@@ -375,37 +374,38 @@ def summarize_corpus(corpus, ratio=0.2):
 
 
 def summarize(text, ratio=0.2, word_count=None, split=False):
-    """Returns a summarized version of the given text.
+    """Get a summarized version of the given text.
 
     The output summary will consist of the most representative sentences
     and will be returned as a string, divided by newlines.
 
-    The input should be a string, and must be longer than
-    :const:`~gensim.summarization.summarizer.INPUT_MIN_LENGTH` sentences for
-    the summary to make sense. The text
-    will be split into sentences using the split_sentences method in the
-    summarization.texcleaner module. Note that newlines divide sentences.
+    Note
+    ----
+    The input should be a string, and must be longer than :const:`~gensim.summarization.summarizer.INPUT_MIN_LENGTH`
+    sentences for the summary to make sense.
+    The text will be split into sentences using the split_sentences method in the :mod:`gensim.summarization.texcleaner`
+    module. Note that newlines divide sentences.
 
-    The length of the output can be specified using the ratio and
-    `word_count` parameters.
 
     Parameters
     ----------
     text : str
         Given text.
-    ratio : float
+    ratio : float, optional
         Number between 0 and 1 that determines the proportion of the number of
-        sentences of the original text to be chosen for the summary. Optional.
-    word_count : int
+        sentences of the original text to be chosen for the summary.
+    word_count : int or None, optional
         Determines how many words will the output contain.
         If both parameters are provided, the ratio will be ignored.
-    split : bool
+    split : bool, optional
         If True, list of sentences will be returned. Otherwise joined
         strings will bwe returned.
 
     Returns
     -------
-    str or list of str
+    list of str
+        If `split` **OR**
+    str
         Most representative sentences of given the text.
 
     """
