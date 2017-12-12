@@ -3,15 +3,8 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains implementation of SyntacticUnit class. It generally used
-while text cleaning. SyntacticUnit represents printable version of provided
-text.
-
-
-Example
--------
->>> print(SyntacticUnit("Beautiful is better than ugly.",  "beauti better ugli"))
-Original unit: 'Beautiful is better than ugly.' *-*-*-* Processed unit: 'beauti better ugli'
+"""This module contains implementation of SyntacticUnit class. It generally used while text cleaning.
+:class:`~gensim.summarization.syntactic_unit.SyntacticUnit` represents printable version of provided text.
 
 """
 
@@ -35,7 +28,7 @@ class SyntacticUnit(object):
     """
 
     def __init__(self, text, token=None, tag=None):
-        """Initializates syntactic unit.
+        """
 
         Parameters
         ----------
@@ -49,7 +42,7 @@ class SyntacticUnit(object):
         """
         self.text = text
         self.token = token
-        self.tag = tag[:2] if tag else None     # Just first two letters of tag
+        self.tag = tag[:2] if tag else None  # Just first two letters of tag
         self.index = -1
         self.score = -1
 
