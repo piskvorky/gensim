@@ -11,6 +11,9 @@ import math
 from gensim import interfaces, matutils, utils
 from six import iteritems
 
+from scipy import sparse as sp
+import numpy as np
+
 
 logger = logging.getLogger(__name__)
 
@@ -165,28 +168,28 @@ class TfidfModel(interfaces.TransformationABC):
             (termid, weight) for termid, weight in norm_vector if                       abs(weight) > eps
         ]
 
-        from scipy import sparse as sp
-        import numpy as np
-
         n_samples = len(self.idfs)
-        piv_lis = [0]*len(self.idfs)
-        lis = piv_lis
+        piv_lis = [0]*n_samples
+        lis = [0]*n_samples
+
         if self.pivot_norm is True:
+            for termid, weight in vector:
+                lis[termid] = weight
+
+            lis = np.array(lis)
             for termid, norm_weight in vector:
+                if self.pivot == None: 
+                    self.pivot = lis.mean()
                 pivoted_vector = (1 - self.slope)*self.pivot + self.slope*norm_weight
                 piv_lis[termid] = pivoted_vector
 
-            for termid, weight in vector:
-                lis[termid] = weight
 
             piv_lis = np.array(piv_lis)
             piv_lis[piv_lis==0]=1
 
-            diag_mat = sp.spdiags(1./piv_lis, diags=0, m=n_samples, n=n_samples, format='csr').toarray()
-            print diag_mat.dot(np.array(lis))
-            print diag_mat
-            print lis
-            print type(vector)
+            diag_mat = sp.spdiags(1./piv_lis, diags=0, m=n_samples, n=n_samples, format='csr')
+            piv_norm_vector = diag_mat.dot(np.array(lis))
             
-            
+            return piv_norm_vector
+
         return vector

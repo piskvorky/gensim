@@ -245,7 +245,7 @@ linux_testenv = win_testenv + [
 
 setup(
     name='gensim',
-    version='3.1.0',
+    version='3.2.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -255,6 +255,9 @@ setup(
             include_dirs=[model_dir]),
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
+            include_dirs=[model_dir]),
+        Extension('gensim.models.fasttext_inner',
+            sources=['./gensim/models/fasttext_inner.c'],
             include_dirs=[model_dir])
     ],
     cmdclass=cmdclass,
