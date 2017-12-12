@@ -44,7 +44,8 @@ class Worker(object):
     def initialize(self, myid, dispatcher, **model_params):
         self.lock_update = threading.Lock()
         self.jobsdone = 0  # how many jobs has this worker completed?
-        self.myid = myid  # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
+        # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
+        self.myid = myid
         self.dispatcher = dispatcher
         self.finished = False
         logger.info("initializing worker #%s", myid)

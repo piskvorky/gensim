@@ -7,6 +7,13 @@
 
 
 """
+Warnings
+--------
+.. deprecated:: 3.2.0
+   Use :class:`gensim.models.fasttext.FastText` instead of :class:`gensim.models.wrappers.fasttext.FastText`.
+
+
+
 Python wrapper around word representation learning from FastText, a library for efficient learning
 of word representations and sentence classification [1].
 
@@ -23,6 +30,8 @@ Example:
 >>> print model['forests']  # prints vector for given out-of-vocabulary word
 
 .. [1] https://github.com/facebookresearch/fastText#enriching-word-vectors-with-subword-information
+
+
 
 """
 
@@ -123,7 +132,8 @@ class FastTextKeyedVectors(KeyedVectors):
                     self.syn0_ngrams[i, :] /= sqrt((self.syn0_ngrams[i, :] ** 2).sum(-1))
                 self.syn0_ngrams_norm = self.syn0_ngrams
             else:
-                self.syn0_ngrams_norm = (self.syn0_ngrams / sqrt((self.syn0_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
+                self.syn0_ngrams_norm = \
+                    (self.syn0_ngrams / sqrt((self.syn0_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
     def __contains__(self, word):
         """
@@ -136,6 +146,11 @@ class FastTextKeyedVectors(KeyedVectors):
             char_ngrams = compute_ngrams(word, self.min_n, self.max_n)
             return any(ng in self.ngrams for ng in char_ngrams)
 
+    @classmethod
+    def load_word2vec_format(cls, *args, **kwargs):
+        """Not suppported. Use gensim.models.KeyedVectors.load_word2vec_format instead."""
+        raise NotImplementedError("Not supported. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
+
 
 class FastText(Word2Vec):
     """
@@ -145,6 +160,12 @@ class FastText(Word2Vec):
     Implements functionality similar to [fasttext.py](https://github.com/salestock/fastText.py),
     improving speed and scope of functionality like `most_similar`, `similarity` by extracting vectors
     into numpy matrix.
+
+    Warnings
+    --------
+    .. deprecated:: 3.2.0
+       Use :class:`gensim.models.fasttext.FastText` instead of :class:`gensim.models.wrappers.fasttext.FastText`.
+
 
     """
 
@@ -252,6 +273,14 @@ class FastText(Word2Vec):
         return model
 
     @classmethod
+    def load(cls, *args, **kwargs):
+        model = super(FastText, cls).load(*args, **kwargs)
+        if hasattr(model.wv, 'syn0_all'):
+            setattr(model.wv, 'syn0_ngrams', model.wv.syn0_all)
+            delattr(model.wv, 'syn0_all')
+        return model
+
+    @classmethod
     def delete_training_files(cls, model_file):
         """Deletes the files created by FastText training"""
         try:
@@ -272,7 +301,8 @@ class FastText(Word2Vec):
         magic, version = self.struct_unpack(file_handle, '@2i')
         if magic == FASTTEXT_FILEFORMAT_MAGIC:  # newer format
             self.new_format = True
-            dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@12i1d')
+            dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = \
+                self.struct_unpack(file_handle, '@12i1d')
         else:  # older format
             self.new_format = False
             dim = magic

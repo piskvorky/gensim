@@ -586,7 +586,8 @@ def vwmodel2ldamodel(vw_model, iterations=50):
     model_gensim = LdaModel(
         num_topics=vw_model.num_topics, id2word=vw_model.id2word, chunksize=vw_model.chunksize,
         passes=vw_model.passes, alpha=vw_model.alpha, eta=vw_model.eta, decay=vw_model.decay,
-        offset=vw_model.offset, iterations=iterations, gamma_threshold=vw_model.gamma_threshold
+        offset=vw_model.offset, iterations=iterations, gamma_threshold=vw_model.gamma_threshold,
+        dtype=numpy.float32
     )
     model_gensim.expElogbeta[:] = vw_model._get_topics()
     return model_gensim

@@ -49,6 +49,8 @@ The core estimation code is based on the `onlineldavb.py` script by M. Hoffman [
 
 import logging
 
+import numpy as np
+
 from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
 
@@ -82,7 +84,7 @@ class LdaMulticore(LdaModel):
                  chunksize=2000, passes=1, batch=False, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
                  gamma_threshold=0.001, random_state=None, minimum_probability=0.01,
-                 minimum_phi_value=0.01, per_word_topics=False):
+                 minimum_phi_value=0.01, per_word_topics=False, dtype=np.float32):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -148,7 +150,7 @@ class LdaMulticore(LdaModel):
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
             gamma_threshold=gamma_threshold, random_state=random_state, minimum_probability=minimum_probability,
-            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics
+            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics, dtype=dtype
         )
 
     def update(self, corpus, chunks_as_numpy=False):
@@ -191,8 +193,10 @@ class LdaMulticore(LdaModel):
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info(
             "running %s LDA training, %s topics, %i passes over the supplied corpus of %i documents, "
-            "updating every %i documents, evaluating every ~%i documents, iterating %ix with a convergence threshold of %f",
-            updatetype, self.num_topics, self.passes, lencorpus, updateafter, evalafter, self.iterations, self.gamma_threshold
+            "updating every %i documents, evaluating every ~%i documents, "
+            "iterating %ix with a convergence threshold of %f",
+            updatetype, self.num_topics, self.passes, lencorpus, updateafter,
+            evalafter, self.iterations, self.gamma_threshold
         )
 
         if updates_per_pass * self.passes < 10:
@@ -230,7 +234,9 @@ class LdaMulticore(LdaModel):
                 if (force and merged_new and queue_size[0] == 0) or (not self.batch and (other.numdocs >= updateafter)):
                     self.do_mstep(rho(), other, pass_ > 0)
                     other.reset()
-                    if self.eval_every is not None and ((force and queue_size[0] == 0) or (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
+                    if self.eval_every is not None and \
+                            ((force and queue_size[0] == 0) or
+                                 (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
                         self.log_perplexity(chunk, total_docs=lencorpus)
 
             chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=chunks_as_numpy)
@@ -245,7 +251,8 @@ class LdaMulticore(LdaModel):
                         chunk_put = True
                         queue_size[0] += 1
                         logger.info(
-                            "PROGRESS: pass %i, dispatched chunk #%i = documents up to #%i/%i, outstanding queue size %i",
+                            "PROGRESS: pass %i, dispatched chunk #%i = documents up to #%i/%i, "
+                            "outstanding queue size %i",
                             pass_, chunk_no, chunk_no * self.chunksize + len(chunk), lencorpus, queue_size[0]
                         )
                     except queue.Full:
