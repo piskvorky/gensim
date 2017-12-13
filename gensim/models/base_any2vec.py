@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from abc import ABCMeta, abstractmethod
+# from abc import ABCMeta, abstractmethod
 from gensim import utils
 
 
@@ -18,7 +18,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def build_vocab(self, data_iterator, **kwargs):
         """Scan through the vocab and create/update vocabulary.
-        Should also initialize/reset vevtors for new vocab entities."""
+        Should also initialize/reset vectors for new vocab entities."""
         raise NotImplementedError
 
     @classmethod
@@ -32,6 +32,12 @@ class BaseAny2VecModel(utils.SaveLoad):
 
 class BaseKeyedVectors(utils.SaveLoad):
 
+    def __init__(self):
+        self.syn0 = []
+        self.vocab = {}
+        self.index2entity = []
+        self.vector_size = None
+
     def save(self, *args, **kwargs):
         super(BaseKeyedVectors, self).save(*args, **kwargs)
 
@@ -40,8 +46,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         return super(BaseKeyedVectors, cls).load(*args, **kwargs)
 
     def similarity(self, e1, e2):
-        """
-        Compute similarity between vectors of two input entities (words, documents, sentences etc.).
+        """Compute similarity between vectors of two input entities (words, documents, sentences etc.).
         To be implemented by child class.
         """
         raise NotImplementedError
@@ -50,23 +55,20 @@ class BaseKeyedVectors(utils.SaveLoad):
         return NotImplementedError
 
     def distance(self, e1, e2):
-        """
-        Compute distance between vectors of two input words.
+        """Compute distance between vectors of two input words.
         To be implemented by child class.
         """
         raise NotImplementedError
 
     def distances(self, entity_or_vector, other_entities=()):
-        """
-        Compute distances from given entity or vector to all words in `other_entity`.
+        """Compute distances from given entity or vector to all words in `other_entity`.
         If `other_entities` is empty, return distance between `entity_or_vectors` and all entities in vocab.
         To be implemented by child class.
         """
         raise NotImplementedError
 
     def get_vector(self, entity):
-        """
-        Accept a single entity as input.
+        """Accept a single entity as input.
         Returns the word's representations in vector space, as a 1D numpy array.
         """
         raise NotImplementedError
@@ -75,17 +77,21 @@ class BaseKeyedVectors(utils.SaveLoad):
         """Return the entity from entities_list most similar to e1."""
         raise NotImplementedError
 
-    def words_closer_than(self, e1, e2):
-        """
-        Returns all words that are closer to `w1` than `w2` is to `w1`.
-        """
+    def entities_closer_than(self, e1, e2):
+        """Returns all words that are closer to `e1` than `e2` is to `e1`."""
         raise NotImplementedError
 
     def rank(self, e1, e2):
-        """
-        Rank of the distance of `w2` from `w1`, in relation to distances of all words from `w1`.
-        """
+        """Rank of the distance of `e2` from `e1`, in relation to distances of all entities from `e1`."""
         raise NotImplementedError
+
+
+class VocabItem(object):
+    """A single vocabulary item, used internally for collecting per-entity frequency, and it's mapped index."""
+
+    def __init__(self, count, index):
+        self.count = count
+        self.index = index
 
 # class BaseVocabBuilder(object):
 #     """Base class to handle building and updating vocabulary (of any entity)."""
@@ -153,6 +159,3 @@ class BaseKeyedVectors(utils.SaveLoad):
 
 #     def train_cbow_pair(*args, **kwagrs):
 #         return
-
-
-
