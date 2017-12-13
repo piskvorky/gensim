@@ -22,12 +22,12 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError
 
     @classmethod
-    def load(cls, *args, **kwargs):
-        model = super(BaseAny2VecModel, cls).load(*args, **kwargs)
+    def load(cls, fname_or_handle, **kwargs):
+        model = super(BaseAny2VecModel, cls).load(fname_or_handle, **kwargs)
         return model
 
-    def save(self, *args, **kwargs):
-        super(BaseAny2VecModel, self).save(*args, **kwargs)
+    def save(self, fname_or_handle, **kwargs):
+        super(BaseAny2VecModel, self).save(fname_or_handle, **kwargs)
 
 
 class BaseKeyedVectors(utils.SaveLoad):
@@ -38,12 +38,12 @@ class BaseKeyedVectors(utils.SaveLoad):
         self.index2entity = []
         self.vector_size = None
 
-    def save(self, *args, **kwargs):
-        super(BaseKeyedVectors, self).save(*args, **kwargs)
+    def save(self, fname_or_handle, **kwargs):
+        super(BaseKeyedVectors, self).save(fname_or_handle, **kwargs)
 
     @classmethod
-    def load(cls, *args, **kwargs):
-        return super(BaseKeyedVectors, cls).load(*args, **kwargs)
+    def load(cls, fname_or_handle, **kwargs):
+        return super(BaseKeyedVectors, cls).load(fname_or_handle, **kwargs)
 
     def similarity(self, e1, e2):
         """Compute similarity between vectors of two input entities (words, documents, sentences etc.).
@@ -51,7 +51,9 @@ class BaseKeyedVectors(utils.SaveLoad):
         """
         raise NotImplementedError
 
-    def most_similar(self, *args, **kwargs):
+    def most_similar(self, e1, **kwargs):
+        """Find the top-N most similar entities.
+        Possibly have `postive` and `negative` list of entities in `**kwargs`."""
         return NotImplementedError
 
     def distance(self, e1, e2):
