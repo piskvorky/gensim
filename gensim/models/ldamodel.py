@@ -468,7 +468,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Initialize the variational distribution q(beta|lambda)
         self.state = LdaState(self.eta, (self.num_topics, self.num_terms), dtype=self.dtype)
         self.state.sstats[...] = self.random_state.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
-        self.expElogbeta = np.exp(dirichlet_expectation(self.state.sstats))
+        self.expElogbeta = np.exp(self._dirichlet_expectation_2d(self.state.sstats))
 
         # Check that we haven't accidentally fall back to np.float64
         assert self.eta.dtype == self.dtype
@@ -561,7 +561,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
         gamma = self.random_state.gamma(100., 1. / 100., (len(chunk), self.num_topics)).astype(self.dtype, copy=False)
-        Elogtheta = dirichlet_expectation(gamma)
+        Elogtheta = self._dirichlet_expectation_2d(gamma)
         expElogtheta = np.exp(Elogtheta)
 
         assert Elogtheta.dtype == self.dtype
@@ -602,11 +602,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 # Substituting the value of the optimal phi back into
                 # the update for gamma gives this update. Cf. Lee&Seung 2001.
                 gammad = self.alpha + expElogthetad * np.dot(cts / phinorm, expElogbetad.T)
-                Elogthetad = dirichlet_expectation(gammad)
+                Elogthetad = self._dirichlet_expectation_1d(gammad)
                 expElogthetad = np.exp(Elogthetad)
                 phinorm = np.dot(expElogthetad, expElogbetad) + eps
                 # If gamma hasn't changed much, we're done.
-                meanchange = np.mean(abs(gammad - lastgamma))
+                meanchange = self._mean_absolute_difference(gammad, lastgamma)
                 if meanchange < self.gamma_threshold:
                     converged += 1
                     break
@@ -651,7 +651,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         topic weights `alpha` given the last `gammat`.
         """
         N = float(len(gammat))
-        logphat = sum(dirichlet_expectation(gamma) for gamma in gammat) / N
+        logphat = sum(self._dirichlet_expectation_1d(gamma) for gamma in gammat) / N
         assert logphat.dtype == self.dtype
 
         self.alpha = update_dir_prior(self.alpha, N, logphat, rho)
@@ -666,7 +666,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         word weights `eta` given the last `lambdat`.
         """
         N = float(lambdat.shape[0])
-        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
+        logphat = (sum(self._dirichlet_expectation_1d(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
         assert logphat.dtype == self.dtype
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
@@ -926,13 +926,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 gammad, _ = self.inference([doc])
             else:
                 gammad = gamma[d]
-            Elogthetad = dirichlet_expectation(gammad)
+            Elogthetad = self._dirichlet_expectation_2d(gammad)
 
             assert gammad.dtype == self.dtype
             assert Elogthetad.dtype == self.dtype
 
             # E[log p(doc | theta, beta)]
-            score += np.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, int(id)]) for id, cnt in doc)
+            score += np.sum(cnt * self._logsumexp(Elogthetad + Elogbeta[:, int(id)]) for id, cnt in doc)
 
             # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is a vector
             score += np.sum((self.alpha - gammad) * Elogthetad)
