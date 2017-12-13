@@ -42,7 +42,7 @@ from six.moves import xrange
 from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
-from gensim.matutils import dirichlet_expectation
+from gensim.matutils import dirichlet_expectation as dirichlet_expectation
 from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jensen_shannon
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
@@ -56,32 +56,113 @@ DTYPE_TO_EPS = {
     np.float64: 1e-100,
 }
 
+try:
+    # try to load fast, cythonized code if possible
+    from gensim.models.ldamodel_inner import dirichlet_expectation_1d_f32, dirichlet_expectation_1d_f64
+    from gensim.models.ldamodel_inner import dirichlet_expectation_2d_f32, dirichlet_expectation_2d_f64
+    from gensim.models.ldamodel_inner import logsumexp_2d_f32, logsumexp_2d_f64
+    from gensim.models.ldamodel_inner import mean_absolute_difference_f32, mean_absolute_difference_f64
+    FAST_VERSION = 1
+except ImportError:
+    # else fall back to python/numpy
+    FAST_VERSION = -1
+    
+    def logsumexp(x):
+        """
+        Log of sum of exponentials
 
-def logsumexp(x):
-    """Log of sum of exponentials
+        Parameters
+        ----------
+        x : array_like
+            Input data
+
+        Returns
+        -------
+        float
+            log of sum of exponentials of elements in `x`
+
+        Notes
+        -----
+            for performance, does not support NaNs or > 1d arrays like
+            scipy.special.logsumexp()
+
+        """
+
+        x_max = np.max(x)
+        x = np.log(np.sum(np.exp(x - x_max)))
+        x += x_max
+
+        return x
+
+    def mean_absolute_difference(a, b):
+        """
+        Mean absolute difference between two arrays
+
+        Parameters
+        ----------
+        a : (M,) array_like of float32
+        b : (M,) array_like of float32
+
+        Returns
+        -------
+        float32
+            mean(abs(a - b))
+        
+        """
+        return np.mean(np.abs(a - b))
+
+    logsumexp_2d_f32 = logsumexp_2d_f64 = logsumexp
+    dirichlet_expectation_1d_f32 = dirichlet_expectation_1d_f64 = dirichlet_expectation
+    dirichlet_expectation_2d_f32 = dirichlet_expectation_2d_f64 = dirichlet_expectation
+    mean_absolute_difference_f32 = mean_absolute_difference_f64 = mean_absolute_difference
+
+
+def _attach_inner_methods(self, dtype):
+    """
+    Choose approriate implementation of "inner" methods 
+    
+    Inner methods are methods called in inner-loop of LDA model.
+    We choose approriate methods based on dtype and whether or not cythonized version
+    of methods is available
 
     Parameters
     ----------
-    x : array_like
-        Input data
-
-    Returns
-    -------
-    float
-        log of sum of exponentials of elements in `x`
+    self : LdaModel
+    dtype : numpy.dtype
 
     Notes
     -----
-        for performance, does not support NaNs or > 1d arrays like
-        scipy.special.logsumexp()
+        This will add following methods to self:
+            self._logsumexp()
+            self._dirichlet_expectation_1d
+            self._dirichlet_expectation_2d
+            self.mean_absolute_difference
 
     """
+    if dtype == np.float16:
+        self._logsumexp = logsumexp
+        self._dirichlet_expectation_1d = dirichlet_expectation
+        self._dirichlet_expectation_2d = dirichlet_expectation
+        self._mean_absolute_difference = mean_absolute_difference
+    elif dtype == np.float32:
+        self._logsumexp = logsumexp_2d_f32
+        self._dirichlet_expectation_1d = dirichlet_expectation_1d_f32
+        self._dirichlet_expectation_2d = dirichlet_expectation_2d_f32
+        self._mean_absolute_difference = mean_absolute_difference_f32
+    elif dtype == np.float64:
+        self._logsumexp = logsumexp_2d_f64
+        self._dirichlet_expectation_1d = dirichlet_expectation_1d_f64
+        self._dirichlet_expectation_2d = dirichlet_expectation_2d_f64
+        self._mean_absolute_difference = mean_absolute_difference_f64
+    else:
+        raise ValueError(
+            "Incorrect 'dtype', please choose one of {}".format(
+                ", ".join("numpy.{}".format(tp.__name__) for tp in sorted(DTYPE_TO_EPS))))
 
-    x_max = np.max(x)
-    x = np.log(np.sum(np.exp(x - x_max)))
-    x += x_max
-
-    return x
+    if dtype == np.float16 or FAST_VERSION < 0:
+        logger.warning('Slow version of {} is being used'.format(__name__))
+    else:
+        logger.debug('Fast version of {} is being used'.format(__name__))
 
 
 def update_dir_prior(prior, N, logphat, rho):
@@ -299,6 +380,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     ", ".join("numpy.{}".format(tp.__name__) for tp in sorted(DTYPE_TO_EPS))))
 
         self.dtype = dtype
+        _attach_inner_methods(self, dtype)
 
         # store user-supplied parameters
         self.id2word = id2word
