@@ -56,6 +56,50 @@ DTYPE_TO_EPS = {
     np.float64: 1e-100,
 }
 
+def logsumexp(x):
+    """
+    Log of sum of exponentials
+
+    Parameters
+    ----------
+    x : array_like
+        Input data
+
+    Returns
+    -------
+    float
+        log of sum of exponentials of elements in `x`
+
+    Notes
+    -----
+        for performance, does not support NaNs or > 1d arrays like
+        scipy.special.logsumexp()
+
+    """
+
+    x_max = np.max(x)
+    x = np.log(np.sum(np.exp(x - x_max)))
+    x += x_max
+
+    return x
+
+def mean_absolute_difference(a, b):
+    """
+    Mean absolute difference between two arrays
+
+    Parameters
+    ----------
+    a : (M,) array_like of float32
+    b : (M,) array_like of float32
+
+    Returns
+    -------
+    float32
+        mean(abs(a - b))
+    
+    """
+    return np.mean(np.abs(a - b))
+
 try:
     # try to load fast, cythonized code if possible
     from gensim.models.ldamodel_inner import dirichlet_expectation_1d_f32, dirichlet_expectation_1d_f64
@@ -67,50 +111,6 @@ except ImportError:
     # else fall back to python/numpy
     FAST_VERSION = -1
     
-    def logsumexp(x):
-        """
-        Log of sum of exponentials
-
-        Parameters
-        ----------
-        x : array_like
-            Input data
-
-        Returns
-        -------
-        float
-            log of sum of exponentials of elements in `x`
-
-        Notes
-        -----
-            for performance, does not support NaNs or > 1d arrays like
-            scipy.special.logsumexp()
-
-        """
-
-        x_max = np.max(x)
-        x = np.log(np.sum(np.exp(x - x_max)))
-        x += x_max
-
-        return x
-
-    def mean_absolute_difference(a, b):
-        """
-        Mean absolute difference between two arrays
-
-        Parameters
-        ----------
-        a : (M,) array_like of float32
-        b : (M,) array_like of float32
-
-        Returns
-        -------
-        float32
-            mean(abs(a - b))
-        
-        """
-        return np.mean(np.abs(a - b))
-
     logsumexp_2d_f32 = logsumexp_2d_f64 = logsumexp
     dirichlet_expectation_1d_f32 = dirichlet_expectation_1d_f64 = dirichlet_expectation
     dirichlet_expectation_2d_f32 = dirichlet_expectation_2d_f64 = dirichlet_expectation
