@@ -5,6 +5,7 @@
 # Copyright (C) 2016 Silvio Olivastri <silvio.olivastri@gmail.com>
 # Copyright (C) 2016 Radim Rehurek <radim@rare-technologies.com>
 
+
 """
 USAGE: $ python -m gensim.scripts.word2vec2tensor --input <Word2Vec model file> --output <TSV tensor filename prefix> \
         [--binary] <Word2Vec binary flag>
