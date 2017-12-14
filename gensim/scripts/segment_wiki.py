@@ -50,11 +50,6 @@ from xml.etree import cElementTree
 from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, get_namespace, utils
 from smart_open import smart_open
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
 logger = logging.getLogger(__name__)
 
 
@@ -155,9 +150,7 @@ def extract_page_xmls(f):
 
     for _, elem in elems:
         if elem.tag == page_tag:
-            # Pickle object explicitly to send it to the children
-            # as elem.clear() will be called earlier than implicitly serialization of elem
-            yield pickle.dumps(elem)
+            yield cElementTree.tostring(elem)
             # Prune the element tree, as per
             # http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
             # except that we don't need to prune backlinks from the parent
@@ -182,8 +175,7 @@ def segment(page_xml):
         Structure contains (title, [(section_heading, section_content)]).
 
     """
-    # Unpickling object should be faster then creation from string (via cElementTree.fromstring(page_xml))
-    elem = pickle.loads(page_xml)
+    elem = cElementTree.fromstring(page_xml)
     filter_namespaces = ('0',)
     namespace = get_namespace(elem.tag)
     ns_mapping = {"ns": namespace}
