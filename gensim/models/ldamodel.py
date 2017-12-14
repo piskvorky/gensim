@@ -42,7 +42,7 @@ from six.moves import xrange
 from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
-from gensim.matutils import dirichlet_expectation as dirichlet_expectation
+from gensim.matutils import dirichlet_expectation
 from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jensen_shannon
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
@@ -102,10 +102,10 @@ def mean_absolute_difference(a, b):
 
 try:
     # try to load fast, cythonized code if possible
-    from gensim.models.ldamodel_inner import dirichlet_expectation_1d_f32, dirichlet_expectation_1d_f64
-    from gensim.models.ldamodel_inner import dirichlet_expectation_2d_f32, dirichlet_expectation_2d_f64
-    from gensim.models.ldamodel_inner import logsumexp_2d_f32, logsumexp_2d_f64
-    from gensim.models.ldamodel_inner import mean_absolute_difference_f32, mean_absolute_difference_f64
+    from gensim.models.ldamodel_inner import (dirichlet_expectation_1d_f32, dirichlet_expectation_1d_f64,
+                                              dirichlet_expectation_2d_f32, dirichlet_expectation_2d_f64,
+                                              logsumexp_2d_f32, logsumexp_2d_f64,
+                                              mean_absolute_difference_f32, mean_absolute_difference_f64)
     FAST_VERSION = 1
 except ImportError:
     # else fall back to python/numpy
