@@ -6,6 +6,8 @@
 
 r"""This module contains functions to compute confirmation on a pair of words or word subsets.
 
+Notes
+-----
 The advantage of indirect confirmation measure is that it computes similarity of words in :math:`W'` and
 :math:`W^{*}` with respect to direct confirmations to all words. Eg. Suppose `x` and `z` are both competing
 brands of cars, which semantically support each other. However, both brands are seldom mentioned
@@ -68,7 +70,10 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
     >>> from gensim.topic_coherence import indirect_confirmation_measure
     >>> from gensim.topic_coherence import text_analysis
     >>>
+    >>> # create segmentation
     >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
+    >>>
+    >>> # create accumulator
     >>> dictionary = Dictionary()
     >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
     >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
@@ -113,14 +118,14 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
 
     Parameters
     ----------
-    segmented_topics: list of (list of tuples)
+    segmented_topics: list of lists of (int, `numpy.ndarray`)
         Output from the segmentation module of the segmented topics.
     accumulator: :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Output from the probability_estimation module. Is an topics: Topics obtained from the trained topic model.
     measure : str
         Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
     gamma: float
-        Gamma value for computing W', W* vectors.
+        Gamma value for computing :math:`W'` and :math:`W^{*}` vectors.
     with_std : bool
         True to also include standard deviation across topic segment sets in addition to the mean coherence
         for each topic; default is False.
@@ -138,12 +143,18 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
     >>> from gensim.corpora.dictionary import Dictionary
     >>> from gensim.topic_coherence import indirect_confirmation_measure, text_analysis
     >>> import numpy as np
+    >>>
+    >>> # create accumulator
     >>> dictionary = Dictionary()
     >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
     >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
     >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
     >>> accumulator._num_docs = 5
+    >>>
+    >>> # create topics
     >>> topics = [np.array([1, 2])]
+    >>>
+    >>> # create segmentation
     >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
     >>> obtained = indirect_confirmation_measure.cosine_similarity(segmentation, accumulator, topics, 'nlr', 1)
     >>> print obtained[0]
@@ -169,6 +180,17 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
 class ContextVectorComputer(object):
     """Lazily compute context vectors for topic segments.
 
+    Parameters
+    ----------
+    measure: str
+        Confirmation measure.
+    topics: list
+        Topics.
+    accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
+        Word occurrence accumulator from probability_estimation.
+    gamma: float
+        Value for computing vectors.
+
     Attributes
     ----------
     sim_cache: dict
@@ -176,39 +198,31 @@ class ContextVectorComputer(object):
     context_vector_cache: dict
         Mapping from (segment, topic_words) --> context_vector.
 
+    Example
+    -------
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>> from gensim.topic_coherence import indirect_confirmation_measure, text_analysis
+    >>> import numpy as np
+    >>>
+    >>> # create measure, topics
+    >>> measure = 'nlr'
+    >>> topics =  [np.array([1, 2])]
+    >>>
+    >>> # create accumulator
+    >>> dictionary = Dictionary()
+    >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
+    >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
+    >>> accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
+    >>> cont_vect_comp = indirect_confirmation_measure.ContextVectorComputer(measure, topics, accumulator,1)
+    >>> # should be {1: 0, 2: 1}
+    >>> cont_vect_comp.mapping
+    >>> # should be 2
+    >>> cont_vect_comp.vocab_size
+
     """
 
     def __init__(self, measure, topics, accumulator, gamma):
-        """
-        Parameters
-        ----------
-        measure: str
-            Confirmation measure.
-        topics: list
-            Topics.
-        accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
-            Word occurrence accumulator from probability_estimation.
-        gamma: float
-            Value for computing vectors.
 
-        Example
-        -------
-        >>> from gensim.corpora.dictionary import Dictionary
-        >>> from gensim.topic_coherence import indirect_confirmation_measure, text_analysis
-        >>> import numpy as np
-        >>> measure = 'nlr'
-        >>> top =  [np.array([1, 2])]
-        >>> dictionary = Dictionary()
-        >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
-        >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
-        >>> accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
-        >>> cont_vect_comp = indirect_confirmation_measure.ContextVectorComputer(measure, top, accumulator,1)
-        >>> cont_vect_comp.mapping
-        {1: 0, 2: 1}
-        >>> cont_vect_comp.vocab_size
-        2
-
-        """
         if measure == 'nlr':
             self.similarity = _pair_npmi
         else:
@@ -242,7 +256,7 @@ class ContextVectorComputer(object):
 
         Example
         ---------
-        In progress
+        #TODO Need help with understanding parameters' types.
 
         """
         key = _key_for_segment(segment_word_ids, topic_word_ids)
@@ -287,7 +301,7 @@ def _pair_npmi(pair, accumulator):
 
     Parameters
     ----------
-    pair : iterable of
+    pair : (str, str)
         The pair of words (word_id1, word_id2).
     accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator from probability_estimation.
