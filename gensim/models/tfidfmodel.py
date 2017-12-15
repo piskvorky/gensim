@@ -11,6 +11,7 @@ import math
 from gensim import interfaces, matutils, utils
 from six import iteritems
 
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -33,22 +34,6 @@ def resolve_weights(smartirs):
     return w_tf, w_df, w_n
 
 
-def df2idf(docfreq, totaldocs, log_base=2.0, add=0.0):
-    """
-    Compute default inverse-document-frequency for a term with document frequency `doc_freq`::
-
-      idf = add + log(totaldocs / doc_freq)
-    """
-    return add + math.log(1.0 * totaldocs / docfreq, log_base)
-
-
-def precompute_idfs(wglobal, dfs, total_docs):
-    """Precompute the inverse document frequency mapping for all terms."""
-    # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
-    # this method is here just to speed things up a little.
-    return {termid: wglobal(df, total_docs) for termid, df in iteritems(dfs)}
-
-
 class TfidfModel(interfaces.TransformationABC):
     """
     Objects of this class realize the transformation between word-document co-occurrence
@@ -67,8 +52,8 @@ class TfidfModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     """
 
-    def __init__(self, corpus=None, id2word=None, dictionary=None, smartirs="nnn",
-                 wlocal=None, wglobal=None, normalize=True):
+    def __init__(self, corpus=None, id2word=None, dictionary=None, smartirs="ntc",
+                 wlocal=None, wglobal=None, wnormalize=None):
         """
         Compute tf-idf by multiplying a local component (term frequency) with a
         global component (inverse document frequency), and normalizing
@@ -96,19 +81,38 @@ class TfidfModel(interfaces.TransformationABC):
         and it will be used to directly construct the inverse document frequency
         mapping (then `corpus`, if specified, is ignored).
         """
-        self.normalize = normalize
         self.id2word = id2word
-        self.wlocal, self.wglobal = wlocal, wglobal
+        self.wlocal, self.wglobal, self.wnormalize = wlocal, wglobal, wnormalize
         self.num_docs, self.num_nnz, self.idfs = None, None, None
         n_tf, n_df, n_n = smartirs
 
-        if n_tf == "n":
-            pass
-        elif n_tf == "":
-            pass
+        if self.wlocal is None:
+            if n_tf == "n":
+                self.wlocal = lambda tf, mean=None, _max=None: tf
+            elif n_tf == "l":
+                self.wlocal = lambda tf, mean=None, _max=None: 1 + math.log(tf)
+            elif n_tf == "a":
+                self.wlocal = lambda tf, mean=None, _max=None: 0.5 + (0.5 * tf / _max)
+            elif n_tf == "b":
+                self.wlocal = lambda tf, mean=None, _max=None: 1 if tf > 0 else 0
+            elif n_tf == "L":
+                self.wlocal = lambda tf, mean=None, _max=None: (1 + math.log(tf)) / (1 + math.log(mean))
 
-        self.wlocal = utils.identity
-        self.wglobal = df2idf
+        if self.wglobal is None:
+            if n_df == "n":
+                self.wglobal = utils.identity
+            elif n_df == "t":
+                self.wglobal = lambda docfreq, totaldocs: math.log(1.0 * totaldocs / docfreq, 10)
+            elif n_tf == "p":
+                self.wglobal = lambda docfreq, totaldocs: math.log((float(totaldocs) - docfreq) / docfreq)
+
+        if self.wnormalize is None:
+            if n_n == "n":
+                self.wnormalize = lambda x: x
+            elif n_n == "c":
+                self.wnormalize = matutils.unitvec
+            elif n_n == "t":
+                self.wnormalize = matutils.unitvec
 
         if dictionary is not None:
             # user supplied a Dictionary object, which already contains all the
@@ -121,7 +125,6 @@ class TfidfModel(interfaces.TransformationABC):
             self.num_docs, self.num_nnz = dictionary.num_docs, dictionary.num_nnz
             self.dfs = dictionary.dfs.copy()
 
-            self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
             if id2word is None:
                 self.id2word = dictionary
         elif corpus is not None:
@@ -161,7 +164,6 @@ class TfidfModel(interfaces.TransformationABC):
             "calculating IDF weights for %i documents and %i features (%i matrix non-zeros)",
             self.num_docs, n_features, self.num_nnz
         )
-        #self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
 
     def __getitem__(self, bow, eps=1e-12):
         """
@@ -174,17 +176,16 @@ class TfidfModel(interfaces.TransformationABC):
 
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
         # as strict application of the IDF formula would dictate)
+
         vector = [
-            (termid, self.wlocal(tf) * self.wglobal(self.dfs[termid], self.num_docs))
+            (termid, self.wlocal(tf, mean=np.mean(np.array(bow), axis=1), _max=np.max(bow, axis=1)) * self.wglobal(self.dfs[termid], self.num_docs))
             for termid, tf in bow if self.wglobal(self.dfs[termid], self.num_docs) != 0.0
         ]
 
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
-        if self.normalize is True:
-            vector = matutils.unitvec(vector)
-        elif self.normalize:
-            vector = self.normalize(vector)
+
+        vector = self.wnormalize(vector)
 
         # make sure there are no explicit zeroes in the vector (must be sparse)
         vector = [(termid, weight) for termid, weight in vector if abs(weight) > eps]
