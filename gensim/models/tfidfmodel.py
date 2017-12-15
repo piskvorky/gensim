@@ -87,34 +87,40 @@ class TfidfModel(interfaces.TransformationABC):
         n_tf, n_df, n_n = smartirs
         self.smartirs = smartirs
 
-        if self.wlocal is None:
-            if n_tf == "n":
-                self.wlocal = lambda tf, mean=None, _max=None: tf
-            elif n_tf == "l":
-                self.wlocal = lambda tf, mean=None, _max=None: 1 + math.log(tf)
-            elif n_tf == "a":
-                self.wlocal = lambda tf, mean=None, _max=None: 0.5 + (0.5 * tf / _max)
-            elif n_tf == "b":
-                self.wlocal = lambda tf, mean=None, _max=None: 1 if tf > 0 else 0
-            elif n_tf == "L":
-                self.wlocal = lambda tf, mean=None, _max=None: (1 + math.log(tf)) / (1 + math.log(mean))
+        if wlocal is None:
+            def wlocal(tf, mean=None, _max=None):
+                if n_tf == "n":
+                    return tf
+                elif n_tf == "l":
+                    return 1 + math.log(tf)
+                elif n_tf == "a":
+                    return 0.5 + (0.5 * tf / _max)
+                elif n_tf == "b":
+                    return 1 if tf > 0 else 0
+                elif n_tf == "L":
+                    return (1 + math.log(tf)) / (1 + math.log(mean))
+            self.wlocal = wlocal
 
-        if self.wglobal is None:
-            if n_df == "n":
-                self.wglobal = utils.identity
-            elif n_df == "t":
-                self.wglobal = lambda docfreq, totaldocs: math.log(1.0 * totaldocs / docfreq, 10)
-            elif n_tf == "p":
-                self.wglobal = lambda docfreq, totaldocs: math.log((float(totaldocs) - docfreq) / docfreq)
+        if wglobal is None:
+            def wglobal(docfreq, totaldocs):
+                if n_df == "n":
+                    return utils.identity(docfreq)
+                elif n_df == "t":
+                    return math.log(1.0 * totaldocs / docfreq, 10)
+                elif n_tf == "p":
+                    return math.log((float(totaldocs) - docfreq) / docfreq)
+            self.wglobal = wglobal
 
         if self.normalize is None or isinstance(self.normalize, bool):
-            if n_n == "n" or self.normalize is False:
-                self.normalize = lambda x: x
-            elif n_n == "c" or self.normalize is True:
-                self.normalize = matutils.unitvec
-            # TODO write byte-size normalisation
-            # elif n_n == "b":
-            #     self.normalize = matutils.unitvec
+            def normalize(x):
+                if n_n == "n" or self.normalize is False:
+                    return x
+                elif n_n == "c" or self.normalize is True:
+                    return matutils.unitvec(x)
+                # TODO write byte-size normalisation
+                # elif n_n == "b":
+                #    pass
+            self.normalize = normalize
 
         if dictionary is not None:
             # user supplied a Dictionary object, which already contains all the
