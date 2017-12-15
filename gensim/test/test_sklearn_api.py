@@ -498,7 +498,6 @@ class TestLsiWrapper(unittest.TestCase):
         original_matrix = self.model.transform(original_bow)
         passed = numpy.allclose(loaded_matrix, original_matrix, atol=1e-1)
         self.assertTrue(passed)
-
     def testModelNotFitted(self):
         lsi_wrapper = LsiTransformer(id2word=dictionary, num_topics=2)
         texts_new = ['graph', 'eulerian']
@@ -973,13 +972,13 @@ class TestTfIdfTransformer(unittest.TestCase):
 
     def testSetGetParams(self):
         # updating only one param
-        self.model.set_params(normalize=False)
+        self.model.set_params(smartirs='nnn')
         model_params = self.model.get_params()
-        self.assertEqual(model_params["normalize"], False)
+        self.assertEqual(model_params["smartirs"], 'nnn')
 
         # verify that the attributes values are also changed for `gensim_model` after fitting
         self.model.fit(self.corpus)
-        self.assertEqual(getattr(self.model.gensim_model, 'normalize'), False)
+        self.assertEqual(getattr(self.model.gensim_model, 'smartirs'), 'nnn')
 
     def testPipeline(self):
         with open(datapath('mini_newsgroup'), 'rb') as f:

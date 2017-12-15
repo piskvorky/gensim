@@ -53,7 +53,7 @@ class TfidfModel(interfaces.TransformationABC):
     """
 
     def __init__(self, corpus=None, id2word=None, dictionary=None, smartirs="ntc",
-                 wlocal=None, wglobal=None, wnormalize=None):
+                 wlocal=None, wglobal=None, normalize=None):
         """
         Compute tf-idf by multiplying a local component (term frequency) with a
         global component (inverse document frequency), and normalizing
@@ -82,9 +82,10 @@ class TfidfModel(interfaces.TransformationABC):
         mapping (then `corpus`, if specified, is ignored).
         """
         self.id2word = id2word
-        self.wlocal, self.wglobal, self.wnormalize = wlocal, wglobal, wnormalize
+        self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
         self.num_docs, self.num_nnz, self.idfs = None, None, None
         n_tf, n_df, n_n = smartirs
+        self.smartirs = smartirs
 
         if self.wlocal is None:
             if n_tf == "n":
@@ -106,13 +107,14 @@ class TfidfModel(interfaces.TransformationABC):
             elif n_tf == "p":
                 self.wglobal = lambda docfreq, totaldocs: math.log((float(totaldocs) - docfreq) / docfreq)
 
-        if self.wnormalize is None:
-            if n_n == "n":
-                self.wnormalize = lambda x: x
-            elif n_n == "c":
-                self.wnormalize = matutils.unitvec
-            elif n_n == "t":
-                self.wnormalize = matutils.unitvec
+        if self.normalize is None or isinstance(self.normalize, bool):
+            if n_n == "n" or self.normalize is False:
+                self.normalize = lambda x: x
+            elif n_n == "c" or self.normalize is True:
+                self.normalize = matutils.unitvec
+            # TODO write byte-size normalisation
+            # elif n_n == "b":
+            #     self.normalize = matutils.unitvec
 
         if dictionary is not None:
             # user supplied a Dictionary object, which already contains all the
@@ -160,10 +162,6 @@ class TfidfModel(interfaces.TransformationABC):
 
         # and finally compute the idf weights
         n_features = max(dfs) if dfs else 0
-        logger.info(
-            "calculating IDF weights for %i documents and %i features (%i matrix non-zeros)",
-            self.num_docs, n_features, self.num_nnz
-        )
 
     def __getitem__(self, bow, eps=1e-12):
         """
@@ -185,7 +183,7 @@ class TfidfModel(interfaces.TransformationABC):
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
 
-        vector = self.wnormalize(vector)
+        vector = self.normalize(vector)
 
         # make sure there are no explicit zeroes in the vector (must be sparse)
         vector = [(termid, weight) for termid, weight in vector if abs(weight) > eps]

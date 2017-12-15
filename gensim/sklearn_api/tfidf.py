@@ -21,14 +21,15 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
     Base Tf-Idf module
     """
 
-    def __init__(self, id2word=None, dictionary=None, wlocal=gensim.utils.identity,
-                 wglobal=gensim.models.tfidfmodel.df2idf, normalize=True):
+    def __init__(self, id2word=None, dictionary=None, smartirs="ntc", wlocal=None,
+                 wglobal=None, normalize=True):
         """
         Sklearn wrapper for Tf-Idf model.
         """
         self.gensim_model = None
         self.id2word = id2word
         self.dictionary = dictionary
+        self.smartirs = smartirs
         self.wlocal = wlocal
         self.wglobal = wglobal
         self.normalize = normalize
@@ -38,7 +39,7 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
         Fit the model according to the given training data.
         """
         self.gensim_model = TfidfModel(
-            corpus=X, id2word=self.id2word, dictionary=self.dictionary,
+            corpus=X, id2word=self.id2word, dictionary=self.dictionary, smartirs=self.smartirs,
             wlocal=self.wlocal, wglobal=self.wglobal, normalize=self.normalize
         )
         return self
