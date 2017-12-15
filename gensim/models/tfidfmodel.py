@@ -15,6 +15,24 @@ from six import iteritems
 logger = logging.getLogger(__name__)
 
 
+def resolve_weights(smartirs):
+    if not isinstance(smartirs, str) or len(smartirs) != 3:
+        raise ValueError('Expected a string of length 3 except got ' + smartirs)
+
+    w_tf, w_df, w_n = smartirs
+
+    if w_tf not in 'nlabL':
+        raise ValueError('Expected term frequency weight to be one of nlabL, except got ' + w_tf)
+
+    if w_df not in 'ntp':
+        raise ValueError('Expected inverse document frequency weight to be one of ntp, except got ' + w_df)
+
+    if w_n not in 'ncb':
+        raise ValueError('Expected normalization weight to be one of ncb, except got ' + w_n)
+
+    return w_tf, w_df, w_n
+
+
 def df2idf(docfreq, totaldocs, log_base=2.0, add=0.0):
     """
     Compute default inverse-document-frequency for a term with document frequency `doc_freq`::
@@ -49,8 +67,8 @@ class TfidfModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     """
 
-    def __init__(self, corpus=None, id2word=None, dictionary=None,
-                 wlocal=utils.identity, wglobal=df2idf, normalize=True):
+    def __init__(self, corpus=None, id2word=None, dictionary=None, smartirs="nnn",
+                 wlocal=None, wglobal=None, normalize=True):
         """
         Compute tf-idf by multiplying a local component (term frequency) with a
         global component (inverse document frequency), and normalizing
@@ -82,6 +100,16 @@ class TfidfModel(interfaces.TransformationABC):
         self.id2word = id2word
         self.wlocal, self.wglobal = wlocal, wglobal
         self.num_docs, self.num_nnz, self.idfs = None, None, None
+        n_tf, n_df, n_n = smartirs
+
+        if n_tf == "n":
+            pass
+        elif n_tf == "":
+            pass
+
+        self.wlocal = utils.identity
+        self.wglobal = df2idf
+
         if dictionary is not None:
             # user supplied a Dictionary object, which already contains all the
             # statistics we need to construct the IDF mapping. we can skip the
@@ -92,6 +120,7 @@ class TfidfModel(interfaces.TransformationABC):
                 )
             self.num_docs, self.num_nnz = dictionary.num_docs, dictionary.num_nnz
             self.dfs = dictionary.dfs.copy()
+
             self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
             if id2word is None:
                 self.id2word = dictionary
@@ -113,6 +142,7 @@ class TfidfModel(interfaces.TransformationABC):
         logger.info("collecting document frequencies")
         dfs = {}
         numnnz, docno = 0, -1
+
         for docno, bow in enumerate(corpus):
             if docno % 10000 == 0:
                 logger.info("PROGRESS: processing document #%i", docno)
@@ -131,7 +161,7 @@ class TfidfModel(interfaces.TransformationABC):
             "calculating IDF weights for %i documents and %i features (%i matrix non-zeros)",
             self.num_docs, n_features, self.num_nnz
         )
-        self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
+        #self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
 
     def __getitem__(self, bow, eps=1e-12):
         """
@@ -145,8 +175,8 @@ class TfidfModel(interfaces.TransformationABC):
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
         # as strict application of the IDF formula would dictate)
         vector = [
-            (termid, self.wlocal(tf) * self.idfs.get(termid))
-            for termid, tf in bow if self.idfs.get(termid, 0.0) != 0.0
+            (termid, self.wlocal(tf) * self.wglobal(self.dfs[termid], self.num_docs))
+            for termid, tf in bow if self.wglobal(self.dfs[termid], self.num_docs) != 0.0
         ]
 
         # and finally, normalize the vector either to unit length, or use a
