@@ -498,6 +498,7 @@ class TestLsiWrapper(unittest.TestCase):
         original_matrix = self.model.transform(original_bow)
         passed = numpy.allclose(loaded_matrix, original_matrix, atol=1e-1)
         self.assertTrue(passed)
+
     def testModelNotFitted(self):
         lsi_wrapper = LsiTransformer(id2word=dictionary, num_topics=2)
         texts_new = ['graph', 'eulerian']
