@@ -19,7 +19,7 @@ Also, please check the [Gensim FAQ](https://github.com/RaRe-Technologies/gensim/
 5. Implement your changes
 6. Check that everything's OK in your branch:
    - Check it for PEP8: `tox -e flake8`
-   - Build its documentation (works only for MacOS/Linux): `tox -e docs`
+   - Build its documentation (works only for MacOS/Linux): `tox -e docs` (documentation stored in `docs/src/_build`)
    - Run unit tests: `tox -e py{version}-{os}`, for example `tox -e py27-linux` or `tox -e py36-win` where
       - `{version}` is one of `27`, `35`, `36`
       - `{os}` is either `win` or `linux`
