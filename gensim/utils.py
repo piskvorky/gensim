@@ -56,10 +56,15 @@ except ImportError:
     def make_closing(base, **attrs):
         """
         Add support for `with Base(attrs) as fout:` to the base class if it's missing.
+        
+        Notes
+        ------
         The base class' `close()` method will be called on context exit, to always close the file properly.
 
-        This is needed for gzip.GzipFile, bz2.BZ2File etc in older Pythons (<=2.6), which otherwise
-        raise "AttributeError: GzipFile instance has no attribute '__exit__'".
+        Raises
+        ------
+        AttributeError
+            If Pythons version is older(<=2.6), needed for gzip.GzipFile, bz2.BZ2File etc.
 
         """
         if not hasattr(base, '__enter__'):
@@ -69,6 +74,19 @@ except ImportError:
         return type('Closing' + base.__name__, (base, object), attrs)
 
     def smart_open(fname, mode='rb'):
+        """ 
+        Based on extension of file, calls make_closing function or python standard open function, to always 
+        close the file properly.
+        
+        Parameters
+        ----------
+        fname 
+            name of the file.
+        
+        Returns
+        -------
+           file-like object ready to be read from the beginning.
+        """
         _, ext = os.path.splitext(fname)
         if ext == '.bz2':
             from bz2 import BZ2File
@@ -86,7 +104,25 @@ RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 def get_random_state(seed):
     """
     Turn seed into a np.random.RandomState instance.
-    Method originally from maciejkula/glove-python, and written by @joshloyal.
+
+    Notes
+    -----
+        Method originally from maciejkula/glove-python, and written by @joshloyal.
+
+    Parameters
+    ----------
+    seed : {None, int, array_like}, optional
+        
+    Returns
+    -------
+    seed : {None, int, array_like}, optional
+        np.random.RandomState instance.
+
+    Raises
+    ------
+    AttributeError
+        If seed is not {None, int, array_like}
+
     """
     if seed is None or seed is np.random:
         return np.random.mtrand._rand
@@ -101,7 +137,10 @@ def synchronous(tlockname):
     """
     A decorator to place an instance-based lock around a method.
 
+    References
+    ----------
     Adapted from http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/
+    
     """
     def _synched(func):
         @wraps(func)
@@ -137,8 +176,14 @@ nocm = NoCM()
 
 def file_or_filename(input):
     """
-    Return a file-like object ready to be read from the beginning. `input` is either
-    a filename (gz/bz2 also supported) or a file-like object supporting seek.
+    Parameters
+    ----------
+    input : {gz/bz2, a file-like object supporting seek}
+        filename.
+    Return
+    ------
+    input : file-like object
+        ready to be read from the beginning.
 
     """
     if isinstance(input, string_types):
@@ -152,10 +197,19 @@ def file_or_filename(input):
 
 def deaccent(text):
     """
-    Remove accentuation from the given string. Input text is either a unicode string or utf8 encoded bytestring.
+    Remove accentuation from the given string.
 
-    Return input string with accents removed, as unicode.
+    Parameters
+    ----------
+    text : unicode string or utf8 encoded bytestring
 
+    Return
+    ------
+    string
+        string with accents removed, as unicode.
+
+    Examples
+    --------
     >>> deaccent("Šéf chomutovských komunistů dostal poštou bílý prášek")
     u'Sef chomutovskych komunistu dostal postou bily prasek'
 
@@ -172,6 +226,13 @@ def copytree_hardlink(source, dest):
     """
     Recursively copy a directory ala shutils.copytree, but hardlink files
     instead of copying. Available on UNIX systems only.
+    
+    Parameters
+    ----------
+    source
+        source directory
+    dest
+        destination directory
     """
     copy2 = shutil.copy2
     try:
@@ -187,11 +248,27 @@ def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict
     and optionally lowercasing the unidoce string by assigning True
     to one of the parameters, lowercase, to_lower, or lower.
 
-    Input text may be either unicode or utf8-encoded byte string.
+    Parameters
+    ----------
+    text : str
+        unicode, utf8-encoded byte string
 
-    The tokens on output are maximal contiguous sequences of alphabetic
-    characters (no digits!).
+    Return
+    ------
+    list
+        maximal contiguous sequences of alphabetic characters (no digits!).
 
+    Other Parameters
+    ----------------
+    lowercase : bool
+    encoding : str
+    errors : str
+    to_lower : bool
+    lower : bool
+    deacc : bool
+    
+    Examples
+    --------
     >>> list(tokenize('Nic nemůže letět rychlostí vyšší, než 300 tisíc kilometrů za sekundu!', deacc = True))
     [u'Nic', u'nemuze', u'letet', u'rychlosti', u'vyssi', u'nez', u'tisic', u'kilometru', u'za', u'sekundu']
 
@@ -206,6 +283,9 @@ def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict
 
 
 def simple_tokenize(text):
+    """
+    Tokenizer to tokenize text
+    """
     for match in PAT_ALPHABETIC.finditer(text):
         yield match.group()
 
@@ -214,8 +294,22 @@ def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
     """
     Convert a document into a list of tokens.
 
-    This lowercases, tokenizes, de-accents (optional). -- the output are final
-    tokens = unicode strings, that won't be processed any further.
+    This lowercases, tokenizes, de-accents (optional).
+
+    Parameters
+    ----------
+    doc : str
+        document which needed to convert into list of tokens
+    deacc : bool
+    min_len : int
+        default value set to 2
+    max_len : int
+        default value set to 15
+
+    Return
+    ------
+    tokens : list
+        a list of tokens that won't be processed any further.
 
     """
     tokens = [
@@ -226,7 +320,21 @@ def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
 
 
 def any2utf8(text, errors='strict', encoding='utf8'):
-    """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8."""
+    """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8.
+
+    Parameters
+    ----------
+    text : str
+        given string (unicode or bytestring in `encoding`)
+    errors : str
+    encoding : str
+
+    Return
+    ------
+    str
+        bytestring in utf8
+    """
+
     if isinstance(text, unicode):
         return text.encode('utf8')
     # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
@@ -237,7 +345,20 @@ to_utf8 = any2utf8
 
 
 def any2unicode(text, encoding='utf8', errors='strict'):
-    """Convert a string (bytestring in `encoding` or unicode), to unicode."""
+    """Convert a string (bytestring in `encoding` or unicode), to unicode.
+
+    Parameters
+    ----------
+    text : str
+        given string to unicode
+    errors : str
+    encoding : str
+
+    Return
+    ------
+    str
+        unicode
+    """
     if isinstance(text, unicode):
         return text
     return unicode(text, encoding, errors=errors)
@@ -247,7 +368,13 @@ to_unicode = any2unicode
 
 
 def call_on_class_only(*args, **kwargs):
-    """Raise exception when load methods are called on instance"""
+    """
+    Raises
+    ------
+    AttributeError 
+        when load methods are called on instance
+
+    """
     raise AttributeError('This method should be called on a class object.')
 
 
@@ -255,7 +382,9 @@ class SaveLoad(object):
     """
     Objects which inherit from this class have save/load functions, which un/pickle
     them to disk.
-
+    
+    Notes
+    -----
     This uses pickle for de/serializing, so objects must not contain
     unpicklable attributes, such as lambda functions etc.
 
@@ -263,15 +392,25 @@ class SaveLoad(object):
     @classmethod
     def load(cls, fname, mmap=None):
         """
-        Load a previously saved object from file (also see `save`).
+        Load a previously saved object from file
 
+        Notes
+        -----
         If the object was saved with large arrays stored separately, you can load
         these arrays via mmap (shared memory) using `mmap='r'`. Default: don't use
         mmap, load large arrays as normal objects.
-
+        
         If the file being loaded is compressed (either '.gz' or '.bz2'), then
-        `mmap=None` must be set.  Load will raise an `IOError` if this condition
-        is encountered.
+        `mmap=None` must be set.  
+        
+        See Also
+        --------
+        `save`
+        
+        Raises
+        ------
+        IOError 
+            when load methods are called on instance
 
         """
         logger.info("loading %s object from %s", cls.__name__, fname)
@@ -343,8 +482,10 @@ class SaveLoad(object):
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
         """
-        Save the object to file (also see `load`).
-
+        Save the object to file
+    
+        Notes
+        -----
         If `separately` is None, automatically detect large
         numpy/scipy.sparse arrays in the object being stored, and store
         them into separate files. This avoids pickle memory errors and
@@ -361,6 +502,9 @@ class SaveLoad(object):
         `pickle_protocol` defaults to 2 so the pickled object can be imported
         in both Python 2 and 3.
 
+        See Also
+        --------
+        `load`
         """
         logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
 
@@ -382,9 +526,11 @@ class SaveLoad(object):
         Save aside any attributes that need to be handled separately, including
         by recursion any attributes that are themselves SaveLoad instances.
 
-        Returns a list of (obj, {attrib: value, ...}) settings that the caller
-        should use to restore each object's attributes that were set aside
-        during the default pickle().
+        Return
+        ------
+        list
+            list of (obj, {attrib: value, ...}) settings that the caller should use to restore each object's attributes
+            that were set aside during the default pickle().
 
         """
         asides = {}
@@ -464,8 +610,10 @@ class SaveLoad(object):
 
     def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
         """
-        Save the object to file (also see `load`).
-
+        Save the object to file
+        
+        Notes
+        -----
         `fname_or_handle` is either a string specifying the file name to
         save to, or an open file-like object which can be written to. If
         the object is a file handle, no special array handling will be
@@ -487,6 +635,9 @@ class SaveLoad(object):
         `pickle_protocol` defaults to 2 so the pickled object can be imported
         in both Python 2 and 3.
 
+        See Also
+        --------
+        `load`
         """
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
@@ -504,6 +655,18 @@ def get_max_id(corpus):
     """
     Return the highest feature id that appears in the corpus.
 
+    Parameters
+    ----------
+    corpus
+        a collection of texts
+
+    Return
+    ------
+    maxid
+        highest feature id
+
+    Notes
+    -----
     For empty corpora (no features at all), return -1.
 
     """
@@ -544,6 +707,8 @@ class FakeDict(object):
         Override the dict.keys() function, which is used to determine the maximum
         internal id of a corpus = the vocabulary dimensionality.
 
+        Notes
+        -----
         HACK: To avoid materializing the whole `range(0, self.num_terms)`, this returns
         the highest id = `[self.num_terms - 1]` only.
 
@@ -564,6 +729,18 @@ def dict_from_corpus(corpus):
     Scan corpus for all word ids that appear in it, then construct and return a mapping
     which maps each `wordId -> str(wordId)`.
 
+    Parameters
+    ----------
+    corpus
+        a collection of texts
+
+    Return
+    ------
+    id2word : dict
+        a mapping which maps each `wordId -> str(wordId)`.
+    
+    Notes
+    -----
     This function is used whenever *words* need to be displayed (as opposed to just
     their ids) but no wordId->word mapping was provided. The resulting mapping
     only covers words actually used in the corpus, up to the highest wordId found.
@@ -576,13 +753,23 @@ def dict_from_corpus(corpus):
 
 def is_corpus(obj):
     """
-    Check whether `obj` is a corpus. Return (is_corpus, new) 2-tuple, where
-    `new is obj` if `obj` was an iterable, or `new` yields the same sequence as
-    `obj` if it was an iterator.
+    Check whether `obj` is a corpus.
+    
+    Parameters
+    ----------
+    obj
+        a corpus if it supports iteration over documents, where a document
+        is in turn anything that acts as a sequence of 2-tuples (int, float).
 
-    `obj` is a corpus if it supports iteration over documents, where a document
-    is in turn anything that acts as a sequence of 2-tuples (int, float).
-
+    Return
+    ------
+    is_corpus : bool
+    obj
+        `new is obj` if `obj` was an iterable, or `new` yields the same sequence as
+        `obj` if it was an iterator.
+    
+    Notes
+    -----
     Note: An "empty" corpus (empty input sequence) is ambiguous, so in this case the
     result is forcefully defined as `is_corpus=False`.
 
@@ -616,6 +803,16 @@ def get_my_ip():
     """
     Try to obtain our external ip (from the pyro nameserver's point of view)
 
+    Return
+    ------
+    result
+        a triple (hostname, aliaslist, ipaddrlist) where hostname is the primary host name 
+        responding to the given ip_address, aliaslist is a (possibly empty) list of alternative 
+        host names for the same address, and ipaddrlist is a list of IPv4 addresses for the same 
+        interface on the same host (often but not always a single address).
+
+    Notes
+    -----
     This tries to sidestep the issue of bogus `/etc/hosts` entries and other
     local misconfigurations, which often mess up hostname resolution.
 
@@ -656,6 +853,8 @@ class RepeatCorpus(SaveLoad):
         length `len(result)==reps` is reached. Repetition is done
         on-the-fly=efficiently, via `itertools`.
 
+        Examples
+        --------
         >>> corpus = [[(1, 0.5)], []] # 2 documents
         >>> list(RepeatCorpus(corpus, 5)) # repeat 2.5 times to get 5 documents
         [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)]]
@@ -674,6 +873,8 @@ class RepeatCorpusNTimes(SaveLoad):
         """
         Repeat a `corpus` `n` times.
 
+        Examples
+        --------
         >>> corpus = [[(1, 0.5)], []]
         >>> list(RepeatCorpusNTimes(corpus, 3)) # repeat 3 times
         [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
@@ -692,6 +893,8 @@ class ClippedCorpus(SaveLoad):
         """
         Return a corpus that is the "head" of input iterable `corpus`.
 
+        Notes
+        -----
         Any documents after `max_docs` are ignored. This effectively limits the
         length of the returned corpus to <= `max_docs`. Set `max_docs=None` for
         "no limit", effectively wrapping the entire input corpus.
@@ -760,9 +963,12 @@ def decode_htmlentities(text):
     """
     Decode HTML entities in text, coded as hex, decimal or named.
 
-    Adapted
+    References
+    ----------
     from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
 
+    Examples
+    --------
     >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
     >>> print(decode_htmlentities(u).encode('UTF-8'))
     E tu vivrai nel terrore - L'aldilà (1981)
@@ -801,7 +1007,9 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
     """
     Return elements from the iterable in `chunksize`-ed lists. The last returned
     element may be smaller (if length of collection is not divisible by `chunksize`).
-
+    
+    Examples
+    --------
     >>> print(list(grouper(range(10), 3)))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
 
@@ -866,6 +1074,9 @@ else:
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         """
         Split a stream of values into smaller chunks.
+
+        Notes
+        -----
         Each chunk is of length `chunksize`, except the last one which may be smaller.
         A once-only input stream (`corpus` from a generator) is ok, chunking is done
         efficiently via itertools.
@@ -879,6 +1090,8 @@ else:
         If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
         via `chunkize_serial()` (no I/O optimizations).
 
+        Examples
+        --------
         >>> for chunk in chunkize(range(10), 4): print(chunk)
         [0, 1, 2, 3]
         [4, 5, 6, 7]
@@ -938,23 +1151,107 @@ def unpickle(fname):
 def revdict(d):
     """
     Reverse a dictionary mapping.
-
+    
+    Notes
+    -----
     When two keys map to the same value, only one of them will be kept in the
     result (which one is kept is arbitrary).
+    
+    Parameters
+    ----------
+    d : dict
+        a dictionary
 
+    Return
+    ------
+    dict
+        reversed dictionary mapping
+
+    Examples
+    --------
+    >>> from gensim.utils import revdict
+    >>> d = {'key':'value'}
+    >>> revdict(d)
+    {'value':'key'}
     """
     return {v: k for (k, v) in iteritems(dict(d))}
 
+def deprecated(reason):
+    """Decorator which can be used to mark functions as deprecated. 
 
+    Parameters
+    ----------
+    reason : str
+        reason of deprecation
+    Returns
+    -------
+    decorator
+        warning decorator function
+    
+    References
+    ----------
+    It will result in a warning being emitted when the function is used,
+    base code from https://stackoverflow.com/a/40301488/8001386.
+
+    Raises
+    ------
+    TypeError
+        when reason is not string
+    """
+    if isinstance(reason, string_types):
+        def decorator(func):
+            fmt = "Call to deprecated `{name}` ({reason})."
+
+            @wraps(func)
+            def new_func1(*args, **kwargs):
+                warnings.warn(
+                    fmt.format(name=func.__name__, reason=reason),
+                    category=DeprecationWarning,
+                    stacklevel=2
+                )
+                return func(*args, **kwargs)
+
+            return new_func1
+        return decorator
+
+    elif inspect.isclass(reason) or inspect.isfunction(reason):
+        func = reason
+        fmt = "Call to deprecated `{name}`."
+
+        @wraps(func)
+        def new_func2(*args, **kwargs):
+            warnings.warn(
+                fmt.format(name=func.__name__),
+                category=DeprecationWarning,
+                stacklevel=2
+            )
+            return func(*args, **kwargs)
+        return new_func2
+
+    else:
+        raise TypeError(repr(type(reason)))
+
+
+@deprecated("Function will be removed in 4.0.0")
 def toptexts(query, texts, index, n=10):
     """
     Debug fnc to help inspect the top `n` most similar documents (according to a
     similarity index `index`), to see if they are actually related to the query.
 
-    `texts` is any object that can return something insightful for each document
-    via `texts[docid]`, such as its fulltext or snippet.
+    Parameters
+    ----------
+    query : list
+        vector OR BoW (list of tuples)
+    texts
+        object that can return something insightful for each document
+        via `texts[docid]`, such as its fulltext or snippet.
+    index
+        a class from gensim.similarity.docsim
 
-    Return a list of 3-tuples (docid, doc's similarity to the query, texts[docid]).
+    Return
+    ------
+    list
+        a list of 3-tuples (docid, doc's similarity to the query, texts[docid])
 
     """
     sims = index[query]  # perform a similarity query against the corpus
@@ -972,6 +1269,8 @@ def upload_chunked(server, docs, chunksize=1000, preprocess=None):
     """
     Memory-friendly upload of documents to a SimServer (or Pyro SimServer proxy).
 
+    Notes
+    -----
     Use this function to train or index large collections -- avoid sending the
     entire corpus over the wire as a single Pyro in-memory object. The documents
     will be sent in smaller chunks, of `chunksize` documents each.
@@ -995,6 +1294,11 @@ def upload_chunked(server, docs, chunksize=1000, preprocess=None):
 def getNS(host=None, port=None, broadcast=True, hmac_key=None):
     """
     Return a Pyro name server proxy.
+    
+    Raises
+    ------
+    RuntimeError
+        when Pyro name server is not found
     """
     import Pyro4
     try:
@@ -1029,6 +1333,11 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None
 def has_pattern():
     """
     Function which returns a flag indicating whether pattern is installed or not
+
+    Raises
+    ------
+    ImportError
+        when import fails
     """
     try:
         from pattern.en import parse  # noqa:F401
@@ -1048,6 +1357,8 @@ def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
 
     Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
 
+    Examples
+    --------
     >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
     ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
 
@@ -1111,6 +1422,18 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
 
     Modifies `vocab` in place, returns the sum of all counts that were pruned.
 
+    Parameters
+    ----------
+    vocab : dict
+        dictionary
+    min_reduce : int
+        to remove entries which are smaller than this
+    
+    Returns
+    -------
+    result : int
+        sum of all counts that were pruned
+
     """
     result = 0
     old_len = len(vocab)
@@ -1159,9 +1482,15 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     Run command with arguments and return its output as a byte string.
     Backported from Python 2.7 as it's implemented as pure python on stdlib.
 
+    Examples
+    --------
     >>> check_output(args=['/usr/bin/python', '--version'])
     Python 2.6.2
-    Added extra KeyboardInterrupt handling
+    
+    Raises
+    ------
+    KeyboardInterrupt
+        when interrupted
     """
     try:
         logger.debug("COMMAND: %s %s", popenargs, kwargs)
@@ -1184,8 +1513,23 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
 def sample_dict(d, n=10, use_random=True):
     """
     Pick `n` items from dictionary `d` and return them as a list.
+    
     The items are picked randomly if `use_random` is True, otherwise picked
     according to natural dict iteration.
+    
+    Parameters
+    ----------
+    d : dict
+        dictionary
+    n : int
+        by default set to 10
+    use_random : bool
+        by default set to True
+
+    Returns
+    -------
+    list
+        n items from dictionary
     """
     selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
     return [(key, d[key]) for key in selected_keys]
@@ -1194,7 +1538,22 @@ def sample_dict(d, n=10, use_random=True):
 def strided_windows(ndarray, window_size):
     """
     Produce a numpy.ndarray of windows, as from a sliding window.
+    
+    Parameters
+    ----------
+    ndarray : numpy.ndarray
+        either a numpy.ndarray or something that can be converted into one.
+    window_size : int
+        sliding window size.
 
+    Returns
+    -------
+        numpy.ndarray of the subsequences produced by sliding a window of the given size over
+        the `ndarray`. Since this uses striding, the individual arrays are views rather than
+        copies of `ndarray`. Changes to one view modifies the others and the original.
+
+    Examples
+    --------
     >>> strided_windows(np.arange(5), 2)
     array([[0, 1],
            [1, 2],
@@ -1207,15 +1566,6 @@ def strided_windows(ndarray, window_size):
            [3, 4, 5, 6, 7],
            [4, 5, 6, 7, 8],
            [5, 6, 7, 8, 9]])
-
-    Args:
-        ndarray: either a numpy.ndarray or something that can be converted into one.
-        window_size: sliding window size.
-
-    Returns:
-        numpy.ndarray of the subsequences produced by sliding a window of the given size over
-        the `ndarray`. Since this uses striding, the individual arrays are views rather than
-        copies of `ndarray`. Changes to one view modifies the others and the original.
     """
     ndarray = np.asarray(ndarray)
     if window_size == ndarray.shape[0]:
@@ -1234,12 +1584,20 @@ def iter_windows(texts, window_size, copy=False, ignore_below_size=True, include
     The windows produced are views of some subsequence of a text. To use deep copies
     instead, pass `copy=True`.
 
-    Args:
-        texts: List of string sentences.
-        window_size: Size of sliding window.
-        copy: False to use views of the texts (default) or True to produce deep copies.
-        ignore_below_size: ignore documents that are not at least `window_size` in length (default behavior).
-            If False, the documents below `window_size` will be yielded as the full document.
+    Parameters
+    ----------
+    texts : list
+        List of string sentences.
+    window_size : int
+        Size of sliding window.
+
+    Other Parameters
+    ----------------
+    copy : bool
+        False to use views of the texts (default) or True to produce deep copies.
+    ignore_below_size : bool
+        ignore documents that are not at least `window_size` in length (default behavior).
+        If False, the documents below `window_size` will be yielded as the full document.
 
     """
     for doc_num, document in enumerate(texts):
@@ -1263,18 +1621,28 @@ def _iter_windows(document, window_size, copy=False, ignore_below_size=True):
 def flatten(nested_list):
     """Recursively flatten out a nested list.
 
-    Args:
-        nested_list (list): possibly nested list.
+    Parameters
+    ----------
+    nested_list : list
+        possibly nested list.
 
-    Returns:
-        list: flattened version of input, where any list elements have been unpacked into the
-            top-level list in a recursive fashion.
+    Returns
+    -------
+    list
+        flattened version of input, where any list elements have been unpacked into the
+        top-level list in a recursive fashion.
     """
     return list(lazy_flatten(nested_list))
 
 
 def lazy_flatten(nested_list):
-    """Lazy version of `flatten`."""
+    """Lazy version of `flatten`.
+    Parameters
+    ----------
+    nested_list : list
+        nested list
+    
+    """
     for el in nested_list:
         if isinstance(el, collections.Iterable) and not isinstance(el, string_types):
             for sub in flatten(el):
@@ -1283,40 +1651,3 @@ def lazy_flatten(nested_list):
             yield el
 
 
-def deprecated(reason):
-    """Decorator which can be used to mark functions as deprecated. It will result in a warning being emitted
-    when the function is used, base code from https://stackoverflow.com/a/40301488/8001386.
-
-    """
-    if isinstance(reason, string_types):
-        def decorator(func):
-            fmt = "Call to deprecated `{name}` ({reason})."
-
-            @wraps(func)
-            def new_func1(*args, **kwargs):
-                warnings.warn(
-                    fmt.format(name=func.__name__, reason=reason),
-                    category=DeprecationWarning,
-                    stacklevel=2
-                )
-                return func(*args, **kwargs)
-
-            return new_func1
-        return decorator
-
-    elif inspect.isclass(reason) or inspect.isfunction(reason):
-        func = reason
-        fmt = "Call to deprecated `{name}`."
-
-        @wraps(func)
-        def new_func2(*args, **kwargs):
-            warnings.warn(
-                fmt.format(name=func.__name__),
-                category=DeprecationWarning,
-                stacklevel=2
-            )
-            return func(*args, **kwargs)
-        return new_func2
-
-    else:
-        raise TypeError(repr(type(reason)))
