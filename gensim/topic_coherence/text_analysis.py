@@ -57,8 +57,8 @@ def _ids_to_words(ids, dictionary):
     >>> dictionary = Dictionary()
     >>> ids = {1: 'fake', 4: 'cats'}
     >>> dictionary.id2token = {1: 'fake', 2: 'tokens', 3: 'rabbids', 4: 'cats'}
+    >>> # should be set(['cats', 'fake'])
     >>> text_analysis._ids_to_words(ids, dictionary)
-    set(['cats', 'fake'])
 
     """
     if not dictionary.id2token:  # may not be initialized in the standard gensim.corpora.Dictionary
@@ -94,8 +94,8 @@ class BaseAnalyzer(object):
     >>> from gensim.topic_coherence import text_analysis
     >>> ids = {1: 'fake', 4: 'cats'}
     >>> base = text_analysis.BaseAnalyzer(ids)
+    >>> # should return {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
     >>> print base.relevant_ids, base._vocab_size, base.id2contiguous, base.log_every, base._num_docs
-    {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
 
     """
     def __init__(self, relevant_ids):
@@ -161,11 +161,10 @@ class UsesDictionary(BaseAnalyzer):
     >>> ids = {1: 'foo', 2: 'bar'}
     >>> dictionary = Dictionary([['foo','bar','baz'], ['foo','bar','bar','baz']])
     >>> usesdict = text_analysis.UsesDictionary(ids, dictionary)
+    >>> # should be set([u'foo', u'baz']) Dictionary(3 unique tokens: [u'baz', u'foo', u'bar']) {u'baz': 2, u'foo': 1, u'bar': 0}
     >>> print usesdict.relevant_words, usesdict.dictionary, usesdict.token2id
-    set([u'foo', u'baz']) Dictionary(3 unique tokens: [u'baz', u'foo', u'bar']) {u'baz': 2, u'foo': 1, u'bar': 0}
 
     """
-
     def __init__(self, relevant_ids, dictionary):
         super(UsesDictionary, self).__init__(relevant_ids)
         self.relevant_words = _ids_to_words(self.relevant_ids, dictionary)
@@ -202,11 +201,10 @@ class InvertedIndexBased(BaseAnalyzer):
     >>> from gensim.topic_coherence import text_analysis
     >>> ids = {1: 'fake', 4: 'cats'}
     >>> ininb = text_analysis.InvertedIndexBased(ids)
+    >>> # should be [set([]) set([])]
     >>> print ininb._inverted_index
-    [set([]) set([])]
 
     """
-
     def __init__(self, *args):
         super(InvertedIndexBased, self).__init__(*args)
         self._inverted_index = np.array([set() for _ in range(self._vocab_size)])
@@ -228,8 +226,7 @@ class CorpusAccumulator(InvertedIndexBased):
     """Gather word occurrence stats from a corpus by iterating over its BoW representation."""
 
     def analyze_text(self, text, doc_num=None):
-        """
-
+        """Build an inverted index from a sequence of corpus texts.
 
         Examples
         --------
@@ -241,7 +238,7 @@ class CorpusAccumulator(InvertedIndexBased):
         >> > print
         corac._inverted_index
 
-        # Doesn't work
+        #TODO:  Doesn't work
         """
         doc_words = frozenset(x[0] for x in text)
         top_ids_in_doc = self.relevant_ids.intersection(doc_words)
@@ -262,7 +259,7 @@ class WindowedTextsAnalyzer(UsesDictionary):
     ----------
     relevant_words : set
         Set of words.
-    dictionary: tuple
+    dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
         Dictionary instance with mappings for the relevant_ids.
     """
 
@@ -290,7 +287,7 @@ class WindowedTextsAnalyzer(UsesDictionary):
                     for w in text], dtype=dtype)
 
     def text_is_relevant(self, text):
-        """Return True if the text has any relevant words, else False."""
+        """Check if the text has any relevant words."""
         for word in text:
             if word in self.relevant_words:
                 return True
@@ -439,7 +436,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
         Returns
         -------
-        tuple
+        (list of lists)
             Tuple of (list of workers, input queue, output queue).
         """
         input_q = mp.Queue(maxsize=self.processes)
@@ -454,8 +451,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         return workers, input_q, output_q
 
     def yield_batches(self, texts):
-        """Return a generator over the given texts that yields batches of `batch_size` texts at a time.
-        """
+        """Return a generator over the given texts that yields batches of `batch_size` texts at a time."""
         batch = []
         for text in self._iter_texts(texts):
             batch.append(text)
