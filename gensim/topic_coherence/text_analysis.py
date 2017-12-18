@@ -324,10 +324,14 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         return self
 
     def partial_accumulate(self, texts, window_size):
-        """Meant to be called several times to accumulate partial results. The final
-        accumulation should be performed with the `accumulate` method as opposed to this one.
+        """Meant to be called several times to accumulate partial results.
+
+        Notes
+        -----
+        The final accumulation should be performed with the `accumulate` method as opposed to this one.
         This method does not ensure the co-occurrence matrix is in lil format and does not
         symmetrize it after accumulation.
+
         """
         self._current_doc_num = -1
         self._token_at_edge = None
@@ -359,8 +363,12 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
     def _symmetrize(self):
         """Word pairs may have been encountered in (i, j) and (j, i) order.
+
+        Notes
+        -----
         Rather than enforcing a particular ordering during the update process,
         we choose to symmetrize the co-occurrence matrix after accumulation has completed.
+
         """
         co_occ = self._co_occurrences
         co_occ.setdiag(self._occurrences)  # diagonal should be equal to occurrence counts
@@ -380,9 +388,7 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
 
 class PatchedWordOccurrenceAccumulator(WordOccurrenceAccumulator):
-    """Monkey patched for multiprocessing worker usage,
-    to move some of the logic to the master process.
-    """
+    """Monkey patched for multiprocessing worker usage, to move some of the logic to the master process."""
     def _iter_texts(self, texts):
         return texts  # master process will handle this
 
@@ -427,6 +433,9 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
     def start_workers(self, window_size):
         """Set up an input and output queue and start processes for each worker.
+
+        Notes
+        -----
         The input queue is used to transmit batches of documents to the workers.
         The output queue is used by workers to transmit the WordOccurrenceAccumulator instances.
 
@@ -477,16 +486,20 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
     def terminate_workers(self, input_q, output_q, workers, interrupted=False):
         """Wait until all workers have transmitted their WordOccurrenceAccumulator instances,
-        then terminate each. We do not use join here because it has been shown to have some issues
+        then terminate each.
+
+        Notes
+        -----
+        We do not use join here because it has been shown to have some issues
         in Python 2.7 (and even in later versions). This method also closes both the input and output
         queue.
-
         If `interrupted` is False (normal execution), a None value is placed on the input queue for
         each worker. The workers are looking for this sentinel value and interpret it as a signal to
         terminate themselves. If `interrupted` is True, a KeyboardInterrupt occurred. The workers are
         programmed to recover from this and continue on to transmit their results before terminating.
         So in this instance, the sentinel values are not queued, but the rest of the execution
         continues as usual.
+
         """
         if not interrupted:
             for _ in workers:
