@@ -46,9 +46,9 @@ import re
 import sys
 from xml.etree import cElementTree
 
+
 from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, get_namespace, utils
 from smart_open import smart_open
-
 
 logger = logging.getLogger(__name__)
 
@@ -142,14 +142,14 @@ def extract_page_xmls(f):
         XML strings for page tags.
 
     """
-    elems = (elem for _, elem in cElementTree.iterparse(f, events=("end",)))
+    elems = cElementTree.iterparse(f, events=("end",))
 
-    elem = next(elems)
+    _, elem = next(elems)
     namespace = get_namespace(elem.tag)
     ns_mapping = {"ns": namespace}
     page_tag = "{%(ns)s}page" % ns_mapping
 
-    for elem in elems:
+    for _, elem in elems:
         if elem.tag == page_tag:
             yield cElementTree.tostring(elem)
             # Prune the element tree, as per
@@ -264,25 +264,22 @@ class _WikiSectionsCorpus(WikiCorpus):
         total_articles, total_sections = 0, 0
         page_xmls = extract_page_xmls(self.fileobj)
         pool = multiprocessing.Pool(self.processes)
-        # process the corpus in smaller chunks of docs, because multiprocessing.Pool
-        # is dumb and would load the entire input into RAM at once...
-        for group in utils.chunkize(page_xmls, chunksize=10 * self.processes, maxsize=1):
-            for article_title, sections in pool.imap(segment, group):  # chunksize=10):
-                # article redirects are pruned here
-                if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):  # filter non-articles
-                    skipped_namespace += 1
-                    continue
-                if not sections or sections[0][1].lstrip().lower().startswith("#redirect"):  # filter redirect
-                    skipped_redirect += 1
-                    continue
-                if sum(len(body.strip()) for (_, body) in sections) < self.min_article_character:
-                    # filter stubs (incomplete, very short articles)
-                    skipped_length += 1
-                    continue
+        for article_title, sections in pool.imap_unordered(segment, page_xmls, chunksize=10):
+            # article redirects are pruned here
+            if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):  # filter non-articles
+                skipped_namespace += 1
+                continue
+            if not sections or sections[0][1].lstrip().lower().startswith("#redirect"):  # filter redirect
+                skipped_redirect += 1
+                continue
+            if sum(len(body.strip()) for (_, body) in sections) < self.min_article_character:
+                # filter stubs (incomplete, very short articles)
+                skipped_length += 1
+                continue
 
-                total_articles += 1
-                total_sections += len(sections)
-                yield (article_title, sections)
+            total_articles += 1
+            total_sections += len(sections)
+            yield (article_title, sections)
         logger.info(
             "finished processing %i articles with %i sections (skipped %i redirects, %i stubs, %i ignored namespaces)",
             total_articles, total_sections, skipped_redirect, skipped_length, skipped_namespace)
