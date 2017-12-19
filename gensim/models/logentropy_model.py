@@ -3,17 +3,18 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+"""This module contains LogEntropyModel class"""
+
 import logging
 import math
-from gensim import interfaces, matutils, utils
 
+from gensim import interfaces, matutils, utils
 
 logger = logging.getLogger('gensim.models.logentropy_model')
 
 
 class LogEntropyModel(interfaces.TransformationABC):
-    """
-    Objects of this class realize the transformation between word-document
+    """Objects of this class realize the transformation between word-document
     co-occurence matrix (integers) into a locally/globally weighted matrix
     (positive floats).
 
@@ -33,10 +34,11 @@ class LogEntropyModel(interfaces.TransformationABC):
 
     The main methods are:
 
-    1. constructor, which calculates the global weighting for all terms in
-        a corpus.
-    2. the [] method, which transforms a simple count representation into the
-        log entropy normalized space.
+    1. constructor, which creates an instance and initiates internal statistics based on a training
+    corpus and calls `initialize` method.
+
+    2. the `initialize` method. It calculates the global weighting for all terms in a given corpus
+    and transforms the simple count representation into the log entropy normalized space.
 
     >>> log_ent = LogEntropyModel(corpus)
     >>> print(log_ent[some_doc])
@@ -46,9 +48,15 @@ class LogEntropyModel(interfaces.TransformationABC):
     """
 
     def __init__(self, corpus, normalize=True):
-        """
-        `normalize` dictates whether the resulting vectors will be
-        set to unit length.
+        """Constructs an instance of LogEntropyModel, initializes internal statistics of the corpus
+        and calls `initialize` method automatically.
+
+        Parameters
+        ----------
+        corpus : iterable object
+            itertable consisting of word-documents that are made up of term id and term frequency.
+        normalize : bool, optional
+            `normalize` dictates whether the resulting vectors will be set to unit length.
         """
         self.normalize = normalize
         self.n_docs = 0
@@ -61,9 +69,15 @@ class LogEntropyModel(interfaces.TransformationABC):
         return "LogEntropyModel(n_docs=%s, n_words=%s)" % (self.n_docs, self.n_words)
 
     def initialize(self, corpus):
-        """
-        Initialize internal statistics based on a training corpus. Called
-        automatically from the constructor.
+        """Calculates the global weighting for all terms in a given corpus and transforms the simple
+        count representation into the log entropy normalized space.
+
+        Called automatically from the constructor.
+
+        Parameters
+        ----------
+        corpus : iterable object
+            itertable consisting of word-documents that are made up of term-id and term-frequency.
         """
         logger.info("calculating counts")
         glob_freq = {}
@@ -97,8 +111,7 @@ class LogEntropyModel(interfaces.TransformationABC):
             self.entr[key] = 1 + self.entr[key] / math.log(self.n_docs + 1)
 
     def __getitem__(self, bow):
-        """
-        Return log entropy representation of the input vector and/or corpus.
+        """Return log entropy representation of the input vector and/or corpus.
         """
         # if the input vector is in fact a corpus, return a transformed corpus
         is_corpus, bow = utils.is_corpus(bow)
