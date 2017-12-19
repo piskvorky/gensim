@@ -252,7 +252,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         return trained_word_count
 
     def train(self, data_iterable, epochs=None, total_examples=None,
-              total_words=None, queue_factor=2, callbacks=None, report_delay=1.0, **kwargs):
+              total_words=None, queue_factor=2, callbacks=(), report_delay=1.0, **kwargs):
         """Handle multi-worker training."""
         self._set_train_params(**kwargs)
         self.epochs = epochs
@@ -268,7 +268,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         raw_word_count = 0
         start = default_timer() - 0.00001
 
-        for cur_epoch in self.epochs:
+        for cur_epoch in range(self.epochs):
             for callback in callbacks:
                 callback.on_epoch_begin(self)
 
@@ -325,7 +325,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         """
         raise NotImplementedError
 
-    def most_similar(self, entity1, **kwargs):
+    def most_similar(self, **kwargs):
         """Find the top-N most similar entities.
         Possibly have `positive` and `negative` list of entities in `**kwargs`.
         """
