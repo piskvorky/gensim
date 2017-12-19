@@ -113,12 +113,18 @@ class RpModel(interfaces.TransformationABC):
 
         Parameters
         ----------
-        bow : :class:`~interfaces.CorpusABC` (iterable of documents) or list of (int, int).
-            Input document
+        bow : :class:`~interfaces.CorpusABC`
+            Input document is an iterable of documents or list of (int, int)
 
         Examples
         ---------- 
+        >>> from gensim.models import RpModel
+        >>> from gensim.corpora import Dictionary
+        >>> from gensim.test.utils import common_texts
+        >>> dictionary = Dictionary(common_texts)
+        >>> corpus = [dictionary.doc2bow(text) for text in common_texts]
         >>> rp = RpModel(corpus)
+        >>> some_doc = dictionary.doc2bow(common_texts[0])
         >>> print(rp[some_doc])
 
         """
