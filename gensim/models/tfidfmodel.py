@@ -165,12 +165,12 @@ class TfidfModel(interfaces.TransformationABC):
 
         # make sure there are no explicit zeroes in the vector (must be sparse)
         sparse_norm_vector = [
-            (termid, weight) for termid, weight in norm_vector if                       abs(weight) > eps
+            (termid, weight) for termid, weight in norm_vector if abs(weight) > eps
         ]
 
         n_samples = len(self.idfs)
-        piv_lis = [0]*n_samples
-        lis = [0]*n_samples
+        piv_lis = np.zeros(n_samples, dtype=int)
+        lis = np.zeros(n_samples, dtype=int)
 
         if self.pivot_norm is True:
             for termid, weight in vector:
@@ -178,18 +178,17 @@ class TfidfModel(interfaces.TransformationABC):
 
             lis = np.array(lis)
             for termid, norm_weight in vector:
-                if self.pivot == None: 
+                if self.pivot is None:
                     self.pivot = lis.mean()
-                pivoted_vector = (1 - self.slope)*self.pivot + self.slope*norm_weight
+                pivoted_vector = (1 - self.slope) * self.pivot + self.slope * norm_weight
                 piv_lis[termid] = pivoted_vector
 
-
             piv_lis = np.array(piv_lis)
-            piv_lis[piv_lis==0]=1
+            piv_lis[piv_lis == 0] = 1
 
-            diag_mat = sp.spdiags(1./piv_lis, diags=0, m=n_samples, n=n_samples, format='csr')
+            diag_mat = sp.spdiags(1. / piv_lis, diags=0, m=n_samples, n=n_samples, format='csr')
             piv_norm_vector = diag_mat.dot(np.array(lis))
-            
+
             return piv_norm_vector
 
         return vector
