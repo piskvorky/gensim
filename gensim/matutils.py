@@ -41,6 +41,21 @@ def argsort(x, topn=None, reverse=False):
 
     If reverse is True, return the greatest elements instead, in descending order.
 
+    Parameters
+    ----------
+    x : array_like
+        Array to sort.
+    topn : int or None, optional
+        Number of indices of the smallest(greatest) elements to be returned if given,
+        otherwise indices of all elements will be returned in ascending(descending) order.
+    reverse : bool
+        If True, return the `topn` greatest elements, in descending order.
+    Returns
+    -------
+    index_array : ndarray, int
+        Array of `topn` indices that.sort the array in ascending order
+        (descending order if reverse is True).
+
     """
     x = np.asarray(x)  # unify code path for when `x` is not a np array (list, tuple...)
     if topn is None:
@@ -67,6 +82,30 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
     The input corpus may be a non-repeatable stream (generator).
 
     This is the mirror function to `Sparse2Corpus`.
+
+    Parameters
+    ----------
+    corpus : iterable
+        Iterable of documents, a streamed corpus to be converted,
+        could be a non-repeatable stream.
+    num_terms : int or None, optional
+        If provided, the `num_terms` attributes in the corpus will be ignored.
+    dtype : data-type, optional
+        Default value is `np.float64`.
+    num_docs : int or None, optional
+        If provided, the `num_docs` attributes in the corpus will be ignored.
+    num_nnz : int or None, optional
+        If provided, the `num_nnz` attributes in the corpus will be ignored.
+    printprogress : int, optional
+        Print progress for every `printprogress` number of documents,
+        if 0(default) it will not the printed.
+    Returns
+    -------
+    output_matrix : scipy.sparse.csc_matrix
+        A scipy.sparse.csc_matrix that is converted from the input corpus.
+    See Also
+    --------
+    Sparse2Corpus : Convert a matrix in scipy.sparse format into a streaming gensim corpus.
 
     """
     try:
@@ -155,8 +194,7 @@ def any2sparse(vec, eps=1e-9):
 
 
 def scipy2scipy_clipped(matrix, topn, eps=1e-9):
-    """
-    Return a scipy.sparse vector/matrix consisting of 'topn' elements of the greatest magnitude (absolute value).
+    """Return a scipy.sparse vector/matrix consisting of 'topn' elements of the greatest magnitude (absolute value).
     """
     if not scipy.sparse.issparse(matrix):
         raise ValueError("'%s' is not a scipy sparse vector." % matrix)
@@ -288,6 +326,24 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
     a more memory-efficient code path is taken.
 
     This is the mirror function to `Dense2Corpus`.
+
+    Parameters
+    ----------
+    corpus : iterable
+        Iterable of documents, a streamed corpus to be converted.
+    num_terms : int
+        The number of features, must supply.
+    num_docs : int or None, optional
+        If provided, the `num_docs` attributes in the corpus will be ignored.
+    dtype : data-type, optional
+        Default value is `np.float32`.
+    Returns
+    -------
+    output_array : dense np array
+        A dense np array that is converted from the input corpus.
+    See Also
+    --------
+    Dense2Corpus : Convert a matrix in scipy.sparse format into a streaming gensim corpus.
 
     """
     if num_docs is not None:
@@ -714,6 +770,30 @@ class MmWriter(object):
 
         Note that the documents are processed one at a time, so the whole corpus
         is allowed to be larger than the available RAM.
+
+        Parameters
+        ----------
+        fname : str
+            Filename of the resulting file.
+        corpus : iterable
+            Iterable of documents, the corpus to be saved to disk.
+        progress_cnt : int, optional
+            Print progress for every `progress_cnt` number of documents,
+            default to be 1000.
+        index : bool, optional
+            If True.the offsets will be return, otherwise return nothing.
+        num_terms : int or None, optional
+            If provided, the `num_terms` attributes in the corpus will be ignored.
+        metadata : bool, optional
+            If True.a metadata file will be generated.
+        Returns
+        -------
+        offsets : list of int or None
+            If index is True.the offsets will be return, otherwise return nothing..
+        See Also
+        --------
+        MmCorpus.save_corpus : Save a corpus in the Matrix Market format to disk.
+
         """
         mw = MmWriter(fname)
 
