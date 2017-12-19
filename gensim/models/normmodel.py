@@ -13,15 +13,28 @@ logger = logging.getLogger(__name__)
 
 class NormModel(interfaces.TransformationABC):
     """
-    Objects of this class realize the explicit normalization of
-    vectors. Supported norms are l1' and 'l2' with 'l2' being
-    default.
+    Objects of this class realize the explicit normalization of vectors.
 
-    The main methods are:
+    Parameters
+    ----------
+    corpus : iterable
+        Iterable of documents.
+    norm : {'l1', 'l2'}
+        Norm used to normalize. l1 and l2 norms are supported (l2 is default)
+    bow :
+        One of the documents. To be treated as a
 
-    1. Constructor which normalizes the terms in the given corpus document-wise.
-    2. The normalize() method which normalizes a simple count representation.
-    3. The [] transformation which internally calls the self.normalize() method.
+    Methods
+    -------
+
+    __init__(corpus=None, norm='l2')
+        Normalizes the terms in the given corpus document-wise.
+    normalize()
+        Normalizes a simple count representation.
+    calc_norm(corpus):
+        Calculates the norm by calling matutils.unitvec with the norm parameter.
+    __getitem__(bow)
+        Calls the self.normalize() method.
 
     >>> norm_l2 = NormModel(corpus)
     >>> print(norm_l2[some_doc])
