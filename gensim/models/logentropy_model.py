@@ -3,7 +3,11 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains LogEntropyModel class"""
+"""This module implements a Log Entropy Model that produces weighted log term frequency over document frequency.
+
+Lee et al. 2005. An Empirical Evaluation of Models of Text Document Similarity.
+https://escholarship.org/uc/item/48g155nq
+"""
 
 import logging
 import math
@@ -53,10 +57,11 @@ class LogEntropyModel(interfaces.TransformationABC):
 
         Parameters
         ----------
-        corpus : iterable object
+        corpus : iterable of list of (int, int)
             itertable consisting of word-documents that are made up of term id and term frequency.
         normalize : bool, optional
-            `normalize` dictates whether the resulting vectors will be set to unit length.
+            `normalize` dictates whether the resulting vectors will be set to unit length. If normalize=True (default),
+            the resulted log entropy weighted vector will be normalized to length of 1, otherwise doesn't normalize.
         """
         self.normalize = normalize
         self.n_docs = 0
@@ -76,7 +81,7 @@ class LogEntropyModel(interfaces.TransformationABC):
 
         Parameters
         ----------
-        corpus : iterable object
+        corpus : iterable of list of (int, int)
             itertable consisting of word-documents that are made up of term-id and term-frequency.
         """
         logger.info("calculating counts")
