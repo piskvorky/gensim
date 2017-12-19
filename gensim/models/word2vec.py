@@ -800,8 +800,7 @@ class Word2Vec(BaseAny2VecModel):
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table
-        kwargs['ignore'] = kwargs.get('ignore', ['wv.vectors_norm', 'trainables.cum_table'])
-        # FIXME: handle ignoring nested attributes
+        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'cum_table'])
         super(Word2Vec, self).save(*args, **kwargs)
 
     save.__doc__ = utils.SaveLoad.save.__doc__
@@ -1211,6 +1210,11 @@ class Word2VecTrainables(BaseModelTrainables):
         self.hs = hs
         self.negative = negative
         self.hashfxn = hashfxn
+
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm'])
+        super(Word2VecTrainables, self).save(*args, **kwargs)
 
     def prepare_weights(self, update=False, vocabulary=None):
         """Build tables and model weights based on final vocabulary settings."""
