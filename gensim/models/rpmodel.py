@@ -49,8 +49,8 @@ class RpModel(interfaces.TransformationABC):
 
         Parameters
         ----------
-        corpus : interfaces.CorpusABC
-        id2word : dict of int tostring
+        corpus : :class:`~gensim.interfaces.CorpusABC` 
+        id2word : dict of (int, string)
         num_topics : int
 
         """
@@ -130,7 +130,8 @@ class RpModel(interfaces.TransformationABC):
 
         Parameters
         ----------
-        state : state of the class
+        state : dict
+           State of the class
         """
         self.__dict__ = state
         self.freshly_loaded = True
