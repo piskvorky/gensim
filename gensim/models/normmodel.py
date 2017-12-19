@@ -21,8 +21,8 @@ class NormModel(interfaces.TransformationABC):
         Iterable of documents.
     norm : {'l1', 'l2'}
         Norm used to normalize. l1 and l2 norms are supported (l2 is default)
-    bow :
-        One of the documents. To be treated as a
+    bow : str
+        One of the documents.
 
     Methods
     -------
