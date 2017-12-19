@@ -14,22 +14,23 @@ from six import iteritems
 
 logger = logging.getLogger(__name__)
 
+
 def resolve_weights(smartirs):
-    if not isinstance(smartirs, str) or len(smartirs)!=3:
-        raise ValueError('Expected a string of length 3 except got ' + smartirs):
+    if not isinstance(smartirs, str) or len(smartirs) != 3:
+        raise ValueError('Expected a string of length 3 except got ' + smartirs)
 
     w_tf, w_df, w_n = smartirs
 
     if w_tf not in 'nlabL':
-      raise ValueError('Expected term frequency weight to be one of nlabL, except got ' + n_tf)
+        raise ValueError('Expected term frequency weight to be one of nlabL, except got ' + w_tf)
 
-    if w_idf not in 'ntp':
-      raise ValueError('Expected inverse document frequency weight to be one of ntp, except got ' + n_idf)
+    if w_df not in 'ntp':
+        raise ValueError('Expected inverse document frequency weight to be one of ntp, except got ' + w_df)
 
     if w_n not in 'ncb':
-      raise ValueError('Expected normalization weight to be one of ncb, except got ' + n_n)
+        raise ValueError('Expected normalization weight to be one of ncb, except got ' + w_n)
 
-    return w_tf, w_idf, w_n
+    return w_tf, w_df, w_n
 
 
 def df2idf(docfreq, totaldocs, log_base=2.0, add=0.0):
