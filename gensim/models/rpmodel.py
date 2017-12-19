@@ -23,7 +23,7 @@ Model persistency is achieved via its load/save methods.
 
 Examples:
 ---------
->>> from gensim.models import RpModel 
+>>> from gensim.models import RpModel
 >>> from gensim.corpora import Dictionary
 >>> from gensim.test.utils import common_texts
 >>> dictionary = Dictionary(common_texts)
@@ -34,7 +34,8 @@ Examples:
 >>> rp.save('/tmp/foo.rp_model')
 
 
-.. [1] Kanerva et al., 2000, Random indexing of text samples for Latent Semantic Analysis, https://cloudfront.escholarship.org/dist/prd/content/qt5644k0w6/qt5644k0w6.pdf
+.. [1] Kanerva et al., 2000, Random indexing of text samples for Latent Semantic Analysis, 
+    https://cloudfront.escholarship.org/dist/prd/content/qt5644k0w6/qt5644k0w6.pdf
 
 """
 
@@ -59,7 +60,7 @@ class RpModel(interfaces.TransformationABC):
 
         Parameters
         ----------
-        corpus : :class:`~gensim.interfaces.CorpusABC` 
+        corpus : :class:`~gensim.interfaces.CorpusABC`
             Iterable of documents
 
         id2word : dict of (int, string)
@@ -117,7 +118,7 @@ class RpModel(interfaces.TransformationABC):
             Input document is an iterable of documents or list of (int, int)
 
         Examples
-        ---------- 
+        ----------
         >>> from gensim.models import RpModel
         >>> from gensim.corpora import Dictionary
         >>> from gensim.test.utils import common_texts
