@@ -9,7 +9,8 @@
 Objects of this class allow building and maintaining a model for Random Projections
 (also known as Random Indexing). 
 
-For theoretical background on RP, see:   Kanerva et al.: "Random indexing of text samples for Latent Semantic Analysis."
+For theoretical background on RP, see [1]_.
+:   Kanerva et al.: "Random indexing of text samples for Latent Semantic Analysis."
 
     The main methods are:
 
@@ -31,6 +32,10 @@ Examples:
 >>> some_doc = dictionary.doc2bow(common_texts[0])
 >>> print(rp[some_doc])
 >>> rp.save('/tmp/foo.rp_model')
+
+
+.. [1] Kanerva et al., 2000, Random indexing of text samples for Latent Semantic Analysis, https://cloudfront.escholarship.org/dist/prd/content/qt5644k0w6/qt5644k0w6.pdf
+
 """
 
 import logging
@@ -55,8 +60,13 @@ class RpModel(interfaces.TransformationABC):
         Parameters
         ----------
         corpus : :class:`~gensim.interfaces.CorpusABC` 
+            Iterable of documents
+
         id2word : dict of (int, string)
+            Mapping from word ids (integers) to words (strings)
+
         num_topics : int
+            Number of topics
 
         """
         self.id2word = id2word
@@ -75,6 +85,7 @@ class RpModel(interfaces.TransformationABC):
         Parameters
         ----------
         corpus : :class:`~interfaces.CorpusABC`
+          Iterable of documents
 
         """
         if self.id2word is None:
@@ -103,6 +114,7 @@ class RpModel(interfaces.TransformationABC):
         Parameters
         ----------
         bow : :class:`~interfaces.CorpusABC` (iterable of documents) or list of (int, int).
+            Input document
 
         Examples:
         -------------
