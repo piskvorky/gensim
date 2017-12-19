@@ -69,7 +69,7 @@ class RpModel(interfaces.TransformationABC):
 
         Parameters
         ----------
-        corpus : interfaces.CorpusABC
+        corpus : :class:`~interfaces.CorpusABC`
 
         """
         if self.id2word is None:
@@ -97,7 +97,13 @@ class RpModel(interfaces.TransformationABC):
 
         Parameters
         ----------
-        bow : interfaces.CorpusABC or document in sparse document format (=sequence of 2-tuples).
+        bow : :class:`~interfaces.CorpusABC` (iterable of documents) or list of (int, int).
+
+        Examples:
+        -------------
+        >>> rp = RpModel(corpus)
+        >>> print(rp[some_doc])
+
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
         is_corpus, bow = utils.is_corpus(bow)
@@ -119,5 +125,12 @@ class RpModel(interfaces.TransformationABC):
         ]
 
     def __setstate__(self, state):
+        """
+        Sets the internal state and updates freshly_loaded to True. Called when unpicked.
+
+        Parameters
+        ----------
+        state : state of the class
+        """
         self.__dict__ = state
         self.freshly_loaded = True
