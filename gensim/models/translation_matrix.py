@@ -45,16 +45,36 @@ class Space(object):
     """
     An auxiliary class for storing the the words space
 
-    Attributes:
-    `mat` (ndarray): each row is the word vector of the lexicon
-    `index2word` (list): a list of words in the `Space` object
-    `word2index` (dict): map the word to index
+    Parameters
+    ----------
+    matrix : numpy.array
+        N * length_of_word_vec, which store the word's vector
+    index2word : list
+        a list of words in the `Space` object
+    word2index : dict
+        a dict for word indexing
+
+    Attributes
+    ----------
+    mat : N-dimensional array
+        each row is the word vector of the lexicon
+    index2word : list
+        a list of words in the `Space` object
+    word2index : dict
+        map the word to index
+    
+    Methods
+    -------
+    __init__(matrix, index2word)
+        build a dictionary to map word to index
+    normalise()
+        Normalize the word vector's matrix
+
     """
     def __init__(self, matrix, index2word):
         """
-        `matrix`: N * length_of_word_vec, which store the word's vector
-        `index2word`: a list of words in the `Space` object
-        `word2index`: a dict which for word indexing
+        build a dictionary to map word to index 
+
         """
         self.mat = matrix
         self.index2word = index2word
