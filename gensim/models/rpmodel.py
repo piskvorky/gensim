@@ -5,6 +5,29 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
+"""
+Objects of this class allow building and maintaining a model for Random Projections
+(also known as Random Indexing). 
+
+For theoretical background on RP, see:   Kanerva et al.: "Random indexing of text samples for Latent Semantic Analysis."
+
+    The main methods are:
+
+    1. constructor, which creates the random projection matrix
+    2. the [] method, which transforms a simple count representation into the TfIdf
+       space.
+
+Model persistency is achieved via its load/save methods.
+
+
+Examples:
+---------
+>>> from gensim.models import rpmmodel
+>>> rp = RpModel(corpus)
+>>> print(rp[some_doc])
+>>> rp.save('/tmp/foo.rp_model')
+"""
+
 import logging
 
 import numpy as np
@@ -16,24 +39,6 @@ logger = logging.getLogger('gensim.models.rpmodel')
 
 
 class RpModel(interfaces.TransformationABC):
-    """
-    Objects of this class allow building and maintaining a model for Random Projections
-    (also known as Random Indexing). For theoretical background on RP, see:
-
-      Kanerva et al.: "Random indexing of text samples for Latent Semantic Analysis."
-
-    The main methods are:
-
-    1. constructor, which creates the random projection matrix
-    2. the [] method, which transforms a simple count representation into the TfIdf
-       space.
-
-    >>> rp = RpModel(corpus)
-    >>> print(rp[some_doc])
-    >>> rp.save('/tmp/foo.rp_model')
-
-    Model persistency is achieved via its load/save methods.
-    """
 
     def __init__(self, corpus, id2word=None, num_topics=300):
         """
