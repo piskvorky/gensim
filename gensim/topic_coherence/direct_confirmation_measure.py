@@ -86,7 +86,7 @@ def aggregate_segment_sims(segment_sims, with_std, with_support):
 
     Parameters
     ----------
-    segment_sims : list of float
+    segment_sims : iterable of float
         Similarity values to aggregate.
     with_std : bool
         Set to True to include standard deviation.

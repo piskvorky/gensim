@@ -49,7 +49,8 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
     ----------
     segmented_topics : list of lists of (int, `numpy.ndarray`)
         Output from the :func:`~gensim.topic_coherence.segmentation.s_one_set`.
-    accumulator : :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator`
+    accumulator : :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator` or
+                  :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator.
     with_std : bool
         True to also include standard deviation across topic segment sets
@@ -77,7 +78,7 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
     >>> dictionary = Dictionary()
     >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
     >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
-    >>> accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
+    >>> _ = accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
     >>>
     >>> # should be (0.726752426218 0.00695475919227)
     >>> mean, std = indirect_confirmation_measure.word2vec_similarity(segmentation, accumulator, with_std=True)[0]
@@ -186,7 +187,8 @@ class ContextVectorComputer(object):
         Confirmation measure.
     topics: list
         Topics.
-    accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
+    accumulator : :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator` or
+                  :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator from probability_estimation.
     gamma: float
         Value for computing vectors.
@@ -212,12 +214,12 @@ class ContextVectorComputer(object):
     >>> dictionary = Dictionary()
     >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
     >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
-    >>> accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
-    >>> cont_vect_comp = indirect_confirmation_measure.ContextVectorComputer(measure, topics, accumulator,1)
-    >>> # should be {1: 0, 2: 1}
+    >>> _ = accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
+    >>> cont_vect_comp = indirect_confirmation_measure.ContextVectorComputer(measure, topics, accumulator, 1)
     >>> cont_vect_comp.mapping
-    >>> # should be 2
+    {1: 0, 2: 1}
     >>> cont_vect_comp.vocab_size
+    2
 
     """
 
@@ -267,11 +269,11 @@ class ContextVectorComputer(object):
         return context_vector
 
     def _make_seg(self, segment_word_ids, topic_word_ids):
-        """Return context vectors for segmentations (Internal helper function).
+        """Return context vectors for segmentation (Internal helper function).
 
         Parameters
         ----------
-        segment_word_ids : list
+        segment_word_ids : iterable or int
             Ids of words in segment.
         topic_word_ids : list
             Ids of words in topic.
@@ -301,7 +303,7 @@ def _pair_npmi(pair, accumulator):
 
     Parameters
     ----------
-    pair : (str, str)
+    pair : (int, int)
         The pair of words (word_id1, word_id2).
     accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator from probability_estimation.
