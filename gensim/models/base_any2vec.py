@@ -8,6 +8,7 @@ from timeit import default_timer
 import threading
 from six import string_types
 from collections import defaultdict
+from numpy import vstack
 
 try:
     from queue import Queue
@@ -20,8 +21,8 @@ logger = logging.getLogger(__name__)
 # Public Interfaces
 class BaseAny2VecModel(utils.SaveLoad):
 
-    def __init__(self, data_iterable, workers=3, vector_size=100, epochs=5,
-                 callbacks=(), seed=1, batch_words=10000, **kwargs):
+    def __init__(self, workers=3, vector_size=100, epochs=5,
+                 callbacks=(), batch_words=10000):
         """Initialize model parameters.
         Subclass should initialize the following attributes:
         - self.kv (instance of concrete implementation of `BaseKeyedVectors` interface)
@@ -29,7 +30,6 @@ class BaseAny2VecModel(utils.SaveLoad):
         - self.trainables (instance of concrete implementation of `BaseTrainables` abstract clas)
         """
         self.vector_size = int(vector_size)
-        self.seed = seed
         self.workers = int(workers)
         self.epochs = epochs
         self.train_count = 0
@@ -42,10 +42,9 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Scan through all the data and create/update vocabulary.
         Should also initialize/reset/update vectors for new vocab entities.
         """
-        self.vocabulary.corpus_count, self.vocabulary.raw_vocab = self.vocabulary.scan_vocab(
-            data_iterable, progress_per=progress_per, **kwargs)
+        self.vocabulary.scan_vocab(data_iterable, progress_per=progress_per, **kwargs)
         self.vocabulary.prepare_vocab(update=update, **kwargs)
-        self.trainables.prepare_weights(self.vocabulary)
+        self.trainables.prepare_weights(update=update, vocabulary=self.vocabulary)
         self._set_keyedvectors()
 
     def _get_job_params(self):
@@ -111,52 +110,52 @@ class BaseAny2VecModel(utils.SaveLoad):
         logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
     def _job_producer(self, data_iterator, job_queue, cur_epoch=0, total_examples=None, total_words=None):
-            """Fill jobs queue using the input `data_iterator`."""
-            job_batch, batch_size = [], 0
-            pushed_words, pushed_examples = 0, 0
-            next_job_params = self._get_job_params()
-            job_no = 0
+        """Fill jobs queue using the input `data_iterator`."""
+        job_batch, batch_size = [], 0
+        pushed_words, pushed_examples = 0, 0
+        next_job_params = self._get_job_params()
+        job_no = 0
 
-            for data_idx, data in enumerate(data_iterator):
-                sentence_length = self._raw_word_count([data])
+        for data_idx, data in enumerate(data_iterator):
+            sentence_length = self._raw_word_count([data])
 
-                # can we fit this sentence into the existing job batch?
-                if batch_size + sentence_length <= self.batch_words:
-                    # yes => add it to the current job
-                    job_batch.append(data)
-                    batch_size += sentence_length
-                else:
-                    job_no += 1
-                    job_queue.put((job_batch, next_job_params))
-
-                    # update the learning rate for the next job
-                    if total_examples:
-                        # examples-based decay
-                        pushed_examples += len(job_batch)
-                        epoch_progress = 1.0 * pushed_examples / total_examples
-                    else:
-                        # words-based decay
-                        pushed_words += self._raw_word_count(job_batch)
-                        epoch_progress = 1.0 * pushed_words / total_words
-                    next_job_params = self._update_job_params(next_job_params, epoch_progress, cur_epoch)
-
-                    # add the sentence that didn't fit as the first item of a new job
-                    job_batch, batch_size = [data], sentence_length
-            # add the last job too (may be significantly smaller than batch_words)
-            if job_batch:
+            # can we fit this sentence into the existing job batch?
+            if batch_size + sentence_length <= self.batch_words:
+                # yes => add it to the current job
+                job_batch.append(data)
+                batch_size += sentence_length
+            else:
                 job_no += 1
                 job_queue.put((job_batch, next_job_params))
 
-            if job_no == 0 and self.train_count == 0:
-                logger.warning(
-                    "train() called with an empty iterator (if not intended, "
-                    "be sure to provide a corpus that offers restartable iteration = an iterable)."
-                )
+                # update the learning rate for the next job
+                if total_examples:
+                    # examples-based decay
+                    pushed_examples += len(job_batch)
+                    epoch_progress = 1.0 * pushed_examples / total_examples
+                else:
+                    # words-based decay
+                    pushed_words += self._raw_word_count(job_batch)
+                    epoch_progress = 1.0 * pushed_words / total_words
+                next_job_params = self._update_job_params(next_job_params, epoch_progress, cur_epoch)
 
-            # give the workers heads up that they can finish -- no more work!
-            for _ in xrange(self.workers):
-                job_queue.put(None)
-            logger.debug("job loop exiting, total %i jobs", job_no)
+                # add the sentence that didn't fit as the first item of a new job
+                job_batch, batch_size = [data], sentence_length
+        # add the last job too (may be significantly smaller than batch_words)
+        if job_batch:
+            job_no += 1
+            job_queue.put((job_batch, next_job_params))
+
+        if job_no == 0 and self.train_count == 0:
+            logger.warning(
+                "train() called with an empty iterator (if not intended, "
+                "be sure to provide a corpus that offers restartable iteration = an iterable)."
+            )
+
+        # give the workers heads up that they can finish -- no more work!
+        for _ in xrange(self.workers):
+            job_queue.put(None)
+        logger.debug("job loop exiting, total %i jobs", job_no)
 
     def _log_epoch_progress(
         self, progress_queue, job_queue, cur_epoch=0, total_examples=None, total_words=None, report_delay=1.0):
@@ -404,14 +403,6 @@ class Callback(object):
         pass
 
 
-class VocabItem(object):
-    """A single vocabulary item, used for collecting per-word frequency, and it's mapped index."""
-
-    def __init__(self, **kwargs):
-        self.count = 0
-        self.__dict__.update(kwargs)
-
-
 class BaseVocabBuilder(utils.SaveLoad):
     """Class for managing vocabulary of a model. Takes care of building, pruning and updating vocabulary."""
     def __init__(self):
@@ -420,8 +411,8 @@ class BaseVocabBuilder(utils.SaveLoad):
 
     def scan_vocab(self, data_iterable, progress_per=10000, **kwargs):
         """Do an initial scan of all words appearing in data_iterable.
-        Return num_examples(total examples in data_iterable),
-        raw_vocab(collections.defaultdict(int) mapping str vocab elements to their counts)"""
+        Sets num_examples(total examples in data_iterable) and
+        raw_vocab(collections.defaultdict(int) mapping str vocab elements to their counts for all vocab words)"""
         raise NotImplementedError
 
     def prepare_vocab(self, update=False, **kwargs):
@@ -429,13 +420,14 @@ class BaseVocabBuilder(utils.SaveLoad):
 
 
 class BaseModelTrainables(utils.SaveLoad):
-    """Class for storing and initializing/updating the trainable weights of a model. Should also include
+    """Class for storing and initializing/updating the trainable weights of a model. Also includes
     tables required for training weights. """
-    def __init__(self):
+    def __init__(self, vector_size=None, seed=1):
         self.vectors = []
-        self.vector_size = None
+        self.vector_size = int(vector_size)
+        self.seed = seed
 
-    def prepare_weights(self, vocab):
+    def prepare_weights(self, update=False, vocabulary=None):
         raise NotImplementedError
 
     def reset_weights(self, vocab):
