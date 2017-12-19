@@ -116,8 +116,8 @@ class RpModel(interfaces.TransformationABC):
         bow : :class:`~interfaces.CorpusABC` (iterable of documents) or list of (int, int).
             Input document
 
-        Examples:
-        -------------
+        Examples
+        ---------- 
         >>> rp = RpModel(corpus)
         >>> print(rp[some_doc])
 
