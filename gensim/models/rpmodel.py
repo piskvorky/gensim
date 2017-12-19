@@ -45,6 +45,14 @@ class RpModel(interfaces.TransformationABC):
         `id2word` is a mapping from word ids (integers) to words (strings). It is
         used to determine the vocabulary size, as well as for debugging and topic
         printing. If not set, it will be determined from the corpus.
+
+
+        Parameters
+        ----------
+        corpus : interfaces.CorpusABC
+        id2word : dict of int tostring
+        num_topics : int
+
         """
         self.id2word = id2word
         self.num_topics = num_topics
@@ -57,6 +65,12 @@ class RpModel(interfaces.TransformationABC):
     def initialize(self, corpus):
         """
         Initialize the random projection matrix.
+
+
+        Parameters
+        ----------
+        corpus : interfaces.CorpusABC
+
         """
         if self.id2word is None:
             logger.info("no word id mapping provided; initializing from corpus, assuming identity")
@@ -80,6 +94,10 @@ class RpModel(interfaces.TransformationABC):
     def __getitem__(self, bow):
         """
         Return RP representation of the input vector and/or corpus.
+
+        Parameters
+        ----------
+        bow : interfaces.CorpusABC or document in sparse document format (=sequence of 2-tuples).
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
         is_corpus, bow = utils.is_corpus(bow)
