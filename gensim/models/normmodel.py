@@ -15,45 +15,54 @@ class NormModel(interfaces.TransformationABC):
     """
     Objects of this class realize the explicit normalization of vectors.
 
+    Model persistency is achieved via its load/save methods.
+
     Parameters
     ----------
     corpus : iterable
         Iterable of documents.
     norm : {'l1', 'l2'}
         Norm used to normalize. l1 and l2 norms are supported (l2 is default)
-    bow : str
-        One of the documents.
 
     Methods
     -------
 
     __init__(corpus=None, norm='l2')
         Normalizes the terms in the given corpus document-wise.
-    normalize()
-        Normalizes a simple count representation.
     calc_norm(corpus):
         Calculates the norm by calling matutils.unitvec with the norm parameter.
+    normalize(bow)
+        Normalizes a simple count representation.
     __getitem__(bow)
         Calls the self.normalize() method.
 
-    >>> norm_l2 = NormModel(corpus)
-    >>> print(norm_l2[some_doc])
-    >>> norm_l2.save('/tmp/foo.tfidf_model')
 
-    Model persistency is achieved via its load/save methods
+    Examples:
+    ---------
+
+    >>> from gensim.models import NormModel
+    >>> from gensim.corpora import Dictionary
+    >>> from gensim.test.utils import common_texts
+    >>> dictionary = Dictionary(common_texts)
+    >>> corpus = [dictionary.doc2bow(text) for text in common_texts]
+    >>> norm_l2 = NormModel(corpus)
+    >>> some_doc = dictionary.doc2bow(common_texts[0])
+    >>> print(norm_l2[some_doc])
+    >>> nm.save('/tmp/foo.norm_model')
     """
 
     def __init__(self, corpus=None, norm='l2'):
         """
-        Compute the 'l1' or 'l2' normalization by normalizing separately
-        for each doc in a corpus.
-        Formula for 'l1' norm for term 'i' in document 'j' in a corpus of 'D' documents is::
+        Compute the l1 or l2 normalization by normalizing separately for
+        each doc in a corpus.
+        If v_{i,j} is the 'i'th component of the vector representing document
+        'j', the l1 normalization is:
 
-          norml1_{i, j} = (i / sum(absolute(values in j)))
+        .. math:: norml1_{i, j} = \frac{v_{i,j}}{\sum_k |v_{k,j}|}
 
-        Formula for 'l2' norm for term 'i' in document 'j' in a corpus of 'D' documents is::
+        The l2 normalization is:
 
-          norml2_{i, j} = (i / sqrt(sum(square(values in j))))
+        .. math:: norml2_{i, j} = \frac{v_{i,j}}{\sqrt{\sum_k v_{k,j}^2}}
         """
         self.norm = norm
         if corpus is not None:
