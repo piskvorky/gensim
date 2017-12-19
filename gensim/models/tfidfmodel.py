@@ -10,7 +10,6 @@ import logging
 from gensim import interfaces, matutils, utils
 from six import iteritems
 
-import math
 import numpy as np
 
 logger = logging.getLogger(__name__)
