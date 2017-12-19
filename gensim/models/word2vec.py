@@ -281,54 +281,6 @@ class Word2Vec(BaseAny2VecModel):
                     "trim_rule provided, if any, will be ignored."
                 )
 
-    def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
-        """
-        Build vocabulary from a dictionary of word frequencies.
-        Build model vocabulary from a passed dictionary that contains (word,word count).
-        Words must be of type unicode strings.
-
-        Parameters
-        ----------
-        `word_freq` : dict
-            Word,Word_Count dictionary.
-        `keep_raw_vocab` : bool
-            If not true, delete the raw vocabulary after the scaling is done and free up RAM.
-        `corpus_count`: int
-            Even if no corpus is provided, this argument can set corpus_count explicitly.
-        `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
-        in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
-        Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
-        returns either `utils.RULE_DISCARD`, `utils.RULE_KEEP` or `utils.RULE_DEFAULT`.
-        `update`: bool
-            If true, the new provided words in `word_freq` dict will be added to model's vocab.
-
-        Returns
-        --------
-        None
-
-        Examples
-        --------
-        >>> from gensim.models.word2vec import Word2Vec
-        >>> model= Word2Vec()
-        >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
-        """
-        logger.info("Processing provided word frequencies")
-        # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq)
-        # to be directly the raw vocab
-        raw_vocab = word_freq
-        logger.info(
-            "collected %i different raw word, with total frequency of %i",
-            len(raw_vocab), sum(itervalues(raw_vocab))
-        )
-
-        # Since no sentences are provided, this is to control the corpus_count
-        self.corpus_count = corpus_count if corpus_count else 0
-        self.raw_vocab = raw_vocab
-
-        # trim by min_count & precalculate downsampling
-        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)
-        self.finalize_vocab(update=update)  # build tables & arrays
-
     def reset_from(self, other_model):
         """
         Borrow shareable pre-built structures (like vocab) from the other_model. Useful
@@ -336,9 +288,9 @@ class Word2Vec(BaseAny2VecModel):
         """
         self.wv.vocab = other_model.wv.vocab
         self.wv.index2word = other_model.wv.index2word
-        self.cum_table = other_model.cum_table
-        self.corpus_count = other_model.corpus_count
-        self.reset_weights()
+        self.trainables.cum_table = other_model.trainables.cum_table
+        self.vocabulary.corpus_count = other_model.vocabulary.corpus_count
+        self.trainables.reset_weights(vocabulary=self.vocabulary)
 
     def _set_keyedvectors(self):
         """Point `keyedvectors` attributes to corresponding `trainables`"""
