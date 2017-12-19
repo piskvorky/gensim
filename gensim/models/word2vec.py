@@ -281,6 +281,55 @@ class Word2Vec(BaseAny2VecModel):
                     "trim_rule provided, if any, will be ignored."
                 )
 
+    def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
+        """
+        Build vocabulary from a dictionary of word frequencies.
+        Build model vocabulary from a passed dictionary that contains (word,word count).
+        Words must be of type unicode strings.
+
+        Parameters
+        ----------
+        `word_freq` : dict
+            Word,Word_Count dictionary.
+        `keep_raw_vocab` : bool
+            If not true, delete the raw vocabulary after the scaling is done and free up RAM.
+        `corpus_count`: int
+            Even if no corpus is provided, this argument can set corpus_count explicitly.
+        `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
+        in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
+        Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+        returns either `utils.RULE_DISCARD`, `utils.RULE_KEEP` or `utils.RULE_DEFAULT`.
+        `update`: bool
+            If true, the new provided words in `word_freq` dict will be added to model's vocab.
+
+        Returns
+        --------
+        None
+
+        Examples
+        --------
+        >>> from gensim.models.word2vec import Word2Vec
+        >>> model= Word2Vec()
+        >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
+        """
+        logger.info("Processing provided word frequencies")
+        # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq)
+        # to be directly the raw vocab
+        raw_vocab = word_freq
+        logger.info(
+            "collected %i different raw word, with total frequency of %i",
+            len(raw_vocab), sum(itervalues(raw_vocab))
+        )
+
+        # Since no sentences are provided, this is to control the corpus_count
+        self.vocabulary.corpus_count = corpus_count if corpus_count else 0
+        self.vocabulary.raw_vocab = raw_vocab
+
+        # trim by min_count & precalculate downsampling
+        self.vocabulary.prepare_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)
+        self.trainables.prepare_weights(update=update, vocabulary=self.vocabulary)  # build tables & arrays
+        self._set_keyedvectors()
+
     def reset_from(self, other_model):
         """
         Borrow shareable pre-built structures (like vocab) from the other_model. Useful
@@ -342,11 +391,18 @@ class Word2Vec(BaseAny2VecModel):
 
     def _set_train_params(self, **kwargs):
         if 'compute_loss' in kwargs:
-            print kwargs['compute_loss']
             self.compute_loss = kwargs['compute_loss']
         self.running_training_loss = 0
 
+    def _set_params_from_kv(self):
+        self.trainables.vectors = self.wv.vectors
+        self.trainables.vector_size = self.wv.vector_size
+        self.vocabulary.vocab = self.wv.vocab
+        self.vocabulary.index2word = self.wv.index2word
+
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
+        if self.wv:
+            self._set_params_from_kv()
         if self.model_trimmed_post_training:
             raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
 
@@ -401,7 +457,7 @@ class Word2Vec(BaseAny2VecModel):
         logger.info(
             "scoring sentences with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s and negative=%s",
-            self.workers, len(self.wv.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative
+            self.workers, len(self.wv.vocab), self.vector_size, self.sg, self.hs, self.vocabulary.sample, self.negative
         )
 
         if not self.wv.vocab:
@@ -416,7 +472,7 @@ class Word2Vec(BaseAny2VecModel):
         def worker_loop():
             """Compute log probability for each sentence, lifting lists of sentences from the jobs queue."""
             work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
-            neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
+            neu1 = matutils.zeros_aligned(self.vector_size, dtype=REAL)
             while True:
                 job = job_queue.get()
                 if job is None:  # signal to finish
@@ -641,7 +697,7 @@ class Word2Vec(BaseAny2VecModel):
                 "so you need to have run word2vec with negative > 0 for this to work."
             )
 
-        if not hasattr(self.wv, 'syn0') or not hasattr(self, 'syn1neg'):
+        if not hasattr(self.wv, 'vectors') or not hasattr(self.trainables, 'syn1neg'):
             raise RuntimeError("Parameters required for predicting the output words not found.")
 
         word_vocabs = [self.wv.vocab[w] for w in context_words_list if w in self.wv.vocab]
@@ -651,11 +707,11 @@ class Word2Vec(BaseAny2VecModel):
 
         word2_indices = [word.index for word in word_vocabs]
 
-        l1 = np_sum(self.wv.syn0[word2_indices], axis=0)
+        l1 = np_sum(self.wv.vectors[word2_indices], axis=0)
         if word2_indices and self.cbow_mean:
             l1 /= len(word2_indices)
 
-        prob_values = exp(dot(l1, self.syn1neg.T))  # propagate hidden -> output and take softmax to get probabilities
+        prob_values = exp(dot(l1, self.trainables.syn1neg.T))  # propagate hidden -> output and take softmax to get probabilities
         prob_values /= sum(prob_values)
         top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
         # returning the most probable output words with their probabilities
@@ -744,8 +800,8 @@ class Word2Vec(BaseAny2VecModel):
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'table', 'cum_table'])
-
+        kwargs['ignore'] = kwargs.get('ignore', ['wv.vectors_norm', 'trainables.cum_table'])
+        # FIXME: handle ignoring nested attributes
         super(Word2Vec, self).save(*args, **kwargs)
 
     save.__doc__ = utils.SaveLoad.save.__doc__
@@ -756,9 +812,9 @@ class Word2Vec(BaseAny2VecModel):
         # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table
-        if model.negative and hasattr(model.wv, 'index2word'):
-            model.make_cum_table()  # rebuild cum_table from vocabulary
-        if not hasattr(model, 'corpus_count'):
+        if model.trainables.negative and hasattr(model.wv, 'index2word'):
+            model.trainables.make_cum_table(vocabulary=model.vocabulary)  # rebuild cum_table from vocabulary
+        if not hasattr(model.vocabulary, 'corpus_count'):
             model.corpus_count = None
         for v in model.wv.vocab.values():
             if hasattr(v, 'sample_int'):
@@ -766,10 +822,10 @@ class Word2Vec(BaseAny2VecModel):
             elif hasattr(v, 'sample_probability'):
                 v.sample_int = int(round(v.sample_probability * 2**32))
                 del v.sample_probability
-        if not hasattr(model, 'syn0_lockf') and hasattr(model, 'syn0'):
-            model.syn0_lockf = ones(len(model.wv.syn0), dtype=REAL)
+        if not hasattr(model.trainables, 'vectors_lockf') and hasattr(model.trainables, 'vectors'):
+            model.trainables.vectors_lockf = ones(len(model.wv.vectors), dtype=REAL)
         if not hasattr(model, 'random'):
-            model.random = random.RandomState(model.seed)
+            model.random = random.RandomState(model.trainables.seed)
         if not hasattr(model, 'train_count'):
             model.train_count = 0
             model.total_train_time = 0
@@ -780,10 +836,12 @@ class Word2Vec(BaseAny2VecModel):
         # loading from a pre-KeyedVectors word2vec model
         if not hasattr(self, 'wv'):
             wv = Word2VecKeyedVectors()
-            wv.syn0 = self.__dict__.get('syn0', [])
-            wv.syn0norm = self.__dict__.get('syn0norm', None)
-            wv.vocab = self.__dict__.get('vocab', {})
-            wv.index2word = self.__dict__.get('index2word', [])
+            if hasattr(self, 'trainables'):
+                wv.vectors = self.trainables.__dict__.get('vectors', [])
+                wv.vectors_norm = self.trainables.__dict__.get('vectors_norm', None)
+            if hasattr(self, 'vocabulary'):
+                wv.vocab = self.vocabulary.__dict__.get('vocab', {})
+                wv.index2word = self.vocabulary.__dict__.get('index2word', [])
             self.wv = wv
 
     @classmethod

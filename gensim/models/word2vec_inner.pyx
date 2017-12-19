@@ -509,9 +509,9 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
 # Score is only implemented for hierarchical softmax
 def score_sentence_sg(model, sentence, _work):
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *work
-    cdef int size = model.layer1_size
+    cdef int size = model.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -525,7 +525,7 @@ def score_sentence_sg(model, sentence, _work):
     cdef np.uint32_t *points[MAX_SENTENCE_LEN]
     cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
 
-    syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+    syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
@@ -589,10 +589,10 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
 
     cdef int cbow_mean = model.cbow_mean
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *work
     cdef REAL_t *neu1
-    cdef int size = model.layer1_size
+    cdef int size = model.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -607,7 +607,7 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
     cdef np.uint32_t *points[MAX_SENTENCE_LEN]
     cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
 
-    syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+    syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
