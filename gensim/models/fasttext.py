@@ -29,11 +29,15 @@ For a tutorial on gensim's native fasttext, refer to the noteboook -- [2]_
 import logging
 
 import numpy as np
-from numpy import zeros, ones, vstack, sum as np_sum, empty, float32 as REAL
+from numpy import zeros, ones, vstack, random, sum as np_sum, empty, float32 as REAL
 
-from gensim.models.word2vec import Word2Vec, train_sg_pair, train_cbow_pair
-from gensim.models.wrappers.fasttext import FastTextKeyedVectors
+# from gensim.models.word2vec import Word2Vec, train_sg_pair, train_cbow_pair
+from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables
+from gensim.models.keyedvectors import FastTextKeyedVectors, Vocab
 from gensim.models.wrappers.fasttext import FastText as Ft_Wrapper, compute_ngrams, ft_hash
+from gensim.models.base_any2vec import BaseAny2VecModel, BaseVocabBuilder, BaseModelTrainables
+
+from types import GeneratorType
 
 logger = logging.getLogger(__name__)
 
@@ -44,124 +48,10 @@ try:
 
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
-    logger.warning('Slow version of Fasttext is being used')
-    FAST_VERSION = -1
-    MAX_WORDS_IN_BATCH = 10000
-
-    def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
-        """Update CBOW model by training on a sequence of sentences.
-
-        Each sentence is a list of string tokens, which are looked up in the model's
-        vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train()`.
-
-        This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from fasttext_inner instead.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.fasttext.FastText`
-            `FastText` instance.
-        sentences : iterable of iterables
-            Iterable of the sentences directly from disk/network.
-        alpha : float
-            Learning rate.
-        work : :class:`numpy.ndarray`
-            Private working memory for each worker.
-        neu1 : :class:`numpy.ndarray`
-            Private working memory for each worker.
-
-        Returns
-        -------
-        int
-            Effective number of words trained.
-
-        """
-        result = 0
-        for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                           model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
-            for pos, word in enumerate(word_vocabs):
-                reduced_window = model.random.randint(model.window)
-                start = max(0, pos - model.window + reduced_window)
-                window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
-                word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-
-                word2_subwords = []
-                vocab_subwords_indices = []
-                ngrams_subwords_indices = []
-
-                for index in word2_indices:
-                    vocab_subwords_indices += [index]
-                    word2_subwords += model.wv.ngrams_word[model.wv.index2word[index]]
-
-                for subword in word2_subwords:
-                    ngrams_subwords_indices.append(model.wv.ngrams[subword])
-
-                l1_vocab = np_sum(model.wv.syn0_vocab[vocab_subwords_indices], axis=0)  # 1 x vector_size
-                l1_ngrams = np_sum(model.wv.syn0_ngrams[ngrams_subwords_indices], axis=0)  # 1 x vector_size
-
-                l1 = np_sum([l1_vocab, l1_ngrams], axis=0)
-                subwords_indices = [vocab_subwords_indices] + [ngrams_subwords_indices]
-                if (subwords_indices[0] or subwords_indices[1]) and model.cbow_mean:
-                    l1 /= (len(subwords_indices[0]) + len(subwords_indices[1]))
-
-                # train on the sliding window for target word
-                train_cbow_pair(model, word, subwords_indices, l1, alpha, is_ft=True)
-            result += len(word_vocabs)
-        return result
-
-    def train_batch_sg(model, sentences, alpha, work=None, neu1=None):
-        """Update skip-gram model by training on a sequence of sentences.
-
-        Each sentence is a list of string tokens, which are looked up in the model's
-        vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train()`.
-
-        This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from fasttext_inner instead.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.fasttext.FastText`
-            `FastText` instance.
-        sentences : iterable of iterables
-            Iterable of the sentences directly from disk/network.
-        alpha : float
-            Learning rate.
-        work : :class:`numpy.ndarray`
-            Private working memory for each worker.
-        neu1 : :class:`numpy.ndarray`
-            Private working memory for each worker.
-
-        Returns
-        -------
-        int
-            Effective number of words trained.
-
-        """
-        result = 0
-        for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                           model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
-            for pos, word in enumerate(word_vocabs):
-                reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
-                # now go over all words from the (reduced) window, predicting each one in turn
-                start = max(0, pos - model.window + reduced_window)
-
-                subwords_indices = [word.index]
-                word2_subwords = model.wv.ngrams_word[model.wv.index2word[word.index]]
-
-                for subword in word2_subwords:
-                    subwords_indices.append(model.wv.ngrams[subword])
-
-                for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
-                    if pos2 != pos:  # don't train on the `word` itself
-                        train_sg_pair(model, model.wv.index2word[word2.index], subwords_indices, alpha, is_ft=True)
-
-            result += len(word_vocabs)
-        return result
+    raise RuntimeError("Support for Python/Numpy implementations has been continued.")
 
 
-class FastText(Word2Vec):
+class FastText(BaseAny2VecModel):
     """Class for training, using and evaluating word representations learned using method
     described in [1]_ aka Fasttext.
 
@@ -170,11 +60,10 @@ class FastText(Word2Vec):
     fasttext implementation via :meth:`~gensim.models.fasttext.FastText.load_fasttext_format()`.
 
     """
-    def __init__(
-            self, sentences=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
-            max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-            negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1,
-            bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH):
+    def __init__(self, sentences=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
+                 max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
+                 negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1,
+                 bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=()):
         """Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
 
@@ -266,25 +155,53 @@ class FastText(Word2Vec):
 
 
         """
-        # fastText specific params
-        self.bucket = bucket
-        self.word_ngrams = word_ngrams
-        self.min_n = min_n
-        self.max_n = max_n
+        self.callbacks = callbacks
+
+        if FAST_VERSION == -1:
+            logger.warning('Slow version of %s is being used', __name__)
+        else:
+            logger.debug('Fast version of %s is being used', __name__)
+
+        self.sg = int(sg)
+        if size % 4 != 0:
+            logger.warning("consider setting layer size to a multiple of 4 for greater performance")
+        self.alpha = float(alpha)
+        self.min_alpha_yet_reached = float(alpha)  # To warn user if alpha increases
+        self.window = int(window)
+        self.random = random.RandomState(seed)
+        self.min_alpha = float(min_alpha)
+        self.hs = hs
+        self.negative = negative
+        self.cbow_mean = int(cbow_mean)
+        self.running_training_loss = 0
         if self.word_ngrams <= 1 and self.max_n == 0:
-            self.bucket = 0
+            bucket = 0
+        self.word_ngrams = word_ngrams
+
+        self.wv = FastTextKeyedVectors()
+        self.vocabulary = FastTextVocab(
+            max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
+            sorted_vocab=sorted_vocab, null_word=null_word, min_n=min_n, max_n=max_n)
+        self.trainables = FastTextTrainables(
+            vector_size=size, seed=seed, alpha=alpha, min_alpha=min_alpha, hs=hs, negative=negative,
+            hashfxn=hashfxn, bucket=bucket)
 
         super(FastText, self).__init__(
-            sentences=sentences, size=size, alpha=alpha, window=window, min_count=min_count,
-            max_vocab_size=max_vocab_size, sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
-            sg=sg, hs=hs, negative=negative, cbow_mean=cbow_mean, hashfxn=hashfxn, iter=iter, null_word=null_word,
-            trim_rule=trim_rule, sorted_vocab=sorted_vocab, batch_words=batch_words)
+            workers=workers, vector_size=size, epochs=iter, callbacks=callbacks, batch_words=batch_words)
 
-    def initialize_word_vectors(self):
-        """Initializes FastTextKeyedVectors instance to store all vocab/ngram vectors for the model."""
-        self.wv = FastTextKeyedVectors()
-        self.wv.min_n = self.min_n
-        self.wv.max_n = self.max_n
+        if sentences is not None:
+            if isinstance(sentences, GeneratorType):
+                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+            self.build_vocab(sentences, trim_rule=trim_rule)
+            self.train(
+                sentences, total_examples=self.corpus_count, epochs=self.iter,
+                start_alpha=self.alpha, end_alpha=self.min_alpha)
+        else:
+            if trim_rule is not None:
+                logger.warning(
+                    "The rule, if given, is only used to prune vocabulary during build_vocab() "
+                    "and is not stored as part of the model. Model initialized without sentences. "
+                    "trim_rule provided, if any, will be ignored.")
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
@@ -333,95 +250,12 @@ class FastText(Word2Vec):
                     "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
                     "First build the vocabulary of your model with a corpus "
                     "before doing an online update.")
-            self.old_vocab_len = len(self.wv.vocab)
-            self.old_hash2index_len = len(self.wv.hash2index)
+            self.vocabulary.old_vocab_len = len(self.vocabulary.vocab)
+            self.trainables.old_hash2index_len = len(self.trainables.hash2index)
 
         super(FastText, self).build_vocab(
             sentences, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, progress_per=progress_per, update=update)
         self.init_ngrams(update=update)
-
-    def init_ngrams(self, update=False):
-        """Compute ngrams of all words present in vocabulary and stores vectors for only those ngrams.
-        Vectors for other ngrams are initialized with a random uniform distribution in FastText.
-
-        Parameters
-        ----------
-        update : bool
-            If True, the new vocab words and their new ngrams word vectors are initialized
-            with random uniform distribution and updated/added to the existing vocab word and ngram vectors.
-
-        """
-        if not update:
-            self.wv.ngrams = {}
-            self.wv.syn0_vocab = empty((len(self.wv.vocab), self.vector_size), dtype=REAL)
-            self.syn0_vocab_lockf = ones((len(self.wv.vocab), self.vector_size), dtype=REAL)
-
-            self.wv.syn0_ngrams = empty((self.bucket, self.vector_size), dtype=REAL)
-            self.syn0_ngrams_lockf = ones((self.bucket, self.vector_size), dtype=REAL)
-
-            all_ngrams = []
-            for w, v in self.wv.vocab.items():
-                self.wv.ngrams_word[w] = compute_ngrams(w, self.min_n, self.max_n)
-                all_ngrams += self.wv.ngrams_word[w]
-
-            all_ngrams = list(set(all_ngrams))
-            self.num_ngram_vectors = len(all_ngrams)
-            logger.info("Total number of ngrams is %d", len(all_ngrams))
-
-            self.wv.hash2index = {}
-            ngram_indices = []
-            new_hash_count = 0
-            for i, ngram in enumerate(all_ngrams):
-                ngram_hash = ft_hash(ngram) % self.bucket
-                if ngram_hash in self.wv.hash2index:
-                    self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
-                else:
-                    ngram_indices.append(ngram_hash % self.bucket)
-                    self.wv.hash2index[ngram_hash] = new_hash_count
-                    self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
-                    new_hash_count = new_hash_count + 1
-
-            self.wv.syn0_ngrams = self.wv.syn0_ngrams.take(ngram_indices, axis=0)
-            self.syn0_ngrams_lockf = self.syn0_ngrams_lockf.take(ngram_indices, axis=0)
-            self.reset_ngram_weights()
-        else:
-            new_ngrams = []
-            for w, v in self.wv.vocab.items():
-                self.wv.ngrams_word[w] = compute_ngrams(w, self.min_n, self.max_n)
-                new_ngrams += [ng for ng in self.wv.ngrams_word[w] if ng not in self.wv.ngrams]
-
-            new_ngrams = list(set(new_ngrams))
-            logger.info("Number of new ngrams is %d", len(new_ngrams))
-            new_hash_count = 0
-            for i, ngram in enumerate(new_ngrams):
-                ngram_hash = ft_hash(ngram) % self.bucket
-                if ngram_hash not in self.wv.hash2index:
-                    self.wv.hash2index[ngram_hash] = new_hash_count + self.old_hash2index_len
-                    self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
-                    new_hash_count = new_hash_count + 1
-                else:
-                    self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
-
-            rand_obj = np.random
-            rand_obj.seed(self.seed)
-            new_vocab_rows = rand_obj.uniform(
-                -1.0 / self.vector_size, 1.0 / self.vector_size,
-                (len(self.wv.vocab) - self.old_vocab_len, self.vector_size)
-            ).astype(REAL)
-            new_vocab_lockf_rows = ones((len(self.wv.vocab) - self.old_vocab_len, self.vector_size), dtype=REAL)
-            new_ngram_rows = rand_obj.uniform(
-                -1.0 / self.vector_size, 1.0 / self.vector_size,
-                (len(self.wv.hash2index) - self.old_hash2index_len, self.vector_size)
-            ).astype(REAL)
-            new_ngram_lockf_rows = ones(
-                (len(self.wv.hash2index) - self.old_hash2index_len,
-                self.vector_size),
-                dtype=REAL)
-
-            self.wv.syn0_vocab = vstack([self.wv.syn0_vocab, new_vocab_rows])
-            self.syn0_vocab_lockf = vstack([self.syn0_vocab_lockf, new_vocab_lockf_rows])
-            self.wv.syn0_ngrams = vstack([self.wv.syn0_ngrams, new_ngram_rows])
-            self.syn0_ngrams_lockf = vstack([self.syn0_ngrams_lockf, new_ngram_lockf_rows])
 
     def reset_ngram_weights(self):
         """Reset all projection weights to an initial (untrained) state,
@@ -522,87 +356,11 @@ class FastText(Word2Vec):
         >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
 
         """
-        self.neg_labels = []
-        if self.negative > 0:
-                # precompute negative labels optimization for pure-python training
-                self.neg_labels = zeros(self.negative + 1)
-                self.neg_labels[0] = 1.
 
-        Word2Vec.train(
+        FastText.train(
             self, sentences, total_examples=self.corpus_count, epochs=self.iter,
             start_alpha=self.alpha, end_alpha=self.min_alpha)
         self.get_vocab_word_vecs()
-
-    def __getitem__(self, word):
-        """Get `word` representations in vector space, as a 1D numpy array.
-
-        Parameters
-        ----------
-        word : str
-            A single word whose vector needs to be returned.
-
-        Returns
-        -------
-        :class:`numpy.ndarray`
-            The word's representations in vector space, as a 1D numpy array.
-
-        Raises
-        ------
-        KeyError
-            For words with all ngrams absent, a KeyError is raised.
-
-        Example
-        -------
-        >>> from gensim.models import FastText
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> trained_model = FastText.load_fasttext_format(datapath('lee_fasttext'))
-        >>> meow_vector = trained_model['hello']  # get vector for word
-
-        """
-        return self.word_vec(word)
-
-    def get_vocab_word_vecs(self):
-        """Calculate vectors for words in vocabulary and stores them in `wv.syn0`."""
-        for w, v in self.wv.vocab.items():
-            word_vec = np.copy(self.wv.syn0_vocab[v.index])
-            ngrams = self.wv.ngrams_word[w]
-            ngram_weights = self.wv.syn0_ngrams
-            for ngram in ngrams:
-                word_vec += ngram_weights[self.wv.ngrams[ngram]]
-            word_vec /= (len(ngrams) + 1)
-            self.wv.syn0[v.index] = word_vec
-
-    def word_vec(self, word, use_norm=False):
-        """Get the word's representations in vector space, as a 1D numpy array.
-
-        Parameters
-        ----------
-        word : str
-            A single word whose vector needs to be returned.
-        use_norm : bool
-            If True, returns normalized vector.
-
-        Returns
-        -------
-        :class:`numpy.ndarray`
-            The word's representations in vector space, as a 1D numpy array.
-
-        Raises
-        ------
-        KeyError
-            For words with all ngrams absent, a KeyError is raised.
-
-        Example
-        -------
-        >>> from gensim.models import FastText
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>>
-        >>> model = FastText(sentences, min_count=1)
-        >>> meow_vector = model.word_vec('meow')  # get vector for word
-
-        """
-        return FastTextKeyedVectors.word_vec(self.wv, word, use_norm=use_norm)
 
     @classmethod
     def load_fasttext_format(cls, *args, **kwargs):
@@ -627,5 +385,126 @@ class FastText(Word2Vec):
             Path to the file.
 
         """
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_vocab_norm', 'syn0_ngrams_norm'])
+        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm'])
         super(FastText, self).save(*args, **kwargs)
+
+
+class FastTextVocab(Word2VecVocab):
+    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
+                 min_n=3, max_n=6):
+        super(FastTextVocab, self).__init(
+            max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
+            sorted_vocab=sorted_vocab, null_word=null_word)
+        self.min_n = min_n
+        self.max_n = max_n
+
+    def prepare_vocab(self, update=False, keep_raw_vocab=False, trim_rule=None, min_count=None,
+                      sample=None, dry_run=False):
+        super(FastTextVocab, self).prepare_vocab(
+            update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, min_count=min_count,
+            sample=sample, dry_run=dry_run)
+        self.build_ngrams(update=update)
+
+    def build_ngrams(self, update=False):
+        if not update:
+            self.ngrams_word = {}
+            for w, v in self.vocab.items():
+                self.ngrams_word[w] = compute_ngrams(w, self.min_n, self.max_n)
+        else:
+            for w, v in self.vocab.items():
+                self.ngrams_word[w] = compute_ngrams(w, self.min_n, self.max_n)
+
+
+class FastTextTrainables(Word2VecTrainables):
+    def __init__(self, vector_size=100, seed=1, alpha=0.025, min_alpha=0.0001, hs=0, negative=5,
+                 hashfxn=hash, bucket=2000000):
+        super(FastTextVocab, self).__init(
+            vector_size=vector_size, seed=seed, alpha=alpha, min_alpha=min_alpha, hs=hs,
+            negative=negative, hashfxn=hashfxn)
+        self.bucket = bucket
+
+    def prepare_weights(self, update=False, vocabulary=None):
+        super(FastTextVocab, self).prepare_weights(update=update, vocabulary=vocabulary)
+        self.init_ngrams(update=update, vocabulary=vocabulary)
+
+    def init_ngrams_weights(self, update=False, vocabulary=None):
+        """Compute ngrams of all words present in vocabulary and stores vectors for only those ngrams.
+        Vectors for other ngrams are initialized with a random uniform distribution in FastText.
+
+        Parameters
+        ----------
+        update : bool
+            If True, the new vocab words and their new ngrams word vectors are initialized
+            with random uniform distribution and updated/added to the existing vocab word and ngram vectors.
+
+        """
+        if not update:
+            self.ngrams = {}
+            self.vectors_vocab = empty((len(vocabulary.vocab), self.vector_size), dtype=REAL)
+            self.vectors_vocab_lockf = ones((len(vocabulary.vocab), self.vector_size), dtype=REAL)
+
+            self.vocabulary_ngrams = empty((self.bucket, self.vector_size), dtype=REAL)
+            self.vocabulary_ngrams_lockf = ones((self.bucket, self.vector_size), dtype=REAL)
+
+            all_ngrams = []
+            for w, ngrams in vocabulary.ngrams_word.items():
+                all_ngrams += ngrams
+
+            all_ngrams = list(set(all_ngrams))
+            self.num_ngram_vectors = len(all_ngrams)
+            logger.info("Total number of ngrams is %d", len(all_ngrams))
+
+            self.hash2index = {}
+            ngram_indices = []
+            new_hash_count = 0
+            for i, ngram in enumerate(all_ngrams):
+                ngram_hash = ft_hash(ngram) % self.bucket
+                if ngram_hash in self.wv.hash2index:
+                    self.ngrams[ngram] = self.hash2index[ngram_hash]
+                else:
+                    ngram_indices.append(ngram_hash % self.bucket)
+                    self.hash2index[ngram_hash] = new_hash_count
+                    self.ngrams[ngram] = self.hash2index[ngram_hash]
+                    new_hash_count = new_hash_count + 1
+
+            self.vectors_ngrams = self.vectors_ngrams.take(ngram_indices, axis=0)
+            self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
+            self.reset_ngram_weights()
+        else:
+            new_ngrams = []
+            for w, ngrams in vocabulary.ngrams_word.items():
+                new_ngrams += [ng for ng in ngrams if ng not in self.ngrams]
+
+            new_ngrams = list(set(new_ngrams))
+            logger.info("Number of new ngrams is %d", len(new_ngrams))
+            new_hash_count = 0
+            for i, ngram in enumerate(new_ngrams):
+                ngram_hash = ft_hash(ngram) % self.bucket
+                if ngram_hash not in self.hash2index:
+                    self.hash2index[ngram_hash] = new_hash_count + self.old_hash2index_len
+                    self.ngrams[ngram] = self.hash2index[ngram_hash]
+                    new_hash_count = new_hash_count + 1
+                else:
+                    self.ngrams[ngram] = self.hash2index[ngram_hash]
+
+            rand_obj = np.random
+            rand_obj.seed(self.seed)
+            new_vocab_rows = rand_obj.uniform(
+                -1.0 / self.vector_size, 1.0 / self.vector_size,
+                (len(vocabulary.vocab) - vocabulary.old_vocab_len, self.vector_size)
+            ).astype(REAL)
+            new_vocab_lockf_rows = ones((len(vocabulary.vocab) - vocabulary.old_vocab_len,
+                self.vector_size), dtype=REAL)
+            new_ngram_rows = rand_obj.uniform(
+                -1.0 / self.vector_size, 1.0 / self.vector_size,
+                (len(self.hash2index) - self.old_hash2index_len, self.vector_size)
+            ).astype(REAL)
+            new_ngram_lockf_rows = ones(
+                (len(self.hash2index) - self.old_hash2index_len,
+                self.vector_size),
+                dtype=REAL)
+
+            self.vectors_vocab = vstack([self.vectors_vocab, new_vocab_rows])
+            self.vectors_vocab_lockf = vstack([self.vectors_vocab_lockf, new_vocab_lockf_rows])
+            self.vectors_ngrams = vstack([self.vectors_ngrams, new_ngram_rows])
+            self.vectors_ngrams_lockf = vstack([self.vectors_ngrams_lockf, new_ngram_lockf_rows])
