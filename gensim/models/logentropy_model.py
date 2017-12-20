@@ -10,7 +10,7 @@ Emprical study by Lee et al. 2015 [1]_ suggests log entroy-weighted model yields
 representation.
 
 .. [1] Lee et al. 2005. An Empirical Evaluation of Models of Text Document Similarity.
-https://escholarship.org/uc/item/48g155nq
+       https://escholarship.org/uc/item/48g155nq
 
 """
 
@@ -43,17 +43,22 @@ class LogEntropyModel(interfaces.TransformationABC):
 
     The main methods are:
 
-    1. constructor, which creates an instance and initiates internal statistics based on a training
-    corpus and calls `initialize` method.
+    - constructor, which creates an instance and initiates internal statistics based on a training
+      corpus and calls `initialize` method.
 
-    2. the `initialize` method. It calculates the global weighting for all terms in a given corpus
-    and transforms the simple count representation into the log entropy normalized space.
+        >>> log_ent = LogEntropyModel(corpus, normalize=True)
 
-    >>> log_ent = LogEntropyModel(corpus)
-    >>> print(log_ent[some_doc])
-    >>> log_ent.save('/tmp/foo.log_ent_model')
+    - `initialize` method. It calculates the global weighting for all terms in a given corpus
+      and transforms the simple count representation into the log entropy normalized space.
 
-    Model persistency is achieved via its load/save methods.
+    - get log entropy representation of document vector or corpus.
+
+        >>> print(log_ent[some_doc])
+
+    - Model persistency is achieved via its load/save methods.
+
+        >>> log_ent.save('/tmp/foo.log_ent_model')
+
     """
 
     def __init__(self, corpus, normalize=True):
