@@ -594,8 +594,8 @@ class Word2Vec(BaseAny2VecModel):
                     weights = fromstring(fin.read(binary_len), dtype=REAL)
                     if word in self.wv.vocab:
                         overlap_count += 1
-                        self.wv.syn0[self.wv.vocab[word].index] = weights
-                        self.syn0_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
+                        self.wv.vectors[self.wv.vocab[word].index] = weights
+                        self.vectors_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
             else:
                 for line_no, line in enumerate(fin):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
@@ -604,9 +604,9 @@ class Word2Vec(BaseAny2VecModel):
                     word, weights = parts[0], [REAL(x) for x in parts[1:]]
                     if word in self.wv.vocab:
                         overlap_count += 1
-                        self.wv.syn0[self.wv.vocab[word].index] = weights
-                        self.syn0_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
-        logger.info("merged %d vectors into %s matrix from %s", overlap_count, self.wv.syn0.shape, fname)
+                        self.wv.vectors[self.wv.vocab[word].index] = weights
+                        self.vectors_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
+        logger.info("merged %d vectors into %s matrix from %s", overlap_count, self.wv.vectors.shape, fname)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar() instead")
     def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
@@ -726,22 +726,22 @@ class Word2Vec(BaseAny2VecModel):
             del self.trainables.syn1
         return self.wv.init_sims(replace)
 
-    # def estimate_memory(self, vocab_size=None, report=None):
-    #     """Estimate required memory for a model using current settings and provided vocabulary size."""
-    #     vocab_size = vocab_size or len(self.vocabulary.vocab)
-    #     report = report or {}
-    #     report['vocab'] = vocab_size * (700 if self.trainables.hs else 500)
-    #     report['syn0'] = vocab_size * self.vector_size * dtype(REAL).itemsize
-    #     if self.trainables.hs:
-    #         report['syn1'] = vocab_size * self.vector_size * dtype(REAL).itemsize
-    #     if self.trainables.negative:
-    #         report['syn1neg'] = vocab_size * self.vector_size * dtype(REAL).itemsize
-    #     report['total'] = sum(report.values())
-    #     logger.info(
-    #         "estimated required memory for %i words and %i dimensions: %i bytes",
-    #         vocab_size, self.vector_size, report['total']
-    #     )
-    #     return report
+    def estimate_memory(self, vocab_size=None, report=None):
+        """Estimate required memory for a model using current settings and provided vocabulary size."""
+        vocab_size = vocab_size or len(self.vocabulary.vocab)
+        report = report or {}
+        report['vocab'] = vocab_size * (700 if self.trainables.hs else 500)
+        report['vectors'] = vocab_size * self.vector_size * dtype(REAL).itemsize
+        if self.trainables.hs:
+            report['syn1'] = vocab_size * self.vector_size * dtype(REAL).itemsize
+        if self.trainables.negative:
+            report['syn1neg'] = vocab_size * self.vector_size * dtype(REAL).itemsize
+        report['total'] = sum(report.values())
+        logger.info(
+            "estimated required memory for %i words and %i dimensions: %i bytes",
+            vocab_size, self.vector_size, report['total']
+        )
+        return report
 
     @staticmethod
     def log_accuracy(section):
@@ -777,14 +777,14 @@ class Word2Vec(BaseAny2VecModel):
     @deprecated(
         "Method will be removed in 4.0.0, keep just_word_vectors = model.wv to retain just the KeyedVectors instance"
     )
-    def _minimize_model(self, save_syn1=False, save_syn1neg=False, save_syn0_lockf=False):
-        if save_syn1 and save_syn1neg and save_syn0_lockf:
+    def _minimize_model(self, save_syn1=False, save_syn1neg=False, save_vectors_lockf=False):
+        if save_syn1 and save_syn1neg and save_vectors_lockf:
             return
         if hasattr(self.trainables, 'syn1') and not save_syn1:
             del self.trainables.syn1
         if hasattr(self.trainables, 'syn1neg') and not save_syn1neg:
             del self.trainables.syn1neg
-        if hasattr(self.trainables, 'syn0_lockf') and not save_syn0_lockf:
+        if hasattr(self.trainables, 'vectors_lockf') and not save_vectors_lockf:
             del self.trainables.vectors_lockf
         self.model_trimmed_post_training = True
 
@@ -1189,7 +1189,7 @@ class Word2VecVocab(BaseVocabBuilder):
         # return from each step: words-affected, resulting-corpus-size, extra memory estimates
         report_values = {
             'drop_unique': drop_unique, 'retain_total': retain_total, 'downsample_unique': downsample_unique,
-            'downsample_total': int(downsample_total)  # 'memory': Word2Vec.estimate_memory(vocab_size=len(retain_words))
+            'downsample_total': int(downsample_total)
         }
 
         return report_values
@@ -1326,12 +1326,12 @@ class Word2VecTrainables(BaseModelTrainables):
         """
         logger.info("updating layer weights")
         gained_vocab = len(vocabulary.vocab) - len(self.vectors)
-        newsyn0 = empty((gained_vocab, self.vector_size), dtype=REAL)
+        newvectors = empty((gained_vocab, self.vector_size), dtype=REAL)
 
         # randomize the remaining words
         for i in xrange(len(self.vectors), len(vocabulary.vocab)):
             # construct deterministic seed from word AND seed argument
-            newsyn0[i - len(self.vectors)] = self.seeded_vector(vocabulary.index2word[i] + str(self.seed))
+            newvectors[i - len(self.vectors)] = self.seeded_vector(vocabulary.index2word[i] + str(self.seed))
 
         # Raise an error if an online update is run before initial training on a corpus
         if not len(self.vectors):
@@ -1340,7 +1340,7 @@ class Word2VecTrainables(BaseModelTrainables):
                 "First build the vocabulary of your model with a corpus before doing an online update."
             )
 
-        self.vectors = vstack([self.vectors, newsyn0])
+        self.vectors = vstack([self.vectors, newvectors])
 
         if self.hs:
             self.syn1 = vstack([self.syn1, zeros((gained_vocab, self.vector_size), dtype=REAL)])
