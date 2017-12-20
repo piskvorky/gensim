@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 try:
-    from gensim.models.sent2vec_inner import update
+    from gensim.models.sent2vec_inner import _do_train_job_fast
     from gensim.models.word2vec_inner import FAST_VERSION
     logger.debug('Fast version of %s is being used', __name__)
 except ImportError:
@@ -550,6 +550,29 @@ class Sent2Vec(SaveLoad):
                 break
         return negative
 
+    def _do_train_job(self, sentences, lr, hidden, grad):
+
+        if FAST_VERSION == -1:
+            local_token_count = 0
+            nexamples = 0
+            loss = 0.0
+            for sentence in sentences:
+                ntokens_temp, hashes, words = self.dict.get_line(sentence)
+                local_token_count += ntokens_temp
+                if len(words) > 1:
+                    for i in range(len(words)):
+                        if self.random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
+                            continue
+                        nexamples += 1
+                        context = list(words)
+                        context[i] = 0
+                        context = self.dict.add_ngrams_train(context=context, n=self.word_ngrams, k=self.dropoutk)
+                        loss += self.update(input_=context, target=words[i], lr=lr)
+            return local_token_count, nexamples, loss
+        else:
+            local_token_count, nexamples, loss = _do_train_job_fast(self, sentences, lr, hidden, grad)
+            return local_token_count, nexamples, loss
+
     def update(self, input_, target, lr):
         """
         Update model's neural weights for given context, target word and learning rate.
@@ -587,28 +610,6 @@ class Sent2Vec(SaveLoad):
                                       (self.dict.size + self.bucket, self.vector_size)).astype(np.float32)
         self.wo = np.zeros((self.dict.size, self.vector_size), dtype=np.float32)
         self.init_table_negatives(counts=counts)
-
-    def _do_train_job(self, sentences, lr, hidden, grad):
-        local_token_count = 0
-        nexamples = 0
-        loss = 0.0
-        for sentence in sentences:
-            ntokens_temp, hashes, words = self.dict.get_line(sentence)
-            local_token_count += ntokens_temp
-            if len(words) > 1:
-                for i in range(len(words)):
-                    if self.random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
-                        continue
-                    context = list(words)
-                    context[i] = 0
-                    context = self.dict.add_ngrams_train(context=context, n=self.word_ngrams, k=self.dropoutk)
-                    context = np.array(context)
-                    if FAST_VERSION == -1:
-                        loss += self.update(input_=context, target=words[i], lr=lr)
-                    else:
-                        loss += update(self, context, words[i], lr, hidden, grad)
-                    nexamples += 1
-        return local_token_count, nexamples, loss
 
     def train(self, sentences, queue_factor=2, report_delay=1.0):
         if FAST_VERSION < 0:
