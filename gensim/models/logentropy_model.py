@@ -3,10 +3,15 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module implements a Log Entropy Model that produces weighted log term frequency over document frequency.
+"""This module allows simple Bag of Words (BoW) represented corpus to be transformed into log entropy space.
+It implements Log Entropy Model that produces entropy-weighted logarthmic term frequency representation.
 
-Lee et al. 2005. An Empirical Evaluation of Models of Text Document Similarity.
+Emprical study by Lee et al. 2015 [1]_ suggests log entroy-weighted model yields better results among other forms of
+representation.
+
+.. [1] Lee et al. 2005. An Empirical Evaluation of Models of Text Document Similarity.
 https://escholarship.org/uc/item/48g155nq
+
 """
 
 import logging
@@ -82,7 +87,7 @@ class LogEntropyModel(interfaces.TransformationABC):
         Parameters
         ----------
         corpus : iterable of list of (int, int)
-            itertable consisting of word-documents that are made up of term-id and term-frequency.
+            itertable consisting of word-documents that are made up of term-id and term-frequency (word count).
         """
         logger.info("calculating counts")
         glob_freq = {}
