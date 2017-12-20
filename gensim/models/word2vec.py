@@ -251,7 +251,7 @@ class Word2Vec(BaseAny2VecModel):
         self.hs = hs
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
-        self.null_word = null_word
+        # self.null_word = null_word
         self.compute_loss = compute_loss
         self.running_training_loss = 0
 
@@ -262,8 +262,8 @@ class Word2Vec(BaseAny2VecModel):
         self.trainables = Word2VecTrainables(
             vector_size=size, seed=seed, alpha=alpha, min_alpha=min_alpha, hs=hs, negative=negative, hashfxn=hashfxn)
 
-        super(Word2Vec, self).__init__(workers=workers, vector_size=size, epochs=iter,
-            callbacks=callbacks, batch_words=batch_words)
+        super(Word2Vec, self).__init__(
+            workers=workers, vector_size=size, epochs=iter, callbacks=callbacks, batch_words=batch_words)
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -271,15 +271,13 @@ class Word2Vec(BaseAny2VecModel):
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(
                 sentences, total_examples=self.vocabulary.corpus_count, epochs=self.epochs,
-                start_alpha=self.trainables.alpha, end_alpha=self.trainables.min_alpha
-            )
+                start_alpha=self.trainables.alpha, end_alpha=self.trainables.min_alpha)
         else:
             if trim_rule is not None:
                 logger.warning(
                     "The rule, if given, is only used to prune vocabulary during build_vocab() "
                     "and is not stored as part of the model. Model initialized without sentences. "
-                    "trim_rule provided, if any, will be ignored."
-                )
+                    "trim_rule provided, if any, will be ignored.")
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
         """
@@ -1068,8 +1066,8 @@ class Word2VecVocab(BaseVocabBuilder):
         for i, word in enumerate(self.index2word):
             self.vocab[word].index = i
 
-    def prepare_vocab(
-        self, update=False, keep_raw_vocab=False, trim_rule=None, min_count=None, sample=None, dry_run=False):
+    def prepare_vocab(self, update=False, keep_raw_vocab=False, trim_rule=None, min_count=None,
+                      sample=None, dry_run=False):
         """
         Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
