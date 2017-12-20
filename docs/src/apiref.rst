@@ -310,5 +310,26 @@ Functions
 
     summarizer.summarize
     summarizer.summarize_corpus
+    mz_entropy.mz_keywords
     bm25.get_bm25_weights
     keywords.keywords
+
+.. _viz_ref:
+
+:mod:`gensim.viz`: Visualization
+================================
+
+.. automodule:: gensim.viz
+    :no-members:
+    :no-inherited-members:
+
+Functions
+---------
+.. currentmodule:: gensim.viz
+
+.. autosummary::
+    :toctree: generated/
+    :template: function.rst
+
+    poincare.poincare_2d_visualization
+    poincare.poincare_distance_heatmap

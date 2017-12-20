@@ -196,7 +196,7 @@ When `citing gensim in academic papers and theses <https://scholar.google.cz/cit
 
   @inproceedings{rehurek_lrec,
         title = {{Software Framework for Topic Modelling with Large Corpora}},
-        author = {Radim {\v R}eh{\r u}{\v r}ek and Petr Sojka},
+        author = {Radim {\\v R}eh{\\r u}{\\v r}ek and Petr Sojka},
         booktitle = {{Proceedings of the LREC 2010 Workshop on New
              Challenges for NLP Frameworks}},
         pages = {45--50},
@@ -229,6 +229,7 @@ distributed_env = ['Pyro4 >= 4.27']
 win_testenv = [
     'pytest',
     'pytest-rerunfailures',
+    'mock',
     'cython',
     'pyemd',
     'testfixtures',
@@ -244,7 +245,7 @@ linux_testenv = win_testenv + [
 
 setup(
     name='gensim',
-    version='3.1.0',
+    version='3.2.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -254,6 +255,9 @@ setup(
             include_dirs=[model_dir]),
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
+            include_dirs=[model_dir]),
+        Extension('gensim.models.fasttext_inner',
+            sources=['./gensim/models/fasttext_inner.c'],
             include_dirs=[model_dir])
     ],
     cmdclass=cmdclass,
@@ -303,7 +307,7 @@ setup(
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon'],
+        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly'],
     },
 
     include_package_data=True,
