@@ -32,6 +32,7 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
+	-rm -rf generated/*
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
@@ -40,7 +41,7 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in ../"
 
-upload: 
+upload:
 	scp -r _build/html/* rr:public_html/gensim/
 
 dirhtml:
