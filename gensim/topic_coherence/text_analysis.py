@@ -5,19 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """This module contains classes for analyzing the texts of a corpus to accumulate
-statistical information about word occurrences.
-
-Example for UsesDictionary
---------------------------
->>> from gensim.topic_coherence import text_analysis
->>> from gensim.corpora.dictionary import Dictionary
->>> ids = {1: 'foo', 2: 'bar'}
->>> dictionary = Dictionary([['foo','bar','baz'], ['foo','bar','bar','baz']])
->>> usesdict = text_analysis.UsesDictionary(ids, dictionary)
->>> print usesdict.relevant_words, usesdict.dictionary, usesdict.token2id
-set([u'foo', u'baz']) Dictionary(3 unique tokens: [u'baz', u'foo', u'bar']) {u'baz': 2, u'foo': 1, u'bar': 0}
-
-"""
+statistical information about word occurrences."""
 
 import itertools
 import logging
@@ -43,7 +31,8 @@ def _ids_to_words(ids, dictionary):
     ----------
     ids: dict
         Dictionary of ids and their words.
-    dictionary: :class:`~gensim.corpora.dictionary`
+    dictionary: :class:`~gensim.corpora.dictionary.Dictionary`
+        Input gensim dictionary
 
     Returns
     -------
@@ -54,11 +43,13 @@ def _ids_to_words(ids, dictionary):
     --------
     >>> from gensim.corpora.dictionary import Dictionary
     >>> from gensim.topic_coherence import text_analysis
+    >>>
     >>> dictionary = Dictionary()
     >>> ids = {1: 'fake', 4: 'cats'}
     >>> dictionary.id2token = {1: 'fake', 2: 'tokens', 3: 'rabbids', 4: 'cats'}
-    >>> # should be set(['cats', 'fake'])
+    >>>
     >>> text_analysis._ids_to_words(ids, dictionary)
+    set(['cats', 'fake'])
 
     """
     if not dictionary.id2token:  # may not be initialized in the standard gensim.corpora.Dictionary
@@ -81,24 +72,35 @@ class BaseAnalyzer(object):
     Attributes
     ----------
     relevant_ids : dict
+        Mapping
     _vocab_size : int
         Size of vocabulary.
     id2contiguous : dict
-
+        Mapping word_id -> number.
     log_every : int
         Interval for logging.
     _num_docs : int
-
-    Examples
-    --------
-    >>> from gensim.topic_coherence import text_analysis
-    >>> ids = {1: 'fake', 4: 'cats'}
-    >>> base = text_analysis.BaseAnalyzer(ids)
-    >>> # should return {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
-    >>> print base.relevant_ids, base._vocab_size, base.id2contiguous, base.log_every, base._num_docs
+        Number of documents.
 
     """
     def __init__(self, relevant_ids):
+        """
+
+        Parameters
+        ----------
+        relevant_ids : dict
+            Mapping
+
+        Examples
+        --------
+        >>> from gensim.topic_coherence import text_analysis
+        >>> ids = {1: 'fake', 4: 'cats'}
+        >>> base = text_analysis.BaseAnalyzer(ids)
+        >>> # should return {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
+        >>> print base.relevant_ids, base._vocab_size, base.id2contiguous, base.log_every, base._num_docs
+        {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
+
+        """
         self.relevant_ids = relevant_ids
         self._vocab_size = len(self.relevant_ids)
         self.id2contiguous = {word_id: n for n, word_id in enumerate(self.relevant_ids)}
@@ -151,21 +153,34 @@ class UsesDictionary(BaseAnalyzer):
     relevant_words : set
         Set of words that occurrences should be accumulated for.
     dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
+        Dictionary based on text
     token2id : dict
-        token2id from :class:`~gensim.corpora.dictionary`
-
-    Examples
-    --------
-    >>> from gensim.topic_coherence import text_analysis
-    >>> from gensim.corpora.dictionary import Dictionary
-    >>> ids = {1: 'foo', 2: 'bar'}
-    >>> dictionary = Dictionary([['foo','bar','baz'], ['foo','bar','bar','baz']])
-    >>> usesdict = text_analysis.UsesDictionary(ids, dictionary)
-    >>> # should be set([u'foo', u'baz']) Dictionary(3 unique tokens: [u'baz', u'foo', u'bar']) {u'baz': 2, u'foo': 1, u'bar': 0}
-    >>> print usesdict.relevant_words, usesdict.dictionary, usesdict.token2id
+        Mapping from :class:`~gensim.corpora.dictionary.Dictionary`
 
     """
     def __init__(self, relevant_ids, dictionary):
+        """
+
+        Parameters
+        ----------
+        relevant_ids : dict
+            Mapping
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
+            Dictionary based on text
+
+        Examples
+        --------
+        >>> from gensim.topic_coherence import text_analysis
+        >>> from gensim.corpora.dictionary import Dictionary
+        >>>
+        >>> ids = {1: 'foo', 2: 'bar'}
+        >>> dictionary = Dictionary([['foo','bar','baz'], ['foo','bar','bar','baz']])
+        >>> udict = text_analysis.UsesDictionary(ids, dictionary)
+        >>>
+        >>> print udict.relevant_words
+        set([u'foo', u'baz'])
+
+        """
         super(UsesDictionary, self).__init__(relevant_ids)
         self.relevant_words = _ids_to_words(self.relevant_ids, dictionary)
         self.dictionary = dictionary
@@ -196,16 +211,26 @@ class UsesDictionary(BaseAnalyzer):
 class InvertedIndexBased(BaseAnalyzer):
     """Analyzer that builds up an inverted index to accumulate stats.
 
-    Examples
-    --------
-    >>> from gensim.topic_coherence import text_analysis
-    >>> ids = {1: 'fake', 4: 'cats'}
-    >>> ininb = text_analysis.InvertedIndexBased(ids)
-    >>> # should be [set([]) set([])]
-    >>> print ininb._inverted_index
-
     """
     def __init__(self, *args):
+        """
+
+        Parameters
+        ----------
+        args : dict
+            Look at :class:`~gensim.topic_coherence.text_analysis.BaseAnalyzer`
+
+        Examples
+        --------
+        >>> from gensim.topic_coherence import text_analysis
+        >>>
+        >>> ids = {1: 'fake', 4: 'cats'}
+        >>> ininb = text_analysis.InvertedIndexBased(ids)
+        >>>
+        >>> print ininb._inverted_index
+        [set([]) set([])]
+
+        """
         super(InvertedIndexBased, self).__init__(*args)
         self._inverted_index = np.array([set() for _ in range(self._vocab_size)])
 
@@ -226,20 +251,7 @@ class CorpusAccumulator(InvertedIndexBased):
     """Gather word occurrence stats from a corpus by iterating over its BoW representation."""
 
     def analyze_text(self, text, doc_num=None):
-        """Build an inverted index from a sequence of corpus texts.
-
-        Examples
-        --------
-        >> > from gensim.topic_coherence import text_analysis
-        >> > ids = {1: 'fake', 4: 'cats'}
-        >> > corac = text_analysis.CorpusAccumulator(ids)
-        >> > texts = [['human', 'interface', 'computer'], ['eps', 'user', 'interface', 'system']]
-        >> > corac.analyze_text(texts)
-        >> > print
-        corac._inverted_index
-
-        #TODO:  Doesn't work
-        """
+        """Build an inverted index from a sequence of corpus texts."""
         doc_words = frozenset(x[0] for x in text)
         top_ids_in_doc = self.relevant_ids.intersection(doc_words)
         for word_id in top_ids_in_doc:
@@ -261,9 +273,20 @@ class WindowedTextsAnalyzer(UsesDictionary):
         Set of words.
     dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
         Dictionary instance with mappings for the relevant_ids.
+
     """
 
     def __init__(self, relevant_ids, dictionary):
+        """
+
+        Parameters
+        ----------
+        relevant_ids : set of int
+            Relevant id
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
+            Dictionary instance with mappings for the relevant_ids.
+
+        """
         super(WindowedTextsAnalyzer, self).__init__(relevant_ids, dictionary)
         self._none_token = self._vocab_size  # see _iter_texts for use of none token
 
@@ -485,14 +508,12 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
                     (batch_num + 1), (batch_num + 1) * self.batch_size, self._num_docs)
 
     def terminate_workers(self, input_q, output_q, workers, interrupted=False):
-        """Wait until all workers have transmitted their WordOccurrenceAccumulator instances,
-        then terminate each.
+        """Wait until all workers have transmitted their WordOccurrenceAccumulator instances, then terminate each.
 
-        Notes
-        -----
+        Warnings
+        --------
         We do not use join here because it has been shown to have some issues
-        in Python 2.7 (and even in later versions). This method also closes both the input and output
-        queue.
+        in Python 2.7 (and even in later versions). This method also closes both the input and output queue.
         If `interrupted` is False (normal execution), a None value is placed on the input queue for
         each worker. The workers are looking for this sentinel value and interpret it as a signal to
         terminate themselves. If `interrupted` is True, a KeyboardInterrupt occurred. The workers are
@@ -522,6 +543,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         """Merge the list of accumulators into a single `WordOccurrenceAccumulator` with all
         occurrence and co-occurrence counts, and a `num_docs` that reflects the total observed
         by all the individual accumulators.
+
         """
         accumulator = WordOccurrenceAccumulator(self.relevant_ids, self.dictionary)
         for other_accumulator in accumulators:
