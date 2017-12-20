@@ -218,8 +218,8 @@ def unique_ids_from_segments(segmented_topics):
     Example
     -------
     >>> from gensim.topic_coherence import probability_estimation
+    >>>
     >>> segmentation = [[(1, 2)]]
-    >>> # should be set([1, 2])
     >>> probability_estimation.unique_ids_from_segments(segmentation)
     set([1, 2])
 
