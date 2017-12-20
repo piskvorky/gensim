@@ -22,14 +22,14 @@ def p_boolean_document(corpus, segmented_topics):
 
     Parameters
     ----------
-    corpus : list
+    corpus : iterable of list of (int, int)
         The corpus of documents.
     segmented_topics: list of (int, int).
         Each tuple (word_id_set1, word_id_set2) is either a single integer, or a `numpy.ndarray` of integers.
 
     Returns
     -------
-    :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
+    :class:`~gensim.topic_coherence.text_analysis.CorpusAccumulator`
         Word occurrence accumulator instance that can be used to lookup token frequencies and co-occurrence frequencies.
 
     Examples
@@ -73,13 +73,17 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
 
     Parameters
     ----------
-    texts : list of str
-    segmented_topics: list of (int, int).
+    texts : iterable of iterable of str
+        Input text
+    segmented_topics: list of (int, int)
         Each tuple (word_id_set1, word_id_set2) is either a single integer, or a `numpy.ndarray` of integers.
-    dictionary : :class:`~gensim.corpora.dictionary`
+    dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
         Gensim dictionary mapping of the tokens and ids.
     window_size : int
-        Size of the sliding window. 110 found out to be the ideal size for large corpora.
+        Size of the sliding window, 110 found out to be the ideal size for large corpora.
+    processes : int, optional
+        Number of process that will be used for
+        :class:`~gensim.topic_coherence.text_analysis.ParallelWordOccurrenceAccumulator`
 
     Notes
     -----
@@ -90,8 +94,11 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
 
     Returns
     -------
-    :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
-        Word occurrence accumulator instance that can be used to lookup token frequencies and co-occurrence frequencies.
+    :class:`~gensim.topic_coherence.text_analysis.WordOccurrenceAccumulator`
+        if `processes` = 1 OR
+    :class:`~gensim.topic_coherence.text_analysis.ParallelWordOccurrenceAccumulator`
+        otherwise. This is word occurrence accumulator instance that can be used to lookup
+        token frequencies and co-occurrence frequencies.
 
     Examples
     ---------
@@ -135,26 +142,27 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
 
 
 def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=1, model=None):
-    """Train word2vec model on `texts` if model is not None.
+    """Train word2vec model on `texts` if `model` is not None.
 
     Parameters
     ----------
-    texts : list of str
-    segmented_topics : list of tuples of (word_id_set1, word_id_set2)
+    texts : iterable of iterable of str
+        Input text
+    segmented_topics : iterable of iterable of str
         Output from the segmentation of topics. Could be simply topics too.
     dictionary : :class:`~gensim.corpora.dictionary`
         Gensim dictionary mapping of the tokens and ids.
     window_size : int
         Size of the sliding window.
-    processes: int
+    processes : int
         Number of processes to use.
-    model: Word2Vec (:class:`~gensim.models.keyedvectors.KeyedVectors`)
+    model : :class:`~gensim.models.word2vec.Word2Vec` or :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
         If None, a new Word2Vec model is trained on the given text corpus. Otherwise,
         it should be a pre-trained Word2Vec context vectors.
 
     Returns
     -------
-    :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
+    :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator`
         Text accumulator with trained context vectors.
 
     Examples
