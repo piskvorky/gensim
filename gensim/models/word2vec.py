@@ -116,6 +116,7 @@ from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.models.keyedvectors import Word2VecKeyedVectors, Vocab
 from gensim.models.base_any2vec import BaseAny2VecModel,\
     BaseVocabBuilder, BaseModelTrainables
+from gensim.models import word2vec_utils
 
 try:
     from queue import Queue, Empty
@@ -244,7 +245,6 @@ class Word2Vec(BaseAny2VecModel):
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
         self.alpha = float(alpha)
-        self.min_alpha_yet_reached = float(alpha)  # To warn user if alpha increases
         self.window = int(window)
         self.random = random.RandomState(seed)
         self.min_alpha = float(min_alpha)
@@ -278,6 +278,14 @@ class Word2Vec(BaseAny2VecModel):
                     "The rule, if given, is only used to prune vocabulary during build_vocab() "
                     "and is not stored as part of the model. Model initialized without sentences. "
                     "trim_rule provided, if any, will be ignored.")
+
+    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
+        """
+        Build vocabulary from a sequence of sentences (can be a once-only generator stream).
+        Each sentence must be a list of unicode strings.
+        """
+        super(Word2Vec, self).build_vocab(
+            sentences, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, progress_per=progress_per)
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
         """
@@ -340,7 +348,6 @@ class Word2Vec(BaseAny2VecModel):
         self.trainables.reset_weights(vocabulary=self.vocabulary)
 
     def _set_keyedvectors(self):
-        """Point `keyedvectors` attributes to corresponding `trainables`"""
         self.wv.vectors = self.trainables.vectors
         self.wv.vector_size = self.trainables.vector_size
         self.wv.vocab = self.vocabulary.vocab
@@ -360,34 +367,26 @@ class Word2Vec(BaseAny2VecModel):
         return tally, self._raw_word_count(sentences)
 
     def _get_job_params(self):
-        """Return the paramter required for each batch"""
-        if self.alpha > self.min_alpha_yet_reached:
-            logger.warning("Effective 'alpha' higher than previous training cycles")
-            self.min_alpha_yet_reached = self.alpha
-        return self.alpha
+        """Return the paramter required for each batch."""
+        return word2vec_utils._get_job_params(self)
 
     def _update_job_params(self, job_params, progress, cur_epoch):
-        start_alpha = self.trainables.alpha
-        end_alpha = self.trainables.min_alpha
-        progress *= (float(cur_epoch + 1) / float(self.epochs))
-        next_alpha = start_alpha - (start_alpha - end_alpha) * progress
-        next_alpha = max(end_alpha, next_alpha)
-        return next_alpha
+        return word2vec_utils._update_job_params(self, job_params, progress, cur_epoch)
 
     def _get_thread_working_mem(self):
-        work = matutils.zeros_aligned(self.trainables.vector_size, dtype=REAL)  # per-thread private work memory
-        neu1 = matutils.zeros_aligned(self.trainables.vector_size, dtype=REAL)
-        return work, neu1
+        return word2vec_utils._get_thread_working_mem(self)
 
     def _raw_word_count(self, job):
         """Return the number of words in a given job."""
-        return sum(len(sentence) for sentence in job)
+        return word2vec_utils._raw_word_count(job)
 
     def _clear_post_train(self):
         """Resets certain properties of the model, post training. eg. `kv.syn0norm`"""
         self.wv.vectors_norm = None
 
     def _set_train_params(self, **kwargs):
+        self.trainables.alpha = self.alpha
+        self.trainables.min_alpha = self.min_alpha
         if 'compute_loss' in kwargs:
             self.compute_loss = kwargs['compute_loss']
         self.running_training_loss = 0
@@ -399,31 +398,28 @@ class Word2Vec(BaseAny2VecModel):
         self.vocabulary.index2word = self.wv.index2word
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
-        if self.wv:
-            self._set_params_from_kv()
-        if self.model_trimmed_post_training:
-            raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
+        return word2vec_utils._check_training_sanity(
+            self, epochs=epochs, total_examples=total_examples, total_words=total_words)
 
-        if not self.vocabulary.vocab:  # should be set by `build_vocab`
-            raise RuntimeError("you must first build vocabulary before training the model")
-        if not len(self.trainables.vectors):
-            raise RuntimeError("you must initialize vectors before training the model")
-
-        if not hasattr(self.vocabulary, 'corpus_count'):
-            raise ValueError(
-                "The number of examples in the training corpus is missing. "
-                "Please make sure this is set inside `build_vocab` function."
-                "Call the `build_vocab` function before calling `train`."
-            )
-
-        if total_words is None and total_examples is None:
-            raise ValueError(
-                "You must specify either total_examples or total_words, for proper job parameters updation"
-                "and progress calculations. "
-                "The usual value is total_examples=model.corpus_count."
-            )
-        if epochs is None:
-            raise ValueError("You must specify an explict epochs count. The usual value is epochs=model.epochs.")
+    def train(self, sentences, total_examples=None, total_words=None,
+              epochs=None, start_alpha=None, end_alpha=None, word_count=0,
+              queue_factor=2, report_delay=1.0, compute_loss=None):
+        """
+        Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
+        For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
+        To support linear learning-rate decay from (initial) alpha to min_alpha, and accurate
+        progres-percentage logging, either total_examples (count of sentences) or total_words (count of
+        raw words in sentences) MUST be provided. (If the corpus is the same as was provided to
+        `build_vocab()`, the count of examples in that corpus will be available in the model's
+        `corpus_count` property.)
+        To avoid common mistakes around the model's ability to do multiple training passes itself, an
+        explicit `epochs` argument MUST be provided. In the common and recommended case, where `train()`
+        is only called once, the model's cached `iter` value should be supplied as `epochs` value.
+        """
+        return super(Word2Vec, self).train(
+            sentences, total_examples=total_examples, total_words=total_words,
+            epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
+            queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss)
 
     # basics copied from the train() function
     def score(self, sentences, total_sentences=int(1e6), chunksize=100, queue_factor=2, report_delay=1):
@@ -606,54 +602,6 @@ class Word2Vec(BaseAny2VecModel):
                         self.vectors_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
         logger.info("merged %d vectors into %s matrix from %s", overlap_count, self.wv.vectors.shape, fname)
 
-    @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar() instead")
-    def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
-        """
-        Deprecated. Use self.wv.most_similar() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.most_similar`
-        """
-        return self.wv.most_similar(positive, negative, topn, restrict_vocab, indexer)
-
-    @deprecated("Method will be removed in 4.0.0, use self.wv.wmdistance() instead")
-    def wmdistance(self, document1, document2):
-        """
-        Deprecated. Use self.wv.wmdistance() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.wmdistance`
-        """
-        return self.wv.wmdistance(document1, document2)
-
-    @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar_cosmul() instead")
-    def most_similar_cosmul(self, positive=None, negative=None, topn=10):
-        """
-        Deprecated. Use self.wv.most_similar_cosmul() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.most_similar_cosmul`
-        """
-        return self.wv.most_similar_cosmul(positive, negative, topn)
-
-    @deprecated("Method will be removed in 4.0.0, use self.wv.similar_by_word() instead")
-    def similar_by_word(self, word, topn=10, restrict_vocab=None):
-        """
-        Deprecated. Use self.wv.similar_by_word() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.similar_by_word`
-        """
-        return self.wv.similar_by_word(word, topn, restrict_vocab)
-
-    @deprecated("Method will be removed in 4.0.0, use self.wv.similar_by_vector() instead")
-    def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
-        """
-        Deprecated. Use self.wv.similar_by_vector() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.similar_by_vector`
-        """
-        return self.wv.similar_by_vector(vector, topn, restrict_vocab)
-
-    @deprecated("Method will be removed in 4.0.0, use self.wv.doesnt_match() instead")
-    def doesnt_match(self, words):
-        """
-        Deprecated. Use self.wv.doesnt_match() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.doesnt_match`
-        """
-        return self.wv.doesnt_match(words)
-
     @deprecated("Method will be removed in 4.0.0, use self.wv.__getitem__() instead")
     def __getitem__(self, words):
         """
@@ -669,22 +617,6 @@ class Word2Vec(BaseAny2VecModel):
         Refer to the documentation for `gensim.models.KeyedVectors.__contains__`
         """
         return self.wv.__contains__(word)
-
-    @deprecated("Method will be removed in 4.0.0, use self.wv.similarity() instead")
-    def similarity(self, w1, w2):
-        """
-        Deprecated. Use self.wv.similarity() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.similarity`
-        """
-        return self.wv.similarity(w1, w2)
-
-    @deprecated("Method will be removed in 4.0.0, use self.wv.n_similarity() instead")
-    def n_similarity(self, ws1, ws2):
-        """
-        Deprecated. Use self.wv.n_similarity() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.n_similarity`
-        """
-        return self.wv.n_similarity(ws1, ws2)
 
     def predict_output_word(self, context_words_list, topn=10):
         """Report the probability distribution of the center word given the context words
@@ -749,42 +681,10 @@ class Word2Vec(BaseAny2VecModel):
         most_similar = most_similar or Word2VecKeyedVectors.most_similar
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
 
-    @staticmethod
-    @deprecated("Method will be removed in 4.0.0, use self.wv.log_evaluate_word_pairs() instead")
-    def log_evaluate_word_pairs(pearson, spearman, oov, pairs):
-        """
-        Deprecated. Use self.wv.log_evaluate_word_pairs() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.log_evaluate_word_pairs`
-        """
-        return Word2VecKeyedVectors.log_evaluate_word_pairs(pearson, spearman, oov, pairs)
-
-    @deprecated("Method will be removed in 4.0.0, use self.wv.evaluate_word_pairs() instead")
-    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
-                            case_insensitive=True, dummy4unknown=False):
-        """
-        Deprecated. Use self.wv.evaluate_word_pairs() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.evaluate_word_pairs`
-        """
-        return self.wv.evaluate_word_pairs(pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
-
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
         )
-
-    @deprecated(
-        "Method will be removed in 4.0.0, keep just_word_vectors = model.wv to retain just the KeyedVectors instance"
-    )
-    def _minimize_model(self, save_syn1=False, save_syn1neg=False, save_vectors_lockf=False):
-        if save_syn1 and save_syn1neg and save_vectors_lockf:
-            return
-        if hasattr(self.trainables, 'syn1') and not save_syn1:
-            del self.trainables.syn1
-        if hasattr(self.trainables, 'syn1neg') and not save_syn1neg:
-            del self.trainables.syn1neg
-        if hasattr(self.trainables, 'vectors_lockf') and not save_vectors_lockf:
-            del self.trainables.vectors_lockf
-        self.model_trimmed_post_training = True
 
     def delete_temporary_training_data(self, replace_word_vectors_with_normalized=False):
         """
@@ -1020,7 +920,7 @@ class Word2VecVocab(BaseVocabBuilder):
         self.sorted_vocab = sorted_vocab
         self.null_word = null_word
 
-    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
+    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None, **kwargs):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
         sentence_no = -1
@@ -1204,6 +1104,7 @@ class Word2VecTrainables(BaseModelTrainables):
         super(Word2VecTrainables, self).__init__(vector_size=vector_size, seed=seed)
         self.cum_table = None  # for negative sampling
         self.alpha = alpha
+        self.min_alpha_yet_reached = float(alpha)  # To warn user if alpha increases
         self.min_alpha = min_alpha
         self.hs = hs
         self.negative = negative
