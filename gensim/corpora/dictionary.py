@@ -36,6 +36,9 @@ logger = logging.getLogger('gensim.corpora.dictionary')
 
 class Dictionary(utils.SaveLoad, Mapping):
     """Dictionary encapsulates the mapping between normalized words and their integer ids.
+
+    Notes
+    -----
     The main function is `doc2bow`, which converts a collection of words to its
     bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
 
@@ -71,13 +74,13 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     """
     def __init__(self, documents=None, prune_at=2000000):
-        self.token2id = {}  # token -> tokenId
-        self.id2token = {}  # reverse mapping for token2id; only formed on request, to save memory
-        self.dfs = {}  # document frequencies: tokenId -> in how many documents this token appeared
+        self.token2id = {}
+        self.id2token = {}
+        self.dfs = {}
 
-        self.num_docs = 0  # number of documents processed
-        self.num_pos = 0  # total number of corpus positions
-        self.num_nnz = 0  # total number of non-zeroes in the BOW matrix
+        self.num_docs = 0
+        self.num_pos = 0
+        self.num_nnz = 0
 
         if documents is not None:
             self.add_documents(documents, prune_at=prune_at)
@@ -128,10 +131,11 @@ class Dictionary(utils.SaveLoad, Mapping):
         return Dictionary(documents=documents)
 
     def add_documents(self, documents, prune_at=2000000):
-        """
-        Update dictionary from a collection of documents. Each document is a list
-        of tokens = **tokenized and normalized** strings (either utf8 or unicode).
+        """Update dictionary from a collection of documents.
 
+        Notes
+        -----
+        Each document is a list of tokens = **tokenized and normalized** strings (either utf8 or unicode).
         This is a convenience wrapper for calling `doc2bow` on each document
         with `allow_update=True`, which also prunes infrequent words, keeping the
         total number of unique words <= `prune_at`. This is to save memory on very
@@ -158,7 +162,11 @@ class Dictionary(utils.SaveLoad, Mapping):
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """
         Convert `document` (a list of words) into the bag-of-words format = list
-        of `(token_id, token_count)` 2-tuples. Each word is assumed to be a
+        of `(token_id, token_count)` 2-tuples.
+
+        Notes
+        -----
+        Each word is assumed to be a
         **tokenized and normalized** string (either unicode or utf8-encoded). No further preprocessing
         is done on the words in `document`; apply tokenization, stemming etc. before
         calling this method.
