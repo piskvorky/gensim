@@ -6,6 +6,7 @@
 
 
 import logging
+from functools import partial
 
 from gensim import interfaces, matutils, utils
 from six import iteritems
@@ -51,6 +52,38 @@ def precompute_idfs(wglobal, dfs, total_docs):
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
     return {termid: wglobal(df, total_docs) for termid, df in iteritems(dfs)}
+
+
+def wlocal_g(tf, n_tf):  # TODO rename it (to avoid confusion)
+    if n_tf == "n":
+        return tf
+    elif n_tf == "l":
+        return 1 + np.log(tf) / np.log(2)
+    elif n_tf == "a":
+        return 0.5 + (0.5 * tf / tf.max(axis=0))
+    elif n_tf == "b":
+        return tf.astype('bool').astype('int')
+    elif n_tf == "L":
+        return (1 + np.log(tf) / np.log(2)) / (1 + np.log(tf.mean(axis=0) / np.log(2)))
+
+
+def wglobal_g(docfreq, totaldocs, n_df):  # TODO rename it (to avoid confusion)
+    if n_df == "n":
+        return utils.identity(docfreq)
+    elif n_df == "t":
+        return np.log(1.0 * totaldocs / docfreq) / np.log(2)
+    elif n_df == "p":
+        return np.log((1.0 * totaldocs - docfreq) / docfreq) / np.log(2)
+
+
+def normalize_g(x, n_n):  # TODO rename it (to avoid confusion)
+    if n_n == "n":
+        return x
+    elif n_n == "c":
+        return matutils.unitvec(x)
+    # TODO write byte-size normalisation
+    # elif n_n == "b":
+    #    pass
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -148,37 +181,9 @@ class TfidfModel(interfaces.TransformationABC):
         if smartirs is not None:
             n_tf, n_df, n_n = resolve_weights(smartirs)
 
-            def wlocal(tf):
-                if n_tf == "n":
-                    return tf
-                elif n_tf == "l":
-                    return 1 + np.log(tf) / np.log(2)
-                elif n_tf == "a":
-                    return 0.5 + (0.5 * tf / tf.max(axis=0))
-                elif n_tf == "b":
-                    return tf.astype('bool').astype('int')
-                elif n_tf == "L":
-                    return (1 + np.log(tf) / np.log(2)) / (1 + np.log(tf.mean(axis=0) / np.log(2)))
-            self.wlocal = wlocal
-
-            def wglobal(docfreq, totaldocs):
-                if n_df == "n":
-                    return utils.identity(docfreq)
-                elif n_df == "t":
-                    return np.log(1.0 * totaldocs / docfreq) / np.log(2)
-                elif n_df == "p":
-                    return np.log((1.0 * totaldocs - docfreq) / docfreq) / np.log(2)
-            self.wglobal = wglobal
-
-            def normalize(x):
-                if n_n == "n":
-                    return x
-                elif n_n == "c":
-                    return matutils.unitvec(x)
-                # TODO write byte-size normalisation
-                # elif n_n == "b":
-                #    pass
-            self.normalize = normalize
+            self.wlocal = partial(wlocal_g, n_tf=n_tf)
+            self.wglobal = partial(wglobal_g, n_df=n_df)
+            self.normalize = partial(normalize_g, n_n=n_n)
 
         if dictionary is not None:
             # user supplied a Dictionary object, which already contains all the
