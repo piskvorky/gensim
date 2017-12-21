@@ -105,7 +105,8 @@ def remove_markup(text):
         text = re.sub(RE_P13, '\n\\3', text)  # leave only cell content
         # remove empty mark-up
         text = text.replace('[]', '')
-        if old == text or iters > 2:  # stop if nothing changed between two iterations or after a fixed number of iterations
+        # stop if nothing changed between two iterations or after a fixed number of iterations
+        if old == text or iters > 2:
             break
 
     # the following is needed to make the tokenizer see '[[socialist]]s' as a single word 'socialists'
@@ -243,7 +244,8 @@ def extract_pages(f, filter_namespaces=False):
 _extract_pages = extract_pages  # for backward compatibility
 
 
-def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
+def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
+                    token_max_len=TOKEN_MAX_LEN, lower=True):
     """
     Parse a wikipedia article, returning its content as a list of tokens
     (utf8-encoded strings).
@@ -279,7 +281,8 @@ def _process_article(args):
 
 class WikiCorpus(TextCorpus):
     """
-    Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
+    Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
+    or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
 
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
@@ -289,7 +292,7 @@ class WikiCorpus(TextCorpus):
     <https://docs.python.org/2/library/bz2.html#de-compression-of-files>`_.
 
     >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
-    >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
+    >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format and mapping
 
     """
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,

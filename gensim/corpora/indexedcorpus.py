@@ -56,7 +56,8 @@ class IndexedCorpus(interfaces.CorpusABC):
         self.length = None
 
     @classmethod
-    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None, metadata=False):
+    def serialize(serializer, fname, corpus, id2word=None, index_fname=None,
+                  progress_cnt=None, labels=None, metadata=False):
         """
         Iterate through the document stream `corpus`, saving the documents to `fname`
         and recording byte offset of each document. Save the resulting index
@@ -93,7 +94,9 @@ class IndexedCorpus(interfaces.CorpusABC):
         offsets = serializer.save_corpus(fname, corpus, id2word, **kwargs)
 
         if offsets is None:
-            raise NotImplementedError("Called serialize on class %s which doesn't support indexing!" % serializer.__name__)
+            raise NotImplementedError(
+                "Called serialize on class %s which doesn't support indexing!" % serializer.__name__
+            )
 
         # store offsets persistently, using pickle
         # we shouldn't have to worry about self.index being a numpy.ndarray as the serializer will return
