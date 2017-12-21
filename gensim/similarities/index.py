@@ -59,7 +59,8 @@ class AnnoyIndexer(object):
         """
         Parameters
         ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec` or :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
+        model : :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec` or
+                :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
             Model, that will be used as source for index.
         num_trees : int, optional
             Number of trees for Annoy indexer.
