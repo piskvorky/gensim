@@ -104,6 +104,7 @@ class TfidfModel(interfaces.TransformationABC):
     >>> tfidf.save('/tmp/foo.tfidf_model')
 
     Model persistency is achieved via its load/save methods.
+
     """
 
     def __init__(self, corpus=None, id2word=None, dictionary=None, wlocal=utils.identity,
