@@ -91,14 +91,8 @@ class TfidfModel(interfaces.TransformationABC):
     Objects of this class realize the transformation between word-document co-occurrence
     matrix (integers) into a locally/globally weighted TF_IDF matrix (positive floats).
 
-    Methods
-    -------
-    __init__(corpus=None, id2word=None, dictionary=None, wlocal=utils.identity,
-                wglobal=df2idf, normalize=True, smartirs=None):
-            Calculates inverse document counts for all terms in the training corpus.
-    __getitem__(bow, eps=1e-12)
-            which transforms a simple count representation into the TfIdf space.
-
+    Examples
+    --------
     >>> tfidf = TfidfModel(corpus)
     >>> print(tfidf[some_doc])
     >>> tfidf.save('/tmp/foo.tfidf_model')
