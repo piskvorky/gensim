@@ -59,9 +59,9 @@ class AnnoyIndexer(object):
         """
         Parameters
         ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec` or :class:`~gensim.models.keyedvectors.KeyedVectors`, optional (default = None)
+        model : :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec` or :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
             Model, that will be used as source for index.
-        num_trees : int, optional (default = None)
+        num_trees : int, optional
             Number of trees for Annoy indexer.
 
         Examples
@@ -99,8 +99,8 @@ class AnnoyIndexer(object):
         ----------
         fname : str
             Path to output file, will produce 2 files: `fname` - parameters and `fname`.d - :class:`~annoy.AnnoyIndex`.
-        protocol : int
-            Protocol for pickle, optional (default = 2).
+        protocol : int, optional
+            Protocol for pickle.
 
         Notes
         -----
@@ -153,13 +153,13 @@ class AnnoyIndexer(object):
             self.labels = d['labels']
 
     def build_from_word2vec(self):
-        """Build an Annoy index using word vectors from a Word2Vec model"""
+        """Build an Annoy index using word vectors from a Word2Vec model."""
 
         self.model.init_sims()
         return self._build_from_model(self.model.wv.syn0norm, self.model.wv.index2word, self.model.vector_size)
 
     def build_from_doc2vec(self):
-        """Build an Annoy index using document vectors from a Doc2Vec model"""
+        """Build an Annoy index using document vectors from a Doc2Vec model."""
 
         docvecs = self.model.docvecs
         docvecs.init_sims()
@@ -167,7 +167,7 @@ class AnnoyIndexer(object):
         return self._build_from_model(docvecs.doctag_syn0norm, labels, self.model.vector_size)
 
     def build_from_keyedvectors(self):
-        """Build an Annoy index using word vectors from a KeyedVectors model"""
+        """Build an Annoy index using word vectors from a KeyedVectors model."""
 
         self.model.init_sims()
         return self._build_from_model(self.model.syn0norm, self.model.index2word, self.model.vector_size)
@@ -194,7 +194,7 @@ class AnnoyIndexer(object):
 
         Returns
         -------
-        [(str, float), ...]
+        list of (str, float)
             List of most similar items in format [(`item`, `cosine_distance`), ... ]
 
         """
