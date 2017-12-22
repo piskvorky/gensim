@@ -113,9 +113,9 @@ except ImportError:
         """
         return np.mean(np.abs(a - b))
 
-        from gensim.matutils import dirichlet_expectation
-        dirichlet_expectation_1d = dirichlet_expectation
-        dirichlet_expectation_2d = dirichlet_expectation
+    from gensim.matutils import dirichlet_expectation
+    dirichlet_expectation_1d = dirichlet_expectation
+    dirichlet_expectation_2d = dirichlet_expectation
     
 
 
