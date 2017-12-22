@@ -257,7 +257,7 @@ setup(
             sources=['./gensim/models/doc2vec_inner.c'],
             include_dirs=[model_dir]),
         Extension('gensim.models.sent2vec_inner',
-            sources=['./gensim/models/sent2vec_inner.c'],
+            sources=['./gensim/models/sent2vec_inner.cpp'],
             include_dirs=[model_dir],
             language="c++"),
         Extension('gensim.models.fasttext_inner',
