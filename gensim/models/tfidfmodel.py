@@ -167,11 +167,6 @@ class TfidfModel(interfaces.TransformationABC):
         self.num_docs, self.num_nnz, self.idfs = None, None, None
         self.smartirs = smartirs
 
-        if self.normalize is True:
-            self.normalize = matutils.unitvec
-        elif self.normalize is False:
-            self.normalize = utils.identity
-
         # If smartirs is not None, override wlocal, wglobal and normalize
         if smartirs is not None:
             n_tf, n_df, n_n = resolve_weights(smartirs)
@@ -255,9 +250,13 @@ class TfidfModel(interfaces.TransformationABC):
             for termid, tf in zip(termid_array, tf_array) if self.idfs.get(termid, 0.0) != 0.0
         ]
 
+        if self.normalize is True:
+            self.normalize = matutils.unitvec
+        elif self.normalize is False:
+            self.normalize = utils.identity
+
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
-
         vector = self.normalize(vector)
 
         # make sure there are no explicit zeroes in the vector (must be sparse)
