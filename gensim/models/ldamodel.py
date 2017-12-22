@@ -66,59 +66,15 @@ try:
 
 except ImportError:
     # else fall back to python/numpy
-    FAST_VERSION = -1
-    logger.warning('Slow version of {} is being used'.format(__name__))
+    from gensim.matutils import (dirichlet_expectation,
+                                 logsumexp,
+                                 mean_absolute_difference)
 
-    def logsumexp(x):
-        """
-        Log of sum of exponentials
-
-        Parameters
-        ----------
-        x : array_like
-            Input data
-
-        Returns
-        -------
-        float
-            log of sum of exponentials of elements in `x`
-
-        Notes
-        -----
-            for performance, does not support NaNs or > 1d arrays like
-            scipy.special.logsumexp()
-
-        """
-
-        x_max = np.max(x)
-        x = np.log(np.sum(np.exp(x - x_max)))
-        x += x_max
-
-        return x
-
-    def mean_absolute_difference(a, b):
-        """
-        Mean absolute difference between two arrays
-
-        Parameters
-        ----------
-        a : (M,) array_like of float32
-        b : (M,) array_like of float32
-
-        Returns
-        -------
-        float32
-            mean(abs(a - b))
-        
-        """
-        return np.mean(np.abs(a - b))
-
-    from gensim.matutils import dirichlet_expectation
     dirichlet_expectation_1d = dirichlet_expectation
     dirichlet_expectation_2d = dirichlet_expectation
     
-
-
+    FAST_VERSION = -1
+    logger.warning('Slow version of {} is being used'.format(__name__))
 
 
 def update_dir_prior(prior, N, logphat, rho):
