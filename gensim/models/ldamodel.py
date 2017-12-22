@@ -42,7 +42,6 @@ from six.moves import xrange
 from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
-from gensim.matutils import dirichlet_expectation
 from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jensen_shannon
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
@@ -56,113 +55,70 @@ DTYPE_TO_EPS = {
     np.float64: 1e-100,
 }
 
-def logsumexp(x):
-    """
-    Log of sum of exponentials
-
-    Parameters
-    ----------
-    x : array_like
-        Input data
-
-    Returns
-    -------
-    float
-        log of sum of exponentials of elements in `x`
-
-    Notes
-    -----
-        for performance, does not support NaNs or > 1d arrays like
-        scipy.special.logsumexp()
-
-    """
-
-    x_max = np.max(x)
-    x = np.log(np.sum(np.exp(x - x_max)))
-    x += x_max
-
-    return x
-
-def mean_absolute_difference(a, b):
-    """
-    Mean absolute difference between two arrays
-
-    Parameters
-    ----------
-    a : (M,) array_like of float32
-    b : (M,) array_like of float32
-
-    Returns
-    -------
-    float32
-        mean(abs(a - b))
-    
-    """
-    return np.mean(np.abs(a - b))
-
 try:
     # try to load fast, cythonized code if possible
-    from gensim.models.ldamodel_inner import (dirichlet_expectation_1d_f32, dirichlet_expectation_1d_f64,
-                                              dirichlet_expectation_2d_f32, dirichlet_expectation_2d_f64,
-                                              logsumexp_2d_f32, logsumexp_2d_f64,
-                                              mean_absolute_difference_f32, mean_absolute_difference_f64)
+    from gensim.models.ldamodel_inner import (dirichlet_expectation_1d,
+                                              dirichlet_expectation_2d,
+                                              logsumexp,
+                                              mean_absolute_difference)
     FAST_VERSION = 1
+    logger.info('Fast version of {} is being used'.format(__name__))
+
 except ImportError:
     # else fall back to python/numpy
     FAST_VERSION = -1
+    logger.warning('Slow version of {} is being used'.format(__name__))
+
+    def logsumexp(x):
+        """
+        Log of sum of exponentials
+
+        Parameters
+        ----------
+        x : array_like
+            Input data
+
+        Returns
+        -------
+        float
+            log of sum of exponentials of elements in `x`
+
+        Notes
+        -----
+            for performance, does not support NaNs or > 1d arrays like
+            scipy.special.logsumexp()
+
+        """
+
+        x_max = np.max(x)
+        x = np.log(np.sum(np.exp(x - x_max)))
+        x += x_max
+
+        return x
+
+    def mean_absolute_difference(a, b):
+        """
+        Mean absolute difference between two arrays
+
+        Parameters
+        ----------
+        a : (M,) array_like of float32
+        b : (M,) array_like of float32
+
+        Returns
+        -------
+        float32
+            mean(abs(a - b))
+        
+        """
+        return np.mean(np.abs(a - b))
+
+        from gensim.matutils import dirichlet_expectation
+        dirichlet_expectation_1d = dirichlet_expectation
+        dirichlet_expectation_2d = dirichlet_expectation
     
-    logsumexp_2d_f32 = logsumexp_2d_f64 = logsumexp
-    dirichlet_expectation_1d_f32 = dirichlet_expectation_1d_f64 = dirichlet_expectation
-    dirichlet_expectation_2d_f32 = dirichlet_expectation_2d_f64 = dirichlet_expectation
-    mean_absolute_difference_f32 = mean_absolute_difference_f64 = mean_absolute_difference
 
 
-def _attach_inner_methods(self, dtype):
-    """
-    Choose approriate implementation of "inner" methods 
-    
-    Inner methods are methods called in inner-loop of LDA model.
-    We choose approriate methods based on dtype and whether or not cythonized version
-    of methods is available
-
-    Parameters
-    ----------
-    self : LdaModel
-    dtype : numpy.dtype
-
-    Notes
-    -----
-        This will add following methods to self:
-            self._logsumexp()
-            self._dirichlet_expectation_1d
-            self._dirichlet_expectation_2d
-            self.mean_absolute_difference
-
-    """
-    if dtype == np.float16:
-        self._logsumexp = logsumexp
-        self._dirichlet_expectation_1d = dirichlet_expectation
-        self._dirichlet_expectation_2d = dirichlet_expectation
-        self._mean_absolute_difference = mean_absolute_difference
-    elif dtype == np.float32:
-        self._logsumexp = logsumexp_2d_f32
-        self._dirichlet_expectation_1d = dirichlet_expectation_1d_f32
-        self._dirichlet_expectation_2d = dirichlet_expectation_2d_f32
-        self._mean_absolute_difference = mean_absolute_difference_f32
-    elif dtype == np.float64:
-        self._logsumexp = logsumexp_2d_f64
-        self._dirichlet_expectation_1d = dirichlet_expectation_1d_f64
-        self._dirichlet_expectation_2d = dirichlet_expectation_2d_f64
-        self._mean_absolute_difference = mean_absolute_difference_f64
-    else:
-        raise ValueError(
-            "Incorrect 'dtype', please choose one of {}".format(
-                ", ".join("numpy.{}".format(tp.__name__) for tp in sorted(DTYPE_TO_EPS))))
-
-    if dtype == np.float16 or FAST_VERSION < 0:
-        logger.warning('Slow version of {} is being used'.format(__name__))
-    else:
-        logger.debug('Fast version of {} is being used'.format(__name__))
 
 
 def update_dir_prior(prior, N, logphat, rho):
@@ -198,7 +154,7 @@ class LdaState(utils.SaveLoad):
 
     """
 
-    def __init__(self, eta, shape, dtype=np.float32):
+    def __init__(self, eta, shape, dtype=np.float32, dirichlet_expectation=None):
         self.eta = eta.astype(dtype, copy=False)
         self.sstats = np.zeros(shape, dtype=dtype)
         self.numdocs = 0
@@ -276,7 +232,7 @@ class LdaState(utils.SaveLoad):
         return self.eta + self.sstats
 
     def get_Elogbeta(self):
-        return dirichlet_expectation(self.get_lambda())
+        return dirichlet_expectation_2d(self.get_lambda())
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
@@ -380,7 +336,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     ", ".join("numpy.{}".format(tp.__name__) for tp in sorted(DTYPE_TO_EPS))))
 
         self.dtype = dtype
-        _attach_inner_methods(self, dtype)
 
         # store user-supplied parameters
         self.id2word = id2word
@@ -468,7 +423,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Initialize the variational distribution q(beta|lambda)
         self.state = LdaState(self.eta, (self.num_topics, self.num_terms), dtype=self.dtype)
         self.state.sstats[...] = self.random_state.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
-        self.expElogbeta = np.exp(self._dirichlet_expectation_2d(self.state.sstats))
+        self.expElogbeta = np.exp(dirichlet_expectation_2d(self.state.sstats))
 
         # Check that we haven't accidentally fall back to np.float64
         assert self.eta.dtype == self.dtype
@@ -561,7 +516,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
         gamma = self.random_state.gamma(100., 1. / 100., (len(chunk), self.num_topics)).astype(self.dtype, copy=False)
-        Elogtheta = self._dirichlet_expectation_2d(gamma)
+        Elogtheta = dirichlet_expectation_2d(gamma)
         expElogtheta = np.exp(Elogtheta)
 
         assert Elogtheta.dtype == self.dtype
@@ -602,11 +557,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 # Substituting the value of the optimal phi back into
                 # the update for gamma gives this update. Cf. Lee&Seung 2001.
                 gammad = self.alpha + expElogthetad * np.dot(cts / phinorm, expElogbetad.T)
-                Elogthetad = self._dirichlet_expectation_1d(gammad)
+                Elogthetad = dirichlet_expectation_1d(gammad)
                 expElogthetad = np.exp(Elogthetad)
                 phinorm = np.dot(expElogthetad, expElogbetad) + eps
                 # If gamma hasn't changed much, we're done.
-                meanchange = self._mean_absolute_difference(gammad, lastgamma)
+                meanchange = mean_absolute_difference(gammad, lastgamma)
                 if meanchange < self.gamma_threshold:
                     converged += 1
                     break
@@ -651,7 +606,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         topic weights `alpha` given the last `gammat`.
         """
         N = float(len(gammat))
-        logphat = sum(self._dirichlet_expectation_1d(gamma) for gamma in gammat) / N
+        logphat = sum(dirichlet_expectation_1d(gamma) for gamma in gammat) / N
         assert logphat.dtype == self.dtype
 
         self.alpha = update_dir_prior(self.alpha, N, logphat, rho)
@@ -666,7 +621,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         word weights `eta` given the last `lambdat`.
         """
         N = float(lambdat.shape[0])
-        logphat = (sum(self._dirichlet_expectation_1d(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
+        logphat = (sum(dirichlet_expectation_1d(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
         assert logphat.dtype == self.dtype
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
@@ -803,7 +758,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 logger.info('initializing %s workers', self.numworkers)
                 self.dispatcher.reset(self.state)
             else:
-                other = LdaState(self.eta, self.state.sstats.shape, self.dtype)
+                other = LdaState(self.eta, self.state.sstats.shape, self.dtype, dirichlet_expectation_1d)
             dirty = False
 
             reallen = 0
@@ -917,7 +872,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         score = 0.0
         _lambda = self.state.get_lambda()
-        Elogbeta = dirichlet_expectation(_lambda)
+        Elogbeta = dirichlet_expectation_2d(_lambda)
 
         for d, doc in enumerate(corpus):  # stream the input doc-by-doc, in case it's too large to fit in RAM
             if d % self.chunksize == 0:
@@ -926,13 +881,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 gammad, _ = self.inference([doc])
             else:
                 gammad = gamma[d]
-            Elogthetad = self._dirichlet_expectation_2d(gammad)
+            Elogthetad = dirichlet_expectation_2d(gammad)
 
             assert gammad.dtype == self.dtype
             assert Elogthetad.dtype == self.dtype
 
             # E[log p(doc | theta, beta)]
-            score += np.sum(cnt * self._logsumexp(Elogthetad + Elogbeta[:, int(id)]) for id, cnt in doc)
+            score += np.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, int(id)]) for id, cnt in doc)
 
             # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is a vector
             score += np.sum((self.alpha - gammad) * Elogthetad)
@@ -1101,7 +1056,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 minimum_probability=minimum_probability,
                 minimum_phi_value=minimum_phi_value
             )
-            return self._apply(corpus, **kwargs)
+            return apply(corpus, **kwargs)
 
         gamma, phis = self.inference([bow], collect_sstats=per_word_topics)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution

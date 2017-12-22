@@ -11,37 +11,18 @@ from libc.math cimport log, exp, fabs
 from cython.parallel import prange
 
 
-def mean_absolute_difference_f32(a, b):
+def mean_absolute_difference(a, b):
     """
     Mean absolute difference between two arrays
 
     Parameters
     ----------
-    a : (M,) array_like of float32
-    b : (M,) array_like of float32
+    a : (M,) array_like
+    b : (M,) array_like
 
     Returns
     -------
-    float32
-        mean(abs(a - b))
-    
-    """
-    
-    return _mean_absolute_difference[float](a, b)
-
-
-def mean_absolute_difference_f64(a, b):
-    """
-    Mean absolute difference between two arrays
-
-    Parameters
-    ----------
-    a : (M,) array_like of float64
-    b : (M,) array_like of float64
-
-    Returns
-    -------
-    float64
+    float
         mean(abs(a - b))
     
     """
@@ -49,131 +30,95 @@ def mean_absolute_difference_f64(a, b):
     if (a.shape != b.shape):
         raise ValueError("a and b must have same shape")
 
-    return _mean_absolute_difference[double](a, b)
+    if a.dtype == np.float64:
+        return _mean_absolute_difference[double](a, b)
+    elif a.dtype == np.float32:
+        return _mean_absolute_difference[float](a, b)
+    elif a.dtype == np.float16:
+        return _mean_absolute_difference[float](a.astype(np.float32), 
+                                                b.astype(np.float32))
 
 
-def logsumexp_2d_f32(x):
+def logsumexp(x):
     """
     Log of sum of exponentials for 2d array
     
     Parameters
     ----------
-    x : (M, N) array_like of float32
+    x : (M, N) array_like
     
     Returns
     -------
-    float32
+    float
         log of sum of exponentials of elements in `x`
  
     """
 
-    return _logsumexp_2d[float](x)
+    if x.dtype == np.float64:
+        return _logsumexp_2d[double](x)
+    elif x.dtype == np.float32:
+        return _logsumexp_2d[float](x)
+    elif x.dtype == np.float16:
+        return _logsumexp_2d[float](x.astype(np.float32))
 
 
-def logsumexp_2d_f64(x):
-    """
-    Log of sum of exponentials for 2d array
-    
-    Parameters
-    ----------
-    x : (M, N) array_like of float64
-    
-    Returns
-    -------
-    float64
-        log of sum of exponentials of elements in `x`
- 
-    """
-    
-    return _logsumexp_2d[double](x)
-
-
-def dirichlet_expectation_2d_f32(alpha):
+def dirichlet_expectation_2d(alpha):
     """
     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
     
     Parameters
     ----------
-    alpha : (M, N) array_like of float32
+    alpha : (M, N) array_like
         Dirichlet parameter vector.  
         Each row is treated as a separate parameter vector
 
     Returns
     -------
-    (M, N) array_like of float32
+    (M, N) array_like
         log of expected values
 
     """
     
-    out = np.zeros(alpha.shape, dtype=np.float32)
-    _dirichlet_expectation_2d[float](alpha, out)
+    if alpha.dtype == np.float64:
+        out = np.zeros(alpha.shape, dtype=alpha.dtype)
+        _dirichlet_expectation_2d[double](alpha, out)
+    elif alpha.dtype == np.float32:
+        out = np.zeros(alpha.shape, dtype=alpha.dtype)
+        _dirichlet_expectation_2d[float](alpha, out)
+    elif alpha.dtype == np.float16:
+        out = np.zeros(alpha.shape, dtype=np.float32)
+        _dirichlet_expectation_2d[float](alpha.astype(np.float32), out)
+        out = out.astype(np.float16)
 
     return out
 
 
-def dirichlet_expectation_2d_f64(alpha):
+def dirichlet_expectation_1d(alpha):
     """
     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
     
     Parameters
     ----------
-    alpha : (M, N) array_like of float64
-        Dirichlet parameter vector.  
-        Each row is treated as a separate parameter vector.
-
-    Returns
-    -------
-    (M, N) array_like of float64
-        log of expected values
-
-    """
-
-    out = np.zeros(alpha.shape, dtype=np.float64)
-    _dirichlet_expectation_2d[double](alpha, out)
-
-    return out
-
-
-def dirichlet_expectation_1d_f32(alpha):
-    """
-    Expected value of log(theta) where theta is drawn from a Dirichlet distribution
-    
-    Parameters
-    ----------
-    alpha : (M,) array_like of float32
+    alpha : (M,) array_like
         Dirichlet parameter vector.  
 
     Returns
     -------
-    (M, ) array_like of float32
+    (M, ) array_like
         log of expected values
 
     """
 
-    out = np.zeros(alpha.shape, dtype=np.float32)
-    _dirichlet_expectation_1d[float](alpha, out)
-
-    return out
-
-
-def dirichlet_expectation_1d_f64(alpha):
-    """
-    Expected value of log(theta) where theta is drawn from a Dirichlet distribution
-    
-    Parameters
-    ----------
-    alpha : (M,) array_like of float64
-        Dirichlet parameter vector.  
-
-    Returns
-    -------
-    (M, ) array_like of float64
-        log of expected values
-
-    """
-
-    out = np.zeros(alpha.shape, dtype=np.float64)
-    _dirichlet_expectation_1d[double](alpha, out)
+    if alpha.dtype == np.float64:
+        out = np.zeros(alpha.shape, dtype=alpha.dtype)
+        _dirichlet_expectation_1d[double](alpha, out)
+    elif alpha.dtype == np.float32:
+        out = np.zeros(alpha.shape, dtype=alpha.dtype)
+        _dirichlet_expectation_1d[float](alpha, out)
+    elif alpha.dtype == np.float16:
+        out = np.zeros(alpha.shape, dtype=np.float32)
+        _dirichlet_expectation_1d[float](alpha.astype(np.float32), out)
+        out = out.astype(np.float16)
 
     return out
 
@@ -184,11 +129,11 @@ def digamma(DTYPE_t x):
 
     Parameters
     ----------
-    x : float32
+    x : float
 
     Returns
     -------
-    digamma : float32
+    digamma : float
     
     """
 
