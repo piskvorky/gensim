@@ -1000,6 +1000,9 @@ class TestTfIdfTransformer(unittest.TestCase):
         self.assertGreater(score, 0.40)
 
     def testPersistence(self):
+        # Test current model persistency.
+        self.model.set_params(smartirs='ntc')
+
         model_dump = pickle.dumps(self.model)
         model_load = pickle.loads(model_dump)
 
@@ -1010,213 +1013,171 @@ class TestTfIdfTransformer(unittest.TestCase):
         original_transformed_doc = self.model.transform(doc)
         self.assertEqual(original_transformed_doc, loaded_transformed_doc)
 
+        # compare backward model pickle compatibility
+        with open("test_data/tfidf_model.pkl", "rb") as model_handler:
+            model_load = pickle.load(model_handler)
+
+        loaded_transformed_doc = model_load.transform(doc)
+
+        # comparing the original and new models
+        original_transformed_doc = self.model.transform(doc)
+        self.assertEqual(original_transformed_doc, loaded_transformed_doc)
+
     def testModelNotFitted(self):
         tfidf_wrapper = TfIdfTransformer()
         self.assertRaises(NotFittedError, tfidf_wrapper.transform, corpus[0])
 
     def testConsistency(self):
-        docs = [corpus[0], corpus[1]]
+        # Test if `ntc` yields the default docs.
+        docs = [corpus[1], corpus[2]]
+
         self.model.set_params(smartirs='ntc')
         self.model.fit(self.corpus)
         transformed_docs = self.model.transform(docs)
-        expected_docs = [
-            [(0, 0.5773502691896257), (1, 0.5773502691896257), (2, 0.5773502691896257)],
-            [(3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.3244870206138555),
-             (6, 0.44424552527467476), (7, 0.3244870206138555), (8, 0.44424552527467476)]
-        ]
+
+        self.model.set_params(normalize=True)
+        self.model.fit(self.corpus)
+        expected_docs = self.model.transform(docs)
+
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
-        
-        
-        # nnn
-        docs = [corpus[0], corpus[1]]
+
+        # Testing all the variations of `wlocal`
+        # smartirs=`nnn`
         self.model.set_params(smartirs='nnn')
         self.model.fit(self.corpus)
+
         transformed_docs = self.model.transform(docs)
-        
-        expected_docs = [
-            [(0, 2), (1, 2), (2, 2)], 
-            [(3, 2), (4, 2), (5, 3), (6, 2), (7, 3), (8, 2)]
+        expected_docs = [[(3, 2), (4, 2), (5, 3), (6, 2), (7, 3), (8, 2)],
+                         [(5, 6), (9, 3), (10, 3)]
         ]
+
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))          
-        
-        # nnc
-        docs = [corpus[0], corpus[1]]
-        self.model.set_params(smartirs='nnc')
-        self.model.fit(self.corpus)
-        transformed_docs = self.model.transform(docs)
-        
-        expected_docs = [
-            [(0, 0.57735026918962584), (1, 0.57735026918962584), (2, 0.57735026918962584)],
-            [(3, 0.34299717028501764), (4, 0.34299717028501764), (5, 0.51449575542752646), (6, 0.34299717028501764), (7, 0.51449575542752646), (8, 0.34299717028501764)]
-        ]
-        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1])) 
-        
-        # ntn
-        docs = [corpus[0], corpus[1]]
-        self.model.set_params(smartirs='ntn')
-        self.model.fit(self.corpus)
-        transformed_docs = self.model.transform(docs)
-        
-        expected_docs = [
-            [(0, 2.1699250014423126), (1, 2.1699250014423126), (2, 2.1699250014423126)],
-            [(3, 2.1699250014423126), (4, 2.1699250014423126), (5, 1.5849625007211563), (6, 2.1699250014423126), (7, 1.5849625007211563), (8, 2.1699250014423126)]
-        ]
-        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1])) 
-        
-        # ntc
-        docs = [corpus[0], corpus[1]]
-        self.model.set_params(smartirs='ntc')
-        self.model.fit(self.corpus)
-        transformed_docs = self.model.transform(docs)
-        
-        expected_docs = [
-            [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)],
-            [(3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.32448702061385548), (6, 0.44424552527467476), (7, 0.32448702061385548), (8, 0.44424552527467476)]
-        ]
-        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))  
-        
-        # npn
-        docs = [corpus[0], corpus[1]]
-        self.model.set_params(smartirs='npn')
-        self.model.fit(self.corpus)
-        transformed_docs = self.model.transform(docs)
-        
-        expected_docs = [
-            [(0, 1.8073549220576042), (1, 1.8073549220576042), (2, 1.8073549220576042)],
-            [(3, 1.8073549220576042), (4, 1.8073549220576042), (5, 1.0), (6, 1.8073549220576042), (7, 1.0), (8, 1.8073549220576042)]
-        ]
-        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))    
-        
-        # npc
-        docs = [corpus[0], corpus[1]]
-        self.model.set_params(smartirs='npc')
-        self.model.fit(self.corpus)
-        transformed_docs = self.model.transform(docs)
-        
-        expected_docs = [
-            [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)],
-            [(3, 0.46563179782533826), (4, 0.46563179782533826), (5, 0.25763163180767745), (6, 0.46563179782533826), (7, 0.25763163180767745), (8, 0.46563179782533826)]
-        ]
-        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))  
-        
-        # lnn
-        docs = [corpus[0], corpus[1]]
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
+        # smartirs=`lnn`
         self.model.set_params(smartirs='lnn')
         self.model.fit(self.corpus)
+
         transformed_docs = self.model.transform(docs)
-        
-        expected_docs = [
-            [(0, 2.0), (1, 2.0), (2, 2.0)],
-            [(3, 2.0), (4, 2.0), (5, 3.0), (6, 2.0), (7, 3.0), (8, 2.0)]
+        expected_docs = [[(3, 2.0), (4, 2.0), (5, 3.0), (6, 2.0), (7, 3.0), (8, 2.0)],
+                         [(5, 6.0), (9, 3.0), (10, 3.0)]
         ]
+
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1])) 
-        
-        # lnc
-        docs = [corpus[0], corpus[1]]
-        self.model.set_params(smartirs='lnc')
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
+        # smartirs=`ann`
+        self.model.set_params(smartirs='ann')
         self.model.fit(self.corpus)
+
         transformed_docs = self.model.transform(docs)
-        
         expected_docs = [
-            [(0, 0.57735026918962584), (1, 0.57735026918962584), (2, 0.57735026918962584)],
-            [(3, 0.34299717028501764), (4, 0.34299717028501764), (5, 0.51449575542752646), (6, 0.34299717028501764), (7, 0.51449575542752646), (8, 0.34299717028501764)]
+            [(3, 2.0), (4, 2.0), (5, 3.0), (6, 2.0), (7, 3.0), (8, 2.0)],
+            [(5, 3.0), (9, 2.25), (10, 2.25)]
         ]
+
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1])) 
-        
-        # ltn
-        docs = [corpus[0], corpus[1]]
-        self.model.set_params(smartirs='ltn')
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
+        # smartirs=`bnn`
+        self.model.set_params(smartirs='bnn')
         self.model.fit(self.corpus)
+
         transformed_docs = self.model.transform(docs)
-        
         expected_docs = [
-            [(0, 2.1699250014423126), (1, 2.1699250014423126), (2, 2.1699250014423126)],
-            [(3, 2.1699250014423126), (4, 2.1699250014423126), (5, 1.5849625007211563), (6, 2.1699250014423126), (7, 1.5849625007211563), (8, 2.1699250014423126)]
+            [(3, 2), (4, 2), (5, 3), (6, 2), (7, 3), (8, 2)],
+            [(5, 3), (9, 3), (10, 3)]
         ]
+
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1])) 
-        
-        # ltc
-        docs = [corpus[0], corpus[1]]
-        self.model.set_params(smartirs='ltc')
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
+        # smartirs=`Lnn`
+        self.model.set_params(smartirs='Lnn')
         self.model.fit(self.corpus)
+
         transformed_docs = self.model.transform(docs)
-        
-        expected_docs = [[(0, 0.57735026918962573),
-                          (1, 0.57735026918962573),
-                          (2, 0.57735026918962573)],
-                         [(3, 0.44424552527467476),
-                          (4, 0.44424552527467476),
-                          (5, 0.32448702061385548),
-                          (6, 0.44424552527467476),
-                          (7, 0.32448702061385548),
-                          (8, 0.44424552527467476)]]
+        expected_docs = [[(3, 1.4635792826230198),
+                          (4, 1.4635792826230198),
+                          (5, 2.19536892393453),
+                          (6, 1.4635792826230198),
+                          (7, 2.19536892393453),
+                          (8, 1.4635792826230198)],
+                         [(5, 3.627141918134611), (9, 1.8135709590673055), (10, 1.8135709590673055)]
+        ]
+
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1])) 
-        
-        # lpn
-        docs = [corpus[0], corpus[1]]
-        self.model.set_params(smartirs='lpn')
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
+        # Testing all the variations of `glocal`
+        # smartirs=`ntn`
+        self.model.set_params(smartirs='ntn')
         self.model.fit(self.corpus)
+
         transformed_docs = self.model.transform(docs)
-        
-        expected_docs = [[(0, 1.8073549220576042),
-                          (1, 1.8073549220576042),
-                          (2, 1.8073549220576042)],
-                         [(3, 1.8073549220576042),
+        expected_docs = [[(3, 2.1699250014423126),
+                          (4, 2.1699250014423126),
+                          (5, 1.5849625007211563),
+                          (6, 2.1699250014423126),
+                          (7, 1.5849625007211563),
+                          (8, 2.1699250014423126)],
+                         [(5, 3.1699250014423126), (9, 1.5849625007211563), (10, 1.5849625007211563)]
+        ]
+
+        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
+        # smartirs=`npn`
+        self.model.set_params(smartirs='npn')
+        self.model.fit(self.corpus)
+
+        transformed_docs = self.model.transform(docs)
+        expected_docs = [[(3, 1.8073549220576042),
                           (4, 1.8073549220576042),
                           (5, 1.0),
                           (6, 1.8073549220576042),
                           (7, 1.0),
-                          (8, 1.8073549220576042)]]
-        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1])) 
-        
-        # lpc
-        docs = [corpus[0], corpus[1]]
-        self.model.set_params(smartirs='lpc')
-        self.model.fit(self.corpus)
-        transformed_docs = self.model.transform(docs)
-        
-        expected_docs = [[(0, 0.57735026918962573),
-                          (1, 0.57735026918962573),
-                          (2, 0.57735026918962573)],
-                         [(3, 0.46563179782533826),
-                          (4, 0.46563179782533826),
-                          (5, 0.25763163180767745),
-                          (6, 0.46563179782533826),
-                          (7, 0.25763163180767745),
-                          (8, 0.46563179782533826)]]
+                          (8, 1.8073549220576042)],
+                         [(5, 2.0), (9, 1.0), (10, 1.0)]
+        ]
+
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
-        
-        # lpc
-        docs = [corpus[0], corpus[1]]
-        self.model.set_params(smartirs='lpc')
+
+        # Testing all the variations of `normalize`
+        # smartirs=`nnc`
+        self.model.set_params(smartirs='nnc')
         self.model.fit(self.corpus)
+
         transformed_docs = self.model.transform(docs)
-        
-        #pprint.pprint(transformed_docs)
-        expected_docs = [[(0, 0.57735026918962573),
-                          (1, 0.57735026918962573),
-                          (2, 0.57735026918962573)],
-                         [(3, 0.46563179782533826),
-                          (4, 0.46563179782533826),
-                          (5, 0.25763163180767745),
-                          (6, 0.46563179782533826),
-                          (7, 0.25763163180767745),
-                          (8, 0.46563179782533826)]]
+        expected_docs = [[(3, 0.34299717028501764),
+                          (4, 0.34299717028501764),
+                          (5, 0.51449575542752646),
+                          (6, 0.34299717028501764),
+                          (7, 0.51449575542752646),
+                          (8, 0.34299717028501764)],
+                         [(5, 0.81649658092772603),
+                          (9, 0.40824829046386302),
+                          (10, 0.40824829046386302)]
+        ]
+
         self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1])) 
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
+        # Check if wlocal and wglobal are overriden if smartirs is not None
+        self.model.set_params(wlocal=lambda x: x, wglobal=lambda x, y: x * x, smartirs='nnc')
+        self.model.fit(self.corpus)
+
+        transformed_docs = self.model.transform(docs)
+
+        self.model.set_params(wlocal=lambda x: x * x, wglobal=lambda x, y: x, smartirs='nnc')
+        self.model.fit(self.corpus)
+        expected_docs = self.model.transform(docs)
+
+        self.assertTrue(numpy.allclose(transformed_docs[0], expected_docs[0]))
+        self.assertTrue(numpy.allclose(transformed_docs[1], expected_docs[1]))
+
 
 class TestHdpTransformer(unittest.TestCase):
     def setUp(self):
