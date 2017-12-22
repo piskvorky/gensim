@@ -38,7 +38,6 @@ corpus = [dictionary.doc2bow(text) for text in texts]
 class TestTfidfModel(unittest.TestCase):
     def setUp(self):
         self.corpus = MmCorpus(datapath('testcorpus.mm'))
-        self.model = tfidfmodel.TfidfModel(self.corpus, normalize=True)
 
     def testTransform(self):
         # create the transformation model
@@ -227,8 +226,8 @@ class TestTfidfModel(unittest.TestCase):
 
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
-
 # endclass TestTfidfModel
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
