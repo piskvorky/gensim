@@ -113,12 +113,12 @@ cdef float update(vector[int] &context, int target, float lr, REAL_t *hidden, RE
 
 cdef float random_uniform()nogil:
 
-    return <float> (rand()) / <float> (RAND_MAX)
+    return rand() / (RAND_MAX + 1.0)
 
 
 cdef int random_range(int a, int b)nogil:
 
-    return a + <int>(rand() / (RAND_MAX * b))
+    return a + <int>(rand() % ((b - a) + 1)
 
 
 cdef int get_line(vector[int] &wids, vector[int] &words, int max_line_size)nogil:
