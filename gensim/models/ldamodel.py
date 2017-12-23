@@ -110,7 +110,7 @@ class LdaState(utils.SaveLoad):
 
     """
 
-    def __init__(self, eta, shape, dtype=np.float32, dirichlet_expectation=None):
+    def __init__(self, eta, shape, dtype=np.float32):
         self.eta = eta.astype(dtype, copy=False)
         self.sstats = np.zeros(shape, dtype=dtype)
         self.numdocs = 0
@@ -714,7 +714,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 logger.info('initializing %s workers', self.numworkers)
                 self.dispatcher.reset(self.state)
             else:
-                other = LdaState(self.eta, self.state.sstats.shape, self.dtype, dirichlet_expectation_1d)
+                other = LdaState(self.eta, self.state.sstats.shape, self.dtype)
             dirty = False
 
             reallen = 0
