@@ -288,7 +288,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 onepass = True
         self.onepass = onepass
         self.extra_samples, self.power_iters = extra_samples, power_iters
-        self.dtype = dtype
+        self.dtype = np.float64
 
         if corpus is None and self.id2word is None:
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
@@ -302,7 +302,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.docs_processed = 0
         self.projection = Projection(
-            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples, dtype=dtype
+            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples, dtype=float32
         )
 
         self.numworkers = 1
@@ -394,7 +394,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         # serial version, there is only one "worker" (myself) => process the job directly
                         update = Projection(
                             self.num_terms, self.num_topics, job, extra_dims=self.extra_samples,
-                            power_iters=self.power_iters, dtype=self.dtype
+                            power_iters=self.power_iters, dtype=float32
                         )
                         del job
                         self.projection.merge(update, decay=decay)
@@ -411,7 +411,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             update = Projection(
                 self.num_terms, self.num_topics, corpus.tocsc(), extra_dims=self.extra_samples,
-                power_iters=self.power_iters, dtype=self.dtype
+                power_iters=self.power_iters, dtype=float32
             )
             self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents", corpus.shape[1])
@@ -668,7 +668,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     # first phase: construct the orthonormal action matrix Q = orth(Y) = orth((A * A.T)^q * A * O)
     # build Y in blocks of `chunksize` documents (much faster than going one-by-one
     # and more memory friendly than processing all documents at once)
-    y = np.zeros(dtype=dtype, shape=(num_terms, samples))
+    y = np.zeros(dtype=float32, shape=(num_terms, samples))
     logger.info("1st phase: constructing %s action matrix", str(y.shape))
 
     if scipy.sparse.issparse(corpus):

@@ -70,7 +70,7 @@ class AuthorTopicState(LdaState):
         self.sstats = np.zeros(lambda_shape, dtype)
         self.gamma = np.zeros(gamma_shape, dtype)
         self.numdocs = 0
-        self.dtype = dtype
+        self.dtype = np.float64
 
 
 def construct_doc2author(corpus, author2doc):
@@ -122,7 +122,7 @@ class AuthorTopicModel(LdaModel):
                  chunksize=2000, passes=1, iterations=50, decay=0.5, offset=1.0,
                  alpha='symmetric', eta='symmetric', update_every=1, eval_every=10,
                  gamma_threshold=0.001, serialized=False, serialization_path=None,
-                 minimum_probability=0.01, random_state=None,dtype=np.float32):
+                 minimum_probability=0.01, random_state=None,dtype=np.float64):
         """
         If the iterable corpus and one of author2doc/doc2author dictionaries are given,
         start training straight away. If not given, the model is left untrained
@@ -250,6 +250,7 @@ class AuthorTopicModel(LdaModel):
 
         self.author2id = {}
         self.id2author = {}
+        self.dtype = np.float64
 
         self.serialized = serialized
         if serialized and not serialization_path:
