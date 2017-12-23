@@ -22,17 +22,12 @@ class NormModel(interfaces.TransformationABC):
     corpus : iterable
         Iterable of documents.
     norm : {'l1', 'l2'}
-        Norm used to normalize. l1 and l2 norms are supported (l2 is default)
+        Norm used to normalize. l1 and l2 norms are supported (l2 is default).
 
-    Methods
-    -------
-    __init__(corpus=None, norm='l2')
-        Normalizes the terms in the given corpus document-wise.
-    calc_norm(corpus):
-        Calculates the norm by calling matutils.unitvec with the norm parameter.
 
-    Examples:
-    ---------
+    Examples
+    --------
+
     >>> from gensim.models import NormModel
     >>> from gensim.corpora import Dictionary
     >>> from gensim.test.utils import common_texts
@@ -42,6 +37,7 @@ class NormModel(interfaces.TransformationABC):
     >>> some_doc = dictionary.doc2bow(common_texts[0])
     >>> print(norm_l2[some_doc])
     >>> norm_ld.save('/tmp/foo.norm_model')
+
     """
 
     def __init__(self, corpus=None, norm='l2'):
@@ -83,6 +79,7 @@ class NormModel(interfaces.TransformationABC):
         ----------
         corpus : iterable
             Iterable of documents.
+
         """
         logger.info("Performing %s normalization...", self.norm)
         norms = []
@@ -104,6 +101,7 @@ class NormModel(interfaces.TransformationABC):
         ----------
         bow : :class:`~interfaces.CorpusABC` (iterable of documents) or list
         of (int, int).
+
         """
         vector = matutils.unitvec(bow, self.norm)
         return vector
@@ -121,5 +119,6 @@ class NormModel(interfaces.TransformationABC):
         ---------
         >>> norm_l2 = NormModel(corpus)
         >>> print(norm_l2[some_doc])
+
         """
         return self.normalize(bow)
