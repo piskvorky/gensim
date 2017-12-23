@@ -12,31 +12,16 @@ logger = logging.getLogger(__name__)
 
 
 class NormModel(interfaces.TransformationABC):
-    """
-    Objects of this class realize the explicit normalization of vectors.
+    """Objects of this class realize the explicit normalization of vectors.
 
-    Model persistency is achieved via its load/save methods.
+    Model persistency is achieved via load/save methods.
 
     Parameters
     ----------
     corpus : iterable
         Iterable of documents.
-    norm : {'l1', 'l2'}
+    norm : {'l2', 'l1'}, optional
         Norm used to normalize. l1 and l2 norms are supported (l2 is default).
-
-
-    Examples
-    --------
-
-    >>> from gensim.models import NormModel
-    >>> from gensim.corpora import Dictionary
-    >>> from gensim.test.utils import common_texts
-    >>> dictionary = Dictionary(common_texts)
-    >>> corpus = [dictionary.doc2bow(text) for text in common_texts]
-    >>> norm_l2 = NormModel(corpus)
-    >>> some_doc = dictionary.doc2bow(common_texts[0])
-    >>> print(norm_l2[some_doc])
-    >>> norm_ld.save('/tmp/foo.norm_model')
 
     """
 
@@ -114,11 +99,6 @@ class NormModel(interfaces.TransformationABC):
         ----------
         bow : :class:`~interfaces.CorpusABC` (iterable of documents) or list
         of (int, int).
-
-        Examples:
-        ---------
-        >>> norm_l2 = NormModel(corpus)
-        >>> print(norm_l2[some_doc])
 
         """
         return self.normalize(bow)
