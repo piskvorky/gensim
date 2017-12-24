@@ -301,25 +301,26 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Notes
         -----
-        Filter out tokens that appear in
-        1ю less than `no_below` documents (absolute number) or
-        2. more than `no_above` documents (fraction of total corpus size, *not* absolute number).
+        Filter out tokens that appear in \n
+        1. less than `no_below` documents (absolute number) or \n
+        2. more than `no_above` documents (fraction of total corpus size, *not* absolute number) \n
+        #TODO: some strange stringjumps
         3. if tokens are given in keep_tokens (list of strings), they will be kept regardless of
-        the `no_below` and `no_above` settings
+        the `no_below` and `no_above` settings \n
         4. after (1), (2) and (3), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
-        After the pruning, shrink resulting gaps in word ids.
+        After the pruning, shrink resulting gaps in word ids. \n
         **Note**: Due to the gap shrinking, the same word may have a different
         word id before and after the call to this function!
 
         Parameters
         ----------
-        no_below : int
+        no_below : int, optional
             Keep less than `no_below` documents.
-        no_above : float
+        no_above : float, optional
             Keep more than `no_below` documents (fraction of total corpus size, not an absolute number).
-        keep_n : int
+        keep_n : int, optional
             Keep only the first `keep_n` most frequent tokens.
-        keep_tokens : list of str
+        keep_tokens : list of str, optional
             Keep token if it is in `keep_tokens` (regardless of another parameters).
 
         Examples
@@ -331,7 +332,6 @@ class Dictionary(utils.SaveLoad, Mapping):
         Dictionary(1 unique tokens: [u'maso'])
 
         """
-
         no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
 
         # determine which tokens to keep
@@ -361,13 +361,26 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.info("resulting dictionary: %s", self)
 
     def filter_n_most_frequent(self, remove_n):
-        """
-        Filter out the 'remove_n' most frequent tokens that appear in the documents.
+        """Filter out the 'remove_n' most frequent tokens that appear in the documents.
 
+        Notes
+        -----
         After the pruning, shrink resulting gaps in word ids.
-
         **Note**: Due to the gap shrinking, the same word may have a different
         word id before and after the call to this function!
+
+        Parameters
+        ----------
+        remove_n : int
+            Number of the most frequent tokens.
+
+        Examples
+        --------
+        >>> from gensim.corpora import dictionary
+        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
+        >>> data.filter_n_most_frequent(2)
+        Dictionary(3 unique tokens: [u'maso', u'ema', u'mele'])
+
         """
         # determine which tokens to keep
         most_frequent_ids = (v for v in itervalues(self.token2id))
@@ -381,11 +394,40 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.info("resulting dictionary: %s", self)
 
     def filter_tokens(self, bad_ids=None, good_ids=None):
-        """
-        Remove the selected `bad_ids` tokens from all dictionary mappings, or, keep
-        selected `good_ids` in the mapping and remove the rest.
+        """Remove the selected `bad_ids` tokens from all dictionary mappings, or, keep selected `good_ids`
+        in the mapping and remove the rest.
 
-        `bad_ids` and `good_ids` are collections of word ids to be removed.
+        Parameters
+        ----------
+        bad_ids : collection of int, optional
+            Collection of word ids to be removed.
+        good_ids : collection of int, optional
+            Keep selected collection of word ids and remove the rest.
+
+        Examples
+        --------
+        >>> # bad ids:
+        >>> from gensim.corpora import dictionary
+        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
+        >>> # show current ids in dictionary mapping
+        >>> data.token2id
+        {u'm\xe1ma': 0, u'maso': 1, u'ema': 3, u'm\xe1': 4, u'mele': 2}
+        >>>
+        >>> data.filter_tokens([0,4])
+        >>> print data
+        Dictionary(3 unique tokens: [u'maso', u'ema', u'mele'])
+
+        >>> # good ids:
+        >>> from gensim.corpora import dictionary
+        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
+        >>> # show current ids in dictionary mapping
+        >>> data.token2id
+        {u'm\xe1ma': 0, u'maso': 1, u'ema': 3, u'm\xe1': 4, u'mele': 2}
+        >>>
+        >>> data.filter_tokens(None,[0,4])
+        >>> print data
+        Dictionary(2 unique tokens: [u'm\xe1ma', u'm\xe1'])
+
         """
         if bad_ids is not None:
             bad_ids = set(bad_ids)
@@ -398,12 +440,23 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.compactify()
 
     def compactify(self):
-        """
-        Assign new word ids to all words.
+        """Assign new word ids to all words.
 
+        Notes
+        -----
         This is done to make the ids more compact, e.g. after some tokens have
         been removed via :func:`filter_tokens` and there are gaps in the id series.
         Calling this method will remove the gaps.
+
+        #TODO: Ivan, probably it should be _compactify, because we remove words and their id only with filter_* methods,
+        so there is no need to call if for user.
+
+        Examples
+        --------
+        >>> from gensim.corpora import dictionary
+        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
+        >>> data.compactify()
+
         """
         logger.debug("rebuilding dictionary, shrinking gaps")
 
@@ -416,14 +469,31 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.dfs = {idmap[tokenid]: freq for tokenid, freq in iteritems(self.dfs)}
 
     def save_as_text(self, fname, sort_by_word=True):
-        """
-        Save this Dictionary to a text file, in format:
-        `num_docs`
-        `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`. Sorted by word,
-        or by decreasing word frequency.
+        """Save this Dictionary to a text file.
 
-        Note: text format should be use for corpus inspection. Use `save`/`load`
+        Parameters
+        ----------
+        fname : str
+            File name.
+        sort_by_word : bool, optional
+            Check if it is necessary to sort by word.
+
+        Notes
+        -----
+        Format:
+        `num_docs`
+        `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
+        Sorted by word, or by decreasing word frequency.
+        Hint: text format should be use for corpus inspection. Use `save`/`load`
         to store in binary format (pickle) for improved performance.
+
+        Examples
+        --------
+        >>> from gensim.corpora import dictionary
+        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
+        >>> data.save_as_text("testdata")
+        Got file "testdata.txt" with specified format (look at Notes).
+
         """
         logger.info("saving dictionary mapping to %s", fname)
         with utils.smart_open(fname, 'wb') as fout:
@@ -439,25 +509,38 @@ class Dictionary(utils.SaveLoad, Mapping):
                     fout.write(utils.to_utf8(line))
 
     def merge_with(self, other):
-        """
-        Merge another dictionary into this dictionary, mapping same tokens to the
-        same ids and new tokens to new ids. The purpose is to merge two corpora
+        """Merge another dictionary into this dictionary, mapping same tokens to the same ids and new tokens to new ids.
+
+        Notes
+        -----
+        The purpose is to merge two corpora
         created using two different dictionaries, one from `self` and one from `other`.
-
         `other` can be any id=>word mapping (a dict, a Dictionary object, ...).
-
         Return a transformation object which, when accessed as `result[doc_from_other_corpus]`,
         will convert documents from a corpus built using the `other` dictionary
         into a document using the new, merged dictionary (see :class:`gensim.interfaces.TransformationABC`).
 
-        Example:
+        Parameters
+        ----------
+        other : :class:`~gensim.corpora.dictionary.Dictionary`
+            Can be any id=>word mapping (a dict, a Dictionary object, ...).
 
-        >>> dict1 = Dictionary(some_documents)
-        >>> dict2 = Dictionary(other_documents)  # ids not compatible with dict1!
+        Return
+        ------
+        :class:`gensim.models.VocabTransform`
+            Transformation object.
+        #TODO: probably, i'm wrong.
+
+        Examples
+        --------
+        >>> from gensim.corpora import dictionary
+        >>> import itertools
+        >>> dict1 = dictionary.Dictionary(["máma mele maso".split()])
+        >>> dict2 = dictionary.Dictionary(["ema má máma hasta".split()])  # ids not compatible with dict1!
         >>> dict2_to_dict1 = dict1.merge_with(dict2)
         >>> # now we can merge corpora from the two incompatible dictionaries into one
-        >>> merged_corpus = itertools.chain(some_corpus_from_dict1, dict2_to_dict1[some_corpus_from_dict2])
-
+        >>> merged_corpus = itertools.chain(["máma mele maso".split()], dict2_to_dict1["ema má máma hasta".split()])
+        #TODO: Monday meeting
         """
         old2new = {}
         for other_id, other_token in iteritems(other):
@@ -485,9 +568,25 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     @staticmethod
     def load_from_text(fname):
-        """
-        Load a previously stored Dictionary from a text file.
-        Mirror function to `save_as_text`.
+        """Load a previously stored Dictionary from a text file. Mirror function to `save_as_text`.
+
+        Parameters
+        ----------
+        fname: str
+            File name.
+
+        Examples
+        --------
+        >>> # first, let's save some data
+        >>> from gensim.corpora import dictionary
+        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
+        >>> data.save_as_text("testdata")
+        >>>
+        >>> # then we will load it
+        >>> loaded_dict = dictionary.Dictionary.load_from_text("testdata")
+        >>> print loaded_dict
+        Dictionary(5 unique tokens: [u'maso', u'm\xe1', u'm\xe1ma', u'ema', u'mele'])
+
         """
         result = Dictionary()
         with utils.smart_open(fname) as f:
@@ -514,8 +613,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     @staticmethod
     def from_corpus(corpus, id2word=None):
-        """
-        Create Dictionary from an existing corpus. This can be useful if you only
+        """Create Dictionary from an existing corpus. This can be useful if you only
         have a term-document BOW matrix (represented by `corpus`), but not the
         original text corpus.
 
@@ -526,6 +624,8 @@ class Dictionary(utils.SaveLoad, Mapping):
         `id2word` is an optional dictionary that maps the `word_id` to a token. In
         case `id2word` isn't specified the mapping `id2word[word_id] = str(word_id)`
         will be used.
+
+        #TODO: Monday meeting.
         """
 
         result = Dictionary()
