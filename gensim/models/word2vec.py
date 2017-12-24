@@ -114,7 +114,7 @@ import warnings
 
 from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors, Vocab
-from gensim.models.base_any2vec import BaseAny2VecModel,\
+from gensim.models.base_any2vec import BaseWordEmbedddingsModel,\
     BaseVocabBuilder, BaseModelTrainables
 from gensim.models import word2vec_utils
 
@@ -131,7 +131,6 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.utils import deprecated
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
-from types import GeneratorType
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +145,7 @@ except ImportError:
     raise RuntimeError("Support for Python/Numpy implementations has been continued.")
 
 
-class Word2Vec(BaseAny2VecModel):
+class Word2Vec(BaseWordEmbedddingsModel):
     """
     Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
 
@@ -241,51 +240,19 @@ class Word2Vec(BaseAny2VecModel):
         else:
             logger.debug('Fast version of %s is being used', __name__)
 
-        self.sg = int(sg)
-        if size % 4 != 0:
-            logger.warning("consider setting layer size to a multiple of 4 for greater performance")
-        self.alpha = float(alpha)
-        self.window = int(window)
-        self.random = random.RandomState(seed)
-        self.min_alpha = float(min_alpha)
-        self.hs = hs
-        self.negative = negative
-        self.cbow_mean = int(cbow_mean)
         # self.null_word = null_word
         self.compute_loss = compute_loss
-        self.running_training_loss = 0
-
         self.wv = Word2VecKeyedVectors()
         self.vocabulary = Word2VecVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=sorted_vocab, null_word=null_word)
+            sorted_vocab=bool(sorted_vocab), null_word=null_word)
         self.trainables = Word2VecTrainables(
-            vector_size=size, seed=seed, alpha=alpha, min_alpha=min_alpha, hs=hs, negative=negative, hashfxn=hashfxn)
+            vector_size=size, seed=seed, hs=hs, negative=negative, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
-            workers=workers, vector_size=size, epochs=iter, callbacks=callbacks, batch_words=batch_words)
-
-        if sentences is not None:
-            if isinstance(sentences, GeneratorType):
-                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
-            self.build_vocab(sentences, trim_rule=trim_rule)
-            self.train(
-                sentences, total_examples=self.vocabulary.corpus_count, epochs=self.epochs,
-                start_alpha=self.trainables.alpha, end_alpha=self.trainables.min_alpha)
-        else:
-            if trim_rule is not None:
-                logger.warning(
-                    "The rule, if given, is only used to prune vocabulary during build_vocab() "
-                    "and is not stored as part of the model. Model initialized without sentences. "
-                    "trim_rule provided, if any, will be ignored.")
-
-    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
-        """
-        Build vocabulary from a sequence of sentences (can be a once-only generator stream).
-        Each sentence must be a list of unicode strings.
-        """
-        super(Word2Vec, self).build_vocab(
-            sentences, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, progress_per=progress_per)
+            sentences=sentences, workers=workers, vector_size=size, epochs=iter, callbacks=callbacks,
+            batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window, seed=seed,
+            hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha)
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
         """
@@ -336,23 +303,6 @@ class Word2Vec(BaseAny2VecModel):
         self.trainables.prepare_weights(update=update, vocabulary=self.vocabulary)  # build tables & arrays
         self._set_keyedvectors()
 
-    def reset_from(self, other_model):
-        """
-        Borrow shareable pre-built structures (like vocab) from the other_model. Useful
-        if testing multiple models in parallel on the same corpus.
-        """
-        self.wv.vocab = other_model.wv.vocab
-        self.wv.index2word = other_model.wv.index2word
-        self.trainables.cum_table = other_model.trainables.cum_table
-        self.vocabulary.corpus_count = other_model.vocabulary.corpus_count
-        self.trainables.reset_weights(vocabulary=self.vocabulary)
-
-    def _set_keyedvectors(self):
-        self.wv.vectors = self.trainables.vectors
-        self.wv.vector_size = self.trainables.vector_size
-        self.wv.vocab = self.vocabulary.vocab
-        self.wv.index2word = self.vocabulary.index2word
-
     def _do_train_job(self, sentences, alpha, inits):
         """
         Train a single batch of sentences. Return 2-tuple `(effective word count after
@@ -366,40 +316,20 @@ class Word2Vec(BaseAny2VecModel):
             tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
         return tally, self._raw_word_count(sentences)
 
-    def _get_job_params(self):
-        """Return the paramter required for each batch."""
-        return word2vec_utils._get_job_params(self)
-
-    def _update_job_params(self, job_params, progress, cur_epoch):
-        return word2vec_utils._update_job_params(self, job_params, progress, cur_epoch)
-
-    def _get_thread_working_mem(self):
-        return word2vec_utils._get_thread_working_mem(self)
-
-    def _raw_word_count(self, job):
-        """Return the number of words in a given job."""
-        return word2vec_utils._raw_word_count(job)
+    def _get_keyedvector_instance(self):
+        return Word2VecKeyedVectors()
 
     def _clear_post_train(self):
         """Resets certain properties of the model, post training. eg. `kv.syn0norm`"""
         self.wv.vectors_norm = None
 
     def _set_train_params(self, **kwargs):
-        self.trainables.alpha = self.alpha
-        self.trainables.min_alpha = self.min_alpha
+        self.trainables.hs = self.hs
+        self.trainables.negative = self.negative
+
         if 'compute_loss' in kwargs:
             self.compute_loss = kwargs['compute_loss']
         self.running_training_loss = 0
-
-    def _set_params_from_kv(self):
-        self.trainables.vectors = self.wv.vectors
-        self.trainables.vector_size = self.wv.vector_size
-        self.vocabulary.vocab = self.wv.vocab
-        self.vocabulary.index2word = self.wv.index2word
-
-    def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
-        return word2vec_utils._check_training_sanity(
-            self, epochs=epochs, total_examples=total_examples, total_words=total_words)
 
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
@@ -608,7 +538,7 @@ class Word2Vec(BaseAny2VecModel):
         Deprecated. Use self.wv.__getitem__() instead.
         Refer to the documentation for `gensim.models.KeyedVectors.__getitem__`
         """
-        return self.wv.__getitem__(words)   
+        return self.wv.__getitem__(words)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.__contains__() instead")
     def __contains__(self, word):
@@ -660,11 +590,11 @@ class Word2Vec(BaseAny2VecModel):
         """Estimate required memory for a model using current settings and provided vocabulary size."""
         vocab_size = vocab_size or len(self.vocabulary.vocab)
         report = report or {}
-        report['vocab'] = vocab_size * (700 if self.trainables.hs else 500)
+        report['vocab'] = vocab_size * (700 if self.hs else 500)
         report['vectors'] = vocab_size * self.vector_size * dtype(REAL).itemsize
-        if self.trainables.hs:
+        if self.hs:
             report['syn1'] = vocab_size * self.vector_size * dtype(REAL).itemsize
-        if self.trainables.negative:
+        if self.negative:
             report['syn1neg'] = vocab_size * self.vector_size * dtype(REAL).itemsize
         report['total'] = sum(report.values())
         logger.info(
@@ -672,6 +602,18 @@ class Word2Vec(BaseAny2VecModel):
             vocab_size, self.vector_size, report['total']
         )
         return report
+
+    def reset_from(self, other_model):
+        """
+        Borrow shareable pre-built structures (like vocab) from the other_model. Useful
+        if testing multiple models in parallel on the same corpus.
+        """
+        self.vocabulary.vocab = other_model.vocabulary.vocab
+        self.vocabulary.index2word = other_model.vocabulary.index2word
+        self.trainables.cum_table = other_model.trainables.cum_table
+        self.vocabulary.corpus_count = other_model.vocabulary.corpus_count
+        self.trainables.reset_weights(vocabulary=self.vocabulary)
+        self._set_keyedvectors()
 
     @staticmethod
     def log_accuracy(section):
@@ -702,44 +644,6 @@ class Word2Vec(BaseAny2VecModel):
         super(Word2Vec, self).save(*args, **kwargs)
 
     save.__doc__ = utils.SaveLoad.save.__doc__
-
-    @classmethod
-    def load(cls, *args, **kwargs):
-        model = super(Word2Vec, cls).load(*args, **kwargs)
-        # update older models
-        if hasattr(model, 'table'):
-            delattr(model, 'table')  # discard in favor of cum_table
-        if model.trainables.negative and hasattr(model.wv, 'index2word'):
-            model.trainables.make_cum_table(vocabulary=model.vocabulary)  # rebuild cum_table from vocabulary
-        if not hasattr(model.vocabulary, 'corpus_count'):
-            model.corpus_count = None
-        for v in model.wv.vocab.values():
-            if hasattr(v, 'sample_int'):
-                break  # already 0.12.0+ style int probabilities
-            elif hasattr(v, 'sample_probability'):
-                v.sample_int = int(round(v.sample_probability * 2**32))
-                del v.sample_probability
-        if not hasattr(model.trainables, 'vectors_lockf') and hasattr(model.trainables, 'vectors'):
-            model.trainables.vectors_lockf = ones(len(model.wv.vectors), dtype=REAL)
-        if not hasattr(model, 'random'):
-            model.random = random.RandomState(model.trainables.seed)
-        if not hasattr(model, 'train_count'):
-            model.train_count = 0
-            model.total_train_time = 0
-        return model
-
-    def _load_specials(self, *args, **kwargs):
-        super(Word2Vec, self)._load_specials(*args, **kwargs)
-        # loading from a pre-KeyedVectors word2vec model
-        if not hasattr(self, 'wv'):
-            wv = Word2VecKeyedVectors()
-            if hasattr(self, 'trainables'):
-                wv.vectors = self.trainables.__dict__.get('vectors', [])
-                wv.vectors_norm = self.trainables.__dict__.get('vectors_norm', None)
-            if hasattr(self, 'vocabulary'):
-                wv.vocab = self.vocabulary.__dict__.get('vocab', {})
-                wv.index2word = self.vocabulary.__dict__.get('index2word', [])
-            self.wv = wv
 
     def get_latest_training_loss(self):
         return self.running_training_loss
@@ -1088,12 +992,9 @@ class Word2VecVocab(BaseVocabBuilder):
 
 
 class Word2VecTrainables(BaseModelTrainables):
-    def __init__(self, vector_size=100, seed=1, alpha=0.025, min_alpha=0.0001, hs=0, negative=5, hashfxn=hash):
+    def __init__(self, vector_size=100, seed=1, hs=0, negative=5, hashfxn=hash):
         super(Word2VecTrainables, self).__init__(vector_size=vector_size, seed=seed)
         self.cum_table = None  # for negative sampling
-        self.alpha = alpha
-        self.min_alpha_yet_reached = float(alpha)  # To warn user if alpha increases
-        self.min_alpha = min_alpha
         self.hs = hs
         self.negative = negative
         self.hashfxn = hashfxn
@@ -1105,8 +1006,6 @@ class Word2VecTrainables(BaseModelTrainables):
 
     def prepare_weights(self, update=False, vocabulary=None):
         """Build tables and model weights based on final vocabulary settings."""
-        # if not self.wv.index2word:
-        #     self.scale_vocab()
         if vocabulary.sorted_vocab and not update:
             vocabulary.sort_vocab(self.vectors)
         if self.hs:
