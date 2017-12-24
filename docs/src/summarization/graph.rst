@@ -1,8 +1,8 @@
-:mod:`summarization.graph` -- TextRank graph
-=========================================================
+:mod:`summarization.graph` -- Graph
+===================================
 
 .. automodule:: gensim.summarization.graph
-    :synopsis: TextRank graph
+    :synopsis: Graph
     :members:
     :inherited-members:
     :undoc-members:

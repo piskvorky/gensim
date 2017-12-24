@@ -43,7 +43,9 @@ class RpTransformer(TransformerMixin, BaseEstimator):
         """
         Take documents/corpus as input.
         Return RP representation of the input documents/corpus.
-        The input `docs` can correspond to multiple documents like : [ [(0, 1.0), (1, 1.0), (2, 1.0)], [(0, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (7, 1.0)] ]
+        The input `docs` can correspond to multiple documents like
+        [[(0, 1.0), (1, 1.0), (2, 1.0)],
+        [(0, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (7, 1.0)]]
         or a single document like : [(0, 1.0), (1, 1.0), (2, 1.0)]
         """
         if self.gensim_model is None:
@@ -52,14 +54,9 @@ class RpTransformer(TransformerMixin, BaseEstimator):
             )
 
         # The input as array of array
-        check = lambda x: [x] if isinstance(x[0], tuple) else x
-        docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
-
-        for k, v in enumerate(docs):
-            transformed_doc = self.gensim_model[v]
-            # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
-            probs_docs = matutils.sparse2full(transformed_doc, self.num_topics)
-            X[k] = probs_docs
-
-        return np.reshape(np.array(X), (len(docs), self.num_topics))
+        if isinstance(docs[0], tuple):
+            docs = [docs]
+        # returning dense representation for compatibility with sklearn
+        # but we should go back to sparse representation in the future
+        presentation = [matutils.sparse2full(self.gensim_model[doc], self.num_topics) for doc in docs]
+        return np.reshape(np.array(presentation), (len(docs), self.num_topics))

@@ -5,7 +5,8 @@
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 
 """
-Python wrapper around word representation learning from Varembed models, a library for efficient learning of word representations
+Python wrapper around word representation learning from Varembed models,
+a library for efficient learning of word representations
 and sentence classification [1].
 
 This module allows ability to obtain word vectors for out-of-vocabulary words, for the Varembed model[2].

@@ -27,6 +27,7 @@ from __future__ import with_statement
 import logging
 import os.path
 import unittest
+from functools import partial
 
 import numpy as np
 
@@ -50,7 +51,7 @@ class TestLeeTest(unittest.TestCase):
         sim_file = 'similarities0-1.txt'
 
         # read in the corpora
-        latin1 = lambda line: utils.to_unicode(line, encoding='latin1')
+        latin1 = partial(utils.to_unicode, encoding='latin1')
         with utils.smart_open(os.path.join(pre_path, bg_corpus_file)) as f:
             bg_corpus = preprocess_documents(latin1(line) for line in f)
         with utils.smart_open(os.path.join(pre_path, corpus_file)) as f:

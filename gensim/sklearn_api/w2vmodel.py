@@ -75,15 +75,10 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
             )
 
         # The input as array of array
-        check = lambda x: [x] if isinstance(x, six.string_types) else x
-        words = check(words)
-        X = [[] for _ in range(0, len(words))]
-
-        for k, v in enumerate(words):
-            word_vec = self.gensim_model[v]
-            X[k] = word_vec
-
-        return np.reshape(np.array(X), (len(words), self.size))
+        if isinstance(words, six.string_types):
+            words = [words]
+        vectors = [self.gensim_model[word] for word in words]
+        return np.reshape(np.array(vectors), (len(words), self.size))
 
     def partial_fit(self, X):
         raise NotImplementedError(

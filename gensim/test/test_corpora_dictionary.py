@@ -10,7 +10,6 @@ Unit tests for the `corpora.Dictionary` class.
 
 from collections import Mapping
 import logging
-import tempfile
 import unittest
 import codecs
 import os
@@ -20,31 +19,14 @@ import scipy
 import gensim
 from gensim.corpora import Dictionary
 from gensim.utils import to_utf8
+from gensim.test.utils import get_tmpfile, common_texts
 from six import PY3
 from six.moves import zip
 
 
-# sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
-
-
-def get_tmpfile(suffix):
-    return os.path.join(tempfile.gettempdir(), suffix)
-
-
 class TestDictionary(unittest.TestCase):
     def setUp(self):
-        self.texts = [
-                ['human', 'interface', 'computer'],
-                ['survey', 'user', 'computer', 'system', 'response', 'time'],
-                ['eps', 'user', 'interface', 'system'],
-                ['system', 'human', 'system', 'eps'],
-                ['user', 'response', 'time'],
-                ['trees'],
-                ['graph', 'trees'],
-                ['graph', 'minors', 'trees'],
-                ['graph', 'minors', 'survey']
-        ]
+        self.texts = common_texts
 
     def testDocFreqOneDoc(self):
         texts = [['human', 'interface', 'computer']]

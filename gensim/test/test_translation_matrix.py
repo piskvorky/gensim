@@ -1,25 +1,17 @@
 #!/usr/bin/env python
 # encoding: utf-8
-import os
+from collections import namedtuple
 import unittest
-import tempfile
-import numpy as np
 import math
 
+import numpy as np
+
 from scipy.spatial.distance import cosine
-from collections import namedtuple
 from gensim.models.doc2vec import Doc2Vec
 from gensim import utils
 from gensim.models import translation_matrix
 from gensim.models import KeyedVectors
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
-
-def temp_save_file():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'transmat-en-it.pkl')
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestTranslationMatrix(unittest.TestCase):
@@ -45,11 +37,13 @@ class TestTranslationMatrix(unittest.TestCase):
 
     def testPersistence(self):
         """Test storing/loading the entire model."""
+        tmpf = get_tmpfile('transmat-en-it.pkl')
+
         model = translation_matrix.TranslationMatrix(self.source_word_vec, self.target_word_vec, self.word_pairs)
         model.train(self.word_pairs)
-        model.save(temp_save_file())
+        model.save(tmpf)
 
-        loaded_model = translation_matrix.TranslationMatrix.load(temp_save_file())
+        loaded_model = translation_matrix.TranslationMatrix.load(tmpf)
         self.assertTrue(np.allclose(model.translation_matrix, loaded_model.translation_matrix))
 
     def test_translate_nn(self):
@@ -58,7 +52,9 @@ class TestTranslationMatrix(unittest.TestCase):
         model.train(self.word_pairs)
 
         test_source_word, test_target_word = zip(*self.test_word_pairs)
-        translated_words = model.translate(test_source_word, topn=5, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec)
+        translated_words = model.translate(
+            test_source_word, topn=5, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec
+        )
 
         for idx, item in enumerate(self.test_word_pairs):
             self.assertTrue(item[1] in translated_words[item[0]])
@@ -69,7 +65,10 @@ class TestTranslationMatrix(unittest.TestCase):
         model.train(self.word_pairs)
 
         test_source_word, test_target_word = zip(*self.test_word_pairs)
-        translated_words = model.translate(test_source_word, topn=5, gc=1, sample_num=3, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec)
+        translated_words = model.translate(
+            test_source_word, topn=5, gc=1, sample_num=3,
+            source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec
+        )
 
         for idx, item in enumerate(self.test_word_pairs):
             self.assertTrue(item[1] in translated_words[item[0]])
@@ -99,12 +98,16 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
         self.target_doc_vec = Doc2Vec.load(self.target_doc_vec_file)
 
     def test_translation_matrix(self):
-        model = translation_matrix.BackMappingTranslationMatrix(self.train_docs[:5], self.source_doc_vec, self.target_doc_vec)
+        model = translation_matrix.BackMappingTranslationMatrix(
+            self.train_docs[:5], self.source_doc_vec, self.target_doc_vec
+        )
         transmat = model.train(self.train_docs[:5])
         self.assertEqual(transmat.shape, (100, 100))
 
     def test_infer_vector(self):
-        model = translation_matrix.BackMappingTranslationMatrix(self.train_docs[:5], self.source_doc_vec, self.target_doc_vec)
+        model = translation_matrix.BackMappingTranslationMatrix(
+            self.train_docs[:5], self.source_doc_vec, self.target_doc_vec
+        )
         model.train(self.train_docs[:5])
         infered_vec = model.infer_vector(self.target_doc_vec.docvecs[self.train_docs[5].tags])
         self.assertEqual(infered_vec.shape, (100, ))
