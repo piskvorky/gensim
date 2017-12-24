@@ -8,10 +8,17 @@
 """This module implements the concept of Dictionary -- a mapping between words and
 their integer ids.
 
+Notes
+-----
 Dictionaries can be created from a corpus and can later be pruned according to
 document frequency (removing (un)common words via the :func:`Dictionary.filter_extremes` method),
 save/loaded from disk (via :func:`Dictionary.save` and :func:`Dictionary.load` methods), merged
 with other dictionary (:func:`Dictionary.merge_with`) etc.
+
+Examples
+--------
+>>> print(Dictionary(["máma mele maso".split(), "ema má máma".split()]))
+Dictionary(5 unique tokens)
 """
 
 from __future__ import with_statement
@@ -106,7 +113,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             return self.values()
 
     def keys(self):
-        """Returns
+        """Return
         ----------
         list
             List of all token ids.
@@ -115,7 +122,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         return list(self.token2id.values())
 
     def __len__(self):
-        """Returns
+        """Return
         int
             The number of token->id mappings in the dictionary.
 
@@ -141,8 +148,20 @@ class Dictionary(utils.SaveLoad, Mapping):
         total number of unique words <= `prune_at`. This is to save memory on very
         large inputs. To disable this pruning, set `prune_at=None`.
 
-        >>> print(Dictionary(["máma mele maso".split(), "ema má máma".split()]))
-        Dictionary(5 unique tokens)
+        Parameters
+        ----------
+        documents : list of list of str
+            Each document is a list of tokens = **tokenized and normalized** strings (either utf8 or unicode).
+        prune_at : int, optional
+            Keep total number of unique words <= `prune_at`
+
+        Examples
+        --------
+        >>> from gensim.corpora import dictionary
+        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split()])
+        >>> data.add_documents([["this","is","sparta"],["just","joking"]])
+        Dictionary(10 unique tokens: [u'ema', u'joking', u'just', u'sparta', u'maso']...)
+
         """
         for docno, document in enumerate(documents):
             # log progress & run a regular check for pruning, once every 10k docs
@@ -160,15 +179,12 @@ class Dictionary(utils.SaveLoad, Mapping):
         )
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
-        """
-        Convert `document` (a list of words) into the bag-of-words format = list
-        of `(token_id, token_count)` 2-tuples.
+        """Convert `document` (a list of words) into the bag-of-words format = list of (token_id, token_count) 2-tuples.
 
         Notes
         -----
-        Each word is assumed to be a
-        **tokenized and normalized** string (either unicode or utf8-encoded). No further preprocessing
-        is done on the words in `document`; apply tokenization, stemming etc. before
+        Each word is assumed to be a **tokenized and normalized** string (either unicode or utf8-encoded).
+        No further preprocessing is done on the words in `document`; apply tokenization, stemming etc. before
         calling this method.
 
         If `allow_update` is set, then also update dictionary in the process: create
@@ -177,6 +193,33 @@ class Dictionary(utils.SaveLoad, Mapping):
         by one.
 
         If `allow_update` is **not** set, this function is `const`, aka read-only.
+
+        Parameters
+        ----------
+        document :  list of str
+            Is a list of tokens = **tokenized and normalized** strings (either utf8 or unicode).
+        allow_update : bool, optional
+            Update dictionary in the process.
+        return_missing : bool, optional
+            Show token_count for missing words.
+
+        Return
+        ------
+        list of (int, int)
+            Bag-of-words format = list of (token_id, token_count) 2-tuples.
+
+        Examples
+        --------
+        >>> from gensim.corpora import dictionary
+        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split()])
+        >>> data.doc2bow(["this","is","máma"])
+        [(0, 1)]
+
+        >>> from gensim.corpora import dictionary
+        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split()])
+        >>> data.doc2bow(["this","is","máma"], False, True)
+        ([(0, 1)], {u'this': 1, u'is': 1})
+
         """
         if isinstance(document, string_types):
             raise TypeError("doc2bow expects an array of unicode tokens on input, not a single string")
@@ -214,22 +257,41 @@ class Dictionary(utils.SaveLoad, Mapping):
             return result
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
-        """
+        """Filter out tokens.
+
+        Notes
+        -----
         Filter out tokens that appear in
-
-        1. less than `no_below` documents (absolute number) or
-        2. more than `no_above` documents (fraction of total corpus size, *not*
-           absolute number).
+        1ю less than `no_below` documents (absolute number) or
+        2. more than `no_above` documents (fraction of total corpus size, *not* absolute number).
         3. if tokens are given in keep_tokens (list of strings), they will be kept regardless of
-           the `no_below` and `no_above` settings
-        4. after (1), (2) and (3), keep only the first `keep_n` most frequent tokens (or
-           keep all if `None`).
-
+        the `no_below` and `no_above` settings
+        4. after (1), (2) and (3), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
         After the pruning, shrink resulting gaps in word ids.
-
         **Note**: Due to the gap shrinking, the same word may have a different
         word id before and after the call to this function!
+
+        Parameters
+        ----------
+        no_below : int
+            Keep less than `no_below` documents.
+        no_above : float
+            Keep more than `no_below` documents (fraction of total corpus size, not an absolute number).
+        keep_n : int
+            Keep only the first `keep_n` most frequent tokens.
+        keep_tokens : list of str
+            Keep token if it is in `keep_tokens` (regardless of another parameters).
+
+        Examples
+        --------
+        >>> from gensim.corpora import dictionary
+        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split()])
+        >>> data.filter_extremes(1, 0.5, 1)
+        >>> print data
+        Dictionary(1 unique tokens: [u'maso'])
+
         """
+
         no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
 
         # determine which tokens to keep
