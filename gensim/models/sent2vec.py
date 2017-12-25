@@ -35,9 +35,9 @@ import threading
 from timeit import default_timer
 
 try:
-    from queue import Queue, Empty
+    from queue import Queue
 except ImportError:
-    from Queue import Queue, Empty
+    from Queue import Queue
 
 logger = logging.getLogger(__name__)
 # Comment out the below statement to avoid printing info logs to console
@@ -361,7 +361,8 @@ class Sent2Vec(SaveLoad):
 
     def __init__(self, sentences=None, vector_size=100, lr=0.2, lr_update_rate=100, epochs=5,
             min_count=5, neg=10, word_ngrams=2, loss_type='ns', bucket=2000000, t=0.0001,
-            minn=3, maxn=6, dropoutk=2, seed=42, min_lr=0.001, batch_words=10000, workers=3):
+            minn=3, maxn=6, dropoutk=2, seed=42, min_lr=0.001, batch_words=10000,
+            workers=3, max_vocab_size=30000000):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -602,7 +603,8 @@ class Sent2Vec(SaveLoad):
 
     def build_vocab(self, sentences):
         logger.info("Creating dictionary...")
-        self.dict = ModelDictionary(t=self.t, bucket=self.bucket, maxn=self.maxn, minn=self.minn)
+        self.dict = ModelDictionary(t=self.t, bucket=self.bucket, maxn=self.maxn,
+                                    minn=self.minn, max_vocab_size=self.max_vocab_size)
         self.dict.read(sentences=sentences, min_count=self.min_count)
         logger.info("Dictionary created, dictionary size: %i, tokens read: %i", self.dict.size, self.dict.ntokens)
         counts = [entry.count for entry in self.dict.words]
@@ -647,7 +649,8 @@ class Sent2Vec(SaveLoad):
                     break  # no more jobs => quit this worker
                 sentences, lr = job
                 tally, nexamples, loss = self._do_train_job(sentences, lr, hidden, grad)
-                progress_queue.put((np.sum(len(sentence) for sentence in sentences), tally, nexamples, loss))  # report back progress
+                progress_queue.put((np.sum(len(sentence) for sentence in sentences), tally,
+                                    nexamples, loss))
                 jobs_processed += 1
             logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
@@ -754,11 +757,13 @@ class Sent2Vec(SaveLoad):
             raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
         )
         if job_tally < 10 * self.workers:
-            logger.warning("under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay")
+            logger.warning("under 10 jobs per worker: consider setting a \
+            smaller `batch_words' for smoother alpha decay")
 
         # check that the input corpus hasn't changed during iteration
         if total_words != raw_word_count:
-            logger.warning("supplied raw word count (%i) did not equal expected count (%i)", raw_word_count, total_words)
+            logger.warning("supplied raw word count (%i) did not equal expected count (%i)",
+                           raw_word_count, total_words)
 
         self.train_count += 1  # number of times train() has been called
         self.total_train_time += elapsed
