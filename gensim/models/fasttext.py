@@ -47,7 +47,6 @@ try:
     from gensim.models.fasttext_inner import train_batch_sg, train_batch_cbow
     from gensim.models.fasttext_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
     logger.debug('Fast version of Fasttext is being used')
-    logger.info("Using FAST_VERSION - %s", FAST_VERSION)
 
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
@@ -283,6 +282,7 @@ class FastText(BaseWordEmbedddingsModel):
         self.vocabulary.ngrams_word = self.wv.__dict__.get('ngrams_word', None)
 
     def _set_train_params(self, **kwargs):
+        # implement using property -- create alias
         # self.trainables.alpha = self.alpha
         # self.trainables.min_alpha = self.min_alpha
         return
@@ -378,8 +378,9 @@ class FastText(BaseWordEmbedddingsModel):
         """
 
         super(FastText, self).train(
-            sentences, total_examples=self.vocabulary.corpus_count, epochs=self.epochs,
-            start_alpha=self.alpha, end_alpha=self.min_alpha)
+            sentences, total_examples=total_examples, total_words=total_words,
+            epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
+            queue_factor=queue_factor, report_delay=report_delay)
         self.trainables.get_vocab_word_vecs(vocabulary=self.vocabulary)
         self._set_keyedvectors()
 
