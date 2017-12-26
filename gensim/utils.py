@@ -211,10 +211,10 @@ def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict
     lower : bool, optional
         Same as `lowercase`.
 
-    Returns
-    -------
-    list of str
-        Contiguous sequences of alphabetic characters (no digits!).
+    Yields
+    ------
+    str
+        Contiguous sequences of alphabetic characters (no digits!), using :func:`~gensim.utils.simple_tokenize`
 
     Examples
     --------
@@ -233,30 +233,43 @@ def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict
 
 
 def simple_tokenize(text):
-    """
-    Tokenizer to tokenize text
+    """Tokenize input test using :const:`gensim.utils.PAT_ALPHABETIC`.
+
+    Parameters
+    ----------
+    text : str
+        Input text.
+
+    Yields
+    ------
+    str
+        Tokens from `text`.
+
     """
     for match in PAT_ALPHABETIC.finditer(text):
         yield match.group()
 
 
 def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
-    """
-    Convert a document into a list of tokens.
-    This lowercases, tokenizes, de-accents (optional).
+    """Convert a document into a list of tokens (also with lowercase and optional de-accents),
+    used :func:`~gensim.utils.tokenize`.
+
     Parameters
     ----------
     doc : str
-        document which needed to convert into list of tokens
-    deacc : bool
-    min_len : int
-        default value set to 2
-    max_len : int
-        default value set to 15
-    Return
-    ------
-    tokens : list
-        a list of tokens that won't be processed any further.
+        Input document.
+    deacc : bool, optional
+        If True - remove accentuation from string by :func:`~gensim.utils.deaccent`.
+    min_len : int, optional
+        Minimal length of token in result (inclusive).
+    max_len : int, optional
+        Maximal length of token in result (inclusive).
+
+    Returns
+    -------
+    list of str
+        Tokens extracted from `doc`.
+
     """
     tokens = [
         token for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
@@ -266,17 +279,22 @@ def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
 
 
 def any2utf8(text, errors='strict', encoding='utf8'):
-    """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8.
+    """Convert `text` to bytestring in utf8.
+
     Parameters
     ----------
     text : str
-        given string (unicode or bytestring in `encoding`)
-    errors : str
-    encoding : str
-    Return
-    ------
+        Input text.
+    errors : str, optional
+        Error handling behaviour, used as parameter for `unicode` function (python2 only).
+    encoding : str, optional
+        Encoding of `text` for `unicode` function (python2 only).
+
+    Returns
+    -------
     str
-        bytestring in utf8
+        Bytestring in utf8.
+
     """
 
     if isinstance(text, unicode):
@@ -289,17 +307,22 @@ to_utf8 = any2utf8
 
 
 def any2unicode(text, encoding='utf8', errors='strict'):
-    """Convert a string (bytestring in `encoding` or unicode), to unicode.
+    """Convert `text` to unicode.
+
     Parameters
     ----------
     text : str
-        given string to unicode
-    errors : str
-    encoding : str
-    Return
-    ------
+        Input text.
+    errors : str, optional
+        Error handling behaviour, used as parameter for `unicode` function (python2 only).
+    encoding : str, optional
+        Encoding of `text` for `unicode` function (python2 only).
+
+    Returns
+    -------
     str
-        unicode
+        Unicode version of `text`.
+
     """
     if isinstance(text, unicode):
         return text
@@ -310,11 +333,20 @@ to_unicode = any2unicode
 
 
 def call_on_class_only(*args, **kwargs):
-    """
+    """Helper for raise `AttributeError` if method should be called from instance.
+
+    Parameters
+    ----------
+    *args
+        Variable length argument list.
+    **kwargs
+        Arbitrary keyword arguments.
+
     Raises
     ------
     AttributeError
-        when load methods are called on instance
+        If `load` method are called on instance.
+
     """
     raise AttributeError('This method should be called on a class object.')
 
