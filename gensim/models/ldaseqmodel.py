@@ -51,7 +51,7 @@ class LdaSeqModel(utils.SaveLoad):
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
                  initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
-                 random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100 dtype = float32):
+                 random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100, dtype = np.float32):
         """
         `corpus` is any iterable gensim corpus
 
@@ -108,7 +108,7 @@ class LdaSeqModel(utils.SaveLoad):
         self.num_topics = num_topics
         self.num_time_slices = len(time_slice)
         self.alphas = np.full(num_topics, alphas)
-        self.dtype = np.float64
+        self.dtype = np.float32
 
         # topic_chains contains for each topic a 'state space language model' object which in turn has information about each topic
         # the sslm class is described below and contains information on topic-word probabilities and doc-topic probabilities.
@@ -422,7 +422,7 @@ class LdaSeqModel(utils.SaveLoad):
         """
         lda_model = ldamodel.LdaModel(num_topics=self.num_topics, alpha=self.alphas, id2word=self.id2word)
         lda_model.topics = np.array(np.split(np.zeros(self.vocab_len * self.num_topics), self.vocab_len))
-        ldapost = LdaPost(num_topics=self.num_topics, max_doc_len=len(doc), lda=lda_model, doc=doc, dtype = float32)
+        ldapost = LdaPost(num_topics=self.num_topics, max_doc_len=len(doc), lda=lda_model, doc=doc, dtype = np.float32)
 
         time_lhoods = []
         for time in range(0, self.num_time_slices):
