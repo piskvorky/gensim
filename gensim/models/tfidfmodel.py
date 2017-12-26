@@ -19,6 +19,34 @@ logger = logging.getLogger(__name__)
 def resolve_weights(smartirs):
     """
     Checks for validity of smartirs parameter.
+
+    Parameters
+    ----------
+    smartirs : {'None' ,'str'}
+                `smartirs` or SMART (System for the Mechanical Analysis and Retrieval of Text)
+                Information Retrieval System, a mnemonic scheme for denoting tf-idf weighting
+                variants in the vector space model. The mnemonic for representing a combination
+                of weights takes the form ddd, where the letters represents the term weighting
+                of the document vector.
+
+
+                for more information visit https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System
+
+    Raises
+    ------
+    ValueError : If `smartirs` is not a string of length 3 or one of the decomposed value
+                 doesn't fit the list of permissible values
+
+    Returns
+    -------
+    w_tf, w_df, w_n : str, str, str
+                      Term frequency weighing:
+                        natural - `n`, logarithm - `l` , augmented - `a`,  boolean `b`, log average - `L`.
+                      Document frequency weighting:
+                        none - `n`, idf - `t`, prob idf - `p`.
+                      Document normalization:
+                        none - `n`, cosine - `c`.
+
     """
     if not isinstance(smartirs, str) or len(smartirs) != 3:
         raise ValueError("Expected a string of length 3 except got " + smartirs)
