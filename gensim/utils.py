@@ -352,32 +352,41 @@ def call_on_class_only(*args, **kwargs):
 
 
 class SaveLoad(object):
-    """
-    Objects which inherit from this class have save/load functions, which un/pickle
-    them to disk.
-    Notes
-    -----
-    This uses pickle for de/serializing, so objects must not contain
-    unpicklable attributes, such as lambda functions etc.
+    """Class which inherit from this class have save/load functions, which un/pickle them to disk.
+
+    Warnings
+    --------
+    This uses pickle for de/serializing, so objects must not contain unpicklable attributes,
+    such as lambda functions etc.
+
     """
     @classmethod
     def load(cls, fname, mmap=None):
-        """
-        Load a previously saved object from file
-        Notes
-        -----
-        If the object was saved with large arrays stored separately, you can load
-        these arrays via mmap (shared memory) using `mmap='r'`. Default: don't use
-        mmap, load large arrays as normal objects.
-        If the file being loaded is compressed (either '.gz' or '.bz2'), then
-        `mmap=None` must be set.
+        """Load a previously saved object (using :meth:`~gensim.utils.SaveLoad.save`) from file.
+
+        Parameters
+        ----------
+        fname : str
+            Path to file that contains needed object.
+        mmap : str, optional
+            Memory-map option.  If the object was saved with large arrays stored separately, you can load these arrays
+            via mmap (shared memory) using `mmap='r'.
+            If the file being loaded is compressed (either '.gz' or '.bz2'), then `mmap=None` **must be** set.
+
         See Also
         --------
-        `save`
+        :meth:`~gensim.utils.SaveLoad.save`
+
+        Returns
+        -------
+        object
+            Object loaded from `fname`.
+
         Raises
         ------
         IOError
-            when load methods are called on instance
+            When methods are called on instance (should be called from class).
+
         """
         logger.info("loading %s object from %s", cls.__name__, fname)
 
@@ -389,9 +398,21 @@ class SaveLoad(object):
         return obj
 
     def _load_specials(self, fname, mmap, compress, subname):
-        """
-        Loads any attributes that were stored specially, and gives the same
-        opportunity to recursively included SaveLoad instances.
+        """Loads any attributes that were stored specially, and gives the same opportunity
+        to recursively included :class:`~gensim.utils.SaveLoad` instances.
+
+        Parameters
+        ----------
+        fname : str
+            Path to file that contains needed object.
+        mmap : str
+            Memory-map option.
+        compress : bool
+            Set to True if file is compressed.
+        subname : str
+            ...
+
+
         """
         def mmap_error(obj, filename):
             return IOError(
@@ -441,13 +462,38 @@ class SaveLoad(object):
 
     @staticmethod
     def _adapt_by_suffix(fname):
-        """Give appropriate compress setting and filename formula"""
+        """Give appropriate compress setting and filename formula.
+
+        Parameters
+        ----------
+        fname : str
+            Input filename.
+
+        Returns
+        -------
+        (bool, function)
+            First argument will be True if `fname` compressed.
+
+        """
         compress, suffix = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
         return compress, lambda *args: '.'.join(args + (suffix,))
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
-        """
-        Save the object to file
+        """Save the object to file.
+
+        Parameters
+        ----------
+        fname : str
+            Path to file.
+        separately : list, optional
+            Iterable of attributes than need to store distinctly.
+        sep_limit : int, optional
+            Limit for separation.
+        ignore : frozenset, optional
+            Attributes that shouldn't be store.
+        pickle_protocol : int, optional
+            Protocol number for pickle.
+
         Notes
         -----
         If `separately` is None, automatically detect large
@@ -459,14 +505,10 @@ class SaveLoad(object):
         a list of attribute names to be stored in separate files. The
         automatic check is not performed in this case.
 
-        `ignore` is a set of attribute names to *not* serialize (file
-        handles, caches etc). On subsequent load() these attributes will
-        be set to None.
-        `pickle_protocol` defaults to 2 so the pickled object can be imported
-        in both Python 2 and 3.
         See Also
         --------
-        `load`
+        :meth:`~gensim.utils.SaveLoad.load`
+
         """
         logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
 
@@ -484,14 +526,32 @@ class SaveLoad(object):
         logger.info("saved %s", fname)
 
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
-        """
-        Save aside any attributes that need to be handled separately, including
-        by recursion any attributes that are themselves SaveLoad instances.
-        Return
-        ------
-        list
-            list of (obj, {attrib: value, ...}) settings that the caller should use to restore each object's attributes
-        that were set aside during the default pickle().
+        """Save aside any attributes that need to be handled separately, including
+        by recursion any attributes that are themselves :class:`~gensim.utils.SaveLoad` instances.
+
+        Parameters
+        ----------
+        fname : str
+            Output filename.
+        separately : list or None
+            Iterable of attributes than need to store distinctly
+        sep_limit : int
+            Limit for separation.
+        ignore : iterable of str
+            Attributes that shouldn't be store.
+        pickle_protocol : int
+            Protocol number for pickle.
+        compress : bool
+            If True - compress output with :func:`numpy.savez_compressed`.
+        subname : function
+            Produced by :meth:`~gensim.utils.SaveLoad._adapt_by_suffix`
+
+        Returns
+        -------
+        list of (obj, {attrib: value, ...})
+            Settings that the caller should use to restore each object's attributes that were set aside
+            during the default :func:`~gensim.utils.pickle`.
+
         """
         asides = {}
         sparse_matrices = (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
@@ -569,34 +629,30 @@ class SaveLoad(object):
         return restores + [(self, asides)]
 
     def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
-        """
-        Save the object to file
-        Notes
-        -----
-        `fname_or_handle` is either a string specifying the file name to
-        save to, or an open file-like object which can be written to. If
-        the object is a file handle, no special array handling will be
-        performed; all attributes will be saved to the same file.
+        """Save the object to file.
 
-        If `separately` is None, automatically detect large
-        numpy/scipy.sparse arrays in the object being stored, and store
-        them into separate files. This avoids pickle memory errors and
-        allows mmap'ing large arrays back on load efficiently.
-
-        You can also set `separately` manually, in which case it must be
-        a list of attribute names to be stored in separate files. The
-        automatic check is not performed in this case.
-
-        `ignore` is a set of attribute names to *not* serialize (file
-        handles, caches etc). On subsequent load() these attributes will
-        be set to None.
-
-        `pickle_protocol` defaults to 2 so the pickled object can be imported
-        in both Python 2 and 3.
+        Parameters
+        ----------
+        fname_or_handle : str or file-like
+            Path to output file or already opened file-like object. If the object is a file handle,
+            no special array handling will be performed, all attributes will be saved to the same file.
+        separately : list of str or None, optional
+            If None -  automatically detect large numpy/scipy.sparse arrays in the object being stored, and store
+            them into separate files. This avoids pickle memory errors and allows mmap'ing large arrays
+            back on load efficiently.
+            If list of str - this attributes will be stored in separate files, the automatic check
+            is not performed in this case.
+        sep_limit : int
+            Limit for automatic separation.
+        ignore : frozenset of str
+            Attributes that shouldn't be serialize/store.
+        pickle_protocol : int
+            Protocol number for pickle.
 
         See Also
         --------
-        `load`
+        :meth:`~gensim.utils.SaveLoad.load`
+
         """
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
@@ -1188,14 +1244,14 @@ def smart_extension(fname, ext):
     Parameters
     ----------
     fname : str
-        Path to filename.
+        Path to file.
     ext : str
         File extension.
 
     Returns
     -------
     str
-        New path to filename with `ext`.
+        New path to file with `ext`.
 
     """
     fname, oext = os.path.splitext(fname)
