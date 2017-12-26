@@ -116,23 +116,6 @@ def synchronous(tlockname):
     return _synched
 
 
-class NoCM(object):
-    def acquire(self):
-        pass
-
-    def release(self):
-        pass
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, type, value, traceback):
-        pass
-
-
-nocm = NoCM()
-
-
 def file_or_filename(input):
     """
     Parameters
