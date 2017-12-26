@@ -109,7 +109,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Fill jobs queue using the input `sentences` iterator."""
         job_batch, batch_size = [], 0
         pushed_words, pushed_examples = 0, 0
-        next_job_params = self._get_job_params()
+        next_job_params = self._get_job_params(cur_epoch)
         job_no = 0
 
         for data_idx, data in enumerate(data_iterator):
@@ -423,7 +423,7 @@ class BaseModelTrainables(utils.SaveLoad):
 class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5,
                  callbacks=(), batch_words=10000, trim_rule=None, sg=0, alpha=0.025,
-                 window=5, seed=1, hs=0, negative=5, cbow_mean=1, min_alpha=0.0001):
+                 window=5, seed=1, hs=0, negative=5, cbow_mean=1, min_alpha=0.0001, **kwargs):
         self.sg = int(sg)
         if vector_size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
@@ -462,24 +462,23 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         self.trainables.prepare_weights(update=update, vocabulary=self.vocabulary)
         self._set_keyedvectors()
 
-    def _get_job_params(self):
+    def _get_job_params(self, cur_epoch):
         """Return the paramter required for each batch."""
-        if self.alpha > self.min_alpha_yet_reached:
-            logger.warning("Effective 'alpha' higher than previous training cycles")
-        return self.alpha
+        alpha_ = self.alpha * (1.0 - float(cur_epoch) / self.epochs)
+        return alpha_
 
-    def _update_job_params(self, job_params, progress, cur_epoch):
+    def _update_job_params(self, job_params, epoch_progress, cur_epoch):
         start_alpha = self.alpha
         end_alpha = self.min_alpha
-        progress *= (float(cur_epoch + 1) / float(self.epochs))
+        progress = (cur_epoch + epoch_progress) / self.epochs
         next_alpha = start_alpha - (start_alpha - end_alpha) * progress
         next_alpha = max(end_alpha, next_alpha)
         self.min_alpha_yet_reached = next_alpha
         return next_alpha
 
     def _get_thread_working_mem(self):
-        work = matutils.zeros_aligned(self.trainables.vector_size, dtype=REAL)  # per-thread private work memory
-        neu1 = matutils.zeros_aligned(self.trainables.vector_size, dtype=REAL)
+        work = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)  # per-thread private work memory
+        neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
         return work, neu1
 
     def _raw_word_count(self, job):
@@ -487,6 +486,8 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         return sum(len(sentence) for sentence in job)
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
+            if self.alpha > self.min_alpha_yet_reached:
+                logger.warning("Effective 'alpha' higher than previous training cycles")
             if len(self.wv.vocab) > 0:
                 self._set_params_from_kv()
             if self.model_trimmed_post_training:
@@ -541,6 +542,9 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
                 raise RuntimeError(
                     "You might be trying to load a Gensim model saved using an older Gensim version."
                     "Current Gensim version does not support loading old models.")
+
+    def _get_keyedvector_instance(self):
+        raise NotImplementedError
 
     def _set_params_from_kv(self):
         self.trainables.vectors = self.wv.__dict__.get('vectors', [])
