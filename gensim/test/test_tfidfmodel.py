@@ -75,7 +75,7 @@ class TestTfidfModel(unittest.TestCase):
         tstvec = [corpus[1], corpus[2]]
         self.assertTrue(np.allclose(model[tstvec[0]], model2[tstvec[0]]))
         self.assertTrue(np.allclose(model[tstvec[1]], model2[tstvec[1]]))
-        self.assertTrue(np.allclose(model[[]], model2[[]])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[[]], model2[[]]))  # try projecting an empty vector
 
         # Test persistence with using `smartirs`
         fname = get_tmpfile('gensim_models_smartirs.tst')
@@ -86,7 +86,7 @@ class TestTfidfModel(unittest.TestCase):
         tstvec = [corpus[1], corpus[2]]
         self.assertTrue(np.allclose(model[tstvec[0]], model2[tstvec[0]]))
         self.assertTrue(np.allclose(model[tstvec[1]], model2[tstvec[1]]))
-        self.assertTrue(np.allclose(model[[]], model2[[]])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[[]], model2[[]]))  # try projecting an empty vector
 
         # Test persistence between Gensim v3.2.0 and current model.
         model3 = tfidfmodel.TfidfModel(self.corpus, smartirs="ntc")
@@ -95,7 +95,7 @@ class TestTfidfModel(unittest.TestCase):
         tstvec = [corpus[1], corpus[2]]
         self.assertTrue(np.allclose(model3[tstvec[0]], model4[tstvec[0]]))
         self.assertTrue(np.allclose(model3[tstvec[1]], model4[tstvec[1]]))
-        self.assertTrue(np.allclose(model3[[]], model4[[]])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model3[[]], model4[[]]))  # try projecting an empty vector
 
     def testPersistenceCompressed(self):
         # Test persistence without using `smartirs`
@@ -107,7 +107,7 @@ class TestTfidfModel(unittest.TestCase):
         tstvec = [corpus[1], corpus[2]]
         self.assertTrue(np.allclose(model[tstvec[0]], model2[tstvec[0]]))
         self.assertTrue(np.allclose(model[tstvec[1]], model2[tstvec[1]]))
-        self.assertTrue(np.allclose(model[[]], model2[[]])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[[]], model2[[]]))  # try projecting an empty vector
 
         # Test persistence with using `smartirs`
         fname = get_tmpfile('gensim_models_smartirs.tst.gz')
@@ -118,7 +118,7 @@ class TestTfidfModel(unittest.TestCase):
         tstvec = [corpus[1], corpus[2]]
         self.assertTrue(np.allclose(model[tstvec[0]], model2[tstvec[0]]))
         self.assertTrue(np.allclose(model[tstvec[1]], model2[tstvec[1]]))
-        self.assertTrue(np.allclose(model[[]], model2[[]])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[[]], model2[[]]))  # try projecting an empty vector
 
         # Test persistence between Gensim v3.2.0 and current compressed model.
         model3 = tfidfmodel.TfidfModel(self.corpus, smartirs="ntc")
@@ -127,7 +127,7 @@ class TestTfidfModel(unittest.TestCase):
         tstvec = [corpus[1], corpus[2]]
         self.assertTrue(np.allclose(model3[tstvec[0]], model4[tstvec[0]]))
         self.assertTrue(np.allclose(model3[tstvec[1]], model4[tstvec[1]]))
-        self.assertTrue(np.allclose(model3[[]], model4[[]])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model3[[]], model4[[]]))  # try projecting an empty vector
 
     def TestConsistency(self):
         docs = [corpus[1], corpus[2]]
