@@ -885,14 +885,23 @@ class RepeatCorpusNTimes(SaveLoad):
 
 
 class ClippedCorpus(SaveLoad):
+    """Wrap a `corpus` and return `max_doc` element from it"""
+
     def __init__(self, corpus, max_docs=None):
         """
-        Return a corpus that is the "head" of input iterable `corpus`.
-        Notes
-        -----
-        Any documents after `max_docs` are ignored. This effectively limits the
-        length of the returned corpus to <= `max_docs`. Set `max_docs=None` for
-        "no limit", effectively wrapping the entire input corpus.
+
+        Parameters
+        ----------
+        corpus : iterable of iterable of (int, int)
+            Input corpus.
+        max_docs : int
+            Maximal number of documents in result corpus.
+
+        Warnings
+        --------
+        Any documents after `max_docs` are ignored. This effectively limits the length of the returned corpus
+        to <= `max_docs`. Set `max_docs=None` for "no limit", effectively wrapping the entire input corpus.
+
         """
         self.corpus = corpus
         self.max_docs = max_docs
@@ -905,19 +914,26 @@ class ClippedCorpus(SaveLoad):
 
 
 class SlicedCorpus(SaveLoad):
+    """Wrap `corpus` and return the slice of it"""
+
     def __init__(self, corpus, slice_):
         """
-        Return a corpus that is the slice of input iterable `corpus`.
 
-        Negative slicing can only be used if the corpus is indexable.
-        Otherwise, the corpus will be iterated over.
+        Parameters
+        ----------
+        corpus : iterable of iterable of (int, int)
+            Input corpus.
+        slice_ : slice or iterable
+            Slice for `corpus`
 
+        Notes
+        -----
+        Negative slicing can only be used if the corpus is indexable, otherwise, the corpus will be iterated over.
         Slice can also be a np.ndarray to support fancy indexing.
 
-        NOTE: calculating the size of a SlicedCorpus is expensive
-        when using a slice as the corpus has to be iterated over once.
-        Using a list or np.ndarray does not have this drawback, but
-        consumes more memory.
+        Calculating the size of a SlicedCorpus is expensive when using a slice as the corpus has
+        to be iterated over once. Using a list or np.ndarray does not have this drawback, but consumes more memory.
+
         """
         self.corpus = corpus
         self.slice_ = slice_
@@ -944,6 +960,19 @@ class SlicedCorpus(SaveLoad):
 
 
 def safe_unichr(intval):
+    """
+
+    Parameters
+    ----------
+    intval : int
+        Integer code of character
+
+    Returns
+    -------
+    string
+        Unicode string of character
+
+    """
     try:
         return unichr(intval)
     except ValueError:
@@ -954,13 +983,18 @@ def safe_unichr(intval):
 
 
 def decode_htmlentities(text):
-    """
-    Decode HTML entities in text, coded as hex, decimal or named.
-    References
+    """Decode HTML entities in text, coded as hex, decimal or named.
+    This function from [3]_.
+
+    Parameters
     ----------
-    from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
+    text : str
+        Input html text.
+
     Examples
     --------
+    >>> from gensim.utils import decode_htmlentities
+    >>>
     >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
     >>> print(decode_htmlentities(u).encode('UTF-8'))
     E tu vivrai nel terrore - L'aldilà (1981)
@@ -968,6 +1002,11 @@ def decode_htmlentities(text):
     l'eau
     >>> print(decode_htmlentities("foo &lt; bar"))
     foo < bar
+
+    References
+    ----------
+    .. [3] http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
+
     """
     def substitute_entity(match):
         try:
