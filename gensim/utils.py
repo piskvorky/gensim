@@ -1592,20 +1592,23 @@ def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
 
 
 def prune_vocab(vocab, min_reduce, trim_rule=None):
-    """
-    Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
+    """Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
 
     Modifies `vocab` in place, returns the sum of all counts that were pruned.
     Parameters
     ----------
     vocab : dict
-        dictionary
+        Input dictionary.
     min_reduce : int
-        to remove entries which are smaller than this
+        Frequency threshold for tokens in `vocab`.
+    trim_rule : function, optional
+        Function for trimming entities from vocab, default behaviour is `vocab[w] <= min_reduce`.
+
     Returns
     -------
     result : int
-        sum of all counts that were pruned
+        Sum of all counts that were pruned.
+
     """
     result = 0
     old_len = len(vocab)
@@ -1621,7 +1624,19 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
 
 
 def qsize(queue):
-    """Return the (approximate) queue size where available; -1 where not (OS X)."""
+    """Get the (approximate) queue size where available.
+
+    Parameters
+    ----------
+    queue : :class:`queue.Queue`
+        Input queue.
+
+    Returns
+    -------
+    int
+        Queue size, -1 if `qsize` method isn't implemented (OS X).
+
+    """
     try:
         return queue.qsize()
     except NotImplementedError:
@@ -1635,6 +1650,25 @@ RULE_KEEP = 2
 
 
 def keep_vocab_item(word, count, min_count, trim_rule=None):
+    """Check that should we keep `word` in vocab or remove.
+
+    Parameters
+    ----------
+    word : str
+        Input word.
+    count : int
+        Number of times that word contains in corpus.
+    min_count : int
+        Frequency threshold for `word`.
+    trim_rule : function, optional
+        Function for trimming entities from vocab, default behaviour is `vocab[w] <= min_reduce`.
+
+    Returns
+    -------
+    bool
+        True if `word` should stay, False otherwise.
+
+    """
     default_res = count >= min_count
 
     if trim_rule is None:
@@ -1650,17 +1684,27 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
 
 
 def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
-    """
-    Run command with arguments and return its output as a byte string.
-    Backported from Python 2.7 as it's implemented as pure python on stdlib.
+    r"""Run command with arguments and return its output as a byte string.
+    Backported from Python 2.7 as it's implemented as pure python on stdlib + small modification.
+    Widely used for :mod:`gensim.models.wrappers`.
+
+    Very similar with [6]_
+
     Examples
     --------
-    >>> check_output(args=['/usr/bin/python', '--version'])
-    Python 2.6.2
+    >>> from gensim.utils import check_output
+    >>> check_output(args=['echo', '1'])
+    '1\n'
+
     Raises
     ------
     KeyboardInterrupt
-        when interrupted
+        If Ctrl+C pressed.
+
+    References
+    ----------
+    .. [6] https://docs.python.org/2/library/subprocess.html#subprocess.check_output
+
     """
     try:
         logger.debug("COMMAND: %s %s", popenargs, kwargs)
@@ -1681,44 +1725,47 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
 
 
 def sample_dict(d, n=10, use_random=True):
-    """
-    Pick `n` items from dictionary `d` and return them as a list.
+    """Pick `n` items from dictionary `d`.
 
-    The items are picked randomly if `use_random` is True, otherwise picked
-    according to natural dict iteration.
     Parameters
     ----------
     d : dict
-        dictionary
-    n : int
-        by default set to 10
-    use_random : bool
-        by default set to True
+        Input dictionary.
+    n : int, optional
+        Number of items that will be picked.
+    use_random : bool, optional
+        If True - pick items randomly, otherwise - according to natural dict iteration.
+
     Returns
     -------
-    list
-        n items from dictionary
+    list of (object, object)
+        Picked items from dictionary, represented as list.
+
     """
     selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
     return [(key, d[key]) for key in selected_keys]
 
 
 def strided_windows(ndarray, window_size):
-    """
-    Produce a numpy.ndarray of windows, as from a sliding window.
+    """Produce a numpy.ndarray of windows, as from a sliding window.
+
     Parameters
     ----------
     ndarray : numpy.ndarray
-        either a numpy.ndarray or something that can be converted into one.
+        Input array
     window_size : int
-        sliding window size.
+        Sliding window size.
+
     Returns
     -------
-        numpy.ndarray of the subsequences produced by sliding a window of the given size over
-    the `ndarray`. Since this uses striding, the individual arrays are views rather than
-    copies of `ndarray`. Changes to one view modifies the others and the original.
+    numpy.ndarray
+        Subsequences produced by sliding a window of the given size over the `ndarray`.
+        Since this uses striding, the individual arrays are views rather than copies of `ndarray`.
+        Changes to one view modifies the others and the original.
+
     Examples
     --------
+    >>> from gensim.utils import strided_windows
     >>> strided_windows(np.arange(5), 2)
     array([[0, 1],
            [1, 2],
@@ -1731,6 +1778,7 @@ def strided_windows(ndarray, window_size):
            [3, 4, 5, 6, 7],
            [4, 5, 6, 7, 8],
            [5, 6, 7, 8, 9]])
+
     """
     ndarray = np.asarray(ndarray)
     if window_size == ndarray.shape[0]:
@@ -1746,21 +1794,23 @@ def strided_windows(ndarray, window_size):
 
 def iter_windows(texts, window_size, copy=False, ignore_below_size=True, include_doc_num=False):
     """Produce a generator over the given texts using a sliding window of `window_size`.
-    The windows produced are views of some subsequence of a text. To use deep copies
-    instead, pass `copy=True`.
+    The windows produced are views of some subsequence of a text.
+    To use deep copies instead, pass `copy=True`.
+
+
     Parameters
     ----------
-    texts : list
+    texts : list of str
         List of string sentences.
     window_size : int
         Size of sliding window.
-    Other Parameters
-    ----------------
-    copy : bool
-        False to use views of the texts (default) or True to produce deep copies.
-    ignore_below_size : bool
-        ignore documents that are not at least `window_size` in length (default behavior).
-    If False, the documents below `window_size` will be yielded as the full document.
+    copy : bool, optional
+        If True - produce deep copies.
+    ignore_below_size : bool, optional
+        If True - ignore documents that are not at least `window_size` in length.
+    include_doc_num : bool, optional
+        If True - will be yield doc_num too.
+
     """
     for doc_num, document in enumerate(texts):
         for window in _iter_windows(document, window_size, copy, ignore_below_size):
@@ -1782,25 +1832,35 @@ def _iter_windows(document, window_size, copy=False, ignore_below_size=True):
 
 def flatten(nested_list):
     """Recursively flatten out a nested list.
+
     Parameters
     ----------
     nested_list : list
-        possibly nested list.
+        Possibly nested list.
+
     Returns
     -------
     list
-        flattened version of input, where any list elements have been unpacked into
-        the top-level list in a recursive fashion.
+        Flattened version of input, where any list elements have been unpacked into the top-level list
+        in a recursive fashion.
+
     """
     return list(lazy_flatten(nested_list))
 
 
 def lazy_flatten(nested_list):
-    """Lazy version of `flatten`.
+    """Lazy version of :func:`~gensim.utils.flatten`.
+
     Parameters
     ----------
     nested_list : list
-        nested list
+        Possibly nested list.
+
+    Yields
+    ------
+    object
+        Element of list
+
     """
     for el in nested_list:
         if isinstance(el, collections.Iterable) and not isinstance(el, string_types):
