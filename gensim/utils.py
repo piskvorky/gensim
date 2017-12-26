@@ -1435,10 +1435,10 @@ def getNS(host=None, port=None, broadcast=True, hmac_key=None):
 
 
 def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None):
-    """
-    Register object with name server (starting the name server if not running
+    """Register object with name server (starting the name server if not running
     yet) and block until the daemon is terminated. The object is registered under
     `name`, or `name`+ some random suffix if `random_suffix` is set.
+
     """
     if ns_conf is None:
         ns_conf = {}
@@ -1457,12 +1457,17 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None
 
 
 def has_pattern():
-    """
-    Function which returns a flag indicating whether pattern is installed or not
-    Raises
-    ------
-    ImportError
-        when import fails
+    """Check that `pattern` [5]_ package already installed.
+
+    Returns
+    -------
+    bool
+        True if `pattern` installed, False otherwise.
+
+    References
+    ----------
+    .. [5] https://github.com/clips/pattern
+
     """
     try:
         from pattern.en import parse  # noqa:F401
@@ -1473,24 +1478,45 @@ def has_pattern():
 
 def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
               stopwords=frozenset(), min_length=2, max_length=15):
-    """
-    This function is only available when the optional 'pattern' package is installed.
-
-    Use the English lemmatizer from `pattern` to extract UTF8-encoded tokens in
+    """Use the English lemmatizer from `pattern` [5]_ to extract UTF8-encoded tokens in
     their base form=lemma, e.g. "are, is, being" -> "be" etc.
     This is a smarter version of stemming, taking word context into account.
 
-    Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
+    Parameters
+    ----------
+    content : str
+        Input string
+    allowed_tags : :class:`_sre.SRE_Pattern`, optional
+        Compiled regexp to select POS that will be used.
+        Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
+    light : bool, optional
+        DEPRECATED FLAG, DOESN'T SUPPORT BY `pattern`.
+    stopwords : frozenset
+        Set of words that will be removed from output.
+    min_length : int
+        Minimal token length in output (inclusive).
+    max_length : int
+        Maximal token length in output (inclusive).
+
+    Returns
+    -------
+    list of str
+        List with tokens with POS tag.
+
+    Warnings
+    --------
+    This function is only available when the optional 'pattern' package is installed.
+
     Examples
     --------
+    >>> from gensim.utils import lemmatize
     >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
     ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
-
     >>> lemmatize('The study ranks high.')
     ['study/NN', 'rank/VB', 'high/JJ']
-
     >>> lemmatize('The ranks study hard.')
     ['rank/NN', 'study/VB', 'hard/RB']
+
     """
     if not has_pattern():
         raise ImportError(
@@ -1520,19 +1546,47 @@ def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
 
 
 def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
-    """
-    Create a random gensim sparse vector. Each coordinate is nonzero with
-    probability `prob_nnz`, each non-zero coordinate value is drawn from
-    a Poisson distribution with parameter lambda equal to `lam`.
+    """Create a random gensim BoW vector.
+
+    Parameters
+    ----------
+    dim : int, optional
+        Dimension of vector.
+    prob_nnz : float, optional
+        Probability of each coordinate will be nonzero, will be drawn from Poisson distribution.
+    lam : float, optional
+        Parameter for Poisson distribution.
+
+    Returns
+    -------
+    list of (int, float)
+        Vector in BoW format.
+
     """
     nnz = np.random.uniform(size=(dim,))
     return [(i, float(np.random.poisson(lam=lam) + 1.0)) for i in xrange(dim) if nnz[i] < prob_nnz]
 
 
 def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
-    """
-    Create a random gensim-style corpus, as a list of lists of (int, float) tuples,
-    to be used as a mock corpus.
+    """Create a random gensim-style corpus (BoW), used :func:`~gensim.utils.mock_data_row`.
+
+    Parameters
+    ----------
+    n_items : int
+        Size of corpus
+    dim : int
+        Dimension of vector, used for :func:`~gensim.utils.mock_data_row`.
+    prob_nnz : float, optional
+        Probability of each coordinate will be nonzero, will be drawn from Poisson distribution,
+        used for :func:`~gensim.utils.mock_data_row`.
+    lam : float, optional
+        Parameter for Poisson distribution, used for :func:`~gensim.utils.mock_data_row`.
+
+    Returns
+    -------
+    list of list of (int, float)
+        Gensim-style corpus.
+
     """
     return [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam) for _ in xrange(n_items)]
 
