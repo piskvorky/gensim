@@ -50,7 +50,8 @@ class TestLdaDiff(unittest.TestCase):
                 self.assertTrue(np.allclose(mdiff, np.zeros(mdiff.shape, dtype=mdiff.dtype)))
 
             # test for diagonal case
-            mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms, distance=dist_name, diagonal=True)
+            mdiff, annotation = \
+                self.model.diff(self.model, n_ann_terms=self.n_ann_terms, distance=dist_name, diagonal=True)
 
             for (int_tokens, diff_tokens) in annotation:
                 self.assertEqual(diff_tokens, [])

@@ -22,7 +22,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
     """
 
     def __init__(self, min_count=5, threshold=10.0, max_vocab_size=40000000,
-            delimiter=b'_', progress_per=10000, scoring='default'):
+                 delimiter=b'_', progress_per=10000, scoring='default'):
         """
         Sklearn wrapper for Phrases model.
         """
@@ -38,8 +38,11 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         """
         Fit the model according to the given training data.
         """
-        self.gensim_model = models.Phrases(sentences=X, min_count=self.min_count, threshold=self.threshold,
-            max_vocab_size=self.max_vocab_size, delimiter=self.delimiter, progress_per=self.progress_per, scoring=self.scoring)
+        self.gensim_model = models.Phrases(
+            sentences=X, min_count=self.min_count, threshold=self.threshold,
+            max_vocab_size=self.max_vocab_size, delimiter=self.delimiter,
+            progress_per=self.progress_per, scoring=self.scoring
+        )
         return self
 
     def transform(self, docs):
@@ -47,7 +50,9 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         Return the input documents to return phrase tokens.
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # input as python lists
         if isinstance(docs[0], string_types):
@@ -56,8 +61,11 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
 
     def partial_fit(self, X):
         if self.gensim_model is None:
-            self.gensim_model = models.Phrases(sentences=X, min_count=self.min_count, threshold=self.threshold,
-                max_vocab_size=self.max_vocab_size, delimiter=self.delimiter, progress_per=self.progress_per, scoring=self.scoring)
+            self.gensim_model = models.Phrases(
+                sentences=X, min_count=self.min_count, threshold=self.threshold,
+                max_vocab_size=self.max_vocab_size, delimiter=self.delimiter,
+                progress_per=self.progress_per, scoring=self.scoring
+            )
 
         self.gensim_model.add_vocab(X)
         return self

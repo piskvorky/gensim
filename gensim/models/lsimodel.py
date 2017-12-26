@@ -106,6 +106,10 @@ def ascarray(a, name=''):
 
 class Projection(utils.SaveLoad):
     def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS, extra_dims=P2_EXTRA_DIMS, dtype=np.float32):
+=======
+    def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS,
+                 extra_dims=P2_EXTRA_DIMS, dtype=np.float32):
+
         """
         Construct the (U, S) projection from a corpus `docs`. The projection can
         be later updated by merging it with another Projection via `self.merge()`.
@@ -133,7 +137,8 @@ class Projection(utils.SaveLoad):
                 logger.info("computing sparse SVD of %s matrix", str(docs.shape))
                 if not scipy.sparse.issparse(docs):
                     docs = matutils.corpus2csc(docs)
-                ut, s, vt = sparsesvd.sparsesvd(docs, k + 30)  # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
+                # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
+                ut, s, vt = sparsesvd.sparsesvd(docs, k + 30)
                 u = ut.T
                 del ut, vt
                 k = clip_spectrum(s**2, self.k)
@@ -195,10 +200,14 @@ class Projection(utils.SaveLoad):
             # see http://www.mail-archive.com/np-discussion@scipy.org/msg07224.html and
             # bug ticket http://projects.scipy.org/np/ticket/706
             # sdoering: replaced np's linalg.svd with scipy's linalg.svd:
-            u_k, s_k, _ = scipy.linalg.svd(k, full_matrices=False)  # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in np :( //sdoering: maybe there is one in scipy?
+
+            # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper
+            # for partial svd/eigendecomp in np :( //sdoering: maybe there is one in scipy?
+            u_k, s_k, _ = scipy.linalg.svd(k, full_matrices=False)
         except scipy.linalg.LinAlgError:
             logger.error("SVD(A) failed; trying SVD(A * A^T)")
-            u_k, s_k, _ = scipy.linalg.svd(np.dot(k, k.T), full_matrices=False)  # if this fails too, give up with an exception
+            # if this fails too, give up with an exception
+            u_k, s_k, _ = scipy.linalg.svd(np.dot(k, k.T), full_matrices=False)
             s_k = np.sqrt(s_k)  # go back from eigen values to singular values
 
         k = clip_spectrum(s_k**2, self.k)
@@ -291,7 +300,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.dtype = np.float64
 
         if corpus is None and self.id2word is None:
-            raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
+            raise ValueError(
+                'at least one of corpus/id2word must be specified, to establish input space dimensionality'
+            )
 
         if self.id2word is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
@@ -387,7 +398,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     if self.dispatcher:
                         # distributed version: add this job to the job queue, so workers can work on it
                         logger.debug("creating job #%i", chunk_no)
-                        self.dispatcher.putjob(job)  # put job into queue; this will eventually block, because the queue has a small finite size
+                        # put job into queue; this will eventually block, because the queue has a small finite size
+                        self.dispatcher.putjob(job)
                         del job
                         logger.info("dispatched documents up to #%s", doc_no)
                     else:
@@ -450,7 +462,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         topic_dist = (vec.T * self.projection.u[:, :self.num_topics]).T  # (x^T * u).T = u^-1 * x
 
         # # convert input to dense, then do dense * dense multiplication
-        # # ± same performance as above (BLAS dense * dense is better optimized than scipy.sparse), but consumes more memory
+        # # ± same performance as above (BLAS dense * dense is better optimized than scipy.sparse),
+        # but consumes more memory
         # vec = matutils.corpus2dense(bow, num_terms=self.num_terms, num_docs=len(bow))
         # topic_dist = np.dot(self.projection.u[:, :self.num_topics].T, vec)
 
@@ -721,7 +734,8 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
             q[:] = 0.0
             for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
                 logger.info('PROGRESS: at document #%i/%i', chunk_no * chunksize, num_docs)
-                chunk = matutils.corpus2csc(chunk, num_terms=num_terms, dtype=dtype)  # documents = columns of sparse CSC
+                # documents = columns of sparse CSC
+                chunk = matutils.corpus2csc(chunk, num_terms=num_terms, dtype=dtype)
                 tmp = chunk.T * yold
                 tmp = chunk * tmp
                 del chunk
@@ -754,8 +768,10 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
 
         # now we're ready to compute decomposition of the small matrix X
         logger.info("running dense decomposition on %s covariance matrix", str(x.shape))
-        u, s, vt = scipy.linalg.svd(x)  # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
-        s = np.sqrt(s)  # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
+        # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
+        u, s, vt = scipy.linalg.svd(x)
+        # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
+        s = np.sqrt(s)
     q = qt.T.copy()
     del qt
 

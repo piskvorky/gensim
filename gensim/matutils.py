@@ -188,7 +188,10 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
         matrix_indices = np.concatenate(matrix_indices).ravel()
         matrix_data = np.concatenate(matrix_data).ravel()
         # Instantiate and return a sparse csr_matrix which preserves the order of indices/data.
-        return scipy.sparse.csr.csr_matrix((matrix_data, matrix_indices, matrix_indptr), shape=(matrix.shape[0], np.max(matrix_indices) + 1))
+        return scipy.sparse.csr.csr_matrix(
+            (matrix_data, matrix_indices, matrix_indptr),
+            shape=(matrix.shape[0], np.max(matrix_indices) + 1)
+        )
 
 
 def scipy2sparse(vec, eps=1e-9):
@@ -531,18 +534,21 @@ def jensen_shannon(vec1, vec2, num_features=None):
 def hellinger(vec1, vec2):
     """
     Hellinger distance is a distance metric to quantify the similarity between two probability distributions.
-    Distance between distributions will be a number between <0,1>, where 0 is minimum distance (maximum similarity) and 1 is maximum distance (minimum similarity).
+    Distance between distributions will be a number between <0,1>, where 0 is minimum distance (maximum similarity)
+    and 1 is maximum distance (minimum similarity).
     """
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
     if scipy.sparse.issparse(vec2):
         vec2 = vec2.toarray()
     if isbow(vec1) and isbow(vec2):
-        # if it is a bag of words format, instead of converting to dense we use dictionaries to calculate appropriate distance
+        # if it is a BoW format, instead of converting to dense we use dictionaries to calculate appropriate distance
         vec1, vec2 = dict(vec1), dict(vec2)
         if len(vec2) < len(vec1):
             vec1, vec2 = vec2, vec1  # swap references so that we iterate over the shorter vector
-        sim = np.sqrt(0.5 * sum((np.sqrt(value) - np.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
+        sim = np.sqrt(
+            0.5 * sum((np.sqrt(value) - np.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1))
+        )
         return sim
     else:
         sim = np.sqrt(0.5 * ((np.sqrt(vec1) - np.sqrt(vec2))**2).sum())
@@ -602,13 +608,12 @@ def jaccard_distance(set1, set2):
 def dirichlet_expectation(alpha):
     """
     For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
-
     """
     if len(alpha.shape) == 1:
         result = psi(alpha) - psi(np.sum(alpha))
     else:
         result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
-    return result.astype(alpha.dtype)  # keep the same precision as input
+    return result.astype(alpha.dtype, copy=False)  # keep the same precision as input
 
 
 def qr_destroy(la):
@@ -672,7 +677,10 @@ class MmWriter(object):
             logger.info("saving sparse matrix to %s", self.fname)
             self.fout.write(utils.to_utf8(' ' * 50 + '\n'))  # 48 digits must be enough for everybody
         else:
-            logger.info("saving sparse %sx%s matrix with %i non-zero entries to %s", num_docs, num_terms, num_nnz, self.fname)
+            logger.info(
+                "saving sparse %sx%s matrix with %i non-zero entries to %s",
+                num_docs, num_terms, num_nnz, self.fname
+            )
             self.fout.write(utils.to_utf8('%s %s %s\n' % (num_docs, num_terms, num_nnz)))
         self.last_docno = -1
         self.headers_written = True
@@ -694,7 +702,8 @@ class MmWriter(object):
         assert self.last_docno < docno, "documents %i and %i not in sequential order!" % (self.last_docno, docno)
         vector = sorted((i, w) for i, w in vector if abs(w) > 1e-12)  # ignore near-zero entries
         for termid, weight in vector:  # write term ids in sorted order
-            self.fout.write(utils.to_utf8("%i %i %s\n" % (docno + 1, termid + 1, weight)))  # +1 because MM format starts counting from 1
+            # +1 because MM format starts counting from 1
+            self.fout.write(utils.to_utf8("%i %i %s\n" % (docno + 1, termid + 1, weight)))
         self.last_docno = docno
         return (vector[-1][0], len(vector)) if vector else (-1, 0)
 
@@ -747,7 +756,10 @@ class MmWriter(object):
         num_terms = num_terms or _num_terms
 
         if num_docs * num_terms != 0:
-            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)", num_docs, num_terms, 100.0 * num_nnz / (num_docs * num_terms), num_nnz, num_docs * num_terms)
+            logger.info(
+                "saved %ix%i matrix, density=%.3f%% (%i/%i)",
+                num_docs, num_terms, 100.0 * num_nnz / (num_docs * num_terms), num_nnz, num_docs * num_terms
+            )
 
         # now write proper headers, by seeking and overwriting the spaces written earlier
         mw.fake_headers(num_docs, num_terms, num_nnz)
@@ -799,8 +811,10 @@ class MmReader(object):
             try:
                 header = utils.to_unicode(next(lines)).strip()
                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
-                    raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
-                                    (self.input, header))
+                    raise ValueError(
+                        "File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
+                        (self.input, header)
+                    )
             except StopIteration:
                 pass
 
@@ -813,7 +827,10 @@ class MmReader(object):
                         self.num_docs, self.num_terms = self.num_terms, self.num_docs
                     break
 
-        logger.info("accepted corpus with %i documents, %i features, %i non-zero entries", self.num_docs, self.num_terms, self.num_nnz)
+        logger.info(
+            "accepted corpus with %i documents, %i features, %i non-zero entries",
+            self.num_docs, self.num_terms, self.num_nnz
+        )
 
     def __len__(self):
         return self.num_docs
@@ -849,7 +866,8 @@ class MmReader(object):
                 docid, termid, val = utils.to_unicode(line).split()  # needed for python3
                 if not self.transposed:
                     termid, docid = docid, termid
-                docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)  # -1 because matrix market indexes are 1-based => convert to 0-based
+                # -1 because matrix market indexes are 1-based => convert to 0-based
+                docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)
                 assert previd <= docid, "matrix columns must come in ascending order"
                 if docid != previd:
                     # change of document: return the document read so far (its id is prevId)
@@ -893,7 +911,8 @@ class MmReader(object):
             docid, termid, val = line.split()
             if not self.transposed:
                 termid, docid = docid, termid
-            docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)  # -1 because matrix market indexes are 1-based => convert to 0-based
+            # -1 because matrix market indexes are 1-based => convert to 0-based
+            docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)
             assert previd <= docid, "matrix columns must come in ascending order"
             if docid != previd:
                 if previd >= 0:

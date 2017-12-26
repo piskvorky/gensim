@@ -148,9 +148,9 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         token2id = self.token2id
         if allow_update or return_missing:
-            missing = {w: freq for w, freq in iteritems(counter) if w not in token2id}
+            missing = sorted(x for x in iteritems(counter) if x[0] not in token2id)
             if allow_update:
-                for w in missing:
+                for w, _ in missing:
                     # new id = number of ids made so far;
                     # NOTE this assumes there are no gaps in the id sequence!
                     token2id[w] = len(token2id)
@@ -169,9 +169,49 @@ class Dictionary(utils.SaveLoad, Mapping):
         # return tokenids, in ascending id order
         result = sorted(iteritems(result))
         if return_missing:
-            return result, missing
+            return result, dict(missing)
         else:
             return result
+
+    def doc2idx(self, document, unknown_word_index=-1):
+        """Convert `document` (a list of words) into a list of indexes = list of `token_id`.
+
+        Each word is assumed to be a **tokenized and normalized** string (either unicode or utf8-encoded).
+        No further preprocessing is done on the words in `document`; apply tokenization, stemming etc. before calling
+        this method.
+
+        Replace all unknown words i.e, words not in the dictionary with the index as set via `unknown_word_index`,
+        defaults to -1.
+
+        Notes
+        -----
+        This function is `const`, aka read-only
+
+        Parameters
+        ----------
+        document : list of str
+            Tokenized, normalized and preprocessed words
+        unknown_word_index : int, optional
+            Index to use for words not in the dictionary.
+
+        Returns
+        -------
+        list of int
+            Indexes in the dictionary for words in the `document` preserving the order of words
+
+        Examples
+        --------
+        >>> dictionary_obj = Dictionary()
+        >>> dictionary_obj.token2id = {'computer': 0, 'human': 1, 'response': 2, 'survey': 3}
+        >>> dictionary_obj.doc2idx(document=['human', 'computer', 'interface'], unknown_word_index=-1)
+        [1, 0, -1]
+
+        """
+        if isinstance(document, string_types):
+            raise TypeError("doc2idx expects an array of unicode tokens on input, not a single string")
+
+        document = [word if isinstance(word, unicode) else unicode(word, 'utf-8') for word in document]
+        return [self.token2id.get(word, unknown_word_index) for word in document]
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
         """
@@ -266,7 +306,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
-        idmap = dict(izip(itervalues(self.token2id), xrange(len(self.token2id))))
+        idmap = dict(izip(sorted(itervalues(self.token2id)), xrange(len(self.token2id))))
 
         # reassign mappings to new ids
         self.token2id = {token: idmap[tokenid] for token, tokenid in iteritems(self.token2id)}

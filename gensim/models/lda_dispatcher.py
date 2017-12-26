@@ -180,13 +180,21 @@ class Dispatcher(object):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--maxsize", help="How many jobs (=chunks of N documents) to keep 'pre-fetched' in a queue (default: %(default)s)", type=int, default=MAX_JOBS_QUEUE)
+    parser.add_argument(
+        "--maxsize",
+        help="How many jobs (=chunks of N documents) to keep 'pre-fetched' in a queue (default: %(default)s)",
+        type=int, default=MAX_JOBS_QUEUE
+    )
     parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
     parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
     parser.add_argument("--no-broadcast", help="Disable broadcast (default: %(default)s)",
                         action='store_const', default=True, const=False)
     parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
-    parser.add_argument('-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel", const=logging.INFO, default=logging.WARNING)
+    parser.add_argument(
+        '-v', '--verbose',
+        help='Verbose flag',
+        action='store_const', dest="loglevel", const=logging.INFO, default=logging.WARNING
+    )
     args = parser.parse_args()
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)

@@ -78,7 +78,8 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
 
         if not isinstance(author_names, list):
             author_names = [author_names]
-        # returning dense representation for compatibility with sklearn but we should go back to sparse representation in the future
+        # returning dense representation for compatibility with sklearn
+        # but we should go back to sparse representation in the future
         topics = [matutils.sparse2full(self.gensim_model[author_name], self.num_topics) for author_name in author_names]
         return np.reshape(np.array(topics), (len(author_names), self.num_topics))
 

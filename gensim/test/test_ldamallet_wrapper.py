@@ -50,7 +50,8 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
             transformed = model[doc]
             vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
             expected = [0.49, 0.51]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)  # must contain the same values, up to re-ordering
+            # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)
             if passed:
                 break
             logging.warning(
@@ -73,7 +74,8 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
             transformed = model[doc]
             vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
             expected = [1.0, 0.0]
-            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-2)  # must contain the same values, up to re-ordering
+            # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-2)
             if passed:
                 break
             logging.warning(
@@ -153,7 +155,6 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, ldamodel.LdaModel.load, fname, mmap='r')
-# endclass TestLdaMallet
 
 
 if __name__ == '__main__':
