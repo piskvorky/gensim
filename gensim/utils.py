@@ -713,22 +713,25 @@ class FakeDict(object):
 
 
 def dict_from_corpus(corpus):
-    """
-    Scan corpus for all word ids that appear in it, then construct and return a mapping
-    which maps each `wordId -> str(wordId)`.
+    """Scan corpus for all word ids that appear in it, then construct a mapping
+    which maps each `word_id` -> `str(word_id)`.
+
     Parameters
     ----------
-    corpus
-        a collection of texts
-    Return
+    corpus : iterable of iterable of (int, int)
+        Collection of texts in BoW format.
+
+    Returns
     ------
-    id2word : dict
-        a mapping which maps each `wordId -> str(wordId)`.
-    Notes
-    -----
-    This function is used whenever *words* need to be displayed (as opposed to just
-    their ids) but no wordId->word mapping was provided. The resulting mapping
-    only covers words actually used in the corpus, up to the highest wordId found.
+    id2word : :class:`~gensim.utils.FakeDict`
+        "Fake" mapping which maps each `word_id` -> `str(word_id)`.
+
+    Warnings
+    --------
+    This function is used whenever *words* need to be displayed (as opposed to just their ids)
+    but no `word_id` -> `word` mapping was provided. The resulting mapping only covers words actually
+    used in the corpus, up to the highest `word_id` found.
+
     """
     num_terms = 1 + get_max_id(corpus)
     id2word = FakeDict(num_terms)
@@ -736,22 +739,23 @@ def dict_from_corpus(corpus):
 
 
 def is_corpus(obj):
-    """
-    Check whether `obj` is a corpus.
+    """Check whether `obj` is a corpus.
+
     Parameters
     ----------
-    obj
-        a corpus if it supports iteration over documents, where a document
-    is in turn anything that acts as a sequence of 2-tuples (int, float).
+    obj : object
+        Something `iterable of iterable` that contains (int, int).
+
     Return
     ------
-    is_corpus : bool
-    obj
-        `new is obj` if `obj` was an iterable, or `new` yields the same sequence as `obj` if it was an iterator.
-    Notes
-    -----
-    Note: An "empty" corpus (empty input sequence) is ambiguous, so in this case the
-    result is forcefully defined as `is_corpus=False`.
+    (bool, object)
+        Pair of (is_corpus, `obj`), is_corpus True if `obj` is corpus.
+
+    Warnings
+    --------
+    An "empty" corpus (empty input sequence) is ambiguous, so in this case
+    the result is forcefully defined as (False, `obj`).
+
     """
     try:
         if 'Corpus' in obj.__class__.__name__:  # the most common case, quick hack
@@ -779,17 +783,19 @@ def is_corpus(obj):
 
 
 def get_my_ip():
-    """
-    Try to obtain our external ip (from the pyro nameserver's point of view)
-    Return
-    ------
-    result
-        a triple (hostname, aliaslist, ipaddrlist)
-    Notes
-    -----
-    This tries to sidestep the issue of bogus `/etc/hosts` entries and other
-    local misconfigurations, which often mess up hostname resolution.
+    """Try to obtain our external ip (from the Pyro4 nameserver's point of view)
+
+    Returns
+    -------
+    str
+        IP address.
+
+    Warnings
+    --------
+    This tries to sidestep the issue of bogus `/etc/hosts` entries and other local misconfiguration,
+    which often mess up hostname resolution.
     If all else fails, fall back to simple `socket.gethostbyname()` lookup.
+
     """
     import socket
     try:
@@ -813,21 +819,30 @@ def get_my_ip():
 
 
 class RepeatCorpus(SaveLoad):
-    """
-    Used in the tutorial on distributed computing and likely not useful anywhere else.
+    """Wrap a `corpus` as another corpus of length `reps`. This is achieved by repeating documents from `corpus`
+    over and over again, until the requested length `len(result) == reps` is reached.
+    Repetition is done on-the-fly=efficiently, via `itertools`.
+
+    Examples
+    --------
+    >>> from gensim.utils import RepeatCorpus
+    >>>
+    >>> corpus = [[(1, 2)], []] # 2 documents
+    >>> list(RepeatCorpus(corpus, 5)) # repeat 2.5 times to get 5 documents
+    [[(1, 2)], [], [(1, 2)], [], [(1, 2)]]
+
     """
 
     def __init__(self, corpus, reps):
         """
-        Wrap a `corpus` as another corpus of length `reps`. This is achieved by
-        repeating documents from `corpus` over and over again, until the requested
-        length `len(result)==reps` is reached. Repetition is done
-        on-the-fly=efficiently, via `itertools`.
-        Examples
-        --------
-        >>> corpus = [[(1, 0.5)], []] # 2 documents
-        >>> list(RepeatCorpus(corpus, 5)) # repeat 2.5 times to get 5 documents
-        [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)]]
+
+        Parameters
+        ----------
+        corpus : iterable of iterable of (int, int)
+            Input corpus.
+        reps : int
+            Number of repeats for documents from corpus.
+
         """
         self.corpus = corpus
         self.reps = reps
@@ -837,15 +852,28 @@ class RepeatCorpus(SaveLoad):
 
 
 class RepeatCorpusNTimes(SaveLoad):
+    """Wrap a `corpus` and repeat it `n` times.
+
+    Examples
+    --------
+    >>> from gensim.utils import RepeatCorpusNTimes
+    >>>
+    >>> corpus = [[(1, 0.5)], []]
+    >>> list(RepeatCorpusNTimes(corpus, 3)) # repeat 3 times
+    [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
+
+    """
 
     def __init__(self, corpus, n):
         """
-        Repeat a `corpus` `n` times.
-        Examples
-        --------
-        >>> corpus = [[(1, 0.5)], []]
-        >>> list(RepeatCorpusNTimes(corpus, 3)) # repeat 3 times
-        [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
+
+        Parameters
+        ----------
+        corpus : iterable of iterable of (int, int)
+            Input corpus.
+        n : int
+            Number of repeats for corpus.
+
         """
         self.corpus = corpus
         self.n = n
