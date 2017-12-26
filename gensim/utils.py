@@ -4,9 +4,7 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-This module contains various general utility functions.
-"""
+"""This module contains various general utility functions."""
 
 from __future__ import with_statement
 
@@ -56,22 +54,31 @@ RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
 def get_random_state(seed):
-    """
-    Turn seed into a np.random.RandomState instance.
-    Notes
-    -----
-        Method originally from maciejkula/glove-python, and written by @joshloyal.
+    """Generate :class:`numpy.random.RandomState` based on input seed.
+
     Parameters
     ----------
-    seed : {None, int, array_like}, optional
+    seed : {None, int, array_like}
+        Seed for random state.
+
     Returns
     -------
-    seed : {None, int, array_like}, optional
-        np.random.RandomState instance.
+    :class:`numpy.random.RandomState`
+        Random state.
+
     Raises
     ------
     AttributeError
         If seed is not {None, int, array_like}
+
+    Notes
+    -----
+    Method originally from [1]_ and written by @joshloyal.
+
+    References
+    ----------
+    .. [1] https://github.com/maciejkula/glove-python
+
     """
     if seed is None or seed is np.random:
         return np.random.mtrand._rand
@@ -83,11 +90,16 @@ def get_random_state(seed):
 
 
 def synchronous(tlockname):
-    """
-    A decorator to place an instance-based lock around a method.
+    """A decorator to place an instance-based lock around a method.
+
+    Notes
+    -----
+    Adapted from [2]_
+
     References
     ----------
-    Adapted from http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/
+    .. [2] http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/
+
     """
     def _synched(func):
         @wraps(func)
@@ -1106,19 +1118,22 @@ def toptexts(query, texts, index, n=10):
     """
     Debug fnc to help inspect the top `n` most similar documents (according to a
     similarity index `index`), to see if they are actually related to the query.
+
     Parameters
     ----------
     query : list
         vector OR BoW (list of tuples)
-    texts
+    texts : str
         object that can return something insightful for each document via `texts[docid]`,
         such as its fulltext or snippet.
-    index
+    index : any
         a class from gensim.similarity.docsim
+
     Return
     ------
     list
         a list of 3-tuples (docid, doc's similarity to the query, texts[docid])
+
     """
     sims = index[query]  # perform a similarity query against the corpus
     sims = sorted(enumerate(sims), key=lambda item: -item[1])
