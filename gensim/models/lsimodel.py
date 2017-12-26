@@ -105,7 +105,7 @@ def ascarray(a, name=''):
 
 
 class Projection(utils.SaveLoad):
-    def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS, extra_dims=P2_EXTRA_DIMS, dtype=np.float64):
+    def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS, extra_dims=P2_EXTRA_DIMS, dtype=np.float32):
         """
         Construct the (U, S) projection from a corpus `docs`. The projection can
         be later updated by merging it with another Projection via `self.merge()`.
@@ -302,7 +302,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.docs_processed = 0
         self.projection = Projection(
-            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples, dtype=float32
+            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples, dtype=np.float32
         )
 
         self.numworkers = 1
@@ -394,7 +394,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         # serial version, there is only one "worker" (myself) => process the job directly
                         update = Projection(
                             self.num_terms, self.num_topics, job, extra_dims=self.extra_samples,
-                            power_iters=self.power_iters, dtype=float32
+                            power_iters=self.power_iters, dtype=np.float32
                         )
                         del job
                         self.projection.merge(update, decay=decay)
@@ -411,7 +411,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             update = Projection(
                 self.num_terms, self.num_topics, corpus.tocsc(), extra_dims=self.extra_samples,
-                power_iters=self.power_iters, dtype=float32
+                power_iters=self.power_iters, dtype=np.float32
             )
             self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents", corpus.shape[1])
