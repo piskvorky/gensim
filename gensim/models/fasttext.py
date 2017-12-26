@@ -38,7 +38,7 @@ from gensim.models.base_any2vec import BaseWordEmbedddingsModel
 
 from types import GeneratorType
 from six import iteritems
-from gensim.utils import deprecated
+from gensim.utils import deprecated, call_on_class_only
 from gensim import utils
 
 logger = logging.getLogger(__name__)
@@ -47,6 +47,7 @@ try:
     from gensim.models.fasttext_inner import train_batch_sg, train_batch_cbow
     from gensim.models.fasttext_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
     logger.debug('Fast version of Fasttext is being used')
+    logger.info("Using FAST_VERSION - %s", FAST_VERSION)
 
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
@@ -185,13 +186,9 @@ class FastText(BaseWordEmbedddingsModel):
 
 
         """
+        self.load = call_on_class_only
+        self.load_fasttext_format = call_on_class_only
         self.callbacks = callbacks
-
-        if FAST_VERSION == -1:
-            logger.warning('Slow version of %s is being used', __name__)
-        else:
-            logger.debug('Fast version of %s is being used', __name__)
-
         self.word_ngrams = word_ngrams
         if self.word_ngrams <= 1 and max_n == 0:
             bucket = 0
@@ -596,14 +593,13 @@ class FastTextVocab(Word2VecVocab):
 
 
 class FastTextTrainables(Word2VecTrainables):
-    def __init__(self, vector_size=100, seed=1, alpha=0.025, min_alpha=0.0001, hs=0, negative=5,
-                 hashfxn=hash, bucket=2000000):
+    def __init__(self, vector_size=100, seed=1, hs=0, negative=5, hashfxn=hash, bucket=2000000):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hs=hs, negative=negative, hashfxn=hashfxn)
         self.bucket = bucket
         self.hash2index = {}
-        self.vectors_vocab = None
-        self.vectors_ngrams = None
+        self.vectors_vocab = []
+        self.vectors_ngrams = []
         self.ngrams = {}
 
     def prepare_weights(self, update=False, vocabulary=None):

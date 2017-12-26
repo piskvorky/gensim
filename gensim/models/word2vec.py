@@ -138,9 +138,9 @@ try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
+    logger.info("Using FAST_VERSION - %s", FAST_VERSION)
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
-    FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
     raise RuntimeError("Support for Python/Numpy implementations has been continued.")
 
@@ -234,11 +234,6 @@ class Word2Vec(BaseWordEmbedddingsModel):
 
         self.callbacks = callbacks
         self.load = call_on_class_only
-
-        if FAST_VERSION == -1:
-            logger.warning('Slow version of %s is being used', __name__)
-        else:
-            logger.debug('Fast version of %s is being used', __name__)
 
         # self.null_word = null_word
         self.compute_loss = compute_loss
@@ -381,7 +376,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
         logger.info(
             "scoring sentences with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s and negative=%s",
-            self.workers, len(self.wv.vocab), self.vector_size, self.sg, self.hs, self.vocabulary.sample, self.negative
+            self.workers, len(self.wv.vocab), self.trainables.layer1_size, self.sg, self.hs, self.vocabulary.sample, self.negative
         )
 
         if not self.wv.vocab:
@@ -396,7 +391,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
         def worker_loop():
             """Compute log probability for each sentence, lifting lists of sentences from the jobs queue."""
             work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
-            neu1 = matutils.zeros_aligned(self.vector_size, dtype=REAL)
+            neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
             while True:
                 job = job_queue.get()
                 if job is None:  # signal to finish
@@ -531,6 +526,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
                         self.wv.vectors[self.wv.vocab[word].index] = weights
                         self.vectors_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
         logger.info("merged %d vectors into %s matrix from %s", overlap_count, self.wv.vectors.shape, fname)
+        self._set_params_from_kv()
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.__getitem__() instead")
     def __getitem__(self, words):
@@ -593,9 +589,9 @@ class Word2Vec(BaseWordEmbedddingsModel):
         report['vocab'] = vocab_size * (700 if self.hs else 500)
         report['vectors'] = vocab_size * self.vector_size * dtype(REAL).itemsize
         if self.hs:
-            report['syn1'] = vocab_size * self.vector_size * dtype(REAL).itemsize
+            report['syn1'] = vocab_size * self.trainables.layer1_size * dtype(REAL).itemsize
         if self.negative:
-            report['syn1neg'] = vocab_size * self.vector_size * dtype(REAL).itemsize
+            report['syn1neg'] = vocab_size * self.trainables.layer1_size * dtype(REAL).itemsize
         report['total'] = sum(report.values())
         logger.info(
             "estimated required memory for %i words and %i dimensions: %i bytes",
@@ -647,6 +643,20 @@ class Word2Vec(BaseWordEmbedddingsModel):
 
     def get_latest_training_loss(self):
         return self.running_training_loss
+
+    @deprecated(
+        "Method will be removed in 4.0.0, keep just_word_vectors = model.wv to retain just the KeyedVectors instance"
+    )
+    def _minimize_model(self, save_syn1=False, save_syn1neg=False, save_vectors_lockf=False):
+        if save_syn1 and save_syn1neg and save_vectors_lockf:
+            return
+        if hasattr(self.trainables, 'syn1') and not save_syn1:
+            del self.trainables.syn1
+        if hasattr(self.trainables, 'syn1neg') and not save_syn1neg:
+            del self.trainables.syn1neg
+        if hasattr(self.trainables, 'vectors_lockf') and not save_vectors_lockf:
+            del self.trainables.vectors_lockf
+        self.model_trimmed_post_training = True
 
 
 class BrownCorpus(object):
@@ -998,6 +1008,7 @@ class Word2VecTrainables(BaseModelTrainables):
         self.hs = hs
         self.negative = negative
         self.hashfxn = hashfxn
+        self.layer1_size = vector_size
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors
@@ -1098,9 +1109,9 @@ class Word2VecTrainables(BaseModelTrainables):
             # construct deterministic seed from word AND seed argument
             self.vectors[i] = self.seeded_vector(vocabulary.index2word[i] + str(self.seed))
         if self.hs:
-            self.syn1 = zeros((len(vocabulary.vocab), self.vector_size), dtype=REAL)
+            self.syn1 = zeros((len(vocabulary.vocab), self.layer1_size), dtype=REAL)
         if self.negative:
-            self.syn1neg = zeros((len(vocabulary.vocab), self.vector_size), dtype=REAL)
+            self.syn1neg = zeros((len(vocabulary.vocab), self.layer1_size), dtype=REAL)
         self.vectors_norm = None
 
         self.vectors_lockf = ones(len(vocabulary.vocab), dtype=REAL)  # zeros suppress learning
@@ -1129,9 +1140,9 @@ class Word2VecTrainables(BaseModelTrainables):
         self.vectors = vstack([self.vectors, newvectors])
 
         if self.hs:
-            self.syn1 = vstack([self.syn1, zeros((gained_vocab, self.vector_size), dtype=REAL)])
+            self.syn1 = vstack([self.syn1, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
         if self.negative:
-            self.syn1neg = vstack([self.syn1neg, zeros((gained_vocab, self.vector_size), dtype=REAL)])
+            self.syn1neg = vstack([self.syn1neg, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
         self.vectors_norm = None
 
         # do not suppress learning for already learned words
