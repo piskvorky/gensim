@@ -122,6 +122,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                 batch_size += sentence_length
             else:
                 job_no += 1
+                print next_job_params
                 job_queue.put((job_batch, next_job_params))
 
                 # update the learning rate for the next job
@@ -231,7 +232,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         return trained_word_count
 
     def train(self, data_iterable, epochs=None, total_examples=None,
-              total_words=None, queue_factor=2, callbacks=(), report_delay=1.0, **kwargs):
+              total_words=None, queue_factor=2, report_delay=1.0, **kwargs):
         """Handle multi-worker training."""
         self._set_train_params(**kwargs)
         self.epochs = epochs
@@ -248,7 +249,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         start = default_timer() - 0.00001
 
         for cur_epoch in range(self.epochs):
-            for callback in callbacks:
+            for callback in self.callbacks:
                 callback.on_epoch_begin(self)
 
             trained_word_count_epoch, raw_word_count_epoch = self._train_epoch(data_iterable, cur_epoch=cur_epoch,
@@ -257,7 +258,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
 
-            for callback in callbacks:
+            for callback in self.callbacks:
                 callback.on_epoch_end(self)
 
         # Log overall time
@@ -462,9 +463,20 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         self.trainables.prepare_weights(update=update, vocabulary=self.vocabulary)
         self._set_keyedvectors()
 
+    def train(self, sentences, total_examples=None, total_words=None,
+              epochs=None, start_alpha=None, end_alpha=None, word_count=0,
+              queue_factor=2, report_delay=1.0, compute_loss=None):
+        self.alpha = start_alpha or self.alpha
+        self.min_alpha = end_alpha or self.min_alpha
+        self.epochs = epochs or self.epochs
+        return super(BaseWordEmbedddingsModel, self).train(
+            sentences, total_examples=total_examples, total_words=total_words,
+            epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
+            queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss)
+
     def _get_job_params(self, cur_epoch):
         """Return the paramter required for each batch."""
-        alpha_ = self.alpha * (1.0 - float(cur_epoch) / self.epochs)
+        alpha_ = self.alpha - ((self.alpha - self.min_alpha) * float(cur_epoch) / self.epochs)
         return alpha_
 
     def _update_job_params(self, job_params, epoch_progress, cur_epoch):
