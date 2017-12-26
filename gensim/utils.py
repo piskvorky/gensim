@@ -606,24 +606,39 @@ class SaveLoad(object):
 
 
 def identity(p):
-    """Identity fnc, for flows that don't accept lambda (pickling etc)."""
+    """Identity fnc, for flows that don't accept lambda (pickling etc).
+
+    Parameters
+    ----------
+    p : object
+        Input parameter.
+
+    Returns
+    -------
+    object
+        Same as `p`.
+
+    """
     return p
 
 
 def get_max_id(corpus):
-    """
-    Return the highest feature id that appears in the corpus.
+    """Get the highest feature id that appears in the corpus.
+
     Parameters
     ----------
-    corpus
-        a collection of texts
-    Return
+    corpus : iterable of iterable of (int, int)
+        Collection of texts in BoW format.
+
+    Returns
     ------
-    maxid
-        highest feature id
+    int
+        Highest feature id.
+
     Notes
     -----
-    For empty corpora (no features at all), return -1.
+    For empty `corpus` return -1.
+
     """
     maxid = -1
     for document in corpus:
@@ -632,15 +647,22 @@ def get_max_id(corpus):
 
 
 class FakeDict(object):
-    """
-    Objects of this class act as dictionaries that map integer->str(integer), for
-    a specified range of integers <0, num_terms).
+    """Objects of this class act as dictionaries that map integer->str(integer), for a specified
+    range of integers <0, num_terms).
 
-    This is meant to avoid allocating real dictionaries when `num_terms` is huge, which
-    is a waste of memory.
+    This is meant to avoid allocating real dictionaries when `num_terms` is huge, which is a waste of memory.
+
     """
 
     def __init__(self, num_terms):
+        """
+
+        Parameters
+        ----------
+        num_terms : int
+            Number of terms.
+
+        """
         self.num_terms = num_terms
 
     def __str__(self):
@@ -649,21 +671,35 @@ class FakeDict(object):
     def __getitem__(self, val):
         if 0 <= val < self.num_terms:
             return str(val)
-        raise ValueError("internal id out of bounds (%s, expected <0..%s))" %
-                         (val, self.num_terms))
+        raise ValueError("internal id out of bounds (%s, expected <0..%s))" % (val, self.num_terms))
 
     def iteritems(self):
+        """Iterate over all keys and values.
+
+
+        Yields
+        ------
+        (int, str)
+            Pair of (id, token).
+
+        """
         for i in xrange(self.num_terms):
             yield i, str(i)
 
     def keys(self):
-        """
-        Override the dict.keys() function, which is used to determine the maximum
-        internal id of a corpus = the vocabulary dimensionality.
-        Notes
-        -----
-        HACK: To avoid materializing the whole `range(0, self.num_terms)`, this returns
-        the highest id = `[self.num_terms - 1]` only.
+        """Override the `dict.keys()`, which is used to determine the maximum internal id of a corpus,
+        i.e. the vocabulary dimensionality.
+
+        Returns
+        -------
+        list of int
+            Highest id, packed in list.
+
+        Warnings
+        --------
+        To avoid materializing the whole `range(0, self.num_terms)`,
+        this returns the highest id = `[self.num_terms - 1]` only.
+
         """
         return [self.num_terms - 1]
 
