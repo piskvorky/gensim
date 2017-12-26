@@ -1034,13 +1034,28 @@ def decode_htmlentities(text):
 
 
 def chunkize_serial(iterable, chunksize, as_numpy=False):
-    """
-    Return elements from the iterable in `chunksize`-ed lists. The last returned
-    element may be smaller (if length of collection is not divisible by `chunksize`).
+    """Give elements from the iterable in `chunksize`-ed lists.
+    The last returned element may be smaller (if length of collection is not divisible by `chunksize`).
+
+    Parameters
+    ----------
+    iterable : iterable of object
+        Any iterable.
+    chunksize : int
+        Size of chunk from result.
+    as_numpy : bool, optional
+        If True - yield `np.ndarray`, otherwise - list
+
+    Yields
+    ------
+    list of object OR np.ndarray
+        Groups based on `iterable`
+
     Examples
     --------
     >>> print(list(grouper(range(10), 3)))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
+
     """
     it = iter(iterable)
     while True:
@@ -1096,32 +1111,59 @@ if os.name == 'nt':
     warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
 
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
+        """Split `corpus` into smaller chunks, used :func:`~gensim.utils.chunkize_serial`.
+
+        Parameters
+        ----------
+        corpus : iterable of object
+            Any iterable object.
+        chunksize : int
+            Size of chunk from result.
+        maxsize : int, optional
+            THIS PARAMETER IGNORED.
+        as_numpy : bool, optional
+            If True - yield `np.ndarray`, otherwise - list
+
+        Yields
+        ------
+        list of object OR np.ndarray
+            Groups based on `iterable`
+
+        """
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
 else:
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
-        """
-        Split a stream of values into smaller chunks.
+        """Split `corpus` into smaller chunks, used :func:`~gensim.utils.chunkize_serial`.
+
+        Parameters
+        ----------
+        corpus : iterable of object
+            Any iterable object.
+        chunksize : int
+            Size of chunk from result.
+        maxsize : int, optional
+            THIS PARAMETER IGNORED.
+        as_numpy : bool, optional
+            If True - yield `np.ndarray`, otherwise - list
+
         Notes
         -----
         Each chunk is of length `chunksize`, except the last one which may be smaller.
-        A once-only input stream (`corpus` from a generator) is ok, chunking is done
-        efficiently via itertools.
+        A once-only input stream (`corpus` from a generator) is ok, chunking is done efficiently via itertools.
 
-        If `maxsize > 1`, don't wait idly in between successive chunk `yields`, but
-        rather keep filling a short queue (of size at most `maxsize`) with forthcoming
-        chunks in advance. This is realized by starting a separate process, and is
-        meant to reduce I/O delays, which can be significant when `corpus` comes
-        from a slow medium (like harddisk).
+        If `maxsize > 1`, don't wait idly in between successive chunk `yields`, but rather keep filling a short queue
+        (of size at most `maxsize`) with forthcoming chunks in advance. This is realized by starting a separate process,
+        and is meant to reduce I/O delays, which can be significant when `corpus` comes from a slow medium (like HDD).
 
-        If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
-        via `chunkize_serial()` (no I/O optimizations).
-        Examples
-        --------
-        >>> for chunk in chunkize(range(10), 4): print(chunk)
-        [0, 1, 2, 3]
-        [4, 5, 6, 7]
-        [8, 9]
+        If `maxsize == 0`, don't fool around with parallelism and simply yield the chunksize
+        via :func:`~gensim.utils.chunkize_serial` (no I/O optimizations).
+
+        Yields
+        ------
+        list of object OR np.ndarray
+            Groups based on `iterable`
+
         """
         assert chunksize > 0
 
@@ -1141,6 +1183,21 @@ else:
 
 
 def smart_extension(fname, ext):
+    """Generate filename with `ext`.
+
+    Parameters
+    ----------
+    fname : str
+        Path to filename.
+    ext : str
+        File extension.
+
+    Returns
+    -------
+    str
+        New path to filename with `ext`.
+
+    """
     fname, oext = os.path.splitext(fname)
     if oext.endswith('.bz2'):
         fname = fname + oext[:-4] + ext + '.bz2'
@@ -1155,15 +1212,34 @@ def smart_extension(fname, ext):
 def pickle(obj, fname, protocol=2):
     """Pickle object `obj` to file `fname`.
 
-    `protocol` defaults to 2 so pickled objects are compatible across
-    Python 2.x and 3.x.
+    Parameters
+    ----------
+    obj : object
+        Any python object.
+    fname : str
+        Path to pickle file.
+    protocol : int, optional
+        Pickle protocol number, default is 2 to support compatible across python 2.x and 3.x.
+
     """
     with smart_open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
 
 
 def unpickle(fname):
-    """Load pickled object from `fname`"""
+    """Load object from `fname`.
+
+    Parameters
+    ----------
+    fname : str
+        Path to pickle file.
+
+    Returns
+    -------
+    object
+        Python object loaded from `fname`.
+
+    """
     with smart_open(fname, 'rb') as f:
         # Because of loading from S3 load can't be used (missing readline in smart_open)
         if sys.version_info > (3, 0):
@@ -1173,48 +1249,54 @@ def unpickle(fname):
 
 
 def revdict(d):
-    """
-    Reverse a dictionary mapping.
-    Notes
-    -----
-    When two keys map to the same value, only one of them will be kept in the
-    result (which one is kept is arbitrary).
+    """Reverse a dictionary mapping, i.e. `{1: 2, 3: 4}` -> `{2: 1, 4: 3}`.
+
     Parameters
     ----------
     d : dict
-        a dictionary
-    Return
-    ------
+        Input dictionary.
+
+    Returns
+    -------
     dict
-        reversed dictionary mapping
+        Reversed dictionary mapping.
+
+    Notes
+    -----
+    When two keys map to the same value, only one of them will be kept in the result (which one is kept is arbitrary).
+
     Examples
     --------
     >>> from gensim.utils import revdict
-    >>> d = {'key':'value'}
+    >>> d = {1: 2, 3: 4}
     >>> revdict(d)
-    {'value':'key'}
+    {2: 1, 4: 3}
+
     """
     return {v: k for (k, v) in iteritems(dict(d))}
 
 
 def deprecated(reason):
     """Decorator which can be used to mark functions as deprecated.
+
     Parameters
     ----------
     reason : str
-        reason of deprecation
+        Reason of deprecation.
+
     Returns
     -------
-    decorator
-        warning decorator function
+    function
+        Decorated function
+
+    Notes
+    -----
+    It will result in a warning being emitted when the function is used, base code from [4]_.
+
     References
     ----------
-    It will result in a warning being emitted when the function is used,
-    base code from https://stackoverflow.com/a/40301488/8001386.
-    Raises
-    ------
-    TypeError
-        when reason is not string
+    .. [4] https://stackoverflow.com/a/40301488/8001386
+
     """
     if isinstance(reason, string_types):
         def decorator(func):
@@ -1279,13 +1361,26 @@ def toptexts(query, texts, index, n=10):
 
 
 def randfname(prefix='gensim'):
+    """Generate path with random filename/
+
+    Parameters
+    ----------
+    prefix : str
+        Prefix of filename.
+
+    Returns
+    -------
+    str
+        Full path with random filename (in temporary folder).
+
+    """
     randpart = hex(random.randint(0, 0xffffff))[2:]
     return os.path.join(tempfile.gettempdir(), prefix + randpart)
 
 
+@deprecated("Function will be removed in 4.0.0")
 def upload_chunked(server, docs, chunksize=1000, preprocess=None):
-    """
-    Memory-friendly upload of documents to a SimServer (or Pyro SimServer proxy).
+    """Memory-friendly upload of documents to a SimServer (or Pyro SimServer proxy).
     Notes
     -----
     Use this function to train or index large collections -- avoid sending the
@@ -1308,12 +1403,29 @@ def upload_chunked(server, docs, chunksize=1000, preprocess=None):
 
 
 def getNS(host=None, port=None, broadcast=True, hmac_key=None):
-    """
-    Return a Pyro name server proxy.
+    """Get a Pyro4 name server proxy.
+
+    Parameters
+    ----------
+    host : str, optional
+        Hostname of ns.
+    port : int, optional
+        Port of ns.
+    broadcast : bool, optional
+        If True - use broadcast mechanism (i.e. all Pyro nodes in local network), not otherwise.
+    hmac_key : str, optional
+        Private key.
+
     Raises
     ------
     RuntimeError
         when Pyro name server is not found
+
+    Returns
+    -------
+    :class:`Pyro4.core.Proxy`
+        Proxy from Pyro4.
+
     """
     import Pyro4
     try:
