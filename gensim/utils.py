@@ -69,7 +69,7 @@ def get_random_state(seed):
     Raises
     ------
     AttributeError
-        If seed is not {None, int, array_like}
+        If seed is not {None, int, array_like}.
 
     Notes
     -----
@@ -117,15 +117,18 @@ def synchronous(tlockname):
 
 
 def file_or_filename(input):
-    """
+    """Open file with `smart_open`.
+
     Parameters
     ----------
-    input : {gz/bz2, a file-like object supporting seek}
-        filename.
-    Return
-    ------
+    input : str or file-like
+        Filename or file-like object.
+
+    Returns
+    -------
     input : file-like object
-        ready to be read from the beginning.
+        Opened file OR seek out to 0 byte if `input` is already file-like object.
+
     """
     if isinstance(input, string_types):
         # input was a filename: open as file
@@ -137,19 +140,24 @@ def file_or_filename(input):
 
 
 def deaccent(text):
-    """
-    Remove accentuation from the given string.
+    """Remove accentuation from the given string.
+
     Parameters
     ----------
-    text : unicode string or utf8 encoded bytestring
-    Return
-    ------
-    string
-        string with accents removed, as unicode.
+    text : str
+        Input string.
+
+    Returns
+    -------
+    str
+        Unicode string without accentuation.
+
     Examples
     --------
+    >>> from gensim.utils import deaccent
     >>> deaccent("Šéf chomutovských komunistů dostal poštou bílý prášek")
     u'Sef chomutovskych komunistu dostal postou bily prasek'
+
     """
     if not isinstance(text, unicode):
         # assume utf8 for byte strings, use default (strict) error handling
@@ -160,15 +168,19 @@ def deaccent(text):
 
 
 def copytree_hardlink(source, dest):
-    """
-    Recursively copy a directory ala shutils.copytree, but hardlink files
-    instead of copying. Available on UNIX systems only.
+    """Recursively copy a directory ala shutils.copytree, but hardlink files instead of copying.
+
     Parameters
     ----------
-    source
-        source directory
-    dest
-        destination directory
+    source : str
+        Path to source directory
+    dest : str
+        Path to destination directory
+
+    Warnings
+    --------
+    Available on UNIX systems only.
+
     """
     copy2 = shutil.copy2
     try:
@@ -179,30 +191,37 @@ def copytree_hardlink(source, dest):
 
 
 def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict", to_lower=False, lower=False):
-    """
-    Iteratively yield tokens as unicode strings, removing accent marks
-    and optionally lowercasing the unidoce string by assigning True
-    to one of the parameters, lowercase, to_lower, or lower.
+    """Iteratively yield tokens as unicode strings, removing accent marks and optionally lowercasing string
+    if any from `lowercase`, `to_lower`, `lower` set to True.
+
     Parameters
     ----------
     text : str
-        unicode, utf8-encoded byte string
-    Return
-    ------
-    list
-        maximal contiguous sequences of alphabetic characters (no digits!).
-    Other Parameters
-    ----------------
-    lowercase : bool
-    encoding : str
-    errors : str
-    to_lower : bool
-    lower : bool
-    deacc : bool
+        Input string.
+    lowercase : bool, optional
+        If True - lowercase input string.
+    deacc : bool, optional
+        If True - remove accentuation from string by :func:`~gensim.utils.deaccent`.
+    encoding : str, optional
+        Encoding of input string, used as parameter for :func:`~gensim.utils.to_unicode`.
+    errors : str, optional
+        Error handling behaviour, used as parameter for :func:`~gensim.utils.to_unicode`.
+    to_lower : bool, optional
+        Same as `lowercase`.
+    lower : bool, optional
+        Same as `lowercase`.
+
+    Returns
+    -------
+    list of str
+        Contiguous sequences of alphabetic characters (no digits!).
+
     Examples
     --------
-    >>> list(tokenize('Nic nemůže letět rychlostí vyšší, než 300 tisíc kilometrů za sekundu!', deacc = True))
+    >>> from gensim.utils import tokenize
+    >>> list(tokenize('Nic nemůže letět rychlostí vyšší, než 300 tisíc kilometrů za sekundu!', deacc=True))
     [u'Nic', u'nemuze', u'letet', u'rychlosti', u'vyssi', u'nez', u'tisic', u'kilometru', u'za', u'sekundu']
+
     """
     lowercase = lowercase or to_lower or lower
     text = to_unicode(text, encoding, errors=errors)
