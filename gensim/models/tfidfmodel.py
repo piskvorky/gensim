@@ -128,7 +128,7 @@ class TfidfModel(interfaces.TransformationABC):
     """
 
     def __init__(self, corpus=None, id2word=None, dictionary=None, wlocal=utils.identity,
-                 wglobal=df2idf, normalize=True, smartirs=None, 
+                 wglobal=df2idf, normalize=True, smartirs=None,
                  pivot_norm=False, slope=0.65, pivot=None):
         """
         Compute tf-idf by multiplying a local component (term frequency) with a
@@ -275,46 +275,35 @@ class TfidfModel(interfaces.TransformationABC):
 
         tf_array = self.wlocal(np.array(tf_array))
 
-        vector = [
-            (termid, tf * self.idfs.get(termid))
-            for termid, tf in zip(termid_array, tf_array) if self.idfs.get(termid, 0.0) != 0.0
-        ]
-
         if self.normalize is True:
             self.normalize = matutils.unitvec
         elif self.normalize is False:
             self.normalize = utils.identity
 
-        # and finally, normalize the vector either to unit length, or use a
-        # user-defined normalization function
-        vector = self.normalize(vector)
-
         # make sure there are no explicit zeroes in the vector (must be sparse)
-        sparse_norm_vector = [
-            (termid, weight) for termid, weight in norm_vector if abs(weight) > eps
+        vector = [
+            (termid, tf * self.idfs.get(termid))
+            for termid, tf in zip(termid_array, tf_array) if self.idfs.get(termid, 0.0) != 0.0
         ]
 
-        n_samples = len(self.idfs)
-        piv_lis = np.zeros(n_samples, dtype=int)
-        lis = np.zeros(n_samples, dtype=int)
+        # and finally, normalize the vector either to unit length, or use a
+        # user-defined normalization function
+        norm_vector = self.normalize(vector)
 
         if self.pivot_norm is True:
-            for termid, weight in vector:
-                lis[termid] = weight
+            norm_vector = np.array(norm_vector)
+            sparse_norm_wts = np.array(norm_vector)[:, 1]
+            n_samples = sparse_norm_wts.shape[0]
 
-            lis = np.array(lis)
-            for termid, norm_weight in vector:
-                if self.pivot is None:
-                    self.pivot = lis.mean()
-                pivoted_vector = (1 - self.slope) * self.pivot + self.slope * norm_weight
-                piv_lis[termid] = pivoted_vector
+            if self.pivot is None:
+                self.pivot = sparse_norm_wts.mean()
 
-            piv_lis = np.array(piv_lis)
-            piv_lis[piv_lis == 0] = 1
+            pivoted_norm = (1 - self.slope) * self.pivot + self.slope * sparse_norm_wts
+            _diag_pivoted_norm = sp.spdiags(1. / pivoted_norm, diags=0, m=n_samples,
+                                            n=n_samples, format='csr')
 
-            diag_mat = sp.spdiags(1. / piv_lis, diags=0, m=n_samples, n=n_samples, format='csr')
-            piv_norm_vector = diag_mat.dot(np.array(lis))
+            norm_vector[:, 1] = _diag_pivoted_norm.dot(np.array(vector)[:, 1])
+            norm_vector = norm_vector.tolist()
 
-            return piv_norm_vector
-
-        return vector
+        norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > eps]
+        return norm_vector
