@@ -67,7 +67,7 @@ def updated_wlocal(tf, n_tf):
         return (1 + np.log(tf) / np.log(2)) / (1 + np.log(tf.mean(axis=0) / np.log(2)))
 
 
-def updated_wglobal(docfreq, totaldocs, n_df):  # TODO rename it (to avoid confusion)
+def updated_wglobal(docfreq, totaldocs, n_df):
     if n_df == "n":
         return utils.identity(docfreq)
     elif n_df == "t":
@@ -76,7 +76,7 @@ def updated_wglobal(docfreq, totaldocs, n_df):  # TODO rename it (to avoid confu
         return np.log((1.0 * totaldocs - docfreq) / docfreq) / np.log(2)
 
 
-def updated_normalize(x, n_n):  # TODO rename it (to avoid confusion)
+def updated_normalize(x, n_n):
     if n_n == "n":
         return x
     elif n_n == "c":
