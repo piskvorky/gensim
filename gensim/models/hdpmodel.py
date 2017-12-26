@@ -127,7 +127,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def __init__(self, corpus, id2word, max_chunks=None, max_time=None,
                  chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
                  gamma=1, eta=0.01, scale=1.0, var_converge=0.0001,
-                 outputdir=None, random_state=None, dtype = float32):
+                 outputdir=None, random_state=None, dtype = np.float32):
         """
         `gamma`: first level concentration
         `alpha`: second level concentration
