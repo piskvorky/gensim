@@ -43,53 +43,12 @@ import scipy.sparse
 from six import iterkeys, iteritems, u, string_types, unichr
 from six.moves import xrange
 
+from smart_open import smart_open
+
 if sys.version_info[0] >= 3:
     unicode = str
 
 logger = logging.getLogger(__name__)
-
-try:
-    from smart_open import smart_open
-except ImportError:
-    logger.info("smart_open library not found; falling back to local-filesystem-only")
-
-    def make_closing(base, **attrs):
-        """
-        Add support for `with Base(attrs) as fout:` to the base class if it's missing.
-        Notes
-        ------
-        The base class' `close()` method will be called on context exit, to always close the file properly.
-        Raises
-        ------
-        AttributeError
-            If Pythons version is older(<=2.6), needed for gzip.GzipFile, bz2.BZ2File etc.
-        """
-        if not hasattr(base, '__enter__'):
-            attrs['__enter__'] = lambda self: self
-        if not hasattr(base, '__exit__'):
-            attrs['__exit__'] = lambda self, type, value, traceback: self.close()
-        return type('Closing' + base.__name__, (base, object), attrs)
-
-    def smart_open(fname, mode='rb'):
-        """
-        Based on extension of file, calls make_closing function or python standard open function, to always
-        close the file properly.
-        Parameters
-        ----------
-        fname
-            name of the file.
-        Returns
-        -------
-           file-like object ready to be read from the beginning.
-        """
-        _, ext = os.path.splitext(fname)
-        if ext == '.bz2':
-            from bz2 import BZ2File
-            return make_closing(BZ2File)(fname, mode)
-        if ext == '.gz':
-            from gzip import GzipFile
-            return make_closing(GzipFile)(fname, mode)
-        return open(fname, mode)
 
 
 PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
