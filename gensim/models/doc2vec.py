@@ -66,7 +66,7 @@ from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
 from six.moves import xrange, zip
 from six import string_types, integer_types
-from gensim.models.base_any2vec import BaseWordEmbedddingsModel
+from gensim.models.base_any2vec import BaseWordEmbedddingsModel, BaseKeyedVectors
 from types import GeneratorType
 
 logger = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
     from gensim.models.word2vec_inner import FAST_VERSION  # blas-adaptation shared from word2vec
-    logger.info("Using FAST_VERSION - %s", FAST_VERSION)
+
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     raise RuntimeError("Support for Python/Numpy implementations has been continued.")
@@ -116,7 +116,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
 
     def __init__(self, documents=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
-                 docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, **kwargs):
+                 docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(), **kwargs):
         """
         Initialize the model from an iterable of `documents`. Each document is a
         TaggedDocument object that will be used for training.
@@ -222,7 +222,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             vector_size=self.vector_size, **trainables_kwargs)
 
         self.wv = Word2VecKeyedVectors()
-        # self.docvecs = docvecs or DocvecsArray(docvecs_mapfile)
+        self.docvecs = docvecs or Doc2VecKeyedVectors()
 
         self.comment = comment
         if documents is not None:
@@ -241,18 +241,35 @@ class Doc2Vec(BaseWordEmbedddingsModel):
     def dbow(self):
         return self.sg  # same as SG
 
-    def _clear_post_train(self):
-        """Resets certain properties of the model, post training. eg. `kv.syn0norm`"""
-        self.wv.vectors_norm = None
-        self.trainables.vectors_docs_norm = None
-
     def _set_train_params(self, **kwargs):
         self.trainables.hs = self.hs
         self.trainables.negative = self.negative
 
-    # def clear_sims(self):
-    #     super(Doc2Vec, self).clear_sims()
-    #     self.docvecs.clear_sims()
+    def _set_keyedvectors(self):
+        super(Doc2Vec, self)._set_keyedvectors()
+        self.docvecs.vectors_docs = self.trainables.__dict__.get('vectors_docs', [])
+        self.docvecs.doctags = self.vocabulary.__dict__.get('doctags', {})
+        self.docvecs.max_rawint = self.vocabulary.__dict__.get('max_rawint', -1)
+        self.docvecs.offset2doctag = self.vocabulary.__dict__.get('offset2doctag', [])
+        self.docvecs.count = self.vocabulary.__dict__.get('count', 0)
+        self.docvecs.mapfile_path = self.vocabulary.__dict__.get('mapfile_path', None)
+
+    def _set_params_from_kv(self):
+        super(Doc2Vec, self)._set_params_from_kv()
+        self.trainables.vectors_docs = self.docvecs.__dict__.get('vectors_docs', [])
+        self.vocabulary.doctags = self.docvecs.__dict__.get('doctags', {})
+        self.vocabulary.max_rawint = self.docvecs.__dict__.get('max_rawint', -1)
+        self.vocabulary.offset2doctag = self.docvecs.__dict__.get('offset2doctag', [])
+        self.vocabulary.count = self.docvecs.__dict__.get('count', 0)
+        self.vocabulary.mapfile_path = self.docvecs.__dict__.get('mapfile_path', None)
+
+    def _clear_post_train(self):
+        """Resets certain properties of the model, post training. eg. `kv.syn0norm`"""
+        self.clear_sims()
+
+    def clear_sims(self):
+        self.wv.vectors_norm = None
+        self.trainables.vectors_docs_norm = None
 
     # def reset_from(self, other_model):
     #     """Reuse shareable structures from other_model."""
@@ -284,9 +301,168 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             self.vocabulary.trained_item(doctag_indexes)
         return tally, self._raw_word_count(job)
 
+    def train(self, sentences, total_examples=None, total_words=None,
+              epochs=None, start_alpha=None, end_alpha=None,
+              word_count=0, queue_factor=2, report_delay=1.0):
+        # TODO: complete docstring
+        """
+        Parameters
+        ----------
+        sentences : iterable of iterables
+            The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+        total_examples : int
+            Count of sentences.
+        total_words : int
+            Count of raw words in sentences.
+        epochs : int
+            Number of iterations (epochs) over the corpus.
+        start_alpha : float
+            Initial learning rate.
+        end_alpha : float
+            Final learning rate. Drops linearly from `start_alpha`.
+        word_count : int
+            Count of words already trained. Set this to 0 for the usual
+            case of training on all words in sentences.
+        queue_factor : int
+            Multiplier for size of queue (number of workers * queue_factor).
+        report_delay : float
+            Seconds to wait before reporting progress.
+        """
+        super(Doc2Vec, self).train(
+            sentences, total_examples=total_examples, total_words=total_words,
+            epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
+            queue_factor=queue_factor, report_delay=report_delay)
+        self._set_keyedvectors()
+
     def _raw_word_count(self, job):
         """Return the number of words in a given job."""
         return sum(len(sentence.words) for sentence in job)
+
+    def estimated_lookup_memory(self):
+        """Estimated memory for tag lookup; 0 if using pure int tags."""
+        return 60 * len(self.vocabulary.offset2doctag) + 140 * len(self.vocabulary.doctags)
+
+    def infer_vector(self, doc_words, alpha=0.1, min_alpha=0.0001, steps=5):
+        """
+        Infer a vector for given post-bulk training document.
+
+        Document should be a list of (word) tokens.
+        """
+        doctag_vectors, doctag_locks = self.trainables._get_doctag_trainables(doc_words)
+        doctag_indexes = [0]
+
+        work = zeros(self.layer1_size, dtype=REAL)
+        if not self.sg:
+            neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
+
+        for i in range(steps):
+            if self.sg:
+                train_document_dbow(
+                    self, doc_words, doctag_indexes, alpha, work,
+                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                )
+            elif self.dm_concat:
+                train_document_dm_concat(
+                    self, doc_words, doctag_indexes, alpha, work, neu1,
+                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                )
+            else:
+                train_document_dm(
+                    self, doc_words, doctag_indexes, alpha, work, neu1,
+                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                )
+            alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
+
+        return doctag_vectors[0]
+
+    def __str__(self):
+        """Abbreviated name reflecting major configuration paramaters."""
+        segments = []
+        if self.comment:
+            segments.append('"%s"' % self.comment)
+        if self.sg:
+            if self.dbow_words:
+                segments.append('dbow+w')  # also training words
+            else:
+                segments.append('dbow')  # PV-DBOW (skip-gram-style)
+
+        else:  # PV-DM...
+            if self.dm_concat:
+                segments.append('dm/c')  # ...with concatenative context layer
+            else:
+                if self.cbow_mean:
+                    segments.append('dm/m')
+                else:
+                    segments.append('dm/s')
+        segments.append('d%d' % self.trainables.vector_size)  # dimensions
+        if self.negative:
+            segments.append('n%d' % self.negative)  # negative samples
+        if self.hs:
+            segments.append('hs')
+        if not self.sg or (self.sg and self.dbow_words):
+            segments.append('w%d' % self.window)  # window size, when relevant
+        if self.vocabulary.min_count > 1:
+            segments.append('mc%d' % self.vocabulary.min_count)
+        if self.vocabulary.sample > 0:
+            segments.append('s%g' % self.vocabulary.sample)
+        if self.workers > 1:
+            segments.append('t%d' % self.workers)
+        return '%s(%s)' % (self.__class__.__name__, ','.join(segments))
+
+    def delete_temporary_training_data(self, keep_doctags_vectors=True, keep_inference=True):
+        """
+        Discard parameters that are used in training and score. Use if you're sure you're done training a model.
+        Set `keep_doctags_vectors` to False if you don't want to save doctags vectors,
+        in this case you can't to use docvecs's most_similar, similarity etc. methods.
+        Set `keep_inference` to False if you don't want to store parameters that is used for infer_vector method
+        """
+        if not keep_inference:
+            if hasattr(self.trainables, 'syn1'):
+                del self.trainables.syn1
+            if hasattr(self.trainables, 'syn1neg'):
+                del self.trainables.syn1neg
+            if hasattr(self.trainables, 'vectors_lockf'):
+                del self.trainables.vectors_lockf
+        self.model_trimmed_post_training = True
+        if self.docvecs and hasattr(self.trainables, 'vectors_docs') and not keep_doctags_vectors:
+            del self.trainables.vectors_docs
+        if self.docvecs and hasattr(self.trainables, 'vectors_docs_lockf'):
+            del self.trainables.vectors_docs_lockf
+        self._set_keyedvectors()
+
+    def save_word2vec_format(self, fname, doctag_vec=False, word_vec=True, prefix='*dt_', fvocab=None, binary=False):
+        """
+        Store the input-hidden weight matrix.
+
+         `fname` is the file used to save the vectors in
+         `doctag_vec` is an optional boolean indicating whether to store document vectors
+         `word_vec` is an optional boolean indicating whether to store word vectors
+         (if both doctag_vec and word_vec are True, then both vectors are stored in the same file)
+         `prefix` to uniquely identify doctags from word vocab, and avoid collision
+         in case of repeated string in doctag and word vocab
+         `fvocab` is an optional file used to save the vocabulary
+         `binary` is an optional boolean indicating whether the data is to be saved
+         in binary word2vec format (default: False)
+
+        """
+        total_vec = len(self.wv.vocab) + len(self.docvecs)
+        write_first_line = False
+        # save word vectors
+        if word_vec:
+            if not doctag_vec:
+                total_vec = len(self.wv.vocab)
+            self.wv.save_word2vec_format(fname, fvocab, binary, total_vec)
+        # save document vectors
+        if doctag_vec:
+            if not word_vec:
+                total_vec = len(self.docvecs)
+                write_first_line = True
+            self.docvecs.save_word2vec_format(
+                fname, prefix=prefix, fvocab=fvocab, total_vec=total_vec,
+                binary=binary, write_first_line=write_first_line)
 
 
 class Doc2VecVocab(Word2VecVocab):
@@ -424,6 +600,228 @@ class Doc2VecTrainables(Word2VecTrainables):
             # construct deterministic seed from index AND model seed
             seed = "%d %s" % (self.seed, vocabulary.index_to_doctag(i))
             self.vectors_docs[i] = self.seeded_vector(seed)
+
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_docs_norm'])
+        super(Word2VecTrainables, self).save(*args, **kwargs)
+
+    def _get_doctag_trainables(self, doc_words):
+        doctag_vectors = empty((1, self.vector_size), dtype=REAL)
+        doctag_vectors[0] = self.seeded_vector(' '.join(doc_words))
+        doctag_locks = ones(1, dtype=REAL)
+        return doctag_vectors, doctag_locks
+
+
+class Doc2VecKeyedVectors(BaseKeyedVectors):
+    def __init__(self):
+        self.doctags = {}  # string -> Doctag (only filled if necessary)
+        self.max_rawint = -1  # highest rawint-indexed doctag
+        self.offset2doctag = []  # int offset-past-(max_rawint+1) -> String (only filled if necessary)
+        self.count = 0
+        self.vectors_docs = []
+        self.mapfile_path = None
+        self.vectors_docs = []
+
+    def __getitem__(self, index):
+        """
+        Accept a single key (int or string tag) or list of keys as input.
+
+        If a single string or int, return designated tag's vector
+        representation, as a 1D numpy array.
+
+        If a list, return designated tags' vector representations as a
+        2D numpy array: #tags x #vector_size.
+        """
+        if isinstance(index, string_types + integer_types + (integer,)):
+            return self.doctag_syn0[self._int_index(index)]
+
+        return vstack([self[i] for i in index])
+
+    #  Repeated in main class<---------------------------------------------------
+    def _int_index(self, index):
+        """Return int index for either string or int index"""
+        if isinstance(index, integer_types + (integer,)):
+            return index
+        else:
+            return self.max_rawint + 1 + self.doctags[index].offset
+
+    #  Repeated in main class<---------------------------------------------------
+    def index_to_doctag(self, i_index):
+        """Return string key for given i_index, if available. Otherwise return raw int doctag (same int)."""
+        candidate_offset = i_index - self.max_rawint - 1
+        if 0 <= candidate_offset < len(self.offset2doctag):
+            return self.offset2doctag[candidate_offset]
+        else:
+            return i_index
+
+    def __len__(self):
+        return self.count
+
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['vectors_docs_norm'])
+        super(BaseKeyedVectors, self).save(*args, **kwargs)
+
+    def init_sims(self, replace=False):
+        """
+        Precompute L2-normalized vectors.
+
+        If `replace` is set, forget the original vectors and only keep the normalized
+        ones = saves lots of memory!
+
+        Note that you **cannot continue training or inference** after doing a replace.
+        The model becomes effectively read-only = you can call `most_similar`, `similarity`
+        etc., but not `train` or `infer_vector`.
+
+        """
+        if getattr(self, 'vectors_docs_norm', None) is None or replace:
+            logger.info("precomputing L2-norms of doc weight vectors")
+            if replace:
+                for i in xrange(self.vectors_docs.shape[0]):
+                    self.vectors_docs[i, :] /= sqrt((self.vectors_docs[i, :] ** 2).sum(-1))
+                self.vectors_docs_norm = self.vectors_docs
+            else:
+                if self.mapfile_path:
+                    self.vectors_docs_norm = np_memmap(
+                        self.mapfile_path + '.vectors_docs_norm', dtype=REAL,
+                        mode='w+', shape=self.vectors_docs.shape)
+                else:
+                    self.vectors_docs_norm = empty(self.vectors_docs.shape, dtype=REAL)
+                np_divide(
+                    self.vectors_docs, sqrt((self.vectors_docs ** 2).sum(-1))[..., newaxis], self.vectors_docs_norm)
+
+    def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None, indexer=None):
+        """
+        Find the top-N most similar docvecs known from training. Positive docs contribute
+        positively towards the similarity, negative docs negatively.
+
+        This method computes cosine similarity between a simple mean of the projection
+        weight vectors of the given docs. Docs may be specified as vectors, integer indexes
+        of trained docvecs, or if the documents were originally presented with string tags,
+        by the corresponding tags.
+
+        The 'clip_start' and 'clip_end' allow limiting results to a particular contiguous
+        range of the underlying doctag_syn0norm vectors. (This may be useful if the ordering
+        there was chosen to be significant, such as more popular tag IDs in lower indexes.)
+        """
+        if positive is None:
+            positive = []
+        if negative is None:
+            negative = []
+
+        self.init_sims()
+        clip_end = clip_end or len(self.vectors_docs_norm)
+
+        if isinstance(positive, string_types + integer_types + (integer,)) and not negative:
+            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
+            positive = [positive]
+
+        # add weights for each doc, if not already present; default to 1.0 for positive and -1.0 for negative docs
+        positive = [
+            (doc, 1.0) if isinstance(doc, string_types + integer_types + (ndarray, integer))
+            else doc for doc in positive
+        ]
+        negative = [
+            (doc, -1.0) if isinstance(doc, string_types + integer_types + (ndarray, integer))
+            else doc for doc in negative
+        ]
+
+        # compute the weighted average of all docs
+        all_docs, mean = set(), []
+        for doc, weight in positive + negative:
+            if isinstance(doc, ndarray):
+                mean.append(weight * doc)
+            elif doc in self.doctags or doc < self.count:
+                mean.append(weight * self.vectors_docs_norm[self._int_index(doc)])
+                all_docs.add(self._int_index(doc))
+            else:
+                raise KeyError("doc '%s' not in trained set" % doc)
+        if not mean:
+            raise ValueError("cannot compute similarity with no input")
+        mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+
+        if indexer is not None:
+            return indexer.most_similar(mean, topn)
+
+        dists = dot(self.vectors_docs_norm[clip_start:clip_end], mean)
+        if not topn:
+            return dists
+        best = matutils.argsort(dists, topn=topn + len(all_docs), reverse=True)
+        # ignore (don't return) docs from the input
+        result = [
+            (self.index_to_doctag(sim + clip_start), float(dists[sim]))
+            for sim in best
+            if (sim + clip_start) not in all_docs
+        ]
+        return result[:topn]
+
+    def doesnt_match(self, docs):
+        """
+        Which doc from the given list doesn't go with the others?
+
+        (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
+
+        """
+        self.init_sims()
+
+        docs = [doc for doc in docs if doc in self.doctags or 0 <= doc < self.count]  # filter out unknowns
+        logger.debug("using docs %s", docs)
+        if not docs:
+            raise ValueError("cannot select a doc from an empty list")
+        vectors = vstack(self.vectors_docs_norm[self._int_index(doc)] for doc in docs).astype(REAL)
+        mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
+        dists = dot(vectors, mean)
+        return sorted(zip(dists, docs))[0][1]
+
+    def similarity(self, d1, d2):
+        """
+        Compute cosine similarity between two docvecs in the trained set, specified by int index or
+        string tag. (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
+
+        """
+        return dot(matutils.unitvec(self[d1]), matutils.unitvec(self[d2]))
+
+    def n_similarity(self, ds1, ds2):
+        """
+        Compute cosine similarity between two sets of docvecs from the trained set, specified by int
+        index or string tag. (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
+
+        """
+        v1 = [self[doc] for doc in ds1]
+        v2 = [self[doc] for doc in ds2]
+        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
+
+    def similarity_unseen_docs(self, model, doc_words1, doc_words2, alpha=0.1, min_alpha=0.0001, steps=5):
+        """
+        Compute cosine similarity between two post-bulk out of training documents.
+
+        Document should be a list of (word) tokens.
+        """
+        d1 = model.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        d2 = model.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        return dot(matutils.unitvec(d1), matutils.unitvec(d2))
+
+    def save_word2vec_format(self, fname, prefix='*dt_', fvocab=None,
+                             total_vec=None, binary=False, write_first_line=True):
+        """
+        Store the input-hidden weight matrix for document vectors.
+
+        """
+        self.init_sims()
+        total_vec = total_vec or len(self.docvecs)
+        with utils.smart_open(fname, 'ab') as fout:
+            if write_first_line:
+                logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
+                fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vectors_docs.shape[1])))
+            # store as in input order
+            for i in range(len(self.docvecs)):
+                doctag = u"%s%s" % (prefix, self.index_to_doctag(i))
+                row = self.vectors_docs_syn0[i]
+                if binary:
+                    fout.write(utils.to_utf8(doctag) + b" " + row.tostring())
+                else:
+                    fout.write(utils.to_utf8("%s %s\n" % (doctag, ' '.join("%f" % val for val in row))))
 
 
 class TaggedBrownCorpus(object):
