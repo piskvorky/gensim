@@ -131,7 +131,7 @@ class Dispatcher(object):
                 i = 0
                 for workerid, worker in iteritems(self.workers):
                     logger.info("checking aliveness for worker %s", workerid)
-                    ping = worker.ping()
+                    worker.ping()
 
         logger.info("merging states from %i workers", len(self.workers))
         workers = list(self.workers.values())
