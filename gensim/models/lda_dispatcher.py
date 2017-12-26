@@ -122,8 +122,17 @@ class Dispatcher(object):
         """
         logger.info("end of input, assigning all remaining jobs")
         logger.debug("jobs done: %s, jobs received: %s", self._jobsdone, self._jobsreceived)
+        i = 0
+        count = 10
         while self._jobsdone < self._jobsreceived:
             time.sleep(0.5)  # check every half a second
+            i += 1
+            if i > count:
+                i = 0
+                for workerid, worker in iteritems(self.workers):
+                    logger.info("checking aliveness for worker %s", workerid)
+                    ping = worker.ping()
+                    print("worker:",ping)
 
         logger.info("merging states from %i workers", len(self.workers))
         workers = list(self.workers.values())
@@ -180,13 +189,21 @@ class Dispatcher(object):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--maxsize", help="How many jobs (=chunks of N documents) to keep 'pre-fetched' in a queue (default: %(default)s)", type=int, default=MAX_JOBS_QUEUE)
+    parser.add_argument(
+        "--maxsize",
+        help="How many jobs (=chunks of N documents) to keep 'pre-fetched' in a queue (default: %(default)s)",
+        type=int, default=MAX_JOBS_QUEUE
+    )
     parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
     parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
     parser.add_argument("--no-broadcast", help="Disable broadcast (default: %(default)s)",
                         action='store_const', default=True, const=False)
     parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
-    parser.add_argument('-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel", const=logging.INFO, default=logging.WARNING)
+    parser.add_argument(
+        '-v', '--verbose',
+        help='Verbose flag',
+        action='store_const', dest="loglevel", const=logging.INFO, default=logging.WARNING
+    )
     args = parser.parse_args()
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)

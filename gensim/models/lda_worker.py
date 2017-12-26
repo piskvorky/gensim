@@ -47,7 +47,8 @@ class Worker(object):
     def initialize(self, myid, dispatcher, **model_params):
         self.lock_update = threading.Lock()
         self.jobsdone = 0  # how many jobs has this worker completed?
-        self.myid = myid  # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
+        # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
+        self.myid = myid
         self.dispatcher = dispatcher
         self.finished = False
         logger.info("initializing worker #%s", myid)
@@ -87,6 +88,10 @@ class Worker(object):
         logger.info("finished processing job #%i", self.jobsdone - 1)
 
     @Pyro4.expose
+    def ping(self):
+        return True
+
+    @Pyro4.expose
     @utils.synchronous('lock_update')
     def getstate(self):
         logger.info("worker #%i returning its state after %s jobs", self.myid, self.jobsdone)
@@ -116,9 +121,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
     parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
-    parser.add_argument("--no-broadcast", help="Disable broadcast (default: %(default)s)", action='store_const', default=True, const=False)
+    parser.add_argument(
+        "--no-broadcast", help="Disable broadcast (default: %(default)s)", action='store_const',
+        default=True, const=False
+    )
     parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
-    parser.add_argument('-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel", const=logging.INFO, default=logging.WARNING)
+    parser.add_argument(
+        '-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel",
+        const=logging.INFO, default=logging.WARNING
+    )
     args = parser.parse_args()
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
