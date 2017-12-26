@@ -71,12 +71,12 @@ except ImportError:
         return type('Closing' + base.__name__, (base, object), attrs)
 
     def smart_open(fname, mode='rb'):
-        """ 
-        Based on extension of file, calls make_closing function or python standard open function, to always 
+        """
+        Based on extension of file, calls make_closing function or python standard open function, to always
         close the file properly.
         Parameters
         ----------
-        fname 
+        fname
             name of the file.
         Returns
         -------
@@ -340,7 +340,7 @@ def call_on_class_only(*args, **kwargs):
     """
     Raises
     ------
-    AttributeError 
+    AttributeError
         when load methods are called on instance
     """
     raise AttributeError('This method should be called on a class object.')
@@ -365,13 +365,13 @@ class SaveLoad(object):
         these arrays via mmap (shared memory) using `mmap='r'`. Default: don't use
         mmap, load large arrays as normal objects.
         If the file being loaded is compressed (either '.gz' or '.bz2'), then
-        `mmap=None` must be set.  
+        `mmap=None` must be set.
         See Also
         --------
         `save`
         Raises
         ------
-        IOError 
+        IOError
             when load methods are called on instance
         """
         logger.info("loading %s object from %s", cls.__name__, fname)
@@ -449,11 +449,11 @@ class SaveLoad(object):
         numpy/scipy.sparse arrays in the object being stored, and store
         them into separate files. This avoids pickle memory errors and
         allows mmap'ing large arrays back on load efficiently.
-        
+
         You can also set `separately` manually, in which case it must be
         a list of attribute names to be stored in separate files. The
         automatic check is not performed in this case.
-        
+
         `ignore` is a set of attribute names to *not* serialize (file
         handles, caches etc). On subsequent load() these attributes will
         be set to None.
@@ -1088,8 +1088,9 @@ def revdict(d):
     """
     return {v: k for (k, v) in iteritems(dict(d))}
 
+
 def deprecated(reason):
-    """Decorator which can be used to mark functions as deprecated. 
+    """Decorator which can be used to mark functions as deprecated.
     Parameters
     ----------
     reason : str
@@ -1151,7 +1152,8 @@ def toptexts(query, texts, index, n=10):
     query : list
         vector OR BoW (list of tuples)
     texts
-        object that can return something insightful for each document via `texts[docid]`, such as its fulltext or snippet.
+        object that can return something insightful for each document via `texts[docid]`,
+        such as its fulltext or snippet.
     index
         a class from gensim.similarity.docsim
     Return
@@ -1404,9 +1406,9 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
 def sample_dict(d, n=10, use_random=True):
     """
     Pick `n` items from dictionary `d` and return them as a list.
-    
+
     The items are picked randomly if `use_random` is True, otherwise picked
-    according to natural dict iteration.    
+    according to natural dict iteration.
     Parameters
     ----------
     d : dict
@@ -1510,7 +1512,8 @@ def flatten(nested_list):
     Returns
     -------
     list
-        flattened version of input, where any list elements have been unpacked into the top-level list in a recursive fashion.
+        flattened version of input, where any list elements have been unpacked into
+        the top-level list in a recursive fashion.
     """
     return list(lazy_flatten(nested_list))
 
@@ -1528,5 +1531,3 @@ def lazy_flatten(nested_list):
                 yield sub
         else:
             yield el
-
-
