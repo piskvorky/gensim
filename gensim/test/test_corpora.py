@@ -11,6 +11,7 @@ Automated tests for checking corpus I/O formats (the corpora package).
 from __future__ import unicode_literals
 
 import codecs
+import bz2
 import itertools
 import logging
 import os.path
@@ -18,9 +19,10 @@ import tempfile
 import unittest
 
 import numpy as np
+from xml.etree.cElementTree import ParseError
 
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
-                            ucicorpus, malletcorpus, textcorpus, indexedcorpus)
+                            ucicorpus, malletcorpus, textcorpus, indexedcorpus, wikicorpus)
 from gensim.interfaces import TransformedCorpus
 from gensim.utils import to_unicode
 from gensim.test.utils import datapath, get_tmpfile
@@ -397,6 +399,73 @@ class TestTextCorpus(CorpusTestCase):
         pass
 
     def test_indexing(self):
+        pass
+
+
+class TestWikiCorpus(TestTextCorpus):
+    def setUp(self):
+        self.corpus_class = wikicorpus.WikiCorpus
+        self.file_extension = '.xml.bz2'
+        self.fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+
+    def test_default_preprocessing(self):
+        expected = ['computer', 'human', 'interface']
+        corpus = self.corpus_class(self.fname, article_min_tokens=0)
+        first_text = corpus.get_texts().next()
+        self.assertEqual(expected, first_text)
+
+    def test_len(self):
+
+        def test_with_limit(article_min_tokens, expected_articles):
+            corpus = self.corpus_class(self.fname, article_min_tokens=article_min_tokens)
+            all_articles = corpus.get_texts()
+            assert (len(list(all_articles)) == expected_articles)
+
+        test_with_limit(0, 9)
+        test_with_limit(100000, 0)
+
+    def test_load_with_metadata(self):
+        corpus = self.corpus_class(self.fname, article_min_tokens=0)
+        corpus.metadata = True
+        self.assertEqual(len(corpus), 9)
+
+        docs = list(corpus)
+        self.assertEqual(len(docs), 9)
+
+        for i, docmeta in enumerate(docs):
+            doc, metadata = docmeta
+            article_no = i + 1  # Counting IDs from 1
+            self.assertEqual(metadata[0], str(article_no))
+            self.assertEqual(metadata[1], 'Article%d' % article_no)
+
+    def test_load(self):
+        corpus = self.corpus_class(self.fname, article_min_tokens=0)
+
+        docs = list(corpus)
+        # the deerwester corpus always has nine documents
+        self.assertEqual(len(docs), 9)
+
+    def test_empty_input(self):
+        tmpf = get_tmpfile('emptycorpus.xml.bz2')
+        content = bz2.compress(b'')  # Explicit string to byte conversion needed in python 3
+        fh = open(tmpf, "wb")
+        fh.write(content)
+        fh.close()
+
+        with self.assertRaises(ParseError):
+            corpus = self.corpus_class(tmpf)
+            del corpus  # Needed to supress tox warning
+
+    def test_sample_text(self):
+        # Cannot instantiate WikiCorpus from lines
+        pass
+
+    def test_sample_text_length(self):
+        # Cannot instantiate WikiCorpus from lines
+        pass
+
+    def test_sample_text_seed(self):
+        # Cannot instantiate WikiCorpus from lines
         pass
 
 
