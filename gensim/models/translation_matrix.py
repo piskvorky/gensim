@@ -10,6 +10,8 @@ for any two sets of named-vectors where there are some paired-guideposts to lear
 
 Examples
 --------
+**How to make translation between two set of word-vectors**
+
 Initialize a word-vector models
 
 >>> from gensim.models import KeyedVectors
@@ -42,6 +44,10 @@ Save / load model
 >>> with temporary_file("model_file") as fname:
 ...     trans_model.save(fname)  # save model to file
 ...     loaded_trans_model = TranslationMatrix.load(fname)  # load model
+
+
+**How to make translation between two :class:`~gensim.models.doc2vec.Doc2Vec` models**
+
 
 
 References
@@ -231,22 +237,28 @@ class TranslationMatrix(utils.SaveLoad):
         return Space(np.dot(words_space.mat, self.translation_matrix), words_space.index2word)
 
     def translate(self, source_words, topn=5, gc=0, sample_num=None, source_lang_vec=None, target_lang_vec=None):
-        """
-        Translate the word from the source language to the target language, and return the topn
-        most similar words.
-        Args:
-            `source_words`(str/list): single word or a list of words to be translated
-            `topn`: return the top N similar words. By default (`topn=5`)
-            `gc`: defines the training algorithm. By default (`gc=0`), use standard NN retrieval.
-            Otherwise use globally corrected neighbour retrieval method(as described in[1]).
-            `sample_num`:  an int parameter that specify the number of word to sample from the source lexicon.
-            if `gc=1`, then `sample_num` must be provided.
-            `source_lang_vec`: you can specify the source language vector for translation, the default is to use
-            the model's source language vector.
-            `target_lang_vec`: you can specify the target language vector for retrieving the most similar word,
-            the default is to use the model's target language vector.
-        Returns:
-            A OrderedDict object, each item is (word : `topn` translated words)
+        """Translate the word from the source language to the target language.
+
+        Parameters
+        ----------
+        source_words : {str, list of str}
+            Single word or a list of words to be translated
+        topn : int, optional
+            Number of words than will be returned as translation for each `source_words`
+        gc : int, optional
+            Define translation algorithm, if `gc == 0` - use standard NN retrieval,
+            otherwise, use globally corrected neighbour retrieval method (as described in [1]_).
+        sample_num : int, optional
+            Number of word to sample from the source lexicon, if `gc == 1`, then `sample_num` **must** be provided.
+        source_lang_vec : :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
+            New source language vectors for translation, by default, used the model's source language vector.
+        target_lang_vec : :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
+            New target language vectors for translation, by default, used the model's target language vector.
+
+        Returns
+        -------
+        :class:`collections.OrderedDict`
+            Ordered dict where each item is `word`: [`translated_word_1`, `translated_word_2`, ...]
 
         """
 
@@ -315,25 +327,20 @@ class TranslationMatrix(utils.SaveLoad):
 
 
 class BackMappingTranslationMatrix(utils.SaveLoad):
+    """Realize the BackMapping translation matrix which map the source model's document vector
+    to the target model's document vector(old model).
+
+    We map it to the other language space by computing z = Wx, then return the
+    word whose representation is close to z.
+
+    the details use seen the notebook [3]_.
+
+    >>> transmat = BackMappingTranslationMatrix(tagged, source_lang_vec, target_lang_vec)
+    >>> transmat.train(word_pair)
+    >>> infered_vec = transmat.infer_vector(tagged_doc)
+
+
     """
-        Objects of this class realize the BackMapping translation matrix which map the
-        source model's document vector to the target model's document vector(old model).
-        The main methods are:
-
-        1. constructor, initializing
-        2. the `train` method, which build a translation matrix
-        3. the `infer_vector` method, which given the target model's document vector
-
-        We map it to the other language space by computing z = Wx, then return the
-        word whose representation is close to z.
-
-        the details use seen the notebook (translation matrix revist.ipynb)
-
-        >>> transmat = BackMappingTranslationMatrix(tagged, source_lang_vec, target_lang_vec)
-        >>> transmat.train(word_pair)
-        >>> infered_vec = transmat.infer_vector(tagged_doc)
-
-        """
     def __init__(self, tagged_docs, source_lang_vec, target_lang_vec, random_state=None):
         """
         Initialize the model from a list of `tagged_docs`. Each word_pair is tupe
@@ -369,11 +376,18 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         return self.translation_matrix
 
     def infer_vector(self, target_doc_vec):
-        """
-        Translate the target model's document vector to the source model's document vector
+        """Translate the target model's document vector to the source model's document vector
 
-        Returns:
-            `infered_vec` the tagged_doc's document vector in the source model
+        Parameters
+        ----------
+        target_doc_vec : numpy.ndarray
+            Document vector
+
+        Returns
+        -------
+        numpy.ndarray
+            Vector `target_doc_vec` in the source model.
+
         """
         infered_vec = np.dot(target_doc_vec, self.translation_matrix)
         return infered_vec
