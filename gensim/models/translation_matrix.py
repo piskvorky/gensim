@@ -214,19 +214,6 @@ class TranslationMatrix(utils.SaveLoad):
         kwargs['ignore'] = kwargs.get('ignore', ['source_space', 'target_space'])
         super(TranslationMatrix, self).save(*args, **kwargs)
 
-    @classmethod
-    def load(cls, *args, **kwargs):
-        """Load the pre-trained translation matrix model.
-
-        Parameters
-        ----------
-        *args : str
-            Path to stored model
-
-        """
-        model = super(TranslationMatrix, cls).load(*args, **kwargs)
-        return model
-
     def apply_transmat(self, words_space):
         """Map the source word vector to the target word vector using translation matrix.
 
@@ -261,8 +248,6 @@ class TranslationMatrix(utils.SaveLoad):
         Returns:
             A OrderedDict object, each item is (word : `topn` translated words)
 
-        [1] Dinu, Georgiana, Angeliki Lazaridou, and Marco Baroni. "Improving zero-shot learning by mitigating the
-        hubness problem." arXiv preprint arXiv:1412.6568 (2014).
         """
 
         if isinstance(source_words, string_types):
