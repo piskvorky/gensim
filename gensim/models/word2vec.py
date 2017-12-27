@@ -234,8 +234,6 @@ class Word2Vec(BaseWordEmbedddingsModel):
         self.callbacks = callbacks
         self.load = call_on_class_only
 
-        # self.null_word = null_word
-        self.compute_loss = compute_loss
         self.wv = Word2VecKeyedVectors()
         self.vocabulary = Word2VecVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
@@ -246,7 +244,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
         super(Word2Vec, self).__init__(
             sentences=sentences, workers=workers, vector_size=size, epochs=iter, callbacks=callbacks,
             batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window, seed=seed,
-            hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha)
+            hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss)
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
         """
@@ -327,7 +325,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
 
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
-              queue_factor=2, report_delay=1.0, compute_loss=None):
+              queue_factor=2, report_delay=1.0, compute_loss=False):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)

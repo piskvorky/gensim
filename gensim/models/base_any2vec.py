@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# from abc import ABCMeta, abstractmethod
 from gensim import utils
 import logging
 from timeit import default_timer
 import threading
 from six import string_types
-# from collections import defaultdict
 from numpy import vstack
 from gensim import matutils
 from numpy import float32 as REAL, ones, random
@@ -352,31 +350,6 @@ class BaseKeyedVectors(utils.SaveLoad):
         raise NotImplementedError
 
 
-class Callback(object):
-    """Abstract base class used to build new callbacks."""
-
-    def __init__(self):
-        self.model = None
-
-    def on_epoch_begin(self, model):
-        pass
-
-    def on_epoch_end(self, model):
-        pass
-
-    def on_batch_begin(self, model):
-        pass
-
-    def on_batch_end(self, model):
-        pass
-
-    def on_train_begin(self, model):
-        pass
-
-    def on_train_end(self, model):
-        pass
-
-
 class BaseVocabBuilder(utils.SaveLoad):
     """Class for managing vocabulary of a model. Takes care of building, pruning and updating vocabulary."""
     def __init__(self):
@@ -421,9 +394,9 @@ class BaseModelTrainables(utils.SaveLoad):
 
 
 class BaseWordEmbedddingsModel(BaseAny2VecModel):
-    def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5,
-                 callbacks=(), batch_words=10000, trim_rule=None, sg=0, alpha=0.025,
-                 window=5, seed=1, hs=0, negative=5, cbow_mean=1, min_alpha=0.0001, **kwargs):
+    def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
+                 trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
+                 min_alpha=0.0001, compute_loss=False, **kwargs):
         self.sg = int(sg)
         if vector_size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
@@ -434,6 +407,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         self.hs = hs
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
+        self.compute_loss = compute_loss
         self.running_training_loss = 0
         self.min_alpha_yet_reached = float(alpha)
 
@@ -444,8 +418,8 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(
-                sentences, total_examples=self.corpus_count, epochs=self.epochs,
-                start_alpha=self.alpha, end_alpha=self.min_alpha)
+                sentences, total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
+                end_alpha=self.min_alpha, compute_loss=compute_loss)
         else:
             if trim_rule is not None:
                 logger.warning(
@@ -470,10 +444,12 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
 
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
-              queue_factor=2, report_delay=1.0, compute_loss=None):
+              queue_factor=2, report_delay=1.0, compute_loss=False):
         self.alpha = start_alpha or self.alpha
         self.min_alpha = end_alpha or self.min_alpha
         self.epochs = epochs or self.epochs
+        self.compute_loss = compute_loss
+        self.running_training_loss = 0.0
         return super(BaseWordEmbedddingsModel, self).train(
             sentences, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,

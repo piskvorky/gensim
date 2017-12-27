@@ -55,15 +55,14 @@ except ImportError:
 from collections import namedtuple, defaultdict
 from timeit import default_timer
 
-from numpy import zeros, sum as np_sum, add as np_add, concatenate, \
-    repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
-    sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide, integer
+from numpy import zeros, array, float32 as REAL, empty, ones, \
+    memmap as np_memmap, sqrt, newaxis, ndarray, dot, vstack, \
+    divide as np_divide, integer
 
 
-from gensim.utils import call_on_class_only, deprecated
+from gensim.utils import call_on_class_only
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables
-from gensim.models.keyedvectors import KeyedVectors
 from six.moves import xrange, zip
 from six import string_types, integer_types
 from gensim.models.base_any2vec import BaseWordEmbedddingsModel, BaseKeyedVectors
@@ -199,6 +198,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
             null_word=dm_concat,
+            callbacks=callbacks,
             **kwargs)
 
         self.load = call_on_class_only
