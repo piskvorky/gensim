@@ -243,7 +243,7 @@ class KeyedVectorsBase(utils.SaveLoad):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
-                    word, weights = parts[0], [REAL(x) for x in parts[1:]]
+                    word, weights = parts[0], [datatype(x) for x in parts[1:]]
                     add_word(word, weights)
         if result.syn0.shape[0] != len(result.vocab):
             logger.info(
