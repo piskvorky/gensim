@@ -10,8 +10,8 @@
 For theoretical background on Random Projections, see [1]_.
 
 
-Examples:
----------
+Examples
+--------
 >>> from gensim.models import RpModel
 >>> from gensim.corpora import Dictionary
 >>> from gensim.test.utils import common_texts, temporary_file
