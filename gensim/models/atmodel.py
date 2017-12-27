@@ -73,11 +73,6 @@ class AuthorTopicState(LdaState):
         self.gamma = np.zeros(gamma_shape, dtype)
         self.numdocs = 0
 
-        self.dtype = np.float64
-
-        self.dtype = np.float32  # To be compatible with LdaState
-
-
 
 def construct_doc2author(corpus, author2doc):
     """Make a mapping from document IDs to author IDs."""
