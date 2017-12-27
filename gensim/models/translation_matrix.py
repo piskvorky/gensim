@@ -10,7 +10,7 @@ for any two sets of named-vectors where there are some paired-guideposts to lear
 
 Examples
 --------
-Initialize a word-vector models (this can be instances of :class:`~gensim.models.word2vec.Word2Vec` too)
+Initialize a word-vector models
 
 >>> from gensim.models import KeyedVectors
 >>> from gensim.test.utils import datapath, temporary_file
@@ -89,7 +89,7 @@ class Space(object):
 
         Parameters
         ----------
-        lang_vec : {:class:`~gensim.models.keyedvectors.KeyedVectors`, :class:`~gensim.models.word2vec.Word2Vec`}
+        lang_vec : :class:`~gensim.models.keyedvectors.KeyedVectors`
             Model from which the vectors will be extracted.
         lexicon : list of str, optional
             Words which contains in the `lang_vec`, if `lexicon = None`, the lexicon is all the lang_vec's word.
@@ -123,36 +123,53 @@ class Space(object):
 
 
 class TranslationMatrix(utils.SaveLoad):
-    """
-    Objects of this class realize the translation matrix which map the source language
-    to the target language.
+    """Objects of this class realize the translation matrix which map the source language to the target language.
     The main methods are:
-
-    1. constructor,
-    2. the `train` method, which initialize everything needed to build a translation matrix
-    3. the `translate` method, which given new word and its vector representation.
 
     We map it to the other language space by computing z = Wx, then return the
     word whose representation is close to z.
 
-    The details use seen the notebook (translation_matrix.ipynb)
+    The details use seen the notebook [3]_
 
-    >>> transmat = TranslationMatrix(source_lang_vec, target_lang_vec, word_pair)
-    >>> transmat.train(word_pair)
-    >>> translated_word = transmat.translate(words, topn=3)
+    Examples
+    --------
+    >>> from gensim.models import KeyedVectors
+    >>> from gensim.test.utils import datapath, temporary_file
+    >>>
+    >>> model_en = KeyedVectors.load_word2vec_format(datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
+    >>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
+    >>>
+    >>> word_pairs = [
+    ...     ("one", "uno"), ("two", "due"), ("three", "tre"), ("four", "quattro"), ("five", "cinque"),
+    ...     ("seven", "sette"), ("eight", "otto"),
+    ...     ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"), ("birds", "uccelli"),
+    ...     ("apple", "mela"), ("orange", "arancione"), ("grape", "acino"), ("banana", "banana")
+    ... ]
+    >>>
+    >>> trans_model = TranslationMatrix(model_en, model_it)
+    >>> trans_model.train(word_pairs)
+    >>> trans_model.translate(["dog", "one"], topn=3)
+    OrderedDict([('dog', [u'cane', u'gatto', u'cavallo']), ('one', [u'uno', u'due', u'tre'])])
+
+
+    References
+    ----------
+    .. [3] https://github.com/RaRe-Technologies/gensim/blob/3.2.0/docs/notebooks/translation_matrix.ipynb
 
     """
     def __init__(self, source_lang_vec, target_lang_vec, word_pairs=None, random_state=None):
         """
-        Initialize the model from a list pair of `word_pair`. Each word_pair is tupe
-         with source language word and target language word.
+        Parameters
+        ----------
+        source_lang_vec : :class:`~gensim.models.keyedvectors.KeyedVectors`
+            Word vectors for source language.
+        target_lang_vec : :class:`~gensim.models.keyedvectors.KeyedVectors`
+            Word vectors for target language.
+        word_pairs : list of (str, str), optional
+            Pairs of words that will be used for training.
+        random_state : {None, int, array_like}, optional
+            Seed for random state.
 
-        Examples: [("one", "uno"), ("two", "due")]
-
-        Args:
-            `word_pair` (list): a list pair of words
-            `source_lang_vec` (KeyedVectors): a set of word vector of source language
-            `target_lang_vec` (KeyedVectors): a set of word vector of target language
         """
 
         self.source_word = None
@@ -171,14 +188,13 @@ class TranslationMatrix(utils.SaveLoad):
             self.train(word_pairs)
 
     def train(self, word_pairs):
-        """
-        Build the translation matrix that mapping from source space to target space.
+        """Build the translation matrix that mapping from source space to target space.
 
-        Args:
-            `word_pairs` (list): a list pair of words
+        Parameters
+        ----------
+        word_pairs : list of (str, str), optional
+            Pairs of words that will be used for training.
 
-        Returns:
-            `translation matrix` that mapping from the source language to target language
         """
         self.source_word, self.target_word = zip(*word_pairs)
 
@@ -194,27 +210,36 @@ class TranslationMatrix(utils.SaveLoad):
         self.translation_matrix = np.linalg.lstsq(m1, m2, -1)[0]
 
     def save(self, *args, **kwargs):
-        """
-        Save the model to file but ignoring the souce_space and target_space
-        """
+        """Save the model to file but ignoring the `source_space` and `target_space`"""
         kwargs['ignore'] = kwargs.get('ignore', ['source_space', 'target_space'])
-
         super(TranslationMatrix, self).save(*args, **kwargs)
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """ Load the pre-trained translation matrix model"""
+        """Load the pre-trained translation matrix model.
+
+        Parameters
+        ----------
+        *args : str
+            Path to stored model
+
+        """
         model = super(TranslationMatrix, cls).load(*args, **kwargs)
         return model
 
     def apply_transmat(self, words_space):
-        """
-        Map the source word vector to the target word vector using translation matrix
-        Args:
-            `words_space`: the `Space` object that constructed for those words to be translate
+        """Map the source word vector to the target word vector using translation matrix.
 
-        Returns:
-            A `Space` object that constructed for those mapped words
+        Parameters
+        ----------
+        words_space : :class:`~gensim.models.translation_matrix.Space`
+            Object that constructed for those words to be translate.
+
+        Returns
+        -------
+        :class:`~gensim.models.translation_matrix.Space`
+            Object that constructed for those mapped words.
+
         """
         return Space(np.dot(words_space.mat, self.translation_matrix), words_space.index2word)
 
