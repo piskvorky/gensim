@@ -150,7 +150,7 @@ class RpModel(interfaces.TransformationABC):
         Parameters
         ----------
         state : dict
-           State of the class,
+           State of the class.
 
         """
         self.__dict__ = state
