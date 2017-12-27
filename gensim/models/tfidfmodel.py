@@ -283,14 +283,16 @@ class TfidfModel(interfaces.TransformationABC):
         # make sure there are no explicit zeroes in the vector (must be sparse)
         vector = [
             (termid, tf * self.idfs.get(termid))
-            for termid, tf in zip(termid_array, tf_array) if self.idfs.get(termid, 0.0) != 0.0
+            for termid, tf in zip(termid_array, tf_array) if self.idfs.get(termid, 0.0) > eps
         ]
 
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
         norm_vector = self.normalize(vector)
 
-        if self.pivot_norm is True:
+        # Need to check if self.pivot_norm variable is in the local scope or not to
+        # mantain backward compatibility.
+        if 'self.pivot_norm' in locals() and self.pivot_norm is True:
             norm_vector = np.array(norm_vector)
             sparse_norm_wts = np.array(norm_vector)[:, 1]
             n_samples = sparse_norm_wts.shape[0]
