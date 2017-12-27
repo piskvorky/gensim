@@ -16,6 +16,7 @@ Initialize a word-vector models
 
 >>> from gensim.models import KeyedVectors
 >>> from gensim.test.utils import datapath, temporary_file
+>>> from gensim.models import TranslationMatrix
 >>>
 >>> model_en = KeyedVectors.load_word2vec_format(datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
 >>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
@@ -48,6 +49,25 @@ Save / load model
 
 **How to make translation between two :class:`~gensim.models.doc2vec.Doc2Vec` models**
 
+Prepare data and models
+
+>>> from gensim.test.utils import datapath
+>>> from gensim.test.test_translation_matrix import read_sentiment_docs
+>>> from gensim.models import Doc2Vec, BackMappingTranslationMatrix
+>>>
+>>> data = read_sentiment_docs(datapath("alldata-id-10.txt"))[:5]
+>>> src_model = Doc2Vec.load(datapath("small_tag_doc_5_iter50"))
+>>> dst_model = Doc2Vec.load(datapath("large_tag_doc_10_iter50"))
+
+Train backward translation
+
+>>> model_trans = BackMappingTranslationMatrix(data, src_model, dst_model)
+>>> trans_matrix = model_trans.train(data)
+
+
+Apply model
+
+>>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
 
 
 References
@@ -335,25 +355,37 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
 
     the details use seen the notebook [3]_.
 
-    >>> transmat = BackMappingTranslationMatrix(tagged, source_lang_vec, target_lang_vec)
-    >>> transmat.train(word_pair)
-    >>> infered_vec = transmat.infer_vector(tagged_doc)
-
+    Examples
+    --------
+    >>> from gensim.test.utils import datapath
+    >>> from gensim.test.test_translation_matrix import read_sentiment_docs
+    >>> from gensim.models import Doc2Vec, BackMappingTranslationMatrix
+    >>>
+    >>> data = read_sentiment_docs(datapath("alldata-id-10.txt"))[:5]
+    >>> src_model = Doc2Vec.load(datapath("small_tag_doc_5_iter50"))
+    >>> dst_model = Doc2Vec.load(datapath("large_tag_doc_10_iter50"))
+    >>>
+    >>> model_trans = BackMappingTranslationMatrix(data, src_model, dst_model)
+    >>> trans_matrix = model_trans.train(data)
+    >>>
+    >>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
 
     """
     def __init__(self, tagged_docs, source_lang_vec, target_lang_vec, random_state=None):
         """
-        Initialize the model from a list of `tagged_docs`. Each word_pair is tupe
-         with source language word and target language word.
 
-        Examples: [("one", "uno"), ("two", "due")]
+        Parameters
+        ----------
+        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
+            Documents that will be used for training
+        source_lang_vec : :class:`~gensim.models.doc2vec.Doc2Vec`
+            Source Doc2Vec model.
+        target_lang_vec : :class:`~gensim.models.doc2vec.Doc2Vec`
+            Target Doc2Vec model.
+        random_state : {None, int, array_like}, optional
+            Seed for random state.
 
-        Args:
-            `tagged_docs` (list): a list of tagged document
-            `source_lang_vec` (Doc2vec): provide the document vector
-            `target_lang_vec` (Doc2vec): provide the document vector
         """
-
         self.tagged_docs = tagged_docs
         self.source_lang_vec = source_lang_vec
         self.target_lang_vec = target_lang_vec
@@ -362,13 +394,19 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         self.translation_matrix = None
 
     def train(self, tagged_docs):
-        """
-        Build the translation matrix that mapping from the source model's vector to target model's vector
+        """Build the translation matrix that mapping from the source model's vector to target model's vector
 
-        Returns:
-            `translation matrix` that mapping from the source model's vector to target model's vector
-        """
+        Parameters
+        ----------
+        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
+            THIS ARGUMENT WILL BE IGNORED.
 
+        Returns
+        -------
+        numpy.ndarray
+            Translation matrix that mapping from the source model's vector to target model's vector.
+
+        """
         m1 = [self.source_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_docs]
         m2 = [self.target_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_docs]
 
@@ -389,5 +427,4 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
             Vector `target_doc_vec` in the source model.
 
         """
-        infered_vec = np.dot(target_doc_vec, self.translation_matrix)
-        return infered_vec
+        return np.dot(target_doc_vec, self.translation_matrix)
