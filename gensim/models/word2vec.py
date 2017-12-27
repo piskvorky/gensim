@@ -290,7 +290,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
         )
 
         # Since no sentences are provided, this is to control the corpus_count
-        self.vocabulary.corpus_count = corpus_count if corpus_count else 0
+        self.corpus_count = corpus_count if corpus_count else 0
         self.vocabulary.raw_vocab = raw_vocab
 
         # trim by min_count & precalculate downsampling
@@ -607,7 +607,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
         self.vocabulary.vocab = other_model.vocabulary.vocab
         self.vocabulary.index2word = other_model.vocabulary.index2word
         self.trainables.cum_table = other_model.trainables.cum_table
-        self.vocabulary.corpus_count = other_model.vocabulary.corpus_count
+        self.corpus_count = other_model.corpus_count
         self.trainables.reset_weights(vocabulary=self.vocabulary)
         self._set_keyedvectors()
 
@@ -856,9 +856,9 @@ class Word2VecVocab(BaseVocabBuilder):
             "collected %i word types from a corpus of %i raw words and %i sentences",
             len(vocab), total_words, sentence_no + 1
         )
-        self.corpus_count = sentence_no + 1
+        corpus_count = sentence_no + 1
         self.raw_vocab = vocab
-        return total_words
+        return total_words, corpus_count
 
     def sort_vocab(self, vectors):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
@@ -1001,7 +1001,7 @@ class Word2VecVocab(BaseVocabBuilder):
 
     def add_null_word(self):
         word, v = '\0', Vocab(count=1, sample_int=0)
-        v.index = len(self.wv.vocab)
+        v.index = len(self.vocab)
         self.index2word.append(word)
         self.vocab[word] = v
 

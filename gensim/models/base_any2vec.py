@@ -444,7 +444,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(
-                sentences, total_examples=self.vocabulary.corpus_count, epochs=self.epochs,
+                sentences, total_examples=self.corpus_count, epochs=self.epochs,
                 start_alpha=self.alpha, end_alpha=self.min_alpha)
         else:
             if trim_rule is not None:
@@ -453,11 +453,17 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
                     "and is not stored as part of the model. Model initialized without sentences. "
                     "trim_rule provided, if any, will be ignored.")
 
+    # for backward compatibility (aliases pointing to corresponding variables in trainables, vocabulary)
+    @property
+    def iter(self):
+        return self.epochs
+
     def build_vocab(self, sentences, update=False, progress_per=10000, **kwargs):
         """Scan through all the data and create/update vocabulary.
         Should also initialize/reset/update vectors for new vocab entities.
         """
-        self.vocabulary.scan_vocab(sentences, progress_per=progress_per, **kwargs)
+        total_words, corpus_count = self.vocabulary.scan_vocab(sentences, progress_per=progress_per, **kwargs)
+        self.corpus_count = corpus_count
         self.vocabulary.prepare_vocab(update=update, **kwargs)
         self.trainables.prepare_weights(update=update, vocabulary=self.vocabulary)
         self._set_keyedvectors()
@@ -509,7 +515,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
             if not len(self.trainables.vectors):
                 raise RuntimeError("you must initialize vectors before training the model")
 
-            if not hasattr(self.vocabulary, 'corpus_count'):
+            if not hasattr(self, 'corpus_count'):
                 raise ValueError(
                     "The number of examples in the training corpus is missing. "
                     "Please make sure this is set inside `build_vocab` function."
@@ -530,8 +536,8 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         model = super(BaseWordEmbedddingsModel, cls).load(*args, **kwargs)
         if model.negative and hasattr(model.trainables, 'index2word'):
             model.trainables.make_cum_table(vocabulary=model.vocabulary)  # rebuild cum_table from vocabulary
-        if not hasattr(model.vocabulary, 'corpus_count'):
-            model.vocabulary.corpus_count = None
+        if not hasattr(model, 'corpus_count'):
+            model.corpus_count = None
         if not hasattr(model.trainables, 'vectors_lockf') and hasattr(model.trainables, 'vectors'):
             model.trainables.vectors_lockf = ones(len(model.trainables.vectors), dtype=REAL)
         if not hasattr(model, 'random'):
