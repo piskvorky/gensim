@@ -116,7 +116,6 @@ from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors, Vocab
 from gensim.models.base_any2vec import BaseWordEmbedddingsModel,\
     BaseVocabBuilder, BaseModelTrainables
-from gensim.models import word2vec_utils
 
 try:
     from queue import Queue, Empty
