@@ -1,5 +1,58 @@
 #!/usr/bin/env python
 # encoding: utf-8
+
+"""Produce translation matrix to translate the word from one language to another language, using either
+standard nearest neighbour method or globally corrected neighbour retrieval method [1]_.
+
+This method can be used to augment the existing phrase tables with more candidate translations, or
+filter out errors from the translation tables and known dictionaries [2]_. What's more, It also work
+for any two sets of named-vectors where there are some paired-guideposts to learn the transformation.
+
+Examples
+--------
+Initialize a word-vector models (this can be instances of :class:`~gensim.models.word2vec.Word2Vec` too)
+
+>>> from gensim.models import KeyedVectors
+>>> from gensim.test.utils import datapath, temporary_file
+>>>
+>>> model_en = KeyedVectors.load_word2vec_format(datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
+>>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
+
+Define word pairs (that will be used for construction of translation matrix
+
+>>> word_pairs = [
+...     ("one", "uno"), ("two", "due"), ("three", "tre"), ("four", "quattro"), ("five", "cinque"),
+...     ("seven", "sette"), ("eight", "otto"),
+...     ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"), ("birds", "uccelli"),
+...     ("apple", "mela"), ("orange", "arancione"), ("grape", "acino"), ("banana", "banana")
+... ]
+
+Fit :class:`~gensim.models.translation_matrix.TranslationMatrix`
+
+>>> trans_model = TranslationMatrix(model_en, model_it, word_pairs=word_pairs)
+
+Apply model (translate words "dog" and "one")
+
+>>> trans_model.translate(["dog", "one"], topn=3)
+OrderedDict([('dog', [u'cane', u'gatto', u'cavallo']), ('one', [u'uno', u'due', u'tre'])])
+
+
+Save / load model
+
+>>> with temporary_file("model_file") as fname:
+...     trans_model.save(fname)  # save model to file
+...     loaded_trans_model = TranslationMatrix.load(fname)  # load model
+
+
+References
+----------
+.. [1] Dinu, Georgiana, Angeliki Lazaridou, and Marco Baroni. "Improving zero-shot learning by mitigating the
+       hubness problem", https://arxiv.org/abs/1412.6568
+.. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean.
+       "Distributed Representations of Words and Phrases and their Compositionality", https://arxiv.org/abs/1310.4546
+
+"""
+
 import warnings
 import numpy as np
 
@@ -8,72 +61,18 @@ from gensim import utils
 from six import string_types
 
 
-"""
-Produce translation matrix to translate the word from one language to another language, using either
-standard nearest neighbour method or globally corrected neighbour retrieval method [1].
-
-This method can be used to augment the existing phrase tables with more candidate translations, or
-filter out errors from the translation tables and known dictionaries [2]. What's more, It also work
-for any two sets of named-vectors where there are some paired-guideposts to learn the transformation.
-
-Initialize a model with e.g.::
-
-    >>> transmat = TranslationMatrix(word_pair, source_word_vec, target_word_vec)
-
-Train a model with e.g.::
-
-    >>> transmat.train(word_pair)
-
-Persist a model to disk with::
-
-    >>> transmat.save(fname)
-    >>> transmat  = TranslationMatrix.load(fname)
-
-Translate the source words to target words, for example
-
-    >>> transmat.translate(["one", "two", "three"], topn=3)
-
-.. [1] Dinu, Georgiana, Angeliki Lazaridou, and Marco Baroni. "Improving zero-shot learning by mitigating the
-        hubness problem." arXiv preprint arXiv:1412.6568 (2014).
-.. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean.
-       Distributed Representations of Words and Phrases and their Compositionality.
-       In Proceedings of NIPS, 2013.
-"""
-
-
 class Space(object):
-    """
-    An auxiliary class for storing the the words space
+    """An auxiliary class for storing the the words space."""
 
-    Parameters
-    ----------
-    matrix : numpy.array
-        N * length_of_word_vec, which store the word's vector
-    index2word : list
-        a list of words in the `Space` object
-    word2index : dict
-        a dict for word indexing
-
-    Attributes
-    ----------
-    mat : N-dimensional array
-        each row is the word vector of the lexicon
-    index2word : list
-        a list of words in the `Space` object
-    word2index : dict
-        map the word to index
-    
-    Methods
-    -------
-    __init__(matrix, index2word)
-        build a dictionary to map word to index
-    normalise()
-        Normalize the word vector's matrix
-
-    """
     def __init__(self, matrix, index2word):
         """
-        build a dictionary to map word to index 
+
+        Parameters
+        ----------
+        matrix : iterable of numpy.ndarray
+            Matrix that contains word-vectors.
+        index2word : list of str
+            Words which correspond to the `matrix`.
 
         """
         self.mat = matrix
@@ -86,14 +85,20 @@ class Space(object):
 
     @classmethod
     def build(cls, lang_vec, lexicon=None):
-        """
-        Construct a space class for the lexicon, if it's provided.
-        Args:
-            `lang_vec`: word2vec model that extract word vector for lexicon
-            `lexicon`: the default is None, if it is not provided, the lexicon is all the lang_vec's word,
-            i.e. lang_vec.vocab.keys()
-        Returns:
-            `Space` object for the lexicon
+        """Construct a space class for the lexicon, if it's provided.
+
+        Parameters
+        ----------
+        lang_vec : {:class:`~gensim.models.keyedvectors.KeyedVectors`, :class:`~gensim.models.word2vec.Word2Vec`}
+            Model from which the vectors will be extracted.
+        lexicon : list of str, optional
+            Words which contains in the `lang_vec`, if `lexicon = None`, the lexicon is all the lang_vec's word.
+
+        Returns
+        -------
+        :class:`~gensim.models.translation_matrix.Space`
+            Object that stored word-vectors
+
         """
         # `words` to store all the word that
         # `mat` to store all the word vector for the word in 'words' list
@@ -113,7 +118,7 @@ class Space(object):
         return Space(mat, words)
 
     def normalize(self):
-        """ Normalize the word vector's matrix """
+        """Normalize the word vector's matrix."""
         self.mat = self.mat / np.sqrt(np.sum(np.multiply(self.mat, self.mat), axis=1, keepdims=True))
 
 
