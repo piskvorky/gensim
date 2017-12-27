@@ -22,7 +22,8 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
     """
 
     def __init__(self, id2word=None, dictionary=None, wlocal=gensim.utils.identity,
-                 wglobal=gensim.models.tfidfmodel.df2idf, normalize=True, smartirs="ntc"):
+                 wglobal=gensim.models.tfidfmodel.df2idf, normalize=True, smartirs="ntc",
+                 pivot_norm=False, slope=0.65, pivot=None):
         """
         Sklearn wrapper for Tf-Idf model.
         """
@@ -33,6 +34,9 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
         self.wglobal = wglobal
         self.normalize = normalize
         self.smartirs = smartirs
+        self.pivot_norm = pivot_norm
+        self.slope = slope
+        self.pivot = pivot
 
     def fit(self, X, y=None):
         """
@@ -41,6 +45,7 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
         self.gensim_model = TfidfModel(
             corpus=X, id2word=self.id2word, dictionary=self.dictionary, wlocal=self.wlocal,
             wglobal=self.wglobal, normalize=self.normalize, smartirs=self.smartirs,
+            pivot_norm=self.pivot_norm, slope=self.slope, pivot=self.pivot
         )
         return self
 
