@@ -5,37 +5,32 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Objects of this class allow building and maintaining a model for Random Projections
-(also known as Random Indexing). 
+"""Random Projections (also known as Random Indexing).
 
-For theoretical background on RP, see [1]_.
-:   Kanerva et al.: "Random indexing of text samples for Latent Semantic Analysis."
-
-    The main methods are:
-
-    1. constructor, which creates the random projection matrix
-    2. the [] method, which transforms a simple count representation into the TfIdf
-       space.
-
-Model persistency is achieved via its load/save methods.
+For theoretical background on Random Projections, see [1]_.
 
 
 Examples:
 ---------
 >>> from gensim.models import RpModel
 >>> from gensim.corpora import Dictionary
->>> from gensim.test.utils import common_texts
->>> dictionary = Dictionary(common_texts)
->>> corpus = [dictionary.doc2bow(text) for text in common_texts]
->>> rp = RpModel(corpus)
->>> some_doc = dictionary.doc2bow(common_texts[0])
->>> print(rp[some_doc])
->>> rp.save('/tmp/foo.rp_model')
+>>> from gensim.test.utils import common_texts, temporary_file
+>>>
+>>> dictionary = Dictionary(common_texts)  # fit dictionary
+>>> corpus = [dictionary.doc2bow(text) for text in common_texts]  # convert texts to BoW format
+>>>
+>>> model = RpModel(corpus, id2word=dictionary)  # fit model
+>>> result = model[corpus[3]]  # apply model to document, result is vector in BoW format
+>>>
+>>> with temporary_file("model_file") as fname:
+...     model.save(fname)  # save model to file
+...     loaded_model = RpModel.load(fname)  # load model
 
 
-.. [1] Kanerva et al., 2000, Random indexing of text samples for Latent Semantic Analysis, 
-    https://cloudfront.escholarship.org/dist/prd/content/qt5644k0w6/qt5644k0w6.pdf
+References
+----------
+.. [1] Kanerva et al., 2000, Random indexing of text samples for Latent Semantic Analysis,
+       https://cloudfront.escholarship.org/dist/prd/content/qt5644k0w6/qt5644k0w6.pdf
 
 """
 
@@ -53,21 +48,17 @@ class RpModel(interfaces.TransformationABC):
 
     def __init__(self, corpus, id2word=None, num_topics=300):
         """
-        `id2word` is a mapping from word ids (integers) to words (strings). It is
-        used to determine the vocabulary size, as well as for debugging and topic
-        printing. If not set, it will be determined from the corpus.
-
 
         Parameters
         ----------
-        corpus : :class:`~gensim.interfaces.CorpusABC`
-            Iterable of documents
+        corpus : iterable of iterable of (int, int)
+            Input corpus.
 
-        id2word : dict of (int, string)
-            Mapping from word ids (integers) to words (strings)
+        id2word : {dict of (int, str), :class:`~gensim.corpora.dictionary.Dictionary`}, optional
+            Mapping `token_id` -> `token`, will be determine from corpus if `id2word == None`.
 
-        num_topics : int
-            Number of topics
+        num_topics : int, optional
+            Number of topics.
 
         """
         self.id2word = id2word
@@ -79,14 +70,12 @@ class RpModel(interfaces.TransformationABC):
         return "RpModel(num_terms=%s, num_topics=%s)" % (self.num_terms, self.num_topics)
 
     def initialize(self, corpus):
-        """
-        Initialize the random projection matrix.
-
+        """Initialize the random projection matrix.
 
         Parameters
         ----------
-        corpus : :class:`~interfaces.CorpusABC`
-          Iterable of documents
+        corpus : iterable of iterable of (int, int)
+          Input corpus.
 
         """
         if self.id2word is None:
@@ -109,24 +98,31 @@ class RpModel(interfaces.TransformationABC):
         # are smarter and this is no longer needed?
 
     def __getitem__(self, bow):
-        """
-        Return RP representation of the input vector and/or corpus.
+        """Get random-projection representation of the input vector or corpus.
 
         Parameters
         ----------
-        bow : :class:`~interfaces.CorpusABC`
-            Input document is an iterable of documents or list of (int, int)
+        bow : {list of (int, int), iterable of list of (int, int)}
+            Input document or corpus.
+
+        Returns
+        -------
+        list of (int, float)
+            if `bow` is document OR
+        :class:`~gensim.interfaces.TransformedCorpus`
+            if `bow` is corpus.
 
         Examples
         ----------
         >>> from gensim.models import RpModel
         >>> from gensim.corpora import Dictionary
         >>> from gensim.test.utils import common_texts
-        >>> dictionary = Dictionary(common_texts)
-        >>> corpus = [dictionary.doc2bow(text) for text in common_texts]
-        >>> rp = RpModel(corpus)
-        >>> some_doc = dictionary.doc2bow(common_texts[0])
-        >>> print(rp[some_doc])
+        >>>
+        >>> dictionary = Dictionary(common_texts)  # fit dictionary
+        >>> corpus = [dictionary.doc2bow(text) for text in common_texts]  # convert texts to BoW format
+        >>>
+        >>> model = RpModel(corpus, id2word=dictionary)  # fit model
+        >>> result = model[corpus[0]]  # apply model to document, result is vector in BoW format, i.e. [(1, 0.3), ... ]
 
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
@@ -149,13 +145,13 @@ class RpModel(interfaces.TransformationABC):
         ]
 
     def __setstate__(self, state):
-        """
-        Sets the internal state and updates freshly_loaded to True. Called when unpicked.
+        """Sets the internal state and updates freshly_loaded to True, called when unpicked.
 
         Parameters
         ----------
         state : dict
-           State of the class
+           State of the class,
+
         """
         self.__dict__ = state
         self.freshly_loaded = True
