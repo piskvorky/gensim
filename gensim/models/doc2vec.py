@@ -185,17 +185,12 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
         of the model.
         """
-        # from IPython.core.debugger import set_trace
-        # set_trace()
 
         if 'sentences' in kwargs:
             raise DeprecationWarning(
                 "Parameter 'sentences' was renamed to 'documents', and will be removed in 4.0.0, "
                 "use 'documents' instead."
             )
-
-        if 'iter' in kwargs:
-            kwargs['epochs'] = kwargs['iter']
 
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
@@ -210,6 +205,10 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
+
+        if 'iter' in kwargs:
+            kwargs['epochs'] = kwargs['iter']
+        kwargs['null_word'] = dm_concat
 
         vocabulary_keys = ['max_vocab_size', 'min_count', 'sample', 'sorted_vocab', 'null_word']
         vocabulary_kwargs = dict((k, kwargs[k]) for k in vocabulary_keys if k in kwargs)
@@ -230,7 +229,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(documents, trim_rule=trim_rule)
             self.train(
-                documents, total_examples=self.vocabulary.corpus_count, epochs=self.epochs,
+                documents, total_examples=self.corpus_count, epochs=self.epochs,
                 start_alpha=self.alpha, end_alpha=self.min_alpha)
 
     @property
@@ -276,7 +275,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         self.vocabulary.vocab = other_model.vocabulary.vocab
         self.vocabulary.index2word = other_model.vocabulary.index2word
         self.trainables.cum_table = other_model.trainables.cum_table
-        self.vocabulary.corpus_count = other_model.vocabulary.corpus_count
+        self.corpus_count = other_model.corpus_count
         self.vocabulary.count = other_model.vocabulary.count
         self.vocabulary.doctags = other_model.vocabulary.doctags
         self.vocabulary.offset2doctag = other_model.vocabulary.offset2doctag
@@ -360,7 +359,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         doctag_vectors, doctag_locks = self.trainables._get_doctag_trainables(doc_words)
         doctag_indexes = [0]
 
-        work = zeros(self.layer1_size, dtype=REAL)
+        work = zeros(self.trainables.layer1_size, dtype=REAL)
         if not self.sg:
             neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
 
@@ -383,6 +382,11 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
 
         return doctag_vectors[0]
+
+    def __getitem__(self, tag):
+        if tag not in self.wv.vocab:
+            return self.docvecs[tag]
+        return self.wv[tag]
 
     def __str__(self):
         """Abbreviated name reflecting major configuration paramaters."""
@@ -524,9 +528,9 @@ class Doc2VecVocab(Word2VecVocab):
             "collected %i word types and %i unique tags from a corpus of %i examples and %i words",
             len(vocab), self.count, document_no + 1, total_words
         )
-        self.corpus_count = document_no + 1
+        corpus_count = document_no + 1
         self.raw_vocab = vocab
-        return total_words
+        return total_words, corpus_count
 
     def note_doctag(self, key, document_no, document_length):
         """Note a document tag during initial corpus scan, for structure sizing."""
@@ -556,8 +560,6 @@ class Doc2VecTrainables(Word2VecTrainables):
                  hashfxn=hash, window=5):
         super(Doc2VecTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hs=hs, negative=negative, hashfxn=hashfxn)
-        self.dm = dm
-        self.dm_concat = dm_concat
         if dm and dm_concat:
             self.layer1_size = (dm_tag_count + (2 * window)) * self.vector_size
             logger.info("using concatenative %d-dimensional layer1", self.layer1_size)
@@ -619,10 +621,17 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         If a list, return designated tags' vector representations as a
         2D numpy array: #tags x #vector_size.
         """
-        if isinstance(index, string_types + integer_types + (integer,)):
-            return self.vectors_docs[_int_index(index, self.doctags, self.max_rawint)]
+        if index in self:
+            if isinstance(index, string_types + integer_types + (integer,)):
+                return self.vectors_docs[_int_index(index, self.doctags, self.max_rawint)]
+            return vstack([self[i] for i in index])
+        raise KeyError("tag '%s' not seen in training corpus/invalid" % index)
 
-        return vstack([self[i] for i in index])
+    def __contains__(self, index):
+        if isinstance(index, integer_types + (integer,)):
+            return index < self.count
+        else:
+            return index in self.doctags
 
     def __len__(self):
         return self.count
@@ -777,16 +786,15 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         Store the input-hidden weight matrix for document vectors.
 
         """
-        self.init_sims()
-        total_vec = total_vec or len(self.docvecs)
+        total_vec = total_vec or len(self)
         with utils.smart_open(fname, 'ab') as fout:
             if write_first_line:
-                logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
+                logger.info("storing %sx%s projection weights into %s", total_vec, self.vectors_docs.shape[1], fname)
                 fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vectors_docs.shape[1])))
             # store as in input order
-            for i in range(len(self.docvecs)):
+            for i in range(len(self)):
                 doctag = u"%s%s" % (prefix, _index_to_doctag(i, self.offset2doctag, self.max_rawint))
-                row = self.vectors_docs_syn0[i]
+                row = self.vectors_docs[i]
                 if binary:
                     fout.write(utils.to_utf8(doctag) + b" " + row.tostring())
                 else:

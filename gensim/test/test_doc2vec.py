@@ -22,8 +22,9 @@ from testfixtures import log_capture
 import numpy as np
 
 from gensim import utils
-from gensim.models import doc2vec, keyedvectors
+from gensim.models import doc2vec
 from gensim.test.utils import datapath, get_tmpfile, common_texts as raw_sentences
+from gensim.models.word2vec import Word2VecKeyedVectors
 
 
 class DocsLeeCorpus(object):
@@ -73,17 +74,17 @@ class TestDoc2VecModel(unittest.TestCase):
         # test saving both document and word embedding
         test_doc_word = get_tmpfile('gensim_doc2vec.dw')
         model.save_word2vec_format(test_doc_word, doctag_vec=True, word_vec=True, binary=True)
-        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_doc_word, binary=True)
+        binary_model_dv = Word2VecKeyedVectors.load_word2vec_format(test_doc_word, binary=True)
         self.assertEqual(len(model.wv.vocab) + len(model.docvecs), len(binary_model_dv.vocab))
         # test saving document embedding only
         test_doc = get_tmpfile('gensim_doc2vec.d')
         model.save_word2vec_format(test_doc, doctag_vec=True, word_vec=False, binary=True)
-        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_doc, binary=True)
+        binary_model_dv = Word2VecKeyedVectors.load_word2vec_format(test_doc, binary=True)
         self.assertEqual(len(model.docvecs), len(binary_model_dv.vocab))
         # test saving word embedding only
         test_word = get_tmpfile('gensim_doc2vec.w')
         model.save_word2vec_format(test_word, doctag_vec=False, word_vec=True, binary=True)
-        binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_word, binary=True)
+        binary_model_dv = Word2VecKeyedVectors.load_word2vec_format(test_word, binary=True)
         self.assertEqual(len(model.wv.vocab), len(binary_model_dv.vocab))
 
     def test_unicode_in_doctag(self):
@@ -113,7 +114,7 @@ class TestDoc2VecModel(unittest.TestCase):
 
         model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
-        self.assertEqual(len(model.docvecs.doctag_syn0), 300)
+        self.assertEqual(len(model.docvecs.vectors_docs), 300)
         self.assertEqual(model.docvecs[0].shape, (100,))
         self.assertEqual(model.docvecs[np.int64(0)].shape, (100,))
         self.assertRaises(KeyError, model.__getitem__, '_*0')
@@ -137,15 +138,16 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
 
-        self.assertEqual(len(model.docvecs.doctag_syn0), 300)
+        self.assertEqual(len(model.docvecs.vectors_docs), 300)
         self.assertEqual(model.docvecs[0].shape, (100,))
         self.assertEqual(model.docvecs['_*0'].shape, (100,))
         self.assertTrue(all(model.docvecs['_*0'] == model.docvecs[0]))
         self.assertTrue(max(d.offset for d in model.docvecs.doctags.values()) < len(model.docvecs.doctags))
         self.assertTrue(
-            max(model.docvecs._int_index(str_key) for str_key in model.docvecs.doctags.keys())
-            < len(model.docvecs.doctag_syn0)
-        )
+            max(
+                doc2vec._int_index(
+                    str_key, model.docvecs.doctags, model.docvecs.max_rawint)
+                for str_key in model.docvecs.doctags.keys()) < len(model.docvecs.vectors_docs))
         # verify docvecs.most_similar() returns string doctags rather than indexes
         self.assertEqual(model.docvecs.offset2doctag[0], model.docvecs.most_similar([model.docvecs[0]])[0][0])
 
@@ -219,7 +221,7 @@ class TestDoc2VecModel(unittest.TestCase):
         corpus = DocsLeeCorpus()
         model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20, workers=1)
         model.build_vocab(corpus)
-        self.assertEqual(model.docvecs.doctag_syn0.shape, (300, 100))
+        self.assertEqual(model.docvecs.vectors_docs.shape, (300, 100))
         model.train(corpus, total_examples=model.corpus_count, epochs=model.iter)
 
         self.model_sanity(model)
@@ -325,25 +327,25 @@ class TestDoc2VecModel(unittest.TestCase):
         self.models_equal(model, model2)
 
     def test_mixed_tag_types(self):
-        """Ensure alternating int/string tags don't share indexes in doctag_syn0"""
+        """Ensure alternating int/string tags don't share indexes in vectors_docs"""
         mixed_tag_corpus = [doc2vec.TaggedDocument(words, [i, words[0]]) for i, words in enumerate(raw_sentences)]
         model = doc2vec.Doc2Vec()
         model.build_vocab(mixed_tag_corpus)
         expected_length = len(sentences) + len(model.docvecs.doctags)  # 9 sentences, 7 unique first tokens
-        self.assertEqual(len(model.docvecs.doctag_syn0), expected_length)
+        self.assertEqual(len(model.docvecs.vectors_docs), expected_length)
 
     def models_equal(self, model, model2):
         # check words/hidden-weights
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
-        self.assertTrue(np.allclose(model.wv.syn0, model2.wv.syn0))
+        self.assertTrue(np.allclose(model.wv.vectors, model2.wv.vectors))
         if model.hs:
-            self.assertTrue(np.allclose(model.syn1, model2.syn1))
+            self.assertTrue(np.allclose(model.trainables.syn1, model2.trainables.syn1))
         if model.negative:
-            self.assertTrue(np.allclose(model.syn1neg, model2.syn1neg))
+            self.assertTrue(np.allclose(model.trainables.syn1neg, model2.trainables.syn1neg))
         # check docvecs
         self.assertEqual(len(model.docvecs.doctags), len(model2.docvecs.doctags))
         self.assertEqual(len(model.docvecs.offset2doctag), len(model2.docvecs.offset2doctag))
-        self.assertTrue(np.allclose(model.docvecs.doctag_syn0, model2.docvecs.doctag_syn0))
+        self.assertTrue(np.allclose(model.docvecs.vectors_docs, model2.docvecs.vectors_docs))
 
     def test_delete_temporary_training_data(self):
         """Test doc2vec model after delete_temporary_training_data"""
@@ -351,25 +353,25 @@ class TestDoc2VecModel(unittest.TestCase):
             for j in [0, 1]:
                 model = doc2vec.Doc2Vec(sentences, size=5, min_count=1, window=4, hs=i, negative=j)
                 if i:
-                    self.assertTrue(hasattr(model, 'syn1'))
+                    self.assertTrue(hasattr(model.trainables, 'syn1'))
                 if j:
-                    self.assertTrue(hasattr(model, 'syn1neg'))
-                self.assertTrue(hasattr(model, 'syn0_lockf'))
+                    self.assertTrue(hasattr(model.trainables, 'syn1neg'))
+                self.assertTrue(hasattr(model.trainables, 'vectors_lockf'))
                 model.delete_temporary_training_data(keep_doctags_vectors=False, keep_inference=False)
                 self.assertTrue(len(model['human']), 10)
                 self.assertTrue(model.wv.vocab['graph'].count, 5)
-                self.assertTrue(not hasattr(model, 'syn1'))
-                self.assertTrue(not hasattr(model, 'syn1neg'))
-                self.assertTrue(not hasattr(model, 'syn0_lockf'))
-                self.assertTrue(model.docvecs and not hasattr(model.docvecs, 'doctag_syn0'))
-                self.assertTrue(model.docvecs and not hasattr(model.docvecs, 'doctag_syn0_lockf'))
+                self.assertTrue(not hasattr(model.trainables, 'syn1'))
+                self.assertTrue(not hasattr(model.trainables, 'syn1neg'))
+                self.assertTrue(not hasattr(model.trainables, 'vectors_docs_lockf'))
+                self.assertTrue(model.docvecs and not hasattr(model.trainables, 'vectors_docs'))
+                self.assertTrue(model.docvecs and not hasattr(model.trainables, 'vectors_docs_lockf'))
         model = doc2vec.Doc2Vec(
             list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=1,
             negative=0, alpha=0.05, min_count=2, iter=20
         )
         model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
-        self.assertTrue(model.docvecs and hasattr(model.docvecs, 'doctag_syn0'))
-        self.assertTrue(hasattr(model, 'syn1'))
+        self.assertTrue(model.docvecs and hasattr(model.docvecs, 'vectors_docs'))
+        self.assertTrue(hasattr(model.trainables, 'syn1'))
         self.model_sanity(model, keep_training=False)
         model = doc2vec.Doc2Vec(
             list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0,
@@ -377,10 +379,10 @@ class TestDoc2VecModel(unittest.TestCase):
         )
         model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
         self.model_sanity(model, keep_training=False)
-        self.assertTrue(hasattr(model, 'syn1neg'))
+        self.assertTrue(hasattr(model.trainables, 'syn1neg'))
 
     def test_word_vec_non_writeable(self):
-        model = keyedvectors.KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'))
+        model = Word2VecKeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'))
         vector = model['says']
         with self.assertRaises(ValueError):
             vector *= 0
