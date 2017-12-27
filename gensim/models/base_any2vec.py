@@ -71,7 +71,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Resets certain properties of the model post training. eg. `kv.vectors_norm`"""
         raise NotImplementedError
 
-    def _do_train_job(self, batch_data, job_parameters, thread_private_mem):
+    def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
         """Train a single batch. Return 2-tuple `(effective word count, total word count)`."""
         raise NotImplementedError
 
@@ -91,17 +91,17 @@ class BaseAny2VecModel(utils.SaveLoad):
             if job is None:
                 progress_queue.put(None)
                 break  # no more jobs => quit this worker
-            sentences, job_parameters = job
+            data_iterable, job_parameters = job
 
             for callback in self.callbacks:
                 callback.on_batch_begin(self)
 
-            tally, raw_tally = self._do_train_job(sentences, job_parameters, thread_private_mem)
+            tally, raw_tally = self._do_train_job(data_iterable, job_parameters, thread_private_mem)
 
             for callback in self.callbacks:
                 callback.on_batch_end(self)
 
-            progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
+            progress_queue.put((len(data_iterable), tally, raw_tally))  # report back progress
             jobs_processed += 1
         logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
@@ -113,16 +113,15 @@ class BaseAny2VecModel(utils.SaveLoad):
         job_no = 0
 
         for data_idx, data in enumerate(data_iterator):
-            sentence_length = self._raw_word_count([data])
+            data_length = self._raw_word_count([data])
 
             # can we fit this sentence into the existing job batch?
-            if batch_size + sentence_length <= self.batch_words:
+            if batch_size + data_length <= self.batch_words:
                 # yes => add it to the current job
                 job_batch.append(data)
-                batch_size += sentence_length
+                batch_size += data_length
             else:
                 job_no += 1
-                print next_job_params
                 job_queue.put((job_batch, next_job_params))
 
                 # update the learning rate for the next job
@@ -137,7 +136,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                 next_job_params = self._update_job_params(next_job_params, epoch_progress, cur_epoch)
 
                 # add the sentence that didn't fit as the first item of a new job
-                job_batch, batch_size = [data], sentence_length
+                job_batch, batch_size = [data], data_length
         # add the last job too (may be significantly smaller than batch_words)
         if job_batch:
             job_no += 1
