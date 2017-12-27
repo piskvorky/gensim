@@ -138,7 +138,7 @@ try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
-    logger.info("Using FAST_VERSION - %s", FAST_VERSION)
+
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     MAX_WORDS_IN_BATCH = 10000
@@ -992,6 +992,11 @@ class Word2VecVocab(BaseVocabBuilder):
             'downsample_total': int(downsample_total)
         }
 
+        if self.null_word:
+            # create null pseudo-word for padding when using concatenative L1 (run-of-words)
+            # this word is only ever input – never predicted – so count, huffman-point, etc doesn't matter
+            self.add_null_word()
+
         return report_values
 
     def add_null_word(self):
@@ -1025,10 +1030,6 @@ class Word2VecTrainables(BaseModelTrainables):
         if self.negative:
             # build the table for drawing random words (for negative sampling)
             self.make_cum_table(vocabulary=vocabulary)
-        if vocabulary.null_word:
-            # create null pseudo-word for padding when using concatenative L1 (run-of-words)
-            # this word is only ever input – never predicted – so count, huffman-point, etc doesn't matter
-            vocabulary.add_null_word()
         # set initial input/projection and hidden weights
         if not update:
             self.reset_weights(vocabulary=vocabulary)
