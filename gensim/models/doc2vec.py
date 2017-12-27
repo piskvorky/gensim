@@ -68,6 +68,7 @@ from six.moves import xrange, zip
 from six import string_types, integer_types
 from gensim.models.base_any2vec import BaseWordEmbedddingsModel, BaseKeyedVectors
 from types import GeneratorType
+from numpy.linalg import norm
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +193,9 @@ class Doc2Vec(BaseWordEmbedddingsModel):
                 "use 'documents' instead."
             )
 
+        if 'iter' in kwargs:
+            kwargs['epochs'] = kwargs['iter']
+
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
             null_word=dm_concat,
@@ -206,10 +210,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
 
-        if 'iter' in kwargs:
-            kwargs['epochs'] = kwargs['iter']
         kwargs['null_word'] = dm_concat
-
         vocabulary_keys = ['max_vocab_size', 'min_count', 'sample', 'sorted_vocab', 'null_word']
         vocabulary_kwargs = dict((k, kwargs[k]) for k in vocabulary_keys if k in kwargs)
         self.vocabulary = Doc2VecVocab(**vocabulary_kwargs)
@@ -639,7 +640,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors
         kwargs['ignore'] = kwargs.get('ignore', ['vectors_docs_norm'])
-        super(BaseKeyedVectors, self).save(*args, **kwargs)
+        super(Doc2VecKeyedVectors, self).save(*args, **kwargs)
 
     def init_sims(self, replace=False):
         """
@@ -709,6 +710,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         all_docs, mean = set(), []
         for doc, weight in positive + negative:
             if isinstance(doc, ndarray):
+                doc /= norm(doc)
                 mean.append(weight * doc)
             elif doc in self.doctags or doc < self.count:
                 mean.append(weight * self.vectors_docs_norm[_int_index(doc, self.doctags, self.max_rawint)])
