@@ -907,8 +907,6 @@ class AuthorTopicModel(LdaModel):
         # Wrap in fuction to avoid code duplication.
         def rollback_new_author_chages():
             self.state.gamma = self.state.gamma[0:-1]
-            for doc in corpus:
-                self.corpus.remove(doc)
 
             del self.author2doc[new_author_name]
             a_id = self.author2id[new_author_name]
@@ -918,7 +916,6 @@ class AuthorTopicModel(LdaModel):
             for new_doc_id in corpus_doc_idx:
                 del self.doc2author[new_doc_id]
 
-            self.total_docs -= len_input_corpus
             self.num_authors -= num_new_authors
 
         try:
@@ -935,21 +932,14 @@ class AuthorTopicModel(LdaModel):
 
         new_author_name = "placeholder_name"
 
-        # Add new documents in corpus to self.corpus.
-        self.extend_corpus(corpus)
 
-        corpus_doc_idx = list(range(self.total_docs, len_input_corpus+self.total_docs))
-        # Increment number of total docs.
-        self.total_docs += len_input_corpus
+        corpus_doc_idx = list(range(0, len_input_corpus))
 
         # Add the new placeholder author to author2id/id2author dictionaries.
         num_new_authors = 1
         author_id = 0
         self.author2id[new_author_name] = author_id + self.num_authors
         self.id2author[author_id + self.num_authors] = new_author_name
-
-        # Increment the number of total authors seen.
-        self.num_authors += num_new_authors
 
         # Add new author in author2doc and doc into doc2author.
         self.author2doc[new_author_name] = corpus_doc_idx
