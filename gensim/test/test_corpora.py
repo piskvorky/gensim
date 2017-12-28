@@ -411,7 +411,7 @@ class TestWikiCorpus(TestTextCorpus):
     def test_default_preprocessing(self):
         expected = ['computer', 'human', 'interface']
         corpus = self.corpus_class(self.fname, article_min_tokens=0)
-        first_text = corpus.get_texts().next()
+        first_text = next(corpus.get_texts())
         self.assertEqual(expected, first_text)
 
     def test_len(self):
