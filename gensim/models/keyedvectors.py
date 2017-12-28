@@ -1073,6 +1073,14 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         self.vectors_norm = None
         self.index2word = []
 
+    @property
+    def index2entity(self):
+        return self.index2word
+
+    @index2entity.setter
+    def index2entity(self, value):
+        self.index2word = value
+
     def __contains__(self, word):
         return word in self.vocab
 
@@ -1105,8 +1113,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         else:
             raise KeyError("word '%s' not in vocabulary" % word)
 
-    def get_vector(self, entity):
-        return self.word_vec(entity)
+    def get_vector(self, word):
+        return self.word_vec(word)
 
     def words_closer_than(self, w1, w2):
         """
@@ -1131,60 +1139,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ['dog.n.01', 'canine.n.02']
 
         """
-        all_distances = self.distances(w1)
-        w1_index = self.vocab[w1].index
-        w2_index = self.vocab[w2].index
-        closer_node_indices = np.where(all_distances < all_distances[w2_index])[0]
-        return [self.index2word[index] for index in closer_node_indices if index != w1_index]
-
-    def rank(self, w1, w2):
-        """
-        Rank of the distance of `w2` from `w1`, in relation to distances of all words from `w1`.
-
-        Parameters
-        ----------
-        w1 : str
-            Input word.
-        w2 : str
-            Input word.
-
-        Returns
-        -------
-        int
-            Rank of `w2` from `w1` in relation to all other nodes.
-
-        Examples
-        --------
-
-        >>> model.rank('mammal.n.01', 'carnivore.n.01')
-        3
-
-        """
-        return len(self.words_closer_than(w1, w2)) + 1
-
-    def most_similar_to_given(self, entity1, entities_list):
-        """Return the word from word_list most similar to w1.
-
-        Args:
-            w1 (str): a word
-            word_list (list): list of words containing a word most similar to w1
-
-        Returns:
-            the word in word_list with the highest similarity to w1
-
-        Raises:
-            KeyError: If w1 or any word in word_list is not in the vocabulary
-
-        Example::
-
-          >>> trained_model.most_similar_to_given('music', ['water', 'sound', 'backpack', 'mouse'])
-          'sound'
-
-          >>> trained_model.most_similar_to_given('snake', ['food', 'pencil', 'animal', 'phone'])
-          'animal'
-
-        """
-        return entities_list[argmax([self.similarity(entity1, word) for word in entities_list])]
+        return super(WordEmbeddingsKeyedVectors, self).closer_than(w1, w2)
 
     def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
         """

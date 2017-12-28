@@ -5,10 +5,11 @@ from gensim import utils
 import logging
 from timeit import default_timer
 import threading
+import numpy as np
 from six import string_types
 from numpy import vstack
 from gensim import matutils
-from numpy import float32 as REAL, ones, random
+from numpy import float32 as REAL, ones, random, argmax
 from types import GeneratorType
 
 try:
@@ -283,6 +284,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         self.vectors = []
         self.vocab = {}
         self.vector_size = None
+        self.index2entity = []
 
     def save(self, fname_or_handle, **kwargs):
         super(BaseKeyedVectors, self).save(fname_or_handle, **kwargs)
@@ -292,8 +294,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         return super(BaseKeyedVectors, cls).load(fname_or_handle, **kwargs)
 
     def similarity(self, entity1, entity2):
-        """Compute cosine similarity between entities, specified by int index or
-        string tag.
+        """Compute cosine similarity between entities, specified by string tag.
         """
         raise NotImplementedError
 
@@ -304,26 +305,30 @@ class BaseKeyedVectors(utils.SaveLoad):
         return NotImplementedError
 
     def distance(self, entity1, entity2):
-        """Compute distance between vectors of two input entities, specified by int index or
-        string tag.
+        """Compute distance between vectors of two input entities, specified by string tag.
         """
         raise NotImplementedError
 
     def distances(self, entity1, other_entities=()):
-        """Compute distances from given entity (string tag or index) to all entities in `other_entity`.
+        """Compute distances from given entity (string tag) to all entities in `other_entity`.
         If `other_entities` is empty, return distance between `entity1` and all entities in vocab.
         """
         raise NotImplementedError
 
     def get_vector(self, entity):
-        """Accept a single entity as input, specified by string tag or index.
+        """Accept a single entity as input, specified by string tag.
         Returns the entity's representations in vector space, as a 1D numpy array.
         """
-        raise NotImplementedError
+        if entity in self.vocab:
+            result = self.vectors[self.vocab[entity].index]
+            result.setflags(write=False)
+            return result
+        else:
+            raise KeyError("'%s' not in vocabulary" % entity)
 
     def __getitem__(self, entities):
         """
-        Accept a single entity (int or string tag) or list of entities as input.
+        Accept a single entity (string tag) or list of entities as input.
 
         If a single string or int, return designated tag's vector
         representation, as a 1D numpy array.
@@ -337,17 +342,24 @@ class BaseKeyedVectors(utils.SaveLoad):
 
         return vstack([self.get_vector(entity) for entity in entities])
 
+    def __contains__(self, entity):
+        return entity in self.vocab
+
     def most_similar_to_given(self, entity1, entities_list):
         """Return the entity from entities_list most similar to entity1."""
-        raise NotImplementedError
+        return entities_list[argmax([self.similarity(entity1, entity) for entity in entities_list])]
 
-    def entities_closer_than(self, entity1, entity2):
+    def closer_than(self, entity1, entity2):
         """Returns all entities that are closer to `entity1` than `entity2` is to `entity1`."""
-        raise NotImplementedError
+        all_distances = self.distances(entity1)
+        e1_index = self.vocab[entity1].index
+        e2_index = self.vocab[entity2].index
+        closer_node_indices = np.where(all_distances < all_distances[e2_index])[0]
+        return [self.index2entity[index] for index in closer_node_indices if index != e1_index]
 
     def rank(self, entity1, entity2):
         """Rank of the distance of `entity2` from `entity1`, in relation to distances of all entities from `entity1`."""
-        raise NotImplementedError
+        return len(self.closer_than(entity1, entity2)) + 1
 
 
 class BaseVocabBuilder(utils.SaveLoad):

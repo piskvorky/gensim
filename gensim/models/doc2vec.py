@@ -66,6 +66,7 @@ from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2Vec
 from six.moves import xrange, zip
 from six import string_types, integer_types
 from gensim.models.base_any2vec import BaseWordEmbedddingsModel, BaseKeyedVectors
+from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors
 from types import GeneratorType
 from numpy.linalg import norm
 
@@ -359,7 +360,6 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         """
         doctag_vectors, doctag_locks = self.trainables._get_doctag_trainables(doc_words)
         doctag_indexes = [0]
-
         work = zeros(self.trainables.layer1_size, dtype=REAL)
         if not self.sg:
             neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
@@ -596,7 +596,7 @@ class Doc2VecTrainables(Word2VecTrainables):
         super(Word2VecTrainables, self).save(*args, **kwargs)
 
     def _get_doctag_trainables(self, doc_words):
-        doctag_vectors = empty((1, self.vector_size), dtype=REAL)
+        doctag_vectors = zeros((1, self.vector_size), dtype=REAL)
         doctag_vectors[0] = self.seeded_vector(' '.join(doc_words))
         doctag_locks = ones(1, dtype=REAL)
         return doctag_vectors, doctag_locks
@@ -611,6 +611,14 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         self.vectors_docs = []
         self.mapfile_path = None
         self.vectors_docs = []
+
+    @property
+    def index2entity(self):
+        return self.offset2doctag
+
+    @index2entity.setter
+    def index2entity(self, value):
+        self.offset2doctag = value
 
     def __getitem__(self, index):
         """
@@ -771,6 +779,15 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         v1 = [self[doc] for doc in ds1]
         v2 = [self[doc] for doc in ds2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
+
+    # required by base keyed vectors class
+    def distances(self, d1, other_docs=()):
+        input_vector = self[d1]
+        if not other_docs:
+            other_vectors = self.vectors_docs
+        else:
+            other_vectors = self[other_vectors]
+        return 1 - WordEmbeddingsKeyedVectors.cosine_similarities(input_vector, other_vectors)
 
     def similarity_unseen_docs(self, model, doc_words1, doc_words2, alpha=0.1, min_alpha=0.0001, steps=5):
         """

@@ -326,7 +326,7 @@ class FastText(BaseWordEmbedddingsModel):
 
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
-              word_count=0, queue_factor=2, report_delay=1.0):
+              word_count=0, queue_factor=2, report_delay=1.0, **kwargs):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For FastText, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
 
