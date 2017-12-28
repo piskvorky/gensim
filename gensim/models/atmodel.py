@@ -208,7 +208,7 @@ class AuthorTopicModel(LdaModel):
         """
 
         self.dtype = np.float64
-=======
+
         # NOTE: this doesn't call constructor of a base class, but duplicates most of this code
         # so we have to set dtype to float64 default here
         
