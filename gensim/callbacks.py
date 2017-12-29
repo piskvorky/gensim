@@ -6,7 +6,7 @@ class Callback(object):
     """Abstract base class used to build new callbacks."""
 
     def __init__(self):
-        self.model = None
+        pass
 
     def on_epoch_begin(self, model):
         pass
@@ -31,7 +31,6 @@ class ModelEpochSaver(Callback):
     """Callback to save model after every epoch."""
 
     def __init__(self, path_prefix):
-        self.model = None
         self.path_prefix = path_prefix
 
     def on_epoch_end(self, model):
@@ -46,7 +45,6 @@ class LossEpochHistory(Callback):
     """Callback to capture loss after every epoch. Currently only valid for Word2Vec"""
 
     def __init__(self):
-        self.model = None
         self.losses = []
 
     def on_epoch_end(self, model):
