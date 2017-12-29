@@ -11,11 +11,12 @@ jobs:
       - run:
           name: basic installation
           command: |
-            python -m venv venv
-            . venv/bin/activate
+            python -m virtualenv venv
+            source venv/bin/activate
             pip install tox
 
       - run:
           name: build documentation
           command: |
+            source venv/bin/activate
             tox -e docs -vv
