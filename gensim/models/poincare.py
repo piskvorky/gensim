@@ -54,6 +54,7 @@ from smart_open import smart_open
 from gensim import utils, matutils
 from gensim.models.keyedvectors import Vocab
 from gensim.models.base_any2vec import BaseKeyedVectors
+from gensim.models.word2vec import save_word2vec_format, load_word2vec_format
 from numpy import zeros, dtype, float32 as REAL, ascontiguousarray, fromstring, argmax, vstack
 from six import iteritems
 
@@ -836,25 +837,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
          (in case word vectors are appended with document vectors afterwards)
 
         """
-        if total_vec is None:
-            total_vec = len(self.vocab)
-        vector_size = self.syn0.shape[1]
-        if fvocab is not None:
-            logger.info("storing vocabulary in %s", fvocab)
-            with utils.smart_open(fvocab, 'wb') as vout:
-                for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
-                    vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
-        logger.info("storing %sx%s projection weights into %s", total_vec, vector_size, fname)
-        assert (len(self.vocab), vector_size) == self.syn0.shape
-        with utils.smart_open(fname, 'wb') as fout:
-            fout.write(utils.to_utf8("%s %s\n" % (total_vec, vector_size)))
-            # store in sorted order: most frequent words at the top
-            for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
-                row = self.syn0[vocab.index]
-                if binary:
-                    fout.write(utils.to_utf8(word) + b" " + row.tostring())
-                else:
-                    fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
+        save_word2vec_format(fname, self.vocab, self.syn0, fvocab=fvocab, binary=binary, total_vec=total_vec)
 
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
@@ -887,79 +870,9 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         or incompatibility with optimized routines.)
 
         """
-        counts = None
-        if fvocab is not None:
-            logger.info("loading word counts from %s", fvocab)
-            counts = {}
-            with utils.smart_open(fvocab) as fin:
-                for line in fin:
-                    word, count = utils.to_unicode(line).strip().split()
-                    counts[word] = int(count)
-
-        logger.info("loading projection weights from %s", fname)
-        with utils.smart_open(fname) as fin:
-            header = utils.to_unicode(fin.readline(), encoding=encoding)
-            vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
-            if limit:
-                vocab_size = min(vocab_size, limit)
-            result = cls()
-            result.vector_size = vector_size
-            result.syn0 = zeros((vocab_size, vector_size), dtype=datatype)
-
-            def add_word(word, weights):
-                word_id = len(result.vocab)
-                if word in result.vocab:
-                    logger.warning("duplicate word '%s' in %s, ignoring all but first", word, fname)
-                    return
-                if counts is None:
-                    # most common scenario: no vocab file given. just make up some bogus counts, in descending order
-                    result.vocab[word] = Vocab(index=word_id, count=vocab_size - word_id)
-                elif word in counts:
-                    # use count from the vocab file
-                    result.vocab[word] = Vocab(index=word_id, count=counts[word])
-                else:
-                    # vocab file given, but word is missing -- set count to None (TODO: or raise?)
-                    logger.warning("vocabulary file is incomplete: '%s' is missing", word)
-                    result.vocab[word] = Vocab(index=word_id, count=None)
-                result.syn0[word_id] = weights
-                result.index2word.append(word)
-
-            if binary:
-                binary_len = dtype(REAL).itemsize * vector_size
-                for _ in xrange(vocab_size):
-                    # mixed text and binary: read text first, then binary
-                    word = []
-                    while True:
-                        ch = fin.read(1)
-                        if ch == b' ':
-                            break
-                        if ch == b'':
-                            raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
-                        if ch != b'\n':  # ignore newlines in front of words (some binary files have)
-                            word.append(ch)
-                    word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
-                    weights = fromstring(fin.read(binary_len), dtype=REAL)
-                    add_word(word, weights)
-            else:
-                for line_no in xrange(vocab_size):
-                    line = fin.readline()
-                    if line == b'':
-                        raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
-                    parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
-                    if len(parts) != vector_size + 1:
-                        raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
-                    word, weights = parts[0], [REAL(x) for x in parts[1:]]
-                    add_word(word, weights)
-        if result.syn0.shape[0] != len(result.vocab):
-            logger.info(
-                "duplicate words detected, shrinking matrix size from %i to %i",
-                result.syn0.shape[0], len(result.vocab)
-            )
-            result.syn0 = ascontiguousarray(result.syn0[: len(result.vocab)])
-        assert (len(result.vocab), vector_size) == result.syn0.shape
-
-        logger.info("loaded %s matrix from %s", result.syn0.shape, fname)
-        return result
+        return load_word2vec_format(
+            PoincareKeyedVectors, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
+            limit=limit, datatype=datatype)
 
     @staticmethod
     def vector_distance(vector_1, vector_2):
