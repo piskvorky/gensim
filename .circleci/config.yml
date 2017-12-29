@@ -8,6 +8,10 @@ jobs:
 
     steps:
       - checkout
+
+      - restore_cache:
+          key: pip-cache
+
       - run:
           name: basic installation
           command: |
@@ -20,3 +24,10 @@ jobs:
           command: |
             source venv/bin/activate
             tox -e docs -vv
+
+      - save_cache:
+          key: pip-cache
+          paths:
+            - "~/.cache/pip"
+            - "~/.ccache"
+            - "~/.pip-cache"
