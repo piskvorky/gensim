@@ -13,21 +13,21 @@ jobs:
           key: pip-cache
 
       - run:
-          name: install apt packages (for latex rendering)
+          name: Apt install (for latex render)
           command: |
             sudo apt-get -yq update
             sudo apt-get -yq remove texlive-binaries --purge
             sudo apt-get -yq --no-install-suggests --no-install-recommends --force-yes install dvipng texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
 
       - run:
-          name: basic installation
+          name: Basic installation (tox)
           command: |
             python -m virtualenv venv
             source venv/bin/activate
             pip install tox
 
       - run:
-          name: build documentation
+          name: Build documentation
           command: |
             source venv/bin/activate
             tox -e docs -vv
