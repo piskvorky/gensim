@@ -32,6 +32,10 @@ jobs:
             source venv/bin/activate
             tox -e docs -vv
 
+      - store_artifacts:
+          path:  docs/src/_build
+          destination: documentation
+
       - save_cache:
           key: pip-cache
           paths:
