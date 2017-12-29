@@ -8,14 +8,14 @@ jobs:
 
     steps:
       - checkout
-      - run: basic installation
-        command: |
-          python -m venv venv
-          . venv/bin/activate
-          pip install tox
+      - run:
+          name: basic installation
+          command: |
+            python -m venv venv
+            . venv/bin/activate
+            pip install tox
 
       - run:
           name: build documentation
           command: |
-            pip install tox
             tox -e docs -vv
