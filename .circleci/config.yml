@@ -8,20 +8,14 @@ jobs:
 
     steps:
       - checkout
-
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "setup.py" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+      - run: basic installation
+        command: |
+          python -m venv venv
+          . venv/bin/activate
+          pip install tox
 
       - run:
           name: build documentation
           command: |
             pip install tox
             tox -e docs -vv
-
-      - save_cache:
-          paths:
-            - .tox/
-          key: v1-dependencies-{{ checksum "setup.py" }}
