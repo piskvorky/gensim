@@ -20,7 +20,7 @@ class TestMatutils(unittest.TestCase):
         input_vector = np.random.uniform(size=(100,)).astype(np.float32)
         unit_vector = matutils.unitvec(input_vector)
         self.assertEqual(input_vector.dtype, unit_vector.dtype)
-        
+
 
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)
