@@ -401,12 +401,12 @@ class TestTextCorpus(CorpusTestCase):
     def test_indexing(self):
         pass
 
-
 class TestWikiCorpus(TestTextCorpus):
     def setUp(self):
         self.corpus_class = wikicorpus.WikiCorpus
         self.file_extension = '.xml.bz2'
         self.fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        self.enwiki = datapath('enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2')
 
     def test_default_preprocessing(self):
         expected = ['computer', 'human', 'interface']
@@ -459,6 +459,76 @@ class TestWikiCorpus(TestTextCorpus):
         with self.assertRaises(ParseError):
             corpus = self.corpus_class(tmpf)
             del corpus  # Needed to supress tox warning
+
+    def test_unicode_element(self):
+        """
+        First unicode article in this sample is
+        1) папа
+        """
+        bgwiki = datapath('bgwiki-latest-pages-articles-shortened.xml.bz2')
+        corpus = self.corpus_class(bgwiki)
+        texts = corpus.get_texts()
+        self.assertTrue(u'папа' in next(texts))
+
+    def test_lower_case_set_true(self):
+        """
+        Set the parameter lower to True and check that upper case 'Anarchism' token doesnt exist
+        """
+        corpus = self.corpus_class(self.enwiki, processes=1, lower=True, lemmatize=False)
+        row = corpus.get_texts()
+        list_tokens = next(row)
+        self.assertTrue(u'Anarchism' not in list_tokens)
+        self.assertTrue(u'anarchism' in list_tokens)
+
+    def test_lower_case_set_false(self):
+        """
+        Set the parameter lower to False and check that upper case Anarchism' token exists
+        """
+        corpus = self.corpus_class(self.enwiki, processes=1, lower=False, lemmatize=False)
+        row = corpus.get_texts()
+        list_tokens = next(row)
+        self.assertTrue(u'Anarchism' in list_tokens)
+        self.assertTrue(u'anarchism' in list_tokens)
+
+    def test_min_token_len_not_set(self):
+        """
+        Don't set the parameter token_min_len and check that 'a' as a token doesn't exist
+        Default token_min_len=2
+        """
+        corpus = self.corpus_class(self.enwiki, processes=1, lemmatize=False)
+        self.assertTrue(u'a' not in next(corpus.get_texts()))
+
+    def test_min_token_len_set(self):
+        """
+        Set the parameter token_min_len to 1 and check that 'a' as a token exists
+        """
+        corpus = self.corpus_class(self.enwiki, processes=1, token_min_len=1, lemmatize=False)
+        self.assertTrue(u'a' in next(corpus.get_texts()))
+
+    def test_max_token_len_not_set(self):
+        """
+        Don't set the parameter token_max_len and check that 'collectivisation' as a token doesn't exist
+        Default token_max_len=15
+        """
+        corpus = self.corpus_class(self.enwiki, processes=1, lemmatize=False)
+        self.assertTrue(u'collectivization' not in next(corpus.get_texts()))
+
+    def test_max_token_len_set(self):
+        """
+        Set the parameter token_max_len to 16 and check that 'collectivisation' as a token exists
+        """
+        corpus = self.corpus_class(self.enwiki, processes=1, token_max_len=16, lemmatize=False)
+        self.assertTrue(u'collectivization' in next(corpus.get_texts()))
+
+    # TODO: sporadic failure to be investigated
+    # def test_get_texts_returns_generator_of_lists(self):
+    #
+    #     corpus = self.corpus_class(self.fname)
+    #     l = corpus.get_texts()
+    #     self.assertEqual(type(l), types.GeneratorType)
+    #     first = next(l)
+    #     self.assertEqual(type(first), list)
+    #     self.assertTrue(isinstance(first[0], bytes) or isinstance(first[0], str))
 
     def test_sample_text(self):
         # Cannot instantiate WikiCorpus from lines
