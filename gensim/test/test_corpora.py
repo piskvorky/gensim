@@ -415,14 +415,15 @@ class TestWikiCorpus(TestTextCorpus):
         self.assertEqual(expected, first_text)
 
     def test_len(self):
+        # When there is no min_token limit all 9 articles must be registered.
+        corpus = self.corpus_class(self.fname, article_min_tokens=0)
+        all_articles = corpus.get_texts()
+        assert (len(list(all_articles)) == 9)
 
-        def test_with_limit(article_min_tokens, expected_articles):
-            corpus = self.corpus_class(self.fname, article_min_tokens=article_min_tokens)
-            all_articles = corpus.get_texts()
-            assert (len(list(all_articles)) == expected_articles)
-
-        test_with_limit(0, 9)
-        test_with_limit(100000, 0)
+        # With a huge min_token limit, all articles should be filtered out.
+        corpus = self.corpus_class(self.fname, article_min_tokens=100000)
+        all_articles = corpus.get_texts()
+        assert (len(list(all_articles)) == 0)
 
     def test_load_with_metadata(self):
         corpus = self.corpus_class(self.fname, article_min_tokens=0)
@@ -446,11 +447,14 @@ class TestWikiCorpus(TestTextCorpus):
         self.assertEqual(len(docs), 9)
 
     def test_empty_input(self):
+        """
+        Empty compressed input raises ParseError
+        """
         tmpf = get_tmpfile('emptycorpus.xml.bz2')
-        content = bz2.compress(b'')  # Explicit string to byte conversion needed in python 3
-        fh = open(tmpf, "wb")
-        fh.write(content)
-        fh.close()
+        content = bz2.compress(''.encode())  # Explicit string to byte conversion needed in python 3
+
+        with open(tmpf, "wb") as fh:
+            fh.write(content)
 
         with self.assertRaises(ParseError):
             corpus = self.corpus_class(tmpf)
