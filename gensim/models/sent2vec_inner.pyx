@@ -111,14 +111,16 @@ cdef float update(vector[int] &context, int target, float lr, REAL_t *hidden, RE
     return loss
 
 
+# TODO fix me with thread-safe version
 cdef float random_uniform()nogil:
 
     return rand() / (RAND_MAX + 1.0)
 
 
+# TODO fix me with thread-safe version
 cdef int random_range(int a, int b)nogil:
 
-    return a + <int>(rand() % ((b - a) + 1)
+    return a + <int>(rand() % ((b - a) + 1))
 
 
 cdef int get_line(vector[int] &wids, vector[int] &words, int max_line_size)nogil:
