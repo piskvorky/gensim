@@ -8,7 +8,13 @@ NOTE: There are more ways to get sentence vectors in Gensim than just Sent2Vec. 
 The training algorithms were originally ported from the C package https://github.com/epfml/sent2vec
 and extended with additional functionality.
 Initialize a model with e.g.::
+    >>> from gensim.models import Sent2Vec
     >>> model = Sent2Vec(sentences, size=100, min_count=5, word_ngrams=2, dropoutk=2)
+Or::
+    >>> from gensim.models import Sent2Vec
+    >>> model = Sent2Vec(size=100, min_count=5, word_ngrams=2, dropoutk=2)
+    >>> model.build_vocab(sentences)
+    >>> model.train(sentences)
 Persist a model to disk with::
     >>> model.save(fname)
     >>> model = Sent2Vec.load(fname)  # you can continue training with the loaded model!
@@ -40,8 +46,6 @@ except ImportError:
     from Queue import Queue
 
 logger = logging.getLogger(__name__)
-# Comment out the below statement to avoid printing info logs to console
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 try:
     from gensim.models.sent2vec_inner import _do_train_job_fast
@@ -58,7 +62,7 @@ class Entry():
     Class for populating Sent2Vec's dictionary.
     """
 
-    def __init__(self, word=None, count=0, subwords=[]):
+    def __init__(self, word=None, count=0):
         """
         Initialize a single dictionary entry.
         Parameters
@@ -67,13 +71,10 @@ class Entry():
             Actual vocabulary word.
         count : int
             Number of times the word occurs in the vocabulary.
-        subwords : list
-            List of character ngrams for the word.
         """
 
         self.word = word
         self.count = count
-        self.subwords = subwords
 
 
 class ModelDictionary():
@@ -82,26 +83,25 @@ class ModelDictionary():
     word and character ngrams.
     """
 
-    def __init__(self, t, bucket, minn, maxn, max_vocab_size=30000000, max_line_size=1024):
+    def __init__(self, t, bucket, minn, maxn, max_vocab_size, max_line_size=1024):
         """
         Initialize a sent2vec dictionary.
         Parameters
         ----------
         t : float
-            Threshold for configuring which higher-frequency words are randomly downsampled;
-            default is 1e-3, useful range is (0, 1e-5).
+            Threshold for configuring which higher-frequency words are randomly downsampled.
         bucket : int
-            Number of hash buckets for vocabulary. Default is 2000000.
+            Number of hash buckets for vocabulary.
         minn : int
-            Min length of char ngrams. Default is 3.
+            Min length of char ngrams.
         maxn : int
-            Max length of char ngrams. Default is 6.
+            Max length of char ngrams.
         max_vocab_size : int
             Limit RAM during vocabulary building; if there are more unique
             words than this, then prune the infrequent ones. Every 10 million word types
-            need about 1GB of RAM. Set to `None` for no limit (default).
+            need about 1GB of RAM.
         max_line_size : int
-            Maximum number of characters in a sentence.
+            Maximum number of characters in a sentence. Default is 1024.
         """
 
         self.max_vocab_size = max_vocab_size
@@ -180,7 +180,7 @@ class ModelDictionary():
         is less than a given value (min_count).
         Parameters
         ----------
-        sentences : iterable or list
+        sentences : iterable or list of list of unicode strings
             for larger corpora (like the Toronto corpus),
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`TorontoCorpus` in this module for such examples.
@@ -200,7 +200,6 @@ class ModelDictionary():
 
         self.threshold(min_count)
         self.init_table_discard()
-        self.init_ngrams()
         logger.info("Read %.2f M words", self.ntokens / 1000000)
         if(self.size == 0):
             logger.error("Empty vocabulary. Try a smaller minCount value.")
@@ -233,32 +232,12 @@ class ModelDictionary():
             f = self.words[i].count / self.ntokens
             self.pdiscard.append(((self.t / f)**(0.5)) + (self.t / f))
 
-    def init_ngrams(self):
-        """
-        Initializing character ngrams for all words in the vocabulary.
-        """
-
-        for i in range(self.size):
-            self.words[i].subwords.append(i)
-            word = self.words[i].word
-            for j in range(len(word)):
-                ngram = ""
-                for k, n in zip(range(j, len(word)), range(1, self.maxn + 1)):
-                    ngram += word[k]
-                    k += 1
-                    while k < len(word):
-                        ngram += word[k]
-                        k += 1
-                    if n >= self.minn and ((n == 1 and (j == 0 or k == len(word))) is False):
-                        h = self.hash_(ngram) % self.bucket
-                        self.words[i].subwords.append(self.size + h)
-
     def add_ngrams_train(self, context, n, k):
         """
         Training word ngrams for a given context and target word.
         Parameters
         ----------
-        context : list
+        context : list of integers
             List of word ids.
         n : int
             Number of word ngrams.
@@ -267,7 +246,7 @@ class ModelDictionary():
         training a Sent2Vec model.
         Returns
         -------
-        line : list
+        line : list of integers
             List of word and word ngram ids.
         """
 
@@ -297,13 +276,13 @@ class ModelDictionary():
         n is the number of word ngrams used.
         Parameters
         ----------
-        context : list
+        context : list of integers
             List of word ids.
         n : int
             Number of word ngrams.
         Returns
         -------
-        line : list
+        line : list of integers
             List of word and word ngram ids.
         """
 
@@ -324,33 +303,28 @@ class ModelDictionary():
         word ids inferred from the dictionary.
         Parameters
         ----------
-        sentence : list
+        sentence : list of unicode strings
             List of words.
         Returns
         -------
         ntokens : int
             Number of tokens processed in given sentence.
-        hashes : list
-            List of hashes of words in the sentence.
-        words : list
+        words : list of integers
             List of word ids.
         """
 
-        hashes = []
         words = []
         ntokens = 0
         for word in sentence:
             h = self.find(word)
             wid = self.word2int[h]
             if wid < 0:
-                hashes.append(self.hash_(word))
                 continue
             ntokens += 1
             words.append(wid)
-            hashes.append(self.hash_(word))
             if ntokens > self.max_line_size:
                 break
-        return ntokens, hashes, words
+        return ntokens, words
 
 
 class Sent2Vec(SaveLoad):
@@ -368,22 +342,22 @@ class Sent2Vec(SaveLoad):
         list of words (unicode strings) that will be used for training.
         Parameters
         ----------
-        sentences : iterable or list
+        sentences : iterable or list of list of unicode strings
             For larger corpora (like the Toronto corpus),
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`TorontoCorpus` in this module for such examples.
         vector_size : int
-            Dimensionality of the feature vectors.
+            Dimensionality of the feature vectors. Default is 100.
         lr : float
-            Initial learning rate.
+            Initial learning rate. Default is 0.2
         seed : int
-            For the random number generator for reproducible reasons.
+            For the random number generator for reproducible reasons. Default is 42.
         min_count : int
-            Ignore all words with total frequency lower than this.
+            Ignore all words with total frequency lower than this. Default is 5.
         max_vocab_size : int
             Limit RAM during vocabulary building; if there are more unique
             words than this, then prune the infrequent ones. Every 10 million word types
-            need about 1GB of RAM. Set to `None` for no limit (default).
+            need about 1GB of RAM.
         t : float
             Threshold for configuring which higher-frequency words are randomly downsampled;
             default is 1e-3, useful range is (0, 1e-5).
@@ -441,6 +415,7 @@ class Sent2Vec(SaveLoad):
         self.train_count = 0
         self.workers = workers
         self.total_train_time = 0
+        self.max_vocab_size = max_vocab_size
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -517,7 +492,7 @@ class Sent2Vec(SaveLoad):
         Initialise table of negatives for negative sampling.
         Parameters
         ----------
-        counts : list
+        counts : list of integers
             List of counts of all words in the vocabulary.
         """
 
@@ -558,7 +533,7 @@ class Sent2Vec(SaveLoad):
             nexamples = 0
             loss = 0.0
             for sentence in sentences:
-                ntokens_temp, hashes, words = self.dict.get_line(sentence)
+                ntokens_temp, words = self.dict.get_line(sentence)
                 local_token_count += ntokens_temp
                 if len(words) > 1:
                     for i in range(len(words)):
@@ -579,7 +554,7 @@ class Sent2Vec(SaveLoad):
         Update model's neural weights for given context, target word and learning rate.
         Parameters
         ----------
-        input_ : list
+        input_ : list of integers
             List of word ids of context words.
         target : int
             Word id of target word.
@@ -774,7 +749,7 @@ class Sent2Vec(SaveLoad):
         Function for getting sentence vector for an input sentence.
         Parameters
         ----------
-        sentence : list
+        sentence : list of unicode strings
             List of words.
         Returns
         -------
@@ -782,7 +757,7 @@ class Sent2Vec(SaveLoad):
             Sentence vector for input sentence.
         """
 
-        ntokens_temp, hashes, words = self.dict.get_line(sentence)
+        ntokens_temp, words = self.dict.get_line(sentence)
         sent_vec = np.zeros(self.vector_size)
         line = self.dict.add_ngrams(context=words, n=self.word_ngrams)
         for word_vec in line:
@@ -796,7 +771,7 @@ class Sent2Vec(SaveLoad):
         Function to compute cosine similarity between two sentences.
         Parameters
         ----------
-        sent1, sent2 : list
+        sent1, sent2 : list of unicode strings
             List of words.
         Returns
         -------
