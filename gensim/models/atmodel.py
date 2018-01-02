@@ -897,9 +897,6 @@ class AuthorTopicModel(LdaModel):
             as a list of `(topic_id, topic_probability)` 2-tuples.
         """
 
-        # Use the training hyperparameters from the model initialization.
-        passes = self.passes
-
         # TODO: how should this function look like for get_new_author_topics?
         def rho():
             return pow(self.offset + 1 + 1, -self.decay)
@@ -931,8 +928,6 @@ class AuthorTopicModel(LdaModel):
             return
 
         new_author_name = "placeholder_name"
-
-
         corpus_doc_idx = list(range(0, len_input_corpus))
 
         # Add the new placeholder author to author2id/id2author dictionaries.
