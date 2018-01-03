@@ -294,8 +294,8 @@ cdef unsigned long long fast_sentence_cbow_neg(
 
 
 def train_batch_sg(model, sentences, alpha, _work, compute_loss):
-    cdef int hs = model.trainables.hs
-    cdef int negative = model.trainables.negative
+    cdef int hs = model.hs
+    cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
 
     cdef int _compute_loss = (1 if compute_loss == True else 0)
@@ -334,8 +334,8 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.trainables.cum_table))
-        cum_table_len = len(model.trainables.cum_table)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
@@ -401,8 +401,8 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
 
 
 def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
-    cdef int hs = model.trainables.hs
-    cdef int negative = model.trainables.negative
+    cdef int hs = model.hs
+    cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
     cdef int cbow_mean = model.cbow_mean
 
@@ -442,8 +442,8 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.trainables.cum_table))
-        cum_table_len = len(model.trainables.cum_table)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 

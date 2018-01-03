@@ -239,7 +239,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=bool(sorted_vocab), null_word=null_word)
         self.trainables = Word2VecTrainables(
-            vector_size=size, seed=seed, hs=hs, negative=negative, hashfxn=hashfxn)
+            vector_size=size, seed=seed, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
             sentences=sentences, workers=workers, vector_size=size, epochs=iter, callbacks=callbacks,
@@ -291,8 +291,8 @@ class Word2Vec(BaseWordEmbedddingsModel):
         self.vocabulary.raw_vocab = raw_vocab
 
         # trim by min_count & precalculate downsampling
-        self.vocabulary.prepare_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)
-        self.trainables.prepare_weights(update=update, vocabulary=self.vocabulary)  # build tables & arrays
+        self.vocabulary.prepare_vocab(len(self.trainables.vectors), self.hs, self.negative, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)
+        self.trainables.prepare_weights(self.hs, self.negative, update=update, vocabulary=self.vocabulary)  # build tables & arrays
         self._set_keyedvectors()
 
     def _do_train_job(self, sentences, alpha, inits):
@@ -603,9 +603,9 @@ class Word2Vec(BaseWordEmbedddingsModel):
         """
         self.vocabulary.vocab = other_model.vocabulary.vocab
         self.vocabulary.index2word = other_model.vocabulary.index2word
-        self.trainables.cum_table = other_model.trainables.cum_table
+        self.vocabulary.cum_table = other_model.vocabulary.cum_table
         self.corpus_count = other_model.corpus_count
-        self.trainables.reset_weights(vocabulary=self.vocabulary)
+        self.trainables.reset_weights(self.hs, self.negative, vocabulary=self.vocabulary)
         self._set_keyedvectors()
 
     @staticmethod
@@ -818,6 +818,7 @@ class Word2VecVocab(BaseVocabBuilder):
         self.sample = sample
         self.sorted_vocab = sorted_vocab
         self.null_word = null_word
+        self.cum_table = None  # for negative sampling
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None, **kwargs):
         """Do an initial scan of all words appearing in sentences."""
@@ -857,16 +858,16 @@ class Word2VecVocab(BaseVocabBuilder):
         self.raw_vocab = vocab
         return total_words, corpus_count
 
-    def sort_vocab(self, vectors):
+    def sort_vocab(self, weights_initialized):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
-        if len(vectors):
+        if weights_initialized:
             raise RuntimeError("cannot sort vocabulary after model weights already initialized.")
         self.index2word.sort(key=lambda word: self.vocab[word].count, reverse=True)
         for i, word in enumerate(self.index2word):
             self.vocab[word].index = i
 
-    def prepare_vocab(self, update=False, keep_raw_vocab=False, trim_rule=None, min_count=None,
-                      sample=None, dry_run=False):
+    def prepare_vocab(self, weights_initialized, hs, negative, update=False, keep_raw_vocab=False, trim_rule=None,
+                      min_count=None, sample=None, dry_run=False):
         """
         Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
@@ -994,6 +995,15 @@ class Word2VecVocab(BaseVocabBuilder):
             # this word is only ever input – never predicted – so count, huffman-point, etc doesn't matter
             self.add_null_word()
 
+        if self.sorted_vocab and not update:
+            self.sort_vocab(weights_initialized)
+        if hs:
+            # add info about each word's Huffman encoding
+            self.create_binary_tree()
+        if negative:
+            # build the table for drawing random words (for negative sampling)
+            self.make_cum_table()
+
         return report_values
 
     def add_null_word(self):
@@ -1002,52 +1012,21 @@ class Word2VecVocab(BaseVocabBuilder):
         self.index2word.append(word)
         self.vocab[word] = v
 
-
-class Word2VecTrainables(BaseModelTrainables):
-    def __init__(self, vector_size=100, seed=1, hs=0, negative=5, hashfxn=hash):
-        super(Word2VecTrainables, self).__init__(vector_size=vector_size, seed=seed)
-        self.cum_table = None  # for negative sampling
-        self.hs = hs
-        self.negative = negative
-        self.hashfxn = hashfxn
-        self.layer1_size = vector_size
-
-    def save(self, *args, **kwargs):
-        # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm'])
-        super(Word2VecTrainables, self).save(*args, **kwargs)
-
-    def prepare_weights(self, update=False, vocabulary=None):
-        """Build tables and model weights based on final vocabulary settings."""
-        if vocabulary.sorted_vocab and not update:
-            vocabulary.sort_vocab(self.vectors)
-        if self.hs:
-            # add info about each word's Huffman encoding
-            self.create_binary_tree(vocabulary=vocabulary)
-        if self.negative:
-            # build the table for drawing random words (for negative sampling)
-            self.make_cum_table(vocabulary=vocabulary)
-        # set initial input/projection and hidden weights
-        if not update:
-            self.reset_weights(vocabulary=vocabulary)
-        else:
-            self.update_weights(vocabulary=vocabulary)
-
-    def create_binary_tree(self, vocabulary=None):
+    def create_binary_tree(self):
         """
         Create a binary Huffman tree using stored vocabulary word counts. Frequent words
         will have shorter binary codes. Called internally from `build_vocab()`.
 
         """
-        logger.info("constructing a huffman tree from %i words", len(vocabulary.vocab))
+        logger.info("constructing a huffman tree from %i words", len(self.vocab))
 
         # build the huffman tree
-        heap = list(itervalues(vocabulary.vocab))
+        heap = list(itervalues(self.vocab))
         heapq.heapify(heap)
-        for i in xrange(len(vocabulary.vocab) - 1):
+        for i in xrange(len(self.vocab) - 1):
             min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
             heapq.heappush(
-                heap, Vocab(count=min1.count + min2.count, index=i + len(vocabulary.vocab), left=min1, right=min2)
+                heap, Vocab(count=min1.count + min2.count, index=i + len(self.vocab), left=min1, right=min2)
             )
 
         # recurse over the tree, assigning a binary code to each vocabulary word
@@ -1055,19 +1034,19 @@ class Word2VecTrainables(BaseModelTrainables):
             max_depth, stack = 0, [(heap[0], [], [])]
             while stack:
                 node, codes, points = stack.pop()
-                if node.index < len(vocabulary.vocab):
+                if node.index < len(self.vocab):
                     # leaf node => store its path from the root
                     node.code, node.point = codes, points
                     max_depth = max(len(codes), max_depth)
                 else:
                     # inner node => continue recursion
-                    points = array(list(points) + [node.index - len(vocabulary.vocab)], dtype=uint32)
+                    points = array(list(points) + [node.index - len(self.vocab)], dtype=uint32)
                     stack.append((node.left, array(list(codes) + [0], dtype=uint8), points))
                     stack.append((node.right, array(list(codes) + [1], dtype=uint8), points))
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def make_cum_table(self, vocabulary=None, power=0.75, domain=2**31 - 1):
+    def make_cum_table(self, power=0.75, domain=2**31 - 1):
         """
         Create a cumulative-distribution table using stored vocabulary word counts for
         drawing random words in the negative-sampling training routines.
@@ -1079,18 +1058,38 @@ class Word2VecTrainables(BaseModelTrainables):
 
         Called internally from 'build_vocab()'.
         """
-        vocab_size = len(vocabulary.index2word)
+        vocab_size = len(self.index2word)
         self.cum_table = zeros(vocab_size, dtype=uint32)
         # compute sum of all power (Z in paper)
         train_words_pow = 0.0
         for word_index in xrange(vocab_size):
-            train_words_pow += vocabulary.vocab[vocabulary.index2word[word_index]].count**power
+            train_words_pow += self.vocab[self.index2word[word_index]].count**power
         cumulative = 0.0
         for word_index in xrange(vocab_size):
-            cumulative += vocabulary.vocab[vocabulary.index2word[word_index]].count**power
+            cumulative += self.vocab[self.index2word[word_index]].count**power
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
+
+
+class Word2VecTrainables(BaseModelTrainables):
+    def __init__(self, vector_size=100, seed=1, hashfxn=hash):
+        super(Word2VecTrainables, self).__init__(vector_size=vector_size, seed=seed)
+        self.hashfxn = hashfxn
+        self.layer1_size = vector_size
+
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm'])
+        super(Word2VecTrainables, self).save(*args, **kwargs)
+
+    def prepare_weights(self, hs, negative, update=False, vocabulary=None):
+        """Build tables and model weights based on final vocabulary settings."""
+        # set initial input/projection and hidden weights
+        if not update:
+            self.reset_weights(hs, negative, vocabulary=vocabulary)
+        else:
+            self.update_weights(hs, negative, vocabulary=vocabulary)
 
     def seeded_vector(self, seed_string):
         """Create one 'random' vector (but deterministic by seed_string)"""
@@ -1098,7 +1097,7 @@ class Word2VecTrainables(BaseModelTrainables):
         once = random.RandomState(self.hashfxn(seed_string) & 0xffffffff)
         return (once.rand(self.vector_size) - 0.5) / self.vector_size
 
-    def reset_weights(self, vocabulary=None):
+    def reset_weights(self, hs, negative, vocabulary=None):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
         self.vectors = empty((len(vocabulary.vocab), self.vector_size), dtype=REAL)
@@ -1106,15 +1105,15 @@ class Word2VecTrainables(BaseModelTrainables):
         for i in xrange(len(vocabulary.vocab)):
             # construct deterministic seed from word AND seed argument
             self.vectors[i] = self.seeded_vector(vocabulary.index2word[i] + str(self.seed))
-        if self.hs:
+        if hs:
             self.syn1 = zeros((len(vocabulary.vocab), self.layer1_size), dtype=REAL)
-        if self.negative:
+        if negative:
             self.syn1neg = zeros((len(vocabulary.vocab), self.layer1_size), dtype=REAL)
         self.vectors_norm = None
 
         self.vectors_lockf = ones(len(vocabulary.vocab), dtype=REAL)  # zeros suppress learning
 
-    def update_weights(self, vocabulary=None):
+    def update_weights(self, hs, negative, vocabulary=None):
         """
         Copy all the existing weights, and reset the weights for the newly
         added vocabulary.
@@ -1137,9 +1136,9 @@ class Word2VecTrainables(BaseModelTrainables):
 
         self.vectors = vstack([self.vectors, newvectors])
 
-        if self.hs:
+        if hs:
             self.syn1 = vstack([self.syn1, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
-        if self.negative:
+        if negative:
             self.syn1neg = vstack([self.syn1neg, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
         self.vectors_norm = None
 

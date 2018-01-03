@@ -560,15 +560,15 @@ class Doc2VecTrainables(Word2VecTrainables):
     def __init__(self, mapfile_path=None, dm=1, dm_concat=0, dm_tag_count=1, vector_size=100, seed=1, hs=0, negative=5,
                  hashfxn=hash, window=5):
         super(Doc2VecTrainables, self).__init__(
-            vector_size=vector_size, seed=seed, hs=hs, negative=negative, hashfxn=hashfxn)
+            vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         if dm and dm_concat:
             self.layer1_size = (dm_tag_count + (2 * window)) * self.vector_size
             logger.info("using concatenative %d-dimensional layer1", self.layer1_size)
         self.vectors_docs = []
         self.mapfile_path = mapfile_path
 
-    def reset_weights(self, vocabulary=None):
-        super(Doc2VecTrainables, self).reset_weights(vocabulary=vocabulary)
+    def reset_weights(self, hs, negative, vocabulary=None):
+        super(Doc2VecTrainables, self).reset_weights(hs, negative, vocabulary=vocabulary)
         self.reset_doc_weights(vocabulary=vocabulary)
 
     def reset_doc_weights(self, vocabulary=None):

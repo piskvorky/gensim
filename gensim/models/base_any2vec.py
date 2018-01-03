@@ -450,8 +450,8 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(sentences, progress_per=progress_per, **kwargs)
         self.corpus_count = corpus_count
-        self.vocabulary.prepare_vocab(update=update, **kwargs)
-        self.trainables.prepare_weights(update=update, vocabulary=self.vocabulary)
+        self.vocabulary.prepare_vocab(len(self.trainables.vectors), self.hs, self.negative, update=update, **kwargs)
+        self.trainables.prepare_weights(self.hs, self.negative, update=update, vocabulary=self.vocabulary)
         self._set_keyedvectors()
 
     def train(self, sentences, total_examples=None, total_words=None,

@@ -227,8 +227,8 @@ cdef unsigned long long fast_document_dmc_neg(
 def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
                         train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
                         word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
-    cdef int hs = model.trainables.hs
-    cdef int negative = model.trainables.negative
+    cdef int hs = model.hs
+    cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
     cdef int _train_words = train_words
     cdef int _learn_words = learn_words
@@ -285,8 +285,8 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.trainables.cum_table))
-        cum_table_len = len(model.trainables.cum_table)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
@@ -363,8 +363,8 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
 def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
                       learn_doctags=True, learn_words=True, learn_hidden=True,
                       word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
-    cdef int hs = model.trainables.hs
-    cdef int negative = model.trainables.negative
+    cdef int hs = model.hs
+    cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
     cdef int _learn_doctags = learn_doctags
     cdef int _learn_words = learn_words
@@ -403,18 +403,19 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
     cdef unsigned long long cum_table_len
     cdef unsigned long long next_random
 
+
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.trainables.vectors
+        word_vectors = model.trainables.vectors
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
-       doctag_vectors = model.trainables.vectors_docs
+        doctag_vectors = model.trainables.vectors_docs
     _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
-       word_locks = model.trainables.vectors_lockf
+        word_locks = model.trainables.vectors_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
     if doctag_locks is None:
-       doctag_locks = model.trainables.vectors_docs_lockf
+        doctag_locks = model.trainables.vectors_docs_lockf
     _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if hs:
@@ -422,8 +423,8 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.trainables.cum_table))
-        cum_table_len = len(model.trainables.cum_table)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
@@ -520,8 +521,8 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
 def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
                              learn_doctags=True, learn_words=True, learn_hidden=True,
                              word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
-    cdef int hs = model.trainables.hs
-    cdef int negative = model.trainables.negative
+    cdef int hs = model.hs
+    cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
     cdef int _learn_doctags = learn_doctags
     cdef int _learn_words = learn_words
@@ -584,8 +585,8 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.trainables.cum_table))
-        cum_table_len = len(model.trainables.cum_table)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 

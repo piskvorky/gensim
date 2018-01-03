@@ -30,13 +30,13 @@ import logging
 import struct
 
 import numpy as np
-from numpy import sqrt, newaxis, ones, vstack, random, empty, float32 as REAL
+from numpy import sqrt, newaxis, ones, vstack, empty, float32 as REAL
 
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables
 from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors, Vocab
 from gensim.models.base_any2vec import BaseWordEmbedddingsModel
+from gensim.models.word2vec import save_word2vec_format
 
-from types import GeneratorType
 from six import iteritems
 from gensim.utils import deprecated, call_on_class_only
 from gensim import utils
@@ -197,7 +197,7 @@ class FastText(BaseWordEmbedddingsModel):
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=bool(sorted_vocab), null_word=null_word, min_n=min_n, max_n=max_n)
         self.trainables = FastTextTrainables(
-            vector_size=size, seed=seed, bucket=bucket, hs=hs, negative=negative, hashfxn=hashfxn)
+            vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
 
         super(FastText, self).__init__(
             sentences=sentences, workers=workers, vector_size=size, epochs=iter, callbacks=callbacks,
@@ -576,11 +576,11 @@ class FastTextVocab(Word2VecVocab):
         self.max_n = max_n
         self.ngrams_word = {}
 
-    def prepare_vocab(self, update=False, keep_raw_vocab=False, trim_rule=None, min_count=None,
-                      sample=None, dry_run=False):
+    def prepare_vocab(self, weights_initialized, hs, negative, update=False, keep_raw_vocab=False, trim_rule=None,
+                      min_count=None, sample=None, dry_run=False):
         super(FastTextVocab, self).prepare_vocab(
-            update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, min_count=min_count,
-            sample=sample, dry_run=dry_run)
+            weights_initialized, hs, negative, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
+            min_count=min_count, sample=sample, dry_run=dry_run)
         self.build_ngrams(update=update)
 
     def build_ngrams(self, update=False):
@@ -594,17 +594,17 @@ class FastTextVocab(Word2VecVocab):
 
 
 class FastTextTrainables(Word2VecTrainables):
-    def __init__(self, vector_size=100, seed=1, hs=0, negative=5, hashfxn=hash, bucket=2000000):
+    def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
         super(FastTextTrainables, self).__init__(
-            vector_size=vector_size, seed=seed, hs=hs, negative=negative, hashfxn=hashfxn)
+            vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         self.bucket = bucket
         self.hash2index = {}
         self.vectors_vocab = []
         self.vectors_ngrams = []
         self.ngrams = {}
 
-    def prepare_weights(self, update=False, vocabulary=None):
-        super(FastTextTrainables, self).prepare_weights(update=update, vocabulary=vocabulary)
+    def prepare_weights(self, hs, negative, update=False, vocabulary=None):
+        super(FastTextTrainables, self).prepare_weights(hs, negative, update=update, vocabulary=vocabulary)
         self.init_ngrams_weights(update=update, vocabulary=vocabulary)
 
     def init_ngrams_weights(self, update=False, vocabulary=None):
@@ -850,3 +850,18 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             else:
                 self.vectors_ngrams_norm = \
                     (self.vectors_ngrams / sqrt((self.vectors_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
+
+    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
+        """
+        Store the input-hidden weight matrix in the same format used by the original
+        C word2vec-tool, for compatibility.
+
+         `fname` is the file used to save the vectors in
+         `fvocab` is an optional file used to save the vocabulary
+         `binary` is an optional boolean indicating whether the data is to be saved
+         in binary word2vec format (default: False)
+         `total_vec` is an optional parameter to explicitly specify total no. of vectors
+         (in case word vectors are appended with document vectors afterwards)
+
+        """
+        save_word2vec_format(fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)
