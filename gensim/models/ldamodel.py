@@ -1012,7 +1012,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 minimum_probability=minimum_probability,
                 minimum_phi_value=minimum_phi_value
             )
-            return apply(corpus, **kwargs)
+            return self._apply(corpus, **kwargs)
 
         gamma, phis = self.inference([bow], collect_sstats=per_word_topics)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
