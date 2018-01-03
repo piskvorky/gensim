@@ -18,7 +18,9 @@ from six import iteritems
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.utils_any2vec_fast import ft_hash as _ft_hash
+    from gensim.models.utils_any2vec_fast import (
+        ft_hash as _ft_hash,
+        compute_ngrams as _compute_ngrams)
 except ImportError:
     # failed... fall back to plain python (~100x slower than the above)
     def _ft_hash(string):
@@ -36,6 +38,7 @@ except ImportError:
             The hash of the string
 
         """
+        raise Exception("slow")
         # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
         old_settings = np.seterr(all='ignore')
         h = np.uint32(2166136261)
@@ -45,32 +48,31 @@ except ImportError:
         np.seterr(**old_settings)
         return h
 
+    def _compute_ngrams(word, min_n, max_n):
+        """Returns the list of all possible ngrams for a given word.
 
-def _compute_ngrams(word, min_n, max_n):
-    """Returns the list of all possible ngrams for a given word.
+        Parameters
+        ----------
+        word : str
+            The word whose ngrams need to be computed
+        min_n : int
+            minimum character length of the ngrams
+        max_n : int
+            maximum character length of the ngrams
 
-    Parameters
-    ----------
-    word : str
-        The word whose ngrams need to be computed
-    min_n : int
-        minimum character length of the ngrams
-    max_n : int
-        maximum character length of the ngrams
+        Returns
+        -------
+        :obj:`list` of :obj:`str`
+            List of character ngrams
 
-    Returns
-    -------
-    :obj:`list` of :obj:`str`
-        List of character ngrams
-
-    """
-    BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
-    extended_word = BOW + word + EOW
-    ngrams = []
-    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
-        for i in range(0, len(extended_word) - ngram_length + 1):
-            ngrams.append(extended_word[i:i + ngram_length])
-    return ngrams
+        """
+        BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
+        extended_word = BOW + word + EOW
+        ngrams = []
+        for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+            for i in range(0, len(extended_word) - ngram_length + 1):
+                ngrams.append(extended_word[i:i + ngram_length])
+        return ngrams
 
 
 def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total_vec=None):

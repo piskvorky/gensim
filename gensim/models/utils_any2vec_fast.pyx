@@ -10,3 +10,14 @@ def ft_hash(unicode string):
         h ^= ord(c)
         h *= 16777619
     return h
+
+
+def compute_ngrams(unicode word, unsigned int min_n, unsigned int max_n):
+    cdef unicode extended_word = f'<{word}>'
+    ngrams = []
+    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+        for i in range(0, len(extended_word) - ngram_length + 1):
+            ngrams.append(extended_word[i:i + ngram_length])
+    return ngrams
+
+
