@@ -17,6 +17,34 @@ from six import iteritems
 
 logger = logging.getLogger(__name__)
 
+try:
+    from gensim.models.utils_any2vec_fast import ft_hash as _ft_hash
+except ImportError:
+    # failed... fall back to plain python (~100x slower than the above)
+    def _ft_hash(string):
+        """Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+        used in [1]_.
+
+        Parameter
+        ---------
+        string : str
+            The string whose hash needs to be calculated
+
+        Returns
+        -------
+        int
+            The hash of the string
+
+        """
+        # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
+        old_settings = np.seterr(all='ignore')
+        h = np.uint32(2166136261)
+        for c in string:
+            h = h ^ np.uint32(ord(c))
+            h = h * np.uint32(16777619)
+        np.seterr(**old_settings)
+        return h
+
 
 def _compute_ngrams(word, min_n, max_n):
     """Returns the list of all possible ngrams for a given word.
@@ -43,31 +71,6 @@ def _compute_ngrams(word, min_n, max_n):
         for i in range(0, len(extended_word) - ngram_length + 1):
             ngrams.append(extended_word[i:i + ngram_length])
     return ngrams
-
-
-def _ft_hash(string):
-    """Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-    used in [1]_.
-
-    Parameter
-    ---------
-    string : str
-        The string whose hash needs to be calculated
-
-    Returns
-    -------
-    int
-        The hash of the string
-
-    """
-    # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
-    old_settings = np.seterr(all='ignore')
-    h = np.uint32(2166136261)
-    for c in string:
-        h = h ^ np.uint32(ord(c))
-        h = h * np.uint32(16777619)
-    np.seterr(**old_settings)
-    return h
 
 
 def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total_vec=None):
