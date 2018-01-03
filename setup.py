@@ -258,6 +258,9 @@ setup(
             include_dirs=[model_dir]),
         Extension('gensim.models.fasttext_inner',
             sources=['./gensim/models/fasttext_inner.c'],
+            include_dirs=[model_dir]),
+        Extension('gensim.models.utils_any2vec_fast',
+            sources=['./gensim/models/utils_any2vec_fast.c'],
             include_dirs=[model_dir])
     ],
     cmdclass=cmdclass,

@@ -105,7 +105,6 @@ class TestFastTextModel(unittest.TestCase):
         loaded_wv = FastTextKeyedVectors.load(tmpf)
         self.assertTrue(np.allclose(wv.syn0_ngrams, loaded_wv.syn0_ngrams))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
-        self.assertEqual(len(wv.ngrams), len(loaded_wv.ngrams))
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_norm_vectors_not_saved(self):
@@ -155,16 +154,16 @@ class TestFastTextModel(unittest.TestCase):
         # vector for oov words are slightly different from original FastText due to discarding unused ngrams
         # obtained using a modified version of ./fasttext print-word-vectors lee_fasttext_new.bin
         expected_vec_oov = [
-            -0.23825,
-            -0.58482,
-            -0.22276,
-            -0.41215,
-            0.91015,
-            -1.6786,
-            -0.26724,
-            0.58818,
-            0.57828,
-            0.75801
+            -0.21929,
+            -0.53778,
+            -0.22463,
+            -0.41735,
+            0.71737,
+            -1.59758,
+            -0.24833,
+            0.62028,
+            0.53203,
+            0.77568
         ]
         self.assertTrue(np.allclose(model["rejection"], expected_vec_oov, atol=1e-4))
 
@@ -206,16 +205,16 @@ class TestFastTextModel(unittest.TestCase):
         # vector for oov words are slightly different from original FastText due to discarding unused ngrams
         # obtained using a modified version of ./fasttext print-word-vectors lee_fasttext_new.bin
         expected_vec_oov = [
-            -0.53378,
-            -0.19,
-            0.013482,
-            -0.86767,
-            -0.21684,
-            -0.89928,
-            0.45124,
-            0.18025,
-            -0.14128,
-            0.22508
+            -0.49111,
+            -0.13122,
+            -0.02109,
+            -0.88769,
+            -0.20105,
+            -0.91732,
+            0.47243,
+            0.19708,
+            -0.17856,
+            0.19815
         ]
         self.assertTrue(np.allclose(new_model["rejection"], expected_vec_oov, atol=1e-4))
 
@@ -295,8 +294,6 @@ class TestFastTextModel(unittest.TestCase):
         # Out of vocab check
         self.assertFalse('nights' in self.test_model.wv.vocab)
         self.assertTrue(np.allclose(self.test_model['nights'], self.test_model[['nights']]))
-        # Word with no ngrams in model
-        self.assertRaises(KeyError, lambda: self.test_model['a!@'])
 
     def test_contains(self):
         # In vocab, sanity check
@@ -305,29 +302,13 @@ class TestFastTextModel(unittest.TestCase):
         # Out of vocab check
         self.assertFalse('nights' in self.test_model.wv.vocab)
         self.assertTrue('nights' in self.test_model)
-        # Word with no ngrams in model
-        self.assertFalse('a!@' in self.test_model.wv.vocab)
-        self.assertFalse('a!@' in self.test_model)
 
     def test_wm_distance(self):
         doc = ['night', 'payment']
         oov_doc = ['nights', 'forests', 'payments']
-        ngrams_absent_doc = ['a!@', 'b#$']
 
         dist = self.test_model.wmdistance(doc, oov_doc)
         self.assertNotEqual(float('inf'), dist)
-        dist = self.test_model.wmdistance(doc, ngrams_absent_doc)
-        self.assertEqual(float('inf'), dist)
-
-    def test_doesnt_match(self):
-        oov_words = ['nights', 'forests', 'payments']
-        # Out of vocab check
-        for word in oov_words:
-            self.assertFalse(word in self.test_model.wv.vocab)
-        try:
-            self.test_model.doesnt_match(oov_words)
-        except Exception:
-            self.fail('model.doesnt_match raises exception for oov words')
 
     def test_cbow_hs_training(self):
 
@@ -448,15 +429,11 @@ class TestFastTextModel(unittest.TestCase):
     def test_online_learning(self):
         model_hs = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=1, negative=0)
         self.assertTrue(len(model_hs.wv.vocab), 12)
-        self.assertTrue(len(model_hs.wv.ngrams), 202)
         self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
-        self.assertFalse('tif' in model_hs.wv.ngrams)
         model_hs.build_vocab(new_sentences, update=True)  # update vocab
         self.assertEqual(len(model_hs.wv.vocab), 14)
-        self.assertTrue(len(model_hs.wv.ngrams), 271)
         self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
         self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
-        self.assertTrue('tif' in model_hs.wv.ngrams)  # ngram added because of the word `artificial`
 
     def test_online_learning_after_save(self):
         tmpf = get_tmpfile('gensim_fasttext.tst')
@@ -464,11 +441,9 @@ class TestFastTextModel(unittest.TestCase):
         model_neg.save(tmpf)
         model_neg = FT_gensim.load(tmpf)
         self.assertTrue(len(model_neg.wv.vocab), 12)
-        self.assertTrue(len(model_neg.wv.ngrams), 202)
         model_neg.build_vocab(new_sentences, update=True)  # update vocab
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
         self.assertEqual(len(model_neg.wv.vocab), 14)
-        self.assertTrue(len(model_neg.wv.ngrams), 271)
 
     def online_sanity(self, model):
         terro, others = [], []
@@ -483,11 +458,9 @@ class TestFastTextModel(unittest.TestCase):
         # checks that `syn0` is different from `syn0_vocab`
         self.assertFalse(np.all(np.equal(model.wv.syn0, model.wv.syn0_vocab)))
         self.assertFalse('terrorism' in model.wv.vocab)
-        self.assertFalse('orism>' in model.wv.ngrams)
         model.build_vocab(terro, update=True)  # update vocab
         self.assertTrue(model.wv.syn0_ngrams.dtype == 'float32')
         self.assertTrue('terrorism' in model.wv.vocab)
-        self.assertTrue('orism>' in model.wv.ngrams)
         orig0_all = np.copy(model.wv.syn0_ngrams)
         model.train(terro, total_examples=len(terro), epochs=model.iter)
         self.assertFalse(np.allclose(model.wv.syn0_ngrams, orig0_all))
@@ -541,6 +514,17 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.wv.syn0_ngrams.shape, (20, 10))
         model.build_vocab(new_sentences, update=True)
         self.assertEqual(model.wv.syn0_ngrams.shape, (20, 10))
+
+    def test_estimate_memory(self):
+        model = FT_gensim(sg=1, hs=1, negative=5, min_count=3)
+        model.build_vocab(sentences)
+        report = model.estimate_memory()
+        self.assertEqual(report['vocab'], 2800)
+        self.assertEqual(report['syn0_vocab'], 1600)
+        self.assertEqual(report['syn1'], 1600)
+        self.assertEqual(report['syn1neg'], 1600)
+        self.assertEqual(report['syn0_ngrams'], 22400)
+        self.assertEqual(report['total'], 30000)
 
     def testLoadOldModel(self):
         """Test loading fasttext models from previous version"""

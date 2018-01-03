@@ -38,7 +38,6 @@ except ImportError:
             The hash of the string
 
         """
-        raise Exception("slow")
         # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
         old_settings = np.seterr(all='ignore')
         h = np.uint32(2166136261)
