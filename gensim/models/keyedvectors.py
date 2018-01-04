@@ -57,6 +57,7 @@ and so on.
 from __future__ import division  # py3 "true division"
 
 import logging
+from math import ceil
 
 try:
     from queue import Queue, Empty
@@ -81,7 +82,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.corpora.dictionary import Dictionary
 from six import string_types, iteritems
 from six.moves import xrange
-from scipy import stats
+from scipy import stats, sparse
 
 
 logger = logging.getLogger(__name__)
@@ -558,6 +559,70 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
+
+    def similarity_matrix(self, corpus, dictionary, threshold=0.0, exponent=2.0,
+                          nonzero_limit=100, dtype=REAL):
+        """
+        Constructs a sparse CSC similarity matrix for computing soft cosine similarity between
+        documents; see gensim.matutils.softcossim for more information. When using this code, please
+        consider citing the following papers:
+
+        .. Grigori Sidorov et al., "Soft Similarity and Soft Cosine Measure: Similarity of Features
+           in Vector Space Model".
+        .. Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3: Soft-Cosine
+           Semantic Similarity between Questions for Community Question Answering".
+
+        The constructed matrix corresponds to the matrix Mrel defined in section 2.1 of the paper
+        by Charlet and Damnati.
+
+        corpus:                         List of sparse bag-of-words vectors.
+        dictionary:                     Dictionary associated with the corpus.
+        threshold:                      Only pairs of words whose embeddings are more similar than
+                                        threshold are considered when building the sparse term
+                                        similarity matrix.
+        exponent:                       The exponent applied to the similarity between two word
+                                        embeddings when building the term similarity matrix.
+        nonzero_limit:                  The maximum number of non-zero elements in a single row of
+                                        the term similarity matrix. Setting to a constant ensures
+                                        that the time complexity will be linear in the document
+                                        length rather than quadratic; the resulting similarity will
+                                        be an approximation.
+        """
+
+        logger.info("constructing a term similarity matrix")
+        similarity_matrix = sparse.identity(len(dictionary), dtype=dtype, format="lil")
+        # Traverse rows.
+        num_rows = len(dictionary)
+        for w1_index in range(num_rows):
+            if w1_index % ceil(num_rows / 10) == 0:
+                logger.info("PROGRESS: at row %i / %i", w1_index + 1, num_rows)
+            w1 = dictionary[w1_index]
+            if w1 not in self.vocab:
+                continue  # A word from the dictionary not present in the word2vec model.
+            # Traverse upper triangle columns.
+            if len(dictionary) < nonzero_limit:  # Traverse all columns.
+                columns = ((w2_index, self.similarity(w1, dictionary[w2_index])) \
+                           for w2_index in range(w1_index+1, num_rows) \
+                           if w1_index != w2_index and dictionary[w2_index] in self.vocab)
+            else:  # Traverse only columns corresponding to the embeddings closest to w1.
+                num_nonzero = similarity_matrix[w1_index].getnnz() - 1
+                columns = ((dictionary.token2id[w2], similarity) \
+                           for _, (w2, similarity) \
+                           in zip(range(nonzero_limit-num_nonzero),
+                                  self.most_similar(positive=[w1], topn=nonzero_limit-num_nonzero))\
+                           if w2 in dictionary.token2id and w1_index < dictionary.token2id[w2])
+                columns = sorted(columns, key=lambda x: x[0])
+            for w2_index, similarity in columns:
+                assert w1_index < w2_index
+                # Ensure that we don't exceed `nonzero_limit` by mirroring the upper triangle.
+                if similarity > threshold and similarity_matrix[w2_index].getnnz() <= nonzero_limit:
+                    element = similarity**exponent
+                    similarity_matrix[w1_index, w2_index] = element
+                    similarity_matrix[w2_index, w1_index] = element
+        logger.info("constructed a term similarity matrix with %0.2f %% nonzero entries",
+                    100.0 * similarity_matrix.getnnz() / num_rows**2)
+        return similarity_matrix.tocsc()
+
 
     def wmdistance(self, document1, document2):
         """

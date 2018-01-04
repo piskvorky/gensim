@@ -464,6 +464,43 @@ def cossim(vec1, vec2):
     return result
 
 
+def softcossim(vec1, vec2, similarity_matrix):
+    """
+    Return soft cosine similarity between two sparse vectors given a sparse term similarity matrix
+    in the CSC format. The similarity is a number between <-1.0, 1.0>, higher is more similar. When
+    using this code, please consider citing the following papers:
+
+        .. Grigori Sidorov et al., "Soft Similarity and Soft Cosine Measure: Similarity of Features
+           in Vector Space Model".
+        .. Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3: Soft-Cosine
+           Semantic Similarity between Questions for Community Question Answering".
+    """
+
+    def sparse2coo(vec):
+        col = [0] * len(vec)
+        row, data = zip(*vec)
+        return scipy.sparse.coo_matrix((data, (row, col)), shape=(similarity_matrix.shape[0], 1),
+                                       dtype=similarity_matrix.dtype)
+
+    def softdot(vec1, vec2):
+        vec1 = vec1.tocsr()
+        vec2 = vec2.tocsc()
+        return (vec1.T).dot(similarity_matrix).dot(vec2)[0, 0]
+
+    if not vec1 or not vec2:
+        return 0.0
+    vec1 = sparse2coo(vec1)
+    vec2 = sparse2coo(vec2)
+    vec1len = softdot(vec1, vec1)
+    vec2len = softdot(vec2, vec2)
+    assert vec1len > 0.0 and vec2len > 0.0, u"sparse documents must not contain any explicit zero" \
+            " entries and the similarity matrix S must satisfy x^T * S * x > 0 for any nonzero" \
+            " bag-of-words vector x."
+    result = softdot(vec1, vec2)
+    result /= math.sqrt(vec1len) * math.sqrt(vec2len)  # rescale by vector lengths
+    return result
+
+
 def isbow(vec):
     """
     Checks if vector passed is in bag of words representation or not.

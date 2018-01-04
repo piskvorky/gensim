@@ -54,6 +54,7 @@ import logging
 import itertools
 import os
 import heapq
+import warnings
 
 import numpy
 import scipy.sparse
@@ -562,6 +563,99 @@ class MatrixSimilarity(interfaces.SimilarityABC):
     def __str__(self):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.index.shape[1])
 
+
+class SoftCosineSimilarity(interfaces.SimilarityABC):
+    """
+    Document similarity (like MatrixSimilarity) that uses the Soft Cosine Similarity as a similarity
+    measure. See gensim.matutils.softcossim for more information.
+
+    When a `num_best` value is provided, only the most similar documents are retrieved.
+
+    When using this code, please consider citing the following papers:
+
+    .. Grigori Sidorov et al., "Soft Similarity and Soft Cosine Measure: Similarity of Features in
+       Vector Space Model".
+    .. Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3: Soft-Cosine Semantic
+       Similarity between Questions for Community Question Answering".
+
+    Example:
+        # See Tutorial Notebook for more examples
+        https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb
+        >>> from gensim.models import Word2Vec
+        >>> from gensim.similarities import SoftCosineSimilarity
+        >>> from gensim.utils import simple_preprocess
+        >>> # Given a document vector collection "corpus", train word2vec model.
+        >>> model = Word2Vec(corpus, workers=3, size=100)
+        >>> # Given a dictionary "dictionary", construct a term similarity matrix.
+        >>> similarity_matrix = model.wv.similarity_matrix(corpus, dictionary)
+        >>> instance = SoftCosineSimilarity(corpus, similarity_matrix, num_best=10)
+        >>> # Make a query.
+        >>> query = 'Yummy! Great view of the Bellagio Fountain show.'
+        >>> sims = instance[dictionary.doc2bow(simple_preprocess(query))]
+    """
+
+    def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256):
+        """
+        corpus:                         List of sparse bag-of-words vectors.
+        similarity_matrix:              The sparse term similarity matrix.
+        num_best:                       Number of results to retrieve.
+        """
+        self.corpus = corpus
+        self.num_best = num_best
+        self.chunksize = chunksize
+
+        # Normalization of features is undesirable, since soft cosine similarity requires special
+        # normalization using the similarity matrix. Therefore, we would just be normalizing twice,
+        # increasing the numerical error.
+        self.normalize = False
+
+        # index is simply an array from 0 to size of corpus.
+        self.index = numpy.array(range(len(corpus)))
+
+        # Remove the columns of the similarity matrix that correspond to terms outside corpus.
+        nonzero_columns = sorted(set((index for document in corpus for index, _ in document)))
+        identity_matrix = scipy.sparse.identity(similarity_matrix.shape[0],
+                                                dtype=similarity_matrix.dtype, format="csr")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", scipy.sparse.SparseEfficiencyWarning)
+            identity_matrix[nonzero_columns] = similarity_matrix.T[nonzero_columns]
+        self.similarity_matrix = identity_matrix.T
+
+    def __len__(self):
+        return len(self.corpus)
+
+    def get_similarities(self, query):
+        """
+        **Do not use this function directly; use the self[query] syntax instead.**
+        """
+        if isinstance(query, numpy.ndarray):
+            # Convert document indexes to actual documents.
+            query = [self.corpus[i] for i in query]
+
+        if not isinstance(query[0], list):
+            query = [query]
+
+        n_queries = len(query)
+        result = []
+        for qidx in range(n_queries):
+            # Compute similarity for each query.
+            qresult = [matutils.softcossim(document, query[qidx], self.similarity_matrix) \
+                       for document in self.corpus]
+            qresult = numpy.array(qresult)
+
+            # Append single query result to list of all results.
+            result.append(qresult)
+
+        if len(result) == 1:
+            # Only one query.
+            result = result[0]
+        else:
+            result = numpy.array(result)
+
+        return result
+
+    def __str__(self):
+        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.wv.syn0.shape[1])
 
 class WmdSimilarity(interfaces.SimilarityABC):
     """
