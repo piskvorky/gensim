@@ -683,9 +683,9 @@ def mean_absolute_difference(a, b):
 
     Returns
     -------
-    float32
+    float
         mean(abs(a - b))
-    
+
     """
     return np.mean(np.abs(a - b))
 
