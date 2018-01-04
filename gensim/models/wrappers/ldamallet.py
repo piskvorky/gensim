@@ -33,6 +33,7 @@ Example:
 import logging
 import os
 import random
+import warnings
 import tempfile
 import xml.etree.ElementTree as et
 import zipfile
@@ -258,7 +259,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             if formatted:
                 topic = self.print_topic(i, topn=num_words)
             else:
-                topic = self.show_topic(i, num_words=num_words)
+                topic = self.show_topic(i, topn=num_words)
             shown.append((i, topic))
             if log:
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
@@ -266,8 +267,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     def show_topic(self, topicid, topn=10, num_words=None):
         if num_words is not None:  # deprecated num_words is used
-            logger.warning("The parameter num_words for show_topic() would be deprecated in the updated version.")
-            logger.warning("Please use topn instead.")
+            warnings.warn("The parameter `num_words` is deprecated, will be removed in 4.0.0, use `topn` instead.")
             topn = num_words
 
         if self.word_topics is None:
