@@ -1068,6 +1068,8 @@ KeyedVectors = EuclideanKeyedVectors
 
 
 class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
+    """Class containing common methods for operations over word vectors.
+    """
     def __init__(self):
         super(WordEmbeddingsKeyedVectors, self).__init__()
         self.vectors_norm = None
@@ -1085,6 +1087,20 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return word in self.vocab
 
     def save(self, *args, **kwargs):
+        """Saves the keyedvectors. This saved model can be loaded again using
+        :func:`~gensim.models.*2vec.*2VecKeyedVectors.load` which supports
+        operations on trained word vectors like `most_similar`.
+
+        Parameters
+        ----------
+        fname : str
+            Path to the file.
+
+        Returns
+        -------
+        None
+
+        """
         # don't bother storing the cached normalized vectors
         kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm'])
         super(WordEmbeddingsKeyedVectors, self).save(*args, **kwargs)
@@ -1096,10 +1112,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         If `use_norm` is True, returns the normalized word vector.
 
-        Example::
-
-          >>> trained_model['office']
-          array([ -1.40128313e-02, ...])
+        Examples
+        --------
+        >>> trained_model['office']
+        array([ -1.40128313e-02, ...])
 
         """
         if word in self.vocab:
@@ -1134,9 +1150,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
-        >>> model.words_closer_than('carnivore.n.01', 'mammal.n.01')
-        ['dog.n.01', 'canine.n.02']
+        >>> model.words_closer_than('carnivore', 'mammal')
+        ['dog', 'canine']
 
         """
         return super(WordEmbeddingsKeyedVectors, self).closer_than(w1, w2)
@@ -1151,17 +1166,29 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         The method corresponds to the `word-analogy` and `distance` scripts in the original
         word2vec implementation.
 
-        If topn is False, most_similar returns the vector of similarity scores.
+        Parameters
+        ----------
+        positive : :obj: `list` of :obj: `str`
+            List of words that contribute positively.
+        negative : :obj: `list` of :obj: `str`
+            List of words that contribute negatively.
+        topn : int
+            Number of top-N similar words to return.
+        restrict_vocab : int
+            Optional integer which limits the range of vectors which
+            are searched for most-similar values. For example, restrict_vocab=10000 would
+            only check the first 10000 word vectors in the vocabulary order. (This may be
+            meaningful if you've sorted the vocabulary by descending frequency.)
 
-        `restrict_vocab` is an optional integer which limits the range of vectors which
-        are searched for most-similar values. For example, restrict_vocab=10000 would
-        only check the first 10000 word vectors in the vocabulary order. (This may be
-        meaningful if you've sorted the vocabulary by descending frequency.)
+        Returns
+        -------
+        :obj: `list` of :obj: `tuple`
+            Returns a list of tuples (word, similarity)
 
-        Example::
-
-          >>> trained_model.most_similar(positive=['woman', 'king'], negative=['man'])
-          [('queen', 0.50882536), ...]
+        Examples
+        --------
+        >>> trained_model.most_similar(positive=['woman', 'king'], negative=['man'])
+        [('queen', 0.50882536), ...]
 
         """
         if positive is None:
@@ -1214,12 +1241,23 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         Find the top-N most similar words.
 
-        If topn is False, similar_by_word returns the vector of similarity scores.
+        Parameters
+        ----------
+        word : str
+            Word
+        topn : int
+            Number of top-N similar words to return. If topn is False, similar_by_word returns
+            the vector of similarity scores.
+        restrict_vocab : int
+            Optional integer which limits the range of vectors which
+            are searched for most-similar values. For example, restrict_vocab=10000 would
+            only check the first 10000 word vectors in the vocabulary order. (This may be
+            meaningful if you've sorted the vocabulary by descending frequency.)
 
-        `restrict_vocab` is an optional integer which limits the range of vectors which
-        are searched for most-similar values. For example, restrict_vocab=10000 would
-        only check the first 10000 word vectors in the vocabulary order. (This may be
-        meaningful if you've sorted the vocabulary by descending frequency.)
+        Returns
+        -------
+        :obj: `list` of :obj: `tuple`
+            Returns a list of tuples (word, similarity)
 
         Example::
 
@@ -1233,17 +1271,23 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         Find the top-N most similar words by vector.
 
-        If topn is False, similar_by_vector returns the vector of similarity scores.
+        Parameters
+        ----------
+        word : str
+            Word
+        topn : int
+            Number of top-N similar words to return. If topn is False, similar_by_vector returns
+            the vector of similarity scores.
+        restrict_vocab : int
+            Optional integer which limits the range of vectors which
+            are searched for most-similar values. For example, restrict_vocab=10000 would
+            only check the first 10000 word vectors in the vocabulary order. (This may be
+            meaningful if you've sorted the vocabulary by descending frequency.)
 
-        `restrict_vocab` is an optional integer which limits the range of vectors which
-        are searched for most-similar values. For example, restrict_vocab=10000 would
-        only check the first 10000 word vectors in the vocabulary order. (This may be
-        meaningful if you've sorted the vocabulary by descending frequency.)
-
-        Example::
-
-          >>> trained_model.similar_by_vector([1,2])
-          [('survey', 0.9942699074745178), ...]
+        Returns
+        -------
+        :obj: `list` of :obj: `tuple`
+            Returns a list of tuples (word, similarity)
 
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
@@ -1407,10 +1451,20 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         Which word from the given list doesn't go with the others?
 
-        Example::
+        Parameters
+        ----------
+        words : :obj: `list` of :obj: `str`
+            List of words
 
-          >>> trained_model.doesnt_match("breakfast cereal dinner lunch".split())
-          'cereal'
+        Returns
+        -------
+        str
+            The word further away from the mean of all words.
+
+        Example
+        -------
+        >>> trained_model.doesnt_match("breakfast cereal dinner lunch".split())
+        'cereal'
 
         """
         self.init_sims()
@@ -1442,7 +1496,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        numpy.array
+        :obj: `numpy.array`
             Contains cosine distance between vector_1 and each row in vectors_all.
             shape (num_vectors,)
 
@@ -1493,13 +1547,14 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         Compute cosine distance between two words.
 
-        Example::
+        Examples
+        --------
 
-          >>> trained_model.distance('woman', 'man')
-          0.34
+        >>> trained_model.distance('woman', 'man')
+        0.34
 
-          >>> trained_model.distance('woman', 'woman')
-          0.0
+        >>> trained_model.distance('woman', 'woman')
+        0.0
 
         """
         return 1 - self.similarity(w1, w2)
@@ -1508,13 +1563,14 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         Compute cosine similarity between two words.
 
-        Example::
+        Examples
+        --------
 
-          >>> trained_model.similarity('woman', 'man')
-          0.73723527
+        >>> trained_model.similarity('woman', 'man')
+        0.73723527
 
-          >>> trained_model.similarity('woman', 'woman')
-          1.0
+        >>> trained_model.similarity('woman', 'woman')
+        1.0
 
         """
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
@@ -1523,16 +1579,17 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         Compute cosine similarity between two sets of words.
 
-        Example::
+        Examples
+        --------
 
-          >>> trained_model.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
-          0.61540466561049689
+        >>> trained_model.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
+        0.61540466561049689
 
-          >>> trained_model.n_similarity(['restaurant', 'japanese'], ['japanese', 'restaurant'])
-          1.0000000000000004
+        >>> trained_model.n_similarity(['restaurant', 'japanese'], ['japanese', 'restaurant'])
+        1.0000000000000004
 
-          >>> trained_model.n_similarity(['sushi'], ['restaurant']) == trained_model.similarity('sushi', 'restaurant')
-          True
+        >>> trained_model.n_similarity(['sushi'], ['restaurant']) == trained_model.similarity('sushi', 'restaurant')
+        True
 
         """
         if not(len(ws1) and len(ws2)):
