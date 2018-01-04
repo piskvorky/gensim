@@ -87,7 +87,6 @@ Modules:
     summarization/commons
     summarization/graph
     summarization/keywords
-    summarization/mz_entropy
     summarization/pagerank_weighted
     summarization/summariser
     summarization/syntactic_unit
