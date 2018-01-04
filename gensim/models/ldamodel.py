@@ -72,7 +72,7 @@ except ImportError:
 
     dirichlet_expectation_1d = dirichlet_expectation
     dirichlet_expectation_2d = dirichlet_expectation
-    
+
     FAST_VERSION = -1
     logger.warning('Slow version of {} is being used'.format(__name__))
 

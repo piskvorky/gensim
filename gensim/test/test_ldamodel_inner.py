@@ -19,16 +19,16 @@ import gensim.matutils as matutils
 class TestLdaModelInner(unittest.TestCase):
     def setUp(self):
         self.random_state = np.random.RandomState()
-        self.num_runs = 10 # test functions with *num_runs* random inputs
+        self.num_runs = 10  # test functions with *num_runs* random inputs
         self.num_topics = 100
 
     def testLogSumExp(self):
         # test logsumexp
         rs = self.random_state
 
-        for dtype in [ np.float16, np.float32, np.float64 ]:
+        for dtype in [np.float16, np.float32, np.float64]:
             for i in range(self.num_runs):
-                input = rs.uniform(-1000, 1000, size=(self.num_topics,1))
+                input = rs.uniform(-1000, 1000, size=(self.num_topics, 1))
 
                 known_good = matutils.logsumexp(input)
                 test_values = mli.logsumexp(input)
@@ -40,7 +40,7 @@ class TestLdaModelInner(unittest.TestCase):
         # test mean_absolute_difference
         rs = self.random_state
 
-        for dtype in [ np.float16, np.float32, np.float64 ]:
+        for dtype in [np.float16, np.float32, np.float64]:
             for i in range(self.num_runs):
                 input1 = rs.uniform(-10000, 10000, size=(self.num_topics,))
                 input2 = rs.uniform(-10000, 10000, size=(self.num_topics,))
@@ -55,7 +55,7 @@ class TestLdaModelInner(unittest.TestCase):
         # test dirichlet_expectation
         rs = self.random_state
 
-        for dtype in [ np.float16, np.float32, np.float64 ]:
+        for dtype in [np.float16, np.float32, np.float64]:
             for i in range(self.num_runs):
                 # 1 dimensional case
                 input_1d = rs.uniform(.01, 10000, size=(self.num_topics,))
