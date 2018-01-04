@@ -77,7 +77,6 @@ try:
     from gensim.models.word2vec_inner import FAST_VERSION  # blas-adaptation shared from word2vec
 
 except ImportError:
-    # failed... fall back to plain numpy (20-80x slower training than the above)
     raise RuntimeError("Support for Python/Numpy implementations has been continued.")
 
 
@@ -118,73 +117,80 @@ class Doc2Vec(BaseWordEmbedddingsModel):
 
     def __init__(self, documents=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(), **kwargs):
-        """
-        Initialize the model from an iterable of `documents`. Each document is a
+        """Initialize the model from an iterable of `documents`. Each document is a
         TaggedDocument object that will be used for training.
 
-        The `documents` iterable can be simply a list of TaggedDocument elements, but for larger corpora,
-        consider an iterable that streams the documents directly from disk/network.
+        Parameters
+        ----------
+        documents : iterable of iterables
+            The `documents` iterable can be simply a list of TaggedDocument elements, but for larger corpora,
+            consider an iterable that streams the documents directly from disk/network.
+            If you don't supply `documents`, the model is left uninitialized -- use if
+            you plan to initialize it in some other way.
 
-        If you don't supply `documents`, the model is left uninitialized -- use if
-        you plan to initialize it in some other way.
+        dm : int {1,0}
+            Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
+            Otherwise, `distributed bag of words` (PV-DBOW) is employed.
 
-        `dm` defines the training algorithm. By default (`dm=1`), 'distributed memory' (PV-DM) is used.
-        Otherwise, `distributed bag of words` (PV-DBOW) is employed.
+        size : int
+            Dimensionality of the feature vectors.
+        window : int
+            The maximum distance between the current and predicted word within a sentence.
+        alpha : float
+            The initial learning rate.
+        min_alpha : float
+            Learning rate will linearly drop to `min_alpha` as training progresses.
+        seed : int
+            Seed for the random number generator. Initial vectors for each word are seeded with a hash of
+            the concatenation of word + `str(seed)`. Note that for a fully deterministically-reproducible run,
+            you must also limit the model to a single worker thread (`workers=1`), to eliminate ordering jitter
+            from OS thread scheduling. (In Python 3, reproducibility between interpreter launches also requires
+            use of the `PYTHONHASHSEED` environment variable to control hash randomization).
+        min_count : int
+            Ignores all words with total frequency lower than this.
+        max_vocab_size : int
+            Limits the RAM during vocabulary building; if there are more unique
+            words than this, then prune the infrequent ones. Every 10 million word types need about 1GB of RAM.
+            Set to `None` for no limit.
+        sample : float
+            The threshold for configuring which higher-frequency words are randomly downsampled,
+            useful range is (0, 1e-5).
+        workers : int
+            Use these many worker threads to train the model (=faster training with multicore machines).
+        iter : int
+            Number of iterations (epochs) over the corpus.
+        hs : int {1,0}
+            If 1, hierarchical softmax will be used for model training.
+            If set to 0, and `negative` is non-zero, negative sampling will be used.
+        negative : int
+            If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
+            should be drawn (usually between 5-20).
+            If set to 0, no negative sampling is used.
+        dm_mean : int {1,0}
+            If 0 , use the sum of the context word vectors. If 1, use the mean.
+            Only applies when `dm` is used in non-concatenative mode.
+        dm_concat : int {1,0}
+            If 1, use concatenation of context vectors rather than sum/average;
+            Note concatenation results in a much-larger model, as the input
+            is no longer the size of one (sampled or arithmetically combined) word vector, but the
+            size of the tag(s) and all words in the context strung together.
+        dm_tag_count : int
+            Expected constant number of document tags per document, when using
+            dm_concat mode; default is 1.
+        dbow_words : int {1,0}
+            If set to 1 trains word-vectors (in skip-gram fashion) simultaneous with DBOW
+            doc-vector training; If 0, only trains doc-vectors (faster).
+        trim_rule : function
+            Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
+            be trimmed away, or handled using the default (discard if word count < min_count).
+            Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
+            or a callable that accepts parameters (word, count, min_count) and returns either
+            :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+            of the model.
+        callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
+            List of callbacks that need to be executed/run at specific stages during training.
 
-        `size` is the dimensionality of the feature vectors.
-
-        `window` is the maximum distance between the predicted word and context words used for prediction
-        within a document.
-
-        `alpha` is the initial learning rate (will linearly drop to `min_alpha` as training progresses).
-
-        `seed` = for the random number generator.
-        Note that for a fully deterministically-reproducible run, you must also limit the model to
-        a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
-        3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
-        environment variable to control hash randomization.)
-
-        `min_count` = ignore all words with total frequency lower than this.
-
-        `max_vocab_size` = limit RAM during vocabulary building; if there are more unique
-        words than this, then prune the infrequent ones. Every 10 million word types
-        need about 1GB of RAM. Set to `None` for no limit (default).
-
-        `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-                default is 1e-3, values of 1e-5 (or lower) may also be useful, set to 0.0 to disable downsampling.
-
-        `workers` = use this many worker threads to train the model (=faster training with multicore machines).
-
-        `iter` = number of iterations (epochs) over the corpus. The default inherited from Word2Vec is 5,
-        but values of 10 or 20 are common in published 'Paragraph Vector' experiments.
-
-        `hs` = if 1, hierarchical softmax will be used for model training.
-        If set to 0 (default), and `negative` is non-zero, negative sampling will be used.
-
-        `negative` = if > 0, negative sampling will be used, the int for negative
-        specifies how many "noise words" should be drawn (usually between 5-20).
-        Default is 5. If set to 0, no negative samping is used.
-
-        `dm_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
-        Only applies when dm is used in non-concatenative mode.
-
-        `dm_concat` = if 1, use concatenation of context vectors rather than sum/average;
-        default is 0 (off). Note concatenation results in a much-larger model, as the input
-        is no longer the size of one (sampled or arithmetically combined) word vector, but the
-        size of the tag(s) and all words in the context strung together.
-
-        `dm_tag_count` = expected constant number of document tags per document, when using
-        dm_concat mode; default is 1.
-
-        `dbow_words` if set to 1 trains word-vectors (in skip-gram fashion) simultaneous with DBOW
-        doc-vector training; default is 0 (faster training of doc-vectors only).
-
-        `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
-        in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
-        Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
-        returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
-        Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
-        of the model.
         """
 
         if 'sentences' in kwargs:
@@ -232,14 +238,18 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             self.build_vocab(documents, trim_rule=trim_rule)
             self.train(
                 documents, total_examples=self.corpus_count, epochs=self.epochs,
-                start_alpha=self.alpha, end_alpha=self.min_alpha)
+                start_alpha=self.alpha, end_alpha=self.min_alpha, callbacks=callbacks)
 
     @property
     def dm(self):
+        """int {1,0} : `dm=1` indicates 'distributed memory' (PV-DM) else
+        `distributed bag of words` (PV-DBOW) is used."""
         return not self.sg  # opposite of SG
 
     @property
     def dbow(self):
+        """int {1,0} : `dbow=1` indicates `distributed bag of words` (PV-DBOW) else
+        'distributed memory' (PV-DM) is used."""
         return self.sg  # same as SG
 
     def _set_train_params(self, **kwargs):
@@ -310,9 +320,21 @@ class Doc2Vec(BaseWordEmbedddingsModel):
 
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
-              word_count=0, queue_factor=2, report_delay=1.0):
-        # TODO: complete docstring
-        """
+              word_count=0, queue_factor=2, report_delay=1.0, callbacks=()):
+        """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
+        The `documents` iterable can be simply a list of TaggedDocument elements.
+
+        To support linear learning-rate decay from (initial) alpha to min_alpha, and accurate
+        progress-percentage logging, either total_examples (count of sentences) or total_words (count of
+        raw words in sentences) **MUST** be provided (if the corpus is the same as was provided to
+        :meth:`~gensim.models.word2vec.Word2Vec.build_vocab()`, the count of examples in that corpus
+        will be available in the model's :attr:`corpus_count` property).
+
+        To avoid common mistakes around the model's ability to do multiple training passes itself, an
+        explicit `epochs` argument **MUST** be provided. In the common and recommended case,
+        where :meth:`~gensim.models.word2vec.Word2Vec.train()` is only called once,
+        the model's cached `iter` value should be supplied as `epochs` value.
+
         Parameters
         ----------
         sentences : iterable of iterables
@@ -337,11 +359,13 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             Multiplier for size of queue (number of workers * queue_factor).
         report_delay : float
             Seconds to wait before reporting progress.
+        callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
+            List of callbacks that need to be executed/run at specific stages during training.
         """
         super(Doc2Vec, self).train(
             sentences, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
-            queue_factor=queue_factor, report_delay=report_delay)
+            queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
         self._set_keyedvectors()
 
     def _raw_word_count(self, job):
@@ -356,7 +380,22 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         """
         Infer a vector for given post-bulk training document.
 
-        Document should be a list of (word) tokens.
+        Parameters
+        ----------
+        doc_words : :obj: `list` of :obj: `str`
+            Document should be a list of (word) tokens.
+        alpha : float
+            The initial learning rate.
+        min_alpha : float
+            Learning rate will linearly drop to `min_alpha` as training progresses.
+        steps : int
+            Number of times to train the new document.
+
+        Returns
+        -------
+        :obj: `numpy.ndarray`
+            Returns the inferred vector for the new document.
+
         """
         doctag_vectors, doctag_locks = self.trainables._get_doctag_trainables(doc_words)
         doctag_indexes = [0]
@@ -424,11 +463,20 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         return '%s(%s)' % (self.__class__.__name__, ','.join(segments))
 
     def delete_temporary_training_data(self, keep_doctags_vectors=True, keep_inference=True):
-        """
-        Discard parameters that are used in training and score. Use if you're sure you're done training a model.
-        Set `keep_doctags_vectors` to False if you don't want to save doctags vectors,
-        in this case you can't to use docvecs's most_similar, similarity etc. methods.
-        Set `keep_inference` to False if you don't want to store parameters that is used for infer_vector method
+        """Discard parameters that are used in training and score. Use if you're sure you're done training a model.
+
+        Parameters
+        ----------
+        keep_doctags_vectors : bool
+            Set `keep_doctags_vectors` to False if you don't want to save doctags vectors,
+            in this case you can't to use docvecs's most_similar, similarity etc. methods.
+        keep_inference : bool
+            Set `keep_inference` to False if you don't want to store parameters that is used for infer_vector method
+
+        Returns
+        -------
+        None
+
         """
         if not keep_inference:
             if hasattr(self.trainables, 'syn1'):
@@ -445,18 +493,28 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         self._set_keyedvectors()
 
     def save_word2vec_format(self, fname, doctag_vec=False, word_vec=True, prefix='*dt_', fvocab=None, binary=False):
-        """
-        Store the input-hidden weight matrix.
+        """Store the input-hidden weight matrix in the same format used by the original
+        C word2vec-tool, for compatibility.
 
-         `fname` is the file used to save the vectors in
-         `doctag_vec` is an optional boolean indicating whether to store document vectors
-         `word_vec` is an optional boolean indicating whether to store word vectors
-         (if both doctag_vec and word_vec are True, then both vectors are stored in the same file)
-         `prefix` to uniquely identify doctags from word vocab, and avoid collision
-         in case of repeated string in doctag and word vocab
-         `fvocab` is an optional file used to save the vocabulary
-         `binary` is an optional boolean indicating whether the data is to be saved
-         in binary word2vec format (default: False)
+        Parameters
+        ----------
+        fname : str
+            The file path used to save the vectors in.
+        doctag_vec : bool
+            Indicates whether to store document vectors.
+        word_vec : bool
+            Indicates whether to store word vectors.
+        prefix : str
+            Uniquely identifies doctags from word vocab, and avoids collision
+            in case of repeated string in doctag and word vocab.
+        fvocab : str
+            Optional file path used to save the vocabulary
+        binary : bool
+            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+
+        Returns
+        -------
+        None
 
         """
         total_vec = len(self.wv.vocab) + len(self.docvecs)
@@ -610,7 +668,6 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         self.count = 0
         self.vectors_docs = []
         self.mapfile_path = None
-        self.vectors_docs = []
 
     @property
     def index2entity(self):
@@ -646,6 +703,20 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         return self.count
 
     def save(self, *args, **kwargs):
+        """Saves the keyedvectors. This saved model can be loaded again using
+        :func:`~gensim.models.doc2vec.Doc2VecKeyedVectors.load` which supports
+        operations on trained document vectors like `most_simialr`.
+
+        Parameters
+        ----------
+        fname : str
+            Path to the file.
+
+        Returns
+        -------
+        None
+
+        """
         # don't bother storing the cached normalized vectors
         kwargs['ignore'] = kwargs.get('ignore', ['vectors_docs_norm'])
         super(Doc2VecKeyedVectors, self).save(*args, **kwargs)
@@ -689,8 +760,29 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         by the corresponding tags.
 
         The 'clip_start' and 'clip_end' allow limiting results to a particular contiguous
-        range of the underlying doctag_syn0norm vectors. (This may be useful if the ordering
+        range of the underlying `vectors_docs_norm` vectors. (This may be useful if the ordering
         there was chosen to be significant, such as more popular tag IDs in lower indexes.)
+
+        Parameters
+        ----------
+        positive : :obj: `list`
+            List of Docs specifed as vectors, integer indexes of trained docvecs or string tags
+            that contribute positively.
+        negative : :obj: `list`
+            List of Docs specifed as vectors, integer indexes of trained docvecs or string tags
+            that contribute negatively.
+        topn : int
+            Number of top-N similar docvecs to return.
+        clip_start : int
+            Start clipping index.
+        clip_end : int
+            End clipping index.
+
+        Returns
+        -------
+        :obj: `list` of :obj: `tuple`
+            Returns a list of tuples (doc, similarity)
+
         """
         if positive is None:
             positive = []
@@ -750,6 +842,16 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
         (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
 
+        Parameters
+        ----------
+        docs : :obj: `list` of (str or int)
+            List of seen documents specified by their corresponding string tags or integer indices.
+
+        Returns
+        -------
+        str or int
+            The document further away from the mean of all the documents.
+
         """
         self.init_sims()
 
@@ -767,6 +869,18 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         Compute cosine similarity between two docvecs in the trained set, specified by int index or
         string tag. (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
 
+        Parameters
+        ----------
+        d1 : int or str
+            Indicate the first document by it's string tag or integer index.
+        d2 : int or str
+            Indicate the second document by it's string tag or integer index.
+
+        Returns
+        -------
+        float
+            The cosine similarity between the vectors of the two documents.
+
         """
         return dot(matutils.unitvec(self[d1]), matutils.unitvec(self[d2]))
 
@@ -775,6 +889,18 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         Compute cosine similarity between two sets of docvecs from the trained set, specified by int
         index or string tag. (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
 
+        Parameters
+        ----------
+        ds1 : :obj: `list` of (str or int)
+            Specify the first set of documents as a list of their integer indices or string tags.
+        ds2 : :obj: `list` of (str or int)
+            Specify the second set of documents as a list of their integer indices or string tags.
+
+        Returns
+        -------
+        float
+            The cosine similarity between the means of the documents in each of the two sets.
+
         """
         v1 = [self[doc] for doc in ds1]
         v2 = [self[doc] for doc in ds2]
@@ -782,6 +908,9 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
     # required by base keyed vectors class
     def distances(self, d1, other_docs=()):
+        """Compute distances from given document (string tag or int index) to all documents in `other_docs`.
+        If `other_docs` is empty, return distance between `d1` and all documents seen during training.
+        """
         input_vector = self[d1]
         if not other_docs:
             other_vectors = self.vectors_docs
@@ -793,7 +922,26 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         """
         Compute cosine similarity between two post-bulk out of training documents.
 
-        Document should be a list of (word) tokens.
+        Parameters
+        ----------
+        model : :obj: `~gensim.models.doc2vec.Doc2Vec`
+            An instance of a trained `Doc2Vec` model.
+        doc_words1 : :obj: `list` of :obj: `str`
+            The first document. Document should be a list of (word) tokens.
+        doc_words2 : :obj: `list` of :obj: `str`
+            The second document. Document should be a list of (word) tokens.
+        alpha : float
+            The initial learning rate.
+        min_alpha : float
+            Learning rate will linearly drop to `min_alpha` as training progresses.
+        steps : int
+            Number of times to train the new document.
+
+        Returns
+        -------
+        float
+            The cosine similarity between the unseen documents.
+
         """
         d1 = model.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
         d2 = model.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
@@ -801,8 +949,29 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
     def save_word2vec_format(self, fname, prefix='*dt_', fvocab=None,
                              total_vec=None, binary=False, write_first_line=True):
-        """
-        Store the input-hidden weight matrix for document vectors.
+        """Store the input-hidden weight matrix in the same format used by the original
+        C word2vec-tool, for compatibility.
+
+        Parameters
+        ----------
+        fname : str
+            The file path used to save the vectors in.
+        prefix : str
+            Uniquely identifies doctags from word vocab, and avoids collision
+            in case of repeated string in doctag and word vocab.
+        fvocab : str
+            Optional file path used to save the vocabulary
+        binary : bool
+            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+        total_vec :  int
+            Optional parameter to explicitly specify total no. of vectors
+            (in case word vectors are appended with document vectors afterwards)
+        write_first_line : bool
+            Whether to print the first line in the file. Useful when saving doc-vectors after word-vectors.
+
+        Returns
+        -------
+        None
 
         """
         total_vec = total_vec or len(self)

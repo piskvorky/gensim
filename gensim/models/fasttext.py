@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
 # Authors: Chinmaya Pancholi <chinmayapancholi13@gmail.com>, Shiva Manne <s.manne@rare-technologies.com>
 # Copyright (C) 2017 RaRe Technologies s.r.o.
 
@@ -49,13 +50,29 @@ try:
     logger.debug('Fast version of Fasttext is being used')
 
 except ImportError:
-    # failed... fall back to plain numpy (20-80x slower training than the above)
     raise RuntimeError("Support for Python/Numpy implementations has been continued.")
 
 FASTTEXT_FILEFORMAT_MAGIC = 793712314
 
 
 def compute_ngrams(word, min_n, max_n):
+    """Returns the list of all possible ngrams for a given word.
+
+    Parameters
+    ----------
+    word : str
+        The word whose ngrams need to be computed
+    min_n : int
+        mininum character length of the ngrams
+    max_n : int
+        maximum character length of the ngrams
+
+    Returns
+    -------
+    :obj:`list` of :obj:`str`
+        List of chracter ngrams
+
+    """
     BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
     extended_word = BOW + word + EOW
     ngrams = []
@@ -68,7 +85,17 @@ def compute_ngrams(word, min_n, max_n):
 def ft_hash(string):
     """
     Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-    used in fastText.
+    used in [1]_.
+
+    Parameter
+    ---------
+    string : str
+        The string whose hash needs to be calculated
+
+    Returns
+    -------
+    int
+        The hash of the string
 
     """
     # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
@@ -171,6 +198,8 @@ class FastText(BaseWordEmbedddingsModel):
         bucket : int
             Character ngrams are hashed into a fixed number of buckets, in order to limit the
             memory usage of the model. This option specifies the number of buckets used by the model.
+        callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
+            List of callbacks that need to be executed/run at specific stages during training.
 
         Examples
         --------
@@ -227,7 +256,7 @@ class FastText(BaseWordEmbedddingsModel):
             of the model.
         progress_per : int
             Indicates how many words to process before showing/updating the progress.
-        update: bool
+        update : bool
             If true, the new words in `sentences` will be added to model's vocab.
 
         Example
@@ -282,13 +311,9 @@ class FastText(BaseWordEmbedddingsModel):
         self.vocabulary.ngrams_word = self.wv.__dict__.get('ngrams_word', None)
 
     def _set_train_params(self, **kwargs):
-        # implement using property -- create alias
-        # self.trainables.alpha = self.alpha
-        # self.trainables.min_alpha = self.min_alpha
-        return
+        pass
 
     def _clear_post_train(self):
-        """Resets certain properties of the model, post training. eg. `kv.syn0norm`"""
         self.wv.vectors_norm = None
         self.wv.vectors_vocab_norm = None
         self.wv.vectors_ngrams_norm = None
@@ -326,9 +351,9 @@ class FastText(BaseWordEmbedddingsModel):
 
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
-              word_count=0, queue_factor=2, report_delay=1.0, **kwargs):
+              word_count=0, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
-        For FastText, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
+        For FastText, each sentence must be a list of unicode strings.
 
         To support linear learning-rate decay from (initial) alpha to min_alpha, and accurate
         progress-percentage logging, either total_examples (count of sentences) or total_words (count of
@@ -365,6 +390,8 @@ class FastText(BaseWordEmbedddingsModel):
             Multiplier for size of queue (number of workers * queue_factor).
         report_delay : float
             Seconds to wait before reporting progress.
+        callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
+            List of callbacks that need to be executed/run at specific stages during training.
 
         Examples
         --------
@@ -380,7 +407,7 @@ class FastText(BaseWordEmbedddingsModel):
         super(FastText, self).train(
             sentences, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
-            queue_factor=queue_factor, report_delay=report_delay)
+            queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
         self.trainables.get_vocab_word_vecs(vocabulary=self.vocabulary)
         self._set_keyedvectors()
 
@@ -425,11 +452,20 @@ class FastText(BaseWordEmbedddingsModel):
         Note that due to limitations in the FastText API, you cannot continue training
         with a model loaded this way, though you can query for word similarity etc.
 
-        `model_file` is the path to the FastText output files.
-        FastText outputs two model files - `/path/to/model.vec` and `/path/to/model.bin`
+        Parameters
+        ----------
+        model_file : str
+            Path to the FastText output files.
+            FastText outputs two model files - `/path/to/model.vec` and `/path/to/model.bin`
+            Expected value for this example: `/path/to/model` or `/path/to/model.bin`,
+            as gensim requires only `.bin` file to load entire fastText model.
+        encoding : str
+            Specifies the encoding.
 
-        Expected value for this example: `/path/to/model` or `/path/to/model.bin`,
-        as gensim requires only `.bin` file to load entire fastText model.
+        Returns
+        -------
+        :obj: `~gensim.models.fasttext.FastText`
+            Returns the loaded model as an instance of :class: `~gensim.models.fasttext.FastText`.
 
         """
         model = cls()
@@ -555,6 +591,18 @@ class FastText(BaseWordEmbedddingsModel):
 
     @classmethod
     def load(cls, *args, **kwargs):
+        """Loads a previously saved `FastText` model. Also see `save()`.
+
+        Parameters
+        ----------
+        fname : str
+            Path to the saved file.
+
+        Returns
+        -------
+        :obj: `~gensim.models.fasttext.FastText`
+            Returns the loaded model as an instance of :class: `~gensim.models.fasttext.FastText`.
+        """
         model = super(FastText, cls).load(*args, **kwargs)
         if not hasattr(model.trainables, 'vectors_vocab_lockf') and hasattr(model.trainables, 'vectors_vocab'):
             model.trainables.vectors_vocab_lockf = ones(len(model.trainables.vectors), dtype=REAL)
@@ -707,7 +755,7 @@ class FastTextTrainables(Word2VecTrainables):
             ).astype(REAL)
 
     def get_vocab_word_vecs(self, vocabulary=None):
-        """Calculate vectors for words in vocabulary and stores them in `wv.syn0`."""
+        """Calculate vectors for words in vocabulary and stores them in `vectors`."""
         for w, v in vocabulary.vocab.items():
             word_vec = np.copy(self.vectors_vocab[v.index])
             ngrams = vocabulary.ngrams_word[w]
@@ -717,7 +765,7 @@ class FastTextTrainables(Word2VecTrainables):
             word_vec /= (len(ngrams) + 1)
             self.vectors[v.index] = word_vec
 
-    def init_ngrams_post_load(self, file_name, vocabulary=None):  # put in trainables
+    def init_ngrams_post_load(self, file_name, vocabulary=None):
         """
         Computes ngrams of all words present in vocabulary and stores vectors for only those ngrams.
         Vectors for other ngrams are initialized with a random uniform distribution in FastText. These
@@ -732,7 +780,6 @@ class FastTextTrainables(Word2VecTrainables):
             self.vectors[vocab.index] += np.array(self.vectors_ngrams[vocab.index])
 
         all_ngrams = set(all_ngrams)
-        # print all_ngrams
         self.num_ngram_vectors = len(all_ngrams)
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
@@ -795,6 +842,20 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             return any(ng in self.ngrams for ng in char_ngrams)
 
     def save(self, *args, **kwargs):
+        """Saves the keyedvectors. This saved model can be loaded again using
+        :func:`~gensim.models.fasttext.FastTextKeyedVectors.load` which supports
+        getting vectors for out-of-vocabulary words.
+
+        Parameters
+        ----------
+        fname : str
+            Path to the file.
+
+        Returns
+        -------
+        None
+
+        """
         # don't bother storing the cached normalized vectors
         kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm'])
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
@@ -805,11 +866,6 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         Returns the word's representations in vector space, as a 1D numpy array.
 
         If `use_norm` is True, returns the normalized word vector.
-
-        Example::
-
-          >>> trained_model['office']
-          array([ -1.40128313e-02, ...])
 
         """
         if word in self.vocab:
@@ -852,16 +908,24 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
                     (self.vectors_ngrams / sqrt((self.vectors_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
-        """
-        Store the input-hidden weight matrix in the same format used by the original
+        """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 
-         `fname` is the file used to save the vectors in
-         `fvocab` is an optional file used to save the vocabulary
-         `binary` is an optional boolean indicating whether the data is to be saved
-         in binary word2vec format (default: False)
-         `total_vec` is an optional parameter to explicitly specify total no. of vectors
-         (in case word vectors are appended with document vectors afterwards)
+        Parameters
+        ----------
+        fname : str
+            The file path used to save the vectors in.
+        fvocab : str
+            Optional file path used to save the vocabulary.
+        binary : bool
+            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+        total_vec :  int
+            Optional parameter to explicitly specify total no. of vectors
+            (in case word vectors are appended with document vectors afterwards).
+
+        Returns
+        -------
+        None
 
         """
         save_word2vec_format(fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)

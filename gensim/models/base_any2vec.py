@@ -230,9 +230,11 @@ class BaseAny2VecModel(utils.SaveLoad):
         return trained_word_count
 
     def train(self, data_iterable, epochs=None, total_examples=None,
-              total_words=None, queue_factor=2, report_delay=1.0, **kwargs):
+              total_words=None, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
         """Handle multi-worker training."""
         self._set_train_params(**kwargs)
+        if len(callbacks):
+            self.callbacks = callbacks
         self.epochs = epochs
         self._check_training_sanity(
             epochs=epochs,
@@ -445,8 +447,30 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         return self.epochs
 
     def build_vocab(self, sentences, update=False, progress_per=10000, **kwargs):
-        """Scan through all the data and create/update vocabulary.
-        Should also initialize/reset/update vectors for new vocab entities.
+        """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
+        Each sentence must be a list of unicode strings.
+
+        Parameters
+        ----------
+        sentences : iterable of iterables
+            The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+        keep_raw_vocab : bool
+            If not true, delete the raw vocabulary after the scaling is done and free up RAM.
+        trim_rule : function
+            Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
+            be trimmed away, or handled using the default (discard if word count < min_count).
+            Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
+            or a callable that accepts parameters (word, count, min_count) and returns either
+            :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+            of the model.
+        progress_per : int
+            Indicates how many words to process before showing/updating the progress.
+        update : bool
+            If true, the new words in `sentences` will be added to model's vocab.
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(sentences, progress_per=progress_per, **kwargs)
         self.corpus_count = corpus_count
@@ -456,16 +480,15 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
 
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
-              queue_factor=2, report_delay=1.0, compute_loss=False):
+              queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
         self.alpha = start_alpha or self.alpha
         self.min_alpha = end_alpha or self.min_alpha
-        self.epochs = epochs or self.epochs
         self.compute_loss = compute_loss
         self.running_training_loss = 0.0
         return super(BaseWordEmbedddingsModel, self).train(
             sentences, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
-            queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss)
+            queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
     def _get_job_params(self, cur_epoch):
         """Return the paramter required for each batch."""
