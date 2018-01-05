@@ -134,11 +134,14 @@ try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
+    logger.info("Using FAST VERSION %s", FAST_VERSION)
 
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     MAX_WORDS_IN_BATCH = 10000
-    raise RuntimeError("Support for Python/Numpy implementations has been continued.")
+    raise RuntimeError(
+        "Support for Python/Numpy implementations has been discontinued."
+        "Please make sure you have installed Cython and BLAS.")
 
 
 class Word2Vec(BaseWordEmbedddingsModel):

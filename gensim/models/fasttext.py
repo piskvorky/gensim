@@ -47,10 +47,12 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.fasttext_inner import train_batch_sg, train_batch_cbow
     from gensim.models.fasttext_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
-    logger.debug('Fast version of Fasttext is being used')
+    logger.info("Using FAST VERSION %s", FAST_VERSION)
 
 except ImportError:
-    raise RuntimeError("Support for Python/Numpy implementations has been continued.")
+    raise RuntimeError(
+        "Support for Python/Numpy implementations has been discontinued."
+        "Please make sure you have installed Cython and BLAS.")
 
 FASTTEXT_FILEFORMAT_MAGIC = 793712314
 

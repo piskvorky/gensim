@@ -68,16 +68,18 @@ from six import string_types, integer_types
 from gensim.models.base_any2vec import BaseWordEmbedddingsModel, BaseKeyedVectors
 from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors
 from types import GeneratorType
-from numpy.linalg import norm
 
 logger = logging.getLogger(__name__)
 
 try:
     from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
     from gensim.models.word2vec_inner import FAST_VERSION  # blas-adaptation shared from word2vec
+    logger.info("Using FAST VERSION %s", FAST_VERSION)
 
 except ImportError:
-    raise RuntimeError("Support for Python/Numpy implementations has been continued.")
+    raise RuntimeError(
+        "Support for Python/Numpy implementations has been discontinued."
+        "Please make sure you have installed Cython and BLAS.")
 
 
 class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
@@ -286,12 +288,12 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         """Reuse shareable structures from other_model."""
         self.vocabulary.vocab = other_model.vocabulary.vocab
         self.vocabulary.index2word = other_model.vocabulary.index2word
-        self.trainables.cum_table = other_model.trainables.cum_table
+        self.vocabulary.cum_table = other_model.vocabulary.cum_table
         self.corpus_count = other_model.corpus_count
         self.vocabulary.count = other_model.vocabulary.count
         self.vocabulary.doctags = other_model.vocabulary.doctags
         self.vocabulary.offset2doctag = other_model.vocabulary.offset2doctag
-        self.trainables.reset_weights(vocabulary=self.vocabulary)
+        self.trainables.reset_weights(self.hs, self.negative, vocabulary=self.vocabulary)
         self._set_keyedvectors()
 
     def _do_train_job(self, job, alpha, inits):
