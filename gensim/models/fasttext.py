@@ -134,7 +134,7 @@ class FastText(BaseWordEmbedddingsModel):
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
         sg : int {1, 0}
-            Defines the training algorithm. If 1, CBOW is used, otherwise, skip-gram is employed.
+            Defines the training algorithm. If 1, skip-gram is used, otherwise, CBOW is employed.
         size : int
             Dimensionality of the feature vectors.
         window : int
