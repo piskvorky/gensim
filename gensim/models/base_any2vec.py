@@ -195,9 +195,9 @@ class BaseAny2VecModel(utils.SaveLoad):
         elapsed = default_timer() - start
         self._log_epoch_end(
             cur_epoch, example_count, total_examples, raw_word_count, total_words,
-            trained_word_count, elapsed, job_tally)
+            trained_word_count, elapsed)
         self.total_train_time += elapsed
-        return trained_word_count, raw_word_count
+        return trained_word_count, raw_word_count, job_tally
 
     def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None,
                      total_words=None, queue_factor=2, report_delay=1.0):
@@ -221,13 +221,13 @@ class BaseAny2VecModel(utils.SaveLoad):
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
-        trained_word_count = self._log_epoch_progress(
+        trained_word_count, raw_word_count, job_tally = self._log_epoch_progress(
             progress_queue, job_queue, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
             report_delay=report_delay)
 
         self._set_keyedvectors()
 
-        return trained_word_count
+        return trained_word_count, raw_word_count, job_tally
 
     def train(self, data_iterable, epochs=None, total_examples=None,
               total_words=None, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
@@ -247,23 +247,25 @@ class BaseAny2VecModel(utils.SaveLoad):
         trained_word_count = 0
         raw_word_count = 0
         start = default_timer() - 0.00001
+        job_tally = 0
 
         for cur_epoch in range(self.epochs):
             for callback in self.callbacks:
                 callback.on_epoch_begin(self)
 
-            trained_word_count_epoch, raw_word_count_epoch = self._train_epoch(data_iterable, cur_epoch=cur_epoch,
-                total_examples=total_examples, total_words=total_words, queue_factor=queue_factor,
+            trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(data_iterable,
+                cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words, queue_factor=queue_factor,
                 report_delay=report_delay)
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
+            job_tally += job_tally_epoch
 
             for callback in self.callbacks:
                 callback.on_epoch_end(self)
 
         # Log overall time
         total_elapsed = default_timer() - start
-        self._log_train_end(raw_word_count, trained_word_count, total_elapsed)
+        self._log_train_end(raw_word_count, trained_word_count, total_elapsed, job_tally)
 
         self.train_count += 1  # number of times train() has been called
         self._clear_post_train()
@@ -446,6 +448,11 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def iter(self):
         return self.epochs
 
+    def __str__(self):
+        return "%s(vocab=%s, size=%s, alpha=%s)" % (
+            self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
+        )
+
     def build_vocab(self, sentences, update=False, progress_per=10000, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
@@ -541,6 +548,12 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
                 )
             if epochs is None:
                 raise ValueError("You must specify an explict epochs count. The usual value is epochs=model.epochs.")
+            logger.info(
+                "training model with %i workers on %i vocabulary and %i features, "
+                "using sg=%s hs=%s sample=%s negative=%s window=%s",
+                self.workers, len(self.wv.vocab), self.trainables.layer1_size, self.sg,
+                self.hs, self.vocabulary.sample, self.negative, self.window
+            )
 
     @classmethod
     def load(cls, *args, **kwargs):
@@ -594,42 +607,42 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
             # examples-based progress %
             logger.info(
                 "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
-                cur_epoch, 100.0 * example_count / total_examples, trained_word_count / elapsed,
+                cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
                 utils.qsize(job_queue), utils.qsize(progress_queue)
             )
         else:
             # words-based progress %
             logger.info(
                 "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
-                cur_epoch, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
+                cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
                 utils.qsize(job_queue), utils.qsize(progress_queue)
             )
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
-                       trained_word_count, elapsed, job_tally):
+                       trained_word_count, elapsed):
         logger.info(
             "EPOCH - %i : training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
-            cur_epoch, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
+            cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
+        )
+
+        # check that the input corpus hasn't changed during iteration
+        if total_examples and total_examples != example_count:
+            logger.warning(
+                "EPOCH - %i : supplied example count (%i) did not equal expected count (%i)", cur_epoch + 1,
+                example_count, total_examples
+            )
+        if total_words and total_words != raw_word_count:
+            logger.warning(
+                "EPOCH - %i : supplied raw word count (%i) did not equal expected count (%i)", cur_epoch + 1,
+                raw_word_count, total_words
+            )
+
+    def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed, job_tally):
+        logger.info(
+            "training on a %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
+            raw_word_count, trained_word_count, total_elapsed, trained_word_count / total_elapsed
         )
         if job_tally < 10 * self.workers:
             logger.warning(
                 "under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay"
             )
-
-        # check that the input corpus hasn't changed during iteration
-        if total_examples and total_examples != example_count:
-            logger.warning(
-                "EPOCH - %i : supplied example count (%i) did not equal expected count (%i)", cur_epoch,
-                example_count, total_examples
-            )
-        if total_words and total_words != raw_word_count:
-            logger.warning(
-                "EPOCH - %i : supplied raw word count (%i) did not equal expected count (%i)", cur_epoch,
-                raw_word_count, total_words
-            )
-
-    def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed):
-        logger.info(
-            "training on a %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
-            raw_word_count, trained_word_count, total_elapsed, trained_word_count / total_elapsed
-        )
