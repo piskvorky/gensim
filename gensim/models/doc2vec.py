@@ -420,6 +420,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
                     learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
                 )
             alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
+        self._set_keyedvectors()
 
         return doctag_vectors[0]
 
@@ -705,7 +706,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
     def save(self, *args, **kwargs):
         """Saves the keyedvectors. This saved model can be loaded again using
         :func:`~gensim.models.doc2vec.Doc2VecKeyedVectors.load` which supports
-        operations on trained document vectors like `most_simialr`.
+        operations on trained document vectors like `most_similar`.
 
         Parameters
         ----------
@@ -810,7 +811,6 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         all_docs, mean = set(), []
         for doc, weight in positive + negative:
             if isinstance(doc, ndarray):
-                doc /= norm(doc)
                 mean.append(weight * doc)
             elif doc in self.doctags or doc < self.count:
                 mean.append(weight * self.vectors_docs_norm[_int_index(doc, self.doctags, self.max_rawint)])
