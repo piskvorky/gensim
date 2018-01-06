@@ -16,26 +16,9 @@ from gensim import matutils
 from scipy.sparse import csr_matrix
 import numpy as np
 import math
-import os
-from gensim.corpora import mmcorpus, Dictionary
+from gensim.corpora.mmcorpus import MmCorpus
 from gensim.models import ldamodel
-
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
-
+from gensim.test.utils import datapath, common_dictionary, common_corpus
 
 
 class TestIsBow(unittest.TestCase):
@@ -64,7 +47,7 @@ class TestIsBow(unittest.TestCase):
         potentialbow = []
         result = matutils.isbow(potentialbow)
         expected = True
-        self.assertEqual(expected, result)     
+        self.assertEqual(expected, result)
 
         # checking corpus; should return false
         potentialbow = [[(2, 1), (3, 1), (4, 1), (5, 1), (1, 1), (7, 1)]]
@@ -85,16 +68,17 @@ class TestIsBow(unittest.TestCase):
         self.assertEqual(expected, result)
 
         # checking np array format bag of words
-        potentialbow = np.array([[1, 0.4], [0, 0.2],[2, 0.2]])
+        potentialbow = np.array([[1, 0.4], [0, 0.2], [2, 0.2]])
         result = matutils.isbow(potentialbow)
         expected = True
         self.assertEqual(expected, result)
 
+
 class TestHellinger(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.corpus = MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamodel.LdaModel
-        self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
+        self.model = self.class_(common_corpus, id2word=common_dictionary, num_topics=2, passes=100)
 
     def test_inputs(self):
 
@@ -128,7 +112,6 @@ class TestHellinger(unittest.TestCase):
         expected = 0.185241936534
         self.assertAlmostEqual(expected, result)
 
-
         # checking ndarray, csr_matrix as inputs
         vec_1 = np.array([[1, 0.3], [0, 0.4], [2, 0.3]])
         vec_2 = csr_matrix([[1, 0.4], [0, 0.2], [2, 0.2]])
@@ -143,20 +126,21 @@ class TestHellinger(unittest.TestCase):
         expected = 0.309742984153
         self.assertAlmostEqual(expected, result)
 
-         # testing LDA distribution vectors
+        # testing LDA distribution vectors
         np.random.seed(0)
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100)
+        model = self.class_(self.corpus, id2word=common_dictionary, num_topics=2, passes=100)
         lda_vec1 = model[[(1, 2), (2, 3)]]
         lda_vec2 = model[[(2, 2), (1, 3)]]
         result = matutils.hellinger(lda_vec1, lda_vec2)
         expected = 1.0406845281146034e-06
         self.assertAlmostEqual(expected, result)
 
+
 class TestKL(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.corpus = MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamodel.LdaModel
-        self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
+        self.model = self.class_(common_corpus, id2word=common_dictionary, num_topics=2, passes=100)
 
     def test_inputs(self):
 
@@ -212,12 +196,13 @@ class TestKL(unittest.TestCase):
 
         # testing LDA distribution vectors
         np.random.seed(0)
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100)
+        model = self.class_(self.corpus, id2word=common_dictionary, num_topics=2, passes=100)
         lda_vec1 = model[[(1, 2), (2, 3)]]
         lda_vec2 = model[[(2, 2), (1, 3)]]
         result = matutils.kullback_leibler(lda_vec1, lda_vec2)
         expected = 4.283407e-12
         self.assertAlmostEqual(expected, result, places=5)
+
 
 class TestJaccard(unittest.TestCase):
     def test_inputs(self):
@@ -225,7 +210,7 @@ class TestJaccard(unittest.TestCase):
         # all empty inputs will give a divide by zero exception
         vec_1 = []
         vec_2 = []
-        self.assertRaises(ZeroDivisionError, matutils.jaccard , vec_1, vec_2)
+        self.assertRaises(ZeroDivisionError, matutils.jaccard, vec_1, vec_2)
 
     def test_distributions(self):
 
@@ -249,6 +234,7 @@ class TestJaccard(unittest.TestCase):
         result = matutils.jaccard(vec_1, vec_2)
         expected = 1 - 0.333333333333
         self.assertAlmostEqual(expected, result)
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

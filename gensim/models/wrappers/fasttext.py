@@ -7,6 +7,13 @@
 
 
 """
+Warnings
+--------
+.. deprecated:: 3.2.0
+   Use :class:`gensim.models.fasttext.FastText` instead of :class:`gensim.models.wrappers.fasttext.FastText`.
+
+
+
 Python wrapper around word representation learning from FastText, a library for efficient learning
 of word representations and sentence classification [1].
 
@@ -19,10 +26,12 @@ The wrapped model can NOT be updated with new documents for online training -- u
 Example:
 
 >>> from gensim.models.wrappers import FastText
->>> model = fasttext.FastText.train('/Users/kofola/fastText/fasttext', corpus_file='text8')
+>>> model = FastText.train('/Users/kofola/fastText/fasttext', corpus_file='text8')
 >>> print model['forests']  # prints vector for given out-of-vocabulary word
 
 .. [1] https://github.com/facebookresearch/fastText#enriching-word-vectors-with-subword-information
+
+
 
 """
 
@@ -35,12 +44,17 @@ import struct
 import numpy as np
 from numpy import float32 as REAL, sqrt, newaxis
 from gensim import utils
-from gensim.models.keyedvectors import KeyedVectors
+from gensim.models.keyedvectors import KeyedVectors, Vocab
 from gensim.models.word2vec import Word2Vec
 
-from six import string_types
-
 logger = logging.getLogger(__name__)
+
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
+
+FASTTEXT_FILEFORMAT_MAGIC = 793712314
 
 
 class FastTextKeyedVectors(KeyedVectors):
@@ -50,14 +64,22 @@ class FastTextKeyedVectors(KeyedVectors):
     Subclasses KeyedVectors to implement oov lookups, storing ngrams and other FastText specific methods
 
     """
+
     def __init__(self):
         super(FastTextKeyedVectors, self).__init__()
-        self.syn0_all_norm = None
+        self.syn0_vocab = None
+        self.syn0_vocab_norm = None
+        self.syn0_ngrams = None
+        self.syn0_ngrams_norm = None
         self.ngrams = {}
+        self.hash2index = {}
+        self.ngrams_word = {}
+        self.min_n = 0
+        self.max_n = 0
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_vocab_norm', 'syn0_ngrams_norm'])
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
@@ -77,18 +99,18 @@ class FastTextKeyedVectors(KeyedVectors):
         if word in self.vocab:
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
         else:
-            word_vec = np.zeros(self.syn0_all.shape[1])
-            ngrams = FastText.compute_ngrams(word, self.min_n, self.max_n)
+            word_vec = np.zeros(self.syn0_ngrams.shape[1], dtype=np.float32)
+            ngrams = compute_ngrams(word, self.min_n, self.max_n)
+            ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:
-                ngram_weights = self.syn0_all_norm
+                ngram_weights = self.syn0_ngrams_norm
             else:
-                ngram_weights = self.syn0_all
+                ngram_weights = self.syn0_ngrams
             for ngram in ngrams:
-                if ngram in self.ngrams:
-                    word_vec += ngram_weights[self.ngrams[ngram]]
+                word_vec += ngram_weights[self.ngrams[ngram]]
             if word_vec.any():
                 return word_vec / len(ngrams)
-            else: # No ngrams of the word are present in self.ngrams
+            else:  # No ngrams of the word are present in self.ngrams
                 raise KeyError('all ngrams for word %s absent from model' % word)
 
     def init_sims(self, replace=False):
@@ -103,29 +125,31 @@ class FastTextKeyedVectors(KeyedVectors):
 
         """
         super(FastTextKeyedVectors, self).init_sims(replace)
-        if getattr(self, 'syn0_all_norm', None) is None or replace:
+        if getattr(self, 'syn0_ngrams_norm', None) is None or replace:
             logger.info("precomputing L2-norms of ngram weight vectors")
             if replace:
-                for i in xrange(self.syn0_all.shape[0]):
-                    self.syn0_all[i, :] /= sqrt((self.syn0_all[i, :] ** 2).sum(-1))
-                self.syn0_all_norm = self.syn0_all
+                for i in range(self.syn0_ngrams.shape[0]):
+                    self.syn0_ngrams[i, :] /= sqrt((self.syn0_ngrams[i, :] ** 2).sum(-1))
+                self.syn0_ngrams_norm = self.syn0_ngrams
             else:
-                self.syn0_all_norm = (self.syn0_all / sqrt((self.syn0_all ** 2).sum(-1))[..., newaxis]).astype(REAL)
+                self.syn0_ngrams_norm = \
+                    (self.syn0_ngrams / sqrt((self.syn0_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
     def __contains__(self, word):
         """
-        Check if word is present in the vocabulary, or if any word ngrams are present. A vector for the word is
-        guaranteed to exist if `__contains__` returns True.
-
+        Check if `word` or any character ngrams in `word` are present in the vocabulary.
+        A vector for the word is guaranteed to exist if `__contains__` returns True.
         """
         if word in self.vocab:
             return True
         else:
-            word_ngrams = set(FastText.compute_ngrams(word, self.min_n, self.max_n))
-            if len(word_ngrams & set(self.ngrams.keys())):
-                return True
-            else:
-                return False
+            char_ngrams = compute_ngrams(word, self.min_n, self.max_n)
+            return any(ng in self.ngrams for ng in char_ngrams)
+
+    @classmethod
+    def load_word2vec_format(cls, *args, **kwargs):
+        """Not suppported. Use gensim.models.KeyedVectors.load_word2vec_format instead."""
+        raise NotImplementedError("Not supported. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
 
 
 class FastText(Word2Vec):
@@ -137,6 +161,12 @@ class FastText(Word2Vec):
     improving speed and scope of functionality like `most_similar`, `similarity` by extracting vectors
     into numpy matrix.
 
+    Warnings
+    --------
+    .. deprecated:: 3.2.0
+       Use :class:`gensim.models.fasttext.FastText` instead of :class:`gensim.models.wrappers.fasttext.FastText`.
+
+
     """
 
     def initialize_word_vectors(self):
@@ -144,7 +174,7 @@ class FastText(Word2Vec):
 
     @classmethod
     def train(cls, ft_path, corpus_file, output_file=None, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
-            loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
+              word_ngrams=1, loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
         """
         `ft_path` is the path to the FastText executable, e.g. `/home/kofola/fastText/fasttext`.
 
@@ -161,6 +191,8 @@ class FastText(Word2Vec):
         `alpha` is the initial learning rate.
 
         `min_count` = ignore all words with total occurrences lower than this.
+
+        `word_ngram` = max length of word ngram
 
         `loss` = defines training objective. Allowed values are `hs` (hierarchical softmax),
         `ns` (negative sampling) and `softmax`. Defaults to `ns`
@@ -195,6 +227,7 @@ class FastText(Word2Vec):
             'ws': window,
             'epoch': iter,
             'minCount': min_count,
+            'wordNgrams': word_ngrams,
             'neg': negative,
             'loss': loss,
             'minn': min_n,
@@ -207,19 +240,15 @@ class FastText(Word2Vec):
             cmd.append("-%s" % option)
             cmd.append(str(value))
 
-        output = utils.check_output(args=cmd)
+        utils.check_output(args=cmd)
         model = cls.load_fasttext_format(output_file)
         cls.delete_training_files(output_file)
         return model
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_all_norm'])
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn0_vocab_norm', 'syn0_ngrams_norm'])
         super(FastText, self).save(*args, **kwargs)
-
-    @classmethod
-    def load_word2vec_format(cls, *args, **kwargs):
-        return FastTextKeyedVectors.load_word2vec_format(*args, **kwargs)
 
     @classmethod
     def load_fasttext_format(cls, model_file, encoding='utf8'):
@@ -230,13 +259,25 @@ class FastText(Word2Vec):
         with a model loaded this way, though you can query for word similarity etc.
 
         `model_file` is the path to the FastText output files.
-        FastText outputs two training files - `/path/to/train.vec` and `/path/to/train.bin`
-        Expected value for this example: `/path/to/train`
+        FastText outputs two model files - `/path/to/model.vec` and `/path/to/model.bin`
+
+        Expected value for this example: `/path/to/model` or `/path/to/model.bin`,
+        as gensim requires only `.bin` file to load entire fastText model.
 
         """
         model = cls()
-        model.wv = cls.load_word2vec_format('%s.vec' % model_file, encoding=encoding)
-        model.load_binary_data('%s.bin' % model_file, encoding=encoding)
+        if not model_file.endswith('.bin'):
+            model_file += '.bin'
+        model.file_name = model_file
+        model.load_binary_data(encoding=encoding)
+        return model
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        model = super(FastText, cls).load(*args, **kwargs)
+        if hasattr(model.wv, 'syn0_all'):
+            setattr(model.wv, 'syn0_ngrams', model.wv.syn0_all)
+            delattr(model.wv, 'syn0_all')
         return model
 
     @classmethod
@@ -249,20 +290,29 @@ class FastText(Word2Vec):
             logger.debug('Training files %s not found when attempting to delete', model_file)
             pass
 
-    def load_binary_data(self, model_binary_file, encoding='utf8'):
+    def load_binary_data(self, encoding='utf8'):
         """Loads data from the output binary file created by FastText training"""
-        with utils.smart_open(model_binary_file, 'rb') as f:
+        with utils.smart_open(self.file_name, 'rb') as f:
             self.load_model_params(f)
             self.load_dict(f, encoding=encoding)
             self.load_vectors(f)
 
     def load_model_params(self, file_handle):
-        (dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t) = self.struct_unpack(file_handle, '@12i1d')
+        magic, version = self.struct_unpack(file_handle, '@2i')
+        if magic == FASTTEXT_FILEFORMAT_MAGIC:  # newer format
+            self.new_format = True
+            dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = \
+                self.struct_unpack(file_handle, '@12i1d')
+        else:  # older format
+            self.new_format = False
+            dim = magic
+            ws = version
+            epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
         # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
         self.vector_size = dim
         self.window = ws
         self.iter = epoch
-        self.min_count = minCount
+        self.min_count = min_count
         self.negative = neg
         self.hs = loss == 1
         self.sg = model == 2
@@ -272,12 +322,16 @@ class FastText(Word2Vec):
         self.sample = t
 
     def load_dict(self, file_handle, encoding='utf8'):
-        (vocab_size, nwords, _) = self.struct_unpack(file_handle, '@3i')
+        vocab_size, nwords, nlabels = self.struct_unpack(file_handle, '@3i')
         # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-        assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
-        assert len(self.wv.vocab) == vocab_size, 'mismatch between vocab sizes'
-        ntokens, = self.struct_unpack(file_handle, '@q')
-        for i in range(nwords):
+        if nlabels > 0:
+            raise NotImplementedError("Supervised fastText models are not supported")
+        logger.info("loading %s words for fastText model from %s", vocab_size, self.file_name)
+
+        self.struct_unpack(file_handle, '@1q')  # number of tokens
+        if self.new_format:
+            pruneidx_size, = self.struct_unpack(file_handle, '@q')
+        for i in range(vocab_size):
             word_bytes = b''
             char_byte = file_handle.read(1)
             # Read vocab word
@@ -285,15 +339,34 @@ class FastText(Word2Vec):
                 word_bytes += char_byte
                 char_byte = file_handle.read(1)
             word = word_bytes.decode(encoding)
-            count, _ = self.struct_unpack(file_handle, '@ib')
-            _ = self.struct_unpack(file_handle, '@i')
-            assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
-            self.wv.vocab[word].count = count
+            count, _ = self.struct_unpack(file_handle, '@qb')
+
+            self.wv.vocab[word] = Vocab(index=i, count=count)
+            self.wv.index2word.append(word)
+
+        assert len(self.wv.vocab) == nwords, (
+            'mismatch between final vocab size ({} words), '
+            'and expected number of words ({} words)'.format(len(self.wv.vocab), nwords))
+        if len(self.wv.vocab) != vocab_size:
+            # expecting to log this warning only for pretrained french vector, wiki.fr
+            logger.warning(
+                "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
+                len(self.wv.vocab), vocab_size
+            )
+
+        if self.new_format:
+            for j in range(pruneidx_size):
+                self.struct_unpack(file_handle, '@2i')
 
     def load_vectors(self, file_handle):
+        if self.new_format:
+            self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
-        assert self.vector_size == dim, 'mismatch between model sizes'
+        assert self.vector_size == dim, (
+            'mismatch between vector size in model params ({}) and model vectors ({})'
+            .format(self.vector_size, dim)
+        )
         float_size = struct.calcsize('@f')
         if float_size == 4:
             dtype = np.dtype(np.float32)
@@ -301,10 +374,14 @@ class FastText(Word2Vec):
             dtype = np.dtype(np.float64)
 
         self.num_original_vectors = num_vectors
-        self.wv.syn0_all = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
-        self.wv.syn0_all = self.wv.syn0_all.reshape((num_vectors, dim))
-        assert self.wv.syn0_all.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
-            'mismatch between weight matrix shape and vocab/model size'
+        self.wv.syn0_ngrams = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
+        self.wv.syn0_ngrams = self.wv.syn0_ngrams.reshape((num_vectors, dim))
+        assert self.wv.syn0_ngrams.shape == (self.bucket + len(self.wv.vocab), self.vector_size), \
+            'mismatch between actual weight matrix shape {} and expected shape {}'\
+            .format(
+                self.wv.syn0_ngrams.shape, (self.bucket + len(self.wv.vocab), self.vector_size)
+            )
+
         self.init_ngrams()
 
     def struct_unpack(self, file_handle, fmt):
@@ -320,41 +397,61 @@ class FastText(Word2Vec):
         """
         self.wv.ngrams = {}
         all_ngrams = []
-        for w, v in self.wv.vocab.items():
-            all_ngrams += self.compute_ngrams(w, self.wv.min_n, self.wv.max_n)
+        self.wv.syn0 = np.zeros((len(self.wv.vocab), self.vector_size), dtype=REAL)
+
+        for w, vocab in self.wv.vocab.items():
+            all_ngrams += compute_ngrams(w, self.wv.min_n, self.wv.max_n)
+            self.wv.syn0[vocab.index] += np.array(self.wv.syn0_ngrams[vocab.index])
+
         all_ngrams = set(all_ngrams)
         self.num_ngram_vectors = len(all_ngrams)
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
-            ngram_hash = self.ft_hash(ngram)
-            ngram_indices.append((len(self.wv.vocab) + ngram_hash) % self.bucket)
+            ngram_hash = ft_hash(ngram)
+            ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
             self.wv.ngrams[ngram] = i
-        self.wv.syn0_all = self.wv.syn0_all.take(ngram_indices, axis=0)
+        self.wv.syn0_ngrams = self.wv.syn0_ngrams.take(ngram_indices, axis=0)
 
-    @staticmethod
-    def compute_ngrams(word, min_n, max_n):
-        ngram_indices = []
-        BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
-        extended_word = BOW + word + EOW
-        ngrams = set()
-        for i in range(len(extended_word) - min_n + 1):
-            for j in range(min_n, max(len(extended_word) - max_n, max_n + 1)):
-                ngrams.add(extended_word[i:i+j])
-        return ngrams
+        ngram_weights = self.wv.syn0_ngrams
 
-    @staticmethod
-    def ft_hash(string):
-        """
-        Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-        used in fastText.
+        logger.info(
+            "loading weights for %s words for fastText model from %s",
+            len(self.wv.vocab), self.file_name
+        )
 
-        """
-        # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
-        old_settings = np.seterr(all='ignore')
-        h = np.uint32(2166136261)
-        for c in string:
-            h = h ^ np.uint32(ord(c))
-            h = h * np.uint32(16777619)
-        np.seterr(**old_settings)
-        return h
+        for w, vocab in self.wv.vocab.items():
+            word_ngrams = compute_ngrams(w, self.wv.min_n, self.wv.max_n)
+            for word_ngram in word_ngrams:
+                self.wv.syn0[vocab.index] += np.array(ngram_weights[self.wv.ngrams[word_ngram]])
 
+            self.wv.syn0[vocab.index] /= (len(word_ngrams) + 1)
+        logger.info(
+            "loaded %s weight matrix for fastText model from %s",
+            self.wv.syn0.shape, self.file_name
+        )
+
+
+def compute_ngrams(word, min_n, max_n):
+    BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
+    extended_word = BOW + word + EOW
+    ngrams = []
+    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+        for i in range(0, len(extended_word) - ngram_length + 1):
+            ngrams.append(extended_word[i:i + ngram_length])
+    return ngrams
+
+
+def ft_hash(string):
+    """
+    Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+    used in fastText.
+
+    """
+    # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
+    old_settings = np.seterr(all='ignore')
+    h = np.uint32(2166136261)
+    for c in string:
+        h = h ^ np.uint32(ord(c))
+        h = h * np.uint32(16777619)
+    np.seterr(**old_settings)
+    return h

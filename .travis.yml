@@ -1,27 +1,28 @@
 sudo: false
+
+cache:
+  apt: true
+  directories:
+  - $HOME/.cache/pip
+  - $HOME/.ccache
+  - $HOME/.pip-cache
 dist: trusty
 language: python
-python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
-before_install:
-  - wget 'http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh' -O miniconda.sh
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b
-  - export PATH=/home/travis/miniconda2/bin:$PATH
-  - conda update --yes conda
-install:
-  - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
-  - source activate gensim-test
-  - pip install pyemd
-  - pip install annoy
-  - pip install testfixtures
-  - pip install unittest2
-  - pip install scikit-learn
-  - pip install Morfessor==2.0.2a4
-  - python setup.py install
-script: 
-  - python setup.py test
-  - pip install flake8
-  - continuous_integration/travis/flake8_diff.sh
+
+
+matrix:
+  include:
+    - python: '2.7'
+      env: TOXENV="flake8, docs"
+
+    - python: '2.7'
+      env: TOXENV="py27-linux"
+
+    - python: '3.5'
+      env: TOXENV="py35-linux"
+
+    - python: '3.6'
+      env: TOXENV="py36-linux"
+
+install: pip install tox
+script: tox -vv
