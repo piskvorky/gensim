@@ -9,6 +9,7 @@ import struct
 import numpy as np
 
 from gensim import utils
+from gensim.models import keyedvectors
 from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
@@ -419,9 +420,12 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(all(['terrorism' not in l for l in others]))
         model.build_vocab(others)
         model.train(others, total_examples=model.corpus_count, epochs=model.iter)
+        # checks that `syn0` is different from `syn0_vocab`
+        self.assertFalse(np.all(np.equal(model.wv.syn0, model.wv.syn0_vocab)))
         self.assertFalse('terrorism' in model.wv.vocab)
         self.assertFalse('orism>' in model.wv.ngrams)
         model.build_vocab(terro, update=True)  # update vocab
+        self.assertTrue(model.wv.syn0_ngrams.dtype == 'float32')
         self.assertTrue('terrorism' in model.wv.vocab)
         self.assertTrue('orism>' in model.wv.ngrams)
         orig0_all = np.copy(model.wv.syn0_ngrams)
@@ -454,6 +458,31 @@ class TestFastTextModel(unittest.TestCase):
             min_count=5, iter=1, seed=42, workers=1, sample=0
         )
         self.online_sanity(model)
+
+    def test_get_vocab_word_vecs(self):
+        model = FT_gensim(size=10, min_count=1, seed=42)
+        model.build_vocab(sentences)
+        original_syn0_vocab = np.copy(model.wv.syn0_vocab)
+        model.get_vocab_word_vecs()
+        self.assertTrue(np.all(np.equal(model.wv.syn0_vocab, original_syn0_vocab)))
+
+    def test_persistence_word2vec_format(self):
+        """Test storing/loading the model in word2vec format."""
+        tmpf = get_tmpfile('gensim_fasttext_w2v_format.tst')
+        model = FT_gensim(sentences, min_count=1, size=10)
+        model.wv.save_word2vec_format(tmpf, binary=True)
+        loaded_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
+        self.assertEqual(len(model.wv.vocab), len(loaded_model_kv.vocab))
+        self.assertTrue(np.allclose(model['human'], loaded_model_kv['human']))
+        self.assertRaises(DeprecationWarning, FT_gensim.load_word2vec_format, tmpf)
+        self.assertRaises(NotImplementedError, FastTextKeyedVectors.load_word2vec_format, tmpf)
+
+    def test_bucket_ngrams(self):
+        model = FT_gensim(size=10, min_count=1, bucket=20)
+        model.build_vocab(sentences)
+        self.assertEqual(model.wv.syn0_ngrams.shape, (20, 10))
+        model.build_vocab(new_sentences, update=True)
+        self.assertEqual(model.wv.syn0_ngrams.shape, (20, 10))
 
 
 if __name__ == '__main__':

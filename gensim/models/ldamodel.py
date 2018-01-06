@@ -47,14 +47,41 @@ from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jense
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
 
-# log(sum(exp(x))) that tries to avoid overflow
-try:
-    from scipy.special import logsumexp
-except ImportError:
-    from scipy.misc import logsumexp
-
 
 logger = logging.getLogger('gensim.models.ldamodel')
+
+DTYPE_TO_EPS = {
+    np.float16: 1e-5,
+    np.float32: 1e-35,
+    np.float64: 1e-100,
+}
+
+
+def logsumexp(x):
+    """Log of sum of exponentials
+
+    Parameters
+    ----------
+    x : array_like
+        Input data
+
+    Returns
+    -------
+    float
+        log of sum of exponentials of elements in `x`
+
+    Notes
+    -----
+        for performance, does not support NaNs or > 1d arrays like
+        scipy.special.logsumexp()
+
+    """
+
+    x_max = np.max(x)
+    x = np.log(np.sum(np.exp(x - x_max)))
+    x += x_max
+
+    return x
 
 
 def update_dir_prior(prior, N, logphat, rho):
@@ -254,6 +281,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         `callbacks` a list of metric callbacks to log/visualize evaluation metrics of topic model during training.
 
         `dtype` is data-type to use during calculations inside model. All inputs are also converted to this dtype.
+        Available types: `numpy.float16`, `numpy.float32`, `numpy.float64`.
 
         Example:
 
@@ -265,6 +293,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> lda = LdaModel(corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
+        if dtype not in DTYPE_TO_EPS:
+            raise ValueError(
+                "Incorrect 'dtype', please choose one of {}".format(
+                    ", ".join("numpy.{}".format(tp.__name__) for tp in sorted(DTYPE_TO_EPS))))
+
         self.dtype = dtype
 
         # store user-supplied parameters
@@ -476,8 +509,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w.
             # phinorm is the normalizer.
-            # TODO treat zeros explicitly, instead of adding 1e-100?
-            phinorm = np.dot(expElogthetad, expElogbetad) + 1e-100
+            # TODO treat zeros explicitly, instead of adding epsilon?
+            eps = DTYPE_TO_EPS[self.dtype]
+            phinorm = np.dot(expElogthetad, expElogbetad) + eps
 
             # Iterate between gamma and phi until convergence
             for _ in xrange(self.iterations):
@@ -488,7 +522,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 gammad = self.alpha + expElogthetad * np.dot(cts / phinorm, expElogbetad.T)
                 Elogthetad = dirichlet_expectation(gammad)
                 expElogthetad = np.exp(Elogthetad)
-                phinorm = np.dot(expElogthetad, expElogbetad) + 1e-100
+                phinorm = np.dot(expElogthetad, expElogbetad) + eps
                 # If gamma hasn't changed much, we're done.
                 meanchange = np.mean(abs(gammad - lastgamma))
                 if meanchange < self.gamma_threshold:

@@ -46,7 +46,6 @@ to trim unneeded model memory = use (much) less RAM.
 
 import logging
 import os
-import warnings
 
 try:
     from queue import Queue
@@ -61,7 +60,7 @@ from numpy import zeros, sum as np_sum, add as np_add, concatenate, \
     sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide, integer
 
 
-from gensim.utils import call_on_class_only
+from gensim.utils import call_on_class_only, deprecated
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg
 from gensim.models.keyedvectors import KeyedVectors
@@ -262,9 +261,9 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
 
 
 # for compatibility
+@deprecated("Class will be removed in 4.0.0, use TaggedDocument instead")
 class LabeledSentence(TaggedDocument):
-    def __init__(self, *args, **kwargs):
-        warnings.warn('LabeledSentence has been replaced by TaggedDocument', DeprecationWarning)
+    pass
 
 
 class DocvecsArray(utils.SaveLoad):
@@ -329,9 +328,9 @@ class DocvecsArray(utils.SaveLoad):
         else:
             return self.max_rawint + 1 + self.doctags[index].offset
 
+    @deprecated("Method will be removed in 4.0.0, use self.index_to_doctag instead")
     def _key_index(self, i_index, missing=None):
         """Return string index for given int index, if available"""
-        warnings.warn("use DocvecsArray.index_to_doctag", DeprecationWarning)
         return self.index_to_doctag(i_index)
 
     def index_to_doctag(self, i_index):
@@ -634,7 +633,8 @@ class Doc2Vec(Word2Vec):
 
         if 'sentences' in kwargs:
             raise DeprecationWarning(
-                "'sentences' in doc2vec was renamed to 'documents'. Please use documents parameter."
+                "Parameter 'sentences' was renamed to 'documents', and will be removed in 4.0.0, "
+                "use 'documents' instead."
             )
 
         super(Doc2Vec, self).__init__(

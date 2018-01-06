@@ -5,8 +5,10 @@
 """
 Common utils for tests
 """
+import contextlib
 import tempfile
 import os
+import shutil
 
 from gensim.corpora import Dictionary
 
@@ -25,6 +27,22 @@ def get_tmpfile(suffix):
     Function doesn't create file. Double calling with the same suffix can return different paths.
     """
     return os.path.join(tempfile.gettempdir(), suffix)
+
+
+@contextlib.contextmanager
+def temporary_file(name=""):
+    """create a temporary directory and return a path to "name" in that directory
+
+    At the end of the context, the directory is removed.
+
+    The function doesn't create the file.
+    """
+    # note : when dropping python2.7 support, we can use tempfile.TemporaryDirectory
+    tmp = tempfile.mkdtemp()
+    try:
+        yield os.path.join(tmp, name)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)

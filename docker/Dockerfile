@@ -151,6 +151,10 @@ RUN cd /gensim/gensim_dependencies \
 
 # Start gensim
 
+# Fix ipython kernel version
+RUN ipython2 kernel install
+RUN ipython3 kernel install
+
 # Run check script
 RUN python2 /gensim/docker/check_fast_version.py
 RUN python3 /gensim/docker/check_fast_version.py
