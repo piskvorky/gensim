@@ -465,15 +465,39 @@ def cossim(vec1, vec2):
 
 
 def softcossim(vec1, vec2, similarity_matrix):
-    """
-    Return soft cosine similarity between two sparse vectors given a sparse term similarity matrix
-    in the CSC format. The similarity is a number between <-1.0, 1.0>, higher is more similar. When
-    using this code, please consider citing the following papers:
+    """Return Soft Cosine Similarity between two vectors given a term similarity matrix.
 
-        .. Grigori Sidorov et al., "Soft Similarity and Soft Cosine Measure: Similarity of Features
-           in Vector Space Model".
-        .. Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3: Soft-Cosine
-           Semantic Similarity between Questions for Community Question Answering".
+    Return Soft Cosine Similarity between two sparse vectors given a sparse term similarity matrix
+    in the `scipy.sparse.csc_matrix` format. The similarity is a number between <-1.0, 1.0>, higher
+    is more similar.
+
+    Parameters
+    ----------
+    vec1 : list of (int, float) two-tuples
+        A query vector in the gensim document format.
+    vec2 : list of (int, float) two-tuples of ints
+        A document vector in the gensim document format.
+    similarity_matrix : scipy.sparse.csc_matrix
+        A term similarity matrix.
+
+    Returns
+    -------
+    similarity_matrix.dtype
+        The Soft Cosine Similarity between `vec1` and `vec2`.
+
+    See Also
+    --------
+    gensim.models.keyedvectors.EuclideanKeyedVectors.similarity_matrix
+        A term similarity matrix produced from term embeddings.
+    gensim.similarities.docsim.SoftCosineSimilarity
+        A class for performing corpus-based similarity queries with Soft Cosine Similarity.
+
+    References
+    ----------
+    Soft Cosine Similarity was perhaps first defined by [sidorovetal14]_.
+
+    .. [sidorovetal14] Grigori Sidorov et al., "Soft Similarity and Soft Cosine Measure: Similarity
+       of Features in Vector Space Model", 2014.
     """
 
     def sparse2coo(vec):

@@ -562,31 +562,51 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
     def similarity_matrix(self, corpus, dictionary, threshold=0.0, exponent=2.0,
                           nonzero_limit=100, dtype=REAL):
-        """
-        Constructs a sparse CSC similarity matrix for computing soft cosine similarity between
-        documents; see gensim.matutils.softcossim for more information. When using this code, please
-        consider citing the following papers:
+        """Constructs a term similarity matrix for computing Soft Cosine Similarity.
 
-        .. Grigori Sidorov et al., "Soft Similarity and Soft Cosine Measure: Similarity of Features
-           in Vector Space Model".
-        .. Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3: Soft-Cosine
-           Semantic Similarity between Questions for Community Question Answering".
+        Constructs a a sparse term similarity matrix in the `scipy.sparse.csc_matrix` format for
+        computing Soft Cosine Similarity between documents.
 
-        The constructed matrix corresponds to the matrix Mrel defined in section 2.1 of the paper
-        by Charlet and Damnati.
+        Parameters
+        ----------
+        corpus : list of lists of (int, float) two-tuples
+            A list of documents in the gensim document format.
+        dictionary : gensim.corpora.Dictionary
+            A dictionary associated with the corpus.
+        threshold : float, optional
+            Only pairs of words whose embeddings are more similar than `threshold` are considered
+            when building the sparse term similarity matrix. Defaults to `0.0`.
+        exponent : float, optional
+            The exponent applied to the similarity between two word embeddings when building the
+            term similarity matrix. Defaults to `2.0`.
+        nonzero_limit : int, optional
+            The maximum number of non-zero elements outside the diagonal in a single row or column
+            of the term similarity matrix. Setting `nonzero_limit` to a constant ensures that the
+            time complexity of computing the Soft Cosine Similarity will be linear in the document
+            length rather than quadratic. Defaults to `100`.
+        dtype : numpy.dtype, optional
+            Data-type of the term similarity matrix. Defaults to `numpy.float32`.
 
-        corpus:                         List of sparse bag-of-words vectors.
-        dictionary:                     Dictionary associated with the corpus.
-        threshold:                      Only pairs of words whose embeddings are more similar than
-                                        threshold are considered when building the sparse term
-                                        similarity matrix.
-        exponent:                       The exponent applied to the similarity between two word
-                                        embeddings when building the term similarity matrix.
-        nonzero_limit:                  The maximum number of non-zero elements in a single row of
-                                        the term similarity matrix. Setting to a constant ensures
-                                        that the time complexity will be linear in the document
-                                        length rather than quadratic; the resulting similarity will
-                                        be an approximation.
+        Returns
+        -------
+        scipy.sparse.csc_matrix
+            The constructed term similarity matrix.
+
+        See Also
+        --------
+        gensim.matutils.softcossim
+            The Soft Cosine Similarity.
+        gensim.similarities.docsim.SoftCosineSimilarity
+            A class for performing corpus-based similarity queries with Soft Cosine Similarity.
+
+        References
+        ----------
+        The constructed matrix corresponds to the matrix Mrel defined in section 2.1 of
+        [charletdamnati17]_.
+
+        .. [charletdamnati17] Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017
+           Task 3: Soft-Cosine Semantic Similarity between Questions for Community Question
+           Answering", 2017.
         """
 
         logger.info("constructing a term similarity matrix")
@@ -600,16 +620,17 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
             if w1 not in self.vocab:
                 continue  # A word from the dictionary not present in the word2vec model.
             # Traverse upper triangle columns.
-            if len(dictionary) < nonzero_limit:  # Traverse all columns.
-                columns = ((w2_index, self.similarity(w1, dictionary[w2_index])) \
-                           for w2_index in range(w1_index+1, num_rows) \
+            if len(dictionary) <= nonzero_limit + 1:  # Traverse all columns.
+                columns = ((w2_index, self.similarity(w1, dictionary[w2_index]))
+                           for w2_index in range(w1_index + 1, num_rows)
                            if w1_index != w2_index and dictionary[w2_index] in self.vocab)
             else:  # Traverse only columns corresponding to the embeddings closest to w1.
                 num_nonzero = similarity_matrix[w1_index].getnnz() - 1
-                columns = ((dictionary.token2id[w2], similarity) \
-                           for _, (w2, similarity) \
-                           in zip(range(nonzero_limit-num_nonzero),
-                                  self.most_similar(positive=[w1], topn=nonzero_limit-num_nonzero))\
+                columns = ((dictionary.token2id[w2], similarity)
+                           for _, (w2, similarity)
+                           in zip(range(nonzero_limit - num_nonzero),
+                                  self.most_similar(positive=[w1],
+                                                    topn=nonzero_limit - num_nonzero))
                            if w2 in dictionary.token2id and w1_index < dictionary.token2id[w2])
                 columns = sorted(columns, key=lambda x: x[0])
             for w2_index, similarity in columns:
@@ -622,7 +643,6 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         logger.info("constructed a term similarity matrix with %0.2f %% nonzero entries",
                     100.0 * similarity_matrix.getnnz() / num_rows**2)
         return similarity_matrix.tocsc()
-
 
     def wmdistance(self, document1, document2):
         """
