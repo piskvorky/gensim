@@ -229,6 +229,7 @@ class TestMmCorpus(CorpusTestCase):
         self.assertEqual(self.corpus.num_docs, 9)
         self.assertEqual(self.corpus.num_terms, 12)
         self.assertEqual(self.corpus.num_nnz, 28)
+        self.assertEqual(next(iter(self.corpus)), [(0, 1.0), (1, 1.0), (2, 1.0)])
         self.assertEqual(tuple(self.corpus.index), (97, 121, 169, 201, 225, 249, 258, 276, 303))
 
 
