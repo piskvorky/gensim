@@ -639,7 +639,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
             # Convert document indexes to actual documents.
             query = [self.corpus[i] for i in query]
 
-        if not isinstance(query[0], list):
+        if not query or not isinstance(query[0], list):
             query = [query]
 
         n_queries = len(query)
@@ -724,7 +724,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
             # Convert document indexes to actual documents.
             query = [self.corpus[i] for i in query]
 
-        if not isinstance(query[0], list):
+        if not query or not isinstance(query[0], list):
             query = [query]
 
         n_queries = len(query)

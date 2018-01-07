@@ -40,6 +40,10 @@ class _TestSimilarityABC(object):
     Base class for SparseMatrixSimilarity and MatrixSimilarity unit tests.
     """
 
+    def factoryMethod(self):
+        """Creates a SimilarityABC instance."""
+        return self.cls(corpus, num_features=len(dictionary))
+
     def testFull(self, num_best=None, shardsize=100):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=shardsize)
@@ -104,6 +108,15 @@ class _TestSimilarityABC(object):
         self.assertTrue(scipy.sparse.issparse(matrix_scipy_clipped))
         self.assertTrue([matutils.scipy2sparse(x) for x in matrix_scipy_clipped], [expected] * 3)
 
+    def testEmptyQuery(self):
+        index = self.factoryMethod()
+        query = []
+        try:
+            sims = index[query]
+            self.assertTrue(sims is not None)
+        except IndexError:
+            self.assertTrue(False)
+
     def testChunking(self):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
@@ -156,14 +169,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        elif self.cls == similarities.SoftCosineSimilarity:
-            index = self.cls(self.corpus, self.similarity_matrix)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         index.save(fname)
         index2 = self.cls.load(fname)
         if self.cls == similarities.Similarity:
@@ -183,14 +189,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        elif self.cls == similarities.SoftCosineSimilarity:
-            index = self.cls(self.corpus, self.similarity_matrix)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         index.save(fname)
         index2 = self.cls.load(fname)
         if self.cls == similarities.Similarity:
@@ -210,14 +209,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        elif self.cls == similarities.SoftCosineSimilarity:
-            index = self.cls(self.corpus, self.similarity_matrix)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         # store all arrays separately
         index.save(fname, sep_limit=0)
 
@@ -239,14 +231,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        elif self.cls == similarities.SoftCosineSimilarity:
-            index = self.cls(self.corpus, self.similarity_matrix)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         # store all arrays separately
         index.save(fname, sep_limit=0)
 
@@ -268,14 +253,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        elif self.cls == similarities.SoftCosineSimilarity:
-            index = self.cls(self.corpus, self.similarity_matrix)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         # store all arrays separately
         index.save(fname, sep_limit=0)
 
@@ -298,14 +276,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        elif self.cls == similarities.SoftCosineSimilarity:
-            index = self.cls(self.corpus, self.similarity_matrix)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         # store all arrays separately
         index.save(fname, sep_limit=0)
 
@@ -322,6 +293,11 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.WmdSimilarity
         self.w2v_model = Word2Vec(texts, min_count=1)
+
+    def factoryMethod(self):
+        # Override factoryMethod.
+
+        return self.cls(texts, self.w2v_model)
 
     def testFull(self, num_best=None):
         # Override testFull.
@@ -404,6 +380,11 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
         similarity_matrix[dictionary.token2id["user"], dictionary.token2id["human"]] = 0.5
         similarity_matrix[dictionary.token2id["human"], dictionary.token2id["user"]] = 0.5
         self.similarity_matrix = similarity_matrix.tocsc()
+
+    def factoryMethod(self):
+        # Override factoryMethod.
+
+        return self.cls(self.corpus, self.similarity_matrix)
 
     def testFull(self, num_best=None):
         # Override testFull.
@@ -503,6 +484,11 @@ class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
 class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.Similarity
+
+    def factoryMethod(self):
+        # Override factoryMethod.
+
+        return self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
 
     def testSharding(self):
         for num_best in [None, 0, 1, 9, 1000]:
