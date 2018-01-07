@@ -9,6 +9,7 @@ from gensim.models import ldamodel
 import numpy as np
 from scipy.special import digamma, gammaln
 from scipy import optimize
+from scipy.sparse import issparse
 import logging
 
 logger = logging.getLogger(__name__)
@@ -32,7 +33,17 @@ def create_rand(num_rands, seed=None):
         rands = np.random.uniform(r)
     return rands
 
-
+def create_lookups(self, X):
+    docs, terms = np.nonzero(X)
+    if issparse(X):
+        x = np.array(X[docs, terms])[0]
+    else:
+        x = X[docs, terms]
+    doc_lookup = np.ascontiguousarray(np.repeat(docs, x), dtype=np.intc)
+    term_lookup = np.ascontiguousarray(np.repeat(terms, x), dtype=np.intc)
+    return doc_lookup, term_lookup
+    
+    
 def topic_lookup(num_tokens, num_topics, seed=None):
     topic_lookup = np.empty(num_tokens, dtype=np.float64, order='C')
     if seed is not None:
@@ -43,7 +54,7 @@ def topic_lookup(num_tokens, num_topics, seed=None):
 
 
 def loglikelihood_slda(nzw, ndz, nz, alpha, beta, sum_beta,
-                       mu, nu, sigma2, eta, y, Z):
+                       mu, nu, sigma, eta, y, Z):
     """
     Log-likelihood calculation for sLDA
     """
@@ -63,7 +74,7 @@ def loglikelihood_slda(nzw, ndz, nz, alpha, beta, sum_beta,
         for k in range(n_topics):
             eta_z += eta[k] * Z[k, d]
             ll += gammaln(alpha[k] + ndz[d, k])
-        ll -= (y[d] - eta_z) * (y[d] - eta_z) / 2 / sigma2
+        ll -= (y[d] - eta_z) * (y[d] - eta_z) / 2 / sigma
     return ll
 
 
@@ -76,8 +87,8 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
     """
     Perform sampling inference for supervised LDA.
     """
-    double sum_alpha = 0.
-    double sum_beta = 0.
+    sum_alpha = 0.
+    sum_beta = 0.
     u = 0
     topic_lookup = create_topic_lookup(num_tokens, num_topics, seed)
     log_likelihood = np.empty(iterations, dtype=np.float64, order='C')
@@ -101,7 +112,7 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
         sum_alpha += alpha[k]
     for w in range(num_terms):
         sum_beta += beta[w]
-    Inu2 = np.identity(n_topics) / nu2
+    Inu = np.identity(n_topics) / nu
     for i in range(iterations):
         # initialize etand for iteration i
         for d in range(num_docs):
@@ -111,13 +122,43 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
             d = doc_lookup[j]
             w = term_lookup[j]
             z = topic_lookup[j]
+            ndz[d, z] -= 1
+            nzw[z, w] -= 1
+            nz[z] -= 1
+            p_sum = 0.
+            y_sum = y[d]
+            for k in range(n_topics):
+                y_sum -= etand[d, k] * ndz[d, k]
+            y_sum = 2 * y_sum
+            for k in range(n_topics):
+                p_sum += (nzw[k, w] + beta[w]) \
+                    / (nz[k] + sum_beta) \
+                    * (ndz[d, k] + alpha[k]) \
+                    * exp(etand[d, k] / 2 / sigma * (y_sum - etand[d, k]))
+                p_cumsum[k] = p_sum
+                u+=1
+                if u == n_rands:
+                u = 0
+            uval = rands[u] * p_sum
+            new_z = topic_lookup[j] = np.searchsorted(p_cumsum, uval)
+            ndz[d, new_z] += 1
+            nzw[new_z, w] += 1
+            nz[new_z] += 1
+        Z = (np.asarray(ndz) / np.asarray(nd)[:, np.newaxis]).T
+        tmp_eta = np.linalg.solve(Inu + np.dot(Z, Z.T) / sigma, np.dot(Z, np.asarray(y) / sigma))
+        for k in range(n_topics):
+            eta[i + 1, k] = tmp_eta[k]
+        lL[i] = loglikelihood_slda(nzw, ndz, nz, alpha, beta, sum_beta, mu, nu, sigma, eta[i + 1], y, Z)
+    theta = estimate_matrix(ndz, alpha, n_docs)
+    phi = estimate_matrix(nzw, beta, n_topics)
+    return theta, phi, np.asarray(eta), np.asarray(lL)
 
 
 class SLdaModel(utils.SaveLoad):
 
     def __init__(self, corpus=None, id2word=None, num_topics=100, chunksize=500,
                  passes=1, interations=50, alpha, beta, nu, sigma,
-                 random_state=None):
+                 seed=None):
         """
         Supervised (regression) latent Dirichlet allocation, using collapsed Gibbs
         sampling implemented in Cython.
@@ -146,7 +187,7 @@ class SLdaModel(utils.SaveLoad):
         iterations : int, default=50
             Number of iterations
 
-        random_state : int, optional
+        seed : int, optional
             Seed for random number generator
         """
         self.id2word = id2word
@@ -178,3 +219,26 @@ class SLdaModel(utils.SaveLoad):
         self.nu = nu
         self.sigma = sigma
         self.iterations = iterations
+        self.seed = seed
+    
+    
+    def fit(self, X, y)
+        """
+        Estimate the topic distributions per document (theta), term
+        distributions per topic (phi), and regression coefficients (eta).
+        Parameters
+        ----------
+        X : array-like, shape = (n_docs, n_terms)
+            The document-term matrix.
+        y : array-like, shape = (n_edges, 3)
+            Response Variable from which the classification will be done.
+        """
+        self.doc_term_matrix = X
+        self.n_docs, self.n_terms = X.shape
+        self.n_tokens = X.sum()
+        self.n_edges = y.shape[0]
+        doc_lookup, term_lookup = create_lookups(X)
+        self.theta, self.phi, self.eta, self.loglikelihoods = gibbs_sampler_blslda(
+            self.iterations, self.num_topics, self.num_docs, self.num_terms, self.num_tokens,
+            self.alpha, self.beta, self.mu, self.nu, self.b,
+            doc_lookup, term_lookup, np.ascontiguousarray(y, dtype=np.float64), self.seed)
