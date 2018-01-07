@@ -99,7 +99,7 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
     p_cumsum = np.empty(num_topics, dtype=np.float64, order='C')
     rands = create_rands(n_rands=n_rands, seed=seed)
 
-    eta = np.ascontiguousarray(np.tile(mu, (iterations + 1, num_topics)), dtype=np.float64))
+    eta = np.ascontiguousarray(np.tile(mu, (iterations + 1, num_topics)), dtype=np.float64)
     etand = np.empty((num_docs, num_topics), dtype=np.float64, order='C')
     eta_tmp = np.empty(num_topics, dtype=np.float64, order='C')
 
