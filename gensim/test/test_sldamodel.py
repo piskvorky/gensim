@@ -58,7 +58,7 @@ def assert_probablity_distribution(results):
 
 class TestSLdaModel(unittest.TestCase):
 
-    def test_slda():
+    def test_slda(self):
         l = language(10000)
         n_iter = 2000
         
@@ -68,10 +68,10 @@ class TestSLdaModel(unittest.TestCase):
         eta = np.random.normal(scale=nu2, size=l['K'])
         y = [np.dot(eta, l['thetas'][i]) for i in range(l['D'])] + \
             np.random.normal(scale=sigma2, size=l['D'])
-        _beta = np.repeat(0.01, l['V'])
-        _mu = 0
-        slda = SLDA(l['K'], l['alpha'], _beta, _mu, nu, sigma, n_iter,
-                    seed=l['seed'], n_report_iter=l['n_report_iters'])
+        beta = np.repeat(0.01, l['V'])
+        mu = 0
+        slda = SLDA(l, l['K'], l['alpha'], beta, mu, nu, sigma, n_iter,
+                    seed=l['seed'])
         slda.fit(l['doc_term_matrix'], y)
 
         assert_probablity_distribution(slda.phi)
