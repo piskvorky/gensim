@@ -538,6 +538,20 @@ class Doc2Vec(BaseWordEmbedddingsModel):
                 fname, prefix=prefix, fvocab=fvocab, total_vec=total_vec,
                 binary=binary, write_first_line=write_first_line)
 
+    def init_sims(self, replace=False):
+        """
+        Precompute L2-normalized vectors.
+
+        If `replace` is set, forget the original vectors and only keep the normalized
+        ones = saves lots of memory!
+
+        Note that you **cannot continue training or inference** after doing a replace.
+        The model becomes effectively read-only = you can call `most_similar`, `similarity`
+        etc., but not `train` or `infer_vector`.
+
+        """
+        return self.docvecs.init_sims(replace=replace)
+
 
 class Doc2VecVocab(Word2VecVocab):
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0):
@@ -610,7 +624,7 @@ class Doc2VecVocab(Word2VecVocab):
 
     def indexed_doctags(self, doctag_tokens):
         """Return indexes and backing-arrays used in training examples."""
-        return [_int_index(index, self.doctags, self.max_rawint) for index in doctag_tokens if self._tag_seen(index)]
+        return [Doc2VecKeyedVectors._int_index(index, self.doctags, self.max_rawint) for index in doctag_tokens if self._tag_seen(index)]
 
     def _tag_seen(self, index):
         if isinstance(index, integer_types + (integer,)):
@@ -650,7 +664,7 @@ class Doc2VecTrainables(Word2VecTrainables):
 
         for i in xrange(length):
             # construct deterministic seed from index AND model seed
-            seed = "%d %s" % (self.seed, _index_to_doctag(i, vocabulary.offset2doctag, vocabulary.max_rawint))
+            seed = "%d %s" % (self.seed, Doc2VecKeyedVectors._index_to_doctag(i, vocabulary.offset2doctag, vocabulary.max_rawint))
             self.vectors_docs[i] = self.seeded_vector(seed)
 
     def save(self, *args, **kwargs):
@@ -694,7 +708,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         """
         if index in self:
             if isinstance(index, string_types + integer_types + (integer,)):
-                return self.vectors_docs[_int_index(index, self.doctags, self.max_rawint)]
+                return self.vectors_docs[self._int_index(index, self.doctags, self.max_rawint)]
             return vstack([self[i] for i in index])
         raise KeyError("tag '%s' not seen in training corpus/invalid" % index)
 
@@ -817,8 +831,8 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             if isinstance(doc, ndarray):
                 mean.append(weight * doc)
             elif doc in self.doctags or doc < self.count:
-                mean.append(weight * self.vectors_docs_norm[_int_index(doc, self.doctags, self.max_rawint)])
-                all_docs.add(_int_index(doc, self.doctags, self.max_rawint))
+                mean.append(weight * self.vectors_docs_norm[self._int_index(doc, self.doctags, self.max_rawint)])
+                all_docs.add(self._int_index(doc, self.doctags, self.max_rawint))
             else:
                 raise KeyError("doc '%s' not in trained set" % doc)
         if not mean:
@@ -834,7 +848,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         best = matutils.argsort(dists, topn=topn + len(all_docs), reverse=True)
         # ignore (don't return) docs from the input
         result = [
-            (_index_to_doctag(sim + clip_start, self.offset2doctag, self.max_rawint), float(dists[sim]))
+            (self._index_to_doctag(sim + clip_start, self.offset2doctag, self.max_rawint), float(dists[sim]))
             for sim in best
             if (sim + clip_start) not in all_docs
         ]
@@ -863,7 +877,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         logger.debug("using docs %s", docs)
         if not docs:
             raise ValueError("cannot select a doc from an empty list")
-        vectors = vstack(self.vectors_docs_norm[_int_index(doc, self.doctags, self.max_rawint)] for doc in docs).astype(REAL)
+        vectors = vstack(self.vectors_docs_norm[self._int_index(doc, self.doctags, self.max_rawint)] for doc in docs).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
         return sorted(zip(dists, docs))[0][1]
@@ -985,12 +999,46 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
                 fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vectors_docs.shape[1])))
             # store as in input order
             for i in range(len(self)):
-                doctag = u"%s%s" % (prefix, _index_to_doctag(i, self.offset2doctag, self.max_rawint))
+                doctag = u"%s%s" % (prefix, self._index_to_doctag(i, self.offset2doctag, self.max_rawint))
                 row = self.vectors_docs[i]
                 if binary:
                     fout.write(utils.to_utf8(doctag) + b" " + row.tostring())
                 else:
                     fout.write(utils.to_utf8("%s %s\n" % (doctag, ' '.join("%f" % val for val in row))))
+
+    @staticmethod
+    def _int_index(index, doctags, max_rawint):
+        """Return int index for either string or int index"""
+        if isinstance(index, integer_types + (integer,)):
+            return index
+        else:
+            return max_rawint + 1 + doctags[index].offset
+
+    @staticmethod
+    def _index_to_doctag(i_index, offset2doctag, max_rawint):
+        """Return string key for given i_index, if available. Otherwise return raw int doctag (same int)."""
+        candidate_offset = i_index - max_rawint - 1
+        if 0 <= candidate_offset < len(offset2doctag):
+            return offset2doctag[candidate_offset]
+        else:
+            return i_index
+
+    # for backward compatibility
+    def index_to_doctag(self, i_index):
+        """Return string key for given i_index, if available. Otherwise return raw int doctag (same int)."""
+        candidate_offset = i_index - self.max_rawint - 1
+        if 0 <= candidate_offset < len(self.offset2doctag):
+            return self.ffset2doctag[candidate_offset]
+        else:
+            return i_index
+
+    # for backward compatibility
+    def int_index(index, doctags, max_rawint):
+        """Return int index for either string or int index"""
+        if isinstance(index, integer_types + (integer,)):
+            return index
+        else:
+            return max_rawint + 1 + doctags[index].offset
 
 
 class TaggedBrownCorpus(object):
@@ -1052,20 +1100,3 @@ class TaggedLineDocument(object):
             with utils.smart_open(self.source) as fin:
                 for item_no, line in enumerate(fin):
                     yield TaggedDocument(utils.to_unicode(line).split(), [item_no])
-
-
-def _int_index(index, doctags, max_rawint):
-    """Return int index for either string or int index"""
-    if isinstance(index, integer_types + (integer,)):
-        return index
-    else:
-        return max_rawint + 1 + doctags[index].offset
-
-
-def _index_to_doctag(i_index, offset2doctag, max_rawint):
-        """Return string key for given i_index, if available. Otherwise return raw int doctag (same int)."""
-        candidate_offset = i_index - max_rawint - 1
-        if 0 <= candidate_offset < len(offset2doctag):
-            return offset2doctag[candidate_offset]
-        else:
-            return i_index

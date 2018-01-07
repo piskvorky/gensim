@@ -145,7 +145,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(max(d.offset for d in model.docvecs.doctags.values()) < len(model.docvecs.doctags))
         self.assertTrue(
             max(
-                doc2vec._int_index(
+                doc2vec.Doc2VecKeyedVectors._int_index(
                     str_key, model.docvecs.doctags, model.docvecs.max_rawint)
                 for str_key in model.docvecs.doctags.keys()) < len(model.docvecs.vectors_docs))
         # verify docvecs.most_similar() returns string doctags rather than indexes
