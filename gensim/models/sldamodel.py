@@ -224,7 +224,7 @@ class SLdaModel(utils.SaveLoad):
         self.seed = seed
     
     
-    def fit(self, X, y)
+    def fit(self, X, y):
         """
         Estimate the topic distributions per document (theta), term
         distributions per topic (phi), and regression coefficients (eta).
