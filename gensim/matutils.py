@@ -485,6 +485,11 @@ def softcossim(vec1, vec2, similarity_matrix):
     similarity_matrix.dtype
         The Soft Cosine Similarity between `vec1` and `vec2`.
 
+    Raises
+    ------
+    ValueError
+        When the term similarity matrix is in an unknown format.
+
     See Also
     --------
     gensim.models.keyedvectors.EuclideanKeyedVectors.similarity_matrix
@@ -511,6 +516,12 @@ def softcossim(vec1, vec2, similarity_matrix):
         vec2 = vec2.tocsc()
         return (vec1.T).dot(similarity_matrix).dot(vec2)[0, 0]
 
+    if not isinstance(similarity_matrix, scipy.sparse.csc_matrix):
+        if isinstance(similarity_matrix, scipy.sparse.csr_matrix):
+            similarity_matrix = similarity_matrix.T
+        else:
+            raise ValueError('unknown similarity matrix format')
+
     if not vec1 or not vec2:
         return 0.0
     vec1 = sparse2coo(vec1)
@@ -522,6 +533,10 @@ def softcossim(vec1, vec2, similarity_matrix):
             " bag-of-words vector x."
     result = softdot(vec1, vec2)
     result /= math.sqrt(vec1len) * math.sqrt(vec2len)  # rescale by vector lengths
+    if result > 1.0:
+        return 1.0
+    if result < -1.0:
+        return -1.0
     return result
 
 

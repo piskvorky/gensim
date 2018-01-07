@@ -13,7 +13,7 @@ import logging
 import unittest
 
 from gensim import matutils
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, csc_matrix
 import numpy as np
 import math
 from gensim.corpora.mmcorpus import MmCorpus
@@ -233,6 +233,38 @@ class TestJaccard(unittest.TestCase):
         vec_2 = [4, 3, 2, 5]
         result = matutils.jaccard(vec_1, vec_2)
         expected = 1 - 0.333333333333
+        self.assertAlmostEqual(expected, result)
+
+
+class TestSoftCosineSimilarity(unittest.TestCase):
+    def test_inputs(self):
+
+        # checking empty inputs
+        vec_1 = []
+        vec_2 = []
+        similarity_matrix = csc_matrix((0, 0))
+        result = matutils.softcossim(vec_1, vec_2, similarity_matrix)
+        expected = 0.0
+        self.assertEqual(expected, result)
+
+        # checking CSR term similarity matrix format
+        similarity_matrix = csr_matrix((0, 0))
+        result = matutils.softcossim(vec_1, vec_2, similarity_matrix)
+        expected = 0.0
+        self.assertEqual(expected, result)
+
+        # checking unknown term similarity matrix format
+        with self.assertRaises(ValueError):
+            matutils.softcossim(vec_1, vec_2, np.matrix([]))
+
+    def test_distributions(self):
+
+        # checking bag of words as inputs
+        vec_1 = [(0, 1.0), (2, 1.0)]  # hello world
+        vec_2 = [(1, 1.0), (2, 1.0)]  # hi world
+        similarity_matrix = csc_matrix([[1, 0.5, 0], [0.5, 1, 0], [0, 0, 1]])
+        result = matutils.softcossim(vec_1, vec_2, similarity_matrix)
+        expected = 0.75
         self.assertAlmostEqual(expected, result)
 
 

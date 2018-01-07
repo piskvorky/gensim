@@ -14,6 +14,7 @@ import unittest
 
 import numpy as np
 
+from gensim.corpora import Dictionary
 from gensim.models.keyedvectors import EuclideanKeyedVectors
 from gensim.test.utils import datapath
 
@@ -25,6 +26,37 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
     def setUp(self):
         self.vectors = EuclideanKeyedVectors.load_word2vec_format(
             datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
+
+    def similarity_matrix(self):
+        """Test similarity_matrix returns expected results."""
+
+        corpus = [["government", "denied", "holiday"], ["holiday", "slowing", "hollingworth"]]
+        dictionary = Dictionary(corpus)
+        corpus = [dictionary.doc2bow(document) for document in corpus]
+
+        # checking symmetry and the existence of ones on the diagonal
+        similarity_matrix = self.similarity_matrix(corpus, dictionary).todense()
+        self.assertTrue((similarity_matrix.T == similarity_matrix).all())
+        self.assertTrue((np.diag(similarity_matrix) == similarity_matrix).all())
+
+        # checking that thresholding works as expected
+        similarity_matrix = self.similarity_matrix(corpus, dictionary, threshold=0.45).todense()
+        expected = 18
+        self.assertEquals(expected, np.sum(similarity_matrix == 0))
+
+        # checking that exponent works as expected
+        similarity_matrix = self.similarity_matrix(corpus, dictionary, exponent=1.0).todense()
+        expected = 9.5788956
+        self.assertAlmostEqual(expected, np.sum(similarity_matrix))
+
+        # checking that nonzero_limit works as expected
+        similarity_matrix = self.similarity_matrix(corpus, dictionary, nonzero_limit=4).todense()
+        expected = 4
+        self.assertEquals(expected, np.sum(similarity_matrix == 0))
+
+        similarity_matrix = self.similarity_matrix(corpus, dictionary, nonzero_limit=3).todense()
+        expected = 20
+        self.assertEquals(expected, np.sum(similarity_matrix == 0))
 
     def test_most_similar(self):
         """Test most_similar returns expected results."""
