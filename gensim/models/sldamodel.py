@@ -82,6 +82,8 @@ def estimate_matrix(counts, psuedo_counts,n_thing):
     mat = np.asarray(counts) + np.tile(psuedo_counts, (n_thing, 1))
     return (mat.T / mat.sum(axis=1)).T
 
+
+
 def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
                   alpha, beta, mu, nu, sigma, doc_lookup, term_tookup, y, seed=None):
     """
@@ -104,15 +106,15 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
     eta_tmp = np.empty(num_topics, dtype=np.float64, order='C')
 
     for j in range(num_tokens):
-        ndz[doc_lookup[j], topic_lookup[j]]
-        nzw[topic_lookup[j], term_lookup[j]])
-        nz[topic_lookup[j]]
-        nd[doc_lookup[j]]
+        ndz[doc_lookup[j], topic_lookup[j]] += 1
+        nzw[topic_lookup[j], term_lookup[j]] += 1
+        nz[topic_lookup[j]] += 1
+        nd[doc_lookup[j]] += 1
     for k in range(num_topics):
         sum_alpha += alpha[k]
     for w in range(num_terms):
         sum_beta += beta[w]
-    Inu = np.identity(n_topics) / nu
+    Inu = np.identity(num_topics) / nu
     for i in range(iterations):
         # initialize etand for iteration i
         for d in range(num_docs):
@@ -127,10 +129,10 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
             nz[z] -= 1
             p_sum = 0.
             y_sum = y[d]
-            for k in range(n_topics):
+            for k in range(num_topics):
                 y_sum -= etand[d, k] * ndz[d, k]
             y_sum = 2 * y_sum
-            for k in range(n_topics):
+            for k in range(num_topics):
                 p_sum += (nzw[k, w] + beta[w]) \
                     / (nz[k] + sum_beta) \
                     * (ndz[d, k] + alpha[k]) \
@@ -146,11 +148,11 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
             nz[new_z] += 1
         Z = (np.asarray(ndz) / np.asarray(nd)[:, np.newaxis]).T
         tmp_eta = np.linalg.solve(Inu + np.dot(Z, Z.T) / sigma, np.dot(Z, np.asarray(y) / sigma))
-        for k in range(n_topics):
+        for k in range(num_topics):
             eta[i + 1, k] = tmp_eta[k]
         lL[i] = loglikelihood_slda(nzw, ndz, nz, alpha, beta, sum_beta, mu, nu, sigma, eta[i + 1], y, Z)
-    theta = estimate_matrix(ndz, alpha, n_docs)
-    phi = estimate_matrix(nzw, beta, n_topics)
+    theta = estimate_matrix(ndz, alpha, num_docs)
+    phi = estimate_matrix(nzw, beta, num_topics)
     return theta, phi, np.asarray(eta), np.asarray(lL)
 
 
