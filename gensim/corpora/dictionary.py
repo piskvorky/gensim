@@ -5,8 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""This module implements the concept of Dictionary -- a mapping between words and
-their integer ids.
+"""This module implements the concept of Dictionary -- a mapping between words and their integer ids.
 
 Notes
 -----
@@ -309,8 +308,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         the `no_below` and `no_above` settings \n
         4. after (1), (2) and (3), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
         After the pruning, shrink resulting gaps in word ids. \n
-        **Note**: Due to the gap shrinking, the same word may have a different
-        word id before and after the call to this function!
+        Due to the gap shrinking, the same word may have a different word id before and after the call to this function!
 
         Parameters
         ----------
@@ -448,15 +446,6 @@ class Dictionary(utils.SaveLoad, Mapping):
         been removed via :func:`filter_tokens` and there are gaps in the id series.
         Calling this method will remove the gaps.
 
-        #TODO: Ivan, probably it should be _compactify, because we remove words and their id only with filter_* methods,
-        so there is no need to call if for user.
-
-        Examples
-        --------
-        >>> from gensim.corpora import dictionary
-        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
-        >>> data.compactify()
-
         """
         logger.debug("rebuilding dictionary, shrinking gaps")
 
@@ -527,7 +516,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Return
         ------
-        :class:`gensim.models.VocabTransform`
+        :class:`gensim.models.__init__.VocabTransform`
             Transformation object.
         #TODO: probably, i'm wrong.
 
@@ -539,8 +528,10 @@ class Dictionary(utils.SaveLoad, Mapping):
         >>> dict2 = dictionary.Dictionary(["ema má máma hasta".split()])  # ids not compatible with dict1!
         >>> dict2_to_dict1 = dict1.merge_with(dict2)
         >>> # now we can merge corpora from the two incompatible dictionaries into one
-        >>> merged_corpus = itertools.chain(["máma mele maso".split()], dict2_to_dict1["ema má máma hasta".split()])
-        #TODO: Monday meeting
+        >>> merged_corpus = itertools.chain([["máma mele maso".split()], dict2_to_dict1["ema má máma hasta".split()]])
+        #>>> merged_corpus = itertools.chain(["máma mele maso".split()], dict2_to_dict1["ema má máma hasta".split()])
+        #TODO: Monday meeting; список списков строк; не работает
+
         """
         old2new = {}
         for other_id, other_token in iteritems(other):
@@ -613,21 +604,36 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     @staticmethod
     def from_corpus(corpus, id2word=None):
-        """Create Dictionary from an existing corpus. This can be useful if you only
-        have a term-document BOW matrix (represented by `corpus`), but not the
-        original text corpus.
+        """Create Dictionary from an existing corpus.
 
-        This will scan the term-document count matrix for all word ids that
-        appear in it, then construct and return Dictionary which maps each
-        `word_id -> id2word[word_id]`.
+        Notes
+        -----
+        This can be useful if you only have a term-document BOW matrix (represented by `corpus`),
+        but not the original text corpus. \n
+        This will scan the term-document count matrix for all word ids that appear in it,
+        then construct and return Dictionary which maps each `word_id -> id2word[word_id]`. \n
+        `id2word` is an optional dictionary that maps the `word_id` to a token.
+        In case `id2word` isn't specified the mapping `id2word[word_id] = str(word_id)` will be used.
 
-        `id2word` is an optional dictionary that maps the `word_id` to a token. In
-        case `id2word` isn't specified the mapping `id2word[word_id] = str(word_id)`
-        will be used.
+        Parameters
+        ----------
+        corpus : iterable of iterable of str
+            Corpus for dictionary.
 
-        #TODO: Monday meeting.
+        Return
+        ------
+        :class:`~gensim.corpora.dictionary.Dictionary`
+            Dictionary instance.
+
+        Examples
+        --------
+        >>> from gensim.corpora import dictionary
+        >>> corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
+        >>> corp_dict = dictionary.Dictionary.from_corpus(corpus)
+        >>> print corp_dict
+        Dictionary(3 unique tokens: [u'1', u'0', u'2'])
+
         """
-
         result = Dictionary()
         max_id = -1
         for docno, document in enumerate(corpus):
