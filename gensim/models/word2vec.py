@@ -137,7 +137,6 @@ try:
     logger.info("Using FAST VERSION %s", FAST_VERSION)
 
 except ImportError:
-    # failed... fall back to plain numpy (20-80x slower training than the above)
     MAX_WORDS_IN_BATCH = 10000
     raise RuntimeError(
         "Support for Python/Numpy implementations has been discontinued."
@@ -445,7 +444,8 @@ class Word2Vec(BaseWordEmbedddingsModel):
         logger.info(
             "scoring sentences with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s and negative=%s",
-            self.workers, len(self.wv.vocab), self.trainables.layer1_size, self.sg, self.hs, self.vocabulary.sample, self.negative
+            self.workers, len(self.wv.vocab), self.trainables.layer1_size, self.sg, self.hs,
+            self.vocabulary.sample, self.negative
         )
 
         if not self.wv.vocab:
@@ -656,7 +656,8 @@ class Word2Vec(BaseWordEmbedddingsModel):
         if word2_indices and self.cbow_mean:
             l1 /= len(word2_indices)
 
-        prob_values = exp(dot(l1, self.trainables.syn1neg.T))  # propagate hidden -> output and take softmax to get probabilities
+        # propagate hidden -> output and take softmax to get probabilities
+        prob_values = exp(dot(l1, self.trainables.syn1neg.T))
         prob_values /= sum(prob_values)
         top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
         # returning the most probable output words with their probabilities
@@ -665,8 +666,8 @@ class Word2Vec(BaseWordEmbedddingsModel):
     def init_sims(self, replace=False):
         """
         init_sims() resides in KeyedVectors because it deals with syn0/vectors mainly, but because syn1 is not an
-        attribute of KeyedVectors, it has to be deleted in this class, and the normalizing of syn0/vectors happens inside
-        of KeyedVectors
+        attribute of KeyedVectors, it has to be deleted in this class, and the normalizing of syn0/vectors happens
+        inside of KeyedVectors
         """
         if replace and hasattr(self.trainables, 'syn1'):
             del self.trainables.syn1
