@@ -138,8 +138,8 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
                     * (ndz[d, k] + alpha[k]) \
                     * exp(etand[d, k] / 2 / sigma * (y_sum - etand[d, k]))
                 p_cumsum[k] = p_sum
-                u+=1
-                if u == n_rands:
+            u += 1
+            if u == n_rands:
                 u = 0
             uval = rands[u] * p_sum
             new_z = topic_lookup[j] = np.searchsorted(p_cumsum, uval)
