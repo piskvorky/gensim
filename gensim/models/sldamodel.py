@@ -82,6 +82,8 @@ def estimate_matrix(counts, psuedo_counts,n_thing):
     mat = np.asarray(counts) + np.tile(psuedo_counts, (n_thing, 1))
     return (mat.T / mat.sum(axis=1)).T
 
+
+
 def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
                   alpha, beta, mu, nu, sigma, doc_lookup, term_tookup, y, seed=None):
     """
@@ -99,20 +101,20 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
     p_cumsum = np.empty(num_topics, dtype=np.float64, order='C')
     rands = create_rands(n_rands=n_rands, seed=seed)
 
-    eta = np.ascontiguousarray(np.tile(mu, (iterations + 1, num_topics)), dtype=np.float64))
+    eta = np.ascontiguousarray(np.tile(mu, (iterations + 1, num_topics)), dtype=np.float64)
     etand = np.empty((num_docs, num_topics), dtype=np.float64, order='C')
     eta_tmp = np.empty(num_topics, dtype=np.float64, order='C')
 
     for j in range(num_tokens):
-        ndz[doc_lookup[j], topic_lookup[j]]
-        nzw[topic_lookup[j], term_lookup[j]])
-        nz[topic_lookup[j]]
-        nd[doc_lookup[j]]
+        ndz[doc_lookup[j], topic_lookup[j]] += 1
+        nzw[topic_lookup[j], term_lookup[j]] += 1
+        nz[topic_lookup[j]] += 1
+        nd[doc_lookup[j]] += 1
     for k in range(num_topics):
         sum_alpha += alpha[k]
     for w in range(num_terms):
         sum_beta += beta[w]
-    Inu = np.identity(n_topics) / nu
+    Inu = np.identity(num_topics) / nu
     for i in range(iterations):
         # initialize etand for iteration i
         for d in range(num_docs):
@@ -127,17 +129,17 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
             nz[z] -= 1
             p_sum = 0.
             y_sum = y[d]
-            for k in range(n_topics):
+            for k in range(num_topics):
                 y_sum -= etand[d, k] * ndz[d, k]
             y_sum = 2 * y_sum
-            for k in range(n_topics):
+            for k in range(num_topics):
                 p_sum += (nzw[k, w] + beta[w]) \
                     / (nz[k] + sum_beta) \
                     * (ndz[d, k] + alpha[k]) \
                     * exp(etand[d, k] / 2 / sigma * (y_sum - etand[d, k]))
                 p_cumsum[k] = p_sum
-                u+=1
-                if u == n_rands:
+            u += 1
+            if u == n_rands:
                 u = 0
             uval = rands[u] * p_sum
             new_z = topic_lookup[j] = np.searchsorted(p_cumsum, uval)
@@ -146,19 +148,18 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
             nz[new_z] += 1
         Z = (np.asarray(ndz) / np.asarray(nd)[:, np.newaxis]).T
         tmp_eta = np.linalg.solve(Inu + np.dot(Z, Z.T) / sigma, np.dot(Z, np.asarray(y) / sigma))
-        for k in range(n_topics):
+        for k in range(num_topics):
             eta[i + 1, k] = tmp_eta[k]
         lL[i] = loglikelihood_slda(nzw, ndz, nz, alpha, beta, sum_beta, mu, nu, sigma, eta[i + 1], y, Z)
-    theta = estimate_matrix(ndz, alpha, n_docs)
-    phi = estimate_matrix(nzw, beta, n_topics)
+    theta = estimate_matrix(ndz, alpha, num_docs)
+    phi = estimate_matrix(nzw, beta, num_topics)
     return theta, phi, np.asarray(eta), np.asarray(lL)
 
 
 class SLdaModel(utils.SaveLoad):
 
-    def __init__(self, corpus=None, id2word=None, num_topics=100, chunksize=500,
-                 passes=1, interations=50, alpha, beta, nu, sigma,
-                 seed=None):
+    def __init__(self, alpha, beta, nu, sigma, corpus=None, id2word=None,
+                 num_topics=100, chunksize=500, passes=1, interations=50, seed=None):
         """
         Supervised (regression) latent Dirichlet allocation, using collapsed Gibbs
         sampling implemented in Cython.
@@ -222,7 +223,7 @@ class SLdaModel(utils.SaveLoad):
         self.seed = seed
     
     
-    def fit(self, X, y)
+    def fit(self, X, y):
         """
         Estimate the topic distributions per document (theta), term
         distributions per topic (phi), and regression coefficients (eta).
