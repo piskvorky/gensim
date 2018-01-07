@@ -427,9 +427,11 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         return doctag_vectors[0]
 
     def __getitem__(self, tag):
-        if tag not in self.wv.vocab:
-            return self.docvecs[tag]
-        return self.wv[tag]
+        if isinstance(tag, string_types + integer_types + (integer,)):
+            if tag not in self.wv.vocab:
+                return self.docvecs[tag]
+            return self.wv[tag]
+        return vstack([self[i] for i in tag])
 
     def __str__(self):
         """Abbreviated name reflecting major configuration paramaters."""
