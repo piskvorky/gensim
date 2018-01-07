@@ -158,7 +158,7 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
 
 class SLdaModel(utils.SaveLoad):
 
-    def __init__(self, corpus=None, id2word=None, alpha, beta, nu, sigma, 
+    def __init__(self, alpha, beta, nu, sigma, corpus=None, id2word=None,
                  num_topics=100, chunksize=500, passes=1, interations=50, seed=None):
         """
         Supervised (regression) latent Dirichlet allocation, using collapsed Gibbs
