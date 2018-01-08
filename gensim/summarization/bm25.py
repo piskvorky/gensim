@@ -78,14 +78,14 @@ class BM25(object):
         self.f = []
         self.df = {}
         self.idf = {}
-        self.doc_length = []
+        self.doc_len = []
         self.initialize()
 
     def initialize(self):
         """Calculates frequencies of terms in documents and in corpus. Also computes inverse document frequencies."""
         for document in self.corpus:
             frequencies = {}
-            (self.doc_length).append(len(document))
+            (self.doc_len).append(len(document))
             for word in document:
                 if word not in frequencies:
                     frequencies[word] = 0
@@ -124,7 +124,7 @@ class BM25(object):
                 continue
             idf = self.idf[word] if self.idf[word] >= 0 else EPSILON * average_idf
             score += (idf * self.f[index][word] * (PARAM_K1 + 1)
-                      / (self.f[index][word] + PARAM_K1 * (1 - PARAM_B + PARAM_B * self.doc_length[index] / self.avgdl)))
+                      / (self.f[index][word] + PARAM_K1 * (1 - PARAM_B + PARAM_B * self.doc_len[index] / self.avgdl)))
         return score
 
     def get_scores(self, document, average_idf):
