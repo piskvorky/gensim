@@ -699,6 +699,14 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
     def index2entity(self, value):
         self.offset2doctag = value
 
+    @property
+    def doctag_syn0(self):
+        return self.vectors_docs
+
+    @property
+    def doctag_syn0norm(self):
+        return self.vectors_docs_norm
+
     def __getitem__(self, index):
         """
         Accept a single key (int or string tag) or list of keys as input.

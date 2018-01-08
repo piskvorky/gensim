@@ -833,6 +833,22 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.min_n = 0
         self.max_n = 0
 
+    @property
+    def syn0_vocab(self):
+        return self.vectors_vocab
+
+    @property
+    def syn0_vocab_norm(self):
+        return self.vectors_vocab_norm
+
+    @property
+    def syn0_ngrams(self):
+        return self.vectors_ngrams
+
+    @property
+    def syn0_ngrams_norm(self):
+        return self.vectors_ngrams_norm
+
     def __contains__(self, word):
         """
         Check if `word` or any character ngrams in `word` are present in the vocabulary.

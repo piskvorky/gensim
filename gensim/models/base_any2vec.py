@@ -449,6 +449,34 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def iter(self):
         return self.epochs
 
+    @property
+    def syn1(self):
+        return self.trainables.syn1
+
+    @property
+    def syn1neg(self):
+        return self.trainables.syn1neg
+
+    @property
+    def layer1_size(self):
+        return self.trainables.layer1_size
+
+    @property
+    def hashfxn(self):
+        return self.trainables.hashfxn
+
+    @property
+    def sample(self):
+        return self.vocabulary.sample
+
+    @property
+    def min_count(self):
+        return self.vocabulary.min_count
+
+    @property
+    def cum_table(self):
+        return self.vocabulary.cum_table
+
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
