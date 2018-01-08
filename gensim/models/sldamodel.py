@@ -42,8 +42,8 @@ def create_lookups(self, X):
     doc_lookup = np.ascontiguousarray(np.repeat(docs, x), dtype=np.intc)
     term_lookup = np.ascontiguousarray(np.repeat(terms, x), dtype=np.intc)
     return doc_lookup, term_lookup
-    
-    
+
+
 def topic_lookup(num_tokens, num_topics, seed=None):
     topic_lookup = np.empty(num_tokens, dtype=np.float64, order='C')
     if seed is not None:
@@ -158,8 +158,7 @@ def slda_sampling(iterations, num_topics, num_docs, num_terms, num_tokens,
 
 class SLdaModel(utils.SaveLoad):
 
-    def __init__(self, alpha, beta, nu, sigma, corpus=None, id2word=None,
-                 num_topics=100, chunksize=500, passes=1, interations=50, seed=None):
+    def __init__(self, alpha, beta, nu, sigma, num_topics=100, interations=50, seed=None):
         """
         Supervised (regression) latent Dirichlet allocation, using collapsed Gibbs
         sampling implemented in Cython.
@@ -191,28 +190,6 @@ class SLdaModel(utils.SaveLoad):
         seed : int, optional
             Seed for random number generator
         """
-        self.id2word = id2word
-        if corpus is None and self.id2word is None:
-            raise ValueError(
-                'at least one of corpus/id2word must be specified, to establish input space dimensionality'
-            )
-
-        if self.id2word is None:
-            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
-            self.id2word = utils.dict_from_corpus(corpus)
-            self.vocab_len = len(self.id2word)
-        elif len(self.id2word) > 0:
-            self.vocab_len = len(self.id2word)
-        else:
-            self.vocab_len = 0
-
-        if corpus is not None:
-            try:
-                self.corpus_len = len(corpus)
-            except TypeError:
-                logger.warning("input corpus stream has no len(); counting documents")
-                self.corpus_len = sum(1 for _ in corpus)
-
         self.num_topics = num_topics
         self.alpha = alpha
         self.beta = beta
@@ -221,8 +198,8 @@ class SLdaModel(utils.SaveLoad):
         self.sigma = sigma
         self.iterations = iterations
         self.seed = seed
-    
-    
+
+
     def fit(self, X, y):
         """
         Estimate the topic distributions per document (theta), term

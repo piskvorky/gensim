@@ -7,6 +7,12 @@ from gensim.models import sldamodel
 
 logger = logging.getLogger(__name__)
 
+"""
+
+The code draws directly from sLDA library by Matt Burbidge: https://github.com/Savvysherpa/slda
+
+"""
+
 
 def generate_topics(rows):
     topics = []
@@ -19,13 +25,13 @@ def generate_topics(rows):
     for i in range(rows):
         topics.append(np.roll(base_topic, i))
     return np.array(topics)
-    
+
 def gen_documents(seed, K, N, thetas, V, topics, D):
     topic_assignments = np.array([np.random.choice(range(K), size=N, p=theta)
                                   for theta in thetas])
     word_assignment = np.array([[np.random.choice(range(V), size=1, p=topics[topic_assignments[d, n]])[0] for n in range(N)] for d in range(D)])
     return np.array([np.histogram(word_assignment[d], bins=V, range=(0, V - 1))[0] for d in range(D)])
-    
+
 
 def language(document_size):
     # Generate topics
@@ -46,11 +52,11 @@ def language(document_size):
             'topics': topics, 'thetas': thetas,
             'doc_term_matrix': doc_term_matrix}
 
-    
+
 
 def gen_thetas(alpha, D):
     return np.random.dirichlet(alpha, size=D)
-    
+
 
 def assert_probablity_distribution(results):
     assert (results >= 0).all()
@@ -61,7 +67,7 @@ class TestSLdaModel(unittest.TestCase):
     def test_slda(self):
         l = language(10000)
         n_iter = 2000
-        
+
         nu = l['K']
         sigma2 = 1
         np.random.seed(l['seed'])
@@ -70,7 +76,7 @@ class TestSLdaModel(unittest.TestCase):
             np.random.normal(scale=sigma2, size=l['D'])
         beta = np.repeat(0.01, l['V'])
         mu = 0
-        slda = SLDA(l, l['K'], l['alpha'], beta, mu, nu, sigma, n_iter,
+        slda = SLDA(l['K'], l['alpha'], beta, mu, nu, sigma, n_iter,
                     seed=l['seed'])
         slda.fit(l['doc_term_matrix'], y)
 
