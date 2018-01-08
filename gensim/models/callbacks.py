@@ -98,10 +98,10 @@ class CoherenceMetric(Metric):
         self.model = None
         self.topics = None
         super(CoherenceMetric, self).set_parameters(**kwargs)
-        
+
         cm = gensim.models.CoherenceModel(
             model=self.model, topics=self.topics, texts=self.texts, corpus=self.corpus,
-            dictionary=self.dictionary, window_size=self.window_size, 
+            dictionary=self.dictionary, window_size=self.window_size,
             coherence=self.coherence, topn=self.topn
         )
 
