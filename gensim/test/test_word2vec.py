@@ -18,7 +18,7 @@ import sys
 import numpy as np
 
 from gensim import utils
-from gensim.models import word2vec, keyedvectors
+from gensim.models import word2vec
 from gensim.test.utils import datapath, get_tmpfile, common_texts as sentences
 from testfixtures import log_capture
 from gensim.models.word2vec import Word2VecKeyedVectors
@@ -226,7 +226,7 @@ class TestWord2VecModel(unittest.TestCase):
         #  test persistence of the KeyedVectors of a model
         wv = model.wv
         wv.save(tmpf)
-        loaded_wv = keyedvectors.KeyedVectors.load(tmpf)
+        loaded_wv = Word2VecKeyedVectors.load(tmpf)
         self.assertTrue(np.allclose(wv.vectors, loaded_wv.vectors))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
@@ -269,7 +269,7 @@ class TestWord2VecModel(unittest.TestCase):
 
         wv = model.wv
         wv.save(tmpf)
-        loaded_kv = keyedvectors.KeyedVectors.load(tmpf)
+        loaded_kv = Word2VecKeyedVectors.load(tmpf)
         self.assertTrue(loaded_kv.vectors_norm is None)
 
     def testLoadPreKeyedVectorModel(self):
