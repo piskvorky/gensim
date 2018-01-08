@@ -616,6 +616,10 @@ class FastText(BaseWordEmbedddingsModel):
     def _get_keyedvector_instance(self):
         return FastTextKeyedVectors()
 
+    def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
+        most_similar = most_similar or FastTextKeyedVectors.most_similar
+        return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
+
 
 class FastTextVocab(Word2VecVocab):
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,

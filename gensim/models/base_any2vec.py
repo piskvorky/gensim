@@ -12,6 +12,7 @@ from numpy import vstack
 from gensim import matutils
 from numpy import float32 as REAL, ones, random, argmax
 from types import GeneratorType
+from gensim.utils import deprecated
 
 try:
     from queue import Queue
@@ -453,29 +454,61 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def syn1(self):
         return self.trainables.syn1
 
+    @syn1.setter
+    def syn1(self, value):
+        self.trainables.syn1 = value
+
     @property
     def syn1neg(self):
         return self.trainables.syn1neg
+
+    @syn1neg.setter
+    def syn1neg(self, value):
+        self.trainables.syn1neg = value
 
     @property
     def layer1_size(self):
         return self.trainables.layer1_size
 
+    @layer1_size.setter
+    def layer1_size(self, value):
+        self.trainables.layer1_size = value
+
     @property
     def hashfxn(self):
         return self.trainables.hashfxn
+
+    @hashfxn.setter
+    def hashfxn(self, value):
+        self.trainables.hashfxn = value
 
     @property
     def sample(self):
         return self.vocabulary.sample
 
+    @sample.setter
+    def sample(self, value):
+        self.vocabulary.sample = value
+
     @property
     def min_count(self):
         return self.vocabulary.min_count
 
+    @min_count.setter
+    def min_count(self, value):
+        self.vocabulary.min_count = value
+
     @property
     def cum_table(self):
         return self.vocabulary.cum_table
+
+    @cum_table.setter
+    def cum_table(self, value):
+        self.vocabulary.cum_table = value
+
+    @cum_table.deleter
+    def cum_table(self):
+        del self.vocabulary.cum_table
 
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (
@@ -675,3 +708,77 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
             logger.warning(
                 "under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay"
             )
+
+    # for backward compatibility
+    @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar() instead")
+    def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
+        """
+        Deprecated. Use self.wv.most_similar() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.most_similar`
+        """
+        return self.wv.most_similar(positive, negative, topn, restrict_vocab, indexer)
+
+    @deprecated("Method will be removed in 4.0.0, use self.wv.wmdistance() instead")
+    def wmdistance(self, document1, document2):
+        """
+        Deprecated. Use self.wv.wmdistance() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.wmdistance`
+        """
+        return self.wv.wmdistance(document1, document2)
+
+    @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar_cosmul() instead")
+    def most_similar_cosmul(self, positive=None, negative=None, topn=10):
+        """
+        Deprecated. Use self.wv.most_similar_cosmul() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.most_similar_cosmul`
+        """
+        return self.wv.most_similar_cosmul(positive, negative, topn)
+
+    @deprecated("Method will be removed in 4.0.0, use self.wv.similar_by_word() instead")
+    def similar_by_word(self, word, topn=10, restrict_vocab=None):
+        """
+        Deprecated. Use self.wv.similar_by_word() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.similar_by_word`
+        """
+        return self.wv.similar_by_word(word, topn, restrict_vocab)
+
+    @deprecated("Method will be removed in 4.0.0, use self.wv.similar_by_vector() instead")
+    def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
+        """
+        Deprecated. Use self.wv.similar_by_vector() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.similar_by_vector`
+        """
+        return self.wv.similar_by_vector(vector, topn, restrict_vocab)
+
+    @deprecated("Method will be removed in 4.0.0, use self.wv.doesnt_match() instead")
+    def doesnt_match(self, words):
+        """
+        Deprecated. Use self.wv.doesnt_match() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.doesnt_match`
+        """
+        return self.wv.doesnt_match(words)
+
+    @deprecated("Method will be removed in 4.0.0, use self.wv.similarity() instead")
+    def similarity(self, w1, w2):
+        """
+        Deprecated. Use self.wv.similarity() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.similarity`
+        """
+        return self.wv.similarity(w1, w2)
+
+    @deprecated("Method will be removed in 4.0.0, use self.wv.n_similarity() instead")
+    def n_similarity(self, ws1, ws2):
+        """
+        Deprecated. Use self.wv.n_similarity() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.n_similarity`
+        """
+        return self.wv.n_similarity(ws1, ws2)
+
+    @deprecated("Method will be removed in 4.0.0, use self.wv.evaluate_word_pairs() instead")
+    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
+                            case_insensitive=True, dummy4unknown=False):
+        """
+        Deprecated. Use self.wv.evaluate_word_pairs() instead.
+        Refer to the documentation for `gensim.models.KeyedVectors.evaluate_word_pairs`
+        """
+        return self.wv.evaluate_word_pairs(pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)

@@ -1083,6 +1083,22 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     def index2entity(self, value):
         self.index2word = value
 
+    @property
+    def syn0(self):
+        return self.vectors
+
+    @syn0.setter
+    def syn0(self, value):
+        self.vectors = value
+
+    @property
+    def syn0norm(self):
+        return self.vectors_norm
+
+    @syn0norm.setter
+    def syn0norm(self, value):
+        self.vectors_norm = value
+
     def __contains__(self, word):
         return word in self.vocab
 
