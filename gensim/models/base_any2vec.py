@@ -7,6 +7,7 @@ from timeit import default_timer
 import threading
 import numpy as np
 from six import string_types
+from six.moves import xrange
 from numpy import vstack
 from gensim import matutils
 from numpy import float32 as REAL, ones, random, argmax
