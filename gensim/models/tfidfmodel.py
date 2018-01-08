@@ -272,7 +272,7 @@ class TfidfModel(interfaces.TransformationABC):
 
         vector = [
             (termid, tf * self.idfs.get(termid))
-            for termid, tf in zip(termid_array, tf_array) if self.idfs.get(termid, 0.0) > eps
+            for termid, tf in zip(termid_array, tf_array) if self.idfs.get(termid, 0.0) != 0.0
         ]
 
         if self.normalize is True:
