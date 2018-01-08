@@ -85,7 +85,7 @@ class BM25(object):
         """Calculates frequencies of terms in documents and in corpus. Also computes inverse document frequencies."""
         for document in self.corpus:
             frequencies = {}
-            doc_length.append(len(document))
+            (self.doc_length).append(len(document))
             for word in document:
                 if word not in frequencies:
                     frequencies[word] = 0
