@@ -624,7 +624,9 @@ class Doc2VecVocab(Word2VecVocab):
 
     def indexed_doctags(self, doctag_tokens):
         """Return indexes and backing-arrays used in training examples."""
-        return [Doc2VecKeyedVectors._int_index(index, self.doctags, self.max_rawint) for index in doctag_tokens if self._tag_seen(index)]
+        return [
+            Doc2VecKeyedVectors._int_index(index, self.doctags, self.max_rawint)
+            for index in doctag_tokens if self._tag_seen(index)]
 
     def _tag_seen(self, index):
         if isinstance(index, integer_types + (integer,)):
@@ -664,7 +666,8 @@ class Doc2VecTrainables(Word2VecTrainables):
 
         for i in xrange(length):
             # construct deterministic seed from index AND model seed
-            seed = "%d %s" % (self.seed, Doc2VecKeyedVectors._index_to_doctag(i, vocabulary.offset2doctag, vocabulary.max_rawint))
+            seed = "%d %s" % (
+                self.seed, Doc2VecKeyedVectors._index_to_doctag(i, vocabulary.offset2doctag, vocabulary.max_rawint))
             self.vectors_docs[i] = self.seeded_vector(seed)
 
     def save(self, *args, **kwargs):
@@ -877,7 +880,8 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         logger.debug("using docs %s", docs)
         if not docs:
             raise ValueError("cannot select a doc from an empty list")
-        vectors = vstack(self.vectors_docs_norm[self._int_index(doc, self.doctags, self.max_rawint)] for doc in docs).astype(REAL)
+        vectors = vstack(
+            self.vectors_docs_norm[self._int_index(doc, self.doctags, self.max_rawint)] for doc in docs).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
         return sorted(zip(dists, docs))[0][1]

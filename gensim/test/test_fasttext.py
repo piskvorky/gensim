@@ -225,7 +225,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(new_model.wv.max_n, 6)
         self.assertEqual(new_model.wv.min_n, 3)
         self.assertEqual(new_model.wv.vectors.shape, (len(new_model.wv.vocab), new_model.vector_size))
-        self.assertEqual(new_model.wv.vectors_ngrams.shape, (new_model.trainables.num_ngram_vectors, new_model.vector_size))
+        self.assertEqual(
+            new_model.wv.vectors_ngrams.shape, (new_model.trainables.num_ngram_vectors, new_model.vector_size))
 
     def test_load_model_supervised(self):
         with self.assertRaises(NotImplementedError):
@@ -250,11 +251,13 @@ class TestFastTextModel(unittest.TestCase):
     def test_n_similarity(self):
         # In vocab, sanity check
         self.assertTrue(np.allclose(self.test_model.wv.n_similarity(['the', 'and'], ['and', 'the']), 1.0))
-        self.assertEqual(self.test_model.wv.n_similarity(['the'], ['and']), self.test_model.wv.n_similarity(['and'], ['the']))
+        self.assertEqual(
+            self.test_model.wv.n_similarity(['the'], ['and']), self.test_model.wv.n_similarity(['and'], ['the']))
         # Out of vocab check
         self.assertTrue(np.allclose(self.test_model.wv.n_similarity(['night', 'nights'], ['nights', 'night']), 1.0))
         self.assertEqual(
-            self.test_model.wv.n_similarity(['night'], ['nights']), self.test_model.wv.n_similarity(['nights'], ['night'])
+            self.test_model.wv.n_similarity(['night'], ['nights']),
+            self.test_model.wv.n_similarity(['nights'], ['night'])
         )
 
     def test_similarity(self):
@@ -263,7 +266,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(self.test_model.wv.similarity('the', 'and'), self.test_model.wv.similarity('and', 'the'))
         # Out of vocab check
         self.assertTrue(np.allclose(self.test_model.wv.similarity('nights', 'nights'), 1.0))
-        self.assertEqual(self.test_model.wv.similarity('night', 'nights'), self.test_model.wv.similarity('nights', 'night'))
+        self.assertEqual(
+            self.test_model.wv.similarity('night', 'nights'), self.test_model.wv.similarity('nights', 'night'))
 
     def test_most_similar(self):
         # In vocab, sanity check
@@ -271,7 +275,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(self.test_model.wv.most_similar('the'), self.test_model.wv.most_similar(positive=['the']))
         # Out of vocab check
         self.assertEqual(len(self.test_model.wv.most_similar(['night', 'nights'], topn=5)), 5)
-        self.assertEqual(self.test_model.wv.most_similar('nights'), self.test_model.wv.most_similar(positive=['nights']))
+        self.assertEqual(
+            self.test_model.wv.most_similar('nights'), self.test_model.wv.most_similar(positive=['nights']))
 
     def test_most_similar_cosmul(self):
         # In vocab, sanity check

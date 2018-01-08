@@ -564,7 +564,8 @@ class FastText(BaseWordEmbedddingsModel):
         self.num_original_vectors = num_vectors
         self.trainables.vectors_ngrams = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
         self.trainables.vectors_ngrams = self.trainables.vectors_ngrams.reshape((num_vectors, dim))
-        assert self.trainables.vectors_ngrams.shape == (self.trainables.bucket + len(self.vocabulary.vocab), self.vector_size), \
+        assert self.trainables.vectors_ngrams.shape == (
+            self.trainables.bucket + len(self.vocabulary.vocab), self.vector_size), \
             'mismatch between actual weight matrix shape {} and expected shape {}'\
             .format(
                 self.trainables.vectors_ngrams.shape, (self.trainables.bucket + len(self.wv.vocab), self.vector_size)
