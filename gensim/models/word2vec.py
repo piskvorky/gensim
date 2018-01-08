@@ -1173,11 +1173,6 @@ class Word2VecTrainables(BaseModelTrainables):
         self.hashfxn = hashfxn
         self.layer1_size = vector_size
 
-    def save(self, *args, **kwargs):
-        # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm'])
-        super(Word2VecTrainables, self).save(*args, **kwargs)
-
     def prepare_weights(self, hs, negative, update=False, vocabulary=None):
         """Build tables and model weights based on final vocabulary settings."""
         # set initial input/projection and hidden weights
