@@ -4,7 +4,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """This module contains function of computing rank scores for documents in
-corpus and helper class `BM25` used in calculations. Original alhorithm
+corpus and helper class `BM25` used in calculations. Original algorithm
 descibed in [1]_, also you may check Wikipedia page [2]_.
 
 
@@ -61,7 +61,8 @@ class BM25(object):
         Dictionary with terms frequencies for whole `corpus`. Words used as keys and frequencies as values.
     idf : dict
         Dictionary with inversed terms frequencies for whole `corpus`. Words used as keys and frequencies as values.
-
+    doc_len : list of int
+        List of document lengths.
     """
 
     def __init__(self, corpus):
@@ -85,7 +86,7 @@ class BM25(object):
         """Calculates frequencies of terms in documents and in corpus. Also computes inverse document frequencies."""
         for document in self.corpus:
             frequencies = {}
-            (self.doc_len).append(len(document))
+            self.doc_len.append(len(document))
             for word in document:
                 if word not in frequencies:
                     frequencies[word] = 0
