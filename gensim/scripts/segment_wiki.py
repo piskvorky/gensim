@@ -109,7 +109,7 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
 
     """
     if output_file is None:
-        outfile = sys.stdout
+        outfile = getattr(sys.stdout, 'buffer', sys.stdout)  # we want write bytes, so for py3 we used 'buffer'
     else:
         outfile = smart_open(output_file, 'wb')
 
@@ -122,9 +122,10 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
                 output_data["section_texts"].append(section_content)
             if (idx + 1) % 100000 == 0:
                 logger.info("processed #%d articles (at %r now)", idx + 1, article_title)
-            outfile.write(json.dumps(output_data) + "\n")
+            outfile.write((json.dumps(output_data) + "\n").encode('utf-8'))
     finally:
-        outfile.close()
+        if output_file is not None:
+            outfile.close()
 
 
 def extract_page_xmls(f):

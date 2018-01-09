@@ -281,6 +281,7 @@ def _download(name):
     """
     url_load_file = "{base}/{fname}/__init__.py".format(base=DOWNLOAD_BASE_URL, fname=name)
     data_folder_dir = os.path.join(base_dir, name)
+    data_folder_dir_tmp = data_folder_dir + '_tmp'
     tmp_dir = tempfile.mkdtemp()
     init_path = os.path.join(tmp_dir, "__init__.py")
     urllib.urlretrieve(url_load_file, init_path)
@@ -310,7 +311,6 @@ def _download(name):
                 with open(part_path, "rb") as rfp:
                     shutil.copyfileobj(rfp, wfp)
                 os.remove(part_path)
-        os.rename(tmp_dir, data_folder_dir)
     else:
         url_data = "{base}/{fname}/{fname}.gz".format(base=DOWNLOAD_BASE_URL, fname=name)
         fname = "{fname}.gz".format(fname=name)
@@ -323,7 +323,12 @@ def _download(name):
         else:
             shutil.rmtree(tmp_dir)
             raise Exception("Checksum comparison failed, try again")
-        os.rename(tmp_dir, data_folder_dir)
+
+    if os.path.exists(data_folder_dir_tmp):
+        os.remove(data_folder_dir_tmp)
+
+    shutil.move(tmp_dir, data_folder_dir_tmp)
+    os.rename(data_folder_dir_tmp, data_folder_dir)
 
 
 def _get_filename(name):

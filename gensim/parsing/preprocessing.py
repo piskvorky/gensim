@@ -363,7 +363,7 @@ def preprocess_documents(docs):
 
     Returns
     -------
-    list of (list of str)
+    list of list of str
         Processed documents split by whitespace.
 
     Examples

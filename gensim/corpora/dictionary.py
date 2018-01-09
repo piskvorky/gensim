@@ -148,9 +148,9 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         token2id = self.token2id
         if allow_update or return_missing:
-            missing = {w: freq for w, freq in iteritems(counter) if w not in token2id}
+            missing = sorted(x for x in iteritems(counter) if x[0] not in token2id)
             if allow_update:
-                for w in missing:
+                for w, _ in missing:
                     # new id = number of ids made so far;
                     # NOTE this assumes there are no gaps in the id sequence!
                     token2id[w] = len(token2id)
@@ -169,7 +169,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         # return tokenids, in ascending id order
         result = sorted(iteritems(result))
         if return_missing:
-            return result, missing
+            return result, dict(missing)
         else:
             return result
 
@@ -306,7 +306,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
-        idmap = dict(izip(itervalues(self.token2id), xrange(len(self.token2id))))
+        idmap = dict(izip(sorted(itervalues(self.token2id)), xrange(len(self.token2id))))
 
         # reassign mappings to new ids
         self.token2id = {token: idmap[tokenid] for token, tokenid in iteritems(self.token2id)}
