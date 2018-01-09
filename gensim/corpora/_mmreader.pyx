@@ -15,12 +15,26 @@ logger = logging.getLogger(__name__)
 
 cdef class MmReader(object):
     """
+    matrix market file reader
+
     Wrap a term-document matrix on disk (in matrix-market format), and present it
     as an object which supports iteration over the rows (~documents).
 
+    Attributes
+    ----------
+    num_docs : int
+        number of documents in market matrix file
+    num_terms : int
+        number of terms
+    num_nnz : int
+        number of non-zero terms
+
+    Notes
+    ----------
     Note that the file is read into memory one document at a time, not the whole
     matrix at once (unlike scipy.io.mmread). This allows us to process corpora
     which are larger than the available RAM.
+
     """
     cdef public input
     cdef public bint transposed
@@ -28,14 +42,21 @@ cdef class MmReader(object):
 
     def __init__(self, input, transposed=True):
         """
-        Initialize the matrix reader.
+        MmReader(input, transposed=True):
 
-        The `input` refers to a file on local filesystem, which is expected to
-        be in the sparse (coordinate) Matrix Market format. Documents are assumed
-        to be rows of the matrix (and document features are columns).
+        Create matrix reader
 
-        `input` is either a string (file path) or a file-like object that supports
-        `seek()` (e.g. gzip.GzipFile, bz2.BZ2File). File-like objects are not closed automatically.
+        Parameters
+        ----------
+        input : string or file-like
+            string (file path) or a file-like object that supports
+            `seek()` (e.g. gzip.GzipFile, bz2.BZ2File). File-like objects are
+            not closed automatically.
+
+        transposed : bool
+            if True, expects lines to represent doc_id, term_id, value
+            else, expects term_id, doc_id, value
+
         """
         logger.info("initializing cython corpus reader from %s", input)
         self.input, self.transposed = input, transposed
@@ -73,7 +94,15 @@ cdef class MmReader(object):
 
     def skip_headers(self, input_file):
         """
+        skip_headers(self, input_file)
+
         Skip file headers that appear before the first document.
+
+        Parameters
+        ----------
+        input_file : iterable
+            consumes any lines from start of `input_file` that begin with a %
+
         """
         for line in input_file:
             if line.startswith(b'%'):
@@ -82,13 +111,23 @@ cdef class MmReader(object):
 
     def __iter__(self):
         """
-        Iteratively yield vectors from the underlying file, in the format (row_no, vector),
-        where vector is a list of (col_no, value) 2-tuples.
+        __iter__()
 
+        Iterate through vectors from underlying matrix
+
+        Yields
+        ------
+        int, list of (termid, val)
+            document id and "vector" of terms for next document in matrix
+            vector of terms is represented as a list of (termid, val) tuples
+
+        Notes
+        ------
         Note that the total number of vectors returned is always equal to the
         number of rows specified in the header; empty documents are inserted and
         yielded where appropriate, even if they are not explicitly stored in the
         Matrix Market file.
+
         """
         cdef int docid, termid, previd
         cdef double val = 0
@@ -136,7 +175,23 @@ cdef class MmReader(object):
             yield previd, []
 
     def docbyoffset(self, offset):
-        """Return document at file offset `offset` (in bytes)"""
+        """
+        docbyoffset(offset)
+
+        Return document at file offset `offset` (in bytes)
+
+        Parameters
+        ----------
+        offset : int
+            offset, in bytes, of desired document
+
+        Returns
+        ------
+        list of (termid, val)
+            "vector" of terms for document at offset
+            vector of terms is represented as a list of (termid, val) tuples
+
+        """
         # empty documents are not stored explicitly in MM format, so the index marks
         # them with a special offset, -1.
         cdef int docid, termid, previd
