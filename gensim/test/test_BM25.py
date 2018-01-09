@@ -28,8 +28,8 @@ class TestBM25(unittest.TestCase):
         """ All the weights for a partiular document should be non negative """
         weights = get_bm25_weights(common_texts)
         for doc_weights in weights:
-        	for weight in doc_weights:
-        		self.assertTrue(weight >= 0)
+            for weight in doc_weights:
+                self.assertTrue(weight >= 0)
 
     def test_same_match_with_same_document(self):
         """ A document should always get the same weight when matched with a particular document """
