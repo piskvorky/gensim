@@ -278,10 +278,12 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Notes
         -----
-        For tokens that appear in \n
-        1. less than `no_below` documents (absolute number) or \n
-        2. more than `no_above` documents (fraction of total corpus size, *not* absolute number). \n
-        3. after (1) and (2), keep only the first `keep_n` most frequent tokens (orkeep all if `None`). \n
+        For tokens that appear in:
+
+        #. Less than `no_below` documents (absolute number) or \n
+        #. More than `no_above` documents (fraction of total corpus size, *not* absolute number).
+        #. After (1) and (2), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
+
         Since HashDictionary's id range is fixed and doesn't depend on
         the number of tokens seen, this doesn't really "remove" anything. It only
         clears some supplementary statistics, for easier debugging and a smaller RAM

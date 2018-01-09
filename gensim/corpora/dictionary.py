@@ -300,14 +300,14 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Notes
         -----
-        Filter out tokens that appear in \n
-        1. less than `no_below` documents (absolute number) or \n
-        2. more than `no_above` documents (fraction of total corpus size, *not* absolute number) \n
-        #TODO: some strange stringjumps
-        3. if tokens are given in keep_tokens (list of strings), they will be kept regardless of
-        the `no_below` and `no_above` settings \n
-        4. after (1), (2) and (3), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
-        After the pruning, shrink resulting gaps in word ids. \n
+        Filter out tokens that appear in:
+
+        #. Less than `no_below` documents (absolute number).
+        #. More than `no_above` documents (fraction of total corpus size, *not* absolute number).
+        #. If tokens are given in keep_tokens, they will be kept regardless of the `no_below` and `no_above` settings.
+        #. After (1), (2) and (3), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
+
+        After the pruning, shrink resulting gaps in word ids.
         Due to the gap shrinking, the same word may have a different word id before and after the call to this function!
 
         Parameters
