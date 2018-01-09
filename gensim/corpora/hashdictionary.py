@@ -335,7 +335,7 @@ class HashDictionary(utils.SaveLoad, dict):
         >>> from gensim.corpora import hashdictionary
         >>> data = hashdictionary.HashDictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
         >>> data.save_as_text("testdata")
-        Got file "testdata.txt" with specified format (look at Notes).
+        Got file "testdata.txt" with specified format (look at Notes for info).
 
         """
         logger.info("saving HashDictionary mapping to %s" % fname)
