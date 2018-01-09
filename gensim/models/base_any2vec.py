@@ -458,6 +458,10 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def syn1(self, value):
         self.trainables.syn1 = value
 
+    @syn1.deleter
+    def syn1(self):
+        del self.trainables.syn1
+
     @property
     def syn1neg(self):
         return self.trainables.syn1neg
@@ -465,6 +469,10 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     @syn1neg.setter
     def syn1neg(self, value):
         self.trainables.syn1neg = value
+
+    @syn1neg.deleter
+    def syn1neg(self):
+        del self.trainables.syn1neg
 
     @property
     def layer1_size(self):
