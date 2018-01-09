@@ -42,7 +42,7 @@ except ImportError:
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
 from gensim.models.fasttext import FastText
-from gensim.models.keyedvectors import KeyedVectors
+from gensim.models import KeyedVectors
 from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors
 try:
     from annoy import AnnoyIndex
@@ -55,7 +55,7 @@ except ImportError:
 class AnnoyIndexer(object):
     """This class allows to use `Annoy <https://github.com/spotify/annoy>`_ as indexer for ``most_similar`` method
     from :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
-    :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.KeyedVectors` classes.
+    :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.word2vec.Word2VecKeyedVectors` classes.
     """
 
     def __init__(self, model=None, num_trees=None):
@@ -63,7 +63,7 @@ class AnnoyIndexer(object):
         Parameters
         ----------
         model : :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
-                :class:`~gensim.models.keyedvectors.KeyedVectors`
+                :class:`~gensim.models.word2vec.Word2VecKeyedVectors`
                 or :class:`~gensim.models.fasttext.FastText`, optional
             Model, that will be used as source for index.
         num_trees : int, optional

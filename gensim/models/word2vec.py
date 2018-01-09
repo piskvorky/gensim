@@ -39,7 +39,7 @@ as a KeyedVectors instance::
     NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights,
     vocabulary frequency and the binary tree is missing::
 
-        >>> from gensim.models.keyedvectors import KeyedVectors
+        >>> from gensim.models import KeyedVectors
         >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
         >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
 

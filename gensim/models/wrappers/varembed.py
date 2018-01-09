@@ -22,7 +22,7 @@ import logging
 import numpy as np
 
 from gensim import utils
-from gensim.models.keyedvectors import KeyedVectors
+from gensim.models import KeyedVectors
 from gensim.models.word2vec import Vocab
 
 logger = logging.getLogger(__name__)
