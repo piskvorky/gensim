@@ -1556,6 +1556,7 @@ static const char __pyx_k_pyx_capi[] = "__pyx_capi__";
 static const char __pyx_k_sent_idx[] = "sent_idx";
 static const char __pyx_k_sentence[] = "sentence";
 static const char __pyx_k_EXP_TABLE[] = "EXP_TABLE";
+static const char __pyx_k_LOG_TABLE[] = "LOG_TABLE";
 static const char __pyx_k_cbow_mean[] = "cbow_mean";
 static const char __pyx_k_cum_table[] = "cum_table";
 static const char __pyx_k_enumerate[] = "enumerate";
@@ -1602,6 +1603,7 @@ static PyObject *__pyx_n_s_FAST_VERSION;
 static PyObject *__pyx_kp_u_Format_string_allocated_too_shor;
 static PyObject *__pyx_kp_u_Format_string_allocated_too_shor_2;
 static PyObject *__pyx_n_s_ImportError;
+static PyObject *__pyx_n_s_LOG_TABLE;
 static PyObject *__pyx_n_s_MAX_WORDS_IN_BATCH;
 static PyObject *__pyx_kp_u_Non_native_byte_order_not_suppor;
 static PyObject *__pyx_n_s_REAL;
@@ -10961,6 +10963,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_u_Format_string_allocated_too_shor, __pyx_k_Format_string_allocated_too_shor, sizeof(__pyx_k_Format_string_allocated_too_shor), 0, 1, 0, 0},
   {&__pyx_kp_u_Format_string_allocated_too_shor_2, __pyx_k_Format_string_allocated_too_shor_2, sizeof(__pyx_k_Format_string_allocated_too_shor_2), 0, 1, 0, 0},
   {&__pyx_n_s_ImportError, __pyx_k_ImportError, sizeof(__pyx_k_ImportError), 0, 0, 1, 1},
+  {&__pyx_n_s_LOG_TABLE, __pyx_k_LOG_TABLE, sizeof(__pyx_k_LOG_TABLE), 0, 0, 1, 1},
   {&__pyx_n_s_MAX_WORDS_IN_BATCH, __pyx_k_MAX_WORDS_IN_BATCH, sizeof(__pyx_k_MAX_WORDS_IN_BATCH), 0, 0, 1, 1},
   {&__pyx_kp_u_Non_native_byte_order_not_suppor, __pyx_k_Non_native_byte_order_not_suppor, sizeof(__pyx_k_Non_native_byte_order_not_suppor), 0, 1, 0, 0},
   {&__pyx_n_s_REAL, __pyx_k_REAL, sizeof(__pyx_k_REAL), 0, 0, 1, 1},
@@ -11378,6 +11381,7 @@ PyMODINIT_FUNC PyInit_word2vec_inner(void)
   if (__Pyx_ExportVoidPtr(__pyx_n_s_snrm2, (void *)&__pyx_v_6gensim_6models_14word2vec_inner_snrm2, "__pyx_t_6gensim_6models_14word2vec_inner_snrm2_ptr") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   if (__Pyx_ExportVoidPtr(__pyx_n_s_sscal, (void *)&__pyx_v_6gensim_6models_14word2vec_inner_sscal, "__pyx_t_6gensim_6models_14word2vec_inner_sscal_ptr") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   if (__Pyx_ExportVoidPtr(__pyx_n_s_EXP_TABLE, (void *)&__pyx_v_6gensim_6models_14word2vec_inner_EXP_TABLE, "__pyx_t_6gensim_6models_14word2vec_inner_REAL_t [0x3E8]") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  if (__Pyx_ExportVoidPtr(__pyx_n_s_LOG_TABLE, (void *)&__pyx_v_6gensim_6models_14word2vec_inner_LOG_TABLE, "__pyx_t_6gensim_6models_14word2vec_inner_REAL_t [0x3E8]") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   if (__Pyx_ExportVoidPtr(__pyx_n_s_our_dot, (void *)&__pyx_v_6gensim_6models_14word2vec_inner_our_dot, "__pyx_t_6gensim_6models_14word2vec_inner_our_dot_ptr") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   if (__Pyx_ExportVoidPtr(__pyx_n_s_our_saxpy, (void *)&__pyx_v_6gensim_6models_14word2vec_inner_our_saxpy, "__pyx_t_6gensim_6models_14word2vec_inner_our_saxpy_ptr") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   /*--- Function export code ---*/
