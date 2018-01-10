@@ -552,6 +552,17 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         """
         return self.docvecs.init_sims(replace=replace)
 
+    @classmethod
+    def load(cls, *args, **kwargs):
+        try:
+            return super(Doc2Vec, cls).load(*args, **kwargs)
+        except AttributeError:
+            # from IPython.core.debugger import set_trace
+            # set_trace()
+            logger.info('Model saved using code from ealier Gensim Version. Re-loading old model in a compatible way.')
+            from gensim.models.deprecated.doc2vec import load_old_doc2vec
+            return load_old_doc2vec(*args, **kwargs)
+
 
 class Doc2VecVocab(Word2VecVocab):
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0):

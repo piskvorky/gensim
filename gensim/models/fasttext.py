@@ -606,12 +606,17 @@ class FastText(BaseWordEmbedddingsModel):
         :obj: `~gensim.models.fasttext.FastText`
             Returns the loaded model as an instance of :class: `~gensim.models.fasttext.FastText`.
         """
-        model = super(FastText, cls).load(*args, **kwargs)
-        if not hasattr(model.trainables, 'vectors_vocab_lockf') and hasattr(model.trainables, 'vectors_vocab'):
-            model.trainables.vectors_vocab_lockf = ones(len(model.trainables.vectors), dtype=REAL)
-        if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.trainables, 'vectors_ngrams'):
-            model.trainables.vectors_ngrams_lockf = ones(len(model.trainables.vectors), dtype=REAL)
-        return model
+        try:
+            model = super(FastText, cls).load(*args, **kwargs)
+            if not hasattr(model.trainables, 'vectors_vocab_lockf') and hasattr(model.trainables, 'vectors_vocab'):
+                model.trainables.vectors_vocab_lockf = ones(len(model.trainables.vectors), dtype=REAL)
+            if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.trainables, 'vectors_ngrams'):
+                model.trainables.vectors_ngrams_lockf = ones(len(model.trainables.vectors), dtype=REAL)
+            return model
+        except:
+            logger.info('Model saved using code from ealier Gensim Version. Re-loading old model in a compatible way.')
+            from gensim.models.deprecated.fasttext import load_old_fasttext
+            return load_old_fasttext(*args, **kwargs)
 
     def _get_keyedvector_instance(self):
         return FastTextKeyedVectors()

@@ -475,6 +475,18 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         del self.trainables.syn1neg
 
     @property
+    def syn0_lockf(self):
+        return self.trainables.vectors_lockf
+
+    @syn0_lockf.setter
+    def syn0_lockf(self, value):
+        self.trainables.vectors_lockf = value
+
+    @syn0_lockf.deleter
+    def syn0_lockf(self):
+        del self.trainables.vectors_lockf
+
+    @property
     def layer1_size(self):
         return self.trainables.layer1_size
 
@@ -640,19 +652,6 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
             model.train_count = 0
             model.total_train_time = 0
         return model
-
-    def _load_specials(self, *args, **kwargs):
-        super(BaseWordEmbedddingsModel, self)._load_specials(*args, **kwargs)
-        # loading from a pre-KeyedVectors word2vec model
-        if not hasattr(self, 'wv'):
-            self.wv = self._get_keyedvector_instance()
-            try:
-                self._set_keyedvectors()
-            except AttributeError:
-                # load model saved with previous Gensim version
-                raise RuntimeError(
-                    "You might be trying to load a Gensim model saved using an older Gensim version."
-                    "Current Gensim version does not support loading old models.")
 
     def _get_keyedvector_instance(self):
         raise NotImplementedError

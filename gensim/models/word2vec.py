@@ -756,6 +756,25 @@ class Word2Vec(BaseWordEmbedddingsModel):
             del self.trainables.vectors_lockf
         self.model_trimmed_post_training = True
 
+    @classmethod
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+                         limit=None, datatype=REAL):
+        """Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead."""
+        raise DeprecationWarning("Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
+
+    def save_word2vec_format(self, fname, fvocab=None, binary=False):
+        """Deprecated. Use model.wv.save_word2vec_format instead."""
+        raise DeprecationWarning("Deprecated. Use model.wv.save_word2vec_format instead.")
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        try:
+            return super(Word2Vec, cls).load(*args, **kwargs)
+        except AttributeError:
+            logger.info('Model saved using code from ealier Gensim Version. Re-loading old model in a compatible way.')
+            from gensim.models.deprecated.word2vec import load_old_word2vec
+            return load_old_word2vec(*args, **kwargs)
+
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
