@@ -14,23 +14,22 @@ Initialize a model with e.g.
 >>> from gensim.models import Sent2Vec
 >>> from gensim.test.utils import common_texts
 >>>
->>> model = Sent2Vec(common_texts, size=100, min_count=5, word_ngrams=2, dropoutk=2)
+>>> model = Sent2Vec(common_texts, size=100, min_count=1)
 
 Or
 
->>> model = Sent2Vec(size=100, min_count=5, word_ngrams=2, dropoutk=2)
+>>> model = Sent2Vec(size=100, min_count=1)
 >>> model.build_vocab(common_texts)
 >>> model.train(common_texts)
+145
 
 The sentence vectors are stored in a numpy array
 
->>> model.sentence_vectors(['This', 'is', 'an', 'awesome', 'gift']) # numpy vector of a sentence
-array([0.68231279,  0.27833666,  0.16755685, -0.42549644, ...])
+>>> vector = model.sentence_vectors(['computer', 'interface']) # vector of a sentence
 
 You can perform the NLP similarity task with the model
 
->>> model.similarity(['This', 'is', 'an', 'awesome', 'gift'], ['This', 'present', 'is', 'great'])
-0.792567220458
+>>> similarity = model.similarity(['graph', 'minors', 'trees'], ['eps', 'user', 'interface', 'system'])
 
 
 References
@@ -53,6 +52,7 @@ from types import GeneratorType
 import os
 import threading
 from timeit import default_timer
+from six.moves import xrange
 
 try:
     from queue import Queue
@@ -72,34 +72,32 @@ except ImportError:
     logger.warning('Slow version of %s is being used', __name__)
 
 
-class Entry():
-    """
-    Class for populating Sent2Vec's dictionary.
-    """
+class Entry(object):
+    """Class for populating Sent2Vec's dictionary."""
 
     def __init__(self, word=None, count=0):
         """
-        Initialize a single dictionary entry.
+
         Parameters
         ----------
-        word : str
+        word : str, optional
             Actual vocabulary word.
         count : int
             Number of times the word occurs in the vocabulary.
-        """
 
+        """
         self.word = word
         self.count = count
 
 
-class ModelDictionary():
-    """Class for maintaining Sent2Vec's vocbulary. Provides functionality for storing and training
+class ModelDictionary(object):
+    """Class for maintaining Sent2Vec vocbulary. Provides functionality for storing and training
     word and character ngrams.
 
     """
 
     def __init__(self, t, bucket, minn, maxn, max_vocab_size, max_line_size=1024):
-        """Initialize a sent2vec dictionary.
+        """
 
         Parameters
         ----------
@@ -112,14 +110,12 @@ class ModelDictionary():
         maxn : int
             Max length of char ngrams.
         max_vocab_size : int
-            Limit RAM during vocabulary building; if there are more unique
-            words than this, then prune the infrequent ones. Every 10 million word types
-            need about 1GB of RAM.
-        max_line_size : int
-            Maximum number of characters in a sentence. Default is 1024.
+            Limit RAM during vocabulary building; if there are more unique words than this,
+            then prune the infrequent ones.
+        max_line_size : int, optional
+            Maximum number of characters in a sentence.
 
         """
-
         self.max_vocab_size = max_vocab_size
         self.max_line_size = max_line_size
         self.words = []
@@ -132,9 +128,10 @@ class ModelDictionary():
         self.maxn = maxn
         self.minn = minn
 
-    def hash_(self, word):
-        """
-        Compute hash of given word.
+    @staticmethod
+    def hash_(word):
+        """Compute hash of given word.
+
         Parameters
         ----------
         word : str
@@ -143,8 +140,8 @@ class ModelDictionary():
         -------
         int
             Hash of the given word.
-        """
 
+        """
         h = 2166136261
         for i in range(len(word)):
             h = h ^ ord(word[i])
@@ -152,32 +149,33 @@ class ModelDictionary():
         return h
 
     def find(self, word):
-        """
-        Find hash of given word. The word may or may not be present in the vocabulary.
+        """Find hash of given word. The word may or may not be present in the vocabulary.
+
         Parameters
         ----------
         word : str
             Actual vocabulary word.
+
         Returns
         -------
         int
             Hash of the given word.
-        """
 
+        """
         h = self.hash_(word) % self.max_vocab_size
         while self.word2int[h] != -1 and self.words[self.word2int[h]].word != word:
             h = (h + 1) % self.max_vocab_size
         return h
 
     def add(self, word):
-        """
-        Add given word to vocabulary.
+        """Add given word to vocabulary.
+
         Parameters
         ----------
         word : str
             Actual vocabulary word.
-        """
 
+        """
         h = self.find(word)
         self.ntokens += 1
         if self.word2int[h] == -1:
@@ -189,21 +187,19 @@ class ModelDictionary():
             self.words[self.word2int[h]].count += 1
 
     def read(self, sentences, min_count):
-        """Process all words present in sentences (where each sentence is a list of unicode strings).
-        Initialize discard table to downsample higher frequency words according to given sampling threshold.
+        """Process all words present in sentences.
+        Initialize discard table to downsampled higher frequency words according to given sampling threshold.
         Also initialize character ngrams for all words and threshold lower frequency words if their count
-        is less than a given value (min_count).
+        is less than a given value `min_count`.
 
         Parameters
         ----------
-        sentences : iterable or list of list of unicode strings
-            For larger corpora (like the Toronto corpus), consider an iterable that streams the sentences
-            directly from disk/network. See :class:`TorontoCorpus` in this module for such examples.
+        sentences : iterable of iterable of str
+            Stream of sentences, see :class:`~gensim.models.sent2vec.TorontoCorpus` in this module for such examples.
         min_count : int
             Value for thresholding lower frequency words.
 
         """
-
         min_threshold = 1
         for sentence in sentences:
             for word in sentence:
@@ -217,19 +213,18 @@ class ModelDictionary():
         self.threshold(min_count)
         self.init_table_discard()
         logger.info("Read %.2f M words", self.ntokens / 1000000)
-        if(self.size == 0):
-            logger.error("Empty vocabulary. Try a smaller minCount value.")
-            sys.exit()
+        if self.size == 0:
+            raise RuntimeError("Empty vocabulary. Try a smaller min_count value.")
 
     def threshold(self, t):
-        """
-        Remove words from vocabulary having count lower than t.
+        """Remove words from vocabulary having count lower than `t`.
+
         Parameters
         ----------
         t : int
             Value for thresholding lower frequency words.
-        """
 
+        """
         self.words = [entry for entry in self.words if entry.count > t]
         self.size = 0
         self.word2int = [-1] * self.max_vocab_size
@@ -239,33 +234,30 @@ class ModelDictionary():
             self.size += 1
 
     def init_table_discard(self):
-        """
-        Downsampling higher frequency words. Initializing discard table according to
-        given sampling threshold.
-        """
+        """Downsample higher frequency words. Initializing discard table according to given sampling threshold."""
 
         for i in range(self.size):
             f = self.words[i].count / self.ntokens
-            self.pdiscard.append(((self.t / f)**(0.5)) + (self.t / f))
+            self.pdiscard.append(((self.t / f) ** 0.5) + (self.t / f))
 
     def add_ngrams_train(self, context, n, k):
-        """
-        Training word ngrams for a given context and target word.
+        """Training word ngrams for a given context and target word.
+
         Parameters
         ----------
-        context : list of integers
+        context : list of int
             List of word ids.
         n : int
             Number of word ngrams.
         k : int
-            Number of word ngrams dropped while
-        training a Sent2Vec model.
+            Number of word ngrams dropped while training a Sent2Vec model.
+
         Returns
         -------
-        line : list of integers
+        list of int
             List of word and word ngram ids.
-        """
 
+        """
         line = list(context)
         num_discarded = 0
         line_size = len(line)
@@ -287,19 +279,20 @@ class ModelDictionary():
         return line
 
     def add_ngrams(self, context, n):
-        """
-        Computing word ngrams for given sentence while infering sentence vector.
-        n is the number of word ngrams used.
+        """Computing word ngrams for given sentence while inferring sentence vector.
+
         Parameters
         ----------
-        context : list of integers
+        context : list of int
             List of word ids.
         n : int
             Number of word ngrams.
+
         Returns
         -------
-        line : list of integers
+        list of int
             List of word and word ngram ids.
+
         """
 
         line = list(context)
@@ -314,19 +307,20 @@ class ModelDictionary():
         return line
 
     def get_line(self, sentence):
-        """
-        Converting sentence to a list of
-        word ids inferred from the dictionary.
+        """Converting sentence to a list of word ids inferred from the dictionary.
+
         Parameters
         ----------
-        sentence : list of unicode strings
+        sentence : list of str
             List of words.
+
         Returns
         -------
         ntokens : int
             Number of tokens processed in given sentence.
         words : list of integers
             List of word ids.
+
         """
 
         words = []
@@ -349,7 +343,7 @@ class Sent2Vec(SaveLoad):
 
     """
 
-    def __init__(self, sentences=None, vector_size=100, lr=0.2, lr_update_rate=100, epochs=5,
+    def __init__(self, sentences=None, size=100, lr=0.2, lr_update_rate=100, epochs=5,
             min_count=5, neg=10, word_ngrams=2, loss_type='ns', bucket=2000000, t=0.0001,
             minn=3, maxn=6, dropoutk=2, seed=42, min_lr=0.001, batch_words=10000,
             workers=3, max_vocab_size=30000000):
@@ -360,7 +354,7 @@ class Sent2Vec(SaveLoad):
         sentences : iterable or list of list of unicode strings
             For larger corpora (like the Toronto corpus), consider an iterable that streams the sentences
             directly from disk/network. See :class:`TorontoCorpus` in this module for such examples.
-        vector_size : int
+        size : int
             Dimensionality of the feature vectors. Default is 100.
         lr : float
             Initial learning rate. Default is 0.2
@@ -410,7 +404,7 @@ class Sent2Vec(SaveLoad):
         self.loss = 0.0
         self.negative_table_size = 10000000
         self.negatives = []
-        self.vector_size = vector_size
+        self.vector_size = size
         self.lr = lr
         self.lr_update_rate = lr_update_rate
         self.epochs = epochs
