@@ -59,7 +59,6 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
     >>> # result should be ~ ln(1 / 2) = -0.693147181
     >>> result = direct_confirmation_measure.log_conditional_probability(segmentation, accumulator)[0]
 
-
     """
     topic_coherences = []
     num_docs = float(accumulator.num_docs)
