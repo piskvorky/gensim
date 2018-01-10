@@ -43,6 +43,7 @@ Modules:
     models/word2vec
     models/keyedvectors
     models/doc2vec
+    models/sent2vec
     models/fasttext
     models/phrases
     models/poincare
