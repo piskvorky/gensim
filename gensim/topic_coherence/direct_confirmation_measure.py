@@ -21,7 +21,7 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
     """
     This function calculates the log-conditional-probability measure
     which is used by coherence measures such as U_mass.
-    This is defined as: m_lc(S_i) = log[(P(W', W*) + e) / P(W*)]
+    This is defined as :math:`m_{lc}(S_i) = log \\frac{P(W', W^{*}) + \epsilon}{P(W^{*})}`.
 
     Args:
         segmented_topics (list): Output from the segmentation module of the segmented
