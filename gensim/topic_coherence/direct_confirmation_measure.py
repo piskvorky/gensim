@@ -27,10 +27,10 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
         :func:`~gensim.topic_coherence.segmentation.s_one_one`.
     accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator from :mod:`gensim.topic_coherence.probability_estimation`.
-    with_std : bool
+    with_std : bool, optional
         True to also include standard deviation across topic segment sets in addition to the mean coherence
         for each topic.
-    with_support : bool
+    with_support : bool, optional
         True to also include support across topic segments. The support is defined as the number of pairwise
         similarity comparisons were used to compute the overall topic coherence.
 
@@ -128,12 +128,12 @@ def log_ratio_measure(segmented_topics, accumulator, normalize=False, with_std=F
         :func:`~gensim.topic_coherence.segmentation.s_one_one`.
     accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator from :mod:`gensim.topic_coherence.probability_estimation`.
-    normalize : bool
+    normalize : bool, optional
         Details in the "Notes" section.
-    with_std : bool
+    with_std : bool, optional
         True to also include standard deviation across topic segment sets in addition to the mean coherence
         for each topic.
-    with_support : bool
+    with_support : bool, optional
         True to also include support across topic segments. The support is defined as the number of pairwise
         similarity comparisons were used to compute the overall topic coherence.
 

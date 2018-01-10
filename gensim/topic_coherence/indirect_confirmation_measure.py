@@ -52,10 +52,10 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
     accumulator : :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator` or
                   :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Word occurrence accumulator.
-    with_std : bool
+    with_std : bool, optional
         True to also include standard deviation across topic segment sets
         in addition to the mean coherence for each topic.
-    with_support : bool
+    with_support : bool, optional
         True to also include support across topic segments. The support is defined as
         the number of pairwise similarity comparisons were used to compute the overall topic coherence.
 
@@ -123,9 +123,9 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
         Output from the segmentation module of the segmented topics.
     accumulator: :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
         Output from the probability_estimation module. Is an topics: Topics obtained from the trained topic model.
-    measure : str
+    measure : str, optional
         Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
-    gamma: float
+    gamma: float, optional
         Gamma value for computing :math:`W'` and :math:`W^{*}` vectors.
     with_std : bool
         True to also include standard deviation across topic segment sets in addition to the mean coherence
@@ -185,7 +185,7 @@ class ContextVectorComputer(object):
     ----------
     measure: str
         Confirmation measure.
-    topics: list
+    topics: list of numpy.array
         Topics.
     accumulator : :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator` or
                   :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
@@ -255,10 +255,6 @@ class ContextVectorComputer(object):
         csr_matrix :class:`~scipy.sparse.csr`
             If context vector has been cached, then return corresponding context vector,
             else compute, cache, and return.
-
-        Example
-        ---------
-        #TODO Need help with understanding parameters' types.
 
         """
         key = _key_for_segment(segment_word_ids, topic_word_ids)

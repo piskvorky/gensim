@@ -48,7 +48,6 @@ def p_boolean_document(corpus, segmented_topics):
     ... ]
     >>> dictionary = HashDictionary(texts)
     >>> w2id = dictionary.token2id
-
     >>>
     >>> # create segmented_topics
     >>> segmented_topics = [
@@ -152,9 +151,9 @@ def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=
         Output from the segmentation of topics. Could be simply topics too.
     dictionary : :class:`~gensim.corpora.dictionary`
         Gensim dictionary mapping of the tokens and ids.
-    window_size : int
+    window_size : int, optional
         Size of the sliding window.
-    processes : int
+    processes : int, optional
         Number of processes to use.
     model : :class:`~gensim.models.word2vec.Word2Vec` or :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
         If None, a new Word2Vec model is trained on the given text corpus. Otherwise,
