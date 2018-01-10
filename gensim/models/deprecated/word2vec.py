@@ -183,10 +183,10 @@ def load_old_word2vec(*args, **kwargs):
 
     new_model.train_count = old_model.train_count
     new_model.corpus_count = old_model.corpus_count
-    new_model.running_training_loss = old_model.running_training_loss
+    new_model.running_training_loss = old_model.__dict__.get('running_training_loss', None)
     new_model.total_train_time = old_model.total_train_time
     new_model.min_alpha_yet_reached = old_model.min_alpha_yet_reached
-    new_model.model_trimmed_post_training = old_model.model_trimmed_post_training
+    new_model.model_trimmed_post_training = old_model.__dict__.get('model_trimmed_post_training', None)
 
     new_model._set_keyedvectors()
     return new_model
