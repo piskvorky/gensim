@@ -318,7 +318,7 @@ class ModelDictionary(object):
         -------
         ntokens : int
             Number of tokens processed in given sentence.
-        words : list of integers
+        words : list of int
             List of word ids.
 
         """
@@ -338,66 +338,56 @@ class ModelDictionary(object):
 
 
 class Sent2Vec(SaveLoad):
-    """Class for training and using neural networks described in https://github.com/epfml/sent2vec
-    The model can be stored/loaded via its `save()` and `load()` methods.
+    """Class for training and using neural networks described in [1]_"""
 
-    """
-
-    def __init__(self, sentences=None, size=100, lr=0.2, lr_update_rate=100, epochs=5,
-            min_count=5, neg=10, word_ngrams=2, loss_type='ns', bucket=2000000, t=0.0001,
-            minn=3, maxn=6, dropoutk=2, seed=42, min_lr=0.001, batch_words=10000,
-            workers=3, max_vocab_size=30000000):
+    def __init__(self, sentences=None, size=100, lr=0.2, lr_update_rate=100, epochs=5, min_count=5, neg=10,
+                 word_ngrams=2, bucket=2000000, t=0.0001, minn=3, maxn=6, dropoutk=2, seed=42,
+                 min_lr=0.001, batch_words=10000, workers=3, max_vocab_size=30000000):
         """
 
         Parameters
         ----------
-        sentences : iterable or list of list of unicode strings
-            For larger corpora (like the Toronto corpus), consider an iterable that streams the sentences
-            directly from disk/network. See :class:`TorontoCorpus` in this module for such examples.
-        size : int
-            Dimensionality of the feature vectors. Default is 100.
-        lr : float
-            Initial learning rate. Default is 0.2
-        seed : int
-            For the random number generator for reproducible reasons. Default is 42.
-        min_count : int
-            Ignore all words with total frequency lower than this. Default is 5.
-        max_vocab_size : int
-            Limit RAM during vocabulary building; if there are more unique
-            words than this, then prune the infrequent ones. Every 10 million word types
-            need about 1GB of RAM.
-        t : float
-            Threshold for configuring which higher-frequency words are randomly downsampled;
-            default is 1e-3, useful range is (0, 1e-5).
-        loss_type : str
-            Default is 'ns', negative sampling will be used.
-        neg : int
+        sentences : iterable of iterable of str, optional
+            Stream of sentences, see :class:`~gensim.models.sent2vec.TorontoCorpus` in this module for such examples.
+        size : int, optional
+            Dimensionality of the feature vectors.
+        lr : float, optional
+            Initial learning rate.
+        lr_update_rate : int, optional
+            Change the rate of updates for the learning rate.
+        epochs : int, optional
+            Number of iterations (epochs) over the corpus.
+        min_count : int, optional
+            Ignore all words with total frequency lower than this.
+        neg : int, optional
             Specifies how many "noise words" should be drawn (usually between 5-20).
-            Default is 10.
-        epochs : int
-            Number of iterations (epochs) over the corpus. Default is 5.
-        lr_update_rate : int
-            Change the rate of updates for the learning rate. Default is 100.
-        word_ngrams : int
-            Max length of word ngram. Default is 2.
-        bucket : int
-            Number of hash buckets for vocabulary. Default is 2000000.
-        minn : int
-            Min length of char ngrams. Default is 3.
-        maxn : int
-            Max length of char ngrams. Default is 6.
-        dropoutk : int
-            Number of ngrams dropped when training a sent2vec model. Default is 2.
-        batch_words : int
-            Target size (in words) for batches of examples passed to worker threads (and
-            thus cython routines). Default is 10000. (Larger batches will be passed if individual
-            texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
-        workers : int
+        word_ngrams : int, optional
+            Max length of word ngram.
+        bucket : int, optional
+            Number of hash buckets for vocabulary.
+        t : float, optional
+            Threshold for configuring which higher-frequency words are randomly downsampled, useful range is (0, 1e-5).
+        minn : int, optional
+            Min length of char ngrams.
+        maxn : int, optional
+            Max length of char ngrams.
+        dropoutk : int, optional
+            Number of ngrams dropped when training a model.
+        seed : int, optional
+            For the random number generator for reproducible reasons.
+        min_lr : float, optional
+            Minimal learning rate.
+        batch_words : int, optional
+            Target size (in words) for batches of examples passed to worker threads (and thus cython routines).
+            Larger batches will be passed if individual texts are longer than 10000 words, but the standard cython code
+            truncates to that maximum.
+        workers : int, optional
             Use this many worker threads to train the model (=faster training with multicore machines).
-            Default is 3.
+        max_vocab_size : int, optional
+            Limit RAM during vocabulary building,
+            if there are more unique words than this, then prune the infrequent ones.
 
         """
-
         self.seed = seed
         self.random = np.random.RandomState(seed)
         self.negpos = 1
@@ -411,7 +401,6 @@ class Sent2Vec(SaveLoad):
         self.min_count = min_count
         self.neg = neg
         self.word_ngrams = word_ngrams
-        self.loss_type = loss_type
         self.bucket = bucket
         self.t = t
         self.minn = minn
@@ -439,11 +428,11 @@ class Sent2Vec(SaveLoad):
         target : int
             Word id of target word.
         lr : float
-            current learning rate.
+            Current learning rate.
 
         Returns
         -------
-        loss : float
+        float
             Negative sampling loss.
 
         """
@@ -457,38 +446,41 @@ class Sent2Vec(SaveLoad):
                 loss += self.binary_logistic(self.get_negative(target), False, lr)
         return loss
 
-    def sigmoid(self, val):
+    @staticmethod
+    def sigmoid(val):
         """Compute sigmoid of a particular value.
 
         Parameters
         ----------
-        val : float
+        val : {float, numpy.ndarray}
             Value for which sigmoid has to be calculated.
 
         Returns
         -------
         float
-            Sigmoid of given real number.
+            Sigmoid of `val`.
 
         """
 
         return 1.0 / (1.0 + np.exp(-val))
 
     def binary_logistic(self, target, label, lr):
-        """
-        Compute loss for given target, label and learning rate using binary logistic regression.
+        """Compute loss for given target, label and learning rate using binary logistic regression.
+
         Parameters
         ----------
         target : int
             Target word id.
         label : bool
-            True if no negative is sampled, False otherwise.
+            If True - no negative is sampled, False otherwise.
         lr : float
             Current learning rate.
+
         Returns
         -------
         float
             Binary logistic regression loss.
+
         """
 
         score = self.sigmoid(np.dot(self.wo[target], self.hidden))
@@ -501,12 +493,13 @@ class Sent2Vec(SaveLoad):
             return -np.log(1.0 - score)
 
     def init_table_negatives(self, counts):
-        """
-        Initialise table of negatives for negative sampling.
+        """Initialise table of negatives for negative sampling.
+
         Parameters
         ----------
-        counts : list of integers
+        counts : list of int
             List of counts of all words in the vocabulary.
+
         """
 
         z = 0.0
@@ -541,7 +534,6 @@ class Sent2Vec(SaveLoad):
         return negative
 
     def _do_train_job(self, sentences, lr, hidden, grad):
-
         if FAST_VERSION == -1:
             local_token_count = 0
             nexamples = 0
@@ -568,24 +560,28 @@ class Sent2Vec(SaveLoad):
 
         Parameters
         ----------
-        input_ : list of integers
-            List of word ids of context words.
+        input_ : list of int
+            Word ids of context words.
         target : int
             Word id of target word.
         lr : float
             Current Learning rate.
 
         """
-        assert(target >= 0)
-        assert(target < self.dict.size)
+        assert target >= 0
+        assert target < self.dict.size
         if len(input_) == 0:
             return
+
         self.hidden = np.zeros(self.vector_size)
+
         for i in input_:
             self.hidden += self.wi[i]
+
         self.hidden *= (1.0 / len(input_))
         loss = self.negative_sampling(target, lr)
         self.grad *= (1.0 / len(input_))
+
         for i in input_:
             self.wi[i] += self.grad
         return loss
