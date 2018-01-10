@@ -1,11 +1,13 @@
 gensim – Topic Modelling in Python
 ==================================
 
-[![Build Status](https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop)](https://travis-ci.org/RaRe-Technologies/gensim)[![GitHub release](https://img.shields.io/github/release/rare-technologies/gensim.svg?maxAge=2592000)]()[![Wheel](https://img.shields.io/pypi/wheel/gensim.svg)](https://pypi.python.org/pypi/gensim) 
-[![Mailing List](https://img.shields.io/badge/-Mailing%20List-lightgrey.svg)](https://groups.google.com/forum/#!forum/gensim)
+[![Build Status](https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop)](https://travis-ci.org/RaRe-Technologies/gensim)
+[![GitHub release](https://img.shields.io/github/release/rare-technologies/gensim.svg?maxAge=3600)](https://github.com/RaRe-Technologies/gensim/releases)
+[![Wheel](https://img.shields.io/pypi/wheel/gensim.svg)](https://pypi.python.org/pypi/gensim)
+[![DOI](https://zenodo.org/badge/DOI/10.13140/2.1.2393.1847.svg)](https://doi.org/10.13140/2.1.2393.1847)
+[![Mailing List](https://img.shields.io/badge/-Mailing%20List-brightgreen.svg)](https://groups.google.com/forum/#!forum/gensim)
 [![Gitter](https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-09a3d5.svg)](https://gitter.im/RaRe-Technologies/gensim)
-[![Follow](https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow)](https://twitter.com/gensim_py)
-
+[![Follow](https://img.shields.io/twitter/follow/gensim_py.svg?style=social&label=Follow)](https://twitter.com/gensim_py)
 
 
 
@@ -137,6 +139,8 @@ Adopters
 | Amazon     |  <img src="http://g-ec2.images-amazon.com/images/G/01/social/api-share/amazon_logo_500500._V323939215_.png" width="100"> | [amazon.com](http://www.amazon.com/)                                  |  Document similarity|
 | SiteGround Hosting     |  <img src="https://www.siteground.com/img/knox/logos/siteground.png" width="100"> | [siteground.com](https://www.siteground.com/)                                  | An ensemble search engine which uses different embeddings models and similarities, including word2vec, WMD, and LDA. |
 | Juju  | <img src="https://d5k1a84rm5hwo.cloudfront.net/img/juju_home_logo.png" width="100">   | [www.juju.com](http://www.juju.com/) | Provide non-obvious related job suggestions. |
+| NLPub | <img src="https://nlpub.org/images/thumb/a/aa/NLPub.svg/240px-NLPub.svg.png" width="100"> | [nlpub.org](https://nlpub.org/) | Distributional semantic models including word2vec. |
+|Capital One | <img src="https://s3.amazonaws.com/fjds/member/original/1245173/C1_Core_NG_RGB_R_%281%29.PNG?1456169388"  width="200"> | [www.capitalone.com](https://www.capitalone.com/) | Topic modeling for customer complaints exploration. |
 
 -------
 

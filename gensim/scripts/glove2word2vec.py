@@ -8,22 +8,21 @@
 """
 USAGE:
     $ python -m gensim.scripts.glove2word2vec --input <GloVe vector file> --output <Word2vec vector file>
+
 Where:
-    <GloVe vector file>: Input GloVe .txt file
-    <Word2vec vector file>: Desired name of output Word2vec .txt file
+
+* <GloVe vector file>: Input GloVe .txt file.
+* <Word2vec vector file>: Desired name of output Word2vec .txt file.
 
 This script is used to convert GloVe vectors in text format into the word2vec text format.
 The only difference between the two formats is an extra header line in word2vec,
 which contains the number of vectors and their dimensionality (two integers).
 """
 
-import os
 import sys
-import random
 import logging
 import argparse
 
-import gensim
 from smart_open import smart_open
 
 logger = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ logger = logging.getLogger(__name__)
 def get_glove_info(glove_file_name):
     """Return the number of vectors and dimensions in a file in GloVe format."""
     with smart_open(glove_file_name) as f:
-        num_lines = sum(1 for line in f)
+        num_lines = sum(1 for _ in f)
     with smart_open(glove_file_name) as f:
         num_dims = len(f.readline().split()) - 1
     return num_lines, num_dims
@@ -55,22 +54,13 @@ if __name__ == "__main__":
     logging.root.setLevel(level=logging.INFO)
     logger.info("running %s", ' '.join(sys.argv))
 
-    # check and process cmdline input
-    program = os.path.basename(sys.argv[0])
-    if len(sys.argv) < 2:
-        print(globals()['__doc__'] % locals())
-        sys.exit(1)
-
     parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--input", required=True, help="Input file, in gloVe format (read-only).")
     parser.add_argument(
-        "-i", "--input", required=True,
-        help="Input file, in gloVe format (read-only).")
-    parser.add_argument(
-        "-o", "--output", required=True,
-        help="Output file, in word2vec text format (will be overwritten).")
+        "-o", "--output", required=True, help="Output file, in word2vec text format (will be overwritten)."
+    )
     args = parser.parse_args()
 
     # do the actual conversion
     num_lines, num_dims = glove2word2vec(args.input, args.output)
     logger.info('Converted model with %i vectors and %i dimensions', num_lines, num_dims)
-    

@@ -42,7 +42,7 @@ class MalletCorpus(LowCorpus):
 
     def _calculate_num_docs(self):
         with utils.smart_open(self.fname) as fin:
-            result = sum([1 for x in fin])
+            result = sum(1 for _ in fin)
         return result
 
     def __iter__(self):
@@ -56,8 +56,8 @@ class MalletCorpus(LowCorpus):
                 yield self.line2doc(line)
 
     def line2doc(self, line):
-        l = [word for word in utils.to_unicode(line).strip().split(' ') if word]
-        docid, doclang, words = l[0], l[1], l[2:]
+        splited_line = [word for word in utils.to_unicode(line).strip().split(' ') if word]
+        docid, doclang, words = splited_line[0], splited_line[1], splited_line[2:]
 
         doc = super(MalletCorpus, self).line2doc(' '.join(words))
 
@@ -85,7 +85,7 @@ class MalletCorpus(LowCorpus):
             logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
 
-        logger.info("storing corpus in Mallet format into %s" % fname)
+        logger.info("storing corpus in Mallet format into %s", fname)
 
         truncated = 0
         offsets = []
@@ -106,9 +106,10 @@ class MalletCorpus(LowCorpus):
                 fout.write(utils.to_utf8('%s %s %s\n' % (doc_id, doc_lang, ' '.join(words))))
 
         if truncated:
-            logger.warning("Mallet format can only save vectors with "
-                            "integer elements; %i float entries were truncated to integer value" %
-                            truncated)
+            logger.warning(
+                "Mallet format can only save vectors with integer elements; "
+                "%i float entries were truncated to integer value", truncated
+            )
 
         return offsets
 
@@ -119,5 +120,3 @@ class MalletCorpus(LowCorpus):
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
-
-# endclass MalletCorpus

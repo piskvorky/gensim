@@ -12,55 +12,33 @@ Automated tests for similarity algorithms (the similarities package).
 import logging
 import unittest
 import os
-import tempfile
 
 import numpy
 import scipy
 
-from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
 from gensim.models import KeyedVectors
 from gensim.models.wrappers import fasttext
-from gensim import matutils, utils, similarities
+from gensim import matutils, similarities
 from gensim.models import Word2Vec
+from gensim.test.utils import (datapath, get_tmpfile,
+    common_texts as texts, common_dictionary as dictionary, common_corpus as corpus)
 
 try:
-    from pyemd import emd
+    from pyemd import emd  # noqa:F401
     PYEMD_EXT = True
 except ImportError:
     PYEMD_EXT = False
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
-
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
-         ['survey', 'user', 'computer', 'system', 'response', 'time'],
-         ['eps', 'user', 'interface', 'system'],
-         ['system', 'human', 'system', 'eps'],
-         ['user', 'response', 'time'],
-         ['trees'],
-         ['graph', 'trees'],
-         ['graph', 'minors', 'trees'],
-         ['graph', 'minors', 'survey']]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
-
-sentences = [doc2vec.TaggedDocument(words, [i])
-             for i, words in enumerate(texts)]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_similarities.tst.pkl')
+sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(texts)]
 
 
 class _TestSimilarityABC(object):
     """
     Base class for SparseMatrixSimilarity and MatrixSimilarity unit tests.
     """
+
     def testFull(self, num_best=None, shardsize=100):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=shardsize)
@@ -77,23 +55,22 @@ class _TestSimilarityABC(object):
                 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.70710677, 0.70710677, 0.0],
                 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.57735026, 0.57735026, 0.57735026],
                 [0.0, 0.0, 0.0, 0.0, 0.0, 0.57735026, 0.0, 0.0, 0.0, 0.0, 0.57735026, 0.57735026],
-                ], dtype=numpy.float32)
+            ], dtype=numpy.float32)
             # HACK: dictionary can be in different order, so compare in sorted order
             self.assertTrue(numpy.allclose(sorted(expected.flat), sorted(index.index.flat)))
         index.num_best = num_best
         query = corpus[0]
         sims = index[query]
-        expected = [(0, 0.99999994), (2, 0.28867513), (3, 0.23570226), (1, 0.23570226)][ : num_best]
+        expected = [(0, 0.99999994), (2, 0.28867513), (3, 0.23570226), (1, 0.23570226)][: num_best]
 
         # convert sims to full numpy arrays, so we can use allclose() and ignore
         # ordering of items with the same similarity value
         expected = matutils.sparse2full(expected, len(index))
-        if num_best is not None: # when num_best is None, sims is already a numpy array
+        if num_best is not None:  # when num_best is None, sims is already a numpy array
             sims = matutils.sparse2full(sims, len(index))
         self.assertTrue(numpy.allclose(expected, sims))
         if self.cls == similarities.Similarity:
             index.destroy()
-
 
     def testNumBest(self):
 
@@ -126,7 +103,6 @@ class _TestSimilarityABC(object):
         self.assertTrue(scipy.sparse.issparse(matrix_scipy_clipped))
         self.assertTrue([matutils.scipy2sparse(x) for x in matrix_scipy_clipped], [expected] * 3)
 
-
     def testChunking(self):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
@@ -135,22 +111,23 @@ class _TestSimilarityABC(object):
         query = corpus[:3]
         sims = index[query]
         expected = numpy.array([
-            [0.99999994, 0.23570226, 0.28867513, 0.23570226, 0.0, 0.0, 0.0, 0.0, 0.0 ],
-            [0.23570226, 1.0, 0.40824831, 0.33333334, 0.70710677, 0.0, 0.0, 0.0, 0.23570226 ],
-            [0.28867513, 0.40824831, 1.0, 0.61237246, 0.28867513, 0.0, 0.0, 0.0, 0.0 ]
-            ], dtype=numpy.float32)
+            [0.99999994, 0.23570226, 0.28867513, 0.23570226, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.23570226, 1.0, 0.40824831, 0.33333334, 0.70710677, 0.0, 0.0, 0.0, 0.23570226],
+            [0.28867513, 0.40824831, 1.0, 0.61237246, 0.28867513, 0.0, 0.0, 0.0, 0.0]
+        ], dtype=numpy.float32)
         self.assertTrue(numpy.allclose(expected, sims))
 
         # test the same thing but with num_best
         index.num_best = 3
         sims = index[query]
-        expected = [[(0, 0.99999994), (2, 0.28867513), (1, 0.23570226)],
-                    [(1, 1.0), (4, 0.70710677), (2, 0.40824831)],
-                    [(2, 1.0), (3, 0.61237246), (1, 0.40824831)]]
+        expected = [
+            [(0, 0.99999994), (2, 0.28867513), (1, 0.23570226)],
+            [(1, 1.0), (4, 0.70710677), (2, 0.40824831)],
+            [(2, 1.0), (3, 0.61237246), (1, 0.40824831)]
+        ]
         self.assertTrue(numpy.allclose(expected, sims))
         if self.cls == similarities.Similarity:
             index.destroy()
-
 
     def testIter(self):
         if self.cls == similarities.Similarity:
@@ -159,26 +136,25 @@ class _TestSimilarityABC(object):
             index = self.cls(corpus, num_features=len(dictionary))
         sims = [sim for sim in index]
         expected = numpy.array([
-            [ 0.99999994, 0.23570226, 0.28867513, 0.23570226, 0.0, 0.0, 0.0, 0.0, 0.0 ],
-            [ 0.23570226, 1.0, 0.40824831, 0.33333334, 0.70710677, 0.0, 0.0, 0.0, 0.23570226 ],
-            [ 0.28867513, 0.40824831, 1.0, 0.61237246, 0.28867513, 0.0, 0.0, 0.0, 0.0 ],
-            [ 0.23570226, 0.33333334, 0.61237246, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
-            [ 0.0, 0.70710677, 0.28867513, 0.0, 0.99999994, 0.0, 0.0, 0.0, 0.0 ],
-            [ 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.70710677, 0.57735026, 0.0 ],
-            [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.70710677, 0.99999994, 0.81649655, 0.40824828 ],
-            [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.57735026, 0.81649655, 0.99999994, 0.66666663 ],
-            [ 0.0, 0.23570226, 0.0, 0.0, 0.0, 0.0, 0.40824828, 0.66666663, 0.99999994 ]
-            ], dtype=numpy.float32)
+            [0.99999994, 0.23570226, 0.28867513, 0.23570226, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.23570226, 1.0, 0.40824831, 0.33333334, 0.70710677, 0.0, 0.0, 0.0, 0.23570226],
+            [0.28867513, 0.40824831, 1.0, 0.61237246, 0.28867513, 0.0, 0.0, 0.0, 0.0],
+            [0.23570226, 0.33333334, 0.61237246, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.70710677, 0.28867513, 0.0, 0.99999994, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.70710677, 0.57735026, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.70710677, 0.99999994, 0.81649655, 0.40824828],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.57735026, 0.81649655, 0.99999994, 0.66666663],
+            [0.0, 0.23570226, 0.0, 0.0, 0.0, 0.0, 0.40824828, 0.66666663, 0.99999994]
+        ], dtype=numpy.float32)
         self.assertTrue(numpy.allclose(expected, sims))
         if self.cls == similarities.Similarity:
             index.destroy()
-
 
     def testPersistency(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -203,7 +179,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -228,7 +204,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -255,7 +231,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -278,12 +254,11 @@ class _TestSimilarityABC(object):
             self.assertTrue(numpy.allclose(index.index, index2.index))
             self.assertEqual(index.num_best, index2.num_best)
 
-
     def testMmap(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -311,7 +286,7 @@ class _TestSimilarityABC(object):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             return
 
-        fname = testfile() + '.gz'
+        fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         elif self.cls == similarities.WmdSimilarity:
@@ -324,9 +299,11 @@ class _TestSimilarityABC(object):
         # same thing, but use mmap to load arrays
         self.assertRaises(IOError, self.cls.load, fname, mmap='r')
 
+
 class TestMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.MatrixSimilarity
+
 
 class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
@@ -347,7 +324,8 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         if num_best is not None:
             # Sparse array.
             for i, sim in sims:
-                self.assertTrue(numpy.alltrue(sim > 0.0))  # Note that similarities are bigger than zero, as they are the 1/ 1 + distances.
+                # Note that similarities are bigger than zero, as they are the 1/ 1 + distances.
+                self.assertTrue(numpy.alltrue(sim > 0.0))
         else:
             self.assertTrue(sims[0] == 1.0)  # Similarity of a document with itself is 0.0.
             self.assertTrue(numpy.alltrue(sims[1:] > 0.0))
@@ -437,7 +415,6 @@ class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
         self.assertEqual(dense_topn_sims, [matutils.scipy2sparse(v) for v in scipy_topn_sims])
 
 
-
 class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.Similarity
@@ -450,7 +427,7 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
     def testReopen(self):
         """test re-opening partially full shards"""
         index = similarities.Similarity(None, corpus[:5], num_features=len(dictionary), shardsize=9)
-        _ = index[corpus[0]] # forces shard close
+        _ = index[corpus[0]]  # noqa:F841 forces shard close
         index.add_documents(corpus[5:])
         query = corpus[0]
         sims = index[query]
@@ -463,7 +440,6 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         pass
         # turns out this test doesn't exercise this because there are no arrays
         # to be mmaped!
-
 
     def testChunksize(self):
         index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
@@ -478,7 +454,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
     def setUp(self):
         try:
-            import annoy
+            import annoy  # noqa:F401
         except ImportError:
             raise unittest.SkipTest("Annoy library is not available")
 
@@ -546,7 +522,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def assertIndexSaved(self, index):
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         index.save(fname)
         self.assertTrue(os.path.exists(fname))
         self.assertTrue(os.path.exists(fname + '.d'))
@@ -554,7 +530,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
     def assertLoadedIndexEqual(self, index, model):
         from gensim.similarities.index import AnnoyIndexer
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         index.save(fname)
 
         index2 = AnnoyIndexer()
@@ -565,11 +541,12 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(index.labels, index2.labels)
         self.assertEqual(index.num_trees, index2.num_trees)
 
+
 class TestDoc2VecAnnoyIndexer(unittest.TestCase):
 
     def setUp(self):
         try:
-            import annoy
+            import annoy  # noqa:F401
         except ImportError:
             raise unittest.SkipTest("Annoy library is not available")
 
@@ -598,7 +575,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def testSave(self):
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         self.index.save(fname)
         self.assertTrue(os.path.exists(fname))
         self.assertTrue(os.path.exists(fname + '.d'))
@@ -612,7 +589,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
     def testSaveLoad(self):
         from gensim.similarities.index import AnnoyIndexer
 
-        fname = testfile()
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
         self.index.save(fname)
 
         self.index2 = AnnoyIndexer()

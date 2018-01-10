@@ -5,7 +5,8 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Word vector storage and similarity look-ups. Common code independent of the way the vectors are trained(Word2Vec, FastText, WordRank, VarEmbed etc)
+Word vector storage and similarity look-ups.
+Common code independent of the way the vectors are trained(Word2Vec, FastText, WordRank, VarEmbed etc)
 
 The word vectors are considered read-only in this class.
 
@@ -19,7 +20,8 @@ Persist the word vectors to disk with::
 >>> word_vectors.save(fname)
 >>> word_vectors = KeyedVectors.load(fname)
 
-The vectors can also be instantiated from an existing file on disk in the original Google's word2vec C format as a KeyedVectors instance::
+The vectors can also be instantiated from an existing file on disk
+in the original Google's word2vec C format as a KeyedVectors instance::
 
   >>> from gensim.models.keyedvectors import KeyedVectors
   >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
@@ -59,7 +61,7 @@ import logging
 try:
     from queue import Queue, Empty
 except ImportError:
-    from Queue import Queue, Empty
+    from Queue import Queue, Empty  # noqa:F401
 
 # If pyemd C extension is available, import it.
 # If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
@@ -69,20 +71,17 @@ try:
 except ImportError:
     PYEMD_EXT = False
 
-from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
-    double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
+from numpy import dot, zeros, dtype, float32 as REAL,\
+    double, array, vstack, fromstring, sqrt, newaxis,\
+    ndarray, sum as np_sum, prod, ascontiguousarray,\
+    argmax
+import numpy as np
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from six import string_types, iteritems
 from six.moves import xrange
 from scipy import stats
-try:
-    from keras.layers import Embedding
-    KERAS_INSTALLED = True
-except ImportError:
-    KERAS_INSTALLED = False
 
 
 logger = logging.getLogger(__name__)
@@ -94,6 +93,7 @@ class Vocab(object):
     and for constructing binary trees (incl. both word leaves and inner nodes).
 
     """
+
     def __init__(self, **kwargs):
         self.count = 0
         self.__dict__.update(kwargs)
@@ -106,26 +106,17 @@ class Vocab(object):
         return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
 
 
-class KeyedVectors(utils.SaveLoad):
+class KeyedVectorsBase(utils.SaveLoad):
     """
-    Class to contain vectors and vocab for the Word2Vec training class and other w2v methods not directly
-    involved in training such as most_similar()
+    Base class to contain vectors and vocab for any set of vectors which are each associated with a key.
+
     """
+
     def __init__(self):
         self.syn0 = []
-        self.syn0norm = None
         self.vocab = {}
         self.index2word = []
         self.vector_size = None
-
-    @property
-    def wv(self):
-        return self
-
-    def save(self, *args, **kwargs):
-        # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
-        super(KeyedVectors, self).save(*args, **kwargs)
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
         """
@@ -144,11 +135,11 @@ class KeyedVectors(utils.SaveLoad):
             total_vec = len(self.vocab)
         vector_size = self.syn0.shape[1]
         if fvocab is not None:
-            logger.info("storing vocabulary in %s" % (fvocab))
+            logger.info("storing vocabulary in %s", fvocab)
             with utils.smart_open(fvocab, 'wb') as vout:
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
-        logger.info("storing %sx%s projection weights into %s" % (total_vec, vector_size, fname))
+        logger.info("storing %sx%s projection weights into %s", total_vec, vector_size, fname)
         assert (len(self.vocab), vector_size) == self.syn0.shape
         with utils.smart_open(fname, 'wb') as fout:
             fout.write(utils.to_utf8("%s %s\n" % (total_vec, vector_size)))
@@ -159,7 +150,6 @@ class KeyedVectors(utils.SaveLoad):
                     fout.write(utils.to_utf8(word) + b" " + row.tostring())
                 else:
                     fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
-
 
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
@@ -204,7 +194,7 @@ class KeyedVectors(utils.SaveLoad):
         logger.info("loading projection weights from %s", fname)
         with utils.smart_open(fname) as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
-            vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
+            vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
             if limit:
                 vocab_size = min(vocab_size, limit)
             result = cls()
@@ -231,7 +221,7 @@ class KeyedVectors(utils.SaveLoad):
 
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
-                for line_no in xrange(vocab_size):
+                for _ in xrange(vocab_size):
                     # mixed text and binary: read text first, then binary
                     word = []
                     while True:
@@ -252,8 +242,8 @@ class KeyedVectors(utils.SaveLoad):
                         raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
-                        raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
-                    word, weights = parts[0], list(map(REAL, parts[1:]))
+                        raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
+                    word, weights = parts[0], [REAL(x) for x in parts[1:]]
                     add_word(word, weights)
         if result.syn0.shape[0] != len(result.vocab):
             logger.info(
@@ -263,8 +253,180 @@ class KeyedVectors(utils.SaveLoad):
             result.syn0 = ascontiguousarray(result.syn0[: len(result.vocab)])
         assert (len(result.vocab), vector_size) == result.syn0.shape
 
-        logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
+        logger.info("loaded %s matrix from %s", result.syn0.shape, fname)
         return result
+
+    def similarity(self, w1, w2):
+        """
+        Compute similarity between vectors of two input words.
+        To be implemented by child class.
+
+        """
+        raise NotImplementedError
+
+    def distance(self, w1, w2):
+        """
+        Compute distance between vectors of two input words.
+        To be implemented by child class.
+
+        """
+        raise NotImplementedError
+
+    def distances(self, word_or_vector, other_words=()):
+        """
+        Compute distances from given word or vector to all words in `other_words`.
+        If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.
+        To be implemented by child class.
+
+        """
+        raise NotImplementedError
+
+    def word_vec(self, word):
+        """
+        Accept a single word as input.
+        Returns the word's representations in vector space, as a 1D numpy array.
+
+        Example::
+
+          >>> trained_model.word_vec('office')
+          array([ -1.40128313e-02, ...])
+
+        """
+        if word in self.vocab:
+            result = self.syn0[self.vocab[word].index]
+            result.setflags(write=False)
+            return result
+        else:
+            raise KeyError("word '%s' not in vocabulary" % word)
+
+    def __getitem__(self, words):
+        """
+        Accept a single word or a list of words as input.
+
+        If a single word: returns the word's representations in vector space, as
+        a 1D numpy array.
+
+        Multiple words: return the words' representations in vector space, as a
+        2d numpy array: #words x #vector_size. Matrix rows are in the same order
+        as in input.
+
+        Example::
+
+          >>> trained_model['office']
+          array([ -1.40128313e-02, ...])
+
+          >>> trained_model[['office', 'products']]
+          array([ -1.40128313e-02, ...]
+                [ -1.70425311e-03, ...]
+                 ...)
+
+        """
+        if isinstance(words, string_types):
+            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
+            return self.word_vec(words)
+
+        return vstack([self.word_vec(word) for word in words])
+
+    def __contains__(self, word):
+        return word in self.vocab
+
+    def most_similar_to_given(self, w1, word_list):
+        """Return the word from word_list most similar to w1.
+
+        Args:
+            w1 (str): a word
+            word_list (list): list of words containing a word most similar to w1
+
+        Returns:
+            the word in word_list with the highest similarity to w1
+
+        Raises:
+            KeyError: If w1 or any word in word_list is not in the vocabulary
+
+        Example::
+
+          >>> trained_model.most_similar_to_given('music', ['water', 'sound', 'backpack', 'mouse'])
+          'sound'
+
+          >>> trained_model.most_similar_to_given('snake', ['food', 'pencil', 'animal', 'phone'])
+          'animal'
+
+        """
+        return word_list[argmax([self.similarity(w1, word) for word in word_list])]
+
+    def words_closer_than(self, w1, w2):
+        """
+        Returns all words that are closer to `w1` than `w2` is to `w1`.
+
+        Parameters
+        ----------
+        w1 : str
+            Input word.
+        w2 : str
+            Input word.
+
+        Returns
+        -------
+        list (str)
+            List of words that are closer to `w1` than `w2` is to `w1`.
+
+        Examples
+        --------
+
+        >>> model.words_closer_than('carnivore.n.01', 'mammal.n.01')
+        ['dog.n.01', 'canine.n.02']
+
+        """
+        all_distances = self.distances(w1)
+        w1_index = self.vocab[w1].index
+        w2_index = self.vocab[w2].index
+        closer_node_indices = np.where(all_distances < all_distances[w2_index])[0]
+        return [self.index2word[index] for index in closer_node_indices if index != w1_index]
+
+    def rank(self, w1, w2):
+        """
+        Rank of the distance of `w2` from `w1`, in relation to distances of all words from `w1`.
+
+        Parameters
+        ----------
+        w1 : str
+            Input word.
+        w2 : str
+            Input word.
+
+        Returns
+        -------
+        int
+            Rank of `w2` from `w1` in relation to all other nodes.
+
+        Examples
+        --------
+
+        >>> model.rank('mammal.n.01', 'carnivore.n.01')
+        3
+
+        """
+        return len(self.words_closer_than(w1, w2)) + 1
+
+
+class EuclideanKeyedVectors(KeyedVectorsBase):
+    """
+    Class to contain vectors and vocab for the Word2Vec training class and other w2v methods not directly
+    involved in training such as most_similar()
+    """
+
+    def __init__(self):
+        super(EuclideanKeyedVectors, self).__init__()
+        self.syn0norm = None
+
+    @property
+    def wv(self):
+        return self
+
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
+        super(EuclideanKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
         """
@@ -281,13 +443,16 @@ class KeyedVectors(utils.SaveLoad):
         """
         if word in self.vocab:
             if use_norm:
-                return self.syn0norm[self.vocab[word].index]
+                result = self.syn0norm[self.vocab[word].index]
             else:
-                return self.syn0[self.vocab[word].index]
+                result = self.syn0[self.vocab[word].index]
+
+            result.setflags(write=False)
+            return result
         else:
             raise KeyError("word '%s' not in vocabulary" % word)
 
-    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
+    def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
         similarity, negative words negatively.
@@ -310,6 +475,11 @@ class KeyedVectors(utils.SaveLoad):
           [('queen', 0.50882536), ...]
 
         """
+        if positive is None:
+            positive = []
+        if negative is None:
+            negative = []
+
         self.init_sims()
 
         if isinstance(positive, string_types) and not negative:
@@ -350,6 +520,44 @@ class KeyedVectors(utils.SaveLoad):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
+
+    def similar_by_word(self, word, topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar words.
+
+        If topn is False, similar_by_word returns the vector of similarity scores.
+
+        `restrict_vocab` is an optional integer which limits the range of vectors which
+        are searched for most-similar values. For example, restrict_vocab=10000 would
+        only check the first 10000 word vectors in the vocabulary order. (This may be
+        meaningful if you've sorted the vocabulary by descending frequency.)
+
+        Example::
+
+          >>> trained_model.similar_by_word('graph')
+          [('user', 0.9999163150787354), ...]
+
+        """
+        return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
+
+    def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar words by vector.
+
+        If topn is False, similar_by_vector returns the vector of similarity scores.
+
+        `restrict_vocab` is an optional integer which limits the range of vectors which
+        are searched for most-similar values. For example, restrict_vocab=10000 would
+        only check the first 10000 word vectors in the vocabulary order. (This may be
+        meaningful if you've sorted the vocabulary by descending frequency.)
+
+        Example::
+
+          >>> trained_model.similar_by_vector([1,2])
+          [('survey', 0.9942699074745178), ...]
+
+        """
+        return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
 
     def wmdistance(self, document1, document2):
         """
@@ -394,12 +602,13 @@ class KeyedVectors(utils.SaveLoad):
         diff1 = len_pre_oov1 - len(document1)
         diff2 = len_pre_oov2 - len(document2)
         if diff1 > 0 or diff2 > 0:
-            logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
-                        diff1, diff2)
+            logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).', diff1, diff2)
 
         if len(document1) == 0 or len(document2) == 0:
-            logger.info('At least one of the documents had no words that were'
-                        'in the vocabulary. Aborting (returning inf).')
+            logger.info(
+                "At least one of the documents had no words that werein the vocabulary. "
+                "Aborting (returning inf)."
+            )
             return float('inf')
 
         dictionary = Dictionary(documents=[document1, document2])
@@ -417,7 +626,7 @@ class KeyedVectors(utils.SaveLoad):
         distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
         for i, t1 in dictionary.items():
             for j, t2 in dictionary.items():
-                if not t1 in docset1 or not t2 in docset2:
+                if t1 not in docset1 or t2 not in docset2:
                     continue
                 # Compute Euclidean distance between word vectors.
                 distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
@@ -442,7 +651,7 @@ class KeyedVectors(utils.SaveLoad):
         # Compute WMD.
         return emd(d1, d2, distance_matrix)
 
-    def most_similar_cosmul(self, positive=[], negative=[], topn=10):
+    def most_similar_cosmul(self, positive=None, negative=None, topn=10):
         """
         Find the top-N most similar words, using the multiplicative combination objective
         proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
@@ -464,14 +673,21 @@ class KeyedVectors(utils.SaveLoad):
         .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
 
         """
+        if positive is None:
+            positive = []
+        if negative is None:
+            negative = []
+
         self.init_sims()
 
         if isinstance(positive, string_types) and not negative:
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
-        all_words = set([self.vocab[word].index for word in positive+negative
-            if not isinstance(word, ndarray) and word in self.vocab])
+        all_words = {
+            self.vocab[word].index for word in positive + negative
+            if not isinstance(word, ndarray) and word in self.vocab
+            }
 
         positive = [
             self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
@@ -498,46 +714,6 @@ class KeyedVectors(utils.SaveLoad):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
-    def similar_by_word(self, word, topn=10, restrict_vocab=None):
-        """
-        Find the top-N most similar words.
-
-        If topn is False, similar_by_word returns the vector of similarity scores.
-
-        `restrict_vocab` is an optional integer which limits the range of vectors which
-        are searched for most-similar values. For example, restrict_vocab=10000 would
-        only check the first 10000 word vectors in the vocabulary order. (This may be
-        meaningful if you've sorted the vocabulary by descending frequency.)
-
-        Example::
-
-          >>> trained_model.similar_by_word('graph')
-          [('user', 0.9999163150787354), ...]
-
-        """
-
-        return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
-
-    def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
-        """
-        Find the top-N most similar words by vector.
-
-        If topn is False, similar_by_vector returns the vector of similarity scores.
-
-        `restrict_vocab` is an optional integer which limits the range of vectors which
-        are searched for most-similar values. For example, restrict_vocab=10000 would
-        only check the first 10000 word vectors in the vocabulary order. (This may be
-        meaningful if you've sorted the vocabulary by descending frequency.)
-
-        Example::
-
-          >>> trained_model.similar_by_vector([1,2])
-          [('survey', 0.9942699074745178), ...]
-
-        """
-
-        return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
-
     def doesnt_match(self, words):
         """
         Which word from the given list doesn't go with the others?
@@ -561,37 +737,83 @@ class KeyedVectors(utils.SaveLoad):
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words))[0][1]
 
-    def __getitem__(self, words):
+    @staticmethod
+    def cosine_similarities(vector_1, vectors_all):
+        """
+        Return cosine similarities between one vector and a set of other vectors.
+
+        Parameters
+        ----------
+        vector_1 : numpy.array
+            vector from which similarities are to be computed.
+            expected shape (dim,)
+        vectors_all : numpy.array
+            for each row in vectors_all, distance from vector_1 is computed.
+            expected shape (num_vectors, dim)
+
+        Returns
+        -------
+        numpy.array
+            Contains cosine distance between vector_1 and each row in vectors_all.
+            shape (num_vectors,)
 
         """
-        Accept a single word or a list of words as input.
+        norm = np.linalg.norm(vector_1)
+        all_norms = np.linalg.norm(vectors_all, axis=1)
+        dot_products = dot(vectors_all, vector_1)
+        similarities = dot_products / (norm * all_norms)
+        return similarities
 
-        If a single word: returns the word's representations in vector space, as
-        a 1D numpy array.
+    def distances(self, word_or_vector, other_words=()):
+        """
+        Compute cosine distances from given word or vector to all words in `other_words`.
+        If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.
 
-        Multiple words: return the words' representations in vector space, as a
-        2d numpy array: #words x #vector_size. Matrix rows are in the same order
-        as in input.
+        Parameters
+        ----------
+        word_or_vector : str or numpy.array
+            Word or vector from which distances are to be computed.
+
+        other_words : iterable(str) or None
+            For each word in `other_words` distance from `word_or_vector` is computed.
+            If None or empty, distance of `word_or_vector` from all words in vocab is computed (including itself).
+
+        Returns
+        -------
+        numpy.array
+            Array containing distances to all words in `other_words` from input `word_or_vector`,
+            in the same order as `other_words`.
+
+        Notes
+        -----
+        Raises KeyError if either `word_or_vector` or any word in `other_words` is absent from vocab.
+
+        """
+        if isinstance(word_or_vector, string_types):
+            input_vector = self.word_vec(word_or_vector)
+        else:
+            input_vector = word_or_vector
+        if not other_words:
+            other_vectors = self.syn0
+        else:
+            other_indices = [self.vocab[word].index for word in other_words]
+            other_vectors = self.syn0[other_indices]
+        return 1 - self.cosine_similarities(input_vector, other_vectors)
+
+    def distance(self, w1, w2):
+        """
+        Compute cosine distance between two words.
 
         Example::
 
-          >>> trained_model['office']
-          array([ -1.40128313e-02, ...])
+          >>> trained_model.distance('woman', 'man')
+          0.34
 
-          >>> trained_model[['office', 'products']]
-          array([ -1.40128313e-02, ...]
-                [ -1.70425311e-03, ...]
-                 ...)
+          >>> trained_model.distance('woman', 'woman')
+          0.0
 
         """
-        if isinstance(words, string_types):
-            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
-            return self.word_vec(words)
-
-        return vstack([self.word_vec(word) for word in words])
-
-    def __contains__(self, word):
-        return word in self.vocab
+        return 1 - self.similarity(w1, w2)
 
     def similarity(self, w1, w2):
         """
@@ -625,25 +847,27 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         if not(len(ws1) and len(ws2)):
-            raise ZeroDivisionError('Atleast one of the passed list is empty.')
+            raise ZeroDivisionError('At least one of the passed list is empty.')
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
-        return dot(matutils.unitvec(array(v1).mean(axis=0)),
-                   matutils.unitvec(array(v2).mean(axis=0)))
+        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
     @staticmethod
     def log_accuracy(section):
         correct, incorrect = len(section['correct']), len(section['incorrect'])
         if correct + incorrect > 0:
-            logger.info("%s: %.1f%% (%i/%i)" %
-                        (section['section'], 100.0 * correct / (correct + incorrect),
-                         correct, correct + incorrect))
+            logger.info(
+                "%s: %.1f%% (%i/%i)",
+                section['section'], 100.0 * correct / (correct + incorrect), correct, correct + incorrect
+            )
 
     def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, case_insensitive=True):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
-        See questions-words.txt in https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/word2vec/source-archive.zip for an example.
+        See questions-words.txt in
+        https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/word2vec/source-archive.zip
+        for an example.
 
         The accuracy is reported (=printed to log and returned as a list) for each
         section separately, plus there's one aggregate summary at the end.
@@ -662,7 +886,7 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
-        ok_vocab = dict((w.upper(), v) for w, v in reversed(ok_vocab)) if case_insensitive else dict(ok_vocab)
+        ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
 
         sections, section = [], None
         for line_no, line in enumerate(utils.smart_open(questions)):
@@ -682,16 +906,16 @@ class KeyedVectors(utils.SaveLoad):
                         a, b, c, expected = [word.upper() for word in line.split()]
                     else:
                         a, b, c, expected = [word for word in line.split()]
-                except:
-                    logger.info("skipping invalid line #%i in %s" % (line_no, questions))
+                except ValueError:
+                    logger.info("skipping invalid line #%i in %s", line_no, questions)
                     continue
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
-                    logger.debug("skipping line #%i with OOV words: %s" % (line_no, line.strip()))
+                    logger.debug("skipping line #%i with OOV words: %s", line_no, line.strip())
                     continue
 
                 original_vocab = self.vocab
                 self.vocab = ok_vocab
-                ignore = set([a, b, c])  # input words to be ignored
+                ignore = {a, b, c}  # input words to be ignored
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
                 sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
@@ -726,8 +950,8 @@ class KeyedVectors(utils.SaveLoad):
         logger.info('Spearman rank-order correlation coefficient against %s: %.4f', pairs, spearman[0])
         logger.info('Pairs with unknown words ratio: %.1f%%', oov)
 
-    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True,
-                            dummy4unknown=False):
+    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
+                            case_insensitive=True, dummy4unknown=False):
         """
         Compute correlation of the model with human similarity judgments. `pairs` is a filename of a dataset where
         lines are 3-tuples, each consisting of a word pair and a similarity value, separated by `delimiter`.
@@ -752,7 +976,7 @@ class KeyedVectors(utils.SaveLoad):
         Otherwise (default False), these pairs are skipped entirely.
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
-        ok_vocab = dict((w.upper(), v) for w, v in reversed(ok_vocab)) if case_insensitive else dict(ok_vocab)
+        ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
 
         similarity_gold = []
         similarity_model = []
@@ -773,7 +997,7 @@ class KeyedVectors(utils.SaveLoad):
                     else:
                         a, b, sim = [word for word in line.split(delimiter)]
                     sim = float(sim)
-                except:
+                except (ValueError, TypeError):
                     logger.info('skipping invalid line #%d in %s', line_no, pairs)
                     continue
                 if a not in ok_vocab or b not in ok_vocab:
@@ -792,18 +1016,14 @@ class KeyedVectors(utils.SaveLoad):
         pearson = stats.pearsonr(similarity_gold, similarity_model)
         oov_ratio = float(oov) / (len(similarity_gold) + oov) * 100
 
-        logger.debug(
-            'Pearson correlation coefficient against %s: %f with p-value %f',
-            pairs, pearson[0], pearson[1]
-        )
+        logger.debug('Pearson correlation coefficient against %s: %f with p-value %f', pairs, pearson[0], pearson[1])
         logger.debug(
             'Spearman rank-order correlation coefficient against %s: %f with p-value %f',
             pairs, spearman[0], spearman[1]
         )
-        logger.debug('Pairs with unknown words: %d' % oov)
+        logger.debug('Pairs with unknown words: %d', oov)
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio
-
 
     def init_sims(self, replace=False):
         """
@@ -825,12 +1045,24 @@ class KeyedVectors(utils.SaveLoad):
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
-    def get_embedding_layer(self, train_embeddings=False):
+    def get_keras_embedding(self, train_embeddings=False):
         """
         Return a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings
         """
-        if not KERAS_INSTALLED:
+        try:
+            from keras.layers import Embedding
+        except ImportError:
             raise ImportError("Please install Keras to use this function")
         weights = self.syn0
-        layer = Embedding(input_dim=weights.shape[0], output_dim=weights.shape[1], weights=[weights])  # No extra mem usage here as `Embedding` layer doesn't create any new matrix for weights
+
+        # set `trainable` as `False` to use the pretrained word embedding
+        # No extra mem usage here as `Embedding` layer doesn't create any new matrix for weights
+        layer = Embedding(
+            input_dim=weights.shape[0], output_dim=weights.shape[1],
+            weights=[weights], trainable=train_embeddings
+        )
         return layer
+
+
+# For backward compatibility
+KeyedVectors = EuclideanKeyedVectors

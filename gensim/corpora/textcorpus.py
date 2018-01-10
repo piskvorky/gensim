@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 
 def remove_stopwords(tokens, stopwords=STOPWORDS):
-    """Remove stopwords using list from `gensim.parsing.preprocessing.STOPWORDS."""
+    """Remove stopwords using list from `gensim.parsing.preprocessing.STOPWORDS`."""
     return [token for token in tokens if token not in stopwords]
 
 
@@ -112,6 +112,7 @@ class TextCorpus(interfaces.CorpusABC):
     6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
 
     """
+
     def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None,
                  tokenizer=None, token_filters=None):
         """
@@ -171,9 +172,7 @@ class TextCorpus(interfaces.CorpusABC):
             else:
                 logger.info("Input stream provided but dictionary already initialized")
         else:
-            logger.warning(
-                "No input document stream provided; assuming "
-                "dictionary will be initialized some other way.")
+            logger.warning("No input document stream provided; assuming dictionary will be initialized some other way.")
 
     def __iter__(self):
         """The function that defines a corpus.
@@ -231,8 +230,7 @@ class TextCorpus(interfaces.CorpusABC):
         yield (self.tokenizer, tokens)
 
         for token_filter in self.token_filters:
-            tokens = token_filter(tokens)
-            yield (token_filter, tokens)
+            yield (token_filter, token_filter(tokens))
 
     def get_texts(self):
         """Iterate over the collection, yielding one document at a time. A document
@@ -280,10 +278,11 @@ class TextCorpus(interfaces.CorpusABC):
             length = len(self)
 
         if not n <= length:
-            raise ValueError("n is larger than length of corpus.")
+            raise ValueError("n {0:d} is larger/equal than length of corpus {1:d}.".format(n, length))
         if not 0 <= n:
-            raise ValueError("Negative sample size.")
+            raise ValueError("Negative sample size n {0:d}.".format(n))
 
+        i = 0
         for i, sample in enumerate(self.getstream()):
             if i == length:
                 break
@@ -300,14 +299,13 @@ class TextCorpus(interfaces.CorpusABC):
         if n != 0:
             # This means that length was set to be greater than number of items in corpus
             # and we were not able to sample enough documents before the stream ended.
-            raise ValueError("length greater than number of documents in corpus")
+            raise ValueError("length {0:d} greater than number of documents in corpus {1:d}".format(length, i + 1))
 
     def __len__(self):
         if self.length is None:
             # cache the corpus length
             self.length = sum(1 for _ in self.getstream())
         return self.length
-# endclass TextCorpus
 
 
 class TextDirectoryCorpus(TextCorpus):
@@ -432,7 +430,6 @@ class TextDirectoryCorpus(TextCorpus):
             self.length = sum(1 for _ in self.iter_filepaths())
         else:
             self.length = sum(1 for _ in self.getstream())
-# endclass TextDirectoryCorpus
 
 
 def walk(top, topdown=True, onerror=None, followlinks=False, depth=0):
