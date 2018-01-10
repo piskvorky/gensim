@@ -5,4 +5,6 @@
     :synopsis: Random Projections
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:
+    :special-members: __getitem__
