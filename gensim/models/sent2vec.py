@@ -64,7 +64,6 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.sent2vec_inner import _do_train_job_fast
     from gensim.models.word2vec_inner import FAST_VERSION
-    logger.debug('Fast version of %s is being used', __name__)
 except ImportError:
     # failed... fall back to plain numpy
     # TODO remove this later (i.e. stay only cython version)
@@ -587,6 +586,14 @@ class Sent2Vec(SaveLoad):
         return loss
 
     def build_vocab(self, sentences):
+        """Build vocab from `sentences`
+
+        Parameters
+        ----------
+        sentences : iterable of iterable of str
+            Input sentences.
+
+        """
         logger.info("Creating dictionary...")
         self.dict = ModelDictionary(t=self.t, bucket=self.bucket, maxn=self.maxn,
                                     minn=self.minn, max_vocab_size=self.max_vocab_size)
@@ -599,18 +606,29 @@ class Sent2Vec(SaveLoad):
         self.init_table_negatives(counts=counts)
 
     def train(self, sentences, queue_factor=2, report_delay=1.0):
-        if FAST_VERSION < 0:
-            logger.warning(
-                "C extension not loaded for Word2Vec, training will be slow. "
-                "Install a C compiler and reinstall gensim for fast training."
-            )
+        """Train model, used `sentences` as input.
 
+        Parameters
+        ----------
+        sentences : iterable of iterable of str
+            Input sentences.
+        queue_factor : int, optional
+            Multiplier for size of queue (number of workers * queue_factor).
+        report_delay : float, optional
+            Seconds to wait before reporting progress.
+
+        Returns
+        -------
+        int
+            Effective number of words trained.
+
+        """
         logger.info(
             "training model with %i workers on %i vocabulary and %i features",
             self.workers, self.dict.size, self.vector_size)
 
         if not self.dict:
-            raise RuntimeError("you must first build vocabulary before training the model")
+            raise RuntimeError("You must first build vocabulary before training the model")
 
         start_lr = self.lr
         end_lr = self.min_lr
@@ -731,8 +749,9 @@ class Sent2Vec(SaveLoad):
             if elapsed >= next_report:
                 # words-based progress %
                 logger.info(
-                "PROGRESS: at %.2f%% words, %.0f words/s",
-                100.0 * raw_word_count / total_words, trained_word_count / elapsed)
+                    "PROGRESS: at %.2f%% words, %.0f words/s",
+                    100.0 * raw_word_count / total_words, trained_word_count / elapsed
+                )
                 next_report = elapsed + report_delay
 
         # all done; report the final stats
@@ -742,29 +761,32 @@ class Sent2Vec(SaveLoad):
             raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
         )
         if job_tally < 10 * self.workers:
-            logger.warning("under 10 jobs per worker: consider setting a \
-            smaller `batch_words' for smoother alpha decay")
+            logger.warning(
+                "under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay"
+            )
 
         # check that the input corpus hasn't changed during iteration
         if total_words != raw_word_count:
-            logger.warning("supplied raw word count (%i) did not equal expected count (%i)",
-                           raw_word_count, total_words)
+            logger.warning(
+                "supplied raw word count (%i) did not equal expected count (%i)",
+                raw_word_count, total_words
+        )
 
         self.train_count += 1  # number of times train() has been called
         self.total_train_time += elapsed
         return trained_word_count
 
     def sentence_vectors(self, sentence):
-        """Function for getting sentence vector for an input sentence.
+        """Get sentence vector for an input sentence.
 
         Parameters
         ----------
-        sentence : list of unicode strings
+        sentence : list of str
             List of words.
 
         Returns
         -------
-        numpy array
+        numpy.ndarray
             Sentence vector for input sentence.
 
         """
@@ -783,8 +805,11 @@ class Sent2Vec(SaveLoad):
 
         Parameters
         ----------
-        sent1, sent2 : list of unicode strings
+        sent1 : list of str
             List of words.
+        sent2 : list of str
+            List of words.
+
         Returns
         -------
         float
@@ -795,7 +820,7 @@ class Sent2Vec(SaveLoad):
         return dot(matutils.unitvec(self.sentence_vectors(sent1)), matutils.unitvec(self.sentence_vectors(sent2)))
 
 
-class TorontoCorpus():
+class TorontoCorpus(object):
     """Iterate over sentences from the Toronto Book Corpus."""
 
     def __init__(self, dirname):
