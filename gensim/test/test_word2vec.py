@@ -282,17 +282,44 @@ class TestWord2VecModel(unittest.TestCase):
         else:
             model_file_suffix = '_py3'
 
-        # Model stored in one file
         model_file = 'word2vec_pre_kv%s' % model_file_suffix
         model = word2vec.Word2Vec.load(datapath(model_file))
-        self.assertTrue(model.wv.vectors.shape == (len(model.wv.vocab), model.vector_size))
-        self.assertTrue(model.trainables.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
 
         # Model stored in multiple files
         model_file = 'word2vec_pre_kv_sep%s' % model_file_suffix
         model = word2vec.Word2Vec.load(datapath(model_file))
-        self.assertTrue(model.wv.vectors.shape == (len(model.wv.vocab), model.vector_size))
-        self.assertTrue(model.trainables.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+
+    def testLoadOldModel(self):
+        """Test loading word2vec models from previous version"""
+
+        model_file = 'word2vec_old'
+        model = word2vec.Word2Vec.load(datapath(model_file))
+        self.assertTrue(model.wv.vectors.shape == (12, 100))
+        self.assertTrue(np.array_equal(model.trainables.vectors, model.wv.vectors))
+        self.assertTrue(len(model.wv.vocab) == 12)
+        self.assertEqual(model.wv.vocab, model.vocabulary.vocab)
+        self.assertTrue(len(model.wv.index2word) == 12)
+        self.assertEqual(model.wv.index2word, model.vocabulary.index2word)
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
+        self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
+
+        # Model stored in multiple files
+        model_file = 'word2vec_old_sep'
+        model = word2vec.Word2Vec.load(datapath(model_file))
+        self.assertTrue(model.wv.vectors.shape == (12, 100))
+        self.assertTrue(np.array_equal(model.trainables.vectors, model.wv.vectors))
+        self.assertTrue(len(model.wv.vocab) == 12)
+        self.assertEqual(model.wv.vocab, model.vocabulary.vocab)
+        self.assertTrue(len(model.wv.index2word) == 12)
+        self.assertEqual(model.wv.index2word, model.vocabulary.index2word)
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
+        self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
 
     def testLoadPreKeyedVectorModelCFormat(self):
         """Test loading pre-KeyedVectors word2vec model saved in word2vec format"""

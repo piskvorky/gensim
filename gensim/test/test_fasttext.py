@@ -539,6 +539,52 @@ class TestFastTextModel(unittest.TestCase):
         model.build_vocab(new_sentences, update=True)
         self.assertEqual(model.wv.vectors_ngrams.shape, (20, 10))
 
+    def testLoadOldModel(self):
+        """Test loading fasttext models from previous version"""
+
+        model_file = 'fasttext_old'
+        model = FT_gensim.load(datapath(model_file))
+        self.assertTrue(model.wv.vectors.shape == (12, 100))
+        self.assertTrue(np.array_equal(model.trainables.vectors, model.wv.vectors))
+        self.assertTrue(len(model.wv.vocab) == 12)
+        self.assertEqual(model.wv.vocab, model.vocabulary.vocab)
+        self.assertTrue(len(model.wv.index2word) == 12)
+        self.assertEqual(model.wv.index2word, model.vocabulary.index2word)
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
+        self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
+
+        self.assertEqual(len(model.vocabulary.ngrams_word), 12)
+        self.assertEqual(model.vocabulary.ngrams_word, model.wv.ngrams_word)
+        self.assertEqual(len(model.trainables.ngrams), 202)
+        self.assertEqual(model.trainables.ngrams, model.wv.ngrams)
+        self.assertEqual(len(model.trainables.hash2index), 202)
+        self.assertEqual(model.trainables.hash2index, model.wv.hash2index)
+        self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
+        self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
+
+        # Model stored in multiple files
+        model_file = 'fasttext_old_sep'
+        model = FT_gensim.load(datapath(model_file))
+        self.assertTrue(model.wv.vectors.shape == (12, 100))
+        self.assertTrue(np.array_equal(model.trainables.vectors, model.wv.vectors))
+        self.assertTrue(len(model.wv.vocab) == 12)
+        self.assertEqual(model.wv.vocab, model.vocabulary.vocab)
+        self.assertTrue(len(model.wv.index2word) == 12)
+        self.assertEqual(model.wv.index2word, model.vocabulary.index2word)
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
+        self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
+
+        self.assertEqual(len(model.vocabulary.ngrams_word), 12)
+        self.assertEqual(model.vocabulary.ngrams_word, model.wv.ngrams_word)
+        self.assertEqual(len(model.trainables.ngrams), 202)
+        self.assertEqual(model.trainables.ngrams, model.wv.ngrams)
+        self.assertEqual(len(model.trainables.hash2index), 202)
+        self.assertEqual(model.trainables.hash2index, model.wv.hash2index)
+        self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
+        self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
