@@ -24,13 +24,5 @@ matrix:
     - python: '3.6'
       env: TOXENV="py36-linux"
 
-before_install:
-  - if [[ ${TOXENV} == *"docs"* ]]; then
-      apt-get -yq update;
-      apt-get -yq remove texlive-binaries --purge;
-      apt-get -yq --no-install-suggests --no-install-recommends --force-yes install \
-        dvipng texlive-latex-base texlive-latex-extra texlive-latex-recommended \
-        texlive-latex-extra texlive-fonts-recommended latexmk;
-    fi
 install: pip install tox
 script: tox -vv
