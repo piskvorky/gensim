@@ -209,9 +209,8 @@ class UsesDictionary(BaseAnalyzer):
 
 
 class InvertedIndexBased(BaseAnalyzer):
-    """Analyzer that builds up an inverted index to accumulate stats.
+    """Analyzer that builds up an inverted index to accumulate stats."""
 
-    """
     def __init__(self, *args):
         """
 
@@ -265,16 +264,7 @@ class CorpusAccumulator(InvertedIndexBased):
 
 
 class WindowedTextsAnalyzer(UsesDictionary):
-    """Gather some stats about relevant terms of a corpus by iterating over windows of texts.
-
-    Attributes
-    ----------
-    relevant_words : set
-        Set of words.
-    dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
-        Dictionary instance with mappings for the relevant_ids.
-
-    """
+    """Gather some stats about relevant terms of a corpus by iterating over windows of texts."""
 
     def __init__(self, relevant_ids, dictionary):
         """
