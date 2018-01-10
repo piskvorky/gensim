@@ -3242,7 +3242,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  *             previd = -1
  *             for line in lines:             # <<<<<<<<<<<<<<
  *                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
- *                 if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):
+ *                 if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
  */
           if (likely(PyList_CheckExact(__pyx_cur_scope->__pyx_v_lines)) || PyTuple_CheckExact(__pyx_cur_scope->__pyx_v_lines)) {
             __pyx_t_4 = __pyx_cur_scope->__pyx_v_lines; __Pyx_INCREF(__pyx_t_4); __pyx_t_9 = 0;
@@ -3291,17 +3291,17 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
             /* "gensim/corpora/_mmreader.pyx":141
  *             for line in lines:
  *                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
- *                 if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):             # <<<<<<<<<<<<<<
+ *                 if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):             # <<<<<<<<<<<<<<
  *                     raise ValueError("unable to parse line: {}".format(line))
  * 
  */
             __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_cur_scope->__pyx_v_line); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 141, __pyx_L8_error)
-            __pyx_t_12 = ((sscanf(__pyx_t_11, ((char const *)"%d %d %lf"), (&__pyx_cur_scope->__pyx_v_docid), (&__pyx_cur_scope->__pyx_v_termid), (&__pyx_cur_scope->__pyx_v_val)) != 3) != 0);
+            __pyx_t_12 = ((sscanf(__pyx_t_11, ((char const *)"%d %d %lg"), (&__pyx_cur_scope->__pyx_v_docid), (&__pyx_cur_scope->__pyx_v_termid), (&__pyx_cur_scope->__pyx_v_val)) != 3) != 0);
             if (__pyx_t_12) {
 
               /* "gensim/corpora/_mmreader.pyx":142
  *                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
- *                 if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):
+ *                 if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
  *                     raise ValueError("unable to parse line: {}".format(line))             # <<<<<<<<<<<<<<
  * 
  *                 if not self.transposed:
@@ -3366,7 +3366,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
               /* "gensim/corpora/_mmreader.pyx":141
  *             for line in lines:
  *                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
- *                 if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):             # <<<<<<<<<<<<<<
+ *                 if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):             # <<<<<<<<<<<<<<
  *                     raise ValueError("unable to parse line: {}".format(line))
  * 
  */
@@ -3768,7 +3768,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  *             previd = -1
  *             for line in lines:             # <<<<<<<<<<<<<<
  *                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
- *                 if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):
+ *                 if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
  */
           }
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;

@@ -138,7 +138,7 @@ cdef class MmReader(object):
             previd = -1
             for line in lines:
                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
-                if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):
+                if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
                     raise ValueError("unable to parse line: {}".format(line))
 
                 if not self.transposed:
