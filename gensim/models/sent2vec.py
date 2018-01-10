@@ -338,7 +338,7 @@ class ModelDictionary(object):
 class Sent2Vec(SaveLoad):
     """Class for training and using neural networks described in [1]_"""
 
-    def __init__(self, sentences=None, size=100, lr=0.2, lr__update_rate=100, epochs=5, min_count=5, neg=10,
+    def __init__(self, sentences=None, size=100, lr=0.2, lr_update_rate=100, epochs=5, min_count=5, neg=10,
                  word_ngrams=2, bucket=2000000, t=0.0001, minn=3, maxn=6, dropoutk=2, seed=42,
                  min_lr=0.001, batch_words=10000, workers=3, max_vocab_size=30000000):
         """
@@ -351,7 +351,7 @@ class Sent2Vec(SaveLoad):
             Dimensionality of the feature vectors.
         lr : float, optional
             Initial learning rate.
-        lr__update_rate : int, optional
+        lr_update_rate : int, optional
             Change the rate of _updates for the learning rate.
         epochs : int, optional
             Number of iterations (epochs) over the corpus.
@@ -394,7 +394,7 @@ class Sent2Vec(SaveLoad):
         self.negatives = []
         self.vector_size = size
         self.lr = lr
-        self.lr__update_rate = lr__update_rate
+        self.lr_update_rate = lr_update_rate
         self.epochs = epochs
         self.min_count = min_count
         self.neg = neg
