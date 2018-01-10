@@ -17,35 +17,37 @@ logger = logging.getLogger(__name__)
 
 
 def resolve_weights(smartirs):
-    """
-    Checks for validity of smartirs parameter.
+    """Checks for validity of `smartirs` parameter.
 
     Parameters
     ----------
-    smartirs : {'None' ,'str'}
-                `smartirs` or SMART (System for the Mechanical Analysis and Retrieval of Text)
-                Information Retrieval System, a mnemonic scheme for denoting tf-idf weighting
-                variants in the vector space model. The mnemonic for representing a combination
-                of weights takes the form ddd, where the letters represents the term weighting
-                of the document vector.
-
-
-                for more information visit https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System
-
-    Raises
-    ------
-    ValueError : If `smartirs` is not a string of length 3 or one of the decomposed value
-                 doesn't fit the list of permissible values
+    smartirs : str
+        `smartirs` or SMART (System for the Mechanical Analysis and Retrieval of Text)
+        Information Retrieval System, a mnemonic scheme for denoting tf-idf weighting
+        variants in the vector space model. The mnemonic for representing a combination
+        of weights takes the form ddd, where the letters represents the term weighting of the document vector.
+        for more information visit [1]_.
 
     Returns
     -------
-    w_tf, w_df, w_n : str, str, str
-                      Term frequency weighing:
-                        natural - `n`, logarithm - `l` , augmented - `a`,  boolean `b`, log average - `L`.
-                      Document frequency weighting:
-                        none - `n`, idf - `t`, prob idf - `p`.
-                      Document normalization:
-                        none - `n`, cosine - `c`.
+    w_tf : str
+        Term frequency weighing: natural - `n`, logarithm - `l` , augmented - `a`,  boolean `b`, log average - `L`.
+    w_df : str
+        Document frequency weighting: none - `n`, idf - `t`, prob idf - `p`.
+    w_n : str
+        Document normalization: none - `n`, cosine - `c`.
+
+    Raises
+    ------
+    ValueError
+        If `smartirs` is not a string of length 3 or one of the decomposed value
+        doesn't fit the list of permissible values
+
+
+
+    References
+    ----------
+    .. [1] https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System
 
     """
     if not isinstance(smartirs, str) or len(smartirs) != 3:
@@ -54,28 +56,58 @@ def resolve_weights(smartirs):
     w_tf, w_df, w_n = smartirs
 
     if w_tf not in 'nlabL':
-        raise ValueError("Expected term frequency weight to be one of 'nlabL', except got " + w_tf)
+        raise ValueError("Expected term frequency weight to be one of 'nlabL', except got {}".format(w_tf))
 
     if w_df not in 'ntp':
-        raise ValueError("Expected inverse document frequency weight to be one of 'ntp', except got " + w_df)
+        raise ValueError("Expected inverse document frequency weight to be one of 'ntp', except got {}".format(w_df))
 
     if w_n not in 'ncb':
-        raise ValueError("Expected normalization weight to be one of 'ncb', except got " + w_n)
+        raise ValueError("Expected normalization weight to be one of 'ncb', except got {}".format(w_n))
 
     return w_tf, w_df, w_n
 
 
 def df2idf(docfreq, totaldocs, log_base=2.0, add=0.0):
-    """
-    Compute default inverse-document-frequency for a term with document frequency `doc_freq`::
-    idf = add + log(totaldocs / doc_freq)
+    """Compute default inverse-document-frequency for a term with document frequency:
+    :math:`idf = add + log_{log\_base} \\frac{totaldocs}{doc\_freq}`
+
+    Parameters
+    ----------
+    docfreq : float
+        Document frequency.
+    totaldocs : int
+        Total number of documents.
+    log_base : float, optional
+        Base of logarithm.
+    add : float, optional
+        Offset.
+
+    Returns
+    -------
+    float
+        Inverse document frequency.
+
     """
     return add + np.log(float(totaldocs) / docfreq) / np.log(log_base)
 
 
 def precompute_idfs(wglobal, dfs, total_docs):
-    """
-    Precompute the inverse document frequency mapping for all terms.
+    """Pre-compute the inverse document frequency mapping for all terms.
+
+    Parameters
+    ----------
+    wglobal : function
+        Custom function for calculation idf, look at "universal" :func:`~gensim.models.tfidfmodel.updated_wglobal`.
+    dfs : dict
+        Dictionary with term_id and how many documents this token appeared.
+    total_docs : int
+        Total number of document.
+
+    Returns
+    -------
+    dict
+        Precomputed idfs in format {term_id_1: idfs_1, term_id_2: idfs_2, ...}
+
     """
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
@@ -83,6 +115,21 @@ def precompute_idfs(wglobal, dfs, total_docs):
 
 
 def updated_wlocal(tf, n_tf):
+    """Apply needed function based on `n_tf`.
+
+    Parameters
+    ----------
+    tf : int
+        Term frequency.
+    n_tf : str
+        Parameter, that choice concrete function.
+
+    Returns
+    -------
+    float
+        Calculated wlocal.
+
+    """
     if n_tf == "n":
         return tf
     elif n_tf == "l":
@@ -96,6 +143,23 @@ def updated_wlocal(tf, n_tf):
 
 
 def updated_wglobal(docfreq, totaldocs, n_df):
+    """Apply needed function based on `n_df`.
+
+    Parameters
+    ----------
+    docfreq : int
+        Document frequency.
+    totaldocs : int
+        Total number of documents.
+    n_df : str
+        Parameter, that choice concrete function.
+
+    Returns
+    -------
+    float
+        Calculated wglobal.
+
+    """
     if n_df == "n":
         return utils.identity(docfreq)
     elif n_df == "t":
@@ -105,6 +169,21 @@ def updated_wglobal(docfreq, totaldocs, n_df):
 
 
 def updated_normalize(x, n_n):
+    """Apply needed normalization based on `n_n`
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        Input array
+    n_n : str
+        Parameter, that choice concrete function.
+
+    Returns
+    -------
+    numpy.ndarray
+        Normalized array.
+
+    """
     if n_n == "n":
         return x
     elif n_n == "c":
