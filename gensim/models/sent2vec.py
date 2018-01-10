@@ -2,30 +2,44 @@
 # -*- coding: utf-8 -*-
 
 
-"""
-Produce sentence vectors with deep learning via sent2vec's models, using negative sampling.
-NOTE: There are more ways to get sentence vectors in Gensim than just Sent2Vec. See Doc2Vec in models.
-The training algorithms were originally ported from the C package https://github.com/epfml/sent2vec
-and extended with additional functionality.
-Initialize a model with e.g.::
-    >>> from gensim.models import Sent2Vec
-    >>> model = Sent2Vec(sentences, size=100, min_count=5, word_ngrams=2, dropoutk=2)
-Or::
-    >>> from gensim.models import Sent2Vec
-    >>> model = Sent2Vec(size=100, min_count=5, word_ngrams=2, dropoutk=2)
-    >>> model.build_vocab(sentences)
-    >>> model.train(sentences)
-Persist a model to disk with::
-    >>> model.save(fname)
-    >>> model = Sent2Vec.load(fname)  # you can continue training with the loaded model!
-The sentence vectors are stored in a numpy array::
-  >>> model.sentence_vectors(['This', 'is', 'an', 'awesome', 'gift']) # numpy vector of a sentence
-  array([0.68231279,  0.27833666,  0.16755685, -0.42549644, ...])
-You can perform the NLP similarity task with the model::
-  >>> model.similarity(['This', 'is', 'an', 'awesome', 'gift'], ['This', 'present', 'is', 'great'])
-  0.792567220458
+"""Produce sentence vectors with deep learning via sent2vec model using negative sampling [1]_.
+
+The training algorithms were originally ported from the C package [2]_. and extended with additional functionality.
+
+
+Examples
+--------
+Initialize a model with e.g.
+
+>>> from gensim.models import Sent2Vec
+>>> from gensim.test.utils import common_texts
+>>>
+>>> model = Sent2Vec(common_texts, size=100, min_count=5, word_ngrams=2, dropoutk=2)
+
+Or
+
+>>> model = Sent2Vec(size=100, min_count=5, word_ngrams=2, dropoutk=2)
+>>> model.build_vocab(common_texts)
+>>> model.train(common_texts)
+
+The sentence vectors are stored in a numpy array
+
+>>> model.sentence_vectors(['This', 'is', 'an', 'awesome', 'gift']) # numpy vector of a sentence
+array([0.68231279,  0.27833666,  0.16755685, -0.42549644, ...])
+
+You can perform the NLP similarity task with the model
+
+>>> model.similarity(['This', 'is', 'an', 'awesome', 'gift'], ['This', 'present', 'is', 'great'])
+0.792567220458
+
+
+References
+----------
 .. [1] Matteo Pagliardini, Prakhar Gupta, Martin Jaggi.
-Unsupervised Learning of Sentence Embeddings using Compositional n-Gram Features arXiv.
+       Unsupervised Learning of Sentence Embeddings using Compositional n-Gram Features.
+       https://arxiv.org/abs/1703.02507
+.. [2] https://github.com/epfml/sent2vec
+
 """
 from __future__ import division
 import logging
@@ -53,6 +67,7 @@ try:
     logger.debug('Fast version of %s is being used', __name__)
 except ImportError:
     # failed... fall back to plain numpy
+    # TODO remove this later (i.e. stay only cython version)
     FAST_VERSION = -1
     logger.warning('Slow version of %s is being used', __name__)
 
@@ -78,14 +93,14 @@ class Entry():
 
 
 class ModelDictionary():
-    """
-    Class for maintaining Sent2Vec's vocbulary. Provides functionality for storing and training
+    """Class for maintaining Sent2Vec's vocbulary. Provides functionality for storing and training
     word and character ngrams.
+
     """
 
     def __init__(self, t, bucket, minn, maxn, max_vocab_size, max_line_size=1024):
-        """
-        Initialize a sent2vec dictionary.
+        """Initialize a sent2vec dictionary.
+
         Parameters
         ----------
         t : float
@@ -102,6 +117,7 @@ class ModelDictionary():
             need about 1GB of RAM.
         max_line_size : int
             Maximum number of characters in a sentence. Default is 1024.
+
         """
 
         self.max_vocab_size = max_vocab_size
@@ -173,19 +189,19 @@ class ModelDictionary():
             self.words[self.word2int[h]].count += 1
 
     def read(self, sentences, min_count):
-        """
-        Process all words present in sentences (where each sentence is a list of unicode strings).
+        """Process all words present in sentences (where each sentence is a list of unicode strings).
         Initialize discard table to downsample higher frequency words according to given sampling threshold.
         Also initialize character ngrams for all words and threshold lower frequency words if their count
         is less than a given value (min_count).
+
         Parameters
         ----------
         sentences : iterable or list of list of unicode strings
-            for larger corpora (like the Toronto corpus),
-            consider an iterable that streams the sentences directly from disk/network.
-            See :class:`TorontoCorpus` in this module for such examples.
+            For larger corpora (like the Toronto corpus), consider an iterable that streams the sentences
+            directly from disk/network. See :class:`TorontoCorpus` in this module for such examples.
         min_count : int
             Value for thresholding lower frequency words.
+
         """
 
         min_threshold = 1
@@ -328,9 +344,9 @@ class ModelDictionary():
 
 
 class Sent2Vec(SaveLoad):
-    """
-    Class for training and using neural networks described in https://github.com/epfml/sent2vec
+    """Class for training and using neural networks described in https://github.com/epfml/sent2vec
     The model can be stored/loaded via its `save()` and `load()` methods.
+
     """
 
     def __init__(self, sentences=None, vector_size=100, lr=0.2, lr_update_rate=100, epochs=5,
@@ -338,14 +354,12 @@ class Sent2Vec(SaveLoad):
             minn=3, maxn=6, dropoutk=2, seed=42, min_lr=0.001, batch_words=10000,
             workers=3, max_vocab_size=30000000):
         """
-        Initialize the model from an iterable of `sentences`. Each sentence is a
-        list of words (unicode strings) that will be used for training.
+
         Parameters
         ----------
         sentences : iterable or list of list of unicode strings
-            For larger corpora (like the Toronto corpus),
-            consider an iterable that streams the sentences directly from disk/network.
-            See :class:`TorontoCorpus` in this module for such examples.
+            For larger corpora (like the Toronto corpus), consider an iterable that streams the sentences
+            directly from disk/network. See :class:`TorontoCorpus` in this module for such examples.
         vector_size : int
             Dimensionality of the feature vectors. Default is 100.
         lr : float
@@ -387,6 +401,7 @@ class Sent2Vec(SaveLoad):
         workers : int
             Use this many worker threads to train the model (=faster training with multicore machines).
             Default is 3.
+
         """
 
         self.seed = seed
@@ -423,18 +438,20 @@ class Sent2Vec(SaveLoad):
             self.train(sentences)
 
     def negative_sampling(self, target, lr):
-        """
-        Get loss using negative sampling.
-        Pararmeters
-        -----------
+        """Get loss using negative sampling.
+
+        Parameters
+        ----------
         target : int
             Word id of target word.
         lr : float
             current learning rate.
+
         Returns
         -------
         loss : float
             Negative sampling loss.
+
         """
 
         loss = 0.0
@@ -447,16 +464,18 @@ class Sent2Vec(SaveLoad):
         return loss
 
     def sigmoid(self, val):
-        """
-        Compute sigmoid of a particular value.
+        """Compute sigmoid of a particular value.
+
         Parameters
         ----------
         val : float
             Value for which sigmoid has to be calculated.
+
         Returns
         -------
         float
             Sigmoid of given real number.
+
         """
 
         return 1.0 / (1.0 + np.exp(-val))
@@ -507,18 +526,19 @@ class Sent2Vec(SaveLoad):
         self.negatives = np.array(self.negatives)
 
     def get_negative(self, target):
-        """
-        Get a negative from the list of negatives for caluculating nagtive sampling loss.
-        Parameter
-        ---------
+        """Get a negative from the list of negatives for calculating negative sampling loss.
+
+        Parameters
+        ----------
         target : int
             Target word id.
+
         Returns
         -------
         int
             Word id of negative sample.
-        """
 
+        """
         while True:
             negative = self.negatives[self.negpos]
             self.negpos = (self.negpos + 1) % len(self.negatives)
@@ -550,8 +570,8 @@ class Sent2Vec(SaveLoad):
             return local_token_count, nexamples, loss
 
     def update(self, input_, target, lr):
-        """
-        Update model's neural weights for given context, target word and learning rate.
+        """Update model's neural weights for given context, target word and learning rate.
+
         Parameters
         ----------
         input_ : list of integers
@@ -560,8 +580,8 @@ class Sent2Vec(SaveLoad):
             Word id of target word.
         lr : float
             Current Learning rate.
-        """
 
+        """
         assert(target >= 0)
         assert(target < self.dict.size)
         if len(input_) == 0:
@@ -745,16 +765,18 @@ class Sent2Vec(SaveLoad):
         return trained_word_count
 
     def sentence_vectors(self, sentence):
-        """
-        Function for getting sentence vector for an input sentence.
+        """Function for getting sentence vector for an input sentence.
+
         Parameters
         ----------
         sentence : list of unicode strings
             List of words.
+
         Returns
         -------
         numpy array
             Sentence vector for input sentence.
+
         """
 
         ntokens_temp, words = self.dict.get_line(sentence)
@@ -767,8 +789,8 @@ class Sent2Vec(SaveLoad):
         return sent_vec
 
     def similarity(self, sent1, sent2):
-        """
-        Function to compute cosine similarity between two sentences.
+        """Function to compute cosine similarity between two sentences.
+
         Parameters
         ----------
         sent1, sent2 : list of unicode strings
@@ -777,6 +799,7 @@ class Sent2Vec(SaveLoad):
         -------
         float
             Cosine similarity score between two sentence vectors.
+
         """
 
         return dot(matutils.unitvec(self.sentence_vectors(sent1)), matutils.unitvec(self.sentence_vectors(sent2)))
@@ -787,10 +810,12 @@ class TorontoCorpus():
 
     def __init__(self, dirname):
         """
+
         Parameters
         ----------
         dirname : str
             Name of the directory where the dataset is located.
+
         """
         self.dirname = dirname
 
