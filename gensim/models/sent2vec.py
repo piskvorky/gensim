@@ -45,7 +45,6 @@ import logging
 import numpy as np
 from numpy import dot
 from gensim import utils, matutils
-import sys
 from random import randint
 from gensim.utils import SaveLoad, tokenize
 from types import GeneratorType
@@ -339,7 +338,7 @@ class ModelDictionary(object):
 class Sent2Vec(SaveLoad):
     """Class for training and using neural networks described in [1]_"""
 
-    def __init__(self, sentences=None, size=100, lr=0.2, lr_update_rate=100, epochs=5, min_count=5, neg=10,
+    def __init__(self, sentences=None, size=100, lr=0.2, lr__update_rate=100, epochs=5, min_count=5, neg=10,
                  word_ngrams=2, bucket=2000000, t=0.0001, minn=3, maxn=6, dropoutk=2, seed=42,
                  min_lr=0.001, batch_words=10000, workers=3, max_vocab_size=30000000):
         """
@@ -352,8 +351,8 @@ class Sent2Vec(SaveLoad):
             Dimensionality of the feature vectors.
         lr : float, optional
             Initial learning rate.
-        lr_update_rate : int, optional
-            Change the rate of updates for the learning rate.
+        lr__update_rate : int, optional
+            Change the rate of _updates for the learning rate.
         epochs : int, optional
             Number of iterations (epochs) over the corpus.
         min_count : int, optional
@@ -395,7 +394,7 @@ class Sent2Vec(SaveLoad):
         self.negatives = []
         self.vector_size = size
         self.lr = lr
-        self.lr_update_rate = lr_update_rate
+        self.lr__update_rate = lr__update_rate
         self.epochs = epochs
         self.min_count = min_count
         self.neg = neg
@@ -419,7 +418,7 @@ class Sent2Vec(SaveLoad):
             self.build_vocab(sentences)
             self.train(sentences)
 
-    def negative_sampling(self, target, lr):
+    def _negative_sampling(self, target, lr):
         """Get loss using negative sampling.
 
         Parameters
@@ -440,30 +439,30 @@ class Sent2Vec(SaveLoad):
         self.grad = np.zeros(self.vector_size)
         for i in range(self.neg + 1):
             if i == 0:
-                loss += self.binary_logistic(target, True, lr)
+                loss += self._binary_logistic(target, True, lr)
             else:
-                loss += self.binary_logistic(self.get_negative(target), False, lr)
+                loss += self._binary_logistic(self._get_negative(target), False, lr)
         return loss
 
     @staticmethod
-    def sigmoid(val):
-        """Compute sigmoid of a particular value.
+    def _sigmoid(val):
+        """Compute _sigmoid of a particular value.
 
         Parameters
         ----------
         val : {float, numpy.ndarray}
-            Value for which sigmoid has to be calculated.
+            Value for which _sigmoid has to be calculated.
 
         Returns
         -------
         float
-            Sigmoid of `val`.
+            _sigmoid of `val`.
 
         """
 
         return 1.0 / (1.0 + np.exp(-val))
 
-    def binary_logistic(self, target, label, lr):
+    def _binary_logistic(self, target, label, lr):
         """Compute loss for given target, label and learning rate using binary logistic regression.
 
         Parameters
@@ -482,7 +481,7 @@ class Sent2Vec(SaveLoad):
 
         """
 
-        score = self.sigmoid(np.dot(self.wo[target], self.hidden))
+        score = self._sigmoid(np.dot(self.wo[target], self.hidden))
         alpha = lr * (float(label) - score)
         self.grad += self.wo[target] * alpha
         self.wo[target] += self.hidden * alpha
@@ -491,7 +490,7 @@ class Sent2Vec(SaveLoad):
         else:
             return -np.log(1.0 - score)
 
-    def init_table_negatives(self, counts):
+    def _init_table_negatives(self, counts):
         """Initialise table of negatives for negative sampling.
 
         Parameters
@@ -511,7 +510,7 @@ class Sent2Vec(SaveLoad):
         self.random.shuffle(self.negatives)
         self.negatives = np.array(self.negatives)
 
-    def get_negative(self, target):
+    def _get_negative(self, target):
         """Get a negative from the list of negatives for calculating negative sampling loss.
 
         Parameters
@@ -548,14 +547,14 @@ class Sent2Vec(SaveLoad):
                         context = list(words)
                         context[i] = 0
                         context = self.dict.add_ngrams_train(context=context, n=self.word_ngrams, k=self.dropoutk)
-                        loss += self.update(input_=context, target=words[i], lr=lr)
+                        loss += self._update(input_=context, target=words[i], lr=lr)
             return local_token_count, nexamples, loss
         else:
             local_token_count, nexamples, loss = _do_train_job_fast(self, sentences, lr, hidden, grad)
             return local_token_count, nexamples, loss
 
-    def update(self, input_, target, lr):
-        """Update model's neural weights for given context, target word and learning rate.
+    def _update(self, input_, target, lr):
+        """_update model's neural weights for given context, target word and learning rate.
 
         Parameters
         ----------
@@ -578,7 +577,7 @@ class Sent2Vec(SaveLoad):
             self.hidden += self.wi[i]
 
         self.hidden *= (1.0 / len(input_))
-        loss = self.negative_sampling(target, lr)
+        loss = self._negative_sampling(target, lr)
         self.grad *= (1.0 / len(input_))
 
         for i in input_:
@@ -603,7 +602,7 @@ class Sent2Vec(SaveLoad):
         self.wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1),
                                       (self.dict.size + self.bucket, self.vector_size)).astype(np.float32)
         self.wo = np.zeros((self.dict.size, self.vector_size), dtype=np.float32)
-        self.init_table_negatives(counts=counts)
+        self._init_table_negatives(counts=counts)
 
     def train(self, sentences, queue_factor=2, report_delay=1.0):
         """Train model, used `sentences` as input.
@@ -684,7 +683,7 @@ class Sent2Vec(SaveLoad):
                     job_no += 1
                     job_queue.put((job_batch, next_lr))
 
-                    # update the learning rate for the next job
+                    # _update the learning rate for the next job
                     if end_lr < next_lr:
                         pushed_words += len(job_batch)
                         progress = 1.0 * pushed_words / total_words
@@ -738,7 +737,7 @@ class Sent2Vec(SaveLoad):
             raw_words, trained_words, nexamples_temp, loss_temp = report
             job_tally += 1
 
-            # update progress stats
+            # _update progress stats
             trained_word_count += trained_words  # only words in vocab
             raw_word_count += raw_words
             nexamples += nexamples_temp
