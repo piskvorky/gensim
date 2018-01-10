@@ -107,7 +107,7 @@ def load_old_fasttext(*args, **kwargs):
     new_model.min_alpha_yet_reached = old_model.min_alpha_yet_reached
     new_model.model_trimmed_post_training = old_model.model_trimmed_post_training
 
-    new_model.num_ngram_vectors = old_model.num_ngram_vectors
+    new_model.trainables.num_ngram_vectors = old_model.num_ngram_vectors
 
     new_model._set_keyedvectors()
     return new_model

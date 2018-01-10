@@ -613,7 +613,7 @@ class FastText(BaseWordEmbedddingsModel):
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.trainables, 'vectors_ngrams'):
                 model.trainables.vectors_ngrams_lockf = ones(len(model.trainables.vectors), dtype=REAL)
             return model
-        except AttributeError:
+        except ImportError:
             logger.info('Model saved using code from ealier Gensim Version. Re-loading old model in a compatible way.')
             from gensim.models.deprecated.fasttext import load_old_fasttext
             return load_old_fasttext(*args, **kwargs)
@@ -857,6 +857,10 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
     @property
     def syn0_ngrams_norm(self):
         return self.vectors_ngrams_norm
+
+    @property
+    def num_ngram_vectors(self):
+        return self.trainables.num_ngram_vectors
 
     def __contains__(self, word):
         """
