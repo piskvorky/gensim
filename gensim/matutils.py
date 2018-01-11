@@ -340,7 +340,7 @@ class Scipy2Corpus(object):
 
     See Also
     --------
-    :func:`gensim.matutils.corpus2csc`
+    :func:`~gensim.matutils.corpus2csc`
 
     """
 
@@ -383,7 +383,7 @@ def sparse2full(doc, length):
 
     See Also
     --------
-    :func:`gensim.matutils.full2sparse`
+    :func:`~gensim.matutils.full2sparse`
 
     """
     result = np.zeros(length, dtype=np.float32)  # fill with zeroes (default value)
@@ -404,7 +404,7 @@ def full2sparse(vec, eps=1e-9):
     vec : numpy.ndarray
         Input dense vector
     eps : float
-        Thrshold value, if coordinate in `vec` < eps, this will not be presented in result.
+        Threshold value, if coordinate in `vec` < eps, this will not be presented in result.
 
     Returns
     -------
@@ -413,7 +413,7 @@ def full2sparse(vec, eps=1e-9):
 
     See Also
     --------
-    :func:`gensim.matutils.sparse2full`
+    :func:`~gensim.matutils.sparse2full`
 
     """
     vec = np.asarray(vec, dtype=float)
@@ -425,8 +425,25 @@ dense2vec = full2sparse
 
 
 def full2sparse_clipped(vec, topn, eps=1e-9):
-    """
-    Like `full2sparse`, but only return the `topn` elements of the greatest magnitude (abs).
+    """Like :func:`~gensim.matutils.full2sparse`, but only return the `topn` elements of the greatest magnitude (abs).
+
+    Parameters
+    ----------
+    vec : numpy.ndarray
+        Input dense vector
+    topn : int
+        Number of greatest (abs) elements that will be presented in result.
+    eps : float
+        Threshold value, if coordinate in `vec` < eps, this will not be presented in result.
+
+    Returns
+    -------
+    list of (int, float)
+        Clipped vector in BoW format.
+
+    See Also
+    --------
+    :func:`~gensim.matutils.full2sparse`
 
     """
     # use np.argpartition/argsort and only form tuples that are actually returned.
@@ -440,33 +457,27 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
 
 
 def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
-    """
-    Convert corpus into a dense np array (documents will be columns). You
-    must supply the number of features `num_terms`, because dimensionality
-    cannot be deduced from the sparse vectors alone.
-
-    You can optionally supply `num_docs` (=the corpus length) as well, so that
-    a more memory-efficient code path is taken.
-
-    This is the mirror function to `Dense2Corpus`.
+    """Convert corpus into a dense numpy array (documents will be columns).
 
     Parameters
     ----------
-    corpus : iterable
-        Iterable of documents, a streamed corpus to be converted.
+    corpus : iterable of iterable of (int, number)
+        Input corpus in BoW format.
     num_terms : int
-        The number of features, must supply.
-    num_docs : int or None, optional
-        If provided, the `num_docs` attributes in the corpus will be ignored.
+        Number of terms in dictionary (will be used as size of output vector.
+    num_docs : int, optional
+        Number of documents in corpus.
     dtype : data-type, optional
-        Default value is `np.float32`.
+        Data type of output matrix
+
     Returns
     -------
-    output_array : dense np array
-        A dense np array that is converted from the input corpus.
+    numpy.ndarray
+        Dense array that present `corpus`.
+
     See Also
     --------
-    Dense2Corpus : Convert a matrix in scipy.sparse format into a streaming gensim corpus.
+    :class:`~gensim.matutils.Dense2Corpus`
 
     """
     if num_docs is not None:
@@ -481,23 +492,43 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
 
 
 class Dense2Corpus(object):
+    """Treat dense numpy array as a streamed gensim corpus in BoW format.
+
+    Notes
+    -----
+    No data copy is made (changes to the underlying matrix imply changes in the corpus).
+
+    See Also
+    --------
+    :func:`~gensim.matutils.corpus2dense`
+    :class:`~gensim.matutils.Sparse2Corpus`
+
     """
-    Treat dense np array as a sparse, streamed gensim corpus.
-
-    No data copy is made (changes to the underlying matrix imply changes in the
-    corpus).
-
-    This is the mirror function to `corpus2dense`.
-
-    """
-
     def __init__(self, dense, documents_columns=True):
+        """
+
+        Parameters
+        ----------
+        dense : numpy.ndarray
+            Corpus in dense format.
+        documents_columns : bool, optional
+            If True - documents will be column, rows otherwise.
+
+        """
         if documents_columns:
             self.dense = dense.T
         else:
             self.dense = dense
 
     def __iter__(self):
+        """Iterate over corpus
+
+        Yields
+        ------
+        list of (int, float)
+            Document in BoW format.
+
+        """
         for doc in self.dense:
             yield full2sparse(doc.flat)
 
@@ -506,20 +537,39 @@ class Dense2Corpus(object):
 
 
 class Sparse2Corpus(object):
+    """Convert a matrix in scipy.sparse format into a streaming gensim corpus.
+
+    See Also
+    --------
+    :func:`~gensim.matutils.corpus2csc`
+    :class:`~gensim.matutils.Dense2Corpus`
+
     """
-    Convert a matrix in scipy.sparse format into a streaming gensim corpus.
-
-    This is the mirror function to `corpus2csc`.
-
-    """
-
     def __init__(self, sparse, documents_columns=True):
+        """
+
+        Parameters
+        ----------
+        sparse : `scipy.sparse`
+            Corpus scipy sparse format
+        documents_columns : bool, optional
+            If True - documents will be column, rows otherwise.
+
+        """
         if documents_columns:
             self.sparse = sparse.tocsc()
         else:
             self.sparse = sparse.tocsr().T  # make sure shape[1]=number of docs (needed in len())
 
     def __iter__(self):
+        """
+
+        Yields
+        ------
+        list of (int, float)
+            Document in BoW format.
+
+        """
         for indprev, indnow in izip(self.sparse.indptr, self.sparse.indptr[1:]):
             yield list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
 
@@ -527,8 +577,18 @@ class Sparse2Corpus(object):
         return self.sparse.shape[1]
 
     def __getitem__(self, document_index):
-        """
-        Return a single document in the corpus by its index (between 0 and `len(self)-1`).
+        """Get a single document in the corpus by its index.
+
+        Parameters
+        ----------
+        document_index : int
+            Index of document
+
+        Returns
+        -------
+        list of (int, number)
+            Document in BoW format.
+
         """
         indprev = self.sparse.indptr[document_index]
         indnow = self.sparse.indptr[document_index + 1]
@@ -536,6 +596,19 @@ class Sparse2Corpus(object):
 
 
 def veclen(vec):
+    """Calculate length of vector
+
+    Parameters
+    ----------
+    vec : list of (int, number)
+        Input vector in BoW format.
+
+    Returns
+    -------
+    float
+        Length of `vec`.
+
+    """
     if len(vec) == 0:
         return 0.0
     length = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
@@ -544,6 +617,21 @@ def veclen(vec):
 
 
 def ret_normalized_vec(vec, length):
+    """Normalize vector.
+
+    Parameters
+    ----------
+    vec : list of (int, number)
+        Input vector in BoW format.
+    length : float
+        Length of vector
+
+    Returns
+    -------
+    list of (int, number)
+        Normalized vector in BoW format.
+
+    """
     if length != 1.0:
         return [(termid, val / length) for termid, val in vec]
     else:
