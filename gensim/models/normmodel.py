@@ -12,39 +12,26 @@ logger = logging.getLogger(__name__)
 
 
 class NormModel(interfaces.TransformationABC):
-    """Objects of this class realize the explicit normalization of vectors.
-
-    Model persistency is achieved via load/save methods.
-
-    Parameters
-    ----------
-    corpus : iterable
-        Iterable of documents.
-    norm : {'l2', 'l1'}, optional
-        Norm used to normalize. l1 and l2 norms are supported (l2 is default).
-
-    """
+    """Objects of this class realize the explicit normalization of vectors (l1 and l2)."""
 
     def __init__(self, corpus=None, norm='l2'):
-        """
-        Compute the l1 or l2 normalization by normalizing separately for
-        each document in a corpus.
+        """Compute the l1 or l2 normalization by normalizing separately for each document in a corpus.
 
-        If v_{i,j} is the 'i'th component of the vector representing document
-        'j', the l1 normalization is:
+        If :math:`v_{i,j}` is the 'i'th component of the vector representing document 'j', the l1 normalization is
 
-        .. math:: norml1_{i, j} = \frac{v_{i,j}}{\sum_k |v_{k,j}|}
+        .. math:: l1_{i, j} = \\frac{v_{i,j}}{\sum_k |v_{k,j}|}
 
-        The l2 normalization is:
+        the l2 normalization is
 
-        .. math:: norml2_{i, j} = \frac{v_{i,j}}{\sqrt{\sum_k v_{k,j}^2}}
+        .. math:: l2_{i, j} = \\frac{v_{i,j}}{\sqrt{\sum_k v_{k,j}^2}}
+
 
         Parameters
         ----------
-        corpus : iterable
-            Iterable of documents.
-        norm : {'l1', 'l2'}
-            Norm used to normalize. l1 and l2 norms are supported (l2 is default)
+        corpus : iterable of iterable of (int, number), optional
+            Input corpus.
+        norm : {'l1', 'l2'}, optional
+            Norm used to normalize.
 
         """
         self.norm = norm
@@ -57,13 +44,12 @@ class NormModel(interfaces.TransformationABC):
         return "NormModel(num_docs=%s, num_nnz=%s, norm=%s)" % (self.num_docs, self.num_nnz, self.norm)
 
     def calc_norm(self, corpus):
-        """
-        Calculates the norm by calling matutils.unitvec with the norm parameter.
+        """Calculates the norm by calling :func:`~gensim.matutils.unitvec` with the norm parameter.
 
         Parameters
         ----------
-        corpus : iterable
-            Iterable of documents.
+        corpus : iterable of iterable of (int, number)
+            Input corpus.
 
         """
         logger.info("Performing %s normalization...", self.norm)
@@ -79,26 +65,35 @@ class NormModel(interfaces.TransformationABC):
         self.norms = norms
 
     def normalize(self, bow):
-        """
-        Normalizes a simple count representation.
+        """Normalizes a simple count representation.
 
         Parameters
         ----------
-        bow : :class:`~interfaces.CorpusABC` (iterable of documents) or list
-        of (int, int).
+        bow : list of (int, number)
+            Document in BoW format.
+
+        Returns
+        -------
+        list of (int, number)
+            Normalized document.
+
 
         """
         vector = matutils.unitvec(bow, self.norm)
         return vector
 
     def __getitem__(self, bow):
-        """
-        Calls the self.normalize() method.
+        """Calls the :func:`~gensim.models.normmodel.NormModel.normalize`.
 
         Parameters
         ----------
-        bow : :class:`~interfaces.CorpusABC` (iterable of documents) or list
-        of (int, int).
+        bow : list of (int, number)
+            Document in BoW format.
+
+        Returns
+        -------
+        list of (int, number)
+            Normalized document.
 
         """
         return self.normalize(bow)
