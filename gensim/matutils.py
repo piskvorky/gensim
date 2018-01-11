@@ -1145,7 +1145,7 @@ class MmWriter(object):
 
     @staticmethod
     def write_corpus(fname, corpus, progress_cnt=1000, index=False, num_terms=None, metadata=False):
-        """Save the corpus to disk in matrix market format.
+        """Save the corpus to disk in Matrix Market format.
 
         Parameters
         ----------
@@ -1260,14 +1260,15 @@ class MmReader(object):
 
     def __init__(self, input, transposed=True):
         """
-        Initialize the matrix reader.
 
-        The `input` refers to a file on local filesystem, which is expected to
-        be in the sparse (coordinate) Matrix Market format. Documents are assumed
-        to be rows of the matrix (and document features are columns).
+        Parameters
+        ----------
+        input : {str, file-like object}
+            Path to input file or file-like object (in Matrix Market format).
+        transposed : bool, optional
+            "Orientation" of document. By default, documents should be rows of the matrix,
+            otherwise, needed to set this to False
 
-        `input` is either a string (file path) or a file-like object that supports
-        `seek()` (e.g. gzip.GzipFile, bz2.BZ2File). File-like objects are not closed automatically.
         """
         logger.info("initializing corpus reader from %s", input)
         self.input, self.transposed = input, transposed
@@ -1304,8 +1305,13 @@ class MmReader(object):
                 (self.num_docs, self.num_terms, self.num_nnz))
 
     def skip_headers(self, input_file):
-        """
-        Skip file headers that appear before the first document.
+        """Skip file headers that appear before the first document.
+
+        Parameters
+        ----------
+        input_file : file-like object
+            Opened file.
+
         """
         for line in input_file:
             if line.startswith(b'%'):
@@ -1313,14 +1319,20 @@ class MmReader(object):
             break
 
     def __iter__(self):
-        """
-        Iteratively yield vectors from the underlying file, in the format (row_no, vector),
-        where vector is a list of (col_no, value) 2-tuples.
+        """Iterate over all corpus.
 
-        Note that the total number of vectors returned is always equal to the
+        Yields
+        ------
+        (prev_id, document) : (int, list of (int, number)
+            Number of document and document in BoW format.
+
+        Notes
+        -----
+        Total number of vectors returned is always equal to the
         number of rows specified in the header; empty documents are inserted and
         yielded where appropriate, even if they are not explicitly stored in the
         Matrix Market file.
+
         """
         with utils.file_or_filename(self.input) as lines:
             self.skip_headers(lines)
@@ -1359,7 +1371,19 @@ class MmReader(object):
             yield previd, []
 
     def docbyoffset(self, offset):
-        """Return document at file offset `offset` (in bytes)"""
+        """Get document at file offset `offset` (in bytes)
+
+        Parameters
+        ----------
+        offset : int
+            Offset (in bytes).
+
+        Returns
+        -------
+        list of (int, number)
+            Document in BoW format, reached by `offset`.
+
+        """
         # empty documents are not stored explicitly in MM format, so the index marks
         # them with a special offset, -1.
         if offset == -1:
