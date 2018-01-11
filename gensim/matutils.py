@@ -666,12 +666,24 @@ blas_scal = blas('scal', np.array([], dtype=float))
 
 
 def unitvec(vec, norm='l2'):
-    """
-    Scale a vector to unit length. The only exception is the zero vector, which
-    is returned back unchanged.
+    """Scale a vector to unit length.
 
-    Output will be in the same format as input (i.e., gensim vector=>gensim vector,
-    or np array=>np array, scipy.sparse=>scipy.sparse).
+    Parameters
+    ----------
+    vec : {numpy.ndarray, scipy.sparse, list of (int, float)}
+        Input vector in any format
+    norm : {'l1', 'l2'}, optional
+        Normalization that will be used.
+
+    Returns
+    -------
+    {numpy.ndarray, scipy.sparse, list of (int, float)}
+        Normalized vector in same format as `vec`.
+
+    Notes
+    -----
+    Zero-vector will be unchanged.
+
     """
     if norm not in ('l1', 'l2'):
         raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
@@ -714,9 +726,21 @@ def unitvec(vec, norm='l2'):
 
 
 def cossim(vec1, vec2):
-    """
-    Return cosine similarity between two sparse vectors.
+    """Get cosine similarity between two sparse vectors.
     The similarity is a number between <-1.0, 1.0>, higher is more similar.
+
+    Parameters
+    ----------
+    vec1 : list of (int, float)
+        Vector in BoW format
+    vec2 : list of (int, float)
+        Vector in BoW format
+
+    Returns
+    -------
+    float
+        Cosine similarity between `vec1` and `vec2`.
+
     """
     vec1, vec2 = dict(vec1), dict(vec2)
     if not vec1 or not vec2:
@@ -732,9 +756,18 @@ def cossim(vec1, vec2):
 
 
 def isbow(vec):
-    """
-    Checks if vector passed is in bag of words representation or not.
-    Vec is considered to be in bag of words format if it is 2-tuple format.
+    """Checks if vector passed is in BoW format.
+
+    Parameters
+    ----------
+    vec : object
+        Input vector in any format
+
+    Returns
+    -------
+    bool
+        True if vector in BoW format, False otherwise.
+
     """
     if scipy.sparse.issparse(vec):
         vec = vec.todense().tolist()
@@ -749,9 +782,22 @@ def isbow(vec):
 
 
 def convert_vec(vec1, vec2, num_features=None):
-    """
-    Convert vectors to appropriate forms required by entropy input.
-    Checks for sparsity and bag of word format.
+    """Convert vectors to dense format
+
+    Parameters
+    ----------
+    vec1 : {scipy.sparse, list of (int, float)}
+        Input vector.
+    vec2 : {scipy.sparse, list of (int, float)}
+        Input vector.
+    num_features : int, optional
+        Number of features in vector.
+
+    Returns
+    -------
+    (numpy.ndarray, numpy.ndarray)
+        (`vec1`, `vec2`) in dense format.
+
     """
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
@@ -778,20 +824,49 @@ def convert_vec(vec1, vec2, num_features=None):
 
 
 def kullback_leibler(vec1, vec2, num_features=None):
-    """
-    A distance metric between two probability distributions.
-    Returns a distance value in range <0, +∞> where values closer to 0 mean less distance (and a higher similarity)
-    Uses the scipy.stats.entropy method to identify kullback_leibler convergence value.
-    If the distribution draws from a certain number of docs, that value must be passed.
+    """Calculate Kullback-Leibler distance between two probability distributions using `scipy.stats.entropy`.
+
+    Parameters
+    ----------
+    vec1 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    vec2 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    num_features : int, optional
+        Number of features in vector.
+
+    Returns
+    -------
+    float
+        Kullback-Leibler distance between `vec1` and `vec2`.
+        Value in range [0, +∞) where values closer to 0 mean less distance (and a higher similarity).
+
     """
     vec1, vec2 = convert_vec(vec1, vec2, num_features=num_features)
     return entropy(vec1, vec2)
 
 
 def jensen_shannon(vec1, vec2, num_features=None):
-    """
-    A method of measuring the similarity between two probability distributions.
-    It is a symmetrized and finite version of the Kullback–Leibler divergence.
+    """Calculate Jensen-Shannon distance between two probability distributions using `scipy.stats.entropy`.
+
+    Parameters
+    ----------
+    vec1 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    vec2 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    num_features : int, optional
+        Number of features in vector.
+
+    Returns
+    -------
+    float
+        Jensen-Shannon distance between `vec1` and `vec2`.
+
+    Notes
+    -----
+    This is symmetric and finite "version" of :func:`gensim.matutils.kullback_leibler`.
+
     """
     vec1, vec2 = convert_vec(vec1, vec2, num_features=num_features)
     avg_vec = 0.5 * (vec1 + vec2)
@@ -799,10 +874,21 @@ def jensen_shannon(vec1, vec2, num_features=None):
 
 
 def hellinger(vec1, vec2):
-    """
-    Hellinger distance is a distance metric to quantify the similarity between two probability distributions.
-    Distance between distributions will be a number between <0,1>, where 0 is minimum distance (maximum similarity)
-    and 1 is maximum distance (minimum similarity).
+    """Calculate Hellinger distance between two probability distributions.
+
+    Parameters
+    ----------
+    vec1 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    vec2 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+
+    Returns
+    -------
+    float
+        Hellinger distance between `vec1` and `vec2`.
+        Value in range [0, 1], where 0 is min distance (max similarity) and 1 is max distance (min similarity).
+
     """
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
@@ -823,11 +909,20 @@ def hellinger(vec1, vec2):
 
 
 def jaccard(vec1, vec2):
-    """
-    A distance metric between bags of words representation.
-    Returns 1 minus the intersection divided by union, where union is the sum of the size of the two bags.
-    If it is not a bag of words representation, the union and intersection is calculated in the traditional manner.
-    Returns a value in range <0,1> where values closer to 0 mean less distance and thus higher similarity.
+    """Calculate Jaccard distance between vectors.
+
+    Parameters
+    ----------
+    vec1 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    vec2 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+
+    Returns
+    -------
+    float
+        Jaccard distance between `vec1` and `vec2`.
+        Value in range [0, 1], where 0 is min distance (max similarity) and 1 is max distance (min similarity).
 
     """
 
@@ -860,9 +955,20 @@ def jaccard(vec1, vec2):
 
 
 def jaccard_distance(set1, set2):
-    """
-    Calculate a distance between set representation (1 minus the intersection divided by union).
-    Return a value in range <0, 1> where values closer to 0 mean smaller distance and thus higher similarity.
+    """Calculate Jaccard distance between two sets
+
+    Parameters
+    ----------
+    set1 : set
+        Input set.
+    set2 : set
+        Input set.
+
+    Returns
+    -------
+    float
+        Jaccard distance between `set1` and `set2`.
+        Value in range [0, 1], where 0 is min distance (max similarity) and 1 is max distance (min similarity).
     """
 
     union_cardinality = len(set1 | set2)
@@ -873,8 +979,18 @@ def jaccard_distance(set1, set2):
 
 
 def dirichlet_expectation(alpha):
-    """
-    For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
+    """For a vector :math:`\\theta \sim Dir(\\alpha)`, compute :math:`E[log \\theta]`.
+
+    Parameters
+    ----------
+    alpha : numpy.ndarray
+        Input vector or matrix.
+
+    Returns
+    -------
+    numpy.ndarray:
+        :math:`E[log \\theta]`
+
     """
     if len(alpha.shape) == 1:
         result = psi(alpha) - psi(np.sum(alpha))
@@ -884,11 +1000,23 @@ def dirichlet_expectation(alpha):
 
 
 def qr_destroy(la):
-    """
-    Return QR decomposition of `la[0]`. Content of `la` gets destroyed in the process.
+    """Get QR decomposition of `la[0]`.
 
+    Notes
+    -----
     Using this function should be less memory intense than calling `scipy.linalg.qr(la[0])`,
     because the memory used in `la[0]` is reclaimed earlier.
+
+
+    Returns
+    -------
+    (numpy.ndarray, numpy.ndarray)
+        Matrices :math:`Q` and :math:`R`.
+
+    Warnings
+    --------
+    Content of `la` gets destroyed in the process.
+
     """
     a = np.asfortranarray(la[0])
     del la[0], la  # now `a` is the only reference to the input matrix
