@@ -336,17 +336,21 @@ def scipy2sparse(vec, eps=1e-9):
 
 
 class Scipy2Corpus(object):
-    """
-    Convert a sequence of dense/sparse vectors into a streamed gensim corpus object.
+    """Convert a sequence of dense/sparse vectors into a streamed gensim corpus object.
 
-    This is the mirror function to `corpus2csc`.
+    See Also
+    --------
+    :func:`gensim.matutils.corpus2csc`
 
     """
 
     def __init__(self, vecs):
         """
-        `vecs` is a sequence of dense and/or sparse vectors, such as a 2d np array,
-        or a scipy.sparse.csc_matrix, or any sequence containing a mix of 1d np/scipy vectors.
+
+        Parameters
+        ----------
+        vecs : iterable of {`numpy.ndarray`, `scipy.sparse`}
+            Input vectors.
 
         """
         self.vecs = vecs
@@ -363,11 +367,23 @@ class Scipy2Corpus(object):
 
 
 def sparse2full(doc, length):
-    """
-    Convert a document in sparse document format (=sequence of 2-tuples) into a dense
-    np array (of size `length`).
+    """Convert a document in BoW format into dense numpy array.
 
-    This is the mirror function to `full2sparse`.
+    Parameters
+    ----------
+    doc : list of (int, number)
+        Document in BoW format
+    length : int
+        Length of result vector
+
+    Returns
+    -------
+    numpy.ndarray
+        Dense variant of `doc` vector.
+
+    See Also
+    --------
+    :func:`gensim.matutils.full2sparse`
 
     """
     result = np.zeros(length, dtype=np.float32)  # fill with zeroes (default value)
@@ -381,12 +397,23 @@ def sparse2full(doc, length):
 
 
 def full2sparse(vec, eps=1e-9):
-    """
-    Convert a dense np array into the sparse document format (sequence of 2-tuples).
+    """Convert a dense array into the BoW format.
 
-    Values of magnitude < `eps` are treated as zero (ignored).
+    Parameters
+    ----------
+    vec : numpy.ndarray
+        Input dense vector
+    eps : float
+        Thrshold value, if coordinate in `vec` < eps, this will not be presented in result.
 
-    This is the mirror function to `sparse2full`.
+    Returns
+    -------
+    list of (int, float)
+        BoW format of `vec`.
+
+    See Also
+    --------
+    :func:`gensim.matutils.sparse2full`
 
     """
     vec = np.asarray(vec, dtype=float)
