@@ -258,62 +258,6 @@ class Word2Vec(BaseWordEmbedddingsModel):
             batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window, seed=seed,
             hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss)
 
-    def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
-        """
-        Build vocabulary from a dictionary of word frequencies.
-        Build model vocabulary from a passed dictionary that contains (word,word count).
-        Words must be of type unicode strings.
-
-        Parameters
-        ----------
-        `word_freq` : dict
-            Word,Word_Count dictionary.
-        `keep_raw_vocab` : bool
-            If not true, delete the raw vocabulary after the scaling is done and free up RAM.
-        `corpus_count`: int
-            Even if no corpus is provided, this argument can set corpus_count explicitly.
-        `trim_rule` : function
-            Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
-            be trimmed away, or handled using the default (discard if word count < min_count).
-            Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
-            or a callable that accepts parameters (word, count, min_count) and returns either
-            :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
-            of the model.
-        `update`: bool
-            If true, the new provided words in `word_freq` dict will be added to model's vocab.
-
-        Returns
-        --------
-        None
-
-        Examples
-        --------
-        >>> from gensim.models.word2vec import Word2Vec
-        >>> model= Word2Vec()
-        >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
-        """
-        logger.info("Processing provided word frequencies")
-        # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq)
-        # to be directly the raw vocab
-        raw_vocab = word_freq
-        logger.info(
-            "collected %i different raw word, with total frequency of %i",
-            len(raw_vocab), sum(itervalues(raw_vocab))
-        )
-
-        # Since no sentences are provided, this is to control the corpus_count
-        self.corpus_count = corpus_count if corpus_count else 0
-        self.vocabulary.raw_vocab = raw_vocab
-
-        # trim by min_count & precalculate downsampling
-        self.vocabulary.prepare_vocab(
-            len(self.trainables.vectors), self.hs, self.negative, keep_raw_vocab=keep_raw_vocab,
-            trim_rule=trim_rule, update=update)
-        self.trainables.prepare_weights(
-            self.hs, self.negative, update=update, vocabulary=self.vocabulary)  # build tables & arrays
-        self._set_keyedvectors()
-
     def _do_train_job(self, sentences, alpha, inits):
         """
         Train a single batch of sentences. Return 2-tuple `(effective word count after
@@ -672,23 +616,6 @@ class Word2Vec(BaseWordEmbedddingsModel):
         if replace and hasattr(self.trainables, 'syn1'):
             del self.trainables.syn1
         return self.wv.init_sims(replace)
-
-    def estimate_memory(self, vocab_size=None, report=None):
-        """Estimate required memory for a model using current settings and provided vocabulary size."""
-        vocab_size = vocab_size or len(self.vocabulary.vocab)
-        report = report or {}
-        report['vocab'] = vocab_size * (700 if self.hs else 500)
-        report['vectors'] = vocab_size * self.vector_size * dtype(REAL).itemsize
-        if self.hs:
-            report['syn1'] = vocab_size * self.trainables.layer1_size * dtype(REAL).itemsize
-        if self.negative:
-            report['syn1neg'] = vocab_size * self.trainables.layer1_size * dtype(REAL).itemsize
-        report['total'] = sum(report.values())
-        logger.info(
-            "estimated required memory for %i words and %i dimensions: %i bytes",
-            vocab_size, self.vector_size, report['total']
-        )
-        return report
 
     def reset_from(self, other_model):
         """Borrow shareable pre-built structures (like vocab) from the other_model. Useful
@@ -1103,7 +1030,7 @@ class Word2VecVocab(BaseVocabBuilder):
         # return from each step: words-affected, resulting-corpus-size, extra memory estimates
         report_values = {
             'drop_unique': drop_unique, 'retain_total': retain_total, 'downsample_unique': downsample_unique,
-            'downsample_total': int(downsample_total)
+            'downsample_total': int(downsample_total), 'num_retained_words': len(retain_words)
         }
 
         if self.null_word:

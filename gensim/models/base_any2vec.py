@@ -5,12 +5,10 @@ from gensim import utils
 import logging
 from timeit import default_timer
 import threading
-import numpy as np
-from six import string_types
 from six.moves import xrange
-from numpy import vstack
+from six import itervalues
 from gensim import matutils
-from numpy import float32 as REAL, ones, random, argmax
+from numpy import float32 as REAL, ones, random, dtype
 from types import GeneratorType
 from gensim.utils import deprecated
 
@@ -284,90 +282,6 @@ class BaseAny2VecModel(utils.SaveLoad):
         super(BaseAny2VecModel, self).save(fname_or_handle, **kwargs)
 
 
-class BaseKeyedVectors(utils.SaveLoad):
-
-    def __init__(self):
-        self.vectors = []
-        self.vocab = {}
-        self.vector_size = None
-        self.index2entity = []
-
-    def save(self, fname_or_handle, **kwargs):
-        super(BaseKeyedVectors, self).save(fname_or_handle, **kwargs)
-
-    @classmethod
-    def load(cls, fname_or_handle, **kwargs):
-        return super(BaseKeyedVectors, cls).load(fname_or_handle, **kwargs)
-
-    def similarity(self, entity1, entity2):
-        """Compute cosine similarity between entities, specified by string tag.
-        """
-        raise NotImplementedError
-
-    def most_similar(self, **kwargs):
-        """Find the top-N most similar entities.
-        Possibly have `positive` and `negative` list of entities in `**kwargs`.
-        """
-        return NotImplementedError
-
-    def distance(self, entity1, entity2):
-        """Compute distance between vectors of two input entities, specified by string tag.
-        """
-        raise NotImplementedError
-
-    def distances(self, entity1, other_entities=()):
-        """Compute distances from given entity (string tag) to all entities in `other_entity`.
-        If `other_entities` is empty, return distance between `entity1` and all entities in vocab.
-        """
-        raise NotImplementedError
-
-    def get_vector(self, entity):
-        """Accept a single entity as input, specified by string tag.
-        Returns the entity's representations in vector space, as a 1D numpy array.
-        """
-        if entity in self.vocab:
-            result = self.vectors[self.vocab[entity].index]
-            result.setflags(write=False)
-            return result
-        else:
-            raise KeyError("'%s' not in vocabulary" % entity)
-
-    def __getitem__(self, entities):
-        """
-        Accept a single entity (string tag) or list of entities as input.
-
-        If a single string or int, return designated tag's vector
-        representation, as a 1D numpy array.
-
-        If a list, return designated tags' vector representations as a
-        2D numpy array: #tags x #vector_size.
-        """
-        if isinstance(entities, string_types):
-            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
-            return self.get_vector(entities)
-
-        return vstack([self.get_vector(entity) for entity in entities])
-
-    def __contains__(self, entity):
-        return entity in self.vocab
-
-    def most_similar_to_given(self, entity1, entities_list):
-        """Return the entity from entities_list most similar to entity1."""
-        return entities_list[argmax([self.similarity(entity1, entity) for entity in entities_list])]
-
-    def closer_than(self, entity1, entity2):
-        """Returns all entities that are closer to `entity1` than `entity2` is to `entity1`."""
-        all_distances = self.distances(entity1)
-        e1_index = self.vocab[entity1].index
-        e2_index = self.vocab[entity2].index
-        closer_node_indices = np.where(all_distances < all_distances[e2_index])[0]
-        return [self.index2entity[index] for index in closer_node_indices if index != e1_index]
-
-    def rank(self, entity1, entity2):
-        """Rank of the distance of `entity2` from `entity1`, in relation to distances of all entities from `entity1`."""
-        return len(self.closer_than(entity1, entity2)) + 1
-
-
 class BaseVocabBuilder(utils.SaveLoad):
     """Class for managing vocabulary of a model. Takes care of building, pruning and updating vocabulary."""
     def __init__(self):
@@ -563,9 +477,85 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(sentences, progress_per=progress_per, **kwargs)
         self.corpus_count = corpus_count
-        self.vocabulary.prepare_vocab(len(self.trainables.vectors), self.hs, self.negative, update=update, **kwargs)
+        report_values = self.vocabulary.prepare_vocab(
+            len(self.trainables.vectors), self.hs, self.negative, update=update, **kwargs)
+        report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
         self.trainables.prepare_weights(self.hs, self.negative, update=update, vocabulary=self.vocabulary)
         self._set_keyedvectors()
+
+    def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
+        """
+        Build vocabulary from a dictionary of word frequencies.
+        Build model vocabulary from a passed dictionary that contains (word,word count).
+        Words must be of type unicode strings.
+
+        Parameters
+        ----------
+        `word_freq` : dict
+            Word,Word_Count dictionary.
+        `keep_raw_vocab` : bool
+            If not true, delete the raw vocabulary after the scaling is done and free up RAM.
+        `corpus_count`: int
+            Even if no corpus is provided, this argument can set corpus_count explicitly.
+        `trim_rule` : function
+            Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
+            be trimmed away, or handled using the default (discard if word count < min_count).
+            Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
+            or a callable that accepts parameters (word, count, min_count) and returns either
+            :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+            of the model.
+        `update`: bool
+            If true, the new provided words in `word_freq` dict will be added to model's vocab.
+
+        Returns
+        --------
+        None
+
+        Examples
+        --------
+        >>> from gensim.models.word2vec import Word2Vec
+        >>> model= Word2Vec()
+        >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
+        """
+        logger.info("Processing provided word frequencies")
+        # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq)
+        # to be directly the raw vocab
+        raw_vocab = word_freq
+        logger.info(
+            "collected %i different raw word, with total frequency of %i",
+            len(raw_vocab), sum(itervalues(raw_vocab))
+        )
+
+        # Since no sentences are provided, this is to control the corpus_count
+        self.corpus_count = corpus_count if corpus_count else 0
+        self.vocabulary.raw_vocab = raw_vocab
+
+        # trim by min_count & precalculate downsampling
+        report_values = self.vocabulary.prepare_vocab(
+            len(self.trainables.vectors), self.hs, self.negative, keep_raw_vocab=keep_raw_vocab,
+            trim_rule=trim_rule, update=update)
+        report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
+        self.trainables.prepare_weights(
+            self.hs, self.negative, update=update, vocabulary=self.vocabulary)  # build tables & arrays
+        self._set_keyedvectors()
+
+    def estimate_memory(self, vocab_size=None, report=None):
+        """Estimate required memory for a model using current settings and provided vocabulary size."""
+        vocab_size = vocab_size or len(self.vocabulary.vocab)
+        report = report or {}
+        report['vocab'] = vocab_size * (700 if self.hs else 500)
+        report['vectors'] = vocab_size * self.vector_size * dtype(REAL).itemsize
+        if self.hs:
+            report['syn1'] = vocab_size * self.trainables.layer1_size * dtype(REAL).itemsize
+        if self.negative:
+            report['syn1neg'] = vocab_size * self.trainables.layer1_size * dtype(REAL).itemsize
+        report['total'] = sum(report.values())
+        logger.info(
+            "estimated required memory for %i words and %i dimensions: %i bytes",
+            vocab_size, self.vector_size, report['total']
+        )
+        return report
 
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,

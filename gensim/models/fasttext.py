@@ -285,7 +285,7 @@ class FastText(BaseWordEmbedddingsModel):
             self.vocabulary.old_vocab_len = len(self.vocabulary.vocab)
             self.trainables.old_hash2index_len = len(self.trainables.hash2index)
 
-        super(FastText, self).build_vocab(
+        return super(FastText, self).build_vocab(
             sentences, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, progress_per=progress_per, update=update)
 
     def _set_keyedvectors(self):
@@ -638,10 +638,11 @@ class FastTextVocab(Word2VecVocab):
 
     def prepare_vocab(self, weights_initialized, hs, negative, update=False, keep_raw_vocab=False, trim_rule=None,
                       min_count=None, sample=None, dry_run=False):
-        super(FastTextVocab, self).prepare_vocab(
+        report_values = super(FastTextVocab, self).prepare_vocab(
             weights_initialized, hs, negative, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
             min_count=min_count, sample=sample, dry_run=dry_run)
         self.build_ngrams(update=update)
+        return report_values
 
     def build_ngrams(self, update=False):
         if not update:

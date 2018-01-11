@@ -57,7 +57,7 @@ from timeit import default_timer
 
 from numpy import zeros, array, float32 as REAL, empty, ones, \
     memmap as np_memmap, sqrt, newaxis, ndarray, dot, vstack, \
-    divide as np_divide, integer
+    divide as np_divide, integer, dtype
 
 
 from gensim.utils import call_on_class_only
@@ -65,8 +65,8 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables
 from six.moves import xrange, zip
 from six import string_types, integer_types
-from gensim.models.base_any2vec import BaseWordEmbedddingsModel, BaseKeyedVectors
-from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors
+from gensim.models.base_any2vec import BaseWordEmbedddingsModel
+from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors, BaseKeyedVectors
 from types import GeneratorType
 
 logger = logging.getLogger(__name__)
@@ -562,6 +562,13 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             logger.info('Model saved using code from ealier Gensim Version. Re-loading old model in a compatible way.')
             from gensim.models.deprecated.doc2vec import load_old_doc2vec
             return load_old_doc2vec(*args, **kwargs)
+
+    def estimate_memory(self, vocab_size=None, report=None):
+        """Estimate required memory for a model using current settings."""
+        report = report or {}
+        report['doctag_lookup'] = self.estimated_lookup_memory()
+        report['doctag_syn0'] = self.vocabulary.count * self.vector_size * dtype(REAL).itemsize
+        return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
 
 
 class Doc2VecVocab(Word2VecVocab):

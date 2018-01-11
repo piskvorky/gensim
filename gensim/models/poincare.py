@@ -52,8 +52,7 @@ from six import string_types
 from smart_open import smart_open
 
 from gensim import utils, matutils
-from gensim.models.keyedvectors import Vocab
-from gensim.models.base_any2vec import BaseKeyedVectors
+from gensim.models.keyedvectors import Vocab, BaseKeyedVectors
 from gensim.models.word2vec import save_word2vec_format, load_word2vec_format
 from numpy import float32 as REAL
 
