@@ -400,6 +400,15 @@ class TestTextCorpus(CorpusTestCase):
         pass
 
 
+# Needed for the test_custom_tokenizer is the TestWikiCorpus class.
+# Cannot be nested due to serializing.
+def custom_tokenizer(content, token_min_len=2, token_max_len=15, lower=True):
+    return [
+        to_unicode(token.lower()) if lower else to_unicode(token) for token in content.split()
+        if token_min_len <= len(token) <= token_max_len and not token.startswith('_')
+    ]
+
+
 class TestWikiCorpus(TestTextCorpus):
     def setUp(self):
         self.corpus_class = wikicorpus.WikiCorpus
@@ -445,6 +454,18 @@ class TestWikiCorpus(TestTextCorpus):
         # the deerwester corpus always has nine documents
         self.assertEqual(len(docs), 9)
 
+    def test_first_element(self):
+        """
+        First two articles in this sample are
+        1) anarchism
+        2) autism
+        """
+        corpus = self.corpus_class(self.enwiki, processes=1)
+
+        texts = corpus.get_texts()
+        self.assertTrue(u'anarchism' in next(texts))
+        self.assertTrue(u'autism' in next(texts))
+
     def test_unicode_element(self):
         """
         First unicode article in this sample is
@@ -454,6 +475,19 @@ class TestWikiCorpus(TestTextCorpus):
         corpus = self.corpus_class(bgwiki)
         texts = corpus.get_texts()
         self.assertTrue(u'папа' in next(texts))
+
+    def test_custom_tokenizer(self):
+        """
+        define a custom tokenizer function and use it
+        """
+        wc = self.corpus_class(self.enwiki, processes=1, lemmatize=False, tokenizer_func=custom_tokenizer,
+                        token_max_len=16, token_min_len=1, lower=False)
+        row = wc.get_texts()
+        list_tokens = next(row)
+        self.assertTrue(u'Anarchism' in list_tokens)
+        self.assertTrue(u'collectivization' in list_tokens)
+        self.assertTrue(u'a' in list_tokens)
+        self.assertTrue(u'i.e.' in list_tokens)
 
     def test_lower_case_set_true(self):
         """
@@ -505,10 +539,9 @@ class TestWikiCorpus(TestTextCorpus):
         corpus = self.corpus_class(self.enwiki, processes=1, token_max_len=16, lemmatize=False)
         self.assertTrue(u'collectivization' in next(corpus.get_texts()))
 
-    # TODO: sporadic failure to be investigated
+    # #TODO: sporadic failure to be investigated
     # def test_get_texts_returns_generator_of_lists(self):
-    #
-    #     corpus = self.corpus_class(self.fname)
+    #     corpus = self.corpus_class(self.enwiki)
     #     l = corpus.get_texts()
     #     self.assertEqual(type(l), types.GeneratorType)
     #     first = next(l)
@@ -528,6 +561,7 @@ class TestWikiCorpus(TestTextCorpus):
         pass
 
     def test_empty_input(self):
+        # An empty file is not legit XML
         pass
 
 
