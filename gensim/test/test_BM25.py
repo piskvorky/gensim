@@ -22,27 +22,27 @@ class TestBM25(unittest.TestCase):
         for index, doc_weights in enumerate(weights):
             expected = max(doc_weights)
             predicted = doc_weights[index]
-            self.assertEqual(expected, predicted)
+            self.assertAlmostEqual(expected, predicted)
 
     def test_nonnegative_weights(self):
         """ All the weights for a partiular document should be non negative """
         weights = get_bm25_weights(common_texts)
         for doc_weights in weights:
             for weight in doc_weights:
-                self.assertTrue(weight >= 0)
+                self.assertTrue(weight >= 0.)
 
     def test_same_match_with_same_document(self):
         """ A document should always get the same weight when matched with a particular document """
         corpus = [['cat', 'dog', 'mouse'], ['cat', 'lion'], ['cat', 'lion']]
         weights = get_bm25_weights(corpus)
-        self.assertEqual(weights[0][1], weights[0][2])
+        self.assertAlmostEqual(weights[0][1], weights[0][2])
 
     def test_disjoint_docs_if_weight_zero(self):
         """ Two disjoint documents should have zero matching"""
         corpus = [['cat', 'dog', 'lion'], ['goat', 'fish', 'tiger']]
         weights = get_bm25_weights(corpus)
-        self.assertTrue(weights[0][1] == 0)
-        self.assertTrue(weights[1][0] == 0)
+        self.assertAlmostEqual(weights[0][1], 0)
+        self.assertAlmostEqual(weights[1][0], 0)
 
 
 if __name__ == '__main__':
