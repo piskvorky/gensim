@@ -4,9 +4,7 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-This module contains math helper functions.
-"""
+"""This module contains math helper functions."""
 
 from __future__ import with_statement
 
@@ -28,33 +26,45 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange, zip as izip
 
 
-def blas(name, ndarray):
-    return scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
-
-
 logger = logging.getLogger(__name__)
 
 
-def argsort(x, topn=None, reverse=False):
-    """
-    Return indices of the `topn` smallest elements in array `x`, in ascending order.
+def blas(name, ndarray):
+    """Helper for getting BLAS function, used :func:`scipy.linalg.get_blas_funcs`.
 
-    If reverse is True, return the greatest elements instead, in descending order.
+    Parameters
+    ----------
+    name : str
+        Name(s) of BLAS functions without type prefix.
+    ndarray : numpy.ndarray
+        Arrays can be given to determine optimal prefix of BLAS routines.
+
+    Returns
+    -------
+    fortran object
+        Fortran function for needed operation.
+
+    """
+    return scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
+
+
+def argsort(x, topn=None, reverse=False):
+    """Get indices of the `topn` smallest elements in array `x`.
 
     Parameters
     ----------
     x : array_like
         Array to sort.
-    topn : int or None, optional
+    topn : int, optional
         Number of indices of the smallest(greatest) elements to be returned if given,
-        otherwise indices of all elements will be returned in ascending(descending) order.
-    reverse : bool
-        If True, return the `topn` greatest elements, in descending order.
+        otherwise - indices of all elements will be returned in ascending(descending) order.
+    reverse : bool, optional
+        If True - return the `topn` greatest elements, in descending order.
+
     Returns
     -------
-    index_array : ndarray, int
-        Array of `topn` indices that.sort the array in ascending order
-        (descending order if reverse is True).
+    numpy.ndarray
+        Array of `topn` indices that.sort the array in the required order.
 
     """
     x = np.asarray(x)  # unify code path for when `x` is not a np array (list, tuple...)
@@ -72,40 +82,38 @@ def argsort(x, topn=None, reverse=False):
 
 
 def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=None, printprogress=0):
-    """
-    Convert a streamed corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
+    """Convert a streamed corpus in BoW format into a sparse matrix `scipy.sparse.csc_matrix`,
     with documents as columns.
 
+    Notes
+    -----
     If the number of terms, documents and non-zero elements is known, you can pass
     them here as parameters and a more memory efficient code path will be taken.
 
-    The input corpus may be a non-repeatable stream (generator).
-
-    This is the mirror function to `Sparse2Corpus`.
-
     Parameters
     ----------
-    corpus : iterable
-        Iterable of documents, a streamed corpus to be converted,
-        could be a non-repeatable stream.
-    num_terms : int or None, optional
+    corpus : iterable of iterable of (int, number)
+        Input corpus in BoW format
+    num_terms : int, optional
         If provided, the `num_terms` attributes in the corpus will be ignored.
     dtype : data-type, optional
-        Default value is `np.float64`.
-    num_docs : int or None, optional
+        Data type of output matrix.
+    num_docs : int, optional
         If provided, the `num_docs` attributes in the corpus will be ignored.
-    num_nnz : int or None, optional
+    num_nnz : int, optional
         If provided, the `num_nnz` attributes in the corpus will be ignored.
     printprogress : int, optional
         Print progress for every `printprogress` number of documents,
-        if 0(default) it will not the printed.
+        If 0 - nothing will be printed.
+
     Returns
     -------
-    output_matrix : scipy.sparse.csc_matrix
-        A scipy.sparse.csc_matrix that is converted from the input corpus.
+    scipy.sparse.csc_matrix
+        Sparse matrix inferred based on `corpus`.
+
     See Also
     --------
-    Sparse2Corpus : Convert a matrix in scipy.sparse format into a streaming gensim corpus.
+    :class:`~gensim.matutils.Sparse2Corpus`
 
     """
     try:
@@ -157,9 +165,22 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
 
 
 def pad(mat, padrow, padcol):
-    """
-    Add additional rows/columns to a np.matrix `mat`. The new rows/columns
-    will be initialized with zeros.
+    """Add additional rows/columns to `mat`. The new rows/columns will be initialized with zeros.
+
+    Parameters
+    ----------
+    mat : numpy.ndarray
+        Input 2D matrix
+    padrow : int
+        Number of additional rows
+    padcol : int
+        Number of additional columns
+
+    Returns
+    -------
+    numpy.matrixlib.defmatrix.matrix
+        Matrix with needed padding.
+
     """
     if padrow < 0:
         padrow = 0
@@ -173,7 +194,25 @@ def pad(mat, padrow, padcol):
 
 
 def zeros_aligned(shape, dtype, order='C', align=128):
-    """Like `np.zeros()`, but the array will be aligned at `align` byte boundary."""
+    """Get array aligned at `align` byte boundary.
+
+    Parameters
+    ----------
+    shape : int or (int, int)
+        Shape of array.
+    dtype : data-type
+        Data type of array.
+    order : {'C', 'F'}, optional
+        Whether to store multidimensional data in C- or Fortran-contiguous (row- or column-wise) order in memory.
+    align : int, optional
+        Boundary for alignment in bytes.
+
+    Returns
+    -------
+    numpy.ndarray
+        Aligned array.
+
+    """
     nbytes = np.prod(shape, dtype=np.int64) * np.dtype(dtype).itemsize
     buffer = np.zeros(nbytes + align, dtype=np.uint8)  # problematic on win64 ("maximum allowed dimension exceeded")
     start_index = -buffer.ctypes.data % align
@@ -181,11 +220,38 @@ def zeros_aligned(shape, dtype, order='C', align=128):
 
 
 def ismatrix(m):
+    """Check does `m` numpy.ndarray or `scipy.sparse` matrix.
+
+    Parameters
+    ----------
+    m : object
+        Candidate for matrix
+
+    Returns
+    -------
+    bool
+        True if `m` is matrix, False otherwise.
+
+    """
     return isinstance(m, np.ndarray) and m.ndim == 2 or scipy.sparse.issparse(m)
 
 
 def any2sparse(vec, eps=1e-9):
-    """Convert a np/scipy vector into gensim document format (=list of 2-tuples)."""
+    """Convert a numpy.ndarray or `scipy.sparse` vector into gensim BoW format.
+
+    Parameters
+    ----------
+    vec : {`numpy.ndarray`, `scipy.sparse`}
+        Input vector
+    eps : float, optional
+        Value used for threshold, all coordinates less than `eps` will not be presented in result.
+
+    Returns
+    -------
+    list of (int, float)
+        Vector in BoW format.
+
+    """
     if isinstance(vec, np.ndarray):
         return dense2vec(vec, eps)
     if scipy.sparse.issparse(vec):
@@ -194,7 +260,22 @@ def any2sparse(vec, eps=1e-9):
 
 
 def scipy2scipy_clipped(matrix, topn, eps=1e-9):
-    """Return a scipy.sparse vector/matrix consisting of 'topn' elements of the greatest magnitude (absolute value).
+    """Get a `scipy.sparse` vector / matrix consisting of 'topn' elements of the greatest magnitude (absolute value).
+
+    Parameters
+    ----------
+    matrix : `scipy.sparse`
+        Input vector / matrix.
+    topn : int
+        Number of greatest (by module) elements, that will be in result.
+    eps : float
+        PARAMETER IGNORED.
+
+    Returns
+    -------
+    `scipy.sparse.csr.csr_matrix`
+        Clipped matrix.
+
     """
     if not scipy.sparse.issparse(matrix):
         raise ValueError("'%s' is not a scipy sparse vector." % matrix)
@@ -233,7 +314,22 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
 
 
 def scipy2sparse(vec, eps=1e-9):
-    """Convert a scipy.sparse vector into gensim document format (=list of 2-tuples)."""
+    """Convert a scipy.sparse vector BoW format.
+
+    Parameters
+    ----------
+    vec : `scipy.sparse`
+        Sparse vector
+
+    eps : float, optional
+        Value used for threshold, all coordinates less than `eps` will not be presented in result.
+
+    Returns
+    -------
+    list of (int, float)
+        Vector in BoW format.
+
+    """
     vec = vec.tocsr()
     assert vec.shape[0] == 1
     return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if np.abs(val) > eps]
