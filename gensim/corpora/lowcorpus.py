@@ -23,22 +23,12 @@ logger = logging.getLogger('gensim.corpora.lowcorpus')
 
 
 def split_on_space(s):
-    """
-
-    Parameters
-    ----------
-    s :
-
-
-    Returns
-    -------
-
-    """
     return [word for word in utils.to_unicode(s).strip().split(' ') if word]
 
 
 class LowCorpus(IndexedCorpus):
-    """List_Of_Words corpus handles input in GibbsLda++ format.
+    """
+    List_Of_Words corpus handles input in GibbsLda++ format.
 
     Quoting http://gibbslda.sourceforge.net/#3.2_Input_Data_Format::
 
@@ -59,7 +49,6 @@ class LowCorpus(IndexedCorpus):
 
         in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated
         by the blank character.
-
     """
     def __init__(self, fname, id2word=None, line2words=split_on_space):
         """
@@ -102,7 +91,6 @@ class LowCorpus(IndexedCorpus):
         )
 
     def _calculate_num_docs(self):
-        """ """
         # the first line in input data is the number of documents (integer). throws exception on bad input.
         with utils.smart_open(self.fname) as fin:
             try:
@@ -116,17 +104,6 @@ class LowCorpus(IndexedCorpus):
         return self.num_docs
 
     def line2doc(self, line):
-        """
-
-        Parameters
-        ----------
-        line :
-
-
-        Returns
-        -------
-
-        """
         words = self.line2words(line)
 
         if self.use_wordids:
@@ -165,25 +142,11 @@ class LowCorpus(IndexedCorpus):
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
-        """Save a corpus in the List-of-words format.
+        """
+        Save a corpus in the List-of-words format.
 
         This function is automatically called by `LowCorpus.serialize`; don't
         call it directly, call `serialize` instead.
-
-        Parameters
-        ----------
-        fname :
-
-        corpus :
-
-        id2word :
-             (Default value = None)
-        metadata :
-             (Default value = False)
-
-        Returns
-        -------
-
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
@@ -211,16 +174,8 @@ class LowCorpus(IndexedCorpus):
         return offsets
 
     def docbyoffset(self, offset):
-        """Return the document stored at file position `offset`.
-
-        Parameters
-        ----------
-        offset :
-
-
-        Returns
-        -------
-
+        """
+        Return the document stored at file position `offset`.
         """
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
@@ -228,17 +183,9 @@ class LowCorpus(IndexedCorpus):
 
     @property
     def id2word(self):
-        """ """
         return self._id2word
 
     @id2word.setter
     def id2word(self, val):
-        """
-
-        Parameters
-        ----------
-        val :
-
-        """
         self._id2word = val
         self.word2id = utils.revdict(val)

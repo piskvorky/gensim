@@ -44,7 +44,8 @@ except ImportError:
 
 
 class ShardedCorpus(IndexedCorpus):
-    """This corpus is designed for situations where you need to train a model
+    """
+    This corpus is designed for situations where you need to train a model
     on matrices, with a large number of iterations. (It should be faster than
     gensim's other IndexedCorpus implementations for this use case; check the
     `benchmark_datasets.py` script. It should also serialize faster.)
@@ -137,7 +138,6 @@ class ShardedCorpus(IndexedCorpus):
     currently open and on a `__getitem__` request, either returns an item from
     the current shard, or opens a new one. The shard size is constant, except
     for the last shard.
-
     """
     def __init__(self, output_prefix, corpus, dim=None,
                  shardsize=4096, overwrite=False, sparse_serialization=False,
@@ -145,10 +145,8 @@ class ShardedCorpus(IndexedCorpus):
         """Initializes the dataset. If `output_prefix` is not found,
         builds the shards.
 
-        Parameters
-        ----------
-        output_prefix :
-            The absolute path to the file from which shard
+        :type output_prefix: str
+        :param output_prefix: The absolute path to the file from which shard
             filenames should be derived. The individual shards will be saved
             as `output_prefix.0`, `output_prefix.1`, etc.
 
@@ -166,44 +164,53 @@ class ShardedCorpus(IndexedCorpus):
 
             Of course, you can save your corpus separately as well using
             the `save()` method.
-        corpus :
-            The source corpus from which to build the dataset.
-        dim :
-            Specify beforehand what the dimension of a dataset item
+
+        :type corpus: gensim.interfaces.CorpusABC
+        :param corpus: The source corpus from which to build the dataset.
+
+        :type dim: int
+        :param dim: Specify beforehand what the dimension of a dataset item
             should be. This is useful when initializing from a corpus that
             doesn't advertise its dimension, or when it does and you want to
             check that the corpus matches the expected dimension. **If `dim`
             is left unused and `corpus` does not provide its dimension in
-            an expected manner, initialization will fail.** (Default value = None)
-        shardsize :
-            How many data points should be in one shard. More
+            an expected manner, initialization will fail.**
+
+        :type shardsize: int
+        :param shardsize: How many data points should be in one shard. More
             data per shard means less shard reloading but higher memory usage
-            and vice versa. (Default value = 4096)
-        overwrite :
-            If set, will build dataset from given corpus even
-            if `output_prefix` already exists. (Default value = False)
-        sparse_serialization :
-            If set, will save the data in a sparse
+            and vice versa.
+
+        :type overwrite: bool
+        :param overwrite: If set, will build dataset from given corpus even
+            if `output_prefix` already exists.
+
+        :type sparse_serialization: bool
+        :param sparse_serialization: If set, will save the data in a sparse
             form (as csr matrices). This is to speed up retrieval when you
             know you will be using sparse matrices.
 
-            This property **should not change** during the lifetime of
-            the dataset. (If you find out you need to change from a sparse
-            to a dense representation, the best practice is to create
-            another ShardedCorpus object.) (Default value = False)
-        sparse_retrieval :
-            If set, will retrieve data as sparse vectors
+            ..note::
+
+                This property **should not change** during the lifetime of
+                the dataset. (If you find out you need to change from a sparse
+                to a dense representation, the best practice is to create
+                another ShardedCorpus object.)
+
+        :type sparse_retrieval: bool
+        :param sparse_retrieval: If set, will retrieve data as sparse vectors
             (numpy csr matrices). If unset, will return ndarrays.
 
             Note that retrieval speed for this option depends on how the dataset
             was serialized. If `sparse_serialization` was set, then setting
             `sparse_retrieval` will be faster. However, if the two settings
             do not correspond, the conversion on the fly will slow the dataset
-            down. (Default value = False)
-        gensim :
-            If set, will convert the output to gensim
+            down.
+
+        :type gensim: bool
+        :param gensim: If set, will convert the output to gensim
             sparse vectors (list of tuples (id, value)) to make it behave like
-            any other gensim corpus. This **will** slow the dataset down. (Default value = False)
+            any other gensim corpus. This **will** slow the dataset down.
 
         """
         self.output_prefix = output_prefix
@@ -229,7 +236,7 @@ class ShardedCorpus(IndexedCorpus):
 
         logger.info('Initializing sharded corpus with prefix %s', output_prefix)
         if (not os.path.isfile(output_prefix)) or overwrite:
-            # logger.info('Building from corpus...')
+            logger.info('Building from corpus...')
             self.init_shards(output_prefix, corpus, shardsize)
 
             # Save automatically, to facilitate re-loading
@@ -242,20 +249,7 @@ class ShardedCorpus(IndexedCorpus):
             self.init_by_clone()
 
     def init_shards(self, output_prefix, corpus, shardsize=4096, dtype=_default_dtype):
-        """Initialize shards from the corpus.
-
-        Parameters
-        ----------
-        output_prefix :
-
-        corpus :
-
-        shardsize :
-             (Default value = 4096)
-        dtype :
-             (Default value = _default_dtype)
-
-        """
+        """Initialize shards from the corpus."""
 
         is_corpus, corpus = gensim.utils.is_corpus(corpus)
         if not is_corpus:
@@ -300,7 +294,8 @@ class ShardedCorpus(IndexedCorpus):
         logger.info('Built %d shards in %f s.', self.n_shards, end_time - start_time)
 
     def init_by_clone(self):
-        """Initialize by copying over attributes of another ShardedCorpus
+        """
+        Initialize by copying over attributes of another ShardedCorpus
         instance saved to the output_prefix given at __init__().
 
         """
@@ -322,20 +317,12 @@ class ShardedCorpus(IndexedCorpus):
         self.dim = temp.dim  # To be consistent with the loaded data!
 
     def save_shard(self, shard, n=None, filename=None):
-        """Pickle the given shard. If `n` is not given, will consider the shard
+        """
+        Pickle the given shard. If `n` is not given, will consider the shard
         a new one.
 
         If `filename` is given, will use that file name instead of generating
         one.
-
-        Parameters
-        ----------
-        shard :
-
-        n :
-             (Default value = None)
-        filename :
-             (Default value = None)
 
         """
         new_shard = False
@@ -353,14 +340,9 @@ class ShardedCorpus(IndexedCorpus):
             self.n_shards += 1
 
     def load_shard(self, n):
-        """Load (unpickle) the n-th shard as the "live" part of the dataset
-        into the Dataset object.
-
-        Parameters
-        ----------
-        n :
-
         """
+        Load (unpickle) the n-th shard as the "live" part of the dataset
+        into the Dataset object."""
 
         # No-op if the shard is already open.
         if self.current_shard_n == n:
@@ -376,25 +358,21 @@ class ShardedCorpus(IndexedCorpus):
         self.current_offset = self.offsets[n]
 
     def reset(self):
-        """Reset to no shard at all. Used for saving."""
+        """
+        Reset to no shard at all. Used for saving.
+
+        """
         self.current_shard = None
         self.current_shard_n = None
         self.current_offset = None
 
     def shard_by_offset(self, offset):
-        """Determine which shard the given offset belongs to. If the offset
+        """
+        Determine which shard the given offset belongs to. If the offset
         is greater than the number of available documents, raises a
         `ValueError`.
 
         Assumes that all shards have the same size.
-
-        Parameters
-        ----------
-        offset :
-
-
-        Returns
-        -------
 
         """
         k = int(offset / self.shardsize)
@@ -407,32 +385,18 @@ class ShardedCorpus(IndexedCorpus):
         return k
 
     def in_current(self, offset):
-        """Determine whether the given offset falls within the current shard.
-
-        Parameters
-        ----------
-        offset :
-
-
-        Returns
-        -------
+        """
+        Determine whether the given offset falls within the current shard.
 
         """
         return (self.current_offset <= offset) and (offset < self.offsets[self.current_shard_n + 1])
 
     def in_next(self, offset):
-        """Determine whether the given offset falls within the next shard.
+        """
+        Determine whether the given offset falls within the next shard.
         This is a very small speedup: typically, we will be iterating through
         the data forward. Could save considerable time with a very large number
         of smaller shards.
-
-        Parameters
-        ----------
-        offset :
-
-
-        Returns
-        -------
 
         """
         if self.current_shard_n == self.n_shards:
@@ -440,15 +404,14 @@ class ShardedCorpus(IndexedCorpus):
         return (self.offsets[self.current_shard_n + 1] <= offset) and (offset < self.offsets[self.current_shard_n + 2])
 
     def resize_shards(self, shardsize):
-        """Re-process the dataset to new shard size. This may take pretty long.
+        """
+        Re-process the dataset to new shard size. This may take pretty long.
         Also, note that you need some space on disk for this one (we're
         assuming there is enough disk space for double the size of the dataset
         and that there is enough memory for old + new shardsize).
 
-        Parameters
-        ----------
-        shardsize :
-            The new shard size.
+        :type shardsize: int
+        :param shardsize: The new shard size.
 
         """
         # Determine how many new shards there will be
@@ -515,46 +478,18 @@ class ShardedCorpus(IndexedCorpus):
                 self.reset()
 
     def _shard_name(self, n):
-        """Generate the name for the n-th shard.
-
-        Parameters
-        ----------
-        n :
-
-
-        Returns
-        -------
-
-        """
+        """Generate the name for the n-th shard."""
         return self.output_prefix + '.' + str(n)
 
     def _resized_shard_name(self, n):
-        """Generate the name for the n-th new shard temporary file when
+        """
+        Generate the name for the n-th new shard temporary file when
         resizing dataset. The file will then be re-named to standard shard name.
-
-        Parameters
-        ----------
-        n :
-
-
-        Returns
-        -------
-
         """
         return self.output_prefix + '.resize-temp.' + str(n)
 
     def _guess_n_features(self, corpus):
-        """Attempt to guess number of features in `corpus`.
-
-        Parameters
-        ----------
-        corpus :
-
-
-        Returns
-        -------
-
-        """
+        """Attempt to guess number of features in `corpus`."""
         n_features = None
         if hasattr(corpus, 'dim'):
             # print 'Guessing from \'dim\' attribute.'
@@ -600,14 +535,6 @@ class ShardedCorpus(IndexedCorpus):
         return self.n_docs
 
     def _ensure_shard(self, offset):
-        """
-
-        Parameters
-        ----------
-        offset :
-
-
-        """
         # No shard loaded
         if self.current_shard is None:
             shard_n = self.shard_by_offset(offset)
@@ -621,31 +548,14 @@ class ShardedCorpus(IndexedCorpus):
                 self.load_shard(shard_n)
 
     def get_by_offset(self, offset):
-        """As opposed to getitem, this one only accepts ints as offsets.
-
-        Parameters
-        ----------
-        offset :
-
-
-        Returns
-        -------
-
-        """
+        """As opposed to getitem, this one only accepts ints as offsets."""
         self._ensure_shard(offset)
         result = self.current_shard[offset - self.current_offset]
         return result
 
     def __getitem__(self, offset):
-        """Retrieve the given row of the dataset. Supports slice notation.
-
-        Parameters
-        ----------
-        offset :
-
-
-        Returns
-        -------
+        """
+        Retrieve the given row of the dataset. Supports slice notation.
 
         """
         if isinstance(offset, list):
@@ -753,7 +663,8 @@ class ShardedCorpus(IndexedCorpus):
             return s_result
 
     def __add_to_slice(self, s_result, result_start, result_stop, start, stop):
-        """Add the rows of the current shard from `start` to `stop`
+        """
+        Add the rows of the current shard from `start` to `stop`
         into rows `result_start` to `result_stop` of `s_result`.
 
         Operation is based on the self.sparse_serialize setting. If the shard
@@ -763,23 +674,6 @@ class ShardedCorpus(IndexedCorpus):
         and we should add them up to `result_stop`.
 
         Returns the resulting s_result.
-
-        Parameters
-        ----------
-        s_result :
-
-        result_start :
-
-        result_stop :
-
-        start :
-
-        stop :
-
-
-        Returns
-        -------
-
         """
         if (result_stop - result_start) != (stop - start):
             raise ValueError(
@@ -807,17 +701,6 @@ class ShardedCorpus(IndexedCorpus):
             return s_result
 
     def _getitem_format(self, s_result):
-        """
-
-        Parameters
-        ----------
-        s_result :
-
-
-        Returns
-        -------
-
-        """
         if self.sparse_serialization:
             if self.gensim:
                 s_result = self._getitem_sparse2gensim(s_result)
@@ -831,33 +714,13 @@ class ShardedCorpus(IndexedCorpus):
         return s_result
 
     def _getitem_sparse2gensim(self, result):
-        """Change given sparse result matrix to gensim sparse vectors.
+        """
+        Change given sparse result matrix to gensim sparse vectors.
 
         Uses the internals of the sparse matrix to make this fast.
 
-        Parameters
-        ----------
-        result :
-
-
-        Returns
-        -------
-
         """
         def row_sparse2gensim(row_idx, csr_matrix):
-            """
-
-            Parameters
-            ----------
-            row_idx :
-
-            csr_matrix :
-
-
-            Returns
-            -------
-
-            """
             indices = csr_matrix.indices[csr_matrix.indptr[row_idx]:csr_matrix.indptr[row_idx + 1]]
             g_row = [(col_idx, csr_matrix[row_idx, col_idx]) for col_idx in indices]
             return g_row
@@ -867,17 +730,7 @@ class ShardedCorpus(IndexedCorpus):
         return output
 
     def _getitem_dense2gensim(self, result):
-        """Change given dense result matrix to gensim sparse vectors.
-
-        Parameters
-        ----------
-        result :
-
-
-        Returns
-        -------
-
-        """
+        """Change given dense result matrix to gensim sparse vectors."""
         if len(result.shape) == 1:
             output = gensim.matutils.full2sparse(result)
         else:
@@ -887,21 +740,18 @@ class ShardedCorpus(IndexedCorpus):
 
     # Overriding the IndexedCorpus and other corpus superclass methods
     def __iter__(self):
-        """Yield dataset items one by one (generator)."""
+        """
+        Yield dataset items one by one (generator).
+
+        """
         for i in xrange(len(self)):
             yield self[i]
 
     def save(self, *args, **kwargs):
-        """Save itself (the wrapper) in clean state (after calling `reset()`)
+        """
+        Save itself (the wrapper) in clean state (after calling `reset()`)
         to the output_prefix file. If you wish to save to a different file,
         use the `fname` argument as the first positional arg.
-
-        Parameters
-        ----------
-        *args :
-
-        **kwargs :
-
 
         """
         # Can we save to a different file than output_prefix? Well, why not?
@@ -917,24 +767,15 @@ class ShardedCorpus(IndexedCorpus):
 
     @classmethod
     def load(cls, fname, mmap=None):
-        """Load itself in clean state. `mmap` has no effect here.
-
-        Parameters
-        ----------
-        fname :
-
-        mmap :
-             (Default value = None)
-
-        Returns
-        -------
-
+        """
+        Load itself in clean state. `mmap` has no effect here.
         """
         return super(ShardedCorpus, cls).load(fname, mmap)
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False, **kwargs):
-        """Implement a serialization interface. Do not call directly;
+        """
+        Implement a serialization interface. Do not call directly;
         use the `serialize` method instead.
 
         Note that you might need some ShardedCorpus init parameters, most
@@ -950,28 +791,14 @@ class ShardedCorpus(IndexedCorpus):
         currently do nothing and are here only to provide a compatible
         method signature with superclass.
 
-        Parameters
-        ----------
-        fname :
-
-        corpus :
-
-        id2word :
-             (Default value = None)
-        progress_cnt :
-             (Default value = 1000)
-        metadata :
-             (Default value = False)
-        **kwargs :
-
-
         """
         ShardedCorpus(fname, corpus, **kwargs)
 
     @classmethod
     def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None,
                   labels=None, metadata=False, **kwargs):
-        """Iterate through the document stream `corpus`, saving the documents
+        """
+        Iterate through the document stream `corpus`, saving the documents
         as a ShardedCorpus to `fname`.
 
         Use this method instead of calling `save_corpus` directly.
@@ -981,28 +808,5 @@ class ShardedCorpus(IndexedCorpus):
 
         Ignore the parameters id2word, index_fname, progress_cnt, labels
         and metadata. They currently do nothing and are here only to
-        provide a compatible method signature with superclass.
-
-        Parameters
-        ----------
-        serializer :
-
-        fname :
-
-        corpus :
-
-        id2word :
-             (Default value = None)
-        index_fname :
-             (Default value = None)
-        progress_cnt :
-             (Default value = None)
-        labels :
-             (Default value = None)
-        metadata :
-             (Default value = False)
-        **kwargs :
-
-
-        """
+        provide a compatible method signature with superclass."""
         serializer.save_corpus(fname, corpus, id2word=id2word, progress_cnt=progress_cnt, metadata=metadata, **kwargs)
