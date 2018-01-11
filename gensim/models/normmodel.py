@@ -44,7 +44,7 @@ class NormModel(interfaces.TransformationABC):
         return "NormModel(num_docs=%s, num_nnz=%s, norm=%s)" % (self.num_docs, self.num_nnz, self.norm)
 
     def calc_norm(self, corpus):
-        """Calculates the norm by calling :func:`~gensim.matutils.unitvec` with the norm parameter.
+        """Calculate the norm by calling :func:`~gensim.matutils.unitvec` with the norm parameter.
 
         Parameters
         ----------
@@ -65,7 +65,7 @@ class NormModel(interfaces.TransformationABC):
         self.norms = norms
 
     def normalize(self, bow):
-        """Normalizes a simple count representation.
+        """Normalize a simple count representation.
 
         Parameters
         ----------
@@ -83,7 +83,7 @@ class NormModel(interfaces.TransformationABC):
         return vector
 
     def __getitem__(self, bow):
-        """Calls the :func:`~gensim.models.normmodel.NormModel.normalize`.
+        """Call the :func:`~gensim.models.normmodel.NormModel.normalize`.
 
         Parameters
         ----------
