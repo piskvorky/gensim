@@ -1040,24 +1040,31 @@ def qr_destroy(la):
 
 
 class MmWriter(object):
-    """
-    Store a corpus in Matrix Market format.
+    """Store a corpus in Matrix Market format.
 
-    Note that the output is written one document at a time, not the whole
-    matrix at once (unlike scipy.io.mmread). This allows us to process corpora
-    which are larger than the available RAM.
+    Notes
+    -----
+    Output is written one document at a time, not the whole matrix at once (unlike `scipy.io.mmread`).
+    This allows us to process corpora which are larger than the available RAM.
 
-    NOTE: the output file is created in a single pass through the input corpus, so
-    that the input can be a once-only stream (iterator).
-    To achieve this, a fake MM header is written first, statistics are collected
-    during the pass (shape of the matrix, number of non-zeroes), followed by a seek
-    back to the beginning of the file, rewriting the fake header with proper values.
+    The output file is created in a single pass through the input corpus, so that the input can be
+    a once-only stream (iterator). To achieve this, a fake MM header is written first, statistics are collected
+    during the pass (shape of the matrix, number of non-zeroes), followed by a seek back to the beginning of the file,
+    rewriting the fake header with proper values.
 
     """
 
     HEADER_LINE = b'%%MatrixMarket matrix coordinate real general\n'  # the only supported MM format
 
     def __init__(self, fname):
+        """
+
+        Parameters
+        ----------
+        fname : str
+            Path to output file
+
+        """
         self.fname = fname
         if fname.endswith(".gz") or fname.endswith('.bz2'):
             raise NotImplementedError("compressed output not supported with MmWriter")
@@ -1065,6 +1072,18 @@ class MmWriter(object):
         self.headers_written = False
 
     def write_headers(self, num_docs, num_terms, num_nnz):
+        """Write headers to file
+
+        Parameters
+        ----------
+        num_docs : int
+            Number of documents in corpus
+        num_terms : int
+            Number of term in corpus
+        num_nnz : int
+            Number of non-zero elements in corpus
+
+        """
         self.fout.write(MmWriter.HEADER_LINE)
 
         if num_nnz < 0:
@@ -1081,6 +1100,18 @@ class MmWriter(object):
         self.headers_written = True
 
     def fake_headers(self, num_docs, num_terms, num_nnz):
+        """Write "fake" headers to file.
+
+        Parameters
+        ----------
+        num_docs : int
+            Number of documents in corpus
+        num_terms : int
+            Number of term in corpus
+        num_nnz : int
+            Number of non-zero elements in corpus
+
+        """
         stats = '%i %i %i' % (num_docs, num_terms, num_nnz)
         if len(stats) > 50:
             raise ValueError('Invalid stats: matrix too large!')
@@ -1088,10 +1119,20 @@ class MmWriter(object):
         self.fout.write(utils.to_utf8(stats))
 
     def write_vector(self, docno, vector):
-        """
-        Write a single sparse vector to the file.
+        """Write a single sparse vector to the file.
 
-        Sparse vector is any iterable yielding (field id, field value) pairs.
+        Parameters
+        ----------
+        docno : int
+            Number of document.
+        vector : list of (int, float)
+            Vector in BoW format.
+
+        Returns
+        -------
+        (int, int)
+            Max word index in vector and len of vector. If vector is empty, return (-1, 0).
+
         """
         assert self.headers_written, "must write Matrix Market file headers before writing data!"
         assert self.last_docno < docno, "documents %i and %i not in sequential order!" % (self.last_docno, docno)
@@ -1104,34 +1145,35 @@ class MmWriter(object):
 
     @staticmethod
     def write_corpus(fname, corpus, progress_cnt=1000, index=False, num_terms=None, metadata=False):
-        """
-        Save the vector space representation of an entire corpus to disk.
-
-        Note that the documents are processed one at a time, so the whole corpus
-        is allowed to be larger than the available RAM.
+        """Save the corpus to disk in matrix market format.
 
         Parameters
         ----------
         fname : str
             Filename of the resulting file.
-        corpus : iterable
-            Iterable of documents, the corpus to be saved to disk.
+        corpus : iterable of iterable of (int, float)
+            Corpus in Bow format
         progress_cnt : int, optional
-            Print progress for every `progress_cnt` number of documents,
-            default to be 1000.
+            Print progress for every `progress_cnt` number of documents.
         index : bool, optional
-            If True.the offsets will be return, otherwise return nothing.
-        num_terms : int or None, optional
+            If True, the offsets will be return, otherwise return None.
+        num_terms : int, optional
             If provided, the `num_terms` attributes in the corpus will be ignored.
         metadata : bool, optional
-            If True.a metadata file will be generated.
+            If True, a metadata file will be generated.
+
         Returns
         -------
-        offsets : list of int or None
-            If index is True.the offsets will be return, otherwise return nothing..
+        offsets : {list of int, None}
+            List of offsets or nothing.
+
+        Notes
+        -----
+        Documents are processed one at a time, so the whole corpus is allowed to be larger than the available RAM.
+
         See Also
         --------
-        MmCorpus.save_corpus : Save a corpus in the Matrix Market format to disk.
+        :func:`~gensim.corpora.mmcorpus.MmCorpus.save_corpus`
 
         """
         mw = MmWriter(fname)
@@ -1188,29 +1230,32 @@ class MmWriter(object):
             return offsets
 
     def __del__(self):
-        """
-        Automatic destructor which closes the underlying file.
+        """Automatic destructor which closes the underlying file.
 
-        There must be no circular references contained in the object for __del__
-        to work! Closing the file explicitly via the close() method is preferred
-        and safer.
+        Notes
+        -----
+        There must be no circular references contained in the object for __del__ to work!
+        Closing the file explicitly via the close() method is preferred and safer.
+
         """
         self.close()  # does nothing if called twice (on an already closed file), so no worries
 
     def close(self):
+        """Close file."""
         logger.debug("closing %s", self.fname)
         if hasattr(self, 'fout'):
             self.fout.close()
 
 
 class MmReader(object):
-    """
-    Wrap a term-document matrix on disk (in matrix-market format), and present it
-    as an object which supports iteration over the rows (~documents).
+    """Wrap a term-document matrix on disk (in matrix-market format),
+    and present it as an object which supports iteration over the rows (~documents).
 
-    Note that the file is read into memory one document at a time, not the whole
-    matrix at once (unlike scipy.io.mmread). This allows us to process corpora
-    which are larger than the available RAM.
+    Notes
+    ------
+    File is read into memory one document at a time, not the whole matrix at once (unlike `scipy.io.mmread`).
+    This allows us to process corpora which are larger than the available RAM.
+
     """
 
     def __init__(self, input, transposed=True):
