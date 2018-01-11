@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2012 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2017 Mohit Rathore <mrmohitrathoremr@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
@@ -123,14 +124,14 @@ def precompute_idfs(wglobal, dfs, total_docs):
 
 
 def updated_wlocal(tf, n_tf):
-    """Apply needed function based on `n_tf`. TODO: add better descriptions for function/parameters.
+    """A scheme to transform `tf` or term frequency based on the value of `n_tf`.
 
     Parameters
     ----------
     tf : int
         Term frequency.
     n_tf : {'n', 'l', 'a', 'b', 'L'}
-        Parameter, that choice concrete function.
+        Parameter to decide the current transformation scheme.
 
     Returns
     -------
@@ -151,7 +152,7 @@ def updated_wlocal(tf, n_tf):
 
 
 def updated_wglobal(docfreq, totaldocs, n_df):
-    """Apply needed function based on `n_df`. TODO: add better descriptions for function/parameters.
+    """A scheme to transform `docfreq` or document frequency based on the value of `n_df`.
 
     Parameters
     ----------
@@ -160,7 +161,7 @@ def updated_wglobal(docfreq, totaldocs, n_df):
     totaldocs : int
         Total number of documents.
     n_df : {'n', 't', 'p'}
-        Parameter, that choice concrete function.
+        Parameter to decide the current transformation scheme.
 
     Returns
     -------
@@ -177,14 +178,14 @@ def updated_wglobal(docfreq, totaldocs, n_df):
 
 
 def updated_normalize(x, n_n):
-    """Apply needed normalization based on `n_n`. TODO: add better descriptions for function/parameters.
+    """Normalizes the final tf-idf value according to the value of `n_n`.
 
     Parameters
     ----------
     x : numpy.ndarray
         Input array
     n_n : {'n', 'c'}
-        Parameter, that choice concrete function.
+        Parameter that decides the normalizing function to be used.
 
     Returns
     -------
