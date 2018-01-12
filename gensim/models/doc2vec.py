@@ -715,7 +715,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         self.offset2doctag = value
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use docvecs.vectors_docs instead") 
+    @deprecated("Attribute will be removed in 4.0.0, use docvecs.vectors_docs instead")
     def doctag_syn0(self):
         return self.vectors_docs
 
