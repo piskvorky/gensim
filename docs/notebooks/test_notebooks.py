@@ -17,7 +17,7 @@ def _notebook_run(path):
     this_file_directory = os.path.dirname(__file__)
     errors = []
     with tempfile.NamedTemporaryFile(suffix=".ipynb", mode='wt') as fout:
-        with smart_open(path) as f:
+        with smart_open(path, 'rb') as f:
             nb = nbformat.read(f, as_version=4)
             nb.metadata.get('kernelspec', {})['name'] = kernel_name
             ep = ExecutePreprocessor(kernel_name=kernel_name, timeout=10)
