@@ -365,23 +365,23 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
     >>> src_model = Doc2Vec.load(datapath("small_tag_doc_5_iter50"))
     >>> dst_model = Doc2Vec.load(datapath("large_tag_doc_10_iter50"))
     >>>
-    >>> model_trans = BackMappingTranslationMatrix(data, src_model, dst_model)
+    >>> model_trans = BackMappingTranslationMatrix(src_model, dst_model)
     >>> trans_matrix = model_trans.train(data)
     >>>
     >>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
 
     """
-    def __init__(self, tagged_docs, source_lang_vec, target_lang_vec, random_state=None):
+    def __init__(self, source_lang_vec, target_lang_vec, tagged_docs=None, random_state=None):
         """
 
         Parameters
         ----------
-        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
-            Documents that will be used for training
         source_lang_vec : :class:`~gensim.models.doc2vec.Doc2Vec`
             Source Doc2Vec model.
         target_lang_vec : :class:`~gensim.models.doc2vec.Doc2Vec`
             Target Doc2Vec model.
+        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
+            Documents that will be used for training
         random_state : {None, int, array_like}, optional
             Seed for random state.
 
@@ -392,6 +392,9 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
 
         self.random_state = utils.get_random_state(random_state)
         self.translation_matrix = None
+
+        if tagged_docs is not None:
+            self.train(tagged_docs)
 
     def train(self, tagged_docs):
         """Build the translation matrix that mapping from the source model's vector to target model's vector
