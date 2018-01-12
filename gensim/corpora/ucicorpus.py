@@ -19,7 +19,7 @@ from collections import defaultdict
 from gensim import utils
 from gensim.corpora import Dictionary
 from gensim.corpora import IndexedCorpus
-from gensim.corpora.mmcorpus import MmReader
+from gensim.corpora.mmreader import MmReader
 from gensim.matutils import MmWriter
 from six.moves import xrange
 

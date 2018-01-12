@@ -518,8 +518,8 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__gensim__corpora___mmreader
-#define __PYX_HAVE_API__gensim__corpora___mmreader
+#define __PYX_HAVE__gensim__corpora__mmreader
+#define __PYX_HAVE_API__gensim__corpora__mmreader
 #include <string.h>
 #include <stdio.h>
 #ifdef _OPENMP
@@ -725,24 +725,24 @@ static const char *__pyx_filename;
 
 
 static const char *__pyx_f[] = {
-  "_mmreader.pyx",
+  "mmreader.pyx",
   "stringsource",
 };
 
 /*--- Type declarations ---*/
-struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader;
-struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__;
-struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr;
-struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__;
+struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader;
+struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__;
+struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr;
+struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__;
 
-/* "gensim/corpora/_mmreader.pyx":16
+/* "gensim/corpora/mmreader.pyx":16
  * 
  * 
  * cdef class MmReader(object):             # <<<<<<<<<<<<<<
  *     """
  *     matrix market file reader
  */
-struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader {
+struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader {
   PyObject_HEAD
   PyObject *input;
   int transposed;
@@ -752,29 +752,29 @@ struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader {
 };
 
 
-/* "gensim/corpora/_mmreader.pyx":43
+/* "gensim/corpora/mmreader.pyx":43
  *     cdef public int num_docs, num_terms, num_nnz
  * 
  *     def __init__(self, input, transposed=True):             # <<<<<<<<<<<<<<
  *         """
  *         MmReader(input, transposed=True):
  */
-struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ {
+struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ {
   PyObject_HEAD
   PyObject *__pyx_v_line;
 };
 
 
-/* "gensim/corpora/_mmreader.pyx":78
+/* "gensim/corpora/mmreader.pyx":78
  *                 line = utils.to_unicode(line)
  *                 if not line.startswith('%'):
  *                     self.num_docs, self.num_terms, self.num_nnz = (int(x) for x in line.split())             # <<<<<<<<<<<<<<
  *                     if not self.transposed:
  *                         self.num_docs, self.num_terms = self.num_terms, self.num_docs
  */
-struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr {
+struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr {
   PyObject_HEAD
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *__pyx_outer_scope;
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *__pyx_outer_scope;
   PyObject *__pyx_v_x;
   PyObject *__pyx_t_0;
   Py_ssize_t __pyx_t_1;
@@ -782,21 +782,21 @@ struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr {
 };
 
 
-/* "gensim/corpora/_mmreader.pyx":112
+/* "gensim/corpora/mmreader.pyx":112
  *             break
  * 
  *     def __iter__(self):             # <<<<<<<<<<<<<<
  *         """
  *         __iter__()
  */
-struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ {
+struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ {
   PyObject_HEAD
   int __pyx_v_docid;
   PyObject *__pyx_v_document;
   PyObject *__pyx_v_line;
   PyObject *__pyx_v_lines;
   int __pyx_v_previd;
-  struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self;
+  struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self;
   int __pyx_v_termid;
   double __pyx_v_val;
   PyObject *__pyx_t_0;
@@ -1279,17 +1279,17 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
 /* Module declarations from 'libc.stdio' */
 
-/* Module declarations from 'gensim.corpora._mmreader' */
-static PyTypeObject *__pyx_ptype_6gensim_7corpora_9_mmreader_MmReader = 0;
-static PyTypeObject *__pyx_ptype_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ = 0;
-static PyTypeObject *__pyx_ptype_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr = 0;
-static PyTypeObject *__pyx_ptype_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ = 0;
-static PyObject *__pyx_f_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader__set_state(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *, PyObject *); /*proto*/
-#define __Pyx_MODULE_NAME "gensim.corpora._mmreader"
-extern int __pyx_module_is_main_gensim__corpora___mmreader;
-int __pyx_module_is_main_gensim__corpora___mmreader = 0;
+/* Module declarations from 'gensim.corpora.mmreader' */
+static PyTypeObject *__pyx_ptype_6gensim_7corpora_8mmreader_MmReader = 0;
+static PyTypeObject *__pyx_ptype_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ = 0;
+static PyTypeObject *__pyx_ptype_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr = 0;
+static PyTypeObject *__pyx_ptype_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ = 0;
+static PyObject *__pyx_f_6gensim_7corpora_8mmreader___pyx_unpickle_MmReader__set_state(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *, PyObject *); /*proto*/
+#define __Pyx_MODULE_NAME "gensim.corpora.mmreader"
+extern int __pyx_module_is_main_gensim__corpora__mmreader;
+int __pyx_module_is_main_gensim__corpora__mmreader = 0;
 
-/* Implementation of 'gensim.corpora._mmreader' */
+/* Implementation of 'gensim.corpora.mmreader' */
 static PyObject *__pyx_builtin_ValueError;
 static PyObject *__pyx_builtin_StopIteration;
 static PyObject *__pyx_builtin_enumerate;
@@ -1353,7 +1353,7 @@ static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_unable_to_parse_line[] = "unable to parse line: {}";
 static const char __pyx_k_init___locals_genexpr[] = "__init__.<locals>.genexpr";
 static const char __pyx_k_pyx_unpickle_MmReader[] = "__pyx_unpickle_MmReader";
-static const char __pyx_k_gensim_corpora__mmreader[] = "gensim.corpora._mmreader";
+static const char __pyx_k_gensim_corpora_mmreader[] = "gensim.corpora.mmreader";
 static const char __pyx_k_matrixmarket_matrix_coordinate[] = "%%matrixmarket matrix coordinate real general";
 static const char __pyx_k_MmCorpus_i_documents_i_features[] = "MmCorpus(%i documents, %i features, %i non-zero entries)";
 static const char __pyx_k_File_s_not_in_Matrix_Market_form[] = "File %s not in Matrix Market format with coordinate real general; instead found: \n%s";
@@ -1382,7 +1382,7 @@ static PyObject *__pyx_n_s_file_or_filename;
 static PyObject *__pyx_n_s_format;
 static PyObject *__pyx_n_s_genexpr;
 static PyObject *__pyx_n_s_gensim;
-static PyObject *__pyx_n_s_gensim_corpora__mmreader;
+static PyObject *__pyx_n_s_gensim_corpora_mmreader;
 static PyObject *__pyx_n_s_getLogger;
 static PyObject *__pyx_n_s_getstate;
 static PyObject *__pyx_n_s_import;
@@ -1430,31 +1430,31 @@ static PyObject *__pyx_kp_s_unable_to_parse_line;
 static PyObject *__pyx_n_s_update;
 static PyObject *__pyx_n_s_utils;
 static PyObject *__pyx_n_s_xrange;
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8__init___genexpr(PyObject *__pyx_self); /* proto */
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_input, PyObject *__pyx_v_transposed); /* proto */
-static Py_ssize_t __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_2__len__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_4__str__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(CYTHON_UNUSED struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_input_file); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8__iter__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_offset); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input___get__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self); /* proto */
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input_2__set__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input_4__del__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_10transposed___get__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self); /* proto */
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_10transposed_2__set__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8num_docs___get__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self); /* proto */
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8num_docs_2__set__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_9num_terms___get__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self); /* proto */
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_9num_terms_2__set__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz___get__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self); /* proto */
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz_2__set__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_13__reduce_cython__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_15__setstate_cython__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader_MmReader(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
-static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
-static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
-static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8__init___genexpr(PyObject *__pyx_self); /* proto */
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader___init__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_input, PyObject *__pyx_v_transposed); /* proto */
+static Py_ssize_t __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_2__len__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_4__str__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_6skip_headers(CYTHON_UNUSED struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_input_file); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8__iter__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_11docbyoffset(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_offset); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_5input___get__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self); /* proto */
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_5input_2__set__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_5input_4__del__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_10transposed___get__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self); /* proto */
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_10transposed_2__set__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8num_docs___get__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self); /* proto */
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8num_docs_2__set__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_9num_terms___get__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self); /* proto */
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_9num_terms_2__set__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_7num_nnz___get__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self); /* proto */
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_7num_nnz_2__set__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_13__reduce_cython__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_15__setstate_cython__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader___pyx_unpickle_MmReader(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_tp_new_6gensim_7corpora_8mmreader_MmReader(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct____init__(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_int_0;
 static PyObject *__pyx_int_1;
 static PyObject *__pyx_int_245759634;
@@ -1467,7 +1467,7 @@ static PyObject *__pyx_tuple__6;
 static PyObject *__pyx_tuple__7;
 static PyObject *__pyx_codeobj__8;
 
-/* "gensim/corpora/_mmreader.pyx":43
+/* "gensim/corpora/mmreader.pyx":43
  *     cdef public int num_docs, num_terms, num_nnz
  * 
  *     def __init__(self, input, transposed=True):             # <<<<<<<<<<<<<<
@@ -1476,12 +1476,12 @@ static PyObject *__pyx_codeobj__8;
  */
 
 /* Python wrapper */
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_6gensim_7corpora_9_mmreader_8MmReader___init__[] = "\n        MmReader(input, transposed=True):\n\n        Create matrix reader\n\n        Parameters\n        ----------\n        input : string or file-like\n            string (file path) or a file-like object that supports\n            `seek()` (e.g. gzip.GzipFile, bz2.BZ2File). File-like objects are\n            not closed automatically.\n\n        transposed : bool\n            if True, expects lines to represent doc_id, term_id, value\n            else, expects term_id, doc_id, value\n\n        ";
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_6gensim_7corpora_8mmreader_8MmReader___init__[] = "\n        MmReader(input, transposed=True):\n\n        Create matrix reader\n\n        Parameters\n        ----------\n        input : string or file-like\n            string (file path) or a file-like object that supports\n            `seek()` (e.g. gzip.GzipFile, bz2.BZ2File). File-like objects are\n            not closed automatically.\n\n        transposed : bool\n            if True, expects lines to represent doc_id, term_id, value\n            else, expects term_id, doc_id, value\n\n        ";
 #if CYTHON_COMPILING_IN_CPYTHON
-struct wrapperbase __pyx_wrapperbase_6gensim_7corpora_9_mmreader_8MmReader___init__;
+struct wrapperbase __pyx_wrapperbase_6gensim_7corpora_8mmreader_8MmReader___init__;
 #endif
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_input = 0;
   PyObject *__pyx_v_transposed = 0;
   int __pyx_r;
@@ -1533,19 +1533,19 @@ static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_1__init__(PyObject *__
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__init__", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 43, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self), __pyx_v_input, __pyx_v_transposed);
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader___init__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self), __pyx_v_input, __pyx_v_transposed);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
-static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_8__init___2generator1(__pyx_CoroutineObject *__pyx_generator, CYTHON_UNUSED PyThreadState *__pyx_tstate, PyObject *__pyx_sent_value); /* proto */
+static PyObject *__pyx_gb_6gensim_7corpora_8mmreader_8MmReader_8__init___2generator1(__pyx_CoroutineObject *__pyx_generator, CYTHON_UNUSED PyThreadState *__pyx_tstate, PyObject *__pyx_sent_value); /* proto */
 
-/* "gensim/corpora/_mmreader.pyx":78
+/* "gensim/corpora/mmreader.pyx":78
  *                 line = utils.to_unicode(line)
  *                 if not line.startswith('%'):
  *                     self.num_docs, self.num_terms, self.num_nnz = (int(x) for x in line.split())             # <<<<<<<<<<<<<<
@@ -1553,24 +1553,24 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_8__init___2gener
  *                         self.num_docs, self.num_terms = self.num_terms, self.num_docs
  */
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8__init___genexpr(PyObject *__pyx_self) {
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr *__pyx_cur_scope;
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8__init___genexpr(PyObject *__pyx_self) {
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr *__pyx_cur_scope;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("genexpr", 0);
-  __pyx_cur_scope = (struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr *)__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr(__pyx_ptype_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr, __pyx_empty_tuple, NULL);
+  __pyx_cur_scope = (struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr *)__pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr(__pyx_ptype_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr, __pyx_empty_tuple, NULL);
   if (unlikely(!__pyx_cur_scope)) {
-    __pyx_cur_scope = ((struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr *)Py_None);
+    __pyx_cur_scope = ((struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr *)Py_None);
     __Pyx_INCREF(Py_None);
     __PYX_ERR(0, 78, __pyx_L1_error)
   } else {
     __Pyx_GOTREF(__pyx_cur_scope);
   }
-  __pyx_cur_scope->__pyx_outer_scope = (struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *) __pyx_self;
+  __pyx_cur_scope->__pyx_outer_scope = (struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *) __pyx_self;
   __Pyx_INCREF(((PyObject *)__pyx_cur_scope->__pyx_outer_scope));
   __Pyx_GIVEREF(__pyx_cur_scope->__pyx_outer_scope);
   {
-    __pyx_CoroutineObject *gen = __Pyx_Generator_New((__pyx_coroutine_body_t) __pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_8__init___2generator1, (PyObject *) __pyx_cur_scope, __pyx_n_s_genexpr, __pyx_n_s_init___locals_genexpr, __pyx_n_s_gensim_corpora__mmreader); if (unlikely(!gen)) __PYX_ERR(0, 78, __pyx_L1_error)
+    __pyx_CoroutineObject *gen = __Pyx_Generator_New((__pyx_coroutine_body_t) __pyx_gb_6gensim_7corpora_8mmreader_8MmReader_8__init___2generator1, (PyObject *) __pyx_cur_scope, __pyx_n_s_genexpr, __pyx_n_s_init___locals_genexpr, __pyx_n_s_gensim_corpora_mmreader); if (unlikely(!gen)) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_DECREF(__pyx_cur_scope);
     __Pyx_RefNannyFinishContext();
     return (PyObject *) gen;
@@ -1578,7 +1578,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8__init___genexp
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.__init__.genexpr", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.__init__.genexpr", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __Pyx_DECREF(((PyObject *)__pyx_cur_scope));
   __Pyx_XGIVEREF(__pyx_r);
@@ -1586,9 +1586,9 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8__init___genexp
   return __pyx_r;
 }
 
-static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_8__init___2generator1(__pyx_CoroutineObject *__pyx_generator, CYTHON_UNUSED PyThreadState *__pyx_tstate, PyObject *__pyx_sent_value) /* generator body */
+static PyObject *__pyx_gb_6gensim_7corpora_8mmreader_8MmReader_8__init___2generator1(__pyx_CoroutineObject *__pyx_generator, CYTHON_UNUSED PyThreadState *__pyx_tstate, PyObject *__pyx_sent_value) /* generator body */
 {
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr *__pyx_cur_scope = ((struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr *)__pyx_generator->closure);
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr *__pyx_cur_scope = ((struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr *)__pyx_generator->closure);
   PyObject *__pyx_r = NULL;
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
@@ -1713,7 +1713,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_8__init___2gener
   return __pyx_r;
 }
 
-/* "gensim/corpora/_mmreader.pyx":43
+/* "gensim/corpora/mmreader.pyx":43
  *     cdef public int num_docs, num_terms, num_nnz
  * 
  *     def __init__(self, input, transposed=True):             # <<<<<<<<<<<<<<
@@ -1721,8 +1721,8 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_8__init___2gener
  *         MmReader(input, transposed=True):
  */
 
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_input, PyObject *__pyx_v_transposed) {
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *__pyx_cur_scope;
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader___init__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_input, PyObject *__pyx_v_transposed) {
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *__pyx_cur_scope;
   PyObject *__pyx_v_lines = NULL;
   PyObject *__pyx_v_header = NULL;
   CYTHON_UNUSED PyObject *__pyx_v_lineno = NULL;
@@ -1751,16 +1751,16 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
   int __pyx_t_21;
   int __pyx_t_22;
   __Pyx_RefNannySetupContext("__init__", 0);
-  __pyx_cur_scope = (struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *)__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__(__pyx_ptype_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__, __pyx_empty_tuple, NULL);
+  __pyx_cur_scope = (struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *)__pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct____init__(__pyx_ptype_6gensim_7corpora_8mmreader___pyx_scope_struct____init__, __pyx_empty_tuple, NULL);
   if (unlikely(!__pyx_cur_scope)) {
-    __pyx_cur_scope = ((struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *)Py_None);
+    __pyx_cur_scope = ((struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *)Py_None);
     __Pyx_INCREF(Py_None);
     __PYX_ERR(0, 43, __pyx_L1_error)
   } else {
     __Pyx_GOTREF(__pyx_cur_scope);
   }
 
-  /* "gensim/corpora/_mmreader.pyx":61
+  /* "gensim/corpora/mmreader.pyx":61
  * 
  *         """
  *         logger.info("initializing cython corpus reader from %s", input)             # <<<<<<<<<<<<<<
@@ -1819,7 +1819,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":62
+  /* "gensim/corpora/mmreader.pyx":62
  *         """
  *         logger.info("initializing cython corpus reader from %s", input)
  *         self.input, self.transposed = input, transposed             # <<<<<<<<<<<<<<
@@ -1836,7 +1836,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
   __pyx_t_1 = 0;
   __pyx_v_self->transposed = __pyx_t_6;
 
-  /* "gensim/corpora/_mmreader.pyx":63
+  /* "gensim/corpora/mmreader.pyx":63
  *         logger.info("initializing cython corpus reader from %s", input)
  *         self.input, self.transposed = input, transposed
  *         with utils.file_or_filename(self.input) as lines:             # <<<<<<<<<<<<<<
@@ -1929,7 +1929,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
           __pyx_v_lines = __pyx_t_2;
           __pyx_t_2 = 0;
 
-          /* "gensim/corpora/_mmreader.pyx":64
+          /* "gensim/corpora/mmreader.pyx":64
  *         self.input, self.transposed = input, transposed
  *         with utils.file_or_filename(self.input) as lines:
  *             try:             # <<<<<<<<<<<<<<
@@ -1945,7 +1945,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
             __Pyx_XGOTREF(__pyx_t_13);
             /*try:*/ {
 
-              /* "gensim/corpora/_mmreader.pyx":65
+              /* "gensim/corpora/mmreader.pyx":65
  *         with utils.file_or_filename(self.input) as lines:
  *             try:
  *                 header = utils.to_unicode(next(lines)).strip()             # <<<<<<<<<<<<<<
@@ -2029,7 +2029,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
               __pyx_v_header = __pyx_t_2;
               __pyx_t_2 = 0;
 
-              /* "gensim/corpora/_mmreader.pyx":66
+              /* "gensim/corpora/mmreader.pyx":66
  *             try:
  *                 header = utils.to_unicode(next(lines)).strip()
  *                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):             # <<<<<<<<<<<<<<
@@ -2067,7 +2067,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
               __pyx_t_16 = ((!__pyx_t_6) != 0);
               if (__pyx_t_16) {
 
-                /* "gensim/corpora/_mmreader.pyx":69
+                /* "gensim/corpora/mmreader.pyx":69
  *                     raise ValueError(
  *                         "File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
  *                         (self.input, header)             # <<<<<<<<<<<<<<
@@ -2083,7 +2083,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
                 __Pyx_GIVEREF(__pyx_v_header);
                 PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_v_header);
 
-                /* "gensim/corpora/_mmreader.pyx":68
+                /* "gensim/corpora/mmreader.pyx":68
  *                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
  *                     raise ValueError(
  *                         "File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %             # <<<<<<<<<<<<<<
@@ -2094,7 +2094,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
                 __Pyx_GOTREF(__pyx_t_3);
                 __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-                /* "gensim/corpora/_mmreader.pyx":67
+                /* "gensim/corpora/mmreader.pyx":67
  *                 header = utils.to_unicode(next(lines)).strip()
  *                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
  *                     raise ValueError(             # <<<<<<<<<<<<<<
@@ -2113,7 +2113,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
                 __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
                 __PYX_ERR(0, 67, __pyx_L13_error)
 
-                /* "gensim/corpora/_mmreader.pyx":66
+                /* "gensim/corpora/mmreader.pyx":66
  *             try:
  *                 header = utils.to_unicode(next(lines)).strip()
  *                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):             # <<<<<<<<<<<<<<
@@ -2122,7 +2122,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
  */
               }
 
-              /* "gensim/corpora/_mmreader.pyx":64
+              /* "gensim/corpora/mmreader.pyx":64
  *         self.input, self.transposed = input, transposed
  *         with utils.file_or_filename(self.input) as lines:
  *             try:             # <<<<<<<<<<<<<<
@@ -2142,7 +2142,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
             __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
             __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-            /* "gensim/corpora/_mmreader.pyx":71
+            /* "gensim/corpora/mmreader.pyx":71
  *                         (self.input, header)
  *                     )
  *             except StopIteration:             # <<<<<<<<<<<<<<
@@ -2157,7 +2157,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
             goto __pyx_L15_except_error;
             __pyx_L15_except_error:;
 
-            /* "gensim/corpora/_mmreader.pyx":64
+            /* "gensim/corpora/mmreader.pyx":64
  *         self.input, self.transposed = input, transposed
  *         with utils.file_or_filename(self.input) as lines:
  *             try:             # <<<<<<<<<<<<<<
@@ -2177,7 +2177,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
             __pyx_L18_try_end:;
           }
 
-          /* "gensim/corpora/_mmreader.pyx":74
+          /* "gensim/corpora/mmreader.pyx":74
  *                 pass
  * 
  *             self.num_docs = self.num_terms = self.num_nnz = 0             # <<<<<<<<<<<<<<
@@ -2188,7 +2188,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
           __pyx_v_self->num_terms = 0;
           __pyx_v_self->num_nnz = 0;
 
-          /* "gensim/corpora/_mmreader.pyx":75
+          /* "gensim/corpora/mmreader.pyx":75
  * 
  *             self.num_docs = self.num_terms = self.num_nnz = 0
  *             for lineno, line in enumerate(lines):             # <<<<<<<<<<<<<<
@@ -2248,7 +2248,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
             __pyx_t_3 = __pyx_t_1;
             __pyx_t_1 = 0;
 
-            /* "gensim/corpora/_mmreader.pyx":76
+            /* "gensim/corpora/mmreader.pyx":76
  *             self.num_docs = self.num_terms = self.num_nnz = 0
  *             for lineno, line in enumerate(lines):
  *                 line = utils.to_unicode(line)             # <<<<<<<<<<<<<<
@@ -2308,7 +2308,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
             __Pyx_GIVEREF(__pyx_t_1);
             __pyx_t_1 = 0;
 
-            /* "gensim/corpora/_mmreader.pyx":77
+            /* "gensim/corpora/mmreader.pyx":77
  *             for lineno, line in enumerate(lines):
  *                 line = utils.to_unicode(line)
  *                 if not line.startswith('%'):             # <<<<<<<<<<<<<<
@@ -2325,14 +2325,14 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
             __pyx_t_6 = ((!__pyx_t_16) != 0);
             if (__pyx_t_6) {
 
-              /* "gensim/corpora/_mmreader.pyx":78
+              /* "gensim/corpora/mmreader.pyx":78
  *                 line = utils.to_unicode(line)
  *                 if not line.startswith('%'):
  *                     self.num_docs, self.num_terms, self.num_nnz = (int(x) for x in line.split())             # <<<<<<<<<<<<<<
  *                     if not self.transposed:
  *                         self.num_docs, self.num_terms = self.num_terms, self.num_docs
  */
-              __pyx_t_5 = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8__init___genexpr(((PyObject*)__pyx_cur_scope)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 78, __pyx_L7_error)
+              __pyx_t_5 = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8__init___genexpr(((PyObject*)__pyx_cur_scope)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 78, __pyx_L7_error)
               __Pyx_GOTREF(__pyx_t_5);
               if ((likely(PyTuple_CheckExact(__pyx_t_5))) || (PyList_CheckExact(__pyx_t_5))) {
                 PyObject* sequence = __pyx_t_5;
@@ -2401,7 +2401,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
               __pyx_v_self->num_terms = __pyx_t_21;
               __pyx_v_self->num_nnz = __pyx_t_22;
 
-              /* "gensim/corpora/_mmreader.pyx":79
+              /* "gensim/corpora/mmreader.pyx":79
  *                 if not line.startswith('%'):
  *                     self.num_docs, self.num_terms, self.num_nnz = (int(x) for x in line.split())
  *                     if not self.transposed:             # <<<<<<<<<<<<<<
@@ -2411,7 +2411,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
               __pyx_t_6 = ((!(__pyx_v_self->transposed != 0)) != 0);
               if (__pyx_t_6) {
 
-                /* "gensim/corpora/_mmreader.pyx":80
+                /* "gensim/corpora/mmreader.pyx":80
  *                     self.num_docs, self.num_terms, self.num_nnz = (int(x) for x in line.split())
  *                     if not self.transposed:
  *                         self.num_docs, self.num_terms = self.num_terms, self.num_docs             # <<<<<<<<<<<<<<
@@ -2423,7 +2423,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
                 __pyx_v_self->num_docs = __pyx_t_22;
                 __pyx_v_self->num_terms = __pyx_t_21;
 
-                /* "gensim/corpora/_mmreader.pyx":79
+                /* "gensim/corpora/mmreader.pyx":79
  *                 if not line.startswith('%'):
  *                     self.num_docs, self.num_terms, self.num_nnz = (int(x) for x in line.split())
  *                     if not self.transposed:             # <<<<<<<<<<<<<<
@@ -2432,7 +2432,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
  */
               }
 
-              /* "gensim/corpora/_mmreader.pyx":81
+              /* "gensim/corpora/mmreader.pyx":81
  *                     if not self.transposed:
  *                         self.num_docs, self.num_terms = self.num_terms, self.num_docs
  *                     break             # <<<<<<<<<<<<<<
@@ -2441,7 +2441,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
  */
               goto __pyx_L21_break;
 
-              /* "gensim/corpora/_mmreader.pyx":77
+              /* "gensim/corpora/mmreader.pyx":77
  *             for lineno, line in enumerate(lines):
  *                 line = utils.to_unicode(line)
  *                 if not line.startswith('%'):             # <<<<<<<<<<<<<<
@@ -2450,7 +2450,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
  */
             }
 
-            /* "gensim/corpora/_mmreader.pyx":75
+            /* "gensim/corpora/mmreader.pyx":75
  * 
  *             self.num_docs = self.num_terms = self.num_nnz = 0
  *             for lineno, line in enumerate(lines):             # <<<<<<<<<<<<<<
@@ -2462,7 +2462,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
           __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
           __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-          /* "gensim/corpora/_mmreader.pyx":63
+          /* "gensim/corpora/mmreader.pyx":63
  *         logger.info("initializing cython corpus reader from %s", input)
  *         self.input, self.transposed = input, transposed
  *         with utils.file_or_filename(self.input) as lines:             # <<<<<<<<<<<<<<
@@ -2483,7 +2483,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
         __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
         __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
         /*except:*/ {
-          __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+          __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
           if (__Pyx_GetException(&__pyx_t_3, &__pyx_t_2, &__pyx_t_5) < 0) __PYX_ERR(0, 63, __pyx_L9_except_error)
           __Pyx_GOTREF(__pyx_t_3);
           __Pyx_GOTREF(__pyx_t_2);
@@ -2546,7 +2546,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
     __pyx_L29:;
   }
 
-  /* "gensim/corpora/_mmreader.pyx":83
+  /* "gensim/corpora/mmreader.pyx":83
  *                     break
  * 
  *         logger.info(             # <<<<<<<<<<<<<<
@@ -2559,7 +2559,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":85
+  /* "gensim/corpora/mmreader.pyx":85
  *         logger.info(
  *             "accepted corpus with %i documents, %i features, %i non-zero entries",
  *             self.num_docs, self.num_terms, self.num_nnz             # <<<<<<<<<<<<<<
@@ -2631,7 +2631,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":43
+  /* "gensim/corpora/mmreader.pyx":43
  *     cdef public int num_docs, num_terms, num_nnz
  * 
  *     def __init__(self, input, transposed=True):             # <<<<<<<<<<<<<<
@@ -2650,7 +2650,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
   __Pyx_XDECREF(__pyx_t_14);
   __Pyx_XDECREF(__pyx_t_15);
   __Pyx_XDECREF(__pyx_t_19);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_lines);
@@ -2661,7 +2661,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
   return __pyx_r;
 }
 
-/* "gensim/corpora/_mmreader.pyx":88
+/* "gensim/corpora/mmreader.pyx":88
  *         )
  * 
  *     def __len__(self):             # <<<<<<<<<<<<<<
@@ -2670,24 +2670,24 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
  */
 
 /* Python wrapper */
-static Py_ssize_t __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_3__len__(PyObject *__pyx_v_self); /*proto*/
-static Py_ssize_t __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_3__len__(PyObject *__pyx_v_self) {
+static Py_ssize_t __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_3__len__(PyObject *__pyx_v_self); /*proto*/
+static Py_ssize_t __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_3__len__(PyObject *__pyx_v_self) {
   Py_ssize_t __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__len__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_2__len__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_2__len__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static Py_ssize_t __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_2__len__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self) {
+static Py_ssize_t __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_2__len__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self) {
   Py_ssize_t __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__len__", 0);
 
-  /* "gensim/corpora/_mmreader.pyx":89
+  /* "gensim/corpora/mmreader.pyx":89
  * 
  *     def __len__(self):
  *         return self.num_docs             # <<<<<<<<<<<<<<
@@ -2697,7 +2697,7 @@ static Py_ssize_t __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_2__len__(struct
   __pyx_r = __pyx_v_self->num_docs;
   goto __pyx_L0;
 
-  /* "gensim/corpora/_mmreader.pyx":88
+  /* "gensim/corpora/mmreader.pyx":88
  *         )
  * 
  *     def __len__(self):             # <<<<<<<<<<<<<<
@@ -2711,7 +2711,7 @@ static Py_ssize_t __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_2__len__(struct
   return __pyx_r;
 }
 
-/* "gensim/corpora/_mmreader.pyx":91
+/* "gensim/corpora/mmreader.pyx":91
  *         return self.num_docs
  * 
  *     def __str__(self):             # <<<<<<<<<<<<<<
@@ -2720,19 +2720,19 @@ static Py_ssize_t __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_2__len__(struct
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5__str__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5__str__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5__str__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5__str__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__str__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_4__str__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_4__str__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_4__str__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self) {
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_4__str__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2741,7 +2741,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_4__str__(struct 
   PyObject *__pyx_t_4 = NULL;
   __Pyx_RefNannySetupContext("__str__", 0);
 
-  /* "gensim/corpora/_mmreader.pyx":92
+  /* "gensim/corpora/mmreader.pyx":92
  * 
  *     def __str__(self):
  *         return ("MmCorpus(%i documents, %i features, %i non-zero entries)" %             # <<<<<<<<<<<<<<
@@ -2750,7 +2750,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_4__str__(struct 
  */
   __Pyx_XDECREF(__pyx_r);
 
-  /* "gensim/corpora/_mmreader.pyx":93
+  /* "gensim/corpora/mmreader.pyx":93
  *     def __str__(self):
  *         return ("MmCorpus(%i documents, %i features, %i non-zero entries)" %
  *                 (self.num_docs, self.num_terms, self.num_nnz))             # <<<<<<<<<<<<<<
@@ -2775,7 +2775,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_4__str__(struct 
   __pyx_t_2 = 0;
   __pyx_t_3 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":92
+  /* "gensim/corpora/mmreader.pyx":92
  * 
  *     def __str__(self):
  *         return ("MmCorpus(%i documents, %i features, %i non-zero entries)" %             # <<<<<<<<<<<<<<
@@ -2789,7 +2789,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_4__str__(struct 
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "gensim/corpora/_mmreader.pyx":91
+  /* "gensim/corpora/mmreader.pyx":91
  *         return self.num_docs
  * 
  *     def __str__(self):             # <<<<<<<<<<<<<<
@@ -2803,7 +2803,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_4__str__(struct 
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.__str__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.__str__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2811,7 +2811,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_4__str__(struct 
   return __pyx_r;
 }
 
-/* "gensim/corpora/_mmreader.pyx":95
+/* "gensim/corpora/mmreader.pyx":95
  *                 (self.num_docs, self.num_terms, self.num_nnz))
  * 
  *     def skip_headers(self, input_file):             # <<<<<<<<<<<<<<
@@ -2820,20 +2820,20 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_4__str__(struct 
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_7skip_headers(PyObject *__pyx_v_self, PyObject *__pyx_v_input_file); /*proto*/
-static char __pyx_doc_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers[] = "\n        skip_headers(self, input_file)\n\n        Skip file headers that appear before the first document.\n\n        Parameters\n        ----------\n        input_file : iterable\n            consumes any lines from start of `input_file` that begin with a %\n\n        ";
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_7skip_headers(PyObject *__pyx_v_self, PyObject *__pyx_v_input_file) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_7skip_headers(PyObject *__pyx_v_self, PyObject *__pyx_v_input_file); /*proto*/
+static char __pyx_doc_6gensim_7corpora_8mmreader_8MmReader_6skip_headers[] = "\n        skip_headers(self, input_file)\n\n        Skip file headers that appear before the first document.\n\n        Parameters\n        ----------\n        input_file : iterable\n            consumes any lines from start of `input_file` that begin with a %\n\n        ";
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_7skip_headers(PyObject *__pyx_v_self, PyObject *__pyx_v_input_file) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("skip_headers (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_input_file));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_6skip_headers(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_input_file));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(CYTHON_UNUSED struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_input_file) {
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_6skip_headers(CYTHON_UNUSED struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_input_file) {
   PyObject *__pyx_v_line = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -2845,7 +2845,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(CY
   int __pyx_t_6;
   __Pyx_RefNannySetupContext("skip_headers", 0);
 
-  /* "gensim/corpora/_mmreader.pyx":107
+  /* "gensim/corpora/mmreader.pyx":107
  * 
  *         """
  *         for line in input_file:             # <<<<<<<<<<<<<<
@@ -2894,7 +2894,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(CY
     __Pyx_XDECREF_SET(__pyx_v_line, __pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "gensim/corpora/_mmreader.pyx":108
+    /* "gensim/corpora/mmreader.pyx":108
  *         """
  *         for line in input_file:
  *             if line.startswith(b'%'):             # <<<<<<<<<<<<<<
@@ -2910,7 +2910,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(CY
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     if (__pyx_t_6) {
 
-      /* "gensim/corpora/_mmreader.pyx":109
+      /* "gensim/corpora/mmreader.pyx":109
  *         for line in input_file:
  *             if line.startswith(b'%'):
  *                 continue             # <<<<<<<<<<<<<<
@@ -2919,7 +2919,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(CY
  */
       goto __pyx_L3_continue;
 
-      /* "gensim/corpora/_mmreader.pyx":108
+      /* "gensim/corpora/mmreader.pyx":108
  *         """
  *         for line in input_file:
  *             if line.startswith(b'%'):             # <<<<<<<<<<<<<<
@@ -2928,7 +2928,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(CY
  */
     }
 
-    /* "gensim/corpora/_mmreader.pyx":110
+    /* "gensim/corpora/mmreader.pyx":110
  *             if line.startswith(b'%'):
  *                 continue
  *             break             # <<<<<<<<<<<<<<
@@ -2937,7 +2937,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(CY
  */
     goto __pyx_L4_break;
 
-    /* "gensim/corpora/_mmreader.pyx":107
+    /* "gensim/corpora/mmreader.pyx":107
  * 
  *         """
  *         for line in input_file:             # <<<<<<<<<<<<<<
@@ -2949,7 +2949,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(CY
   __pyx_L4_break:;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":95
+  /* "gensim/corpora/mmreader.pyx":95
  *                 (self.num_docs, self.num_terms, self.num_nnz))
  * 
  *     def skip_headers(self, input_file):             # <<<<<<<<<<<<<<
@@ -2964,7 +2964,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(CY
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.skip_headers", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.skip_headers", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_line);
@@ -2972,9 +2972,9 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers(CY
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
-static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__pyx_CoroutineObject *__pyx_generator, CYTHON_UNUSED PyThreadState *__pyx_tstate, PyObject *__pyx_sent_value); /* proto */
+static PyObject *__pyx_gb_6gensim_7corpora_8mmreader_8MmReader_10generator(__pyx_CoroutineObject *__pyx_generator, CYTHON_UNUSED PyThreadState *__pyx_tstate, PyObject *__pyx_sent_value); /* proto */
 
-/* "gensim/corpora/_mmreader.pyx":112
+/* "gensim/corpora/mmreader.pyx":112
  *             break
  * 
  *     def __iter__(self):             # <<<<<<<<<<<<<<
@@ -2983,30 +2983,30 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_9__iter__(PyObject *__pyx_v_self); /*proto*/
-static char __pyx_doc_6gensim_7corpora_9_mmreader_8MmReader_8__iter__[] = "\n        __iter__()\n\n        Iterate through vectors from underlying matrix\n\n        Yields\n        ------\n        int, list of (termid, val)\n            document id and \"vector\" of terms for next document in matrix\n            vector of terms is represented as a list of (termid, val) tuples\n\n        Notes\n        ------\n        Note that the total number of vectors returned is always equal to the\n        number of rows specified in the header; empty documents are inserted and\n        yielded where appropriate, even if they are not explicitly stored in the\n        Matrix Market file.\n\n        ";
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_9__iter__(PyObject *__pyx_v_self); /*proto*/
+static char __pyx_doc_6gensim_7corpora_8mmreader_8MmReader_8__iter__[] = "\n        __iter__()\n\n        Iterate through vectors from underlying matrix\n\n        Yields\n        ------\n        int, list of (termid, val)\n            document id and \"vector\" of terms for next document in matrix\n            vector of terms is represented as a list of (termid, val) tuples\n\n        Notes\n        ------\n        Note that the total number of vectors returned is always equal to the\n        number of rows specified in the header; empty documents are inserted and\n        yielded where appropriate, even if they are not explicitly stored in the\n        Matrix Market file.\n\n        ";
 #if CYTHON_COMPILING_IN_CPYTHON
-struct wrapperbase __pyx_wrapperbase_6gensim_7corpora_9_mmreader_8MmReader_8__iter__;
+struct wrapperbase __pyx_wrapperbase_6gensim_7corpora_8mmreader_8MmReader_8__iter__;
 #endif
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_9__iter__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_9__iter__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__iter__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8__iter__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8__iter__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8__iter__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self) {
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ *__pyx_cur_scope;
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8__iter__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self) {
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ *__pyx_cur_scope;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__iter__", 0);
-  __pyx_cur_scope = (struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ *)__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__(__pyx_ptype_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__, __pyx_empty_tuple, NULL);
+  __pyx_cur_scope = (struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ *)__pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__(__pyx_ptype_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__, __pyx_empty_tuple, NULL);
   if (unlikely(!__pyx_cur_scope)) {
-    __pyx_cur_scope = ((struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ *)Py_None);
+    __pyx_cur_scope = ((struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ *)Py_None);
     __Pyx_INCREF(Py_None);
     __PYX_ERR(0, 112, __pyx_L1_error)
   } else {
@@ -3016,7 +3016,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8__iter__(struct
   __Pyx_INCREF((PyObject *)__pyx_cur_scope->__pyx_v_self);
   __Pyx_GIVEREF((PyObject *)__pyx_cur_scope->__pyx_v_self);
   {
-    __pyx_CoroutineObject *gen = __Pyx_Generator_New((__pyx_coroutine_body_t) __pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator, (PyObject *) __pyx_cur_scope, __pyx_n_s_iter, __pyx_n_s_MmReader___iter, __pyx_n_s_gensim_corpora__mmreader); if (unlikely(!gen)) __PYX_ERR(0, 112, __pyx_L1_error)
+    __pyx_CoroutineObject *gen = __Pyx_Generator_New((__pyx_coroutine_body_t) __pyx_gb_6gensim_7corpora_8mmreader_8MmReader_10generator, (PyObject *) __pyx_cur_scope, __pyx_n_s_iter, __pyx_n_s_MmReader___iter, __pyx_n_s_gensim_corpora_mmreader); if (unlikely(!gen)) __PYX_ERR(0, 112, __pyx_L1_error)
     __Pyx_DECREF(__pyx_cur_scope);
     __Pyx_RefNannyFinishContext();
     return (PyObject *) gen;
@@ -3024,7 +3024,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8__iter__(struct
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.__iter__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.__iter__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __Pyx_DECREF(((PyObject *)__pyx_cur_scope));
   __Pyx_XGIVEREF(__pyx_r);
@@ -3032,9 +3032,9 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8__iter__(struct
   return __pyx_r;
 }
 
-static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__pyx_CoroutineObject *__pyx_generator, CYTHON_UNUSED PyThreadState *__pyx_tstate, PyObject *__pyx_sent_value) /* generator body */
+static PyObject *__pyx_gb_6gensim_7corpora_8mmreader_8MmReader_10generator(__pyx_CoroutineObject *__pyx_generator, CYTHON_UNUSED PyThreadState *__pyx_tstate, PyObject *__pyx_sent_value) /* generator body */
 {
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ *__pyx_cur_scope = ((struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ *)__pyx_generator->closure);
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ *__pyx_cur_scope = ((struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ *)__pyx_generator->closure);
   PyObject *__pyx_r = NULL;
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
@@ -3073,7 +3073,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
   __pyx_L3_first_run:;
   if (unlikely(!__pyx_sent_value)) __PYX_ERR(0, 112, __pyx_L1_error)
 
-  /* "gensim/corpora/_mmreader.pyx":133
+  /* "gensim/corpora/mmreader.pyx":133
  *         """
  *         cdef int docid, termid, previd
  *         cdef double val = 0             # <<<<<<<<<<<<<<
@@ -3082,7 +3082,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  */
   __pyx_cur_scope->__pyx_v_val = 0.0;
 
-  /* "gensim/corpora/_mmreader.pyx":135
+  /* "gensim/corpora/mmreader.pyx":135
  *         cdef double val = 0
  * 
  *         with utils.file_or_filename(self.input) as lines:             # <<<<<<<<<<<<<<
@@ -3174,7 +3174,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
           __pyx_cur_scope->__pyx_v_lines = __pyx_t_4;
           __pyx_t_4 = 0;
 
-          /* "gensim/corpora/_mmreader.pyx":136
+          /* "gensim/corpora/mmreader.pyx":136
  * 
  *         with utils.file_or_filename(self.input) as lines:
  *             self.skip_headers(lines)             # <<<<<<<<<<<<<<
@@ -3228,20 +3228,20 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
           __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-          /* "gensim/corpora/_mmreader.pyx":138
+          /* "gensim/corpora/mmreader.pyx":138
  *             self.skip_headers(lines)
  * 
  *             previd = -1             # <<<<<<<<<<<<<<
  *             for line in lines:
- *                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
+ * 
  */
           __pyx_cur_scope->__pyx_v_previd = -1;
 
-          /* "gensim/corpora/_mmreader.pyx":139
+          /* "gensim/corpora/mmreader.pyx":139
  * 
  *             previd = -1
  *             for line in lines:             # <<<<<<<<<<<<<<
- *                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
+ * 
  *                 if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
  */
           if (likely(PyList_CheckExact(__pyx_cur_scope->__pyx_v_lines)) || PyTuple_CheckExact(__pyx_cur_scope->__pyx_v_lines)) {
@@ -3288,9 +3288,9 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
             __Pyx_GIVEREF(__pyx_t_1);
             __pyx_t_1 = 0;
 
-            /* "gensim/corpora/_mmreader.pyx":141
+            /* "gensim/corpora/mmreader.pyx":141
  *             for line in lines:
- *                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
+ * 
  *                 if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):             # <<<<<<<<<<<<<<
  *                     raise ValueError("unable to parse line: {}".format(line))
  * 
@@ -3299,8 +3299,8 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
             __pyx_t_12 = ((sscanf(__pyx_t_11, ((char const *)"%d %d %lg"), (&__pyx_cur_scope->__pyx_v_docid), (&__pyx_cur_scope->__pyx_v_termid), (&__pyx_cur_scope->__pyx_v_val)) != 3) != 0);
             if (__pyx_t_12) {
 
-              /* "gensim/corpora/_mmreader.pyx":142
- *                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
+              /* "gensim/corpora/mmreader.pyx":142
+ * 
  *                 if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
  *                     raise ValueError("unable to parse line: {}".format(line))             # <<<<<<<<<<<<<<
  * 
@@ -3363,16 +3363,16 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
               __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
               __PYX_ERR(0, 142, __pyx_L8_error)
 
-              /* "gensim/corpora/_mmreader.pyx":141
+              /* "gensim/corpora/mmreader.pyx":141
  *             for line in lines:
- *                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
+ * 
  *                 if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):             # <<<<<<<<<<<<<<
  *                     raise ValueError("unable to parse line: {}".format(line))
  * 
  */
             }
 
-            /* "gensim/corpora/_mmreader.pyx":144
+            /* "gensim/corpora/mmreader.pyx":144
  *                     raise ValueError("unable to parse line: {}".format(line))
  * 
  *                 if not self.transposed:             # <<<<<<<<<<<<<<
@@ -3382,7 +3382,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
             __pyx_t_12 = ((!(__pyx_cur_scope->__pyx_v_self->transposed != 0)) != 0);
             if (__pyx_t_12) {
 
-              /* "gensim/corpora/_mmreader.pyx":145
+              /* "gensim/corpora/mmreader.pyx":145
  * 
  *                 if not self.transposed:
  *                     termid, docid = docid, termid             # <<<<<<<<<<<<<<
@@ -3394,7 +3394,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
               __pyx_cur_scope->__pyx_v_termid = __pyx_t_14;
               __pyx_cur_scope->__pyx_v_docid = __pyx_t_15;
 
-              /* "gensim/corpora/_mmreader.pyx":144
+              /* "gensim/corpora/mmreader.pyx":144
  *                     raise ValueError("unable to parse line: {}".format(line))
  * 
  *                 if not self.transposed:             # <<<<<<<<<<<<<<
@@ -3403,7 +3403,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  */
             }
 
-            /* "gensim/corpora/_mmreader.pyx":148
+            /* "gensim/corpora/mmreader.pyx":148
  * 
  *                 # -1 because matrix market indexes are 1-based => convert to 0-based
  *                 docid -= 1             # <<<<<<<<<<<<<<
@@ -3412,7 +3412,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  */
             __pyx_cur_scope->__pyx_v_docid = (__pyx_cur_scope->__pyx_v_docid - 1);
 
-            /* "gensim/corpora/_mmreader.pyx":149
+            /* "gensim/corpora/mmreader.pyx":149
  *                 # -1 because matrix market indexes are 1-based => convert to 0-based
  *                 docid -= 1
  *                 termid -= 1             # <<<<<<<<<<<<<<
@@ -3421,7 +3421,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  */
             __pyx_cur_scope->__pyx_v_termid = (__pyx_cur_scope->__pyx_v_termid - 1);
 
-            /* "gensim/corpora/_mmreader.pyx":151
+            /* "gensim/corpora/mmreader.pyx":151
  *                 termid -= 1
  * 
  *                 assert previd <= docid, "matrix columns must come in ascending order"             # <<<<<<<<<<<<<<
@@ -3437,7 +3437,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
             }
             #endif
 
-            /* "gensim/corpora/_mmreader.pyx":152
+            /* "gensim/corpora/mmreader.pyx":152
  * 
  *                 assert previd <= docid, "matrix columns must come in ascending order"
  *                 if docid != previd:             # <<<<<<<<<<<<<<
@@ -3447,7 +3447,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
             __pyx_t_12 = ((__pyx_cur_scope->__pyx_v_docid != __pyx_cur_scope->__pyx_v_previd) != 0);
             if (__pyx_t_12) {
 
-              /* "gensim/corpora/_mmreader.pyx":154
+              /* "gensim/corpora/mmreader.pyx":154
  *                 if docid != previd:
  *                     # change of document: return the document read so far (its id is prevId)
  *                     if previd >= 0:             # <<<<<<<<<<<<<<
@@ -3457,7 +3457,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
               __pyx_t_12 = ((__pyx_cur_scope->__pyx_v_previd >= 0) != 0);
               if (__pyx_t_12) {
 
-                /* "gensim/corpora/_mmreader.pyx":155
+                /* "gensim/corpora/mmreader.pyx":155
  *                     # change of document: return the document read so far (its id is prevId)
  *                     if previd >= 0:
  *                         yield previd, document  # noqa:F821             # <<<<<<<<<<<<<<
@@ -3515,7 +3515,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
                 __pyx_t_10 = __pyx_cur_scope->__pyx_t_6;
                 if (unlikely(!__pyx_sent_value)) __PYX_ERR(0, 155, __pyx_L8_error)
 
-                /* "gensim/corpora/_mmreader.pyx":154
+                /* "gensim/corpora/mmreader.pyx":154
  *                 if docid != previd:
  *                     # change of document: return the document read so far (its id is prevId)
  *                     if previd >= 0:             # <<<<<<<<<<<<<<
@@ -3524,7 +3524,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  */
               }
 
-              /* "gensim/corpora/_mmreader.pyx":159
+              /* "gensim/corpora/mmreader.pyx":159
  *                     # return implicit (empty) documents between previous id and new id
  *                     # too, to keep consistent document numbering and corpus length
  *                     for previd in xrange(previd + 1, docid):             # <<<<<<<<<<<<<<
@@ -3630,7 +3630,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
                 __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
                 __pyx_cur_scope->__pyx_v_previd = __pyx_t_15;
 
-                /* "gensim/corpora/_mmreader.pyx":160
+                /* "gensim/corpora/mmreader.pyx":160
  *                     # too, to keep consistent document numbering and corpus length
  *                     for previd in xrange(previd + 1, docid):
  *                         yield previd, []             # <<<<<<<<<<<<<<
@@ -3698,7 +3698,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
                 __pyx_t_19 = __pyx_cur_scope->__pyx_t_9;
                 if (unlikely(!__pyx_sent_value)) __PYX_ERR(0, 160, __pyx_L8_error)
 
-                /* "gensim/corpora/_mmreader.pyx":159
+                /* "gensim/corpora/mmreader.pyx":159
  *                     # return implicit (empty) documents between previous id and new id
  *                     # too, to keep consistent document numbering and corpus length
  *                     for previd in xrange(previd + 1, docid):             # <<<<<<<<<<<<<<
@@ -3708,7 +3708,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
               }
               __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-              /* "gensim/corpora/_mmreader.pyx":163
+              /* "gensim/corpora/mmreader.pyx":163
  * 
  *                     # from now on start adding fields to a new document, with a new id
  *                     previd = docid             # <<<<<<<<<<<<<<
@@ -3717,7 +3717,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  */
               __pyx_cur_scope->__pyx_v_previd = __pyx_cur_scope->__pyx_v_docid;
 
-              /* "gensim/corpora/_mmreader.pyx":164
+              /* "gensim/corpora/mmreader.pyx":164
  *                     # from now on start adding fields to a new document, with a new id
  *                     previd = docid
  *                     document = []             # <<<<<<<<<<<<<<
@@ -3731,7 +3731,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
               __Pyx_GIVEREF(__pyx_t_1);
               __pyx_t_1 = 0;
 
-              /* "gensim/corpora/_mmreader.pyx":152
+              /* "gensim/corpora/mmreader.pyx":152
  * 
  *                 assert previd <= docid, "matrix columns must come in ascending order"
  *                 if docid != previd:             # <<<<<<<<<<<<<<
@@ -3740,7 +3740,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  */
             }
 
-            /* "gensim/corpora/_mmreader.pyx":166
+            /* "gensim/corpora/mmreader.pyx":166
  *                     document = []
  * 
  *                 document.append((termid, val,))  # add another field to the current document             # <<<<<<<<<<<<<<
@@ -3763,17 +3763,17 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
             __pyx_t_20 = __Pyx_PyList_Append(__pyx_cur_scope->__pyx_v_document, __pyx_t_17); if (unlikely(__pyx_t_20 == ((int)-1))) __PYX_ERR(0, 166, __pyx_L8_error)
             __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
 
-            /* "gensim/corpora/_mmreader.pyx":139
+            /* "gensim/corpora/mmreader.pyx":139
  * 
  *             previd = -1
  *             for line in lines:             # <<<<<<<<<<<<<<
- *                 #docid, termid, val = utils.to_unicode(line).split()  # needed for python3
+ * 
  *                 if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
  */
           }
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-          /* "gensim/corpora/_mmreader.pyx":135
+          /* "gensim/corpora/mmreader.pyx":135
  *         cdef double val = 0
  * 
  *         with utils.file_or_filename(self.input) as lines:             # <<<<<<<<<<<<<<
@@ -3794,7 +3794,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
         __Pyx_XDECREF(__pyx_t_17); __pyx_t_17 = 0;
         __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
         /*except:*/ {
-          __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.__iter__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+          __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.__iter__", __pyx_clineno, __pyx_lineno, __pyx_filename);
           if (__Pyx_GetException(&__pyx_t_4, &__pyx_t_17, &__pyx_t_3) < 0) __PYX_ERR(0, 135, __pyx_L10_except_error)
           __Pyx_GOTREF(__pyx_t_4);
           __Pyx_GOTREF(__pyx_t_17);
@@ -3857,7 +3857,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
     __pyx_L27:;
   }
 
-  /* "gensim/corpora/_mmreader.pyx":169
+  /* "gensim/corpora/mmreader.pyx":169
  * 
  *         # handle the last document, as a special case
  *         if previd >= 0:             # <<<<<<<<<<<<<<
@@ -3867,7 +3867,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
   __pyx_t_22 = ((__pyx_cur_scope->__pyx_v_previd >= 0) != 0);
   if (__pyx_t_22) {
 
-    /* "gensim/corpora/_mmreader.pyx":170
+    /* "gensim/corpora/mmreader.pyx":170
  *         # handle the last document, as a special case
  *         if previd >= 0:
  *             yield previd, document             # <<<<<<<<<<<<<<
@@ -3896,7 +3896,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
     __pyx_L29_resume_from_yield:;
     if (unlikely(!__pyx_sent_value)) __PYX_ERR(0, 170, __pyx_L1_error)
 
-    /* "gensim/corpora/_mmreader.pyx":169
+    /* "gensim/corpora/mmreader.pyx":169
  * 
  *         # handle the last document, as a special case
  *         if previd >= 0:             # <<<<<<<<<<<<<<
@@ -3905,7 +3905,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  */
   }
 
-  /* "gensim/corpora/_mmreader.pyx":174
+  /* "gensim/corpora/mmreader.pyx":174
  *         # return empty documents between the last explicit document and the number
  *         # of documents as specified in the header
  *         for previd in xrange(previd + 1, self.num_docs):             # <<<<<<<<<<<<<<
@@ -4011,7 +4011,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
     __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
     __pyx_cur_scope->__pyx_v_previd = __pyx_t_15;
 
-    /* "gensim/corpora/_mmreader.pyx":175
+    /* "gensim/corpora/mmreader.pyx":175
  *         # of documents as specified in the header
  *         for previd in xrange(previd + 1, self.num_docs):
  *             yield previd, []             # <<<<<<<<<<<<<<
@@ -4050,7 +4050,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
     __pyx_t_10 = __pyx_cur_scope->__pyx_t_6;
     if (unlikely(!__pyx_sent_value)) __PYX_ERR(0, 175, __pyx_L1_error)
 
-    /* "gensim/corpora/_mmreader.pyx":174
+    /* "gensim/corpora/mmreader.pyx":174
  *         # return empty documents between the last explicit document and the number
  *         # of documents as specified in the header
  *         for previd in xrange(previd + 1, self.num_docs):             # <<<<<<<<<<<<<<
@@ -4061,7 +4061,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   CYTHON_MAYBE_UNUSED_VAR(__pyx_cur_scope);
 
-  /* "gensim/corpora/_mmreader.pyx":112
+  /* "gensim/corpora/mmreader.pyx":112
  *             break
  * 
  *     def __iter__(self):             # <<<<<<<<<<<<<<
@@ -4090,7 +4090,7 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
   return __pyx_r;
 }
 
-/* "gensim/corpora/_mmreader.pyx":177
+/* "gensim/corpora/mmreader.pyx":177
  *             yield previd, []
  * 
  *     def docbyoffset(self, offset):             # <<<<<<<<<<<<<<
@@ -4099,20 +4099,20 @@ static PyObject *__pyx_gb_6gensim_7corpora_9_mmreader_8MmReader_10generator(__py
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_12docbyoffset(PyObject *__pyx_v_self, PyObject *__pyx_v_offset); /*proto*/
-static char __pyx_doc_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset[] = "\n        docbyoffset(offset)\n\n        Return document at file offset `offset` (in bytes)\n\n        Parameters\n        ----------\n        offset : int\n            offset, in bytes, of desired document\n\n        Returns\n        ------\n        list of (termid, val)\n            \"vector\" of terms for document at offset\n            vector of terms is represented as a list of (termid, val) tuples\n\n        ";
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_12docbyoffset(PyObject *__pyx_v_self, PyObject *__pyx_v_offset) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_12docbyoffset(PyObject *__pyx_v_self, PyObject *__pyx_v_offset); /*proto*/
+static char __pyx_doc_6gensim_7corpora_8mmreader_8MmReader_11docbyoffset[] = "\n        docbyoffset(offset)\n\n        Return document at file offset `offset` (in bytes)\n\n        Parameters\n        ----------\n        offset : int\n            offset, in bytes, of desired document\n\n        Returns\n        ------\n        list of (termid, val)\n            \"vector\" of terms for document at offset\n            vector of terms is represented as a list of (termid, val) tuples\n\n        ";
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_12docbyoffset(PyObject *__pyx_v_self, PyObject *__pyx_v_offset) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("docbyoffset (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_offset));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_11docbyoffset(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_offset));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_offset) {
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_11docbyoffset(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_offset) {
   int __pyx_v_docid;
   int __pyx_v_termid;
   int __pyx_v_previd;
@@ -4138,7 +4138,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
   int __pyx_t_13;
   __Pyx_RefNannySetupContext("docbyoffset", 0);
 
-  /* "gensim/corpora/_mmreader.pyx":200
+  /* "gensim/corpora/mmreader.pyx":200
  *         cdef double val
  * 
  *         if offset == -1:             # <<<<<<<<<<<<<<
@@ -4151,7 +4151,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "gensim/corpora/_mmreader.pyx":201
+    /* "gensim/corpora/mmreader.pyx":201
  * 
  *         if offset == -1:
  *             return []             # <<<<<<<<<<<<<<
@@ -4165,7 +4165,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "gensim/corpora/_mmreader.pyx":200
+    /* "gensim/corpora/mmreader.pyx":200
  *         cdef double val
  * 
  *         if offset == -1:             # <<<<<<<<<<<<<<
@@ -4174,7 +4174,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
  */
   }
 
-  /* "gensim/corpora/_mmreader.pyx":202
+  /* "gensim/corpora/mmreader.pyx":202
  *         if offset == -1:
  *             return []
  *         if isinstance(self.input, string_types):             # <<<<<<<<<<<<<<
@@ -4191,7 +4191,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
   __pyx_t_4 = (__pyx_t_2 != 0);
   if (__pyx_t_4) {
 
-    /* "gensim/corpora/_mmreader.pyx":203
+    /* "gensim/corpora/mmreader.pyx":203
  *             return []
  *         if isinstance(self.input, string_types):
  *             fin, close_fin = utils.smart_open(self.input), True             # <<<<<<<<<<<<<<
@@ -4251,7 +4251,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
     __pyx_t_3 = 0;
     __pyx_v_close_fin = __pyx_t_4;
 
-    /* "gensim/corpora/_mmreader.pyx":202
+    /* "gensim/corpora/mmreader.pyx":202
  *         if offset == -1:
  *             return []
  *         if isinstance(self.input, string_types):             # <<<<<<<<<<<<<<
@@ -4261,7 +4261,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
     goto __pyx_L4;
   }
 
-  /* "gensim/corpora/_mmreader.pyx":205
+  /* "gensim/corpora/mmreader.pyx":205
  *             fin, close_fin = utils.smart_open(self.input), True
  *         else:
  *             fin, close_fin = self.input, False             # <<<<<<<<<<<<<<
@@ -4278,7 +4278,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
   }
   __pyx_L4:;
 
-  /* "gensim/corpora/_mmreader.pyx":207
+  /* "gensim/corpora/mmreader.pyx":207
  *             fin, close_fin = self.input, False
  * 
  *         fin.seek(offset)  # works for gzip/bz2 input, too             # <<<<<<<<<<<<<<
@@ -4332,12 +4332,12 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":208
+  /* "gensim/corpora/mmreader.pyx":208
  * 
  *         fin.seek(offset)  # works for gzip/bz2 input, too
  *         previd, document = -1, []             # <<<<<<<<<<<<<<
  *         for line in fin:
- *             if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):
+ *             if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
  */
   __pyx_t_7 = -1;
   __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 208, __pyx_L1_error)
@@ -4346,11 +4346,11 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
   __pyx_v_document = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":209
+  /* "gensim/corpora/mmreader.pyx":209
  *         fin.seek(offset)  # works for gzip/bz2 input, too
  *         previd, document = -1, []
  *         for line in fin:             # <<<<<<<<<<<<<<
- *             if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):
+ *             if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
  *                 raise ValueError("unable to parse line: {}".format(line))
  */
   if (likely(PyList_CheckExact(__pyx_v_fin)) || PyTuple_CheckExact(__pyx_v_fin)) {
@@ -4395,20 +4395,20 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
     __Pyx_XDECREF_SET(__pyx_v_line, __pyx_t_5);
     __pyx_t_5 = 0;
 
-    /* "gensim/corpora/_mmreader.pyx":210
+    /* "gensim/corpora/mmreader.pyx":210
  *         previd, document = -1, []
  *         for line in fin:
- *             if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):             # <<<<<<<<<<<<<<
+ *             if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):             # <<<<<<<<<<<<<<
  *                 raise ValueError("unable to parse line: {}".format(line))
  * 
  */
     __pyx_t_10 = __Pyx_PyObject_AsString(__pyx_v_line); if (unlikely((!__pyx_t_10) && PyErr_Occurred())) __PYX_ERR(0, 210, __pyx_L1_error)
-    __pyx_t_4 = ((sscanf(__pyx_t_10, ((char const *)"%d %d %lf"), (&__pyx_v_docid), (&__pyx_v_termid), (&__pyx_v_val)) != 3) != 0);
+    __pyx_t_4 = ((sscanf(__pyx_t_10, ((char const *)"%d %d %lg"), (&__pyx_v_docid), (&__pyx_v_termid), (&__pyx_v_val)) != 3) != 0);
     if (__pyx_t_4) {
 
-      /* "gensim/corpora/_mmreader.pyx":211
+      /* "gensim/corpora/mmreader.pyx":211
  *         for line in fin:
- *             if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):
+ *             if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
  *                 raise ValueError("unable to parse line: {}".format(line))             # <<<<<<<<<<<<<<
  * 
  *             if not self.transposed:
@@ -4470,16 +4470,16 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __PYX_ERR(0, 211, __pyx_L1_error)
 
-      /* "gensim/corpora/_mmreader.pyx":210
+      /* "gensim/corpora/mmreader.pyx":210
  *         previd, document = -1, []
  *         for line in fin:
- *             if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):             # <<<<<<<<<<<<<<
+ *             if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):             # <<<<<<<<<<<<<<
  *                 raise ValueError("unable to parse line: {}".format(line))
  * 
  */
     }
 
-    /* "gensim/corpora/_mmreader.pyx":213
+    /* "gensim/corpora/mmreader.pyx":213
  *                 raise ValueError("unable to parse line: {}".format(line))
  * 
  *             if not self.transposed:             # <<<<<<<<<<<<<<
@@ -4489,7 +4489,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
     __pyx_t_4 = ((!(__pyx_v_self->transposed != 0)) != 0);
     if (__pyx_t_4) {
 
-      /* "gensim/corpora/_mmreader.pyx":214
+      /* "gensim/corpora/mmreader.pyx":214
  * 
  *             if not self.transposed:
  *                 termid, docid = docid, termid             # <<<<<<<<<<<<<<
@@ -4501,7 +4501,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
       __pyx_v_termid = __pyx_t_7;
       __pyx_v_docid = __pyx_t_12;
 
-      /* "gensim/corpora/_mmreader.pyx":213
+      /* "gensim/corpora/mmreader.pyx":213
  *                 raise ValueError("unable to parse line: {}".format(line))
  * 
  *             if not self.transposed:             # <<<<<<<<<<<<<<
@@ -4510,7 +4510,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
  */
     }
 
-    /* "gensim/corpora/_mmreader.pyx":217
+    /* "gensim/corpora/mmreader.pyx":217
  * 
  *             # -1 because matrix market indexes are 1-based => convert to 0-based
  *             docid -= 1             # <<<<<<<<<<<<<<
@@ -4519,7 +4519,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
  */
     __pyx_v_docid = (__pyx_v_docid - 1);
 
-    /* "gensim/corpora/_mmreader.pyx":218
+    /* "gensim/corpora/mmreader.pyx":218
  *             # -1 because matrix market indexes are 1-based => convert to 0-based
  *             docid -= 1
  *             termid -= 1             # <<<<<<<<<<<<<<
@@ -4528,7 +4528,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
  */
     __pyx_v_termid = (__pyx_v_termid - 1);
 
-    /* "gensim/corpora/_mmreader.pyx":220
+    /* "gensim/corpora/mmreader.pyx":220
  *             termid -= 1
  * 
  *             assert previd <= docid, "matrix columns must come in ascending order"             # <<<<<<<<<<<<<<
@@ -4544,7 +4544,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
     }
     #endif
 
-    /* "gensim/corpora/_mmreader.pyx":221
+    /* "gensim/corpora/mmreader.pyx":221
  * 
  *             assert previd <= docid, "matrix columns must come in ascending order"
  *             if docid != previd:             # <<<<<<<<<<<<<<
@@ -4554,7 +4554,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
     __pyx_t_4 = ((__pyx_v_docid != __pyx_v_previd) != 0);
     if (__pyx_t_4) {
 
-      /* "gensim/corpora/_mmreader.pyx":222
+      /* "gensim/corpora/mmreader.pyx":222
  *             assert previd <= docid, "matrix columns must come in ascending order"
  *             if docid != previd:
  *                 if previd >= 0:             # <<<<<<<<<<<<<<
@@ -4564,7 +4564,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
       __pyx_t_4 = ((__pyx_v_previd >= 0) != 0);
       if (__pyx_t_4) {
 
-        /* "gensim/corpora/_mmreader.pyx":223
+        /* "gensim/corpora/mmreader.pyx":223
  *             if docid != previd:
  *                 if previd >= 0:
  *                     break             # <<<<<<<<<<<<<<
@@ -4573,7 +4573,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
  */
         goto __pyx_L6_break;
 
-        /* "gensim/corpora/_mmreader.pyx":222
+        /* "gensim/corpora/mmreader.pyx":222
  *             assert previd <= docid, "matrix columns must come in ascending order"
  *             if docid != previd:
  *                 if previd >= 0:             # <<<<<<<<<<<<<<
@@ -4582,7 +4582,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
  */
       }
 
-      /* "gensim/corpora/_mmreader.pyx":224
+      /* "gensim/corpora/mmreader.pyx":224
  *                 if previd >= 0:
  *                     break
  *                 previd = docid             # <<<<<<<<<<<<<<
@@ -4591,7 +4591,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
  */
       __pyx_v_previd = __pyx_v_docid;
 
-      /* "gensim/corpora/_mmreader.pyx":221
+      /* "gensim/corpora/mmreader.pyx":221
  * 
  *             assert previd <= docid, "matrix columns must come in ascending order"
  *             if docid != previd:             # <<<<<<<<<<<<<<
@@ -4600,7 +4600,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
  */
     }
 
-    /* "gensim/corpora/_mmreader.pyx":226
+    /* "gensim/corpora/mmreader.pyx":226
  *                 previd = docid
  * 
  *             document.append((termid, val,))  # add another field to the current document             # <<<<<<<<<<<<<<
@@ -4622,18 +4622,18 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
     __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_document, __pyx_t_11); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 226, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
 
-    /* "gensim/corpora/_mmreader.pyx":209
+    /* "gensim/corpora/mmreader.pyx":209
  *         fin.seek(offset)  # works for gzip/bz2 input, too
  *         previd, document = -1, []
  *         for line in fin:             # <<<<<<<<<<<<<<
- *             if (sscanf(line, "%d %d %lf", &docid, &termid, &val) != 3):
+ *             if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
  *                 raise ValueError("unable to parse line: {}".format(line))
  */
   }
   __pyx_L6_break:;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":228
+  /* "gensim/corpora/mmreader.pyx":228
  *             document.append((termid, val,))  # add another field to the current document
  * 
  *         if close_fin:             # <<<<<<<<<<<<<<
@@ -4643,7 +4643,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
   __pyx_t_4 = (__pyx_v_close_fin != 0);
   if (__pyx_t_4) {
 
-    /* "gensim/corpora/_mmreader.pyx":229
+    /* "gensim/corpora/mmreader.pyx":229
  * 
  *         if close_fin:
  *             fin.close()             # <<<<<<<<<<<<<<
@@ -4671,7 +4671,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "gensim/corpora/_mmreader.pyx":228
+    /* "gensim/corpora/mmreader.pyx":228
  *             document.append((termid, val,))  # add another field to the current document
  * 
  *         if close_fin:             # <<<<<<<<<<<<<<
@@ -4680,7 +4680,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
  */
   }
 
-  /* "gensim/corpora/_mmreader.pyx":230
+  /* "gensim/corpora/mmreader.pyx":230
  *         if close_fin:
  *             fin.close()
  *         return document             # <<<<<<<<<<<<<<
@@ -4690,7 +4690,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
   __pyx_r = __pyx_v_document;
   goto __pyx_L0;
 
-  /* "gensim/corpora/_mmreader.pyx":177
+  /* "gensim/corpora/mmreader.pyx":177
  *             yield previd, []
  * 
  *     def docbyoffset(self, offset):             # <<<<<<<<<<<<<<
@@ -4705,7 +4705,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_11);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.docbyoffset", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.docbyoffset", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_fin);
@@ -4716,7 +4716,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
   return __pyx_r;
 }
 
-/* "gensim/corpora/_mmreader.pyx":39
+/* "gensim/corpora/mmreader.pyx":39
  * 
  *     """
  *     cdef public input             # <<<<<<<<<<<<<<
@@ -4725,19 +4725,19 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset(st
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5input_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5input_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5input_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5input_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input___get__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_5input___get__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input___get__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self) {
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_5input___get__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
@@ -4754,19 +4754,19 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input___get__(s
 }
 
 /* Python wrapper */
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5input_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5input_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5input_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5input_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input_2__set__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_5input_2__set__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input_2__set__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_5input_2__set__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__", 0);
@@ -4783,19 +4783,19 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input_2__set__(struct
 }
 
 /* Python wrapper */
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5input_5__del__(PyObject *__pyx_v_self); /*proto*/
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5input_5__del__(PyObject *__pyx_v_self) {
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5input_5__del__(PyObject *__pyx_v_self); /*proto*/
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5input_5__del__(PyObject *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input_4__del__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_5input_4__del__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input_4__del__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self) {
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_5input_4__del__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__", 0);
@@ -4811,7 +4811,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input_4__del__(struct
   return __pyx_r;
 }
 
-/* "gensim/corpora/_mmreader.pyx":40
+/* "gensim/corpora/mmreader.pyx":40
  *     """
  *     cdef public input
  *     cdef public bint transposed             # <<<<<<<<<<<<<<
@@ -4820,19 +4820,19 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_5input_4__del__(struct
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_10transposed_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_10transposed_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_10transposed_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_10transposed_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_10transposed___get__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_10transposed___get__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_10transposed___get__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self) {
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_10transposed___get__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4847,7 +4847,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_10transposed___g
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.transposed.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.transposed.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -4856,19 +4856,19 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_10transposed___g
 }
 
 /* Python wrapper */
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_10transposed_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_10transposed_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_10transposed_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_10transposed_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_10transposed_2__set__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_10transposed_2__set__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_10transposed_2__set__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_10transposed_2__set__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -4880,14 +4880,14 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_10transposed_2__set__(
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.transposed.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.transposed.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "gensim/corpora/_mmreader.pyx":41
+/* "gensim/corpora/mmreader.pyx":41
  *     cdef public input
  *     cdef public bint transposed
  *     cdef public int num_docs, num_terms, num_nnz             # <<<<<<<<<<<<<<
@@ -4896,19 +4896,19 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_10transposed_2__set__(
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_8num_docs_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_8num_docs_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_8num_docs_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_8num_docs_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8num_docs___get__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8num_docs___get__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8num_docs___get__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self) {
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8num_docs___get__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4923,7 +4923,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8num_docs___get_
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.num_docs.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.num_docs.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -4932,19 +4932,19 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8num_docs___get_
 }
 
 /* Python wrapper */
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_8num_docs_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_8num_docs_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_8num_docs_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_8num_docs_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8num_docs_2__set__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8num_docs_2__set__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8num_docs_2__set__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_8num_docs_2__set__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -4956,7 +4956,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8num_docs_2__set__(str
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.num_docs.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.num_docs.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
@@ -4964,19 +4964,19 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_8num_docs_2__set__(str
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_9num_terms_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_9num_terms_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_9num_terms_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_9num_terms_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_9num_terms___get__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_9num_terms___get__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_9num_terms___get__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self) {
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_9num_terms___get__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4991,7 +4991,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_9num_terms___get
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.num_terms.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.num_terms.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5000,19 +5000,19 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_9num_terms___get
 }
 
 /* Python wrapper */
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_9num_terms_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_9num_terms_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_9num_terms_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_9num_terms_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_9num_terms_2__set__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_9num_terms_2__set__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_9num_terms_2__set__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_9num_terms_2__set__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -5024,7 +5024,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_9num_terms_2__set__(st
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.num_terms.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.num_terms.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
@@ -5032,19 +5032,19 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_9num_terms_2__set__(st
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_7num_nnz_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_7num_nnz_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz___get__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_7num_nnz___get__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz___get__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self) {
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_7num_nnz___get__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5059,7 +5059,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz___get__
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.num_nnz.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.num_nnz.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5068,19 +5068,19 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz___get__
 }
 
 /* Python wrapper */
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_7num_nnz_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_7num_nnz_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz_2__set__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_7num_nnz_2__set__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz_2__set__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_7num_nnz_2__set__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -5092,7 +5092,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz_2__set__(stru
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.num_nnz.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.num_nnz.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
@@ -5106,19 +5106,19 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz_2__set__(stru
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_14__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_14__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_14__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_14__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__reduce_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_13__reduce_cython__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_13__reduce_cython__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_13__reduce_cython__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self) {
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_13__reduce_cython__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self) {
   int __pyx_v_use_setstate;
   PyObject *__pyx_v_state = NULL;
   PyObject *__pyx_v__dict = NULL;
@@ -5344,7 +5344,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_13__reduce_cytho
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_state);
@@ -5362,19 +5362,19 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_13__reduce_cytho
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_16__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_16__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_16__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_16__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setstate_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_15__setstate_cython__(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader_8MmReader_15__setstate_cython__(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_15__setstate_cython__(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader_8MmReader_15__setstate_cython__(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5386,7 +5386,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_15__setstate_cyt
  *     __pyx_unpickle_MmReader__set_state(self, __pyx_state)             # <<<<<<<<<<<<<<
  */
   if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 15, __pyx_L1_error)
-  __pyx_t_1 = __pyx_f_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 15, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_7corpora_8mmreader___pyx_unpickle_MmReader__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 15, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
@@ -5402,7 +5402,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_15__setstate_cyt
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.MmReader.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.MmReader.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5417,9 +5417,9 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader_8MmReader_15__setstate_cyt
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_1__pyx_unpickle_MmReader(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_6gensim_7corpora_9_mmreader_1__pyx_unpickle_MmReader = {"__pyx_unpickle_MmReader", (PyCFunction)__pyx_pw_6gensim_7corpora_9_mmreader_1__pyx_unpickle_MmReader, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_1__pyx_unpickle_MmReader(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_1__pyx_unpickle_MmReader(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_6gensim_7corpora_8mmreader_1__pyx_unpickle_MmReader = {"__pyx_unpickle_MmReader", (PyCFunction)__pyx_pw_6gensim_7corpora_8mmreader_1__pyx_unpickle_MmReader, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_6gensim_7corpora_8mmreader_1__pyx_unpickle_MmReader(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v___pyx_type = 0;
   long __pyx_v___pyx_checksum;
   PyObject *__pyx_v___pyx_state = 0;
@@ -5478,18 +5478,18 @@ static PyObject *__pyx_pw_6gensim_7corpora_9_mmreader_1__pyx_unpickle_MmReader(P
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__pyx_unpickle_MmReader", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 1, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("gensim.corpora._mmreader.__pyx_unpickle_MmReader", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.__pyx_unpickle_MmReader", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
+  __pyx_r = __pyx_pf_6gensim_7corpora_8mmreader___pyx_unpickle_MmReader(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_6gensim_7corpora_8mmreader___pyx_unpickle_MmReader(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_v___pyx_PickleError = NULL;
   PyObject *__pyx_v___pyx_result = NULL;
   PyObject *__pyx_r = NULL;
@@ -5612,7 +5612,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader(CY
  *     if __pyx_state is not None:
  *         __pyx_unpickle_MmReader__set_state(<MmReader> __pyx_result, __pyx_state)
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_6gensim_7corpora_9_mmreader_MmReader), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 5, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_6gensim_7corpora_8mmreader_MmReader), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 5, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_6 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -5679,7 +5679,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader(CY
  * cdef __pyx_unpickle_MmReader__set_state(MmReader __pyx_result, tuple __pyx_state):
  */
     if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 7, __pyx_L1_error)
-    __pyx_t_3 = __pyx_f_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader__set_state(((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 7, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_6gensim_7corpora_8mmreader___pyx_unpickle_MmReader__set_state(((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 7, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
@@ -5717,7 +5717,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader(CY
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.__pyx_unpickle_MmReader", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.__pyx_unpickle_MmReader", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v___pyx_PickleError);
@@ -5735,7 +5735,7 @@ static PyObject *__pyx_pf_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader(CY
  *     if len(__pyx_state) > 5 and hasattr(__pyx_result, '__dict__'):
  */
 
-static PyObject *__pyx_f_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader__set_state(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_f_6gensim_7corpora_8mmreader___pyx_unpickle_MmReader__set_state(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5917,7 +5917,7 @@ static PyObject *__pyx_f_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader__se
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9);
   __Pyx_XDECREF(__pyx_t_10);
-  __Pyx_AddTraceback("gensim.corpora._mmreader.__pyx_unpickle_MmReader__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.corpora.mmreader.__pyx_unpickle_MmReader__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5925,8 +5925,8 @@ static PyObject *__pyx_f_6gensim_7corpora_9_mmreader___pyx_unpickle_MmReader__se
   return __pyx_r;
 }
 
-static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader_MmReader(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
-  struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *p;
+static PyObject *__pyx_tp_new_6gensim_7corpora_8mmreader_MmReader(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+  struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *p;
   PyObject *o;
   if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
     o = (*t->tp_alloc)(t, 0);
@@ -5934,13 +5934,13 @@ static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader_MmReader(PyTypeObject 
     o = (PyObject *) PyBaseObject_Type.tp_new(t, __pyx_empty_tuple, 0);
   }
   if (unlikely(!o)) return 0;
-  p = ((struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)o);
+  p = ((struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)o);
   p->input = Py_None; Py_INCREF(Py_None);
   return o;
 }
 
-static void __pyx_tp_dealloc_6gensim_7corpora_9_mmreader_MmReader(PyObject *o) {
-  struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *p = (struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)o;
+static void __pyx_tp_dealloc_6gensim_7corpora_8mmreader_MmReader(PyObject *o) {
+  struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *p = (struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)o;
   #if CYTHON_USE_TP_FINALIZE
   if (unlikely(PyType_HasFeature(Py_TYPE(o), Py_TPFLAGS_HAVE_FINALIZE) && Py_TYPE(o)->tp_finalize) && !_PyGC_FINALIZED(o)) {
     if (PyObject_CallFinalizerFromDealloc(o)) return;
@@ -5951,58 +5951,44 @@ static void __pyx_tp_dealloc_6gensim_7corpora_9_mmreader_MmReader(PyObject *o) {
   (*Py_TYPE(o)->tp_free)(o);
 }
 
-static int __pyx_tp_traverse_6gensim_7corpora_9_mmreader_MmReader(PyObject *o, visitproc v, void *a) {
+static int __pyx_tp_traverse_6gensim_7corpora_8mmreader_MmReader(PyObject *o, visitproc v, void *a) {
   int e;
-  struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *p = (struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)o;
+  struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *p = (struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)o;
   if (p->input) {
     e = (*v)(p->input, a); if (e) return e;
   }
   return 0;
 }
 
-static int __pyx_tp_clear_6gensim_7corpora_9_mmreader_MmReader(PyObject *o) {
+static int __pyx_tp_clear_6gensim_7corpora_8mmreader_MmReader(PyObject *o) {
   PyObject* tmp;
-  struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *p = (struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader *)o;
+  struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *p = (struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader *)o;
   tmp = ((PyObject*)p->input);
   p->input = Py_None; Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   return 0;
 }
 
-static PyObject *__pyx_getprop_6gensim_7corpora_9_mmreader_8MmReader_input(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5input_1__get__(o);
+static PyObject *__pyx_getprop_6gensim_7corpora_8mmreader_8MmReader_input(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5input_1__get__(o);
 }
 
-static int __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_input(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_6gensim_7corpora_8mmreader_8MmReader_input(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5input_3__set__(o, v);
+    return __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5input_3__set__(o, v);
   }
   else {
-    return __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5input_5__del__(o);
+    return __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5input_5__del__(o);
   }
 }
 
-static PyObject *__pyx_getprop_6gensim_7corpora_9_mmreader_8MmReader_transposed(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_10transposed_1__get__(o);
+static PyObject *__pyx_getprop_6gensim_7corpora_8mmreader_8MmReader_transposed(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_10transposed_1__get__(o);
 }
 
-static int __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_transposed(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_6gensim_7corpora_8mmreader_8MmReader_transposed(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_10transposed_3__set__(o, v);
-  }
-  else {
-    PyErr_SetString(PyExc_NotImplementedError, "__del__");
-    return -1;
-  }
-}
-
-static PyObject *__pyx_getprop_6gensim_7corpora_9_mmreader_8MmReader_num_docs(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_8num_docs_1__get__(o);
-}
-
-static int __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_num_docs(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
-  if (v) {
-    return __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_8num_docs_3__set__(o, v);
+    return __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_10transposed_3__set__(o, v);
   }
   else {
     PyErr_SetString(PyExc_NotImplementedError, "__del__");
@@ -6010,13 +5996,13 @@ static int __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_num_docs(PyObject
   }
 }
 
-static PyObject *__pyx_getprop_6gensim_7corpora_9_mmreader_8MmReader_num_terms(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_9num_terms_1__get__(o);
+static PyObject *__pyx_getprop_6gensim_7corpora_8mmreader_8MmReader_num_docs(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_8num_docs_1__get__(o);
 }
 
-static int __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_num_terms(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_6gensim_7corpora_8mmreader_8MmReader_num_docs(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_9num_terms_3__set__(o, v);
+    return __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_8num_docs_3__set__(o, v);
   }
   else {
     PyErr_SetString(PyExc_NotImplementedError, "__del__");
@@ -6024,13 +6010,13 @@ static int __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_num_terms(PyObjec
   }
 }
 
-static PyObject *__pyx_getprop_6gensim_7corpora_9_mmreader_8MmReader_num_nnz(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz_1__get__(o);
+static PyObject *__pyx_getprop_6gensim_7corpora_8mmreader_8MmReader_num_terms(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_9num_terms_1__get__(o);
 }
 
-static int __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_num_nnz(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_6gensim_7corpora_8mmreader_8MmReader_num_terms(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_7num_nnz_3__set__(o, v);
+    return __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_9num_terms_3__set__(o, v);
   }
   else {
     PyErr_SetString(PyExc_NotImplementedError, "__del__");
@@ -6038,25 +6024,39 @@ static int __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_num_nnz(PyObject 
   }
 }
 
-static PyMethodDef __pyx_methods_6gensim_7corpora_9_mmreader_MmReader[] = {
-  {"skip_headers", (PyCFunction)__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_7skip_headers, METH_O, __pyx_doc_6gensim_7corpora_9_mmreader_8MmReader_6skip_headers},
-  {"docbyoffset", (PyCFunction)__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_12docbyoffset, METH_O, __pyx_doc_6gensim_7corpora_9_mmreader_8MmReader_11docbyoffset},
-  {"__reduce_cython__", (PyCFunction)__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_14__reduce_cython__, METH_NOARGS, 0},
-  {"__setstate_cython__", (PyCFunction)__pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_16__setstate_cython__, METH_O, 0},
+static PyObject *__pyx_getprop_6gensim_7corpora_8mmreader_8MmReader_num_nnz(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_7num_nnz_1__get__(o);
+}
+
+static int __pyx_setprop_6gensim_7corpora_8mmreader_8MmReader_num_nnz(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+  if (v) {
+    return __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_7num_nnz_3__set__(o, v);
+  }
+  else {
+    PyErr_SetString(PyExc_NotImplementedError, "__del__");
+    return -1;
+  }
+}
+
+static PyMethodDef __pyx_methods_6gensim_7corpora_8mmreader_MmReader[] = {
+  {"skip_headers", (PyCFunction)__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_7skip_headers, METH_O, __pyx_doc_6gensim_7corpora_8mmreader_8MmReader_6skip_headers},
+  {"docbyoffset", (PyCFunction)__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_12docbyoffset, METH_O, __pyx_doc_6gensim_7corpora_8mmreader_8MmReader_11docbyoffset},
+  {"__reduce_cython__", (PyCFunction)__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_14__reduce_cython__, METH_NOARGS, 0},
+  {"__setstate_cython__", (PyCFunction)__pyx_pw_6gensim_7corpora_8mmreader_8MmReader_16__setstate_cython__, METH_O, 0},
   {0, 0, 0, 0}
 };
 
-static struct PyGetSetDef __pyx_getsets_6gensim_7corpora_9_mmreader_MmReader[] = {
-  {(char *)"input", __pyx_getprop_6gensim_7corpora_9_mmreader_8MmReader_input, __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_input, (char *)0, 0},
-  {(char *)"transposed", __pyx_getprop_6gensim_7corpora_9_mmreader_8MmReader_transposed, __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_transposed, (char *)0, 0},
-  {(char *)"num_docs", __pyx_getprop_6gensim_7corpora_9_mmreader_8MmReader_num_docs, __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_num_docs, (char *)0, 0},
-  {(char *)"num_terms", __pyx_getprop_6gensim_7corpora_9_mmreader_8MmReader_num_terms, __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_num_terms, (char *)0, 0},
-  {(char *)"num_nnz", __pyx_getprop_6gensim_7corpora_9_mmreader_8MmReader_num_nnz, __pyx_setprop_6gensim_7corpora_9_mmreader_8MmReader_num_nnz, (char *)0, 0},
+static struct PyGetSetDef __pyx_getsets_6gensim_7corpora_8mmreader_MmReader[] = {
+  {(char *)"input", __pyx_getprop_6gensim_7corpora_8mmreader_8MmReader_input, __pyx_setprop_6gensim_7corpora_8mmreader_8MmReader_input, (char *)0, 0},
+  {(char *)"transposed", __pyx_getprop_6gensim_7corpora_8mmreader_8MmReader_transposed, __pyx_setprop_6gensim_7corpora_8mmreader_8MmReader_transposed, (char *)0, 0},
+  {(char *)"num_docs", __pyx_getprop_6gensim_7corpora_8mmreader_8MmReader_num_docs, __pyx_setprop_6gensim_7corpora_8mmreader_8MmReader_num_docs, (char *)0, 0},
+  {(char *)"num_terms", __pyx_getprop_6gensim_7corpora_8mmreader_8MmReader_num_terms, __pyx_setprop_6gensim_7corpora_8mmreader_8MmReader_num_terms, (char *)0, 0},
+  {(char *)"num_nnz", __pyx_getprop_6gensim_7corpora_8mmreader_8MmReader_num_nnz, __pyx_setprop_6gensim_7corpora_8mmreader_8MmReader_num_nnz, (char *)0, 0},
   {0, 0, 0, 0, 0}
 };
 
 static PySequenceMethods __pyx_tp_as_sequence_MmReader = {
-  __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_3__len__, /*sq_length*/
+  __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_3__len__, /*sq_length*/
   0, /*sq_concat*/
   0, /*sq_repeat*/
   0, /*sq_item*/
@@ -6069,17 +6069,17 @@ static PySequenceMethods __pyx_tp_as_sequence_MmReader = {
 };
 
 static PyMappingMethods __pyx_tp_as_mapping_MmReader = {
-  __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_3__len__, /*mp_length*/
+  __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_3__len__, /*mp_length*/
   0, /*mp_subscript*/
   0, /*mp_ass_subscript*/
 };
 
-static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader_MmReader = {
+static PyTypeObject __pyx_type_6gensim_7corpora_8mmreader_MmReader = {
   PyVarObject_HEAD_INIT(0, 0)
-  "gensim.corpora._mmreader.MmReader", /*tp_name*/
-  sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader_MmReader), /*tp_basicsize*/
+  "gensim.corpora.mmreader.MmReader", /*tp_name*/
+  sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader_MmReader), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_6gensim_7corpora_9_mmreader_MmReader, /*tp_dealloc*/
+  __pyx_tp_dealloc_6gensim_7corpora_8mmreader_MmReader, /*tp_dealloc*/
   0, /*tp_print*/
   0, /*tp_getattr*/
   0, /*tp_setattr*/
@@ -6095,29 +6095,29 @@ static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader_MmReader = {
   &__pyx_tp_as_mapping_MmReader, /*tp_as_mapping*/
   0, /*tp_hash*/
   0, /*tp_call*/
-  __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_5__str__, /*tp_str*/
+  __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_5__str__, /*tp_str*/
   0, /*tp_getattro*/
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
   "\n    matrix market file reader\n\n    Wrap a term-document matrix on disk (in matrix-market format), and present it\n    as an object which supports iteration over the rows (~documents).\n\n    Attributes\n    ----------\n    num_docs : int\n        number of documents in market matrix file\n    num_terms : int\n        number of terms\n    num_nnz : int\n        number of non-zero terms\n\n    Notes\n    ----------\n    Note that the file is read into memory one document at a time, not the whole\n    matrix at once (unlike scipy.io.mmread). This allows us to process corpora\n    which are larger than the available RAM.\n\n    ", /*tp_doc*/
-  __pyx_tp_traverse_6gensim_7corpora_9_mmreader_MmReader, /*tp_traverse*/
-  __pyx_tp_clear_6gensim_7corpora_9_mmreader_MmReader, /*tp_clear*/
+  __pyx_tp_traverse_6gensim_7corpora_8mmreader_MmReader, /*tp_traverse*/
+  __pyx_tp_clear_6gensim_7corpora_8mmreader_MmReader, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
-  __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_9__iter__, /*tp_iter*/
+  __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_9__iter__, /*tp_iter*/
   0, /*tp_iternext*/
-  __pyx_methods_6gensim_7corpora_9_mmreader_MmReader, /*tp_methods*/
+  __pyx_methods_6gensim_7corpora_8mmreader_MmReader, /*tp_methods*/
   0, /*tp_members*/
-  __pyx_getsets_6gensim_7corpora_9_mmreader_MmReader, /*tp_getset*/
+  __pyx_getsets_6gensim_7corpora_8mmreader_MmReader, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
   0, /*tp_dictoffset*/
-  __pyx_pw_6gensim_7corpora_9_mmreader_8MmReader_1__init__, /*tp_init*/
+  __pyx_pw_6gensim_7corpora_8mmreader_8MmReader_1__init__, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_6gensim_7corpora_9_mmreader_MmReader, /*tp_new*/
+  __pyx_tp_new_6gensim_7corpora_8mmreader_MmReader, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -6132,14 +6132,14 @@ static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader_MmReader = {
   #endif
 };
 
-static struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *__pyx_freelist_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__[8];
-static int __pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ = 0;
+static struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *__pyx_freelist_6gensim_7corpora_8mmreader___pyx_scope_struct____init__[8];
+static int __pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ = 0;
 
-static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+static PyObject *__pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct____init__(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
   PyObject *o;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely((__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ > 0) & (t->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__)))) {
-    o = (PyObject*)__pyx_freelist_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__[--__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__];
-    memset(o, 0, sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__));
+  if (CYTHON_COMPILING_IN_CPYTHON && likely((__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ > 0) & (t->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__)))) {
+    o = (PyObject*)__pyx_freelist_6gensim_7corpora_8mmreader___pyx_scope_struct____init__[--__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct____init__];
+    memset(o, 0, sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__));
     (void) PyObject_INIT(o, t);
     PyObject_GC_Track(o);
   } else {
@@ -6149,41 +6149,41 @@ static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct____
   return o;
 }
 
-static void __pyx_tp_dealloc_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__(PyObject *o) {
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *p = (struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *)o;
+static void __pyx_tp_dealloc_6gensim_7corpora_8mmreader___pyx_scope_struct____init__(PyObject *o) {
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *p = (struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *)o;
   PyObject_GC_UnTrack(o);
   Py_CLEAR(p->__pyx_v_line);
-  if (CYTHON_COMPILING_IN_CPYTHON && ((__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ < 8) & (Py_TYPE(o)->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__)))) {
-    __pyx_freelist_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__[__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__++] = ((struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *)o);
+  if (CYTHON_COMPILING_IN_CPYTHON && ((__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ < 8) & (Py_TYPE(o)->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__)))) {
+    __pyx_freelist_6gensim_7corpora_8mmreader___pyx_scope_struct____init__[__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct____init__++] = ((struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *)o);
   } else {
     (*Py_TYPE(o)->tp_free)(o);
   }
 }
 
-static int __pyx_tp_traverse_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__(PyObject *o, visitproc v, void *a) {
+static int __pyx_tp_traverse_6gensim_7corpora_8mmreader___pyx_scope_struct____init__(PyObject *o, visitproc v, void *a) {
   int e;
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *p = (struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *)o;
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *p = (struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *)o;
   if (p->__pyx_v_line) {
     e = (*v)(p->__pyx_v_line, a); if (e) return e;
   }
   return 0;
 }
 
-static int __pyx_tp_clear_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__(PyObject *o) {
+static int __pyx_tp_clear_6gensim_7corpora_8mmreader___pyx_scope_struct____init__(PyObject *o) {
   PyObject* tmp;
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *p = (struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ *)o;
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *p = (struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ *)o;
   tmp = ((PyObject*)p->__pyx_v_line);
   p->__pyx_v_line = Py_None; Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   return 0;
 }
 
-static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ = {
+static PyTypeObject __pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ = {
   PyVarObject_HEAD_INIT(0, 0)
-  "gensim.corpora._mmreader.__pyx_scope_struct____init__", /*tp_name*/
-  sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__), /*tp_basicsize*/
+  "gensim.corpora.mmreader.__pyx_scope_struct____init__", /*tp_name*/
+  sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct____init__), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__, /*tp_dealloc*/
+  __pyx_tp_dealloc_6gensim_7corpora_8mmreader___pyx_scope_struct____init__, /*tp_dealloc*/
   0, /*tp_print*/
   0, /*tp_getattr*/
   0, /*tp_setattr*/
@@ -6205,8 +6205,8 @@ static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct___
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
   0, /*tp_doc*/
-  __pyx_tp_traverse_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__, /*tp_traverse*/
-  __pyx_tp_clear_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__, /*tp_clear*/
+  __pyx_tp_traverse_6gensim_7corpora_8mmreader___pyx_scope_struct____init__, /*tp_traverse*/
+  __pyx_tp_clear_6gensim_7corpora_8mmreader___pyx_scope_struct____init__, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
@@ -6221,7 +6221,7 @@ static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct___
   0, /*tp_dictoffset*/
   0, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__, /*tp_new*/
+  __pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct____init__, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -6236,14 +6236,14 @@ static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct___
   #endif
 };
 
-static struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr *__pyx_freelist_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr[8];
-static int __pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr = 0;
+static struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr *__pyx_freelist_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr[8];
+static int __pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr = 0;
 
-static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+static PyObject *__pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
   PyObject *o;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely((__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr > 0) & (t->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr)))) {
-    o = (PyObject*)__pyx_freelist_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr[--__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr];
-    memset(o, 0, sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr));
+  if (CYTHON_COMPILING_IN_CPYTHON && likely((__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr > 0) & (t->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr)))) {
+    o = (PyObject*)__pyx_freelist_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr[--__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr];
+    memset(o, 0, sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr));
     (void) PyObject_INIT(o, t);
     PyObject_GC_Track(o);
   } else {
@@ -6253,22 +6253,22 @@ static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_g
   return o;
 }
 
-static void __pyx_tp_dealloc_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr(PyObject *o) {
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr *p = (struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr *)o;
+static void __pyx_tp_dealloc_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr(PyObject *o) {
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr *p = (struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr *)o;
   PyObject_GC_UnTrack(o);
   Py_CLEAR(p->__pyx_outer_scope);
   Py_CLEAR(p->__pyx_v_x);
   Py_CLEAR(p->__pyx_t_0);
-  if (CYTHON_COMPILING_IN_CPYTHON && ((__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr < 8) & (Py_TYPE(o)->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr)))) {
-    __pyx_freelist_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr[__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr++] = ((struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr *)o);
+  if (CYTHON_COMPILING_IN_CPYTHON && ((__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr < 8) & (Py_TYPE(o)->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr)))) {
+    __pyx_freelist_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr[__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr++] = ((struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr *)o);
   } else {
     (*Py_TYPE(o)->tp_free)(o);
   }
 }
 
-static int __pyx_tp_traverse_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr(PyObject *o, visitproc v, void *a) {
+static int __pyx_tp_traverse_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr(PyObject *o, visitproc v, void *a) {
   int e;
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr *p = (struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr *)o;
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr *p = (struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr *)o;
   if (p->__pyx_outer_scope) {
     e = (*v)(((PyObject *)p->__pyx_outer_scope), a); if (e) return e;
   }
@@ -6281,12 +6281,12 @@ static int __pyx_tp_traverse_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_ge
   return 0;
 }
 
-static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr = {
+static PyTypeObject __pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr = {
   PyVarObject_HEAD_INIT(0, 0)
-  "gensim.corpora._mmreader.__pyx_scope_struct_1_genexpr", /*tp_name*/
-  sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr), /*tp_basicsize*/
+  "gensim.corpora.mmreader.__pyx_scope_struct_1_genexpr", /*tp_name*/
+  sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr, /*tp_dealloc*/
+  __pyx_tp_dealloc_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr, /*tp_dealloc*/
   0, /*tp_print*/
   0, /*tp_getattr*/
   0, /*tp_setattr*/
@@ -6308,7 +6308,7 @@ static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
   0, /*tp_doc*/
-  __pyx_tp_traverse_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr, /*tp_traverse*/
+  __pyx_tp_traverse_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr, /*tp_traverse*/
   0, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
@@ -6324,7 +6324,7 @@ static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_
   0, /*tp_dictoffset*/
   0, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr, /*tp_new*/
+  __pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -6339,14 +6339,14 @@ static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_
   #endif
 };
 
-static struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ *__pyx_freelist_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__[8];
-static int __pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ = 0;
+static struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ *__pyx_freelist_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__[8];
+static int __pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ = 0;
 
-static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+static PyObject *__pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
   PyObject *o;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely((__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ > 0) & (t->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__)))) {
-    o = (PyObject*)__pyx_freelist_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__[--__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__];
-    memset(o, 0, sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__));
+  if (CYTHON_COMPILING_IN_CPYTHON && likely((__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ > 0) & (t->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__)))) {
+    o = (PyObject*)__pyx_freelist_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__[--__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__];
+    memset(o, 0, sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__));
     (void) PyObject_INIT(o, t);
     PyObject_GC_Track(o);
   } else {
@@ -6356,8 +6356,8 @@ static PyObject *__pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct_2__
   return o;
 }
 
-static void __pyx_tp_dealloc_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__(PyObject *o) {
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ *p = (struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ *)o;
+static void __pyx_tp_dealloc_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__(PyObject *o) {
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ *p = (struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ *)o;
   PyObject_GC_UnTrack(o);
   Py_CLEAR(p->__pyx_v_document);
   Py_CLEAR(p->__pyx_v_line);
@@ -6369,16 +6369,16 @@ static void __pyx_tp_dealloc_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___
   Py_CLEAR(p->__pyx_t_3);
   Py_CLEAR(p->__pyx_t_4);
   Py_CLEAR(p->__pyx_t_7);
-  if (CYTHON_COMPILING_IN_CPYTHON && ((__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ < 8) & (Py_TYPE(o)->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__)))) {
-    __pyx_freelist_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__[__pyx_freecount_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__++] = ((struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ *)o);
+  if (CYTHON_COMPILING_IN_CPYTHON && ((__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ < 8) & (Py_TYPE(o)->tp_basicsize == sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__)))) {
+    __pyx_freelist_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__[__pyx_freecount_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__++] = ((struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ *)o);
   } else {
     (*Py_TYPE(o)->tp_free)(o);
   }
 }
 
-static int __pyx_tp_traverse_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__(PyObject *o, visitproc v, void *a) {
+static int __pyx_tp_traverse_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__(PyObject *o, visitproc v, void *a) {
   int e;
-  struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ *p = (struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ *)o;
+  struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ *p = (struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ *)o;
   if (p->__pyx_v_document) {
     e = (*v)(p->__pyx_v_document, a); if (e) return e;
   }
@@ -6412,12 +6412,12 @@ static int __pyx_tp_traverse_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___
   return 0;
 }
 
-static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ = {
+static PyTypeObject __pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ = {
   PyVarObject_HEAD_INIT(0, 0)
-  "gensim.corpora._mmreader.__pyx_scope_struct_2___iter__", /*tp_name*/
-  sizeof(struct __pyx_obj_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__), /*tp_basicsize*/
+  "gensim.corpora.mmreader.__pyx_scope_struct_2___iter__", /*tp_name*/
+  sizeof(struct __pyx_obj_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__, /*tp_dealloc*/
+  __pyx_tp_dealloc_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__, /*tp_dealloc*/
   0, /*tp_print*/
   0, /*tp_getattr*/
   0, /*tp_setattr*/
@@ -6439,7 +6439,7 @@ static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_2_
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
   0, /*tp_doc*/
-  __pyx_tp_traverse_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__, /*tp_traverse*/
+  __pyx_tp_traverse_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__, /*tp_traverse*/
   0, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
@@ -6455,7 +6455,7 @@ static PyTypeObject __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_2_
   0, /*tp_dictoffset*/
   0, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__, /*tp_new*/
+  __pyx_tp_new_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -6477,17 +6477,17 @@ static PyMethodDef __pyx_methods[] = {
 #if PY_MAJOR_VERSION >= 3
 #if CYTHON_PEP489_MULTI_PHASE_INIT
 static PyObject* __pyx_pymod_create(PyObject *spec, PyModuleDef *def); /*proto*/
-static int __pyx_pymod_exec__mmreader(PyObject* module); /*proto*/
+static int __pyx_pymod_exec_mmreader(PyObject* module); /*proto*/
 static PyModuleDef_Slot __pyx_moduledef_slots[] = {
   {Py_mod_create, (void*)__pyx_pymod_create},
-  {Py_mod_exec, (void*)__pyx_pymod_exec__mmreader},
+  {Py_mod_exec, (void*)__pyx_pymod_exec_mmreader},
   {0, NULL}
 };
 #endif
 
 static struct PyModuleDef __pyx_moduledef = {
     PyModuleDef_HEAD_INIT,
-    "_mmreader",
+    "mmreader",
     0, /* m_doc */
   #if CYTHON_PEP489_MULTI_PHASE_INIT
     0, /* m_size */
@@ -6528,7 +6528,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_format, __pyx_k_format, sizeof(__pyx_k_format), 0, 0, 1, 1},
   {&__pyx_n_s_genexpr, __pyx_k_genexpr, sizeof(__pyx_k_genexpr), 0, 0, 1, 1},
   {&__pyx_n_s_gensim, __pyx_k_gensim, sizeof(__pyx_k_gensim), 0, 0, 1, 1},
-  {&__pyx_n_s_gensim_corpora__mmreader, __pyx_k_gensim_corpora__mmreader, sizeof(__pyx_k_gensim_corpora__mmreader), 0, 0, 1, 1},
+  {&__pyx_n_s_gensim_corpora_mmreader, __pyx_k_gensim_corpora_mmreader, sizeof(__pyx_k_gensim_corpora_mmreader), 0, 0, 1, 1},
   {&__pyx_n_s_getLogger, __pyx_k_getLogger, sizeof(__pyx_k_getLogger), 0, 0, 1, 1},
   {&__pyx_n_s_getstate, __pyx_k_getstate, sizeof(__pyx_k_getstate), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
@@ -6591,7 +6591,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "gensim/corpora/_mmreader.pyx":66
+  /* "gensim/corpora/mmreader.pyx":66
  *             try:
  *                 header = utils.to_unicode(next(lines)).strip()
  *                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):             # <<<<<<<<<<<<<<
@@ -6602,7 +6602,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "gensim/corpora/_mmreader.pyx":77
+  /* "gensim/corpora/mmreader.pyx":77
  *             for lineno, line in enumerate(lines):
  *                 line = utils.to_unicode(line)
  *                 if not line.startswith('%'):             # <<<<<<<<<<<<<<
@@ -6613,7 +6613,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
 
-  /* "gensim/corpora/_mmreader.pyx":63
+  /* "gensim/corpora/mmreader.pyx":63
  *         logger.info("initializing cython corpus reader from %s", input)
  *         self.input, self.transposed = input, transposed
  *         with utils.file_or_filename(self.input) as lines:             # <<<<<<<<<<<<<<
@@ -6624,7 +6624,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__4);
   __Pyx_GIVEREF(__pyx_tuple__4);
 
-  /* "gensim/corpora/_mmreader.pyx":108
+  /* "gensim/corpora/mmreader.pyx":108
  *         """
  *         for line in input_file:
  *             if line.startswith(b'%'):             # <<<<<<<<<<<<<<
@@ -6635,7 +6635,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
 
-  /* "gensim/corpora/_mmreader.pyx":135
+  /* "gensim/corpora/mmreader.pyx":135
  *         cdef double val = 0
  * 
  *         with utils.file_or_filename(self.input) as lines:             # <<<<<<<<<<<<<<
@@ -6674,11 +6674,11 @@ static int __Pyx_InitGlobals(void) {
 }
 
 #if PY_MAJOR_VERSION < 3
-PyMODINIT_FUNC init_mmreader(void); /*proto*/
-PyMODINIT_FUNC init_mmreader(void)
+PyMODINIT_FUNC initmmreader(void); /*proto*/
+PyMODINIT_FUNC initmmreader(void)
 #else
-PyMODINIT_FUNC PyInit__mmreader(void); /*proto*/
-PyMODINIT_FUNC PyInit__mmreader(void)
+PyMODINIT_FUNC PyInit_mmreader(void); /*proto*/
+PyMODINIT_FUNC PyInit_mmreader(void)
 #if CYTHON_PEP489_MULTI_PHASE_INIT
 {
   return PyModuleDef_Init(&__pyx_moduledef);
@@ -6718,7 +6718,7 @@ bad:
 }
 
 
-static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
+static int __pyx_pymod_exec_mmreader(PyObject *__pyx_pyinit_module)
 #endif
 #endif
 {
@@ -6740,7 +6740,7 @@ static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
           Py_FatalError("failed to import 'refnanny' module");
   }
   #endif
-  __Pyx_RefNannySetupContext("PyMODINIT_FUNC PyInit__mmreader(void)", 0);
+  __Pyx_RefNannySetupContext("PyMODINIT_FUNC PyInit_mmreader(void)", 0);
   if (__Pyx_check_binary_version() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_empty_tuple = PyTuple_New(0); if (unlikely(!__pyx_empty_tuple)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_empty_bytes = PyBytes_FromStringAndSize("", 0); if (unlikely(!__pyx_empty_bytes)) __PYX_ERR(0, 1, __pyx_L1_error)
@@ -6776,7 +6776,7 @@ static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
   Py_INCREF(__pyx_m);
   #else
   #if PY_MAJOR_VERSION < 3
-  __pyx_m = Py_InitModule4("_mmreader", __pyx_methods, 0, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
+  __pyx_m = Py_InitModule4("mmreader", __pyx_methods, 0, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
   #else
   __pyx_m = PyModule_Create(&__pyx_moduledef);
   #endif
@@ -6795,14 +6795,14 @@ static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
-  if (__pyx_module_is_main_gensim__corpora___mmreader) {
+  if (__pyx_module_is_main_gensim__corpora__mmreader) {
     if (PyObject_SetAttrString(__pyx_m, "__name__", __pyx_n_s_main) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(0, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "gensim.corpora._mmreader")) {
-      if (unlikely(PyDict_SetItemString(modules, "gensim.corpora._mmreader", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "gensim.corpora.mmreader")) {
+      if (unlikely(PyDict_SetItemString(modules, "gensim.corpora.mmreader", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
     }
   }
   #endif
@@ -6814,40 +6814,40 @@ static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
   /*--- Variable export code ---*/
   /*--- Function export code ---*/
   /*--- Type init code ---*/
-  if (PyType_Ready(&__pyx_type_6gensim_7corpora_9_mmreader_MmReader) < 0) __PYX_ERR(0, 16, __pyx_L1_error)
-  __pyx_type_6gensim_7corpora_9_mmreader_MmReader.tp_print = 0;
+  if (PyType_Ready(&__pyx_type_6gensim_7corpora_8mmreader_MmReader) < 0) __PYX_ERR(0, 16, __pyx_L1_error)
+  __pyx_type_6gensim_7corpora_8mmreader_MmReader.tp_print = 0;
   #if CYTHON_COMPILING_IN_CPYTHON
   {
-    PyObject *wrapper = PyObject_GetAttrString((PyObject *)&__pyx_type_6gensim_7corpora_9_mmreader_MmReader, "__init__"); if (unlikely(!wrapper)) __PYX_ERR(0, 16, __pyx_L1_error)
+    PyObject *wrapper = PyObject_GetAttrString((PyObject *)&__pyx_type_6gensim_7corpora_8mmreader_MmReader, "__init__"); if (unlikely(!wrapper)) __PYX_ERR(0, 16, __pyx_L1_error)
     if (Py_TYPE(wrapper) == &PyWrapperDescr_Type) {
-      __pyx_wrapperbase_6gensim_7corpora_9_mmreader_8MmReader___init__ = *((PyWrapperDescrObject *)wrapper)->d_base;
-      __pyx_wrapperbase_6gensim_7corpora_9_mmreader_8MmReader___init__.doc = __pyx_doc_6gensim_7corpora_9_mmreader_8MmReader___init__;
-      ((PyWrapperDescrObject *)wrapper)->d_base = &__pyx_wrapperbase_6gensim_7corpora_9_mmreader_8MmReader___init__;
+      __pyx_wrapperbase_6gensim_7corpora_8mmreader_8MmReader___init__ = *((PyWrapperDescrObject *)wrapper)->d_base;
+      __pyx_wrapperbase_6gensim_7corpora_8mmreader_8MmReader___init__.doc = __pyx_doc_6gensim_7corpora_8mmreader_8MmReader___init__;
+      ((PyWrapperDescrObject *)wrapper)->d_base = &__pyx_wrapperbase_6gensim_7corpora_8mmreader_8MmReader___init__;
     }
   }
   #endif
   #if CYTHON_COMPILING_IN_CPYTHON
   {
-    PyObject *wrapper = PyObject_GetAttrString((PyObject *)&__pyx_type_6gensim_7corpora_9_mmreader_MmReader, "__iter__"); if (unlikely(!wrapper)) __PYX_ERR(0, 16, __pyx_L1_error)
+    PyObject *wrapper = PyObject_GetAttrString((PyObject *)&__pyx_type_6gensim_7corpora_8mmreader_MmReader, "__iter__"); if (unlikely(!wrapper)) __PYX_ERR(0, 16, __pyx_L1_error)
     if (Py_TYPE(wrapper) == &PyWrapperDescr_Type) {
-      __pyx_wrapperbase_6gensim_7corpora_9_mmreader_8MmReader_8__iter__ = *((PyWrapperDescrObject *)wrapper)->d_base;
-      __pyx_wrapperbase_6gensim_7corpora_9_mmreader_8MmReader_8__iter__.doc = __pyx_doc_6gensim_7corpora_9_mmreader_8MmReader_8__iter__;
-      ((PyWrapperDescrObject *)wrapper)->d_base = &__pyx_wrapperbase_6gensim_7corpora_9_mmreader_8MmReader_8__iter__;
+      __pyx_wrapperbase_6gensim_7corpora_8mmreader_8MmReader_8__iter__ = *((PyWrapperDescrObject *)wrapper)->d_base;
+      __pyx_wrapperbase_6gensim_7corpora_8mmreader_8MmReader_8__iter__.doc = __pyx_doc_6gensim_7corpora_8mmreader_8MmReader_8__iter__;
+      ((PyWrapperDescrObject *)wrapper)->d_base = &__pyx_wrapperbase_6gensim_7corpora_8mmreader_8MmReader_8__iter__;
     }
   }
   #endif
-  if (PyObject_SetAttrString(__pyx_m, "MmReader", (PyObject *)&__pyx_type_6gensim_7corpora_9_mmreader_MmReader) < 0) __PYX_ERR(0, 16, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_6gensim_7corpora_9_mmreader_MmReader) < 0) __PYX_ERR(0, 16, __pyx_L1_error)
-  __pyx_ptype_6gensim_7corpora_9_mmreader_MmReader = &__pyx_type_6gensim_7corpora_9_mmreader_MmReader;
-  if (PyType_Ready(&__pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__) < 0) __PYX_ERR(0, 43, __pyx_L1_error)
-  __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__.tp_print = 0;
-  __pyx_ptype_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__ = &__pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct____init__;
-  if (PyType_Ready(&__pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr) < 0) __PYX_ERR(0, 78, __pyx_L1_error)
-  __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr.tp_print = 0;
-  __pyx_ptype_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr = &__pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_1_genexpr;
-  if (PyType_Ready(&__pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__) < 0) __PYX_ERR(0, 112, __pyx_L1_error)
-  __pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__.tp_print = 0;
-  __pyx_ptype_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__ = &__pyx_type_6gensim_7corpora_9_mmreader___pyx_scope_struct_2___iter__;
+  if (PyObject_SetAttrString(__pyx_m, "MmReader", (PyObject *)&__pyx_type_6gensim_7corpora_8mmreader_MmReader) < 0) __PYX_ERR(0, 16, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_6gensim_7corpora_8mmreader_MmReader) < 0) __PYX_ERR(0, 16, __pyx_L1_error)
+  __pyx_ptype_6gensim_7corpora_8mmreader_MmReader = &__pyx_type_6gensim_7corpora_8mmreader_MmReader;
+  if (PyType_Ready(&__pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct____init__) < 0) __PYX_ERR(0, 43, __pyx_L1_error)
+  __pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct____init__.tp_print = 0;
+  __pyx_ptype_6gensim_7corpora_8mmreader___pyx_scope_struct____init__ = &__pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct____init__;
+  if (PyType_Ready(&__pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr) < 0) __PYX_ERR(0, 78, __pyx_L1_error)
+  __pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr.tp_print = 0;
+  __pyx_ptype_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr = &__pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct_1_genexpr;
+  if (PyType_Ready(&__pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__) < 0) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__.tp_print = 0;
+  __pyx_ptype_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__ = &__pyx_type_6gensim_7corpora_8mmreader___pyx_scope_struct_2___iter__;
   /*--- Type import code ---*/
   /*--- Variable import code ---*/
   /*--- Function import code ---*/
@@ -6856,7 +6856,7 @@ static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "gensim/corpora/_mmreader.pyx":3
+  /* "gensim/corpora/mmreader.pyx":3
  * from __future__ import with_statement
  * 
  * from gensim import utils             # <<<<<<<<<<<<<<
@@ -6877,7 +6877,7 @@ static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":5
+  /* "gensim/corpora/mmreader.pyx":5
  * from gensim import utils
  * 
  * from six import string_types             # <<<<<<<<<<<<<<
@@ -6898,7 +6898,7 @@ static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":6
+  /* "gensim/corpora/mmreader.pyx":6
  * 
  * from six import string_types
  * from six.moves import xrange             # <<<<<<<<<<<<<<
@@ -6919,7 +6919,7 @@ static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":7
+  /* "gensim/corpora/mmreader.pyx":7
  * from six import string_types
  * from six.moves import xrange
  * import logging             # <<<<<<<<<<<<<<
@@ -6931,7 +6931,7 @@ static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_logging, __pyx_t_2) < 0) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":13
+  /* "gensim/corpora/mmreader.pyx":13
  * 
  * 
  * logger = logging.getLogger(__name__)             # <<<<<<<<<<<<<<
@@ -6999,12 +6999,12 @@ static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
  *     if __pyx_checksum != 0xea5fe92:
  *         from pickle import PickleError as __pyx_PickleError
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_6gensim_7corpora_9_mmreader_1__pyx_unpickle_MmReader, NULL, __pyx_n_s_gensim_corpora__mmreader); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_6gensim_7corpora_8mmreader_1__pyx_unpickle_MmReader, NULL, __pyx_n_s_gensim_corpora_mmreader); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_pyx_unpickle_MmReader, __pyx_t_2) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "gensim/corpora/_mmreader.pyx":1
+  /* "gensim/corpora/mmreader.pyx":1
  * from __future__ import with_statement             # <<<<<<<<<<<<<<
  * 
  * from gensim import utils
@@ -7025,11 +7025,11 @@ static int __pyx_pymod_exec__mmreader(PyObject *__pyx_pyinit_module)
   __Pyx_XDECREF(__pyx_t_5);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init gensim.corpora._mmreader", 0, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init gensim.corpora.mmreader", 0, __pyx_lineno, __pyx_filename);
     }
     Py_DECREF(__pyx_m); __pyx_m = 0;
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init gensim.corpora._mmreader");
+    PyErr_SetString(PyExc_ImportError, "init gensim.corpora.mmreader");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();

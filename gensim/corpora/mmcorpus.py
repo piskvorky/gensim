@@ -14,22 +14,10 @@ import logging
 
 from gensim import matutils
 from gensim.corpora import IndexedCorpus
+from gensim.corpora.mmreader import MmReader
 
 
 logger = logging.getLogger('gensim.corpora.mmcorpus')
-
-try:
-    # try to load fast, cythonized code if possible
-    from gensim.corpora._mmreader import MmReader
-    FAST_VERSION = 1
-    logger.info('Fast version of {} is being used'.format(__name__))
-
-except ImportError:
-    # else fall back to python/numpy
-    from gensim.matutils import MmReader
-
-    FAST_VERSION = -1
-    logger.warning('Slow version of {} is being used'.format(__name__))
 
 
 class MmCorpus(MmReader, IndexedCorpus):
