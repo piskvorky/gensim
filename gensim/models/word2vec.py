@@ -7,7 +7,7 @@
 hierarchical softmax or negative sampling [1]_ [2]_.
 
 NOTE: There are more ways to get word vectors in Gensim than just Word2Vec.
-See wrappers for FastText, VarEmbed and WordRank.
+See FastText and wrappers for VarEmbed and WordRank.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
@@ -134,7 +134,7 @@ try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
-    logger.info("Using FAST VERSION %s", FAST_VERSION)
+    logger.info("Using FAST VERSION=%d", FAST_VERSION)
 
 except ImportError:
     MAX_WORDS_IN_BATCH = 10000
@@ -279,9 +279,6 @@ class Word2Vec(BaseWordEmbedddingsModel):
         self.wv.vectors_norm = None
 
     def _set_train_params(self, **kwargs):
-        self.trainables.hs = self.hs
-        self.trainables.negative = self.negative
-
         if 'compute_loss' in kwargs:
             self.compute_loss = kwargs['compute_loss']
         self.running_training_loss = 0
@@ -863,6 +860,7 @@ class Word2VecVocab(BaseVocabBuilder):
         self.sorted_vocab = sorted_vocab
         self.null_word = null_word
         self.cum_table = None  # for negative sampling
+        self.raw_vocab = None
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None, **kwargs):
         """Do an initial scan of all words appearing in sentences."""

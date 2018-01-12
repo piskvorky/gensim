@@ -331,7 +331,8 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_cbow_hs_training(self):
 
-        model_gensim = FT_gensim(size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
+        model_gensim = FT_gensim(
+            size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
             sorted_vocab=1, workers=1, min_alpha=0.0)
 
@@ -342,7 +343,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
 
         sims_gensim = model_gensim.wv.most_similar('night', topn=10)
-        sims_gensim_words = (list(map(lambda x: x[0], sims_gensim)))  # get similar words
+        sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
         expected_sims_words = [
             u'night,',
             u'night.',
@@ -356,11 +357,11 @@ class TestFastTextModel(unittest.TestCase):
             u'comes']
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 3)
-        # self.assertEqual(sims_gensim_words, expected_sims_words)
 
     def test_sg_hs_training(self):
 
-        model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
+        model_gensim = FT_gensim(
+            size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
             sorted_vocab=1, workers=1, min_alpha=0.0)
 
@@ -371,7 +372,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
 
         sims_gensim = model_gensim.wv.most_similar('night', topn=10)
-        sims_gensim_words = (list(map(lambda x: x[0], sims_gensim)))  # get similar words
+        sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
         expected_sims_words = [
             u'night,',
             u'night.',
@@ -388,7 +389,8 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_cbow_neg_training(self):
 
-        model_gensim = FT_gensim(size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
+        model_gensim = FT_gensim(
+            size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
             sorted_vocab=1, workers=1, min_alpha=0.0)
 
@@ -399,7 +401,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
 
         sims_gensim = model_gensim.wv.most_similar('night', topn=10)
-        sims_gensim_words = (list(map(lambda x: x[0], sims_gensim)))  # get similar words
+        sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
         expected_sims_words = [
             u'night.',
             u'night,',
@@ -416,7 +418,8 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_sg_neg_training(self):
 
-        model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=0, negative=5,
+        model_gensim = FT_gensim(
+            size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=0, negative=5,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
             sorted_vocab=1, workers=1, min_alpha=0.0)
 
@@ -427,7 +430,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
 
         sims_gensim = model_gensim.wv.most_similar('night', topn=10)
-        sims_gensim_words = (list(map(lambda x: x[0], sims_gensim)))  # get similar words
+        sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
         expected_sims_words = [
             u'night.',
             u'night,',

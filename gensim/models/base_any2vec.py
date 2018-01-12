@@ -20,13 +20,12 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-# Public Interfaces
 class BaseAny2VecModel(utils.SaveLoad):
 
     def __init__(self, workers=3, vector_size=100, epochs=5,
                  callbacks=(), batch_words=10000):
         """Initialize model parameters.
-        Subclass should initialize the following attributes:
+        A subclass should initialize the following attributes:
         - self.kv (instance of concrete implementation of `BaseKeyedVectors` interface)
         - self.vocabulary (instance of concrete implementation of `BaseVocabBuilder` abstract class)
         - self.trainables (instance of concrete implementation of `BaseTrainables` abstract clas)
@@ -44,42 +43,42 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Scan through all the data and create/update vocabulary.
         Should also initialize/reset/update vectors for new vocab entities.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _get_job_params(self):
         """Return job parameters required for each batch"""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _set_train_params(self, **kwargs):
         """Set model parameters required for training"""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _update_job_params(self, job_params, epoch_progress, cur_epoch):
         """Return updated job parameters based on the epoch_progress and cur_epoch"""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _get_thread_working_mem(self):
         """Return private working memory per thread"""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _raw_word_count(self, job):
         """Return the number of words in a given job."""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _clear_post_train(self):
         """Resets certain properties of the model post training. eg. `kv.vectors_norm`"""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
         """Train a single batch. Return 2-tuple `(effective word count, total word count)`."""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
         """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided"""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _set_keyedvectors(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _worker_loop(self, job_queue, progress_queue):
         """Train the model, lifting lists of data from the job_queue."""
@@ -105,7 +104,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
     def _job_producer(self, data_iterator, job_queue, cur_epoch=0, total_examples=None, total_words=None):
-        """Fill jobs queue using the input `sentences` iterator."""
+        """Fill jobs queue using the input `data_iterator`."""
         job_batch, batch_size = [], 0
         pushed_words, pushed_examples = 0, 0
         next_job_params = self._get_job_params(cur_epoch)
@@ -154,14 +153,14 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
                       raw_word_count, total_words, trained_word_count, elapsed):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
                        trained_word_count, elapsed, job_tally):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _log_epoch_progress(self, progress_queue, job_queue, cur_epoch=0, total_examples=None, total_words=None,
                             report_delay=1.0):
@@ -233,7 +232,7 @@ class BaseAny2VecModel(utils.SaveLoad):
               total_words=None, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
         """Handle multi-worker training."""
         self._set_train_params(**kwargs)
-        if len(callbacks):
+        if callbacks:
             self.callbacks = callbacks
         self.epochs = epochs
         self._check_training_sanity(
@@ -253,9 +252,9 @@ class BaseAny2VecModel(utils.SaveLoad):
             for callback in self.callbacks:
                 callback.on_epoch_begin(self)
 
-            trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(data_iterable,
-                cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words, queue_factor=queue_factor,
-                report_delay=report_delay)
+            trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(
+                data_iterable, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
+                queue_factor=queue_factor, report_delay=report_delay)
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
             job_tally += job_tally_epoch
@@ -290,12 +289,12 @@ class BaseVocabBuilder(utils.SaveLoad):
 
     def scan_vocab(self, data_iterable, progress_per=10000, **kwargs):
         """Do an initial scan of all words appearing in data_iterable.
-        Sets num_examples(total examples in data_iterable) and
-        raw_vocab(collections.defaultdict(int) mapping str vocab elements to their counts for all vocab words)"""
-        raise NotImplementedError
+        Sets corpus_count (total examples in data_iterable) and
+        raw_vocab(collections.defaultdict (int) mapping str vocab elements to their counts for all vocab words)"""
+        raise NotImplementedError()
 
     def prepare_vocab(self, update=False, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class BaseModelTrainables(utils.SaveLoad):
@@ -307,22 +306,22 @@ class BaseModelTrainables(utils.SaveLoad):
         self.seed = seed
 
     def prepare_weights(self, update=False, vocabulary=None):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def reset_weights(self, vocab):
         """Reset all trainable weights to an initial (untrained) state, but keep the existing vocabulary."""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def update_weights(self, vocab):
         """
         Copy all the existing weights, and reset the weights for the newly
         added vocabulary.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def seeded_vector(self, seed_string):
         """Create one 'random' vector (but deterministic by seed_string)"""
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class BaseWordEmbedddingsModel(BaseAny2VecModel):
@@ -336,10 +335,10 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         self.window = int(window)
         self.random = random.RandomState(seed)
         self.min_alpha = float(min_alpha)
-        self.hs = hs
-        self.negative = negative
+        self.hs = int(hs)
+        self.negative = int(negative)
         self.cbow_mean = int(cbow_mean)
-        self.compute_loss = compute_loss
+        self.compute_loss = bool(compute_loss)
         self.running_training_loss = 0
         self.min_alpha_yet_reached = float(alpha)
 
@@ -451,7 +450,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
 
     def build_vocab(self, sentences, update=False, progress_per=10000, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
-        Each sentence must be a list of unicode strings.
+        Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
         Parameters
         ----------
@@ -508,10 +507,6 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         `update`: bool
             If true, the new provided words in `word_freq` dict will be added to model's vocab.
 
-        Returns
-        --------
-        None
-
         Examples
         --------
         >>> from gensim.models.word2vec import Word2Vec
@@ -528,7 +523,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         )
 
         # Since no sentences are provided, this is to control the corpus_count
-        self.corpus_count = corpus_count if corpus_count else 0
+        self.corpus_count = corpus_count or 0
         self.vocabulary.raw_vocab = raw_vocab
 
         # trim by min_count & precalculate downsampling
@@ -570,9 +565,9 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
     def _get_job_params(self, cur_epoch):
-        """Return the paramter required for each batch."""
-        alpha_ = self.alpha - ((self.alpha - self.min_alpha) * float(cur_epoch) / self.epochs)
-        return alpha_
+        """Return the parameter required for each batch."""
+        alpha = self.alpha - ((self.alpha - self.min_alpha) * float(cur_epoch) / self.epochs)
+        return alpha
 
     def _update_job_params(self, job_params, epoch_progress, cur_epoch):
         start_alpha = self.alpha
@@ -593,39 +588,39 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         return sum(len(sentence) for sentence in job)
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
-            if self.alpha > self.min_alpha_yet_reached:
-                logger.warning("Effective 'alpha' higher than previous training cycles")
-            if len(self.wv.vocab) > 0:
-                self._set_params_from_kv()
-            if self.model_trimmed_post_training:
-                raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
+        if self.alpha > self.min_alpha_yet_reached:
+            logger.warning("Effective 'alpha' higher than previous training cycles")
+        if len(self.wv.vocab) > 0:
+            self._set_params_from_kv()
+        if self.model_trimmed_post_training:
+            raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
 
-            if not self.vocabulary.vocab:  # should be set by `build_vocab`
-                raise RuntimeError("you must first build vocabulary before training the model")
-            if not len(self.trainables.vectors):
-                raise RuntimeError("you must initialize vectors before training the model")
+        if not self.vocabulary.vocab:  # should be set by `build_vocab`
+            raise RuntimeError("you must first build vocabulary before training the model")
+        if not len(self.trainables.vectors):
+            raise RuntimeError("you must initialize vectors before training the model")
 
-            if not hasattr(self, 'corpus_count'):
-                raise ValueError(
-                    "The number of examples in the training corpus is missing. "
-                    "Please make sure this is set inside `build_vocab` function."
-                    "Call the `build_vocab` function before calling `train`."
-                )
-
-            if total_words is None and total_examples is None:
-                raise ValueError(
-                    "You must specify either total_examples or total_words, for proper job parameters updation"
-                    "and progress calculations. "
-                    "The usual value is total_examples=model.corpus_count."
-                )
-            if epochs is None:
-                raise ValueError("You must specify an explict epochs count. The usual value is epochs=model.epochs.")
-            logger.info(
-                "training model with %i workers on %i vocabulary and %i features, "
-                "using sg=%s hs=%s sample=%s negative=%s window=%s",
-                self.workers, len(self.wv.vocab), self.trainables.layer1_size, self.sg,
-                self.hs, self.vocabulary.sample, self.negative, self.window
+        if not hasattr(self, 'corpus_count'):
+            raise ValueError(
+                "The number of examples in the training corpus is missing. "
+                "Please make sure this is set inside `build_vocab` function."
+                "Call the `build_vocab` function before calling `train`."
             )
+
+        if total_words is None and total_examples is None:
+            raise ValueError(
+                "You must specify either total_examples or total_words, for proper job parameters updation"
+                "and progress calculations. "
+                "The usual value is total_examples=model.corpus_count."
+            )
+        if epochs is None:
+            raise ValueError("You must specify an explict epochs count. The usual value is epochs=model.epochs.")
+        logger.info(
+            "training model with %i workers on %i vocabulary and %i features, "
+            "using sg=%s hs=%s sample=%s negative=%s window=%s",
+            self.workers, len(self.wv.vocab), self.trainables.layer1_size, self.sg,
+            self.hs, self.vocabulary.sample, self.negative, self.window
+        )
 
     @classmethod
     def load(cls, *args, **kwargs):
@@ -644,21 +639,21 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         return model
 
     def _get_keyedvector_instance(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _set_params_from_kv(self):
-        self.trainables.vectors = self.wv.__dict__.get('vectors', [])
-        self.trainables.vectors_norm = self.wv.__dict__.get('vectors_norm', None)
-        self.trainables.vector_size = self.wv.__dict__.get('vector_size', None)
-        self.vocabulary.vocab = self.wv.__dict__.get('vocab', {})
-        self.vocabulary.index2word = self.wv.__dict__.get('index2word', [])
+        self.trainables.vectors = getattr(self.wv, 'vectors', [])
+        self.trainables.vectors_norm = getattr(self.wv, 'vectors_norm', None)
+        self.trainables.vector_size = getattr(self.wv, 'vector_size', None)
+        self.vocabulary.vocab = getattr(self.wv, 'vocab', {})
+        self.vocabulary.index2word = getattr(self.wv, 'index2word', [])
 
     def _set_keyedvectors(self):
-        self.wv.vectors = self.trainables.__dict__.get('vectors', [])
-        self.wv.vectors_norm = self.trainables.__dict__.get('vectors_norm', None)
-        self.wv.vector_size = self.trainables.__dict__.get('vector_size', None)
-        self.wv.vocab = self.vocabulary.__dict__.get('vocab', {})
-        self.wv.index2word = self.vocabulary.__dict__.get('index2word', [])
+        self.wv.vectors = getattr(self.trainables, 'vectors', [])
+        self.wv.vectors_norm = getattr(self.trainables, 'vectors_norm', None)
+        self.wv.vector_size = getattr(self.trainables, 'vector_size', None)
+        self.wv.vocab = getattr(self.vocabulary, 'vocab', {})
+        self.wv.index2word = getattr(self.vocabulary, 'index2word', [])
 
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
                       raw_word_count, total_words, trained_word_count, elapsed):

@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.fasttext_inner import train_batch_sg, train_batch_cbow
     from gensim.models.fasttext_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
-    logger.info("Using FAST VERSION %s", FAST_VERSION)
+    logger.info("Using FAST VERSION=%d", FAST_VERSION)
 
 except ImportError:
     raise RuntimeError(
@@ -85,8 +85,7 @@ def compute_ngrams(word, min_n, max_n):
 
 
 def ft_hash(string):
-    """
-    Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+    """Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
     used in [1]_.
 
     Parameter
@@ -219,7 +218,7 @@ class FastText(BaseWordEmbedddingsModel):
         self.load = call_on_class_only
         self.load_fasttext_format = call_on_class_only
         self.callbacks = callbacks
-        self.word_ngrams = word_ngrams
+        self.word_ngrams = int(word_ngrams)
         if self.word_ngrams <= 1 and max_n == 0:
             bucket = 0
 
@@ -290,27 +289,27 @@ class FastText(BaseWordEmbedddingsModel):
 
     def _set_keyedvectors(self):
         super(FastText, self)._set_keyedvectors()
-        self.wv.vectors_vocab = self.trainables.__dict__.get('vectors_vocab', [])
-        self.wv.vectors_ngrams = self.trainables.__dict__.get('vectors_ngrams', [])
-        self.wv.vectors_vocab_norm = self.trainables.__dict__.get('vectors_vocab_norm', None)
-        self.wv.vectors_ngrams_norm = self.trainables.__dict__.get('vectors_ngrams_norm', None)
-        self.wv.ngrams = self.trainables.__dict__.get('ngrams', {})
-        self.wv.hash2index = self.trainables.__dict__.get('hash2index', {})
-        self.wv.min_n = self.vocabulary.__dict__.get('min_n', None)
-        self.wv.max_n = self.vocabulary.__dict__.get('max_n', None)
-        self.wv.ngrams_word = self.vocabulary.__dict__.get('ngrams_word', None)
+        self.wv.vectors_vocab = getattr(self.trainables, 'vectors_vocab', [])
+        self.wv.vectors_ngrams = getattr(self.trainables, 'vectors_ngrams', [])
+        self.wv.vectors_vocab_norm = getattr(self.trainables, 'vectors_vocab_norm', None)
+        self.wv.vectors_ngrams_norm = getattr(self.trainables, 'vectors_ngrams_norm', None)
+        self.wv.ngrams = getattr(self.trainables, 'ngrams', {})
+        self.wv.hash2index = getattr(self.trainables, 'hash2index', {})
+        self.wv.min_n = getattr(self.vocabulary, 'min_n', None)
+        self.wv.max_n = getattr(self.vocabulary, 'max_n', None)
+        self.wv.ngrams_word = getattr(self.vocabulary, 'ngrams_word', None)
 
     def _set_params_from_kv(self):
         super(FastText, self)._set_params_from_kv()
-        self.trainables.vectors_vocab = self.wv.__dict__.get('vectors_vocab', [])
-        self.trainables.vectors_ngrams = self.wv.__dict__.get('vectors_ngrams', [])
-        self.trainables.vectors_vocab_norm = self.wv.__dict__.get('vectors_vocab_norm', None)
-        self.trainables.vectors_ngrams_norm = self.wv.__dict__.get('vectors_ngrams_norm', None)
-        self.trainables.ngrams = self.wv.__dict__.get('ngrams', {})
-        self.trainables.hash2index = self.wv.__dict__.get('hash2index', {})
-        self.vocabulary.min_n = self.wv.__dict__.get('min_n', None)
-        self.vocabulary.max_n = self.wv.__dict__.get('max_n', None)
-        self.vocabulary.ngrams_word = self.wv.__dict__.get('ngrams_word', None)
+        self.trainables.vectors_vocab = getattr(self.wv, 'vectors_vocab', [])
+        self.trainables.vectors_ngrams = getattr(self.wv, 'vectors_ngrams', [])
+        self.trainables.vectors_vocab_norm = getattr(self.wv, 'vectors_vocab_norm', None)
+        self.trainables.vectors_ngrams_norm = getattr(self.wv, 'vectors_ngrams_norm', None)
+        self.trainables.ngrams = getattr(self.wv, 'ngrams', {})
+        self.trainables.hash2index = getattr(self.wv, 'hash2index', {})
+        self.vocabulary.min_n = getattr(self.wv, 'min_n', None)
+        self.vocabulary.max_n = getattr(self.wv, 'max_n', None)
+        self.vocabulary.ngrams_word = getattr(self.wv, 'ngrams_word', None)
 
     def _set_train_params(self, **kwargs):
         pass
@@ -632,8 +631,8 @@ class FastTextVocab(Word2VecVocab):
         super(FastTextVocab, self).__init__(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=sorted_vocab, null_word=null_word)
-        self.min_n = min_n
-        self.max_n = max_n
+        self.min_n = int(min_n)
+        self.max_n = int(max_n)
         self.ngrams_word = {}
 
     def prepare_vocab(self, weights_initialized, hs, negative, update=False, keep_raw_vocab=False, trim_rule=None,
@@ -658,7 +657,7 @@ class FastTextTrainables(Word2VecTrainables):
     def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
-        self.bucket = bucket
+        self.bucket = int(bucket)
         self.hash2index = {}
         self.vectors_vocab = []
         self.vectors_ngrams = []
@@ -844,18 +843,22 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.max_n = 0
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab instead")
     def syn0_vocab(self):
         return self.vectors_vocab
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab_norm instead")
     def syn0_vocab_norm(self):
         return self.vectors_vocab_norm
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_ngrams instead")
     def syn0_ngrams(self):
         return self.vectors_ngrams
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_ngrams_norm instead")
     def syn0_ngrams_norm(self):
         return self.vectors_ngrams_norm
 

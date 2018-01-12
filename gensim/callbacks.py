@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Abstract base class to build callbacks. Callbacks are used to apply custom functions over the model
+Base class to build callbacks. Callbacks are used to apply custom functions over the model
 at specific points during training (epoch start, batch end etc.). To implement a Callback, subclass
 :class: ~gensim.callbacks.Callback, look at the example below which creates a callback to save a training model
 after each epoch:
@@ -25,10 +25,7 @@ after each epoch:
 
 
 class Callback(object):
-    """Abstract base class used to build new callbacks."""
-
-    def __init__(self):
-        pass
+    """Base class used to build new callbacks."""
 
     def on_epoch_begin(self, model):
         pass

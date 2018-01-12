@@ -121,24 +121,24 @@ class BaseKeyedVectors(utils.SaveLoad):
     def similarity(self, entity1, entity2):
         """Compute cosine similarity between entities, specified by string tag.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def most_similar(self, **kwargs):
         """Find the top-N most similar entities.
         Possibly have `positive` and `negative` list of entities in `**kwargs`.
         """
-        return NotImplementedError
+        return NotImplementedError()
 
     def distance(self, entity1, entity2):
         """Compute distance between vectors of two input entities, specified by string tag.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def distances(self, entity1, other_entities=()):
         """Compute distances from given entity (string tag) to all entities in `other_entity`.
         If `other_entities` is empty, return distance between `entity1` and all entities in vocab.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def get_vector(self, entity):
         """Accept a single entity as input, specified by string tag.

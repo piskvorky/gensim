@@ -60,7 +60,7 @@ from numpy import zeros, array, float32 as REAL, empty, ones, \
     divide as np_divide, integer, dtype
 
 
-from gensim.utils import call_on_class_only
+from gensim.utils import call_on_class_only, deprecated
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables
 from six.moves import xrange, zip
@@ -74,7 +74,7 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
     from gensim.models.word2vec_inner import FAST_VERSION  # blas-adaptation shared from word2vec
-    logger.info("Using FAST VERSION %s", FAST_VERSION)
+    logger.info("Using FAST VERSION=%d", FAST_VERSION)
 
 except ImportError:
     raise RuntimeError(
@@ -215,9 +215,9 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         if dm_mean is not None:
             self.cbow_mean = dm_mean
 
-        self.dbow_words = dbow_words
-        self.dm_concat = dm_concat
-        self.dm_tag_count = dm_tag_count
+        self.dbow_words = int(dbow_words)
+        self.dm_concat = int(dm_concat)
+        self.dm_tag_count = int(dm_tag_count)
 
         kwargs['null_word'] = dm_concat
         vocabulary_keys = ['max_vocab_size', 'min_count', 'sample', 'sorted_vocab', 'null_word']
@@ -236,7 +236,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         self.comment = comment
         if documents is not None:
             if isinstance(documents, GeneratorType):
-                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+                raise TypeError("You can't pass a generator as the documents argument. Try an iterator.")
             self.build_vocab(documents, trim_rule=trim_rule)
             self.train(
                 documents, total_examples=self.corpus_count, epochs=self.epochs,
@@ -255,26 +255,25 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         return self.sg  # same as SG
 
     def _set_train_params(self, **kwargs):
-        self.trainables.hs = self.hs
-        self.trainables.negative = self.negative
+        pass
 
     def _set_keyedvectors(self):
         super(Doc2Vec, self)._set_keyedvectors()
-        self.docvecs.vectors_docs = self.trainables.__dict__.get('vectors_docs', [])
-        self.docvecs.doctags = self.vocabulary.__dict__.get('doctags', {})
-        self.docvecs.max_rawint = self.vocabulary.__dict__.get('max_rawint', -1)
-        self.docvecs.offset2doctag = self.vocabulary.__dict__.get('offset2doctag', [])
-        self.docvecs.count = self.vocabulary.__dict__.get('count', 0)
-        self.docvecs.mapfile_path = self.vocabulary.__dict__.get('mapfile_path', None)
+        self.docvecs.vectors_docs = getattr(self.trainables, 'vectors_docs', [])
+        self.docvecs.doctags = getattr(self.vocabulary, 'doctags', {})
+        self.docvecs.max_rawint = getattr(self.vocabulary, 'max_rawint', -1)
+        self.docvecs.offset2doctag = getattr(self.vocabulary, 'offset2doctag', [])
+        self.docvecs.count = getattr(self.vocabulary, 'count', 0)
+        self.docvecs.mapfile_path = getattr(self.vocabulary, 'mapfile_path', None)
 
     def _set_params_from_kv(self):
         super(Doc2Vec, self)._set_params_from_kv()
-        self.trainables.vectors_docs = self.docvecs.__dict__.get('vectors_docs', [])
-        self.vocabulary.doctags = self.docvecs.__dict__.get('doctags', {})
-        self.vocabulary.max_rawint = self.docvecs.__dict__.get('max_rawint', -1)
-        self.vocabulary.offset2doctag = self.docvecs.__dict__.get('offset2doctag', [])
-        self.vocabulary.count = self.docvecs.__dict__.get('count', 0)
-        self.vocabulary.mapfile_path = self.docvecs.__dict__.get('mapfile_path', None)
+        self.trainables.vectors_docs = getattr(self.docvecs, 'vectors_docs', [])
+        self.vocabulary.doctags = getattr(self.docvecs, 'doctags', {})
+        self.vocabulary.max_rawint = getattr(self.docvecs, 'max_rawint', -1)
+        self.vocabulary.offset2doctag = getattr(self.docvecs, 'offset2doctag', [])
+        self.vocabulary.count = getattr(self.docvecs, 'count', 0)
+        self.vocabulary.mapfile_path = getattr(self.docvecs, 'mapfile_path', None)
 
     def _clear_post_train(self):
         """Resets certain properties of the model, post training. eg. `kv.syn0norm`"""
@@ -320,7 +319,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
                 )
         return tally, self._raw_word_count(job)
 
-    def train(self, sentences, total_examples=None, total_words=None,
+    def train(self, documents, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
               word_count=0, queue_factor=2, report_delay=1.0, callbacks=()):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
@@ -339,15 +338,15 @@ class Doc2Vec(BaseWordEmbedddingsModel):
 
         Parameters
         ----------
-        sentences : iterable of iterables
-            The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
-            consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+        documents : iterable of iterables
+            The `documents` iterable can be simply a list of TaggedDocument elements, but for larger corpora,
+            consider an iterable that streams the documents directly from disk/network.
+            See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
+            in :mod:`~gensim.models.doc2vec` module for such examples.
         total_examples : int
             Count of sentences.
         total_words : int
-            Count of raw words in sentences.
+            Count of raw words in documents.
         epochs : int
             Number of iterations (epochs) over the corpus.
         start_alpha : float
@@ -365,7 +364,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             List of callbacks that need to be executed/run at specific stages during training.
         """
         super(Doc2Vec, self).train(
-            sentences, total_examples=total_examples, total_words=total_words,
+            documents, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
         self._set_keyedvectors()
@@ -557,8 +556,6 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         try:
             return super(Doc2Vec, cls).load(*args, **kwargs)
         except AttributeError:
-            # from IPython.core.debugger import set_trace
-            # set_trace()
             logger.info('Model saved using code from ealier Gensim Version. Re-loading old model in a compatible way.')
             from gensim.models.deprecated.doc2vec import load_old_doc2vec
             return load_old_doc2vec(*args, **kwargs)
@@ -718,10 +715,12 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         self.offset2doctag = value
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use docvecs.vectors_docs instead") 
     def doctag_syn0(self):
         return self.vectors_docs
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use docvecs.vectors_docs_norm instead")
     def doctag_syn0norm(self):
         return self.vectors_docs_norm
 
