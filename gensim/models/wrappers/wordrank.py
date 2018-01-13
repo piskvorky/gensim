@@ -25,7 +25,7 @@ import copy
 import multiprocessing
 
 from gensim import utils
-from gensim.models import KeyedVectors
+from gensim.models.keyedvectors import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
 
 from smart_open import smart_open

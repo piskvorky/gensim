@@ -31,12 +31,12 @@ import logging
 import struct
 
 import numpy as np
-from numpy import sqrt, newaxis, ones, vstack, empty, float32 as REAL
+from numpy import ones, vstack, empty, float32 as REAL
 
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables
-from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors, Vocab
+from gensim.models.keyedvectors import Vocab, FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbedddingsModel
-from gensim.models.word2vec import save_word2vec_format
+from gensim.models.utils_any2vec import compute_ngrams, ft_hash
 
 from six import iteritems
 from gensim.utils import deprecated, call_on_class_only
@@ -55,58 +55,6 @@ except ImportError:
         "Please make sure you have installed Cython and BLAS.")
 
 FASTTEXT_FILEFORMAT_MAGIC = 793712314
-
-
-def compute_ngrams(word, min_n, max_n):
-    """Returns the list of all possible ngrams for a given word.
-
-    Parameters
-    ----------
-    word : str
-        The word whose ngrams need to be computed
-    min_n : int
-        mininum character length of the ngrams
-    max_n : int
-        maximum character length of the ngrams
-
-    Returns
-    -------
-    :obj:`list` of :obj:`str`
-        List of chracter ngrams
-
-    """
-    BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
-    extended_word = BOW + word + EOW
-    ngrams = []
-    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
-        for i in range(0, len(extended_word) - ngram_length + 1):
-            ngrams.append(extended_word[i:i + ngram_length])
-    return ngrams
-
-
-def ft_hash(string):
-    """Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-    used in [1]_.
-
-    Parameter
-    ---------
-    string : str
-        The string whose hash needs to be calculated
-
-    Returns
-    -------
-    int
-        The hash of the string
-
-    """
-    # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
-    old_settings = np.seterr(all='ignore')
-    h = np.uint32(2166136261)
-    for c in string:
-        h = h ^ np.uint32(ord(c))
-        h = h * np.uint32(16777619)
-    np.seterr(**old_settings)
-    return h
 
 
 class FastText(BaseWordEmbedddingsModel):
@@ -822,146 +770,3 @@ class FastTextTrainables(Word2VecTrainables):
         # don't bother storing the cached normalized vectors
         kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm'])
         super(Word2VecTrainables, self).save(*args, **kwargs)
-
-
-class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
-    """
-    Class to contain vectors and vocab for the FastText training class and other methods not directly
-    involved in training such as most_similar()
-    """
-
-    def __init__(self):
-        super(FastTextKeyedVectors, self).__init__()
-        self.vectors_vocab = None
-        self.vectors_vocab_norm = None
-        self.vectors_ngrams = None
-        self.vectors_ngrams_norm = None
-        self.ngrams = {}
-        self.hash2index = {}
-        self.ngrams_word = {}
-        self.min_n = 0
-        self.max_n = 0
-
-    @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab instead")
-    def syn0_vocab(self):
-        return self.vectors_vocab
-
-    @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab_norm instead")
-    def syn0_vocab_norm(self):
-        return self.vectors_vocab_norm
-
-    @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_ngrams instead")
-    def syn0_ngrams(self):
-        return self.vectors_ngrams
-
-    @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_ngrams_norm instead")
-    def syn0_ngrams_norm(self):
-        return self.vectors_ngrams_norm
-
-    @property
-    def num_ngram_vectors(self):
-        return self.trainables.num_ngram_vectors
-
-    def __contains__(self, word):
-        """
-        Check if `word` or any character ngrams in `word` are present in the vocabulary.
-        A vector for the word is guaranteed to exist if `__contains__` returns True.
-        """
-        if word in self.vocab:
-            return True
-        else:
-            char_ngrams = compute_ngrams(word, self.min_n, self.max_n)
-            return any(ng in self.ngrams for ng in char_ngrams)
-
-    def save(self, *args, **kwargs):
-        """Saves the keyedvectors. This saved model can be loaded again using
-        :func:`~gensim.models.fasttext.FastTextKeyedVectors.load` which supports
-        getting vectors for out-of-vocabulary words.
-
-        Parameters
-        ----------
-        fname : str
-            Path to the file.
-
-        Returns
-        -------
-        None
-
-        """
-        # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm'])
-        super(FastTextKeyedVectors, self).save(*args, **kwargs)
-
-    def word_vec(self, word, use_norm=False):
-        """
-        Accept a single word as input.
-        Returns the word's representations in vector space, as a 1D numpy array.
-
-        If `use_norm` is True, returns the normalized word vector.
-
-        """
-        if word in self.vocab:
-            return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
-        else:
-            word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=np.float32)
-            ngrams = compute_ngrams(word, self.min_n, self.max_n)
-            ngrams = [ng for ng in ngrams if ng in self.ngrams]
-            if use_norm:
-                ngram_weights = self.vectors_ngrams_norm
-            else:
-                ngram_weights = self.vectors_ngrams
-            for ngram in ngrams:
-                word_vec += ngram_weights[self.ngrams[ngram]]
-            if word_vec.any():
-                return word_vec / len(ngrams)
-            else:  # No ngrams of the word are present in self.ngrams
-                raise KeyError('all ngrams for word %s absent from model' % word)
-
-    def init_sims(self, replace=False):
-        """
-        Precompute L2-normalized vectors.
-
-        If `replace` is set, forget the original vectors and only keep the normalized
-        ones = saves lots of memory!
-
-        Note that you **cannot continue training** after doing a replace. The model becomes
-        effectively read-only = you can only call `most_similar`, `similarity` etc.
-
-        """
-        super(FastTextKeyedVectors, self).init_sims(replace)
-        if getattr(self, 'vectors_ngrams_norm', None) is None or replace:
-            logger.info("precomputing L2-norms of ngram weight vectors")
-            if replace:
-                for i in range(self.vectors_ngrams.shape[0]):
-                    self.vectors_ngrams[i, :] /= sqrt((self.vectors_ngrams[i, :] ** 2).sum(-1))
-                self.vectors_ngrams_norm = self.vectors_ngrams
-            else:
-                self.vectors_ngrams_norm = \
-                    (self.vectors_ngrams / sqrt((self.vectors_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
-
-    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
-        """Store the input-hidden weight matrix in the same format used by the original
-        C word2vec-tool, for compatibility.
-
-        Parameters
-        ----------
-        fname : str
-            The file path used to save the vectors in.
-        fvocab : str
-            Optional file path used to save the vocabulary.
-        binary : bool
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-        total_vec :  int
-            Optional parameter to explicitly specify total no. of vectors
-            (in case word vectors are appended with document vectors afterwards).
-
-        Returns
-        -------
-        None
-
-        """
-        save_word2vec_format(fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)

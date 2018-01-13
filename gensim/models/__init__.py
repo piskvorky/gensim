@@ -13,7 +13,7 @@ from .rpmodel import RpModel  # noqa:F401
 from .logentropy_model import LogEntropyModel  # noqa:F401
 from .word2vec import Word2Vec  # noqa:F401
 from .doc2vec import Doc2Vec  # noqa:F401
-from .word2vec import Word2VecKeyedVectors as KeyedVectors  # noqa:F401
+from .keyedvectors import KeyedVectors  # noqa:F401
 from .ldamulticore import LdaMulticore  # noqa:F401
 from .phrases import Phrases  # noqa:F401
 from .normmodel import NormModel  # noqa:F401
