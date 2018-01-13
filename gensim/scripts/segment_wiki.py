@@ -70,8 +70,8 @@ def segment_all_articles(file_path, min_article_character=200, workers=None):
 
     Yields
     ------
-    (str, list of (str, str))
-        Structure contains (title, [(section_heading, section_content), ...]).
+    (str, list of (str, str), list of str)
+        Structure contains (title, [(section_heading, section_content), ...], [interlink, ...]).
 
     """
     with smart_open(file_path, 'rb') as xml_fileobj:
@@ -79,18 +79,19 @@ def segment_all_articles(file_path, min_article_character=200, workers=None):
             xml_fileobj, min_article_character=min_article_character, processes=workers)
         wiki_sections_corpus.metadata = True
         wiki_sections_text = wiki_sections_corpus.get_texts_with_sections()
-        for article_title, article_sections in wiki_sections_text:
-            yield article_title, article_sections
+        for article_title, article_sections, article_interlinks in wiki_sections_text:
+            yield article_title, article_sections, article_interlinks
 
 
 def segment_and_write_all_articles(file_path, output_file, min_article_character=200, workers=None):
     """Write article title and sections to `output_file` (or stdout, if output_file is None).
 
-    The output format is one article per line, in json-line format with 3 fields::
+    The output format is one article per line, in json-line format with 4 fields::
 
         'title' - title of article,
         'section_titles' - list of titles of sections,
-        'section_texts' - list of content from sections.
+        'section_texts' - list of content from sections,
+        'section_interlinks' - list of interlinks in the article.
 
     Parameters
     ----------
@@ -115,8 +116,13 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
 
     try:
         article_stream = segment_all_articles(file_path, min_article_character, workers=workers)
-        for idx, (article_title, article_sections) in enumerate(article_stream):
-            output_data = {"title": article_title, "section_titles": [], "section_texts": []}
+        for idx, (article_title, article_sections, article_interlinks) in enumerate(article_stream):
+            output_data = {"title": article_title,
+                           "section_titles": [],
+                           "section_texts": [],
+                           "section_interlinks": article_interlinks
+                           }
+
             for section_heading, section_content in article_sections:
                 output_data["section_titles"].append(section_heading)
                 output_data["section_texts"].append(section_content)
@@ -171,9 +177,10 @@ def segment(page_xml):
         Content from page tag.
 
     Returns
+
     -------
-    (str, list of (str, str))
-        Structure contains (title, [(section_heading, section_content)]).
+    (str, list of (str, str), list of str)
+        Structure contains (title, [(section_heading, section_content), ...], [interlink, ...]).
 
     """
     elem = cElementTree.fromstring(page_xml)
@@ -186,6 +193,7 @@ def segment(page_xml):
     lead_section_heading = "Introduction"
     top_level_heading_regex = r"\n==[^=].*[^=]==\n"
     top_level_heading_regex_capture = r"\n==([^=].*[^=])==\n"
+    interlink_regex_capture = r"\[\[(.*?)\]\]"
 
     title = elem.find(title_path).text
     text = elem.find(text_path).text
@@ -203,7 +211,14 @@ def segment(page_xml):
 
     section_contents = [filter_wiki(section_content) for section_content in section_contents]
     sections = list(zip(section_headings, section_contents))
-    return title, sections
+
+    interlinks = []
+    for filtered_content in section_contents:
+        section_interlinks = re.findall(interlink_regex_capture, filtered_content)
+        legit_interlinks = [i for i in section_interlinks if '[' not in i and ']' not in i]
+        interlinks.extend(legit_interlinks)
+
+    return title, sections, interlinks
 
 
 class _WikiSectionsCorpus(WikiCorpus):
@@ -256,8 +271,8 @@ class _WikiSectionsCorpus(WikiCorpus):
 
         Yields
         ------
-        (str, list of (str, str))
-            Structure contains (title, [(section_heading, section_content), ...]).
+        (str, list of (str, str), list of str)
+            Structure contains (title, [(section_heading, section_content), ...], [interlink, ...]).
 
         """
         skipped_namespace, skipped_length, skipped_redirect = 0, 0, 0
@@ -267,7 +282,7 @@ class _WikiSectionsCorpus(WikiCorpus):
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
         for group in utils.chunkize(page_xmls, chunksize=10 * self.processes, maxsize=1):
-            for article_title, sections in pool.imap(segment, group):  # chunksize=10):
+            for article_title, sections, interlinks in pool.imap(segment, group):  # chunksize=10):
                 # article redirects are pruned here
                 if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):  # filter non-articles
                     skipped_namespace += 1
@@ -282,7 +297,7 @@ class _WikiSectionsCorpus(WikiCorpus):
 
                 total_articles += 1
                 total_sections += len(sections)
-                yield (article_title, sections)
+                yield (article_title, sections, interlinks)
         logger.info(
             "finished processing %i articles with %i sections (skipped %i redirects, %i stubs, %i ignored namespaces)",
             total_articles, total_sections, skipped_redirect, skipped_length, skipped_namespace)
@@ -321,3 +336,15 @@ if __name__ == "__main__":
     )
 
     logger.info("finished running %s", sys.argv[0])
+
+    print("-----Now checking output--------\n\n\n")
+    for line in smart_open(args.output):
+        # decode each JSON line into a Python dictionary object
+        article = json.loads(line)
+
+        # each article has a "title" and a list of "section_titles" and "section_texts".
+        print("Article title: %s" % article['title'])
+        print("Article interlinks: %s" % article['section_interlinks'])
+        for section_title, section_text in zip(article['section_titles'], article['section_texts']):
+            print("Section title: %s" % section_title)
+            print("Section text: %s" % section_text)
