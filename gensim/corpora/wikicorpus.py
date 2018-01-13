@@ -109,10 +109,7 @@ def remove_markup(text):
         # stop if nothing changed between two iterations or after a fixed number of iterations
         if old == text or iters > 2:
             break
-
-    # the following is needed to make the tokenizer see '[[socialist]]s' as a single word 'socialists'
-    # TODO is this really desirable?
-    text = text.replace('[', '').replace(']', '')  # promote all remaining markup to plain text
+            
     return text
 
 
