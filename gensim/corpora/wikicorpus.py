@@ -109,7 +109,7 @@ def remove_markup(text):
         # stop if nothing changed between two iterations or after a fixed number of iterations
         if old == text or iters > 2:
             break
-            
+
     return text
 
 
