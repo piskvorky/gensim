@@ -490,7 +490,7 @@ class Sent2Vec(SaveLoad):
         else:
             return -np.log(1.0 - score)
 
-    def _init_table_negatives(self, counts):
+    def _init_table_negatives(self, counts, update):
         """Initialise table of negatives for negative sampling.
 
         Parameters
@@ -499,7 +499,8 @@ class Sent2Vec(SaveLoad):
             List of counts of all words in the vocabulary.
 
         """
-
+        if update:
+            self.negatives = list(self.negatives)
         z = 0.0
         for i in range(len(counts)):
             z += counts[i] ** 0.5
@@ -584,25 +585,48 @@ class Sent2Vec(SaveLoad):
             self.wi[i] += self.grad
         return loss
 
-    def build_vocab(self, sentences):
+    def build_vocab(self, sentences, update=False):
         """Build vocab from `sentences`
 
         Parameters
         ----------
         sentences : iterable of iterable of str
             Input sentences.
-
+        update : boolean
+            Update existing vocabulary using input sentences if True
         """
-        logger.info("Creating dictionary...")
-        self.dict = ModelDictionary(t=self.t, bucket=self.bucket, maxn=self.maxn,
-                                    minn=self.minn, max_vocab_size=self.max_vocab_size)
-        self.dict.read(sentences=sentences, min_count=self.min_count)
-        logger.info("Dictionary created, dictionary size: %i, tokens read: %i", self.dict.size, self.dict.ntokens)
-        counts = [entry.count for entry in self.dict.words]
-        self.wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1),
-                                      (self.dict.size + self.bucket, self.vector_size)).astype(np.float32)
-        self.wo = np.zeros((self.dict.size, self.vector_size), dtype=np.float32)
-        self._init_table_negatives(counts=counts)
+        if not update:
+            logger.info("Creating dictionary...")
+            self.dict = ModelDictionary(t=self.t, bucket=self.bucket, maxn=self.maxn,
+                                        minn=self.minn, max_vocab_size=self.max_vocab_size)
+            self.dict.read(sentences=sentences, min_count=self.min_count)
+            logger.info("Dictionary created, dictionary size: %i, tokens read: %i",
+                        self.dict.size, self.dict.ntokens)
+            counts = [entry.count for entry in self.dict.words]
+            self.wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1),
+                                          (self.dict.size + self.bucket, self.vector_size)
+                                          ).astype(np.float32)
+            self.wo = np.zeros((self.dict.size, self.vector_size), dtype=np.float32)
+            self._init_table_negatives(counts=counts, update=update)
+        else:
+            logger.info("Updating dictionary...")
+            if self.dict.size == 0:
+                raise RuntimeError(
+                    "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
+                    "First build the vocabulary of your model with a corpus "
+                    "before doing an online update.")
+            prev_dict_size = self.dict.size
+            self.dict.read(sentences=sentences, min_count=self.min_count)
+            logger.info("Dictionary updated, dictionary size: %i, tokens read: %i",
+                        self.dict.size, self.dict.ntokens)
+            counts = [entry.count for entry in self.dict.words]
+            new_wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1),
+                                              (self.dict.size - prev_dict_size + self.bucket,
+                                               self.vector_size)).astype(np.float32)
+            new_wo = np.zeros((self.dict.size - prev_dict_size, self.vector_size), dtype=np.float32)
+            self.wi = np.append(self.wi, new_wi, axis=0)
+            self.wo = np.append(self.wo, new_wo, axis=0)
+            self._init_table_negatives(counts=counts, update=update)
 
     def train(self, sentences, queue_factor=2, report_delay=1.0):
         """Train model, used `sentences` as input.
