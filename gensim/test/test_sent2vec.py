@@ -22,6 +22,7 @@ class TestSent2VecModel(unittest.TestCase):
     def setUp(self):
         self.s2v_path = os.path.join('gensim/models', 'sent2vec')
 
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_training(self):
         model = Sent2Vec(size=10, min_count=1, neg=5, seed=42, workers=1)
         model.build_vocab(sentences)
@@ -50,6 +51,7 @@ class TestSent2VecModel(unittest.TestCase):
         model.save(tmpf)
         self.models_equal(model, Sent2Vec.load(tmpf))
 
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_online_learning(self):
         model = Sent2Vec(sentences, size=10, min_count=1, seed=42, neg=5, workers=1)
         self.assertTrue(model.dict.size, 12)
@@ -59,6 +61,7 @@ class TestSent2VecModel(unittest.TestCase):
         self.assertTrue(model.dict.words[model.dict.word2int[model.dict.find('graph')]].count, 4)
         self.assertTrue(model.dict.words[model.dict.word2int[model.dict.find('artificial')]].count, 3)
 
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_online_learning_after_save(self):
         tmpf = get_tmpfile('gensim_sent2vec.tst')
         model = Sent2Vec(sentences, size=10, min_count=0, seed=42, neg=5, workers=1)
