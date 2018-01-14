@@ -41,7 +41,7 @@ class TestSent2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(model.wi, model2.wi))
         most_common_word = max(model.dict.words, key=lambda item: item.count).word
         self.assertTrue(np.allclose(model.dict.word2int[model.dict.find(
-                most_common_word)],model2.dict.word2int[model2.dict.find(most_common_word)]))
+                most_common_word)], model2.dict.word2int[model2.dict.find(most_common_word)]))
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_persistence(self):
