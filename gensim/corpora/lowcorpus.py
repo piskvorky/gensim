@@ -49,6 +49,20 @@ class LowCorpus(IndexedCorpus):
         in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated
         by the blank character.
 
+        For example create file "lowcorpus_document.txt" and fill it with:
+
+        3
+        this is sparta
+        for real
+        lowcorpus example
+
+    Examples
+    --------
+    >>> from gensim.corpora import lowcorpus
+    >>> data = lowcorpus.LowCorpus("lowcorpus_document")
+    >>> print data.fname, data.id2word
+    {0: u'example', 1: u'for', 2: u'is', 3: u'lowcorpus', 4: u'real', 5: u'sparta', 6: u'this'}
+
     """
     def __init__(self, fname, id2word=None, line2words=split_on_space):
         """Initialize the corpus from a file.
@@ -57,11 +71,19 @@ class LowCorpus(IndexedCorpus):
         ----------
         fname : str
             File name.
-        id2word : str
+        id2word : str, optional
             If provided, it is a dictionary mapping between word_ids (integers) and words (strings).
             Otherwise, the mapping is constructed from the documents.
-        line2words : str
+        line2words : str, optional
             Function which converts lines into tokens. Defaults to simple splitting on spaces.
+
+        Attributes
+        ----------
+        fname : str
+        line2words : str
+        use_wordids : bool
+        id2word : dict
+        num_terms : int
 
         """
         IndexedCorpus.__init__(self, fname)
@@ -163,6 +185,13 @@ class LowCorpus(IndexedCorpus):
         This function is automatically called by `LowCorpus.serialize`; don't
         call it directly, call `serialize` instead.
 
+        Parameters
+        ----------
+        fname : str
+        corpus : list of (list of str)
+        id2word : bool, optional
+        metadata : bool, optional
+
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
@@ -191,6 +220,13 @@ class LowCorpus(IndexedCorpus):
 
     def docbyoffset(self, offset):
         """Return the document stored at file position `offset`.
+
+        Parameters
+        ----------
+
+        offset : int
+
+        
         """
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
