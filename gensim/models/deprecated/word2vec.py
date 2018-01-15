@@ -167,9 +167,9 @@ def load_old_word2vec(*args, **kwargs):
     }
     new_model = NewWord2Vec(**params)
     # set trainables attributes
-    new_model.trainables.vectors = old_model.wv.syn0
+    new_model.wv.vectors = old_model.wv.syn0
     if hasattr(old_model.wv, 'syn0norm'):
-        new_model.trainables.vectors_norm = old_model.wv.syn0norm
+        new_model.wv.vectors_norm = old_model.wv.syn0norm
     if hasattr(old_model, 'syn1'):
         new_model.trainables.syn1 = old_model.syn1
     if hasattr(old_model, 'syn1neg'):
@@ -177,8 +177,8 @@ def load_old_word2vec(*args, **kwargs):
     if hasattr(old_model, 'syn0_lockf'):
         new_model.trainables.vectors_lockf = old_model.syn0_lockf
     # set vocabulary attributes
-    new_model.vocabulary.vocab = old_model.wv.vocab
-    new_model.vocabulary.index2word = old_model.wv.index2word
+    new_model.wv.vocab = old_model.wv.vocab
+    new_model.wv.index2word = old_model.wv.index2word
     new_model.vocabulary.cum_table = old_model.cum_table
 
     new_model.train_count = old_model.train_count
@@ -188,7 +188,6 @@ def load_old_word2vec(*args, **kwargs):
     new_model.min_alpha_yet_reached = old_model.min_alpha_yet_reached
     new_model.model_trimmed_post_training = old_model.__dict__.get('model_trimmed_post_training', None)
 
-    new_model._set_keyedvectors()
     return new_model
 
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Author: Shiva Manne <s.manne@rare-technologies.com>
-# Copyright (C) 2017 RaRe Technologies s.r.o.
+# Copyright (C) 2018 RaRe Technologies s.r.o.
 
 """This module contains various general functions useful for any2vec models."""
 
@@ -169,7 +169,7 @@ def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8',
         vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
         if limit:
             vocab_size = min(vocab_size, limit)
-        result = cls()
+        result = cls(vector_size)
         result.vector_size = vector_size
         result.vectors = zeros((vocab_size, vector_size), dtype=datatype)
 

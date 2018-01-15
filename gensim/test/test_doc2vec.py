@@ -424,43 +424,32 @@ class TestDoc2VecModel(unittest.TestCase):
         model_file = 'doc2vec_old'
         model = doc2vec.Doc2Vec.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (3955, 100))
-        self.assertTrue(np.array_equal(model.trainables.vectors, model.wv.vectors))
         self.assertTrue(len(model.wv.vocab) == 3955)
-        self.assertEqual(model.wv.vocab, model.vocabulary.vocab)
         self.assertTrue(len(model.wv.index2word) == 3955)
-        self.assertEqual(model.wv.index2word, model.vocabulary.index2word)
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (3955, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (3955, ))
 
-        self.assertTrue(model.trainables.vectors_docs.shape == (300, 100))
-        self.assertTrue(np.array_equal(model.trainables.vectors_docs, model.docvecs.vectors_docs))
+        self.assertTrue(model.docvecs.vectors_docs.shape == (300, 100))
         self.assertTrue(model.trainables.vectors_docs_lockf.shape == (300, ))
-        self.assertTrue(model.vocabulary.max_rawint == 299)
-        self.assertEqual(model.vocabulary.max_rawint, model.docvecs.max_rawint)
-        self.assertTrue(model.vocabulary.count == 300)
-        self.assertEqual(model.vocabulary.count, model.docvecs.count)
+        self.assertTrue(model.docvecs.max_rawint == 299)
+        self.assertTrue(model.docvecs.count == 300)
 
         # Model stored in multiple files
         model_file = 'doc2vec_old_sep'
         model = doc2vec.Doc2Vec.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (3955, 100))
-        self.assertTrue(np.array_equal(model.trainables.vectors, model.wv.vectors))
         self.assertTrue(len(model.wv.vocab) == 3955)
-        self.assertEqual(model.wv.vocab, model.vocabulary.vocab)
         self.assertTrue(len(model.wv.index2word) == 3955)
-        self.assertEqual(model.wv.index2word, model.vocabulary.index2word)
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (3955, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (3955, ))
 
-        self.assertTrue(model.trainables.vectors_docs.shape == (300, 100))
-        self.assertTrue(np.array_equal(model.trainables.vectors_docs, model.docvecs.vectors_docs))
+        self.assertTrue(model.docvecs.vectors_docs.shape == (300, 100))
         self.assertTrue(model.trainables.vectors_docs_lockf.shape == (300, ))
-        self.assertTrue(model.vocabulary.max_rawint == 299)
-        self.assertEqual(model.vocabulary.max_rawint, model.docvecs.max_rawint)
-        self.assertTrue(model.vocabulary.count == 300)
-        self.assertEqual(model.vocabulary.count, model.docvecs.count)
+        self.assertTrue(model.docvecs.max_rawint == 299)
+        self.assertTrue(model.docvecs.count == 300)
+
 # endclass TestDoc2VecModel
 
 

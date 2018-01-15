@@ -53,7 +53,7 @@ from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.models.keyedvectors import Vocab, BaseKeyedVectors
-from gensim.models.word2vec import save_word2vec_format, load_word2vec_format
+from gensim.models.utils_any2vec import save_word2vec_format, load_word2vec_format
 from numpy import float32 as REAL
 
 try:
@@ -132,7 +132,7 @@ class PoincareModel(utils.SaveLoad):
 
         """
         self.train_data = train_data
-        self.kv = PoincareKeyedVectors()
+        self.kv = PoincareKeyedVectors(size)
         self.size = size
         self.train_alpha = alpha  # Learning rate for training
         self.burn_in_alpha = burn_in_alpha  # Learning rate for burn-in
@@ -763,8 +763,8 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
     """
 
-    def __init__(self):
-        super(PoincareKeyedVectors, self).__init__()
+    def __init__(self, vector_size):
+        super(PoincareKeyedVectors, self).__init__(vector_size)
         self.max_distance = 0
         self.index2word = []
 

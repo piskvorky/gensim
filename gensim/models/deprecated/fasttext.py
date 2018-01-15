@@ -70,11 +70,11 @@ def load_old_fasttext(*args, **kwargs):
     }
     new_model = NewFastText(**params)
     # set trainables attributes
-    new_model.trainables.vectors = old_model.wv.syn0
-    new_model.trainables.vectors_vocab = old_model.wv.syn0_vocab
-    new_model.trainables.vectors_ngrams = old_model.wv.syn0_ngrams
+    new_model.wv.vectors = old_model.wv.syn0
+    new_model.wv.vectors_vocab = old_model.wv.syn0_vocab
+    new_model.wv.vectors_ngrams = old_model.wv.syn0_ngrams
     if hasattr(old_model.wv, 'syn0norm'):
-        new_model.trainables.vectors_norm = old_model.wv.syn0norm
+        new_model.wv.vectors_norm = old_model.wv.syn0norm
     if hasattr(old_model, 'syn1'):
         new_model.trainables.syn1 = old_model.syn1
     if hasattr(old_model, 'syn1neg'):
@@ -92,13 +92,13 @@ def load_old_fasttext(*args, **kwargs):
         new_model.trainables.vectors_ngrams_norm = old_model.wv.syn0_ngrams_norm
 
     # set vocabulary attributes
-    new_model.vocabulary.vocab = old_model.wv.vocab
-    new_model.vocabulary.index2word = old_model.wv.index2word
+    new_model.wv.vocab = old_model.wv.vocab
+    new_model.wv.index2word = old_model.wv.index2word
     new_model.vocabulary.cum_table = old_model.cum_table
 
-    new_model.vocabulary.ngrams_word = old_model.wv.ngrams_word
-    new_model.trainables.ngrams = old_model.wv.ngrams
-    new_model.trainables.hash2index = old_model.wv.hash2index
+    new_model.wv.ngrams_word = old_model.wv.ngrams_word
+    new_model.wv.ngrams = old_model.wv.ngrams
+    new_model.wv.hash2index = old_model.wv.hash2index
 
     new_model.train_count = old_model.train_count
     new_model.corpus_count = old_model.corpus_count
@@ -109,7 +109,6 @@ def load_old_fasttext(*args, **kwargs):
 
     new_model.trainables.num_ngram_vectors = old_model.num_ngram_vectors
 
-    new_model._set_keyedvectors()
     return new_model
 
 

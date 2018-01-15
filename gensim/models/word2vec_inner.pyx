@@ -301,11 +301,11 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     cdef int _compute_loss = (1 if compute_loss == True else 0)
     cdef REAL_t _running_training_loss = model.running_training_loss
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
-    cdef int size = model.trainables.vector_size
+    cdef int size = model.wv.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -343,7 +343,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     work = <REAL_t *>np.PyArray_DATA(_work)
 
     # prepare C structures so we can go "full C" and release the Python GIL
-    vlookup = model.vocabulary.vocab
+    vlookup = model.wv.vocab
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
@@ -409,11 +409,11 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     cdef int _compute_loss = (1 if compute_loss == True else 0)
     cdef REAL_t _running_training_loss = model.running_training_loss
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
-    cdef int size = model.trainables.vector_size
+    cdef int size = model.wv.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -452,7 +452,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
     # prepare C structures so we can go "full C" and release the Python GIL
-    vlookup = model.vocabulary.vocab
+    vlookup = model.wv.vocab
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
@@ -511,7 +511,7 @@ def score_sentence_sg(model, sentence, _work):
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *work
-    cdef int size = model.vector_size
+    cdef int size = model.wv.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -592,7 +592,7 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *work
     cdef REAL_t *neu1
-    cdef int size = model.vector_size
+    cdef int size = model.wv.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]

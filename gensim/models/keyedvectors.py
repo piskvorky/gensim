@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2016 Radim Rehurek <me@radimrehurek.com>
+# Author: Shiva Manne <manneshiva@gmail.com>
+# Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
@@ -107,10 +108,10 @@ class Vocab(object):
 
 class BaseKeyedVectors(utils.SaveLoad):
 
-    def __init__(self):
+    def __init__(self, vector_size):
         self.vectors = []
         self.vocab = {}
-        self.vector_size = None
+        self.vector_size = vector_size
         self.index2entity = []
 
     def save(self, fname_or_handle, **kwargs):
@@ -192,8 +193,8 @@ class BaseKeyedVectors(utils.SaveLoad):
 class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     """Class containing common methods for operations over word vectors.
     """
-    def __init__(self):
-        super(WordEmbeddingsKeyedVectors, self).__init__()
+    def __init__(self, vector_size):
+        super(WordEmbeddingsKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_norm = None
         self.index2word = []
 
@@ -1036,13 +1037,14 @@ KeyedVectors = Word2VecKeyedVectors  # alias for backward compatibility
 
 
 class Doc2VecKeyedVectors(BaseKeyedVectors):
-    def __init__(self):
+    def __init__(self, vector_size, mapfile_path):
         self.doctags = {}  # string -> Doctag (only filled if necessary)
         self.max_rawint = -1  # highest rawint-indexed doctag
         self.offset2doctag = []  # int offset-past-(max_rawint+1) -> String (only filled if necessary)
         self.count = 0
         self.vectors_docs = []
-        self.mapfile_path = None
+        self.mapfile_path = mapfile_path
+        self.vector_size = vector_size
 
     @property
     def index2entity(self):
@@ -1414,8 +1416,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
     involved in training such as most_similar()
     """
 
-    def __init__(self):
-        super(FastTextKeyedVectors, self).__init__()
+    def __init__(self, vector_size, min_n, max_n):
+        super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_vocab = None
         self.vectors_vocab_norm = None
         self.vectors_ngrams = None
@@ -1423,8 +1425,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.ngrams = {}
         self.hash2index = {}
         self.ngrams_word = {}
-        self.min_n = 0
-        self.max_n = 0
+        self.min_n = min_n
+        self.max_n = max_n
 
     @property
     @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab instead")
@@ -1445,10 +1447,6 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
     @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_ngrams_norm instead")
     def syn0_ngrams_norm(self):
         return self.vectors_ngrams_norm
-
-    @property
-    def num_ngram_vectors(self):
-        return self.trainables.num_ngram_vectors
 
     def __contains__(self, word):
         """

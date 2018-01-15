@@ -299,12 +299,9 @@ class TestWord2VecModel(unittest.TestCase):
         model_file = 'word2vec_old'
         model = word2vec.Word2Vec.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (12, 100))
-        self.assertTrue(np.array_equal(model.trainables.vectors, model.wv.vectors))
         self.assertTrue(len(model.wv.vocab) == 12)
-        self.assertEqual(model.wv.vocab, model.vocabulary.vocab)
         self.assertTrue(len(model.wv.index2word) == 12)
-        self.assertEqual(model.wv.index2word, model.vocabulary.index2word)
-        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.wv.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
 
@@ -312,12 +309,9 @@ class TestWord2VecModel(unittest.TestCase):
         model_file = 'word2vec_old_sep'
         model = word2vec.Word2Vec.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (12, 100))
-        self.assertTrue(np.array_equal(model.trainables.vectors, model.wv.vectors))
         self.assertTrue(len(model.wv.vocab) == 12)
-        self.assertEqual(model.wv.vocab, model.vocabulary.vocab)
         self.assertTrue(len(model.wv.index2word) == 12)
-        self.assertEqual(model.wv.index2word, model.vocabulary.index2word)
-        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.wv.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
 
@@ -398,8 +392,6 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
         testvocab = get_tmpfile('gensim_word2vec.vocab')
-        # from IPython.core.debugger import set_trace
-        # set_trace()
         model.wv.save_word2vec_format(tmpf, testvocab, binary=True)
         binary_model_with_vocab_kv = Word2VecKeyedVectors.load_word2vec_format(tmpf, testvocab, binary=True)
         self.assertEqual(model.wv.vocab['human'].count, binary_model_with_vocab_kv.vocab['human'].count)

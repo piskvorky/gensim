@@ -103,9 +103,9 @@ def load_old_doc2vec(*args, **kwargs):
     }
     new_model = NewDoc2Vec(**params)
     # set word2vec trainables attributes
-    new_model.trainables.vectors = old_model.wv.syn0
+    new_model.wv.vectors = old_model.wv.syn0
     if hasattr(old_model.wv, 'syn0norm'):
-        new_model.trainables.vectors_norm = old_model.wv.syn0norm
+        new_model.docvecs.vectors_norm = old_model.wv.syn0norm
     if hasattr(old_model, 'syn1'):
         new_model.trainables.syn1 = old_model.syn1
     if hasattr(old_model, 'syn1neg'):
@@ -114,24 +114,24 @@ def load_old_doc2vec(*args, **kwargs):
         new_model.trainables.vectors_lockf = old_model.syn0_lockf
 
     # set doc2vec trainables attributes
-    new_model.trainables.vectors_docs = old_model.docvecs.doctag_syn0
+    new_model.docvecs.vectors_docs = old_model.docvecs.doctag_syn0
     if hasattr(old_model.docvecs, 'doctag_syn0norm'):
-        new_model.trainables.vectors_docs_norm = old_model.docvecs.doctag_syn0norm
+        new_model.docvecs.vectors_docs_norm = old_model.docvecs.doctag_syn0norm
     if hasattr(old_model.docvecs, 'doctag_syn0_lockf'):
         new_model.trainables.vectors_docs_lockf = old_model.docvecs.doctag_syn0_lockf
     if hasattr(old_model.docvecs, 'mapfile_path'):
-        new_model.trainables.mapfile_path = old_model.docvecs.mapfile_path
+        new_model.docvecs.mapfile_path = old_model.docvecs.mapfile_path
 
     # set word2vec vocabulary attributes
-    new_model.vocabulary.vocab = old_model.wv.vocab
-    new_model.vocabulary.index2word = old_model.wv.index2word
+    new_model.wv.vocab = old_model.wv.vocab
+    new_model.wv.index2word = old_model.wv.index2word
     new_model.vocabulary.cum_table = old_model.cum_table
 
     # set doc2vec vocabulary attributes
-    new_model.vocabulary.doctags = old_model.docvecs.doctags
-    new_model.vocabulary.max_rawint = old_model.docvecs.max_rawint
-    new_model.vocabulary.offset2doctag = old_model.docvecs.offset2doctag
-    new_model.vocabulary.count = old_model.docvecs.count
+    new_model.docvecs.doctags = old_model.docvecs.doctags
+    new_model.docvecs.max_rawint = old_model.docvecs.max_rawint
+    new_model.docvecs.offset2doctag = old_model.docvecs.offset2doctag
+    new_model.docvecs.count = old_model.docvecs.count
 
     new_model.train_count = old_model.train_count
     new_model.corpus_count = old_model.corpus_count
@@ -140,7 +140,6 @@ def load_old_doc2vec(*args, **kwargs):
     new_model.min_alpha_yet_reached = old_model.min_alpha_yet_reached
     new_model.model_trimmed_post_training = old_model.model_trimmed_post_training
 
-    new_model._set_keyedvectors()
     return new_model
 
 

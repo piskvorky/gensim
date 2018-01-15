@@ -268,10 +268,10 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.trainables.vectors
+       word_vectors = model.wv.vectors
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
-       doctag_vectors = model.trainables.vectors_docs
+       doctag_vectors = model.docvecs.vectors_docs
     _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
        word_locks = model.trainables.vectors_lockf
@@ -406,10 +406,10 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-        word_vectors = model.trainables.vectors
+        word_vectors = model.wv.vectors
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
-        doctag_vectors = model.trainables.vectors_docs
+        doctag_vectors = model.docvecs.vectors_docs
     _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
         word_locks = model.trainables.vectors_lockf
@@ -536,7 +536,7 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
     cdef REAL_t *_neu1
     cdef REAL_t _alpha = alpha
     cdef int layer1_size = model.trainables.layer1_size
-    cdef int vector_size = model.trainables.vector_size
+    cdef int vector_size = model.docvecs.vector_size
 
     cdef int codelens[MAX_DOCUMENT_LEN]
     cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
@@ -568,10 +568,10 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.trainables.vectors
+       word_vectors = model.wv.vectors
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
-       doctag_vectors = model.trainables.vectors_docs
+       doctag_vectors = model.docvecs.vectors_docs
     _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
        word_locks = model.trainables.vectors_lockf

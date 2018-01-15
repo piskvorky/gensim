@@ -249,16 +249,16 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
 
-    cdef REAL_t *syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_vocab))
+    cdef REAL_t *syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab))
     cdef REAL_t *word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_vocab_lockf))
-    cdef REAL_t *syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_ngrams))
+    cdef REAL_t *syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams))
     cdef REAL_t *word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_ngrams_lockf))
 
     cdef REAL_t *work
     cdef REAL_t *l1
     
     cdef REAL_t _alpha = alpha
-    cdef int size = model.trainables.vector_size
+    cdef int size = model.wv.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -304,7 +304,7 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     l1 = <REAL_t *>np.PyArray_DATA(_l1)
 
     # prepare C structures so we can go "full C" and release the Python GIL
-    vlookup = model.vocabulary.vocab
+    vlookup = model.wv.vocab
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
@@ -317,7 +317,7 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                 continue
             indexes[effective_words] = word.index
 
-            subwords = [model.trainables.ngrams[subword_i] for subword_i in model.vocabulary.ngrams_word[model.vocabulary.index2word[word.index]]]
+            subwords = [model.wv.ngrams[subword_i] for subword_i in model.wv.ngrams_word[model.wv.index2word[word.index]]]
             word_subwords = np.array([word.index] + subwords, dtype=np.uint32)
             subwords_idx_len[effective_words] = <int>(len(subwords) + 1)
             subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)
@@ -380,14 +380,14 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     cdef int sample = (model.vocabulary.sample != 0)
     cdef int cbow_mean = model.cbow_mean
 
-    cdef REAL_t *syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_vocab))
+    cdef REAL_t *syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab))
     cdef REAL_t *word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_vocab_lockf))
-    cdef REAL_t *syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_ngrams))
+    cdef REAL_t *syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams))
     cdef REAL_t *word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_ngrams_lockf))
 
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
-    cdef int size = model.trainables.vector_size
+    cdef int size = model.wv.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -433,7 +433,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
     # prepare C structures so we can go "full C" and release the Python GIL
-    vlookup = model.vocabulary.vocab
+    vlookup = model.wv.vocab
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
@@ -446,7 +446,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
                 continue
             indexes[effective_words] = word.index
 
-            subwords = [model.trainables.ngrams[subword_i] for subword_i in model.vocabulary.ngrams_word[model.vocabulary.index2word[word.index]]]
+            subwords = [model.wv.ngrams[subword_i] for subword_i in model.wv.ngrams_word[model.wv.index2word[word.index]]]
             word_subwords = np.array(subwords, dtype=np.uint32)
             subwords_idx_len[effective_words] = <int>len(subwords)
             subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)

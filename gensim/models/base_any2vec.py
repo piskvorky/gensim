@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Author: Shiva Manne <manneshiva@gmail.com>
+# Copyright (C) 2018 RaRe Technologies s.r.o.
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 from gensim import utils
 import logging
@@ -224,7 +228,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             progress_queue, job_queue, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
             report_delay=report_delay)
 
-        self._set_keyedvectors()
+        # self._set_keyedvectors()
 
         return trained_word_count, raw_word_count, job_tally
 
@@ -283,9 +287,6 @@ class BaseAny2VecModel(utils.SaveLoad):
 
 class BaseVocabBuilder(utils.SaveLoad):
     """Class for managing vocabulary of a model. Takes care of building, pruning and updating vocabulary."""
-    def __init__(self):
-        self.vocab = {}
-        self.index2word = []
 
     def scan_vocab(self, data_iterable, progress_per=10000, **kwargs):
         """Do an initial scan of all words appearing in data_iterable.
@@ -300,9 +301,7 @@ class BaseVocabBuilder(utils.SaveLoad):
 class BaseModelTrainables(utils.SaveLoad):
     """Class for storing and initializing/updating the trainable weights of a model. Also includes
     tables required for training weights. """
-    def __init__(self, vector_size=None, seed=1):
-        self.vectors = []
-        self.vector_size = int(vector_size)
+    def __init__(self, seed=1):
         self.seed = seed
 
     def prepare_weights(self, update=False, vocabulary=None):
@@ -319,7 +318,7 @@ class BaseModelTrainables(utils.SaveLoad):
         """
         raise NotImplementedError()
 
-    def seeded_vector(self, seed_string):
+    def seeded_vector(self, seed_string, vector_size):
         """Create one 'random' vector (but deterministic by seed_string)"""
         raise NotImplementedError()
 
@@ -477,10 +476,9 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         total_words, corpus_count = self.vocabulary.scan_vocab(sentences, progress_per=progress_per, **kwargs)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
-            len(self.trainables.vectors), self.hs, self.negative, update=update, **kwargs)
+            self.hs, self.negative, self.wv, update=update, **kwargs)
         report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
-        self.trainables.prepare_weights(self.hs, self.negative, update=update, vocabulary=self.vocabulary)
-        self._set_keyedvectors()
+        self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
         """
@@ -528,16 +526,15 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
 
         # trim by min_count & precalculate downsampling
         report_values = self.vocabulary.prepare_vocab(
-            len(self.trainables.vectors), self.hs, self.negative, keep_raw_vocab=keep_raw_vocab,
+            self.hs, self.negative, self.wv, keep_raw_vocab=keep_raw_vocab,
             trim_rule=trim_rule, update=update)
         report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
         self.trainables.prepare_weights(
-            self.hs, self.negative, update=update, vocabulary=self.vocabulary)  # build tables & arrays
-        self._set_keyedvectors()
+            self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)  # build tables & arrays
 
     def estimate_memory(self, vocab_size=None, report=None):
         """Estimate required memory for a model using current settings and provided vocabulary size."""
-        vocab_size = vocab_size or len(self.vocabulary.vocab)
+        vocab_size = vocab_size or len(self.wv.vocab)
         report = report or {}
         report['vocab'] = vocab_size * (700 if self.hs else 500)
         report['vectors'] = vocab_size * self.vector_size * dtype(REAL).itemsize
@@ -590,14 +587,12 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
         if self.alpha > self.min_alpha_yet_reached:
             logger.warning("Effective 'alpha' higher than previous training cycles")
-        if len(self.wv.vocab) > 0:
-            self._set_params_from_kv()
         if self.model_trimmed_post_training:
             raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
 
-        if not self.vocabulary.vocab:  # should be set by `build_vocab`
+        if not self.wv.vocab:  # should be set by `build_vocab`
             raise RuntimeError("you must first build vocabulary before training the model")
-        if not len(self.trainables.vectors):
+        if not len(self.wv.vectors):
             raise RuntimeError("you must initialize vectors before training the model")
 
         if not hasattr(self, 'corpus_count'):
@@ -625,35 +620,18 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     @classmethod
     def load(cls, *args, **kwargs):
         model = super(BaseWordEmbedddingsModel, cls).load(*args, **kwargs)
-        if model.negative and hasattr(model.trainables, 'index2word'):
-            model.trainables.make_cum_table(vocabulary=model.vocabulary)  # rebuild cum_table from vocabulary
+        if model.negative and hasattr(model.wv, 'index2word'):
+            model.vocabulary.make_cum_table(model.wv)  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
-        if not hasattr(model.trainables, 'vectors_lockf') and hasattr(model.trainables, 'vectors'):
-            model.trainables.vectors_lockf = ones(len(model.trainables.vectors), dtype=REAL)
+        if not hasattr(model.trainables, 'vectors_lockf') and hasattr(model.wv, 'vectors'):
+            model.trainables.vectors_lockf = ones(len(model.wv.vectors), dtype=REAL)
         if not hasattr(model, 'random'):
             model.random = random.RandomState(model.trainables.seed)
         if not hasattr(model, 'train_count'):
             model.train_count = 0
             model.total_train_time = 0
         return model
-
-    def _get_keyedvector_instance(self):
-        raise NotImplementedError()
-
-    def _set_params_from_kv(self):
-        self.trainables.vectors = getattr(self.wv, 'vectors', [])
-        self.trainables.vectors_norm = getattr(self.wv, 'vectors_norm', None)
-        self.trainables.vector_size = getattr(self.wv, 'vector_size', None)
-        self.vocabulary.vocab = getattr(self.wv, 'vocab', {})
-        self.vocabulary.index2word = getattr(self.wv, 'index2word', [])
-
-    def _set_keyedvectors(self):
-        self.wv.vectors = getattr(self.trainables, 'vectors', [])
-        self.wv.vectors_norm = getattr(self.trainables, 'vectors_norm', None)
-        self.wv.vector_size = getattr(self.trainables, 'vector_size', None)
-        self.wv.vocab = getattr(self.vocabulary, 'vocab', {})
-        self.wv.index2word = getattr(self.vocabulary, 'index2word', [])
 
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
                       raw_word_count, total_words, trained_word_count, elapsed):

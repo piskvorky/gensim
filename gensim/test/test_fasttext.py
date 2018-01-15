@@ -77,7 +77,7 @@ class TestFastTextModel(unittest.TestCase):
 
     def models_equal(self, model, model2):
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
-        self.assertEqual(model.trainables.num_ngram_vectors, model2.trainables.num_ngram_vectors)
+        self.assertEqual(model.wv.num_ngram_vectors, model2.wv.num_ngram_vectors)
         self.assertTrue(np.allclose(model.wv.vectors_vocab, model2.wv.vectors_vocab))
         self.assertTrue(np.allclose(model.wv.vectors_ngrams, model2.wv.vectors_ngrams))
         self.assertTrue(np.allclose(model.wv.vectors, model2.wv.vectors))
@@ -121,7 +121,7 @@ class TestFastTextModel(unittest.TestCase):
     def model_sanity(self, model):
         self.assertEqual(model.wv.vectors.shape, (len(model.wv.vocab), model.vector_size))
         self.assertEqual(model.wv.vectors_vocab.shape, (len(model.wv.vocab), model.vector_size))
-        self.assertEqual(model.wv.vectors_ngrams.shape, (model.trainables.num_ngram_vectors, model.vector_size))
+        self.assertEqual(model.wv.vectors_ngrams.shape, (model.wv.num_ngram_vectors, model.vector_size))
 
     def test_load_fasttext_format(self):
         try:
@@ -131,7 +131,7 @@ class TestFastTextModel(unittest.TestCase):
         vocab_size, model_size = 1762, 10
         self.assertEqual(model.wv.vectors.shape, (vocab_size, model_size))
         self.assertEqual(len(model.wv.vocab), vocab_size, model_size)
-        self.assertEqual(model.wv.vectors_ngrams.shape, (model.trainables.num_ngram_vectors, model_size))
+        self.assertEqual(model.wv.vectors_ngrams.shape, (model.wv.num_ngram_vectors, model_size))
 
         expected_vec = [
             -0.57144,
@@ -172,7 +172,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.wv.max_n, 6)
         self.assertEqual(model.wv.min_n, 3)
         self.assertEqual(model.wv.vectors.shape, (len(model.wv.vocab), model.vector_size))
-        self.assertEqual(model.wv.vectors_ngrams.shape, (model.trainables.num_ngram_vectors, model.vector_size))
+        self.assertEqual(model.wv.vectors_ngrams.shape, (model.wv.num_ngram_vectors, model.vector_size))
 
     def test_load_fasttext_new_format(self):
         try:
@@ -182,7 +182,7 @@ class TestFastTextModel(unittest.TestCase):
         vocab_size, model_size = 1763, 10
         self.assertEqual(new_model.wv.vectors.shape, (vocab_size, model_size))
         self.assertEqual(len(new_model.wv.vocab), vocab_size, model_size)
-        self.assertEqual(new_model.wv.vectors_ngrams.shape, (new_model.trainables.num_ngram_vectors, model_size))
+        self.assertEqual(new_model.wv.vectors_ngrams.shape, (new_model.wv.num_ngram_vectors, model_size))
 
         expected_vec = [
             -0.025627,
@@ -224,7 +224,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(new_model.wv.min_n, 3)
         self.assertEqual(new_model.wv.vectors.shape, (len(new_model.wv.vocab), new_model.vector_size))
         self.assertEqual(
-            new_model.wv.vectors_ngrams.shape, (new_model.trainables.num_ngram_vectors, new_model.vector_size))
+            new_model.wv.vectors_ngrams.shape, (new_model.wv.num_ngram_vectors, new_model.vector_size))
 
     def test_load_model_supervised(self):
         with self.assertRaises(NotImplementedError):
@@ -523,7 +523,7 @@ class TestFastTextModel(unittest.TestCase):
         model = FT_gensim(size=10, min_count=1, seed=42)
         model.build_vocab(sentences)
         original_vectors_vocab = np.copy(model.wv.vectors_vocab)
-        model.trainables.get_vocab_word_vecs(vocabulary=model.vocabulary)
+        model.trainables.get_vocab_word_vecs(model.wv, vocabulary=model.vocabulary)
         self.assertTrue(np.all(np.equal(model.wv.vectors_vocab, original_vectors_vocab)))
 
     def test_persistence_word2vec_format(self):
@@ -548,21 +548,15 @@ class TestFastTextModel(unittest.TestCase):
         model_file = 'fasttext_old'
         model = FT_gensim.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (12, 100))
-        self.assertTrue(np.array_equal(model.trainables.vectors, model.wv.vectors))
         self.assertTrue(len(model.wv.vocab) == 12)
-        self.assertEqual(model.wv.vocab, model.vocabulary.vocab)
         self.assertTrue(len(model.wv.index2word) == 12)
-        self.assertEqual(model.wv.index2word, model.vocabulary.index2word)
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
 
-        self.assertEqual(len(model.vocabulary.ngrams_word), 12)
-        self.assertEqual(model.vocabulary.ngrams_word, model.wv.ngrams_word)
-        self.assertEqual(len(model.trainables.ngrams), 202)
-        self.assertEqual(model.trainables.ngrams, model.wv.ngrams)
-        self.assertEqual(len(model.trainables.hash2index), 202)
-        self.assertEqual(model.trainables.hash2index, model.wv.hash2index)
+        self.assertEqual(len(model.wv.ngrams_word), 12)
+        self.assertEqual(len(model.wv.ngrams), 202)
+        self.assertEqual(len(model.wv.hash2index), 202)
         self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
         self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
 
@@ -570,21 +564,15 @@ class TestFastTextModel(unittest.TestCase):
         model_file = 'fasttext_old_sep'
         model = FT_gensim.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (12, 100))
-        self.assertTrue(np.array_equal(model.trainables.vectors, model.wv.vectors))
         self.assertTrue(len(model.wv.vocab) == 12)
-        self.assertEqual(model.wv.vocab, model.vocabulary.vocab)
         self.assertTrue(len(model.wv.index2word) == 12)
-        self.assertEqual(model.wv.index2word, model.vocabulary.index2word)
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
 
-        self.assertEqual(len(model.vocabulary.ngrams_word), 12)
-        self.assertEqual(model.vocabulary.ngrams_word, model.wv.ngrams_word)
-        self.assertEqual(len(model.trainables.ngrams), 202)
-        self.assertEqual(model.trainables.ngrams, model.wv.ngrams)
-        self.assertEqual(len(model.trainables.hash2index), 202)
-        self.assertEqual(model.trainables.hash2index, model.wv.hash2index)
+        self.assertEqual(len(model.wv.ngrams_word), 12)
+        self.assertEqual(len(model.wv.ngrams), 202)
+        self.assertEqual(len(model.wv.hash2index), 202)
         self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
         self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
 
