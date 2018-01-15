@@ -90,7 +90,8 @@ class TestSegmentWiki(unittest.TestCase):
         segment_and_write_all_articles(self.fname, tmpf)
 
         # Get the first line from the text file we created.
-        first = next(smart_open(tmpf))
+        with open(tmpf) as f:
+            first = next(f)
 
         # decode JSON line into a Python dictionary object
         article = json.loads(first)
