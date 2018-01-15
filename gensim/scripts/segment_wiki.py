@@ -207,6 +207,7 @@ def segment(page_xml):
     if text is not None:
         section_contents = re.split(top_level_heading_regex, text)
         section_headings = [lead_section_heading] + re.findall(top_level_heading_regex_capture, text)
+        section_headings = [heading.strip() for heading in section_headings]
         assert len(section_contents) == len(section_headings)
     else:
         section_contents = []
