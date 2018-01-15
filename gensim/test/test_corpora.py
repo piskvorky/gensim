@@ -266,10 +266,35 @@ class TestMmCorpusNoIndex(CorpusTestCase):
         self.assertRaises(RuntimeError, lambda: self.corpus[3])
 
 
-class TestMmCorpusNoIndexCompressed(CorpusTestCase):
+class TestMmCorpusNoIndexGzip(CorpusTestCase):
     def setUp(self):
         self.corpus_class = mmcorpus.MmCorpus
         self.corpus = self.corpus_class(datapath('test_mmcorpus_no_index.mm.gz'))
+        self.file_extension = '.mm'
+
+    def test_serialize_compressed(self):
+        # MmCorpus needs file write with seek => doesn't support compressed output (only input)
+        pass
+
+    def test_load(self):
+        self.assertEqual(self.corpus.num_docs, 9)
+        self.assertEqual(self.corpus.num_terms, 12)
+        self.assertEqual(self.corpus.num_nnz, 28)
+
+        # confirm we can iterate and that document values match expected for first three docs
+        it = iter(self.corpus)
+        self.assertEqual(next(it), [(0, 1.0), (1, 1.0), (2, 1.0)])
+        self.assertEqual(next(it), [])
+        self.assertEqual(next(it), [(2, 0.42371910849), (5, 0.6625174), (7, 1.0), (8, 1.0)])
+
+        # confirm that accessing document by index fails
+        self.assertRaises(RuntimeError, lambda: self.corpus[3])
+
+
+class TestMmCorpusNoIndexBzip(CorpusTestCase):
+    def setUp(self):
+        self.corpus_class = mmcorpus.MmCorpus
+        self.corpus = self.corpus_class(datapath('test_mmcorpus_no_index.mm.bz2'))
         self.file_extension = '.mm'
 
     def test_serialize_compressed(self):
