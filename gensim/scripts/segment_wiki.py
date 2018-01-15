@@ -117,15 +117,18 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
     try:
         article_stream = segment_all_articles(file_path, min_article_character, workers=workers)
         for idx, (article_title, article_sections, article_interlinks) in enumerate(article_stream):
-            output_data = {"title": article_title,
-                           "section_titles": [],
-                           "section_texts": [],
-                           "section_interlinks": article_interlinks
-                           }
+
+            output_data = {
+                "title": article_title,
+                "section_titles": [],
+                "section_texts": [],
+                "interlinks": article_interlinks
+            }
 
             for section_heading, section_content in article_sections:
                 output_data["section_titles"].append(section_heading)
                 output_data["section_texts"].append(section_content)
+
             if (idx + 1) % 100000 == 0:
                 logger.info("processed #%d articles (at %r now)", idx + 1, article_title)
             outfile.write((json.dumps(output_data) + "\n").encode('utf-8'))
