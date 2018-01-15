@@ -196,7 +196,7 @@ def segment(page_xml):
     lead_section_heading = "Introduction"
     top_level_heading_regex = r"\n==[^=].*[^=]==\n"
     top_level_heading_regex_capture = r"\n==([^=].*[^=])==\n"
-    interlink_regex_capture = r"\[\[(.*?)\]\]"
+    interlink_regex_capture = r"\[{1,2}(.*?)\]{1,2}"
 
     title = elem.find(title_path).text
     text = elem.find(text_path).text
