@@ -339,15 +339,3 @@ if __name__ == "__main__":
     )
 
     logger.info("finished running %s", sys.argv[0])
-
-    print("-----Now checking output--------\n\n\n")
-    for line in smart_open(args.output):
-        # decode each JSON line into a Python dictionary object
-        article = json.loads(line)
-
-        # each article has a "title" and a list of "section_titles" and "section_texts".
-        print("Article title: %s" % article['title'])
-        print("Article interlinks: %s" % article['section_interlinks'])
-        for section_title, section_text in zip(article['section_titles'], article['section_texts']):
-            print("Section title: %s" % section_title)
-            print("Section text: %s" % section_text)
