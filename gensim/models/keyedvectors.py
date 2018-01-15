@@ -1008,14 +1008,14 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
     def get_keras_embedding(self, train_embeddings=False):
         """Return a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         train_embeddings : bool
             If False, the weights are frozen and stopped from being updated.
             If True, the weights can/will be further trained/updated.
 
-        Return
-        ------
+        Returns
+        -------
         :obj: `keras.layers.Embedding`
             Embedding layer
 
@@ -1033,6 +1033,8 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
             weights=[weights], trainable=train_embeddings
         )
         return layer
+
+
 KeyedVectors = Word2VecKeyedVectors  # alias for backward compatibility
 
 

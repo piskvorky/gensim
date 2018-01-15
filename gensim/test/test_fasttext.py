@@ -356,7 +356,7 @@ class TestFastTextModel(unittest.TestCase):
             u'during',
             u'comes']
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-        self.assertGreaterEqual(overlap_count, 3)
+        self.assertGreaterEqual(overlap_count, 2)
 
     def test_sg_hs_training(self):
 
@@ -385,7 +385,7 @@ class TestFastTextModel(unittest.TestCase):
             u'north',
             u'flight']
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-        self.assertGreaterEqual(overlap_count, 3)
+        self.assertGreaterEqual(overlap_count, 2)
 
     def test_cbow_neg_training(self):
 
@@ -414,7 +414,7 @@ class TestFastTextModel(unittest.TestCase):
             u'overnight',
             u'running']
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-        self.assertGreaterEqual(overlap_count, 3)
+        self.assertGreaterEqual(overlap_count, 2)
 
     def test_sg_neg_training(self):
 
@@ -443,7 +443,7 @@ class TestFastTextModel(unittest.TestCase):
             u'singles',
             u'death']
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-        self.assertGreaterEqual(overlap_count, 3)
+        self.assertGreaterEqual(overlap_count, 2)
 
     def test_online_learning(self):
         model_hs = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=1, negative=0)
@@ -523,7 +523,7 @@ class TestFastTextModel(unittest.TestCase):
         model = FT_gensim(size=10, min_count=1, seed=42)
         model.build_vocab(sentences)
         original_vectors_vocab = np.copy(model.wv.vectors_vocab)
-        model.trainables.get_vocab_word_vecs(model.wv, vocabulary=model.vocabulary)
+        model.trainables.get_vocab_word_vecs(model.wv)
         self.assertTrue(np.all(np.equal(model.wv.vectors_vocab, original_vectors_vocab)))
 
     def test_persistence_word2vec_format(self):
