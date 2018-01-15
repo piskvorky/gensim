@@ -349,7 +349,7 @@ class FastText(BaseWordEmbedddingsModel):
             sentences, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
-        self.trainables.get_vocab_word_vecs(self.wv, vocabulary=self.vocabulary)
+        self.trainables.get_vocab_word_vecs(self.wv)
 
     def init_sims(self, replace=False):
         """
@@ -509,7 +509,7 @@ class FastText(BaseWordEmbedddingsModel):
                 self.wv.vectors_ngrams.shape, (self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size)
             )
 
-        self.trainables.init_ngrams_post_load(self.file_name, self.wv, vocabulary=self.vocabulary)
+        self.trainables.init_ngrams_post_load(self.file_name, self.wv)
         self._clear_post_train()
         # self._set_keyedvectors()
 
@@ -637,7 +637,7 @@ class FastTextTrainables(Word2VecTrainables):
 
             wv.vectors_ngrams = wv.vectors_ngrams.take(ngram_indices, axis=0)
             self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
-            self.reset_ngrams_weights(wv, vocabulary=vocabulary)
+            self.reset_ngrams_weights(wv)
         else:
             new_ngrams = []
             for w, ngrams in iteritems(wv.ngrams_word):
@@ -678,7 +678,7 @@ class FastTextTrainables(Word2VecTrainables):
             wv.vectors_ngrams = vstack([wv.vectors_ngrams, new_ngram_rows])
             self.vectors_ngrams_lockf = vstack([self.vectors_ngrams_lockf, new_ngram_lockf_rows])
 
-    def reset_ngrams_weights(self, wv, vocabulary=None):
+    def reset_ngrams_weights(self, wv):
         """Reset all projection weights to an initial (untrained) state,
         but keep the existing vocabulary and their ngrams.
 
@@ -694,7 +694,7 @@ class FastTextTrainables(Word2VecTrainables):
                 -1.0 / wv.vector_size, 1.0 / wv.vector_size, wv.vector_size
             ).astype(REAL)
 
-    def get_vocab_word_vecs(self, wv, vocabulary=None):
+    def get_vocab_word_vecs(self, wv):
         """Calculate vectors for words in vocabulary and stores them in `vectors`."""
         for w, v in wv.vocab.items():
             word_vec = np.copy(wv.vectors_vocab[v.index])
@@ -705,7 +705,7 @@ class FastTextTrainables(Word2VecTrainables):
             word_vec /= (len(ngrams) + 1)
             wv.vectors[v.index] = word_vec
 
-    def init_ngrams_post_load(self, file_name, wv, vocabulary=None):
+    def init_ngrams_post_load(self, file_name, wv):
         """
         Computes ngrams of all words present in vocabulary and stores vectors for only those ngrams.
         Vectors for other ngrams are initialized with a random uniform distribution in FastText. These

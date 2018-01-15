@@ -529,7 +529,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
                     if word in self.wv.vocab:
                         overlap_count += 1
                         self.wv.vectors[self.wv.vocab[word].index] = weights
-                        self.trainables.vectors_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
+                        self.trainables.vectors_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0=no changes
             else:
                 for line_no, line in enumerate(fin):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
@@ -539,7 +539,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
                     if word in self.wv.vocab:
                         overlap_count += 1
                         self.wv.vectors[self.wv.vocab[word].index] = weights
-                        self.trainables.vectors_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
+                        self.trainables.vectors_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0=no changes
         logger.info("merged %d vectors into %s matrix from %s", overlap_count, self.wv.vectors.shape, fname)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.__getitem__() instead")
@@ -620,7 +620,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
         self.wv.index2word = other_model.wv.index2word
         self.vocabulary.cum_table = other_model.vocabulary.cum_table
         self.corpus_count = other_model.corpus_count
-        self.trainables.reset_weights(self.hs, self.negative, self.wv, vocabulary=self.vocabulary)
+        self.trainables.reset_weights(self.hs, self.negative, self.wv)
 
     @staticmethod
     def log_accuracy(section):
@@ -1118,9 +1118,9 @@ class Word2VecTrainables(BaseModelTrainables):
         """Build tables and model weights based on final vocabulary settings."""
         # set initial input/projection and hidden weights
         if not update:
-            self.reset_weights(hs, negative, wv, vocabulary=vocabulary)
+            self.reset_weights(hs, negative, wv)
         else:
-            self.update_weights(hs, negative, wv, vocabulary=vocabulary)
+            self.update_weights(hs, negative, wv)
 
     def seeded_vector(self, seed_string, vector_size):
         """Create one 'random' vector (but deterministic by seed_string)"""
@@ -1128,7 +1128,7 @@ class Word2VecTrainables(BaseModelTrainables):
         once = random.RandomState(self.hashfxn(seed_string) & 0xffffffff)
         return (once.rand(vector_size) - 0.5) / vector_size
 
-    def reset_weights(self, hs, negative, wv, vocabulary=None):
+    def reset_weights(self, hs, negative, wv):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
         wv.vectors = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
@@ -1144,7 +1144,7 @@ class Word2VecTrainables(BaseModelTrainables):
 
         self.vectors_lockf = ones(len(wv.vocab), dtype=REAL)  # zeros suppress learning
 
-    def update_weights(self, hs, negative, wv, vocabulary=None):
+    def update_weights(self, hs, negative, wv):
         """
         Copy all the existing weights, and reset the weights for the newly
         added vocabulary.

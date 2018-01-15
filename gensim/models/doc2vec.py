@@ -273,7 +273,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         self.docvecs.count = other_model.docvecs.count
         self.docvecs.doctags = other_model.docvecs.doctags
         self.docvecs.offset2doctag = other_model.docvecs.offset2doctag
-        self.trainables.reset_weights(self.hs, self.negative, self.wv, self.docvecs, vocabulary=self.vocabulary)
+        self.trainables.reset_weights(self.hs, self.negative, self.wv, self.docvecs)
 
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
@@ -579,7 +579,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             self.hs, self.negative, self.wv, update=update, **kwargs)
         report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
         self.trainables.prepare_weights(
-            self.hs, self.negative, self.wv, self.docvecs, update=update, vocabulary=self.vocabulary)
+            self.hs, self.negative, self.wv, self.docvecs, update=update)
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
         """
@@ -631,7 +631,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             trim_rule=trim_rule, update=update)
         report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
         self.trainables.prepare_weights(
-            self.hs, self.negative, self.wv, self.docvecs, update=update, vocabulary=self.vocabulary)
+            self.hs, self.negative, self.wv, self.docvecs, update=update)
 
 
 class Doc2VecVocab(Word2VecVocab):
@@ -721,19 +721,19 @@ class Doc2VecTrainables(Word2VecTrainables):
             self.layer1_size = (dm_tag_count + (2 * window)) * vector_size
             logger.info("using concatenative %d-dimensional layer1", self.layer1_size)
 
-    def prepare_weights(self, hs, negative, wv, docvecs, update=False, vocabulary=None):
+    def prepare_weights(self, hs, negative, wv, docvecs, update=False):
         """Build tables and model weights based on final vocabulary settings."""
         # set initial input/projection and hidden weights
         if not update:
-            self.reset_weights(hs, negative, wv, docvecs, vocabulary=vocabulary)
+            self.reset_weights(hs, negative, wv, docvecs)
         else:
-            self.update_weights(hs, negative, wv, vocabulary=vocabulary)
+            self.update_weights(hs, negative, wv)
 
     def reset_weights(self, hs, negative, wv, docvecs, vocabulary=None):
-        super(Doc2VecTrainables, self).reset_weights(hs, negative, wv, vocabulary=vocabulary)
-        self.reset_doc_weights(docvecs, vocabulary=vocabulary)
+        super(Doc2VecTrainables, self).reset_weights(hs, negative, wv)
+        self.reset_doc_weights(docvecs)
 
-    def reset_doc_weights(self, docvecs, vocabulary=None):
+    def reset_doc_weights(self, docvecs):
         length = max(len(docvecs.doctags), docvecs.count)
         if docvecs.mapfile_path:
             docvecs.vectors_docs = np_memmap(
