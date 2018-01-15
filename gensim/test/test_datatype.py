@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 from gensim.models.keyedvectors import KeyedVectors
 
+
 class TestDataType(unittest.TestCase):
     def test_datatype(self):
         kv = KeyedVectors.load_word2vec_format('test.kv.txt', datatype=np.float64)
