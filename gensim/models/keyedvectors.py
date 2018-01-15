@@ -87,6 +87,13 @@ from scipy import stats
 logger = logging.getLogger(__name__)
 
 
+def _init_syn0(shape, dtype, use_mmap=False):
+    # if use_mmap:
+    #     _, filename = mkstemp()
+    #     return np.memmap(filename, shape, dtype)
+    return zeros(shape, dtype=dtype)
+
+
 class Vocab(object):
     """
     A single vocabulary item, used internally for collecting per-word frequency/sampling info,
@@ -199,7 +206,7 @@ class KeyedVectorsBase(utils.SaveLoad):
                 vocab_size = min(vocab_size, limit)
             result = cls()
             result.vector_size = vector_size
-            result.syn0 = zeros((vocab_size, vector_size), dtype=datatype)
+            result.syn0 = _init_syn0((vocab_size, vector_size), datatype, False)
 
             def add_word(word, weights):
                 word_id = len(result.vocab)
