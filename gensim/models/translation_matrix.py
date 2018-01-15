@@ -401,8 +401,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
 
         Parameters
         ----------
-        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
-            THIS ARGUMENT WILL BE IGNORED.
+        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`
 
         Returns
         -------
@@ -410,8 +409,8 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
             Translation matrix that mapping from the source model's vector to target model's vector.
 
         """
-        m1 = [self.source_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_docs]
-        m2 = [self.target_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_docs]
+        m1 = [self.source_lang_vec.docvecs[item.tags].flatten() for item in tagged_docs]
+        m2 = [self.target_lang_vec.docvecs[item.tags].flatten() for item in tagged_docs]
 
         self.translation_matrix = np.linalg.lstsq(m2, m1, -1)[0]
         return self.translation_matrix
