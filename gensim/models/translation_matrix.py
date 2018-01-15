@@ -350,8 +350,10 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
     """Realize the BackMapping translation matrix which map the source model's document vector
     to the target model's document vector(old model).
 
-    We map it to the other language space by computing z = Wx, then return the
-    word whose representation is close to z.
+    BackMapping translation matrix is used to learn a mapping for two document vector space which we
+    specify as source document vector and target document vector. The target document vector are trained
+    on superset corpus of source document vector, we can incrementally increase the vector in
+    the old model through the BackMapping translation matrix.
 
     the details use seen the notebook [3]_.
 
@@ -380,8 +382,9 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
             Source Doc2Vec model.
         target_lang_vec : :class:`~gensim.models.doc2vec.Doc2Vec`
             Target Doc2Vec model.
-        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
-            Documents that will be used for training
+        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional.
+            Documents that will be used for training, both the source language document vector and
+            target language document vector trained on those tagged documents.
         random_state : {None, int, array_like}, optional
             Seed for random state.
 
@@ -401,7 +404,9 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
 
         Parameters
         ----------
-        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`
+        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, Documents
+            that will be used for training, both the source language document vector and
+            target language document vector trained on those tagged documents.
 
         Returns
         -------
@@ -421,7 +426,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         Parameters
         ----------
         target_doc_vec : numpy.ndarray
-            Document vector
+            Document vector from the target document, whose document are not in the source model.
 
         Returns
         -------
