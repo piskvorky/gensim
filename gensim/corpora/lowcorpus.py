@@ -82,8 +82,10 @@ class LowCorpus(IndexedCorpus):
         fname : str
         line2words : str
         use_wordids : bool
+            If True, then return documents as (wordIndex, wordCount) 2-tuples, otherwise - (word, wordCount) 2-tuples.
         id2word : dict
         num_terms : int
+            Length of word2id.
 
         """
         IndexedCorpus.__init__(self, fname)
@@ -169,8 +171,7 @@ class LowCorpus(IndexedCorpus):
         return doc
 
     def __iter__(self):
-        """Iterate over the corpus, returning one bag-of-words vector at a time.
-        """
+        """Iterate over the corpus, returning one bag-of-words vector at a time."""
         with utils.smart_open(self.fname) as fin:
             for lineno, line in enumerate(fin):
                 if lineno > 0:  # ignore the first line = number of documents
@@ -188,9 +189,14 @@ class LowCorpus(IndexedCorpus):
         Parameters
         ----------
         fname : str
+            File name.
         corpus : list of (list of str)
-        id2word : bool, optional
-        metadata : bool, optional
+            Data for creating dictionary.
+        id2word : str, optional
+            If provided, it is a dictionary mapping between word_ids (integers) and words (strings).
+            Otherwise, the mapping is constructed from the documents.
+        metadata : noidea, optional
+            Wait, it has no effect, wut???
 
         """
         if id2word is None:
