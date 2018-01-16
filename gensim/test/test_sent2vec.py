@@ -45,12 +45,17 @@ class TestSent2VecModel(unittest.TestCase):
                 most_common_word)], model2.dict.word2int[model2.dict.find(most_common_word)]))
 
     # TODO - fix this test, probably - very buggy.
-    # @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
-    # def test_persistence(self):
-    #     tmpf = get_tmpfile('gensim_sent2vec.tst')
-    #     model = Sent2Vec(sentences, min_count=1, workers=1)
-    #     model.save(tmpf)
-    #     self.models_equal(model, Sent2Vec.load(tmpf))
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
+    def test_persistence(self):
+        tmpf = get_tmpfile('gensim_sent2vec.tst')
+        logger.warning("Train model")
+        model = Sent2Vec(sentences, min_count=1, workers=1)
+        logger.warning("Model trained, save")
+        model.save(tmpf)
+        logger.warning("Load saved model")
+        loaded_model = Sent2Vec.load(tmpf)
+        logger.warning("Check that models equal")
+        self.models_equal(model, loaded_model)
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_online_learning(self):
