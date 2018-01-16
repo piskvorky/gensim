@@ -85,7 +85,7 @@ class TestSegmentWiki(unittest.TestCase):
         tmpf = get_tmpfile('script.tst.json')
 
         logger.warning("Calling segment_and_write_all_articles on temp file")
-        segment_and_write_all_articles(self.fname, tmpf)
+        segment_and_write_all_articles(self.fname, tmpf, workers=1)
 
         expected_num_articles = 106
         num_articles = sum(1 for line in smart_open(tmpf))
@@ -96,7 +96,7 @@ class TestSegmentWiki(unittest.TestCase):
         tmpf = get_tmpfile('script.tst.json')
 
         logger.warning("Calling segment_and_write_all_articles on temp file")
-        segment_and_write_all_articles(self.fname, tmpf)
+        segment_and_write_all_articles(self.fname, tmpf, workers=1)
 
         # Get the first line from the text file we created.
         with open(tmpf) as f:
