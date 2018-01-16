@@ -45,7 +45,6 @@ import logging
 import numpy as np
 from numpy import dot
 from gensim import utils, matutils
-from random import randint
 from gensim.utils import SaveLoad, tokenize
 from types import GeneratorType
 import os
@@ -60,14 +59,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-try:
-    from gensim.models.sent2vec_inner import _do_train_job_fast
-    from gensim.models.word2vec_inner import FAST_VERSION
-except ImportError:
-    # failed... fall back to plain numpy
-    # TODO remove this later (i.e. stay only cython version)
-    FAST_VERSION = -1
-    logger.warning('Slow version of %s is being used', __name__)
+from gensim.models.sent2vec_inner import _do_train_job_fast
 
 
 class Entry(object):
@@ -238,44 +230,6 @@ class ModelDictionary(object):
             f = self.words[i].count / self.ntokens
             self.pdiscard.append(((self.t / f) ** 0.5) + (self.t / f))
 
-    def add_ngrams_train(self, context, n, k):
-        """Training word ngrams for a given context and target word.
-
-        Parameters
-        ----------
-        context : list of int
-            List of word ids.
-        n : int
-            Number of word ngrams.
-        k : int
-            Number of word ngrams dropped while training a Sent2Vec model.
-
-        Returns
-        -------
-        list of int
-            List of word and word ngram ids.
-
-        """
-        line = list(context)
-        num_discarded = 0
-        line_size = len(line)
-        discard = [False] * line_size
-        while num_discarded < k and line_size - num_discarded > 2:
-            token_to_discard = randint(0, line_size - 1)
-            if discard[token_to_discard] is False:
-                discard[token_to_discard] = True
-                num_discarded += 1
-        for i in range(line_size):
-            if discard[i] is True:
-                continue
-            h = line[i]
-            for j in range(i + 1, line_size):
-                if j >= i + n or discard[j] is True:
-                    break
-                h = h * 116049371 + line[j]
-                line.append(self.size + (h % self.bucket))
-        return line
-
     def add_ngrams(self, context, n):
         """Computing word ngrams for given sentence while inferring sentence vector.
 
@@ -303,36 +257,6 @@ class ModelDictionary(object):
                 h = h * 116049371 + line[j]
                 line.append(self.size + (h % self.bucket))
         return line
-
-    def get_line(self, sentence):
-        """Converting sentence to a list of word ids inferred from the dictionary.
-
-        Parameters
-        ----------
-        sentence : list of str
-            List of words.
-
-        Returns
-        -------
-        ntokens : int
-            Number of tokens processed in given sentence.
-        words : list of int
-            List of word ids.
-
-        """
-
-        words = []
-        ntokens = 0
-        for word in sentence:
-            h = self.find(word)
-            wid = self.word2int[h]
-            if wid < 0:
-                continue
-            ntokens += 1
-            words.append(wid)
-            if ntokens > self.max_line_size:
-                break
-        return ntokens, words
 
 
 class Sent2Vec(SaveLoad):
@@ -418,78 +342,6 @@ class Sent2Vec(SaveLoad):
             self.build_vocab(sentences)
             self.train(sentences)
 
-    def _negative_sampling(self, target, lr):
-        """Get loss using negative sampling.
-
-        Parameters
-        ----------
-        target : int
-            Word id of target word.
-        lr : float
-            Current learning rate.
-
-        Returns
-        -------
-        float
-            Negative sampling loss.
-
-        """
-
-        loss = 0.0
-        self.grad = np.zeros(self.vector_size)
-        for i in range(self.neg + 1):
-            if i == 0:
-                loss += self._binary_logistic(target, True, lr)
-            else:
-                loss += self._binary_logistic(self._get_negative(target), False, lr)
-        return loss
-
-    @staticmethod
-    def _sigmoid(val):
-        """Compute _sigmoid of a particular value.
-
-        Parameters
-        ----------
-        val : {float, numpy.ndarray}
-            Value for which _sigmoid has to be calculated.
-
-        Returns
-        -------
-        float
-            _sigmoid of `val`.
-
-        """
-
-        return 1.0 / (1.0 + np.exp(-val))
-
-    def _binary_logistic(self, target, label, lr):
-        """Compute loss for given target, label and learning rate using binary logistic regression.
-
-        Parameters
-        ----------
-        target : int
-            Target word id.
-        label : bool
-            If True - no negative is sampled, False otherwise.
-        lr : float
-            Current learning rate.
-
-        Returns
-        -------
-        float
-            Binary logistic regression loss.
-
-        """
-
-        score = self._sigmoid(np.dot(self.wo[target], self.hidden))
-        alpha = lr * (float(label) - score)
-        self.grad += self.wo[target] * alpha
-        self.wo[target] += self.hidden * alpha
-        if label is True:
-            return -np.log(score)
-        else:
-            return -np.log(1.0 - score)
-
     def _init_table_negatives(self, counts, update):
         """Initialise table of negatives for negative sampling.
 
@@ -511,79 +363,31 @@ class Sent2Vec(SaveLoad):
         self.random.shuffle(self.negatives)
         self.negatives = np.array(self.negatives)
 
-    def _get_negative(self, target):
-        """Get a negative from the list of negatives for calculating negative sampling loss.
+    def _do_train_job(self, sentences, lr, hidden, grad):
+        """Train on a batch of input `sentences`
 
         Parameters
         ----------
-        target : int
-            Target word id.
+        sentences : iterable of iterable of str
+            Input sentences.
+        lr : float
+            Learning rate for given batch of input sentences.
+        hidden : numpy.ndarray
+            Hidden vector for neural network computation.
+        grad : numpy.ndarray
+            Gradient vector for neural network computation.
 
         Returns
         -------
-        int
-            Word id of negative sample.
-
+        local_token_count : int
+            Number of tokens processed for given training batch.
+        nexamples : int
+            Number of examples processed in given training batch.
+        loss : float
+            Loss for given training batch.
         """
-        while True:
-            negative = self.negatives[self.negpos]
-            self.negpos = (self.negpos + 1) % len(self.negatives)
-            if target != negative:
-                break
-        return negative
-
-    def _do_train_job(self, sentences, lr, hidden, grad):
-        if FAST_VERSION == -1:
-            local_token_count = 0
-            nexamples = 0
-            loss = 0.0
-            for sentence in sentences:
-                ntokens_temp, words = self.dict.get_line(sentence)
-                local_token_count += ntokens_temp
-                if len(words) > 1:
-                    for i in range(len(words)):
-                        if self.random.uniform(0, 1) > self.dict.pdiscard[words[i]]:
-                            continue
-                        nexamples += 1
-                        context = list(words)
-                        context[i] = 0
-                        context = self.dict.add_ngrams_train(context=context, n=self.word_ngrams, k=self.dropoutk)
-                        loss += self._update(input_=context, target=words[i], lr=lr)
-            return local_token_count, nexamples, loss
-        else:
-            local_token_count, nexamples, loss = _do_train_job_fast(self, sentences, lr, hidden, grad)
-            return local_token_count, nexamples, loss
-
-    def _update(self, input_, target, lr):
-        """_update model's neural weights for given context, target word and learning rate.
-
-        Parameters
-        ----------
-        input_ : list of int
-            Word ids of context words.
-        target : int
-            Word id of target word.
-        lr : float
-            Current Learning rate.
-
-        """
-        assert target >= 0
-        assert target < self.dict.size
-        if len(input_) == 0:
-            return
-
-        self.hidden = np.zeros(self.vector_size)
-
-        for i in input_:
-            self.hidden += self.wi[i]
-
-        self.hidden *= (1.0 / len(input_))
-        loss = self._negative_sampling(target, lr)
-        self.grad *= (1.0 / len(input_))
-
-        for i in input_:
-            self.wi[i] += self.grad
-        return loss
+        local_token_count, nexamples, loss = _do_train_job_fast(self, sentences, lr, hidden, grad)
+        return local_token_count, nexamples, loss
 
     def build_vocab(self, sentences, update=False):
         """Build vocab from `sentences`
