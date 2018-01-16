@@ -99,14 +99,14 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
 
     def test_translation_matrix(self):
         model = translation_matrix.BackMappingTranslationMatrix(
-            self.train_docs[:5], self.source_doc_vec, self.target_doc_vec
+            self.source_doc_vec, self.target_doc_vec, self.train_docs[:5]
         )
         transmat = model.train(self.train_docs[:5])
         self.assertEqual(transmat.shape, (100, 100))
 
     def test_infer_vector(self):
         model = translation_matrix.BackMappingTranslationMatrix(
-            self.train_docs[:5], self.source_doc_vec, self.target_doc_vec
+            self.source_doc_vec, self.target_doc_vec, self.train_docs[:5]
         )
         model.train(self.train_docs[:5])
         infered_vec = model.infer_vector(self.target_doc_vec.docvecs[self.train_docs[5].tags])

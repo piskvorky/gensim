@@ -3,6 +3,7 @@
 #
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Copyright (C) 2012 Lars Buitinck <larsmans@gmail.com>
+# Copyright (C) 2018 Emmanouil Stergiadis <em.stergiadis@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
@@ -496,11 +497,7 @@ class WikiCorpus(TextCorpus):
         self.token_min_len = token_min_len
         self.token_max_len = token_max_len
         self.lower = lower
-
-        if dictionary is None:
-            self.dictionary = Dictionary(self.get_texts())
-        else:
-            self.dictionary = dictionary
+        self.dictionary = dictionary or Dictionary(self.get_texts())
 
     def get_texts(self):
         """Iterate over the dump, yielding list of tokens for each article.
@@ -512,7 +509,7 @@ class WikiCorpus(TextCorpus):
         Notes
         -----
         Only articles of sufficient length are returned (short articles,
-        redirects, etc. are ignored). This is control by
+        redirects, etc. are ignored). This is controlled by
         `article_min_tokens` on the class instance.
 
         Examples
@@ -552,6 +549,7 @@ class WikiCorpus(TextCorpus):
                         yield (tokens, (pageid, title))
                     else:
                         yield tokens
+
         except KeyboardInterrupt:
             logger.warn(
                 "user terminated iteration over Wikipedia corpus after %i documents with %i positions "
