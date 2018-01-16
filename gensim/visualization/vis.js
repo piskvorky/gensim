@@ -1,3 +1,5 @@
+// code modified from https://github.com/bmabey/pyLDAvis
+
 var TopicModelVis = function(to_select, data_or_file_name) {
 
     // This section sets up the logic for event handling
@@ -269,6 +271,97 @@ var TopicModelVis = function(to_select, data_or_file_name) {
             });
 
 
+        // create linear scaling to pixels (and add some padding on outer region of scatterplot)
+        var doc_xrange = d3.extent(docMdsData, function(d) {
+            return d.x;
+        }); //d3.extent returns min and max of an array
+        var doc_xdiff = doc_xrange[1] - doc_xrange[0],
+            doc_xpad = 0.05;
+        var doc_yrange = d3.extent(docMdsData, function(d) {
+            return d.y;
+        });
+        var doc_ydiff = doc_yrange[1] - doc_yrange[0],
+            doc_ypad = 0.05;
+
+        if (doc_xdiff > doc_ydiff) {
+            var doc_xScale = d3.scale.linear()
+                    .range([0, mdswidth])
+                    .domain([doc_xrange[0] - doc_xpad * doc_xdiff, doc_xrange[1] + doc_xpad * doc_xdiff]);
+
+            var doc_yScale = d3.scale.linear()
+                    .range([mdsheight, 0])
+                    .domain([doc_yrange[0] - 0.5*(doc_xdiff - doc_ydiff) - doc_ypad*doc_xdiff, doc_yrange[1] + 0.5*(doc_xdiff - doc_ydiff) + doc_ypad*doc_xdiff]);
+        } else {
+            var doc_xScale = d3.scale.linear()
+                    .range([0, mdswidth])
+                    .domain([doc_xrange[0] - 0.5*(doc_ydiff - doc_xdiff) - doc_xpad*doc_ydiff, doc_xrange[1] + 0.5*(doc_ydiff - doc_xdiff) + doc_xpad*doc_ydiff]);
+
+            var doc_yScale = d3.scale.linear()
+                    .range([mdsheight, 0])
+                    .domain([doc_yrange[0] - doc_ypad * doc_ydiff, doc_yrange[1] + doc_ypad * doc_ydiff]);
+        }
+
+        // create linear scaling to pixels (and add some padding on outer region of scatterplot)
+        var topic_xrange = d3.extent(topicMdsData, function(d) {
+            return d.x;
+        }); //d3.extent returns min and max of an array
+        var topic_xdiff = topic_xrange[1] - topic_xrange[0],
+            topic_xpad = 0.05;
+        var topic_yrange = d3.extent(topicMdsData, function(d) {
+            return d.y;
+        });
+        var topic_ydiff = topic_yrange[1] - topic_yrange[0],
+            topic_ypad = 0.05;
+
+        if (topic_xdiff > topic_ydiff) {
+            var topic_xScale = d3.scale.linear()
+                    .range([0, mdswidth])
+                    .domain([topic_xrange[0] - topic_xpad * topic_xdiff, topic_xrange[1] + topic_xpad * topic_xdiff]);
+
+            var topic_yScale = d3.scale.linear()
+                    .range([mdsheight, 0])
+                    .domain([topic_yrange[0] - 0.5*(topic_xdiff - topic_ydiff) - topic_ypad*topic_xdiff, topic_yrange[1] + 0.5*(topic_xdiff - topic_ydiff) + topic_ypad*topic_xdiff]);
+        } else {
+            var topic_xScale = d3.scale.linear()
+                    .range([0, mdswidth])
+                    .domain([topic_xrange[0] - 0.5*(topic_ydiff - topic_xdiff) - topic_xpad*topic_ydiff, topic_xrange[1] + 0.5*(topic_ydiff - topic_xdiff) + topic_xpad*topic_ydiff]);
+
+            var topic_yScale = d3.scale.linear()
+                    .range([mdsheight, 0])
+                    .domain([topic_yrange[0] - topic_ypad * topic_ydiff, topic_yrange[1] + topic_ypad * topic_ydiff]);
+        }
+
+        // create linear scaling to pixels (and add some padding on outer region of scatterplot)
+        var word_xrange = d3.extent(wordMdsData, function(d) {
+            return d.x;
+        }); //d3.extent returns min and max of an array
+        var word_xdiff = word_xrange[1] - word_xrange[0],
+            word_xpad = 0.05;
+        var word_yrange = d3.extent(wordMdsData, function(d) {
+            return d.y;
+        });
+        var word_ydiff = word_yrange[1] - word_yrange[0],
+            word_ypad = 0.05;
+
+        if (word_xdiff > word_ydiff) {
+            var word_xScale = d3.scale.linear()
+                    .range([0, mdswidth])
+                    .domain([word_xrange[0] - word_xpad * word_xdiff, word_xrange[1] + word_xpad * word_xdiff]);
+
+            var word_yScale = d3.scale.linear()
+                    .range([mdsheight, 0])
+                    .domain([word_yrange[0] - 0.5*(word_xdiff - word_ydiff) - word_ypad*word_xdiff, word_yrange[1] + 0.5*(word_xdiff - word_ydiff) + word_ypad*word_xdiff]);
+        } else {
+            var word_xScale = d3.scale.linear()
+                    .range([0, mdswidth])
+                    .domain([word_xrange[0] - 0.5*(word_ydiff - word_xdiff) - word_xpad*word_ydiff, word_xrange[1] + 0.5*(word_ydiff - word_xdiff) + word_xpad*word_ydiff]);
+
+            var word_yScale = d3.scale.linear()
+                    .range([mdsheight, 0])
+                    .domain([word_yrange[0] - word_ypad * word_ydiff, word_yrange[1] + word_ypad * word_ydiff]);
+        }
+
+
         // Create new svg element (that will contain everything):
         var svg = d3.select(to_select).append("svg")
                 .attr("width", 3 * (mdswidth + margin.left) + margin.right)
@@ -280,12 +373,28 @@ var TopicModelVis = function(to_select, data_or_file_name) {
                 .attr("class", "docpoints")
                 .attr("transform", "translate(" + margin.left + "," + 2 * margin.top + ")");
 
+        // Create line element b/w doc and topic plot
+        var doc_topic_partition = doc_plot.append("line")
+                .attr("x1", mdswidth)
+                .attr("x2", mdswidth)
+                .attr("y1", 20)
+                .attr("y2", mdsheight)
+                .attr("stroke", "black")
+
         // Create a group for the topic plot
         var topic_plot = svg.append("g")
                 .attr("id", topicPanelID)
                 .attr("class", "topicpoints")
                 // .attr("align","center")
                 .attr("transform", "translate(" + (mdswidth + 2 * margin.left) + "," + 2 * margin.top + ")");
+
+        // Create line element b/w topic and word plot
+        var topic_word_partition = topic_plot.append("line")
+                .attr("x1", mdswidth)
+                .attr("x2", mdswidth)
+                .attr("y1", 20)
+                .attr("y2", mdsheight)
+                .attr("stroke", "black")
 
         // Add a group for the word plot
         var word_plot = svg.append("g")
@@ -904,7 +1013,6 @@ var TopicModelVis = function(to_select, data_or_file_name) {
                 // 11 is the default, so leaving this as 11 won't change anything.
                 size[dat1[i].Doc] = 11;
             }
-            console.log("radiusssss", doc_radius)
 
             // var rScaleCond = d3.scale.sqrt()
             //         .domain([0, 1]).range([0, rMax]);
