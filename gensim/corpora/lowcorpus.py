@@ -49,19 +49,16 @@ class LowCorpus(IndexedCorpus):
         in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated
         by the blank character.
 
-        For example create file "lowcorpus_document.txt" and fill it with:
-
-        3
-        this is sparta
-        for real
-        lowcorpus example
-
     Examples
     --------
+    >>> from gensim.test.utils import datapath
     >>> from gensim.corpora import lowcorpus
-    >>> data = lowcorpus.LowCorpus("lowcorpus_document")
+    >>> data = lowcorpus.LowCorpus(datapath("testcorpus.low"))
     >>> print data.fname, data.id2word
-    {0: u'example', 1: u'for', 2: u'is', 3: u'lowcorpus', 4: u'real', 5: u'sparta', 6: u'this'}
+    gensim/test/test_data/testcorpus.low
+    {0: u'computer', 1: u'eps', 2: u'graph', 3: u'human', 4: u'interface', 5: u'minors', 6: u'response', 7: u'survey',
+    8: u'system', 9: u'time', 10: u'trees', 11: u'user'}
+
 
     """
     def __init__(self, fname, id2word=None, line2words=split_on_space):
@@ -196,7 +193,7 @@ class LowCorpus(IndexedCorpus):
             If provided, it is a dictionary mapping between word_ids (integers) and words (strings).
             Otherwise, the mapping is constructed from the documents.
         metadata : noidea, optional
-            Wait, it has no effect, wut???
+            THIS PARAMETER WILL BE IGNORED.
 
         """
         if id2word is None:
