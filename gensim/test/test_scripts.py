@@ -22,6 +22,7 @@ from gensim.test.utils import datapath, get_tmpfile
 
 logger = logging.getLogger(__name__)
 
+
 class TestSegmentWiki(unittest.TestCase):
 
     def setUp(self):
