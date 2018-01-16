@@ -38,9 +38,13 @@ class TestSent2VecModel(unittest.TestCase):
         self.models_equal(model, model2)
 
     def models_equal(self, model, model2):
+        logger.warning("assert dict size")
         self.assertEqual(model.dict.size, model2.dict.size)
+        logger.warning("assert matricies")
         self.assertTrue(np.allclose(model.wi, model2.wi))
+        logger.warning("calc mcw")
         most_common_word = max(model.dict.words, key=lambda item: item.count).word
+        logger.warning("assert mcw")
         self.assertTrue(np.allclose(model.dict.word2int[model.dict.find(
                 most_common_word)], model2.dict.word2int[model2.dict.find(most_common_word)]))
 
