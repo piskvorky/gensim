@@ -113,8 +113,7 @@ import warnings
 
 from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.models.keyedvectors import Vocab, Word2VecKeyedVectors
-from gensim.models.base_any2vec import BaseWordEmbedddingsModel,\
-    BaseVocabBuilder, BaseModelTrainables
+from gensim.models.base_any2vec import BaseWordEmbedddingsModel
 
 try:
     from queue import Queue, Empty
@@ -230,6 +229,8 @@ class Word2Vec(BaseWordEmbedddingsModel):
             Target size (in words) for batches of examples passed to worker threads (and
             thus cython routines).(Larger batches will be passed if individual
             texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
+        compute_loss: bool
+            If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
             List of callbacks that need to be executed/run at specific stages during training.
 
@@ -249,7 +250,6 @@ class Word2Vec(BaseWordEmbedddingsModel):
         self.load = call_on_class_only
 
         self.wv = Word2VecKeyedVectors(size)
-        # self.kv = self.wv
         self.vocabulary = Word2VecVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=bool(sorted_vocab), null_word=null_word)
@@ -323,6 +323,8 @@ class Word2Vec(BaseWordEmbedddingsModel):
             Multiplier for size of queue (number of workers * queue_factor).
         report_delay : float
             Seconds to wait before reporting progress.
+        compute_loss: bool
+            If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
             List of callbacks that need to be executed/run at specific stages during training.
 
@@ -491,7 +493,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
         existing vocabulary, but intersecting words adopt the file's weights, and
         non-intersecting words are left alone.)
 
-         Parameters
+        Parameters
         ----------
         fname : str
             The file path used to save the vectors in
@@ -546,7 +548,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
     def __getitem__(self, words):
         """
         Deprecated. Use self.wv.__getitem__() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.__getitem__`
+        Refer to the documentation for `gensim.models.keyedvectors.Word2VecKeyedVectors.__getitem__`
         """
         return self.wv.__getitem__(words)
 
@@ -554,7 +556,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
     def __contains__(self, word):
         """
         Deprecated. Use self.wv.__contains__() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.__contains__`
+        Refer to the documentation for `gensim.models.keyedvectors.Word2VecKeyedVectors.__contains__`
         """
         return self.wv.__contains__(word)
 
@@ -569,8 +571,8 @@ class Word2Vec(BaseWordEmbedddingsModel):
         topn: int
             Return `topn` words and their probabilities
 
-        Return
-        ------
+        Returns
+        -------
         :obj: `list` of :obj: `tuple`
             `topn` length list of tuples of (word, probability)
 
@@ -626,6 +628,7 @@ class Word2Vec(BaseWordEmbedddingsModel):
     def log_accuracy(section):
         return Word2VecKeyedVectors.log_accuracy(section)
 
+    @deprecated("Method will be removed in 4.0.0, use self.wv.accuracy() instead")
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
         most_similar = most_similar or Word2VecKeyedVectors.most_similar
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
@@ -658,8 +661,6 @@ class Word2Vec(BaseWordEmbedddingsModel):
         kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'cum_table'])
         super(Word2Vec, self).save(*args, **kwargs)
 
-    save.__doc__ = utils.SaveLoad.save.__doc__
-
     def get_latest_training_loss(self):
         return self.running_training_loss
 
@@ -678,8 +679,9 @@ class Word2Vec(BaseWordEmbedddingsModel):
         self.model_trimmed_post_training = True
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                         limit=None, datatype=REAL):
+    def load_word2vec_format(
+            cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+            limit=None, datatype=REAL):
         """Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead."""
         raise DeprecationWarning("Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
 
@@ -689,10 +691,22 @@ class Word2Vec(BaseWordEmbedddingsModel):
 
     @classmethod
     def load(cls, *args, **kwargs):
+        """Loads a previously saved `Word2Vec` model. Also see `save()`.
+
+        Parameters
+        ----------
+        fname : str
+            Path to the saved file.
+
+        Returns
+        -------
+        :obj: `~gensim.models.word2vec.Word2Vec`
+            Returns the loaded model as an instance of :class: `~gensim.models.word2vec.Word2Vec`.
+        """
         try:
             return super(Word2Vec, cls).load(*args, **kwargs)
         except AttributeError:
-            logger.info('Model saved using code from ealier Gensim Version. Re-loading old model in a compatible way.')
+            logger.info('Model saved using code from earlier Gensim Version. Re-loading old model in a compatible way.')
             from gensim.models.deprecated.word2vec import load_old_word2vec
             return load_old_word2vec(*args, **kwargs)
 
@@ -848,9 +862,8 @@ class PathLineSentences(object):
                         i += self.max_sentence_length
 
 
-class Word2VecVocab(BaseVocabBuilder):
+class Word2VecVocab(utils.SaveLoad):
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0):
-        super(Word2VecVocab, self).__init__()
         self.max_vocab_size = max_vocab_size
         self.min_count = min_count
         self.sample = sample
@@ -1108,11 +1121,11 @@ class Word2VecVocab(BaseVocabBuilder):
             assert self.cum_table[-1] == domain
 
 
-class Word2VecTrainables(BaseModelTrainables):
+class Word2VecTrainables(utils.SaveLoad):
     def __init__(self, vector_size=100, seed=1, hashfxn=hash):
-        super(Word2VecTrainables, self).__init__(seed=seed)
         self.hashfxn = hashfxn
         self.layer1_size = vector_size
+        self.seed = seed
 
     def prepare_weights(self, hs, negative, wv, update=False, vocabulary=None):
         """Build tables and model weights based on final vocabulary settings."""

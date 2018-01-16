@@ -26,14 +26,14 @@ def compute_ngrams(word, min_n, max_n):
     word : str
         The word whose ngrams need to be computed
     min_n : int
-        mininum character length of the ngrams
+        minimum character length of the ngrams
     max_n : int
         maximum character length of the ngrams
 
     Returns
     -------
     :obj:`list` of :obj:`str`
-        List of chracter ngrams
+        List of character ngrams
 
     """
     BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
@@ -78,6 +78,10 @@ def save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total
         ----------
         fname : str
             The file path used to save the vectors in
+        vocab : dict
+            The vocabulary of words
+        vectors : numpy.array
+            The vectors to be stored
         fvocab : str
             Optional file path used to save the vocabulary
         binary : bool
@@ -85,10 +89,6 @@ def save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total
         total_vec :  int
             Optional parameter to explicitly specify total no. of vectors
             (in case word vectors are appended with document vectors afterwards)
-
-        Returns
-        -------
-        None
 
         """
         if not (vocab or vectors):
@@ -115,7 +115,7 @@ def save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total
 
 
 def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                             limit=None, datatype=REAL):
+                         limit=None, datatype=REAL):
     """Load the input-hidden weight matrix from the original C word2vec-tool format.
 
     Note that the information stored in the file is incomplete (the binary tree is missing),

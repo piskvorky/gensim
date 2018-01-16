@@ -224,7 +224,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         vocabulary_kwargs = dict((k, kwargs[k]) for k in vocabulary_keys if k in kwargs)
         self.vocabulary = Doc2VecVocab(**vocabulary_kwargs)
 
-        trainables_keys = ['seed', 'hs', 'negative', 'hashfxn', 'window']
+        trainables_keys = ['seed', 'hashfxn', 'window']
         trainables_kwargs = dict((k, kwargs[k]) for k in trainables_keys if k in kwargs)
         self.trainables = Doc2VecTrainables(
             dm=dm, dm_concat=dm_concat, dm_tag_count=dm_tag_count,
@@ -347,7 +347,6 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             documents, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
-        # self._set_keyedvectors()
 
     def _raw_word_count(self, job):
         """Return the number of words in a given job."""
@@ -378,7 +377,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             Returns the inferred vector for the new document.
 
         """
-        doctag_vectors, doctag_locks = self.trainables._get_doctag_trainables(doc_words, self.docvecs.vector_size)
+        doctag_vectors, doctag_locks = self.trainables.get_doctag_trainables(doc_words, self.docvecs.vector_size)
         doctag_indexes = [0]
         work = zeros(self.trainables.layer1_size, dtype=REAL)
         if not self.sg:
@@ -456,10 +455,6 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         keep_inference : bool
             Set `keep_inference` to False if you don't want to store parameters that is used for infer_vector method
 
-        Returns
-        -------
-        None
-
         """
         if not keep_inference:
             if hasattr(self.trainables, 'syn1'):
@@ -473,7 +468,6 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             del self.docvecs.vectors_docs
         if self.docvecs and hasattr(self.trainables, 'vectors_docs_lockf'):
             del self.trainables.vectors_docs_lockf
-        # self._set_keyedvectors()
 
     def save_word2vec_format(self, fname, doctag_vec=False, word_vec=True, prefix='*dt_', fvocab=None, binary=False):
         """Store the input-hidden weight matrix in the same format used by the original
@@ -494,10 +488,6 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             Optional file path used to save the vocabulary
         binary : bool
             If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-
-        Returns
-        -------
-        None
 
         """
         total_vec = len(self.wv.vocab) + len(self.docvecs)
@@ -535,7 +525,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         try:
             return super(Doc2Vec, cls).load(*args, **kwargs)
         except AttributeError:
-            logger.info('Model saved using code from ealier Gensim Version. Re-loading old model in a compatible way.')
+            logger.info('Model saved using code from earlier Gensim Version. Re-loading old model in a compatible way.')
             from gensim.models.deprecated.doc2vec import load_old_doc2vec
             return load_old_doc2vec(*args, **kwargs)
 
@@ -546,17 +536,17 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         report['doctag_syn0'] = self.docvecs.count * self.vector_size * dtype(REAL).itemsize
         return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
 
-    def build_vocab(self, sentences, update=False, progress_per=10000, **kwargs):
+    def build_vocab(self, documents, update=False, progress_per=10000, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
         Parameters
         ----------
-        sentences : iterable of iterables
-            The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
-            consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+        documents : iterable of iterables
+            The `documents` iterable can be simply a list of TaggedDocument elements, but for larger corpora,
+            consider an iterable that streams the documents directly from disk/network.
+            See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
+            in :mod:`~gensim.models.doc2vec` module for such examples.
         keep_raw_vocab : bool
             If not true, delete the raw vocabulary after the scaling is done and free up RAM.
         trim_rule : function
@@ -573,7 +563,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             If true, the new words in `sentences` will be added to model's vocab.
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            sentences, self.docvecs, progress_per=progress_per, **kwargs)
+            documents, self.docvecs, progress_per=progress_per, **kwargs)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, **kwargs)
@@ -589,13 +579,13 @@ class Doc2Vec(BaseWordEmbedddingsModel):
 
         Parameters
         ----------
-        `word_freq` : dict
+        word_freq : dict
             Word,Word_Count dictionary.
-        `keep_raw_vocab` : bool
+        keep_raw_vocab : bool
             If not true, delete the raw vocabulary after the scaling is done and free up RAM.
-        `corpus_count`: int
+        corpus_count : int
             Even if no corpus is provided, this argument can set corpus_count explicitly.
-        `trim_rule` : function
+        trim_rule : function
             Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
             be trimmed away, or handled using the default (discard if word count < min_count).
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
@@ -603,7 +593,7 @@ class Doc2Vec(BaseWordEmbedddingsModel):
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
-        `update`: bool
+        update : bool
             If true, the new provided words in `word_freq` dict will be added to model's vocab.
 
         Examples
@@ -713,8 +703,7 @@ class Doc2VecVocab(Word2VecVocab):
 
 
 class Doc2VecTrainables(Word2VecTrainables):
-    def __init__(self, dm=1, dm_concat=0, dm_tag_count=1, vector_size=100, seed=1, hs=0, negative=5,
-                 hashfxn=hash, window=5):
+    def __init__(self, dm=1, dm_concat=0, dm_tag_count=1, vector_size=100, seed=1, hashfxn=hash, window=5):
         super(Doc2VecTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         if dm and dm_concat:
@@ -753,7 +742,7 @@ class Doc2VecTrainables(Word2VecTrainables):
                 self.seed, Doc2VecKeyedVectors._index_to_doctag(i, docvecs.offset2doctag, docvecs.max_rawint))
             docvecs.vectors_docs[i] = self.seeded_vector(seed, docvecs.vector_size)
 
-    def _get_doctag_trainables(self, doc_words, vector_size):
+    def get_doctag_trainables(self, doc_words, vector_size):
         doctag_vectors = zeros((1, vector_size), dtype=REAL)
         doctag_vectors[0] = self.seeded_vector(' '.join(doc_words), vector_size)
         doctag_locks = ones(1, dtype=REAL)

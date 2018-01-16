@@ -511,7 +511,6 @@ class FastText(BaseWordEmbedddingsModel):
 
         self.trainables.init_ngrams_post_load(self.file_name, self.wv)
         self._clear_post_train()
-        # self._set_keyedvectors()
 
     def struct_unpack(self, file_handle, fmt):
         num_bytes = struct.calcsize(fmt)
@@ -552,10 +551,11 @@ class FastText(BaseWordEmbedddingsModel):
                 model.trainables.vectors_ngrams_lockf = ones(len(model.trainables.vectors), dtype=REAL)
             return model
         except ImportError:
-            logger.info('Model saved using code from ealier Gensim Version. Re-loading old model in a compatible way.')
+            logger.info('Model saved using code from earlier Gensim Version. Re-loading old model in a compatible way.')
             from gensim.models.deprecated.fasttext import load_old_fasttext
             return load_old_fasttext(*args, **kwargs)
 
+    @deprecated("Method will be removed in 4.0.0, use self.wv.accuracy() instead")
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
         most_similar = most_similar or FastTextKeyedVectors.most_similar
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
@@ -662,16 +662,14 @@ class FastTextTrainables(Word2VecTrainables):
                 -1.0 / wv.vector_size, 1.0 / wv.vector_size,
                 (len(wv.vocab) - vocabulary.old_vocab_len, wv.vector_size)
             ).astype(REAL)
-            new_vocab_lockf_rows = ones((len(wv.vocab) - vocabulary.old_vocab_len,
-                wv.vector_size), dtype=REAL)
+            new_vocab_lockf_rows = ones(
+                (len(wv.vocab) - vocabulary.old_vocab_len, wv.vector_size), dtype=REAL)
             new_ngram_rows = rand_obj.uniform(
                 -1.0 / wv.vector_size, 1.0 / wv.vector_size,
                 (len(wv.hash2index) - self.old_hash2index_len, wv.vector_size)
             ).astype(REAL)
             new_ngram_lockf_rows = ones(
-                (len(wv.hash2index) - self.old_hash2index_len,
-                wv.vector_size),
-                dtype=REAL)
+                (len(wv.hash2index) - self.old_hash2index_len, wv.vector_size), dtype=REAL)
 
             wv.vectors_vocab = vstack([wv.vectors_vocab, new_vocab_rows])
             self.vectors_vocab_lockf = vstack([self.vectors_vocab_lockf, new_vocab_lockf_rows])

@@ -235,10 +235,6 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         fname : str
             Path to the file.
 
-        Returns
-        -------
-        None
-
         """
         # don't bother storing the cached normalized vectors
         kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm'])
@@ -412,8 +408,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Parameters
         ----------
-        word : str
-            Word
+        vector : numpy.array
+            vector from which similarities are to be computed.
+            expected shape (dim,)
         topn : int
             Number of top-N similar words to return. If topn is False, similar_by_vector returns
             the vector of similarity scores.
@@ -932,8 +929,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
 
 class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
-    """Class to contain vectors and vocab for the Word2Vec training class and other w2v methods not directly
-    involved in training such as most_similar()
+    """Class to contain vectors and vocab for word2vec model.
+    Used to perform operations on the vectors such as vector lookup, distance, similarity etc.
     """
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
         """Store the input-hidden weight matrix in the same format used by the original
@@ -950,10 +947,6 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         total_vec :  int
             Optional parameter to explicitly specify total no. of vectors
             (in case word vectors are appended with document vectors afterwards)
-
-        Returns
-        -------
-        None
 
         """
         # from gensim.models.word2vec import save_word2vec_format
@@ -1039,7 +1032,9 @@ KeyedVectors = Word2VecKeyedVectors  # alias for backward compatibility
 
 
 class Doc2VecKeyedVectors(BaseKeyedVectors):
+
     def __init__(self, vector_size, mapfile_path):
+        super(Doc2VecKeyedVectors, self).__init__(vector_size=vector_size)
         self.doctags = {}  # string -> Doctag (only filled if necessary)
         self.max_rawint = -1  # highest rawint-indexed doctag
         self.offset2doctag = []  # int offset-past-(max_rawint+1) -> String (only filled if necessary)
@@ -1047,6 +1042,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         self.vectors_docs = []
         self.mapfile_path = mapfile_path
         self.vector_size = vector_size
+        self.vectors_docs_norm = None
 
     @property
     def index2entity(self):
@@ -1100,10 +1096,6 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         ----------
         fname : str
             Path to the file.
-
-        Returns
-        -------
-        None
 
         """
         # don't bother storing the cached normalized vectors
@@ -1295,6 +1287,13 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         v2 = [self[doc] for doc in ds2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
+    def distance(self, d1, d2):
+        """
+        Compute cosine distance between two documents.
+
+        """
+        return 1 - self.similarity(d1, d2)
+
     # required by base keyed vectors class
     def distances(self, d1, other_docs=()):
         """Compute distances from given document (string tag or int index) to all documents in `other_docs`.
@@ -1304,7 +1303,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         if not other_docs:
             other_vectors = self.vectors_docs
         else:
-            other_vectors = self[other_vectors]
+            other_vectors = self[other_docs]
         return 1 - WordEmbeddingsKeyedVectors.cosine_similarities(input_vector, other_vectors)
 
     def similarity_unseen_docs(self, model, doc_words1, doc_words2, alpha=0.1, min_alpha=0.0001, steps=5):
@@ -1358,10 +1357,6 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         write_first_line : bool
             Whether to print the first line in the file. Useful when saving doc-vectors after word-vectors.
 
-        Returns
-        -------
-        None
-
         """
         total_vec = total_vec or len(self)
         with utils.smart_open(fname, 'ab') as fout:
@@ -1404,7 +1399,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             return i_index
 
     # for backward compatibility
-    def int_index(index, doctags, max_rawint):
+    def int_index(self, index, doctags, max_rawint):
         """Return int index for either string or int index"""
         if isinstance(index, integer_types + (integer,)):
             return index
@@ -1429,6 +1424,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.ngrams_word = {}
         self.min_n = min_n
         self.max_n = max_n
+        self.num_ngram_vectors = 0
 
     @property
     @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab instead")
@@ -1471,10 +1467,6 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         ----------
         fname : str
             Path to the file.
-
-        Returns
-        -------
-        None
 
         """
         # don't bother storing the cached normalized vectors
@@ -1544,10 +1536,6 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         total_vec :  int
             Optional parameter to explicitly specify total no. of vectors
             (in case word vectors are appended with document vectors afterwards).
-
-        Returns
-        -------
-        None
 
         """
         # from gensim.models.word2vec import save_word2vec_format

@@ -5,6 +5,8 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+"""Contains base classes required for implementing any2vec algorithms.
+"""
 from gensim import utils
 import logging
 from timeit import default_timer
@@ -25,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAny2VecModel(utils.SaveLoad):
+    """Base class for training, using and evaluating any2vec model. Contains implementation for multi-threaded training.
+    """
 
     def __init__(self, workers=3, vector_size=100, epochs=5,
                  callbacks=(), batch_words=10000):
@@ -32,7 +36,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         A subclass should initialize the following attributes:
         - self.kv (instance of concrete implementation of `BaseKeyedVectors` interface)
         - self.vocabulary (instance of concrete implementation of `BaseVocabBuilder` abstract class)
-        - self.trainables (instance of concrete implementation of `BaseTrainables` abstract clas)
+        - self.trainables (instance of concrete implementation of `BaseTrainables` abstract class)
         """
         self.vector_size = int(vector_size)
         self.workers = int(workers)
@@ -49,7 +53,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         """
         raise NotImplementedError()
 
-    def _get_job_params(self):
+    def _get_job_params(self, cur_epoch):
         """Return job parameters required for each batch"""
         raise NotImplementedError()
 
@@ -70,7 +74,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _clear_post_train(self):
-        """Resets certain properties of the model post training. eg. `kv.vectors_norm`"""
+        """Resets certain properties of the model post training. eg. `keyedvectors.vectors_norm`"""
         raise NotImplementedError()
 
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
@@ -79,9 +83,6 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
         """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided"""
-        raise NotImplementedError()
-
-    def _set_keyedvectors(self):
         raise NotImplementedError()
 
     def _worker_loop(self, job_queue, progress_queue):
@@ -160,10 +161,10 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
-                       trained_word_count, elapsed, job_tally):
+                       trained_word_count, elapsed):
         raise NotImplementedError()
 
-    def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed):
+    def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed, job_tally):
         raise NotImplementedError()
 
     def _log_epoch_progress(self, progress_queue, job_queue, cur_epoch=0, total_examples=None, total_words=None,
@@ -228,8 +229,6 @@ class BaseAny2VecModel(utils.SaveLoad):
             progress_queue, job_queue, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
             report_delay=report_delay)
 
-        # self._set_keyedvectors()
-
         return trained_word_count, raw_word_count, job_tally
 
     def train(self, data_iterable, epochs=None, total_examples=None,
@@ -285,45 +284,20 @@ class BaseAny2VecModel(utils.SaveLoad):
         super(BaseAny2VecModel, self).save(fname_or_handle, **kwargs)
 
 
-class BaseVocabBuilder(utils.SaveLoad):
-    """Class for managing vocabulary of a model. Takes care of building, pruning and updating vocabulary."""
-
-    def scan_vocab(self, data_iterable, progress_per=10000, **kwargs):
-        """Do an initial scan of all words appearing in data_iterable.
-        Sets corpus_count (total examples in data_iterable) and
-        raw_vocab(collections.defaultdict (int) mapping str vocab elements to their counts for all vocab words)"""
-        raise NotImplementedError()
-
-    def prepare_vocab(self, update=False, **kwargs):
-        raise NotImplementedError()
-
-
-class BaseModelTrainables(utils.SaveLoad):
-    """Class for storing and initializing/updating the trainable weights of a model. Also includes
-    tables required for training weights. """
-    def __init__(self, seed=1):
-        self.seed = seed
-
-    def prepare_weights(self, update=False, vocabulary=None):
-        raise NotImplementedError()
-
-    def reset_weights(self, vocab):
-        """Reset all trainable weights to an initial (untrained) state, but keep the existing vocabulary."""
-        raise NotImplementedError()
-
-    def update_weights(self, vocab):
-        """
-        Copy all the existing weights, and reset the weights for the newly
-        added vocabulary.
-        """
-        raise NotImplementedError()
-
-    def seeded_vector(self, seed_string, vector_size):
-        """Create one 'random' vector (but deterministic by seed_string)"""
-        raise NotImplementedError()
-
-
 class BaseWordEmbedddingsModel(BaseAny2VecModel):
+    """Base class containing common methods for training, using & evaluating word embeddings learning
+    models (`Word2Vec`, `FastText`).
+    """
+
+    def _clear_post_train(self):
+        raise NotImplementedError()
+
+    def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
+        raise NotImplementedError()
+
+    def _set_train_params(self, **kwargs):
+        raise NotImplementedError()
+
     def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
                  trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
                  min_alpha=0.0001, compute_loss=False, **kwargs):
@@ -340,6 +314,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         self.compute_loss = bool(compute_loss)
         self.running_training_loss = 0
         self.min_alpha_yet_reached = float(alpha)
+        self.corpus_count = 0
 
         super(BaseWordEmbedddingsModel, self).__init__(
             workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
@@ -488,13 +463,13 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        `word_freq` : dict
+        word_freq : dict
             Word,Word_Count dictionary.
-        `keep_raw_vocab` : bool
+        keep_raw_vocab : bool
             If not true, delete the raw vocabulary after the scaling is done and free up RAM.
-        `corpus_count`: int
+        corpus_count : int
             Even if no corpus is provided, this argument can set corpus_count explicitly.
-        `trim_rule` : function
+        trim_rule : function
             Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
             be trimmed away, or handled using the default (discard if word count < min_count).
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
@@ -502,7 +477,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
-        `update`: bool
+        update : bool
             If true, the new provided words in `word_freq` dict will be added to model's vocab.
 
         Examples
@@ -684,7 +659,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
         """
         Deprecated. Use self.wv.most_similar() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.most_similar`
+        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar`
         """
         return self.wv.most_similar(positive, negative, topn, restrict_vocab, indexer)
 
@@ -692,7 +667,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def wmdistance(self, document1, document2):
         """
         Deprecated. Use self.wv.wmdistance() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.wmdistance`
+        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.wmdistance`
         """
         return self.wv.wmdistance(document1, document2)
 
@@ -700,7 +675,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def most_similar_cosmul(self, positive=None, negative=None, topn=10):
         """
         Deprecated. Use self.wv.most_similar_cosmul() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.most_similar_cosmul`
+        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar_cosmul`
         """
         return self.wv.most_similar_cosmul(positive, negative, topn)
 
@@ -708,7 +683,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
         """
         Deprecated. Use self.wv.similar_by_word() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.similar_by_word`
+        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similar_by_word`
         """
         return self.wv.similar_by_word(word, topn, restrict_vocab)
 
@@ -716,7 +691,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
         """
         Deprecated. Use self.wv.similar_by_vector() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.similar_by_vector`
+        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similar_by_vector`
         """
         return self.wv.similar_by_vector(vector, topn, restrict_vocab)
 
@@ -724,7 +699,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def doesnt_match(self, words):
         """
         Deprecated. Use self.wv.doesnt_match() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.doesnt_match`
+        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.doesnt_match`
         """
         return self.wv.doesnt_match(words)
 
@@ -732,7 +707,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def similarity(self, w1, w2):
         """
         Deprecated. Use self.wv.similarity() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.similarity`
+        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity`
         """
         return self.wv.similarity(w1, w2)
 
@@ -740,7 +715,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
     def n_similarity(self, ws1, ws2):
         """
         Deprecated. Use self.wv.n_similarity() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.n_similarity`
+        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.n_similarity`
         """
         return self.wv.n_similarity(ws1, ws2)
 
@@ -749,6 +724,6 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
                             case_insensitive=True, dummy4unknown=False):
         """
         Deprecated. Use self.wv.evaluate_word_pairs() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.evaluate_word_pairs`
+        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.evaluate_word_pairs`
         """
         return self.wv.evaluate_word_pairs(pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
