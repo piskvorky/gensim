@@ -257,6 +257,36 @@ class ModelDictionary(object):
                 line.append(self.size + (h % self.bucket))
         return line
 
+    def get_line(self, sentence):
+        """Converting sentence to a list of word ids inferred from the dictionary.
+ 
+        Parameters
+        ----------
+        sentence : list of str
+            List of words.
+
+        Returns
+        -------
+        ntokens : int
+            Number of tokens processed in given sentence.
+        words : list of int
+            List of word ids.
+
+        """
+
+        words = []
+        ntokens = 0
+        for word in sentence:
+            h = self.find(word)
+            wid = self.word2int[h]
+            if wid < 0:
+                continue
+            ntokens += 1
+            words.append(wid)
+            if ntokens > self.max_line_size:
+                break
+        return ntokens, words
+
 
 class Sent2Vec(SaveLoad):
     """Class for training and using neural networks described in [1]_"""

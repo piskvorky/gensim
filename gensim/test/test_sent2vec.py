@@ -13,6 +13,13 @@ from gensim.test.utils import get_tmpfile, common_texts as sentences
 
 logger = logging.getLogger(__name__)
 
+test_sentences = [
+    ['How', 'are', 'you', 'today'],
+    ['Coding', 'is', 'fun'],
+    ['This', 'is', 'a', 'great', 'gensim', 'model'],
+    ['Would', 'you', 'like', 'to', 'go', 'for', 'a', 'swim']
+]
+
 
 class TestSent2VecModel(unittest.TestCase):
 
@@ -34,25 +41,17 @@ class TestSent2VecModel(unittest.TestCase):
         self.models_equal(model, model2)
 
     def models_equal(self, model, model2):
-        logger.warning("assert dict size")
         self.assertEqual(model.dict.size, model2.dict.size)
-        logger.warning("assert matricies")
         self.assertTrue(np.allclose(model.wi, model2.wi))
-        logger.warning("calc mcw")
         most_common_word = max(model.dict.words, key=lambda item: item.count).word
-        logger.warning("assert mcw")
         self.assertTrue(np.allclose(model.dict.word2int[model.dict.find(
                 most_common_word)], model2.dict.word2int[model2.dict.find(most_common_word)]))
 
     def test_persistence(self):
         tmpf = get_tmpfile('gensim_sent2vec.tst')
-        logger.warning("Train model")
         model = Sent2Vec(sentences, size=5, min_count=0, seed=42, neg=5, workers=1)
-        logger.warning("Model trained, save")
         model.save(tmpf)
-        logger.warning("Load saved model")
         loaded_model = Sent2Vec.load(tmpf)
-        logger.warning("Check that models equal")
         self.models_equal(model, loaded_model)
 
     def test_online_learning(self):
@@ -73,6 +72,12 @@ class TestSent2VecModel(unittest.TestCase):
         model.build_vocab(new_sentences, update=True)  # update vocab
         model.train(new_sentences)
         self.assertEqual(model.dict.size, 14)
+
+    def test_sent2vec_for_document(self):
+        model = Sent2Vec(sentences, size=5, min_count=0, seed=42, neg=5, workers=1)
+        for sentence in test_sentences:
+            sent_vec = model.sentence_vectors(sentence)
+            self.assertEqual(len(sent_vec), 5)
 
 
 if __name__ == '__main__':
