@@ -11,7 +11,6 @@ Automated tests for checking the output of gensim.scripts.
 from __future__ import unicode_literals
 
 import json
-import itertools
 import logging
 import os.path
 import unittest
@@ -57,12 +56,10 @@ class TestSegmentWiki(unittest.TestCase):
         for ext in extensions:
             try:
                 os.remove(fname + ext)
-                logger.warning("Removed temp file " + fname + ext)
             except OSError:
                 pass
 
     def test_segment_all_articles(self):
-        logger.warning("Calling segment_all_articles")
         title, sections, interlinks = next(segment_all_articles(self.fname))
         section_titles = [s[0] for s in sections]
         first_section_text = sections[0][1]
@@ -81,10 +78,7 @@ class TestSegmentWiki(unittest.TestCase):
         self.assertEqual(num_articles, expected_num_articles)
 
     def test_json_len(self):
-        logger.warning("Creating temp file script.tst.json")
         tmpf = get_tmpfile('script.tst.json')
-
-        logger.warning("Calling segment_and_write_all_articles on temp file")
         segment_and_write_all_articles(self.fname, tmpf, workers=1)
 
         expected_num_articles = 106
@@ -92,19 +86,14 @@ class TestSegmentWiki(unittest.TestCase):
         self.assertEqual(num_articles, expected_num_articles)
 
     def test_segment_and_write_all_articles(self):
-        logger.warning("Creating temp file script.tst.json")
         tmpf = get_tmpfile('script.tst.json')
-
-        logger.warning("Calling segment_and_write_all_articles on temp file")
         segment_and_write_all_articles(self.fname, tmpf, workers=1)
 
         # Get the first line from the text file we created.
         with open(tmpf) as f:
-            logger.warning("Reading first line from json")
             first = next(f)
 
         # decode JSON line into a Python dictionary object
-        logger.warning("Loading json")
         article = json.loads(first)
         title, section_titles, interlinks = article['title'], article['section_titles'], article['interlinks']
 
