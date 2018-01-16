@@ -259,7 +259,7 @@ class ModelDictionary(object):
 
     def get_line(self, sentence):
         """Converting sentence to a list of word ids inferred from the dictionary.
- 
+
         Parameters
         ----------
         sentence : list of str
