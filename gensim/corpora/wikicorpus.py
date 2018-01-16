@@ -42,7 +42,7 @@ from gensim.corpora.textcorpus import TextCorpus
 logger = logging.getLogger(__name__)
 
 ARTICLE_MIN_WORDS = 50
-"""Ignore shorter articles (after full preprocessing)"""
+"""Ignore shorter articles (after full preprocessing)."""
 
 # default thresholds for lengths of individual tokens
 TOKEN_MIN_LEN = 2
@@ -50,37 +50,37 @@ TOKEN_MAX_LEN = 15
 
 
 RE_P0 = re.compile(r'<!--.*?-->', re.DOTALL | re.UNICODE)
-"""Comments"""
+"""Comments."""
 RE_P1 = re.compile(r'<ref([> ].*?)(</ref>|/>)', re.DOTALL | re.UNICODE)
-"""Footnotes"""
+"""Footnotes."""
 RE_P2 = re.compile(r'(\n\[\[[a-z][a-z][\w-]*:[^:\]]+\]\])+$', re.UNICODE)
-"""Links to languages"""
+"""Links to languages."""
 RE_P3 = re.compile(r'{{([^}{]*)}}', re.DOTALL | re.UNICODE)
-"""Template"""
+"""Template."""
 RE_P4 = re.compile(r'{{([^}]*)}}', re.DOTALL | re.UNICODE)
-"""Template"""
+"""Template."""
 RE_P5 = re.compile(r'\[(\w+):\/\/(.*?)(( (.*?))|())\]', re.UNICODE)
-"""Remove URL, keep description"""
+"""Remove URL, keep description."""
 RE_P6 = re.compile(r'\[([^][]*)\|([^][]*)\]', re.DOTALL | re.UNICODE)
-"""Simplify links, keep description"""
+"""Simplify links, keep description."""
 RE_P7 = re.compile(r'\n\[\[[iI]mage(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)
-"""Keep description of images"""
+"""Keep description of images."""
 RE_P8 = re.compile(r'\n\[\[[fF]ile(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)
-"""Keep description of files"""
+"""Keep description of files."""
 RE_P9 = re.compile(r'<nowiki([> ].*?)(</nowiki>|/>)', re.DOTALL | re.UNICODE)
-"""External links"""
+"""External links."""
 RE_P10 = re.compile(r'<math([> ].*?)(</math>|/>)', re.DOTALL | re.UNICODE)
-"""Math content"""
+"""Math content."""
 RE_P11 = re.compile(r'<(.*?)>', re.DOTALL | re.UNICODE)
-"""All other tags"""
+"""All other tags."""
 RE_P12 = re.compile(r'\n(({\|)|(\|-)|(\|}))(.*?)(?=\n)', re.UNICODE)
-"""Table formatting"""
+"""Table formatting."""
 RE_P13 = re.compile(r'\n(\||\!)(.*?\|)*([^|]*?)', re.UNICODE)
-"""Table cell formatting"""
+"""Table cell formatting."""
 RE_P14 = re.compile(r'\[\[Category:[^][]*\]\]', re.UNICODE)
-"""Categories"""
+"""Categories."""
 RE_P15 = re.compile(r'\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
-"""Remove File and Image templates"""
+"""Remove File and Image templates."""
 
 IGNORED_NAMESPACES = [
     'Wikipedia', 'Category', 'File', 'Portal', 'Template',
@@ -122,7 +122,7 @@ def remove_markup(text):
     Parameters
     ----------
     text : str
-        String containing markup
+        String containing markup.
 
     Returns
     -------
@@ -226,7 +226,7 @@ def remove_file(s):
     Parameters
     ----------
     s : str
-        String containing 'File:' and 'Image:' markup
+        String containing 'File:' and 'Image:' markup.
 
     Returns
     -------
@@ -254,11 +254,11 @@ def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, 
     Parameters
     ----------
     content : str
-        String without markup (see `filter_wiki()`)
+        String without markup (see `filter_wiki()`).
     token_min_len : int
     token_max_len : int
     lower : bool
-         Whether to lowercase content
+         Whether to lowercase content.
 
     Returns
     -------
@@ -300,10 +300,10 @@ def extract_pages(f, filter_namespaces=False):
     Parameters
     ----------
     f : File
-        File-like object
+        File-like object.
 
     filter_namespaces : list of str or bool
-         Namespaces to consider
+         Namespaces to consider.
 
     Yields
     ------
@@ -353,26 +353,25 @@ _extract_pages = extract_pages  # for backward compatibility
 
 def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
                     token_max_len=TOKEN_MAX_LEN, lower=True):
-    """Parse a wikipedia article, returning its content as a list of tokens
-    (utf8-encoded strings).
+    """Parse a wikipedia article, returning its content as a list of tokens.
 
     Set `tokenizer_func` (defaults to `tokenize`) parameter for languages like japanese or thai to perform better
     tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower).
 
     Parameters
     ----------
-    args :
-
+    args : list of (function, int, int, bool)
+        Meta info.
     tokenizer_func :
-         (Default value = tokenize)
     token_min_len : int
     token_max_len : int
     lower : bool
-         Whether to lowercase result
+         Whether to lowercase result.
 
     Returns
     -------
-    tuple(list of str, str, str)
+    tokens : tuple(list of str, str, str)
+        UTF-8 encoded.
 
     """
     text, lemmatize, title, pageid = args
@@ -458,26 +457,26 @@ class WikiCorpus(TextCorpus):
         Parameters
         ----------
         fname : str
-            Filename
+            Filename.
         processes : int or None
-            Number of processes to run, defaults to *number of cpu - 1*
+            Number of processes to run, defaults to *number of cpu - 1*.
         lemmatize : bool
             Whether to use lemmatization instead of simple regexp
             tokenization. Defaults to `True` if *pattern* package installed
-            and to `False` otherwise
+            and to `False` otherwise.
         dictionary : `corpora.Dictionary` or None
         filter_namespaces : tuple of str
-            Namespaces to consider
+            Namespaces to consider.
         tokenizer_func : function(text, token_min_len, token_max_len, lower)
             Returns list of tokens. Set this parameter for languages like
-            japanese or thai to perform better tokenization
+            japanese or thai to perform better tokenization.
         article_min_tokens : int
             Minimum tokens in article. Article ignored if number of tokens is
-            less
+            less.
         token_min_len : int
         token_max_len : int
         lower : bool
-            Whether to lowercase texts
+            Whether to lowercase texts.
 
         Attributes
         ----------

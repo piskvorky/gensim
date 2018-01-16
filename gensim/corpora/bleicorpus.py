@@ -42,14 +42,15 @@ class BleiCorpus(IndexedCorpus):
         Parameters
         ----------
         fname : str
-            Serialized corpus's filename
+            Serialized corpus's filename.
         fname_vocab : str or None, optional
-            Vocabulary file; takes precedence over
+            Vocabulary file. If not given, searching for the
+            ``vocab``/``vocab.txt `` file.
 
         Raises
         ------
         IOError
-            If vocabulary file doesn't exist
+            If vocabulary file doesn't exist.
 
         """
         IndexedCorpus.__init__(self, fname)
@@ -88,12 +89,12 @@ class BleiCorpus(IndexedCorpus):
         Parameters
         ----------
         line : str
-            Document's string representation
+            Document's string representation.
 
         Returns
         -------
         list of (int, float)
-            document's list representation
+            Document's list representation.
 
         """
         parts = utils.to_unicode(line).split()
@@ -113,13 +114,13 @@ class BleiCorpus(IndexedCorpus):
         Parameters
         ----------
         fname : str
-            Filename
+            Filename.
         corpus : iterable
-            Iterable of documents
+            Iterable of documents.
         id2word : dict of (str, str), optional
-            Transforms id to word (Default value = None)
+            Transforms id to word.
         metadata : bool
-            Any additional info (Default value = False)
+            Any additional info.
 
         Returns
         -------
@@ -157,7 +158,7 @@ class BleiCorpus(IndexedCorpus):
         Parameters
         ----------
         offset : int
-            Position of the document in the file
+            Position of the document in the file.
 
         Returns
         -------

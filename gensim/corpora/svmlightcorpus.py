@@ -51,7 +51,7 @@ class SvmLightCorpus(IndexedCorpus):
         Parameters
         ----------
         fname: str
-            Corpus filename
+            Filename.
         store_labels : bool
             Whether to store labels (~SVM target class). They currently have
             no application but stored in `self.labels` for convenience by
@@ -96,15 +96,15 @@ class SvmLightCorpus(IndexedCorpus):
         Parameters
         ----------
         fname : str
-            Corpus filename
+            Filename.
         corpus : iterable
-            Iterable of documents
+            Iterable of documents.
         id2word : dict of (str, str), optional
-            Transforms id to word (Default value = None)
+            Transforms id to word.
         labels : list or False
-            An SVMlight `<target>` class tags or False if not present
+            An SVMlight `<target>` class tags or False if not present.
         metadata : bool
-            Any additional info (Default value = False)
+            Any additional info.
 
         Returns
         -------
@@ -127,7 +127,7 @@ class SvmLightCorpus(IndexedCorpus):
         Parameters
         ----------
         offset : int
-            Document's position
+            Document's position.
 
         Returns
         -------
@@ -145,7 +145,7 @@ class SvmLightCorpus(IndexedCorpus):
         Parameters
         ----------
         line : str
-            Line in SVMLight format
+            Line in SVMLight format.
 
         Returns
         -------
@@ -173,9 +173,9 @@ class SvmLightCorpus(IndexedCorpus):
         Parameters
         ----------
         doc : tuple of (int, float)
-            Document
+            Document.
         label : int
-            (Default value = 0)
+            Document label.
 
         Returns
         -------

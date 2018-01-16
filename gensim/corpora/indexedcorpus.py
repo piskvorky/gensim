@@ -38,9 +38,9 @@ class IndexedCorpus(interfaces.CorpusABC):
         Parameters
         ----------
         fname : string
-            Corpus filename
+            Filename.
         index_fname : string or None
-            Index filename, or None for loading `fname`.index
+            Index filename, or None for loading `fname`.index.
 
         Examples
         --------
@@ -75,20 +75,20 @@ class IndexedCorpus(interfaces.CorpusABC):
         Parameters
         ----------
         fname : str
-            Filename
+            Filename.
         corpus : iterable
-            Iterable of documents
+            Iterable of documents.
         id2word : dict of (str, str), optional
-            Transforms id to word (Default value = None)
+            Transforms id to word.
         index_fname : str
              Where to save resulting index. Saved to `fname`.index if None.
         progress_cnt : int
-            Number of documents after which progress info is printed
+            Number of documents after which progress info is printed.
         labels : bool
-             Whether to skip the first column (class labels)
+             Whether to skip the first column (class labels).
         metadata : bool
             If True will ensure that serialize will write out
-            article titles to a pickle file. (Default value = False)
+            article titles to a pickle file. (Default value = False).
 
         Examples
         --------
@@ -149,7 +149,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         Parameters
         ----------
         docno : int
-            Document number
+            Document number.
 
         Returns
         -------

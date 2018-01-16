@@ -34,9 +34,9 @@ class CsvCorpus(interfaces.CorpusABC):
         Parameters
         ----------
         fname : str
-            Filename
+            Filename.
         labels : bool
-            Whether to skip the first column
+            Whether to skip the first column.
 
         """
         logger.info("loading corpus from %s", fname)
