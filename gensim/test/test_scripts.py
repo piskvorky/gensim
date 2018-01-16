@@ -19,8 +19,6 @@ from gensim.scripts.segment_wiki import segment_all_articles, segment_and_write_
 from smart_open import smart_open
 from gensim.test.utils import datapath, get_tmpfile
 
-logger = logging.getLogger(__name__)
-
 
 class TestSegmentWiki(unittest.TestCase):
 
