@@ -47,12 +47,6 @@ class BaseAny2VecModel(utils.SaveLoad):
         self.model_trimmed_post_training = False
         self.callbacks = callbacks
 
-    def build_vocab(self, data_iterable, update=False, progress_per=10000, **kwargs):
-        """Scan through all the data and create/update vocabulary.
-        Should also initialize/reset/update vectors for new vocab entities.
-        """
-        raise NotImplementedError()
-
     def _get_job_params(self, cur_epoch):
         """Return job parameters required for each batch"""
         raise NotImplementedError()
