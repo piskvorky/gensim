@@ -51,6 +51,7 @@ import os
 import threading
 from timeit import default_timer
 from six.moves import xrange
+from gensim.models.sent2vec_inner import _do_train_job_fast
 
 try:
     from queue import Queue
@@ -58,8 +59,6 @@ except ImportError:
     from Queue import Queue
 
 logger = logging.getLogger(__name__)
-
-from gensim.models.sent2vec_inner import _do_train_job_fast
 
 
 class Entry(object):
