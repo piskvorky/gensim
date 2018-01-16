@@ -45,7 +45,7 @@ class BleiCorpus(IndexedCorpus):
             Serialized corpus's filename.
         fname_vocab : str or None, optional
             Vocabulary file. If not given, searching for the
-            ``vocab``/``vocab.txt `` file.
+            vocab/vocab.txt file.
 
         Raises
         ------
