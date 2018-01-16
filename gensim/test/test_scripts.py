@@ -66,7 +66,7 @@ class TestSegmentWiki(unittest.TestCase):
         self.assertEqual(title, self.expected_title)
         self.assertEqual(section_titles, self.expected_section_titles)
 
-        first_sentence = "'''Anarchism''' is a [[political philosophy]] that advocates [self-governed] societies"
+        first_sentence = "'''Anarchism''' is a political philosophy that advocates self-governed societies"
         self.assertTrue(first_sentence in first_section_text)
         for interlink in self.expected_interlinks:
             self.assertIn(interlink, interlinks)

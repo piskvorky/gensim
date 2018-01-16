@@ -69,7 +69,19 @@ IGNORED_NAMESPACES = [
 ]
 
 
-def filter_wiki(raw):
+def find_interlinks(raw):
+    """
+    Find all interlinks to other articles in the dump. `raw` is either unicode
+    or utf-8 encoded string.
+    """
+    interlink_regex_capture = r"\[{1,2}(.*?)\]{1,2}"
+    filtered = filter_wiki(raw, promote_remaining=False)
+    interlinks = re.findall(interlink_regex_capture, filtered)
+    legit_interlinks = [i for i in interlinks if '[' not in i and ']' not in i]
+    return legit_interlinks
+
+
+def filter_wiki(raw, promote_remaining=True):
     """
     Filter out wiki mark-up from `raw`, leaving only text. `raw` is either unicode
     or utf-8 encoded string.
@@ -78,10 +90,10 @@ def filter_wiki(raw):
     # contributions to improving this code are welcome :)
     text = utils.to_unicode(raw, 'utf8', errors='ignore')
     text = utils.decode_htmlentities(text)  # '&amp;nbsp;' --> '\xa0'
-    return remove_markup(text)
+    return remove_markup(text, promote_remaining)
 
 
-def remove_markup(text):
+def remove_markup(text, promote_remaining=True):
     text = re.sub(RE_P2, '', text)  # remove the last list (=languages)
     # the wiki markup is recursive (markup inside markup etc)
     # instead of writing a recursive grammar, here we deal with that by removing
@@ -109,6 +121,9 @@ def remove_markup(text):
         # stop if nothing changed between two iterations or after a fixed number of iterations
         if old == text or iters > 2:
             break
+
+    if promote_remaining:
+        text = text.replace('[', '').replace(']', '')  # promote all remaining markup to plain text
 
     return text
 

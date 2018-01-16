@@ -46,7 +46,7 @@ import re
 import sys
 from xml.etree import cElementTree
 
-from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, get_namespace, utils
+from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, find_interlinks, get_namespace, utils
 from smart_open import smart_open
 
 
@@ -196,7 +196,6 @@ def segment(page_xml):
     lead_section_heading = "Introduction"
     top_level_heading_regex = r"\n==[^=].*[^=]==\n"
     top_level_heading_regex_capture = r"\n==([^=].*[^=])==\n"
-    interlink_regex_capture = r"\[{1,2}(.*?)\]{1,2}"
 
     title = elem.find(title_path).text
     text = elem.find(text_path).text
@@ -205,22 +204,18 @@ def segment(page_xml):
         text = None
 
     if text is not None:
+        interlinks = find_interlinks(text)
         section_contents = re.split(top_level_heading_regex, text)
         section_headings = [lead_section_heading] + re.findall(top_level_heading_regex_capture, text)
         section_headings = [heading.strip() for heading in section_headings]
         assert len(section_contents) == len(section_headings)
     else:
+        interlinks = []
         section_contents = []
         section_headings = []
 
     section_contents = [filter_wiki(section_content) for section_content in section_contents]
     sections = list(zip(section_headings, section_contents))
-
-    interlinks = []
-    for filtered_content in section_contents:
-        section_interlinks = re.findall(interlink_regex_capture, filtered_content)
-        legit_interlinks = [i for i in section_interlinks if '[' not in i and ']' not in i]
-        interlinks.extend(legit_interlinks)
 
     return title, sections, interlinks
 
