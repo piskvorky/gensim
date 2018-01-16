@@ -473,12 +473,11 @@ var TopicModelVis = function(to_select, data_or_file_name) {
         // draw circles
         docpoints.append("circle")
             .attr("class", "docdot")
-            .style("opacity", 0.2)
-            .style("fill", color1)
-            .attr("r", function(d) {
-                //return (rScaleMargin(+d.Freq));
-                return (Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/3);
-            })
+            .style("opacity", function(d) {
+				return ((d.Freq/10)*0.2);
+			})
+			.style("fill", color1)
+			.attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*D))
             .attr("cx", function(d) {
                 return (doc_xScale(+d.x));
             })
@@ -540,12 +539,11 @@ var TopicModelVis = function(to_select, data_or_file_name) {
         // draw circles
         topicpoints.append("circle")
             .attr("class", "topicdot")
-            .style("opacity", 0.2)
-            .style("fill", color1)
-            .attr("r", function(d) {
-                //return (rScaleMargin(+d.Freq));
-                return (Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/3);
-            })
+            .style("opacity", function(d) {
+				return ((d.Freq/10)*0.2);
+			})
+			.style("fill", color1)
+			.attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*T))
             .attr("cx", function(d) {
                 return (topic_xScale(+d.x));
             })
@@ -585,34 +583,23 @@ var TopicModelVis = function(to_select, data_or_file_name) {
         var wordpoints = word_plot.selectAll("wordpoints")
                 .data(wordMdsData)
                 .enter();
-
-        // text to indicate word
-        wordpoints.append("text")
-            .attr("class", "word_txt")
-            .attr("x", function(d) {
-                return (word_xScale(+d.x));
-            })
-            .attr("y", function(d) {
-                return (word_yScale(+d.y) + 4);
-            })
+   
+        var tooltip = d3.select("body")
+            .append("div")
+            .style("position", "absolute")
+            .style("z-index", "10")
+            .style("visibility", "hidden")
             .attr("stroke", "black")
-            .attr("opacity", 1)
-            .style("text-anchor", "middle")
-            .style("font-size", "11px")
-            .style("fontWeight", 100)
-            .text(function(d) {
-                return d.vocab;
-            });
+            .text("a simple tooltip");
 
         // draw circles
         wordpoints.append("circle")
             .attr("class", "worddot")
-            .style("opacity", 0.2)
-            .style("fill", color1)
-            .attr("r", function(d) {
-                //return (rScaleMargin(+d.Freq));
-                return (Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/3);
+            .style("opacity", function(d) {
+                return ((d.Freq/10)*0.2);
             })
+            .style("fill", color1)
+            .attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*W))
             .attr("cx", function(d) {
                 return (word_xScale(+d.x));
             })
@@ -623,7 +610,12 @@ var TopicModelVis = function(to_select, data_or_file_name) {
             .attr("id", function(d) {
                 return (wordID + d.vocab);
             })
+            .text(function(d) {
+                return d.vocab;
+            })
             .on("mouseover", function(d) {
+                tooltip.text(d.vocab); 
+                tooltip.style("visibility", "visible");
                 var old_word = wordID + vis_state.word;
                 if (vis_state.word > 0 && old_word!= this.id) {
                     word_off(document.getElementById(old_word));
@@ -643,9 +635,13 @@ var TopicModelVis = function(to_select, data_or_file_name) {
                 state_save(true);
                 word_on(this);
             })
+            .on("mousemove", function(){
+                return tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+            })
             .on("mouseout", function(d) {
                 if (vis_state.word != d.vocab) word_off(this);
                 if (vis_state.word > 0) word_on(document.getElementById(wordID + vis_state.word));
+                return tooltip.style("visibility", "hidden");
             });
 
 
@@ -802,14 +798,6 @@ var TopicModelVis = function(to_select, data_or_file_name) {
             d3.selectAll(to_select + " .worddot")
                 .data(wordMdsData);
 
-            // // Change sizes of word numbers:
-            // d3.selectAll(to_select + " .word_txt")
-            //     .data(size)
-            //     .transition()
-            //     .style("font-size", function(d) {
-            //         return +d;
-            //     });
-
 
             // topic interactions
 
@@ -916,14 +904,6 @@ var TopicModelVis = function(to_select, data_or_file_name) {
             d3.selectAll(to_select + " .docdot")
                 .data(docMdsData);
 
-            // // Change sizes of word numbers:
-            // d3.selectAll(to_select + " .word_txt")
-            //     .data(size)
-            //     .transition()
-            //     .style("font-size", function(d) {
-            //         return +d;
-            //     });
-
 
             // word interactions
 
@@ -1029,14 +1009,6 @@ var TopicModelVis = function(to_select, data_or_file_name) {
             // re-bind mdsData so we can handle multiple selection
             d3.selectAll(to_select + " .docdot")
                 .data(docMdsData);
-
-            // // Change sizes of word numbers:
-            // d3.selectAll(to_select + " .word_txt")
-            //     .data(size)
-            //     .transition()
-            //     .style("font-size", function(d) {
-            //         return +d;
-            //     });
 
 
             // topic interactions
