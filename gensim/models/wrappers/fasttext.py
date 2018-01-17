@@ -394,18 +394,46 @@ class FastText(Word2Vec):
         """
         self.wv.ngrams = {}
         all_ngrams = []
+        self.wv.syn0_vocab = np.zeros((len(self.wv.vocab), self.vector_size), dtype=REAL)
         self.wv.syn0 = np.zeros((len(self.wv.vocab), self.vector_size), dtype=REAL)
 
         for w, vocab in self.wv.vocab.items():
             all_ngrams += compute_ngrams(w, self.wv.min_n, self.wv.max_n)
-            self.wv.syn0[vocab.index] += np.array(self.wv.syn0_ngrams[vocab.index])
+            self.wv.syn0_vocab[vocab.index] += np.array(self.wv.syn0_ngrams[vocab.index])
 
-        self.wv.syn0_ngrams = self.wv.syn0_ngrams[len(self.wv.vocab):]
+        self.wv.hash2index = {}
+        ngram_indices = []
+        new_hash_count = 0
+        for i, ngram in enumerate(all_ngrams):
+            ngram_hash = ft_hash(ngram) % self.bucket
+            if ngram_hash in self.wv.hash2index:
+                self.wv.ngrams[ngram] = self.wv.hash2index[ngram_hash]
+            else:
+                ngram_indices.append(len(self.wv.vocab) + ngram_hash)
+                self.wv.hash2index[ngram_hash] = new_hash_count
+                self.wv.ngrams[ngram] = new_hash_count
+                new_hash_count = new_hash_count + 1
 
-        all_ngrams = set(all_ngrams)
-        for ngram in all_ngrams:
-            self.wv.ngrams[ngram] = ft_hash(ngram) % self.bucket
+        self.wv.syn0_ngrams = self.wv.syn0_ngrams.take(ngram_indices, axis=0)
 
+        ngram_weights = self.wv.syn0_ngrams
+
+        logger.info(
+            "loading weights for %s words for fastText model from %s",
+            len(self.wv.vocab), self.file_name
+        )
+
+        for w, vocab in self.wv.vocab.items():
+            word_vec = np.copy(self.wv.syn0_vocab[vocab.index])
+            ngrams = compute_ngrams(w, self.wv.min_n, self.wv.max_n)
+            for ngram in ngrams:
+                word_vec += self.wv.syn0_ngrams[self.wv.ngrams[ngram]]
+            word_vec /= (len(ngrams) + 1)
+            self.wv.syn0[vocab.index] += word_vec
+        logger.info(
+            "loaded %s weight matrix for fastText model from %s",
+            self.wv.syn0.shape, self.file_name
+        )
 
 def compute_ngrams(word, min_n, max_n):
     BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
