@@ -220,7 +220,7 @@ class KeyedVectorsBase(utils.SaveLoad):
                 result.index2word.append(word)
 
             if binary:
-                binary_len = dtype(REAL).itemsize * vector_size
+                binary_len = dtype(datatype).itemsize * vector_size
                 for _ in xrange(vocab_size):
                     # mixed text and binary: read text first, then binary
                     word = []
@@ -233,7 +233,7 @@ class KeyedVectorsBase(utils.SaveLoad):
                         if ch != b'\n':  # ignore newlines in front of words (some binary files have)
                             word.append(ch)
                     word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
-                    weights = fromstring(fin.read(binary_len), dtype=REAL)
+                    weights = fromstring(fin.read(binary_len), dtype=datatype)
                     add_word(word, weights)
             else:
                 for line_no in xrange(vocab_size):
@@ -243,7 +243,7 @@ class KeyedVectorsBase(utils.SaveLoad):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
-                    word, weights = parts[0], [datatype(x) for x in parts[1:]]
+                    word, weights = parts[0], np.array(parts[1:], dtype=datatype)
                     add_word(word, weights)
         if result.syn0.shape[0] != len(result.vocab):
             logger.info(
