@@ -192,12 +192,13 @@ class HashDictionary(utils.SaveLoad, dict):
         )
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
-        """Convert `document` into the bag-of-words format = list of `(token_id, token_count)` 2-tuples.
+        """Convert `document` into the bag-of-words format, like [(1, 4), (150, 1), (2005, 2)].
 
         Notes
         -----
         Each word is assumed to be a **tokenized and normalized** utf-8 encoded string. No further preprocessing
-        is done on the words in `document`; apply tokenization, stemming etc. before calling this method.
+        is done on the words in `document` (apply tokenization, stemming etc) before calling this method.
+
         If `allow_update` or `self.allow_update` is set, then also update dictionary in the process: update overall
         corpus statistics and document frequencies. For each id appearing in this document, increase its document
         frequency (`self.dfs`) by one.
@@ -207,14 +208,16 @@ class HashDictionary(utils.SaveLoad, dict):
         document : list of str
             Is a list of tokens = **tokenized and normalized** strings (either utf8 or unicode).
         allow_update : bool, optional
-            Update dictionary in the process.
+            If True - update dictionary in the process.
         return_missing : bool, optional
-            Show token_count for missing words.
+            Show token_count for missing words. HAVE NO SENSE FOR THIS CLASS, BECAUSE WE USING HASHING-TRICK.
 
         Return
         ------
         list of (int, int)
-            Bag-of-words format = list of (token_id, token_count) 2-tuples.
+            Document in Bag-of-words (BoW) format.
+        list of (int, int), dict
+            If `return_missing=True`, return document in Bag-of-words (BoW) format + empty dictionary.
 
         Examples
         --------
@@ -255,14 +258,15 @@ class HashDictionary(utils.SaveLoad, dict):
             return result
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000):
-        """Remove document frequency statistics for tokens.
+        """Filter tokens in dictionary by frequency.
 
         Parameters
         ----------
         no_below : int, optional
-            Keep less than `no_below` documents.
+            Keep tokens which are contained in at least `no_below` documents.
         no_above : float, optional
-            Keep more than `no_below` documents (fraction of total corpus size, not an absolute number).
+            Keep tokens which are contained in no more than `no_above` documents
+            (fraction of total corpus size, not an absolute number).
         keep_n : int, optional
             Keep only the first `keep_n` most frequent tokens.
 
@@ -271,18 +275,18 @@ class HashDictionary(utils.SaveLoad, dict):
         For tokens that appear in:
 
         #. Less than `no_below` documents (absolute number) or \n
-        #. More than `no_above` documents (fraction of total corpus size, *not* absolute number).
+        #. More than `no_above` documents (fraction of total corpus size, **not absolute number**).
         #. After (1) and (2), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
 
-        Since HashDictionary's id range is fixed and doesn't depend on
-        the number of tokens seen, this doesn't really "remove" anything. It only
-        clears some supplementary statistics, for easier debugging and a smaller RAM
-        footprint.
+        Since :class:`~gensim.corpora.hashdictionary.HashDictionary` id range is fixed and doesn't depend on the number of tokens seen,
+        this doesn't really "remove" anything. It only clears some supplementary statistics,
+        for easier debugging and a smaller RAM footprint.
 
         Examples
         --------
-        >>> from gensim.corpora import hashdictionary
-        >>> data = hashdictionary.HashDictionary(["máma mele maso".split(), "ema má máma".split()])
+        >>> from gensim.corpora import HashDictionary
+        >>>
+        >>> data = HashDictionary(["máma mele maso".split(), "ema má máma".split()])
         >>> data.filter_extremes(1, 0.5, 1)
         >>> print data.token2id
         {'maso': 15025}
@@ -307,25 +311,26 @@ class HashDictionary(utils.SaveLoad, dict):
         )
 
     def save_as_text(self, fname):
-        """Save this HashDictionary to a text file, for easier debugging.
+        """Save this HashDictionary to a text file.
 
         Parameters
         ----------
         fname : str
-            File name.
+            Path to output file.
 
-        Notes:
+        Notes
         -----
         The format is:
         `id[TAB]document frequency of this id[TAB]tab-separated set of words in UTF8 that map to this id[NEWLINE]`.
-        Note: use `save`/`load` to store in binary format instead (pickle).
+
 
         Examples
         --------
-        >>> from gensim.corpora import hashdictionary
-        >>> data = hashdictionary.HashDictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
-        >>> data.save_as_text("testdata")
-        Got file "testdata.txt" with specified format (look at Notes for info).
+        >>> from gensim.corpora import HashDictionary
+        >>> from gensim.test.utils import get_tmpfile
+        >>>
+        >>> data = HashDictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
+        >>> data.save_as_text(get_tmpfile("dictionary_in_text_format"))
 
         """
         logger.info("saving HashDictionary mapping to %s" % fname)
