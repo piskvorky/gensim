@@ -15,28 +15,28 @@ import itertools
 
 from gensim import interfaces, utils
 
-logger = logging.getLogger('gensim.corpora.csvcorpus')
+logger = logging.getLogger(__name__)
 
 
 class CsvCorpus(interfaces.CorpusABC):
     """Corpus in CSV format.
 
-    The CSV delimiter, headers etc. are guessed automatically based on the
-    file content.
-
+    Notes
+    -----
+    The CSV delimiter, headers etc. are guessed automatically based on the file content.
     All row values are expected to be ints/floats.
 
     """
 
     def __init__(self, fname, labels):
-        """Initialize the corpus from a file.
+        """
 
         Parameters
         ----------
         fname : str
-            Filename.
+            Path to corpus in CSV format.
         labels : bool
-            Whether to skip the first column.
+            If True - skip first line (header).
 
         """
         logger.info("loading corpus from %s", fname)
@@ -51,11 +51,12 @@ class CsvCorpus(interfaces.CorpusABC):
         logger.info("sniffed CSV delimiter=%r, headers=%s", self.dialect.delimiter, self.headers)
 
     def __iter__(self):
-        """Iterate over the corpus, returning one sparse vector at a time.
+        """Iterate over the corpus, returning one BoW vector at a time.
 
         Yields
         ------
         list of (int, float)
+            Document in BoW format.
 
         """
         reader = csv.reader(utils.smart_open(self.fname), self.dialect)
