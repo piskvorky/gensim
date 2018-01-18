@@ -15,6 +15,7 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
+from gensim.models import doc2vec
 
 
 class D2VTransformer(TransformerMixin, BaseEstimator):
@@ -63,8 +64,9 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         Fit the model according to the given training data.
         Calls gensim.models.Doc2Vec
         """
+        d2v_sentences = [doc2vec.TaggedDocument(words[0], [i]) for i, words in enumerate(X)]
         self.gensim_model = models.Doc2Vec(
-            documents=X, dm_mean=self.dm_mean, dm=self.dm,
+            documents=d2v_sentences, dm_mean=self.dm_mean, dm=self.dm,
             dbow_words=self.dbow_words, dm_concat=self.dm_concat, dm_tag_count=self.dm_tag_count,
             docvecs=self.docvecs, docvecs_mapfile=self.docvecs_mapfile, comment=self.comment,
             trim_rule=self.trim_rule, size=self.size, alpha=self.alpha, window=self.window,
