@@ -139,6 +139,13 @@ class LowCorpus(IndexedCorpus):
         list of tuples
             Construct a list of (word, wordFrequency) 2-tuples.
 
+        Examples
+        --------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.corpora import lowcorpus
+        >>> data = lowcorpus.LowCorpus(datapath("testcorpus.low"))
+        >>> docline = data.line2doc("graph")
+        [(2, 1)]
         """
         words = self.line2words(line)
 
@@ -192,8 +199,13 @@ class LowCorpus(IndexedCorpus):
         id2word : str, optional
             If provided, it is a dictionary mapping between word_ids (integers) and words (strings).
             Otherwise, the mapping is constructed from the documents.
-        metadata : noidea, optional
+        metadata : str, optional
             THIS PARAMETER WILL BE IGNORED.
+
+        Return
+        ------
+        list of int
+            List of offsets.
 
         """
         if id2word is None:
@@ -226,10 +238,37 @@ class LowCorpus(IndexedCorpus):
 
         Parameters
         ----------
-
         offset : int
 
-        
+        Return
+        list of tuples
+            Construct a list of (word, wordFrequency) 2-tuples.
+
+        Examples
+        --------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.corpora import lowcorpus
+        >>> data = lowcorpus.LowCorpus(datapath("testcorpus.low"))
+        >>>
+        >>> data.docbyoffset(1)
+        >>>
+        >>> #There are no docs at the end of the first line.
+        []
+        >>> data.docbyoffset(2)
+        >>>
+        >>> #Now we can see all words at the second line.
+        [(0, 1), (3, 1), (4, 1)]
+        >>>
+        >>> data.docbyoffset(12)
+        >>>
+        >>> #Only last word of the second line.
+        [(4, 1)]
+        >>>
+        >>> data.docbyoffset(12)
+        >>>
+        >>> #Beginning of the third line: show all words in it.
+        [(0, 1), (6, 1), (7, 1), (8, 1), (9, 1), (11, 1)]
+
         """
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
