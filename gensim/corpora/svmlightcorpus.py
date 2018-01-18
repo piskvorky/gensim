@@ -5,9 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Corpus in SVMlight format.
-"""
+"""Corpus in SVMlight format."""
 
 
 from __future__ import with_statement
@@ -18,16 +16,16 @@ from gensim import utils
 from gensim.corpora import IndexedCorpus
 
 
-logger = logging.getLogger('gensim.corpora.svmlightcorpus')
+logger = logging.getLogger(__name__)
 
 
 class SvmLightCorpus(IndexedCorpus):
     """Corpus in SVMlight format.
 
     Quoting http://svmlight.joachims.org/:
-    The input file contains the training examples. The first lines
-    may contain comments and are ignored if they start with #. Each of the following
-    lines represents one training example and is of the following format::
+    The input file contains the training examples. The first lines  may contain comments and are ignored
+    if they start with #. Each of the following lines represents one training example
+    and is of the following format::
 
         <line> .=. <target> <feature>:<value> <feature>:<value> ... <feature>:<value> # <info>
         <target> .=. +1 | -1 | 0 | <float>
@@ -37,25 +35,24 @@ class SvmLightCorpus(IndexedCorpus):
 
     The "qid" feature (used for SVMlight ranking), if present, is ignored.
 
-    Although not mentioned in the specification above, SVMlight also expect its
-    feature ids to be 1-based (counting starts at 1). We convert features to 0-base
-    internally by decrementing all ids when loading a SVMlight input file, and
-    increment them again when saving as SVMlight.
+    Notes
+    -----
+    Although not mentioned in the specification above, SVMlight also expect its feature ids to be 1-based
+    (counting starts at 1). We convert features to 0-base internally by decrementing all ids when loading a SVMlight
+    input file, and increment them again when saving as SVMlight.
 
     """
 
     def __init__(self, fname, store_labels=True):
         """
-        Initialize the corpus from a file.
 
         Parameters
         ----------
         fname: str
-            Filename.
-        store_labels : bool
-            Whether to store labels (~SVM target class). They currently have
-            no application but stored in `self.labels` for convenience by
-            default.
+            Path to corpus in SVMlight format.
+        store_labels : bool, optional
+            Whether to store labels (~SVM target class). They currently have no application but stored
+            in `self.labels` for convenience by default.
 
         """
         IndexedCorpus.__init__(self, fname)
@@ -67,12 +64,12 @@ class SvmLightCorpus(IndexedCorpus):
         self.labels = []
 
     def __iter__(self):
-        """
-        Iterate over the corpus, returning one sparse vector at a time.
+        """ Iterate over the corpus, returning one sparse (BoW) vector at a time.
 
         Yields
         ------
         list of (int, float)
+            Document in BoW format.
 
         """
         lineno = -1
@@ -90,25 +87,26 @@ class SvmLightCorpus(IndexedCorpus):
     def save_corpus(fname, corpus, id2word=None, labels=False, metadata=False):
         """Save a corpus in the SVMlight format.
 
-        The SVMlight `<target>` class tag is taken from the `labels` array, or set
-        to 0 for all documents if `labels` is not supplied.
+        The SVMlight `<target>` class tag is taken from the `labels` array, or set to 0 for all documents
+        if `labels` is not supplied.
 
         Parameters
         ----------
         fname : str
-            Filename.
-        corpus : iterable
-            Iterable of documents.
+            Path to output file.
+        corpus : iterable of iterable of (int, float)
+            Corpus in BoW format.
         id2word : dict of (str, str), optional
-            Transforms id to word.
+            Mapping id -> word.
         labels : list or False
             An SVMlight `<target>` class tags or False if not present.
         metadata : bool
-            Any additional info.
+            ARGUMENT WILL BE IGNORED.
 
         Returns
         -------
         list of int
+            Offsets for each line in file (in bytes).
 
         """
         logger.info("converting corpus to SVMlight format: %s", fname)
@@ -122,7 +120,7 @@ class SvmLightCorpus(IndexedCorpus):
         return offsets
 
     def docbyoffset(self, offset):
-        """Return the document stored at file position `offset`.
+        """Get the document stored at file position `offset`.
 
         Parameters
         ----------
@@ -140,7 +138,8 @@ class SvmLightCorpus(IndexedCorpus):
             # TODO: it brakes if gets None from line2doc
 
     def line2doc(self, line):
-        """Create a document from a single line (string) in SVMlight format.
+        """Get a document from a single line in SVMlight format,
+        inverse of :meth:`~gensim.corpora.svmlightcorpus.SvmLightCorpus.doc2line`.
 
         Parameters
         ----------
@@ -149,7 +148,8 @@ class SvmLightCorpus(IndexedCorpus):
 
         Returns
         -------
-        (tuple of (int, float)) or None
+        (list of (int, float), str)
+            Document in BoW format and target class label.
 
         """
         line = utils.to_unicode(line)
@@ -166,20 +166,20 @@ class SvmLightCorpus(IndexedCorpus):
 
     @staticmethod
     def doc2line(doc, label=0):
-        """Output the document in SVMlight format, as a string.
-
-        Inverse function to `line2doc`.
+        """Convert BoW representation of document in SVMlight format,
+        inverse of :meth:`~gensim.corpora.svmlightcorpus.SvmLightCorpus.line2doc`.
 
         Parameters
         ----------
-        doc : tuple of (int, float)
-            Document.
-        label : int
-            Document label.
+        doc : list of (int, float)
+            Document in BoW format.
+        label : int, optional
+            Document label (if provided).
 
         Returns
         -------
         str
+            `doc` in SVMlight format.
 
         """
         pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc)  # +1 to convert 0-base to 1-base
