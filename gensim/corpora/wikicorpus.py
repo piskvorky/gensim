@@ -365,7 +365,8 @@ def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
         page identificator.
     tokenizer_func : function
         Function for tokenization (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`).
-        Needs to take 4 parameters: (text: str, token_min_len: int, token_max_len: int, lower: bool).
+        Needs to have interface:
+        tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str.
     token_min_len : int
         Minimal token length.
     token_max_len : int
@@ -429,26 +430,33 @@ def _process_article(args):
 
 
 class WikiCorpus(TextCorpus):
-    """
-    Treat a wikipedia articles dump as a (read-only) corpus.
+    """Treat a wikipedia articles dump as a **read-only** corpus.
 
     Supported dump formats:
 
-    *<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2*
+    * <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
+    * <LANG>wiki-latest-pages-articles.xml.bz2
 
-    *<LANG>wiki-latest-pages-articles.xml.bz2*
-
-    The documents are extracted on-the-fly, so that the whole (massive) dump
-    can stay compressed on disk.
+    The documents are extracted on-the-fly, so that the whole (massive) dump can stay compressed on disk.
 
     Notes
     -----
-    "Multistream" archives are *not* supported in Python 2 due to
-    `limitations in the core bz2 library
+    Dumps for English wikipedia can be founded `here <https://dumps.wikimedia.org/enwiki/>`_.
+
+    Attributes
+    ----------
+    metadata : bool
+        Whether to write articles titles to serialized corpus.
+
+    Warnings
+    --------
+    "Multistream" archives are *not* supported in Python 2 due to `limitations in the core bz2 library
     <https://docs.python.org/2/library/bz2.html#de-compression-of-files>`_.
 
     Examples
     --------
+    >>> from gensim.corpora import WikiCorpus, MmCorpus
+    >>>
     >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format and mapping
 
@@ -464,31 +472,29 @@ class WikiCorpus(TextCorpus):
         Parameters
         ----------
         fname : str
-            Filename.
-        processes : int or None
-            Number of processes to run, defaults to *number of cpu - 1*.
+            Path to file with wikipedia dump.
+        processes : int, optional
+            Number of processes to run, defaults to **number of cpu - 1**.
         lemmatize : bool
-            Whether to use lemmatization instead of simple regexp
-            tokenization. Defaults to `True` if *pattern* package installed
-            and to `False` otherwise.
-        dictionary : `corpora.Dictionary` or None
+            Whether to use lemmatization instead of simple regexp tokenization.
+            Defaults to `True` if *pattern* package installed.
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
+            Dictionary, if not provided,  this scans the corpus once, to determine its vocabulary
+            (this needs **really long time**).
         filter_namespaces : tuple of str
             Namespaces to consider.
-        tokenizer_func : function(text, token_min_len, token_max_len, lower)
-            Returns list of tokens. Set this parameter for languages like
-            japanese or thai to perform better tokenization.
-        article_min_tokens : int
-            Minimum tokens in article. Article ignored if number of tokens is
-            less.
-        token_min_len : int
-        token_max_len : int
-        lower : bool
-            Whether to lowercase texts.
-
-        Attributes
-        ----------
-        metadata : bool
-            Whether to write articles titles to serialized corpus.
+        tokenizer_func : function, optional
+            Function that will be used for tokenization. By default, use :func:`~gensim.corpora.wikicorpus.tokenize`.
+            Need to support interface:
+            tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str.
+        article_min_tokens : int, optional
+            Minimum tokens in article. Article will be ignored if number of tokens is less.
+        token_min_len : int, optional
+            Minimal token length.
+        token_max_len : int, optional
+            Maximal token length.
+        lower : bool, optional
+             If True - convert all text to lower case.
 
         """
         self.fname = fname
@@ -508,23 +514,20 @@ class WikiCorpus(TextCorpus):
     def get_texts(self):
         """Iterate over the dump, yielding list of tokens for each article.
 
-        Yields
-        ------
-        (list of str) or tuple(list of str, tuple(str, str)))
-
         Notes
         -----
-        Only articles of sufficient length are returned (short articles,
-        redirects, etc. are ignored). This is controlled by
-        `article_min_tokens` on the class instance.
-
-        Examples
-        --------
-        Note that this iterates over the **texts**; if you want vectors,
-        just use the standard corpus interface instead of this function:
+        This iterates over the **texts**. If you want vectors, just use the standard corpus interface
+        instead of this method
 
         >>> for vec in wiki_corpus:
         >>>     print(vec)
+
+        Yields
+        ------
+        list of str
+            If `metadata` is False, yield only list of token extracted from the article.
+        (list of str, (int, str))
+            List of tokens (extracted from the article), page id and article title otherwise.
 
         """
 
