@@ -350,25 +350,33 @@ _extract_pages = extract_pages  # for backward compatibility
 
 def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
                     token_max_len=TOKEN_MAX_LEN, lower=True):
-    """Parse a wikipedia article, returning its content as a list of tokens.
+    """Parse a wikipedia article, extract all tokens.
 
-    Set `tokenizer_func` (defaults to `tokenize`) parameter for languages like japanese or thai to perform better
-    tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower).
+    Notes
+    -----
+    Set `tokenizer_func` (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`) parameter for languages
+    like japanese or thai to perform better tokenization.
+    The `tokenizer_func` needs to take 4 parameters: (text: str, token_min_len: int, token_max_len: int, lower: bool).
 
     Parameters
     ----------
-    args : list of (function, int, int, bool)
-        Meta info.
-    tokenizer_func :
+    args : (str, bool, str, int)
+        Article text, lemmatize flag (if True, :func:`~gensim.utils.lemmatize` will be used), article title,
+        page identificator.
+    tokenizer_func : function
+        Function for tokenization (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`).
+        Needs to take 4 parameters: (text: str, token_min_len: int, token_max_len: int, lower: bool).
     token_min_len : int
+        Minimal token length.
     token_max_len : int
+        Maximal token length.
     lower : bool
-         Whether to lowercase result.
+         If True - convert article text to lower case.
 
     Returns
     -------
-    tokens : tuple(list of str, str, str)
-        UTF-8 encoded.
+    (list of str, str, int)
+        List of tokens from article, title and page id.
 
     """
     text, lemmatize, title, pageid = args
@@ -383,8 +391,8 @@ def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
 def init_to_ignore_interrupt():
     """Enables interruption ignoring.
 
-    Notes
-    -----
+    Warnings
+    --------
     Should only be used when master is prepared to handle termination of
     child processes.
 
@@ -393,22 +401,24 @@ def init_to_ignore_interrupt():
 
 
 def _process_article(args):
-    """Same as `process_article`, but with args in list format.
+    """Same as :func:`~gensim.corpora.wikicorpus.process_article`, but with args in list format.
 
     Parameters
     ----------
-    args : list of (function, int, int, bool)
+    args : [(str, bool, str, int), (function, int, int, bool)]
+        First element - same as `args` from :func:`~gensim.corpora.wikicorpus.process_article`,
+        second element is tokenizer function, token minimal length, token maximal length, lowercase flag.
 
     Returns
     -------
-    tuple(list of str, str, str)
+    (list of str, str, int)
+        List of tokens from article, title and page id.
 
-    Notes
-    -----
-    Should not be called explicitly. Use `process_article` instead.
+    Warnings
+    --------
+    Should not be called explicitly. Use :func:`~gensim.corpora.wikicorpus.process_article` instead.
 
     """
-
     tokenizer_func, token_min_len, token_max_len, lower = args[-1]
     args = args[:-1]
 
