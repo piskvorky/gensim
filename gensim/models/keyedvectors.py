@@ -149,7 +149,7 @@ class KeyedVectorsBase(utils.SaveLoad):
                 if binary:
                     fout.write(utils.to_utf8(word) + b" " + row.tostring())
                 else:
-                    fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
+                    fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join(repr(val) for val in row))))
 
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
