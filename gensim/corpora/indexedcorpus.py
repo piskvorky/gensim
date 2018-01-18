@@ -14,43 +14,44 @@ import numpy
 
 from gensim import interfaces, utils
 
-logger = logging.getLogger('gensim.corpora.indexedcorpus')
+logger = logging.getLogger(__name__)
 
 
 class IndexedCorpus(interfaces.CorpusABC):
     """Indexed corpus is a mechanism for random-accessing corpora.
 
-    While the standard corpus interface in gensim allows iterating over
-    corpus with `for doc in corpus: pass`, indexed corpus allows accessing
-    the documents with `corpus[docno]` (in O(1) look-up time).
+    While the standard corpus interface in gensim allows iterating over corpus,
+    we'll show it with :class:`~gensim.corpora.mmcorpus.MmCorpus`.
+
+    >>> from gensim.corpora import MmCorpus
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> corpus = MmCorpus(datapath('testcorpus.mm'))
+    >>> for doc in corpus:
+    ...    pass
+
+    :class:`~gensim.corpora.indexedcorpus.IndexedCorpus` allows accessing the documents with index
+    in :math:`{O}(1)` look-up time.
+
+    >>> document_index = 3
+    >>> doc = corpus[document_index]
 
     Notes
     -----
-    This functionality is achieved by storing an extra file (by default
-    named the same as the '{corpus name}.index') that stores the byte
-    offset of the beginning of each document.
+    This functionality is achieved by storing an extra file (by default named the same as the `fname.index`)
+    that stores the byte offset of the beginning of each document.
 
     """
 
     def __init__(self, fname, index_fname=None):
-        """Initialize the corpus.
+        """
 
         Parameters
         ----------
-        fname : string
-            Filename.
-        index_fname : string or None
-            Index filename, or None for loading `fname`.index.
-
-        Examples
-        --------
-        >>> # save corpus in SvmLightCorpus format with an index
-        >>> corpus = [[(1, 0.5)], [(0, 1.0), (1, 2.0)]]
-        >>> gensim.corpora.SvmLightCorpus.serialize('testfile.svmlight', corpus)
-        >>> # load back as a document stream (*not* plain Python list)
-        >>> corpus_with_random_access = gensim.corpora.SvmLightCorpus('tstfile.svmlight')
-        >>> print(corpus_with_random_access[1])
-        [(0, 1.0), (1, 2.0)]
+        fname : str
+            Path to indexed corpus.
+        index_fname : str, optional
+            Path to index, if not provided - used `fname.index`.
 
         """
         try:
@@ -67,34 +68,38 @@ class IndexedCorpus(interfaces.CorpusABC):
     @classmethod
     def serialize(serializer, fname, corpus, id2word=None, index_fname=None,
                   progress_cnt=None, labels=None, metadata=False):
-        """Iterate through the document stream `corpus`.
-
-        Saving the documents to
-        `fname` and recording byte offset of each document.
+        """Serialize corpus with offset metadata, allows to use direct indexes after loading.
 
         Parameters
         ----------
         fname : str
-            Filename.
-        corpus : iterable
-            Iterable of documents.
+            Path to output filename
+        corpus : iterable of iterable of (int, float)
+            Corpus in BoW format
         id2word : dict of (str, str), optional
-            Transforms id to word.
-        index_fname : str
-             Where to save resulting index. Saved to `fname`.index if None.
-        progress_cnt : int
+            Mapping id -> word.
+        index_fname : str, optional
+             Where to save resulting index, if None - store index to `fname`.index.
+        progress_cnt : int, optional
             Number of documents after which progress info is printed.
-        labels : bool
-             Whether to skip the first column (class labels).
-        metadata : bool
-            If True will ensure that serialize will write out
-            article titles to a pickle file. (Default value = False).
+        labels : bool, optional
+             If True - ignore first column (class labels).
+        metadata : bool, optional
+            If True - ensure that serialize will write out article titles to a pickle file.
 
         Examples
         --------
-        >>> MmCorpus.serialize('test.mm', corpus)
-        >>> mm = MmCorpus('test.mm') # `mm` document stream now has random access
-        >>> print(mm[42]) # retrieve document no. 42, etc.
+        >>> from gensim.corpora import MmCorpus
+        >>> from gensim.test.utils import get_tmpfile
+        >>>
+        >>> corpus = [[(1, 0.3), (2, 0.1)], [(1, 0.1)], [(2, 0.3)]]
+        >>> output_fname = get_tmpfile("test.mm")
+        >>>
+        >>> MmCorpus.serialize(output_fname, corpus)
+        >>> mm = MmCorpus(output_fname) # `mm` document stream now has random access
+        >>> print(mm[1]) # retrieve document no. 42, etc.
+        [(1, 0.1)]
+
         """
         if getattr(corpus, 'fname', None) == fname:
             raise ValueError("identical input vs. output corpus filename, refusing to serialize: %s" % fname)
@@ -125,15 +130,16 @@ class IndexedCorpus(interfaces.CorpusABC):
         utils.pickle(offsets, index_fname)
 
     def __len__(self):
-        """
-        Return the index length.
+        """Get the index length.
 
-        If the corpus is not indexed, also count corpus length and cache this
-        value.
+        Notes
+        -----
+        If the corpus is not indexed, also count corpus length and cache this value.
 
         Returns
         -------
         int
+            Length of index.
 
         """
         if self.index is not None:
@@ -144,16 +150,26 @@ class IndexedCorpus(interfaces.CorpusABC):
         return self.length
 
     def __getitem__(self, docno):
-        """Return certain document.
+        """Get document by `docno` index.
 
         Parameters
         ----------
-        docno : int
-            Document number.
+        docno : {int, iterable of int}
+            Document number or iterable of numbers (like a list of str).
 
         Returns
         -------
-        `utils.SlicedCorpus`
+        list of (int, float)
+            If `docno` is int - return document in BoW format.
+
+        :class:`~gensim.utils.SlicedCorpus`
+            If `docno` is iterable of int - return several documents in BoW format
+            wrapped to :class:`~gensim.utils.SlicedCorpus`.
+
+        Raises
+        ------
+        RuntimeError
+            If index isn't exist.
 
         """
         if self.index is None:

@@ -36,7 +36,7 @@ class CsvCorpus(interfaces.CorpusABC):
         fname : str
             Path to corpus in CSV format.
         labels : bool
-            If True - skip first line (header).
+            If True - ignore first column (class labels).
 
         """
         logger.info("loading corpus from %s", fname)
