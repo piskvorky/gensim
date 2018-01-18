@@ -103,10 +103,6 @@ class CorpusABC(utils.SaveLoad):
                 fmt = str(doc)  # format the document appropriately...
                 fout.write(utils.to_utf8("%s\n" % fmt))  # serialize the formatted document to disk
 
-    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None,
-                  metadata=False):
-        pass
-
 
 class TransformedCorpus(CorpusABC):
     def __init__(self, obj, corpus, chunksize=None, **kwargs):
