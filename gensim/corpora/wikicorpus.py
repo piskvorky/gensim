@@ -7,17 +7,14 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump.
+"""Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump.
 
 Notes
 -----
-If you have the `pattern` package installed, this module will use a fancy
-lemmatization to get a lemma of each token (instead of plain alphabetic
-tokenizer). The package is available at [1]_ .
+If you have the `pattern` package installed, this module will use a fancy lemmatization to get a lemma
+of each token (instead of plain alphabetic tokenizer). The package is available at [1]_ .
 
-See scripts/process_wiki.py for a canned (example) script based on this
-module.
+See :mod:`~gensim.scripts.make_wiki` for a canned (example) script based on this module.
 
 References
 ----------
@@ -107,6 +104,7 @@ def filter_wiki(raw):
     Returns
     -------
     str
+        `raw` without markup.
 
     """
     # parsing of the wiki markup is not perfect, but sufficient for our purposes
@@ -127,6 +125,7 @@ def remove_markup(text):
     Returns
     -------
     str
+        `text` without markup.
 
     """
     text = re.sub(RE_P2, '', text)  # remove the last list (=languages)
@@ -166,10 +165,6 @@ def remove_markup(text):
 def remove_template(s):
     """Remove template wikimedia markup.
 
-    Return a copy of `s` with all the wikimedia markup template removed. See
-    [4]_ for wikimedia templates
-    details.
-
     Parameters
     ----------
     s : str
@@ -178,11 +173,11 @@ def remove_template(s):
     Returns
     -------
     str
+        Сopy of `s` with all the wikimedia markup template removed. See [4]_ for wikimedia templates details.
 
     Notes
     -----
-    Since template can be nested, it is difficult remove them using
-    regular expresssions.
+    Since template can be nested, it is difficult remove them using regular expressions.
 
     References
     ----------
@@ -220,9 +215,6 @@ def remove_template(s):
 def remove_file(s):
     """Remove the 'File:' and 'Image:' markup, keeping the file caption.
 
-    Return a copy of `s` with all the 'File:' and 'Image:' markup replaced by
-    their corresponding captions. [3]_
-
     Parameters
     ----------
     s : str
@@ -231,6 +223,7 @@ def remove_file(s):
     Returns
     -------
     str
+        Сopy of `s` with all the 'File:' and 'Image:' markup replaced by their corresponding captions. [3]_
 
     References
     ----------
@@ -248,21 +241,23 @@ def remove_file(s):
 def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
     """Tokenize a piece of text from wikipedia.
 
-    Set `token_min_len`, `token_max_len` as character length (not bytes!)
-    thresholds for individual tokens.
+    Set `token_min_len`, `token_max_len` as character length (not bytes!) thresholds for individual tokens.
 
     Parameters
     ----------
     content : str
-        String without markup (see `filter_wiki()`).
+        String without markup (see :func:`~gensim.corpora.wikicorpus.filter_wiki`).
     token_min_len : int
+        Minimal token length.
     token_max_len : int
+        Maximal token length
     lower : bool
-         Whether to lowercase content.
+         If True - convert `content` to lower case.
 
     Returns
     -------
     list of str
+        List of tokens from `content`.
 
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
@@ -273,15 +268,17 @@ def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, 
 
 
 def get_namespace(tag):
-    """Returns the namespace of tag.
+    """Get the namespace of tag.
 
     Parameters
     ----------
     tag : str
+        Namespace or tag.
 
     Returns
     -------
     str
+        Matched namespace or tag.
 
     """
     m = re.match("^{(.*?)}", tag)
@@ -295,19 +292,19 @@ _get_namespace = get_namespace
 
 
 def extract_pages(f, filter_namespaces=False):
-    """Extract pages from a MediaWiki database dump = open file-like object `f`.
+    """Extract pages from a MediaWiki database dump.
 
     Parameters
     ----------
-    f : File
+    f : file
         File-like object.
-
     filter_namespaces : list of str or bool
-         Namespaces to consider.
+         Namespaces that will be extracted
 
     Yields
     ------
     tuple of (str or None, str, str)
+        Title, text and page id.
 
     """
     elems = (elem for _, elem in iterparse(f, events=("end",)))
