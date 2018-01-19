@@ -5,20 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""This module implements the concept of Dictionary -- a mapping between words and their integer ids.
-
-Notes
------
-Dictionaries can be created from a corpus and can later be pruned according to
-document frequency (removing (un)common words via the :func:`Dictionary.filter_extremes` method),
-save/loaded from disk (via :func:`Dictionary.save` and :func:`Dictionary.load` methods), merged
-with other dictionary (:func:`Dictionary.merge_with`) etc.
-
-Examples
---------
->>> print(Dictionary(["máma mele maso".split(), "ema má máma".split()]))
-Dictionary(5 unique tokens)
-"""
+"""This module implements the concept of Dictionary -- a mapping between words and their integer ids."""
 
 from __future__ import with_statement
 
@@ -37,49 +24,49 @@ if sys.version_info[0] >= 3:
     unicode = str
 
 
-logger = logging.getLogger('gensim.corpora.dictionary')
+logger = logging.getLogger(__name__)
 
 
 class Dictionary(utils.SaveLoad, Mapping):
     """Dictionary encapsulates the mapping between normalized words and their integer ids.
 
-    Notes
-    -----
-    The main function is `doc2bow`, which converts a collection of words to its
-    bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
-
-    Parameters
-    ----------
-    documents : list of (list of str), optional
-        If `documents` are given, use them to initialize Dictionary (see `add_documents()`).
-    prune_at : int, optional
-        Total number of unique words <= `prune_at`.
-
     Attributes
     ---------
-    token2id : dict
+    token2id : dict of (str, int)
         token -> tokenId.
-    id2token : dict
-        Reverse mapping for token2id; only formed on request, to save memory.
-    dfs : dict
-        Document frequencies: tokenId -> in how many documents this token appeared.
+    id2token : dict of (int, str)
+        Reverse mapping for token2id, initialized in lazy manner to save memory.
+    dfs : dict of (int, int)
+        Document frequencies: token_id -> in how many documents contain this token.
     num_docs : int
         Number of documents processed.
     num_pos : int
-        Total number of corpus positions.
+        Total number of corpus positions (number of processed words).
     num_nnz : int
         Total number of non-zeroes in the BOW matrix.
 
-    Examples
-    --------
-    >>> from gensim.corpora import dictionary
-    >>> texts = [['human', 'interface', 'computer']]
-    >>> d = dictionary.Dictionary(texts)
-    >>> print d.token2id, d.id2token, d.dfs, d.num_docs, d.num_pos, d.num_nnz
-    {u'interface': 0, u'computer': 1, u'human': 2} {} {0: 1, 1: 1, 2: 1} 1 3 3
-
     """
     def __init__(self, documents=None, prune_at=2000000):
+        """
+
+        Parameters
+        ----------
+        documents : iterable of iterable of str, optional
+            Documents that used for initialization.
+        prune_at : int, optional
+            Total number of unique words. Dictionary will keep not more than `prune_at` words.
+
+        Examples
+        --------
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> texts = [['human', 'interface', 'computer']]
+        >>> dct = Dictionary(texts)  # fit dictionary
+        >>> dct.add_documents([["cat", "say", "meow"], ["dog"]])  # update dictionary with new documents
+        >>> dct.doc2bow(["dog", "computer", "non_existent_word"])
+        [(0, 1), (6, 1)]
+
+        """
         self.token2id = {}
         self.id2token = {}
         self.dfs = {}
@@ -92,6 +79,24 @@ class Dictionary(utils.SaveLoad, Mapping):
             self.add_documents(documents, prune_at=prune_at)
 
     def __getitem__(self, tokenid):
+        """Get token by provided `tokenid`.
+
+        Parameters
+        ----------
+        tokenid : int
+            Id of token
+
+        Returns
+        -------
+        str
+            Token corresponding to `tokenid`.
+
+        Raises
+        ------
+        KeyError
+            If `tokenid` isn't contained in :class:`~gensim.corpora.dictionary.Dictionary`.
+
+        """
         if len(self.id2token) != len(self.token2id):
             # the word->id mapping has changed (presumably via add_documents);
             # recompute id->word accordingly
@@ -99,6 +104,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         return self.id2token[tokenid]  # will throw for non-existent ids
 
     def __iter__(self):
+        """Iterate over tokens that stored."""
         return iter(self.keys())
 
     if PY3:
@@ -112,18 +118,23 @@ class Dictionary(utils.SaveLoad, Mapping):
             return self.values()
 
     def keys(self):
-        """Return
-        ----------
-        list
+        """Get all stored ids.
+
+        Returns
+        -------
+        list of int
             List of all token ids.
 
         """
         return list(self.token2id.values())
 
     def __len__(self):
-        """Return
+        """Get number of stored tokens.
+
+        Returns
+        -------
         int
-            The number of token->id mappings in the dictionary.
+            Number of stored tokens.
 
         """
         return len(self.token2id)
@@ -134,32 +145,41 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     @staticmethod
     def from_documents(documents):
-        return Dictionary(documents=documents)
-
-    def add_documents(self, documents, prune_at=2000000):
-        """Update dictionary from a collection of documents.
-
-        Notes
-        -----
-        Each document is a list of tokens = **tokenized and normalized** strings (either utf8 or unicode).
-        This is a convenience wrapper for calling `doc2bow` on each document
-        with `allow_update=True`, which also prunes infrequent words, keeping the
-        total number of unique words <= `prune_at`. This is to save memory on very
-        large inputs. To disable this pruning, set `prune_at=None`.
+        """Create :class:`~gensim.corpora.dictionary.Dictionary` based on `documents`
 
         Parameters
         ----------
-        documents : list of list of str
-            Each document is a list of tokens = **tokenized and normalized** strings (either utf8 or unicode).
+        documents : iterable of iterable of str
+            Input corpus.
+
+        Returns
+        -------
+        :class:`~gensim.corpora.dictionary.Dictionary`
+            Dictionary filled by `documents`.
+
+        """
+        return Dictionary(documents=documents)
+
+    def add_documents(self, documents, prune_at=2000000):
+        """Update dictionary from a collection of `documents`.
+
+        Parameters
+        ----------
+        documents : iterable of iterable of str
+            Input corpus. All tokens should be already **tokenized and normalized**.
         prune_at : int, optional
-            Keep total number of unique words <= `prune_at`
+            Total number of unique words. Dictionary will keep not more than `prune_at` words.
 
         Examples
         --------
-        >>> from gensim.corpora import dictionary
-        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split()])
-        >>> data.add_documents([["this","is","sparta"],["just","joking"]])
-        Dictionary(10 unique tokens: [u'ema', u'joking', u'just', u'sparta', u'maso']...)
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> corpus = ["máma mele maso".split(), "ema má máma".split()]
+
+        >>> dct = Dictionary(corpus)
+        >>> assert len(dct) == 5
+        >>> dct.add_documents([["this","is","sparta"],["just","joking"]])
+        >>> assert len(dct) == 10
 
         """
         for docno, document in enumerate(documents):
@@ -178,46 +198,33 @@ class Dictionary(utils.SaveLoad, Mapping):
         )
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
-        """Convert `document` (a list of words) into the bag-of-words format = list of (token_id, token_count) 2-tuples.
-
-        Notes
-        -----
-        Each word is assumed to be a **tokenized and normalized** string (either unicode or utf8-encoded).
-        No further preprocessing is done on the words in `document`; apply tokenization, stemming etc. before
-        calling this method.
-
-        If `allow_update` is set, then also update dictionary in the process: create
-        ids for new words. At the same time, update document frequencies -- for
-        each word appearing in this document, increase its document frequency (`self.dfs`)
-        by one.
-
-        If `allow_update` is **not** set, this function is `const`, aka read-only.
+        """Convert `document` into the bag-of-words (BoW) format = list of (token_id, token_count).
 
         Parameters
         ----------
         document :  list of str
-            Is a list of tokens = **tokenized and normalized** strings (either utf8 or unicode).
+            Input document.
         allow_update : bool, optional
-            Update dictionary in the process.
+            If True - update dictionary in the process (i.e. add new tokens and update frequencies).
         return_missing : bool, optional
-            Show token_count for missing words.
+            Also return missing tokens (that doesn't contains in current dictionary).
 
         Return
         ------
         list of (int, int)
-            Bag-of-words format = list of (token_id, token_count) 2-tuples.
+            BoW representation of `document`
+        list of (int, int), dict of (str, int)
+            If `return_missing` is True, return BoW representation of `document` + dictionary with missing
+            tokens and their frequencies.
 
         Examples
         --------
-        >>> from gensim.corpora import dictionary
-        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split()])
-        >>> data.doc2bow(["this","is","máma"])
-        [(0, 1)]
-
-        >>> from gensim.corpora import dictionary
-        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split()])
-        >>> data.doc2bow(["this","is","máma"], False, True)
-        ([(0, 1)], {u'this': 1, u'is': 1})
+        >>> from gensim.corpora import Dictionary
+        >>> dct = Dictionary(["máma mele maso".split(), "ema má máma".split()])
+        >>> dct.doc2bow(["this","is","máma"])
+        [(2, 1)]
+        >>> dct.doc2bow(["this","is","máma"], return_missing=True)
+        ([(2, 1)], {u'this': 1, u'is': 1})
 
         """
         if isinstance(document, string_types):
@@ -258,35 +265,30 @@ class Dictionary(utils.SaveLoad, Mapping):
     def doc2idx(self, document, unknown_word_index=-1):
         """Convert `document` (a list of words) into a list of indexes = list of `token_id`.
 
-        Each word is assumed to be a **tokenized and normalized** string (either unicode or utf8-encoded).
-        No further preprocessing is done on the words in `document`; apply tokenization, stemming etc. before calling
-        this method.
-
-        Replace all unknown words i.e, words not in the dictionary with the index as set via `unknown_word_index`,
-        defaults to -1.
-
         Notes
         -----
-        This function is `const`, aka read-only
+        Replace all unknown words i.e, words not in the dictionary with the index as set via `unknown_word_index`.
 
         Parameters
         ----------
         document : list of str
-            Tokenized, normalized and preprocessed words
+            Input document
         unknown_word_index : int, optional
             Index to use for words not in the dictionary.
 
         Returns
         -------
         list of int
-            Indexes in the dictionary for words in the `document` preserving the order of words
+            Indexes in the dictionary for words in the `document` (preserving the order of words).
 
         Examples
         --------
-        >>> dictionary_obj = Dictionary()
-        >>> dictionary_obj.token2id = {'computer': 0, 'human': 1, 'response': 2, 'survey': 3}
-        >>> dictionary_obj.doc2idx(document=['human', 'computer', 'interface'], unknown_word_index=-1)
-        [1, 0, -1]
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> corpus = [["a", "a", "b"], ["a", "c"]]
+        >>> dct = Dictionary(corpus)
+        >>> dct.doc2idx(["a", "a", "c", "not_in_dictionary", "c"])
+        [0, 0, 2, -1, 2]
 
         """
         if isinstance(document, string_types):
