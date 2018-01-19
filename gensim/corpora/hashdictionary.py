@@ -278,9 +278,9 @@ class HashDictionary(utils.SaveLoad, dict):
         #. More than `no_above` documents (fraction of total corpus size, **not absolute number**).
         #. After (1) and (2), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
 
-        Since :class:`~gensim.corpora.hashdictionary.HashDictionary` id range is fixed and doesn't depend on the number of tokens seen,
-        this doesn't really "remove" anything. It only clears some supplementary statistics,
-        for easier debugging and a smaller RAM footprint.
+        Since :class:`~gensim.corpora.hashdictionary.HashDictionary` id range is fixed and doesn't depend on the number
+        of tokens seen, this doesn't really "remove" anything.
+        It only clears some supplementary statistics, for easier debugging and a smaller RAM footprint.
 
         Examples
         --------
