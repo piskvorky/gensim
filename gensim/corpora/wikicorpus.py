@@ -74,14 +74,24 @@ def find_interlinks(raw):
     Find all interlinks to other articles in the dump. `raw` is either unicode
     or utf-8 encoded string.
     """
-    interlink_regex_capture = r"\[{1,2}(.*?)\]{1,2}"
-    filtered = filter_wiki(raw, promote_remaining=False)
-    interlinks = re.findall(interlink_regex_capture, filtered)
-    legit_interlinks = [i for i in interlinks if '[' not in i and ']' not in i]
+    interlink_regex_capture = r"\[{2}(.*?)\]{2}"
+    filtered = filter_wiki(raw, promote_remaining=False, simplify_links=False)
+    interlinks_raw = re.findall(interlink_regex_capture, filtered)
+
+    interlinks = {}
+    for parts in [i.split('|') for i in interlinks_raw]:
+        actual_title = parts[0]
+        try:
+            interlink_text = parts[1]
+            interlinks[actual_title] = interlink_text
+        except IndexError:
+            interlinks[actual_title] = actual_title
+
+    legit_interlinks = {i: j for i, j in interlinks.items() if '[' not in i and ']' not in i}
     return legit_interlinks
 
 
-def filter_wiki(raw, promote_remaining=True):
+def filter_wiki(raw, promote_remaining=True, simplify_links=True):
     """
     Filter out wiki mark-up from `raw`, leaving only text. `raw` is either unicode
     or utf-8 encoded string.
@@ -90,10 +100,10 @@ def filter_wiki(raw, promote_remaining=True):
     # contributions to improving this code are welcome :)
     text = utils.to_unicode(raw, 'utf8', errors='ignore')
     text = utils.decode_htmlentities(text)  # '&amp;nbsp;' --> '\xa0'
-    return remove_markup(text, promote_remaining)
+    return remove_markup(text, promote_remaining, simplify_links)
 
 
-def remove_markup(text, promote_remaining=True):
+def remove_markup(text, promote_remaining=True, simplify_links=True):
     text = re.sub(RE_P2, '', text)  # remove the last list (=languages)
     # the wiki markup is recursive (markup inside markup etc)
     # instead of writing a recursive grammar, here we deal with that by removing
@@ -111,8 +121,11 @@ def remove_markup(text, promote_remaining=True):
         text = re.sub(RE_P11, '', text)  # remove all remaining tags
         text = re.sub(RE_P14, '', text)  # remove categories
         text = re.sub(RE_P5, '\\3', text)  # remove urls, keep description
-        text = re.sub(RE_P6, '\\2', text)  # simplify links, keep description only
+
+        if simplify_links:
+            text = re.sub(RE_P6, '\\2', text)  # simplify links, keep description only
         # remove table markup
+
         text = text.replace('||', '\n|')  # each table cell on a separate line
         text = re.sub(RE_P12, '\n', text)  # remove formatting lines
         text = re.sub(RE_P13, '\n\\3', text)  # leave only cell content

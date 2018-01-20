@@ -37,15 +37,6 @@ class TestSegmentWiki(unittest.TestCase):
             'Further reading',
             'External links'
         ]
-        self.expected_interlinks = [
-            'political philosophy', 'self-governed', 'stateless societies',
-            'hierarchical', 'free associations', 'state',
-            'anti-statism', 'authority', 'hierarchical organisation',
-            'Anarchist schools of thought', 'individualism', 'social',
-            'individualist anarchism', 'left-wing', 'anarchist economics',
-            'anarchist legal philosophy', 'anti-authoritarian interpretations', 'communism',
-            'collectivism', 'syndicalism', 'mutualism', 'participatory economics'
-        ]
 
     def tearDown(self):
         # remove all temporary test files
@@ -59,15 +50,23 @@ class TestSegmentWiki(unittest.TestCase):
 
     def test_segment_all_articles(self):
         title, sections, interlinks = next(segment_all_articles(self.fname))
-        section_titles = [s[0] for s in sections]
-        first_section_text = sections[0][1]
 
+        # Check title
         self.assertEqual(title, self.expected_title)
+
+        # Check section titles
+        section_titles = [s[0] for s in sections]
         self.assertEqual(section_titles, self.expected_section_titles)
+
+        # Check text
+        first_section_text = sections[0][1]
         first_sentence = "'''Anarchism''' is a political philosophy that advocates self-governed societies"
         self.assertTrue(first_sentence in first_section_text)
-        for interlink in self.expected_interlinks:
-            self.assertIn(interlink, interlinks)
+
+        # Check interlinks
+        self.assertTrue(interlinks['self-governance'] == 'self-governed')
+        self.assertTrue(interlinks['Hierarchy'] == 'hierarchical')
+        self.assertTrue(interlinks['Pierre-Joseph Proudhon'] == 'Proudhon')
 
     def test_generator_len(self):
         expected_num_articles = 106
@@ -97,8 +96,11 @@ class TestSegmentWiki(unittest.TestCase):
 
         self.assertEqual(title, self.expected_title)
         self.assertEqual(section_titles, self.expected_section_titles)
-        for interlink in self.expected_interlinks:
-            self.assertIn(interlink, interlinks)
+
+        # Check interlinks
+        self.assertTrue(interlinks['self-governance'] == 'self-governed')
+        self.assertTrue(interlinks['Hierarchy'] == 'hierarchical')
+        self.assertTrue(interlinks['Pierre-Joseph Proudhon'] == 'Proudhon')
 
 
 if __name__ == '__main__':

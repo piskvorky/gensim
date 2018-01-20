@@ -31,8 +31,9 @@ You can then read the created output (~6.1 GB gzipped) with:
 >>>    # decode each JSON line into a Python dictionary object
 >>>    article = json.loads(line)
 >>>
->>>    # each article has a "title" and a list of "section_titles" and "section_texts".
+>>>    # each article has a "title", a mapping of interlinks and a list of "section_titles" and "section_texts".
 >>>    print("Article title: %s" % article['title'])
+>>>    print("Interlinks: %s" + article['interlinks'])
 >>>    for section_title, section_text in zip(article['section_titles'], article['section_texts']):
 >>>        print("Section title: %s" % section_title)
 >>>        print("Section text: %s" % section_text)
@@ -70,8 +71,8 @@ def segment_all_articles(file_path, min_article_character=200, workers=None):
 
     Yields
     ------
-    (str, list of (str, str), list of str)
-        Structure contains (title, [(section_heading, section_content), ...], [interlink, ...]).
+    (str, list of (str, str), dict of str: str)
+        Structure contains (title, [(section_heading, section_content), ...], {linked_article: interlink_text}).
 
     """
     with smart_open(file_path, 'rb') as xml_fileobj:
@@ -182,8 +183,8 @@ def segment(page_xml):
     Returns
 
     -------
-    (str, list of (str, str), list of str)
-        Structure contains (title, [(section_heading, section_content), ...], [interlink, ...]).
+    (str, list of (str, str), dict of (str: str))
+        Structure contains (title, [(section_heading, section_content), ...], {linked_article: interlink_text}).
 
     """
     elem = cElementTree.fromstring(page_xml)
@@ -270,8 +271,8 @@ class _WikiSectionsCorpus(WikiCorpus):
 
         Yields
         ------
-        (str, list of (str, str), list of str)
-            Structure contains (title, [(section_heading, section_content), ...], [interlink, ...]).
+        (str, list of (str, str), dict of (str: str))
+            Structure contains (title, [(section_heading, section_content), ...], {linked_article: interlink_text}).
 
         """
         skipped_namespace, skipped_length, skipped_redirect = 0, 0, 0
