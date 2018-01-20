@@ -58,7 +58,7 @@ RE_P12 = re.compile(r'\n(({\|)|(\|-)|(\|}))(.*?)(?=\n)', re.UNICODE)  # table fo
 RE_P13 = re.compile(r'\n(\||\!)(.*?\|)*([^|]*?)', re.UNICODE)  # table cell formatting
 RE_P14 = re.compile(r'\[\[Category:[^][]*\]\]', re.UNICODE)  # categories
 RE_P15 = re.compile(r'\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)  # Remove File and Image template
-
+interlink_regex_capture = r"\[{2}(.*?)\]{2}"
 
 # MediaWiki namespaces (https://www.mediawiki.org/wiki/Manual:Namespace) that
 # ought to be ignored
@@ -74,7 +74,6 @@ def find_interlinks(raw):
     Find all interlinks to other articles in the dump. `raw` is either unicode
     or utf-8 encoded string.
     """
-    interlink_regex_capture = r"\[{2}(.*?)\]{2}"
     filtered = filter_wiki(raw, promote_remaining=False, simplify_links=False)
     interlinks_raw = re.findall(interlink_regex_capture, filtered)
 
