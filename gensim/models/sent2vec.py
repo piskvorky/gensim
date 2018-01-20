@@ -632,7 +632,7 @@ class Sent2Vec(SaveLoad):
         self.total_train_time += elapsed
         return trained_word_count
 
-    def sentence_vectors(self, sentence):
+    def __getitem__(self, sentence):
         """Get sentence vector for an input sentence.
 
         Parameters

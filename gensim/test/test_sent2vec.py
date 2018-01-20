@@ -74,10 +74,14 @@ class TestSent2VecModel(unittest.TestCase):
         self.assertEqual(model.dict.size, 14)
 
     def test_sent2vec_for_document(self):
-        model = Sent2Vec(sentences, size=5, min_count=0, seed=42, neg=5, workers=1)
+        model1 = Sent2Vec(sentences, size=5, min_count=0, seed=42, neg=5, workers=2)
+        model2 = Sent2Vec(sentences, size=5, min_count=0, seed=42, neg=5, workers=2)
         for sentence in test_sentences:
-            sent_vec = model.sentence_vectors(sentence)
-            self.assertEqual(len(sent_vec), 5)
+            sent_vec1 = model1[sentence]
+            sent_vec2 = model2[sentence]
+            self.assertTrue(np.allclose(sent_vec1, sent_vec2))
+            self.assertEqual(len(sent_vec1), 5)
+            self.assertEqual(len(sent_vec2), 5)
 
 
 if __name__ == '__main__':
