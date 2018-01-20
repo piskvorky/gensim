@@ -1038,7 +1038,7 @@ typedef struct __pyx_ctuple_int__and_int__and_float __pyx_ctuple_int__and_int__a
  * 
  * 
  * cdef (int, int, float) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t *pdiscard, int max_line_size,             # <<<<<<<<<<<<<<
- *                              int word_ngrams, int dropoutk, float lr, REAL_t *hidden, REAL_t *grad,
+ *                              int word_ngrams, int dropout_k, float lr, REAL_t *hidden, REAL_t *grad,
  *                              int vector_size, int *negpos, int neg, int negatives_len,
  */
 struct __pyx_ctuple_int__and_int__and_float {
@@ -1619,7 +1619,7 @@ static const char __pyx_k_hidden[] = "hidden_";
 static const char __pyx_k_import[] = "__import__";
 static const char __pyx_k_negpos[] = "negpos";
 static const char __pyx_k_float32[] = "float32";
-static const char __pyx_k_dropoutk[] = "dropoutk";
+static const char __pyx_k_dropout_k[] = "dropout_k";
 static const char __pyx_k_hidden_2[] = "hidden";
 static const char __pyx_k_pdiscard[] = "pdiscard";
 static const char __pyx_k_sentence[] = "sentence";
@@ -1664,7 +1664,7 @@ static PyObject *__pyx_n_s_array;
 static PyObject *__pyx_n_s_bucket;
 static PyObject *__pyx_n_s_dict;
 static PyObject *__pyx_n_s_do_train_job_fast;
-static PyObject *__pyx_n_s_dropoutk;
+static PyObject *__pyx_n_s_dropout_k;
 static PyObject *__pyx_n_s_fblas;
 static PyObject *__pyx_n_s_find;
 static PyObject *__pyx_n_s_float32;
@@ -2837,11 +2837,11 @@ static void __pyx_f_6gensim_6models_14sent2vec_inner_add_ngrams_train(std::vecto
  * 
  * 
  * cdef (int, int, float) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t *pdiscard, int max_line_size,             # <<<<<<<<<<<<<<
- *                              int word_ngrams, int dropoutk, float lr, REAL_t *hidden, REAL_t *grad,
+ *                              int word_ngrams, int dropout_k, float lr, REAL_t *hidden, REAL_t *grad,
  *                              int vector_size, int *negpos, int neg, int negatives_len,
  */
 
-static __pyx_ctuple_int__and_int__and_float __pyx_f_6gensim_6models_14sent2vec_inner__do_train_job_util(std::vector<std::vector<int> >  &__pyx_v_word_ids, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_pdiscard, int __pyx_v_max_line_size, int __pyx_v_word_ngrams, int __pyx_v_dropoutk, float __pyx_v_lr, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_hidden, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_grad, int __pyx_v_vector_size, int *__pyx_v_negpos, int __pyx_v_neg, int __pyx_v_negatives_len, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_wi, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_wo, int *__pyx_v_negatives, int __pyx_v_bucket, int __pyx_v_size) {
+static __pyx_ctuple_int__and_int__and_float __pyx_f_6gensim_6models_14sent2vec_inner__do_train_job_util(std::vector<std::vector<int> >  &__pyx_v_word_ids, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_pdiscard, int __pyx_v_max_line_size, int __pyx_v_word_ngrams, int __pyx_v_dropout_k, float __pyx_v_lr, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_hidden, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_grad, int __pyx_v_vector_size, int *__pyx_v_negpos, int __pyx_v_neg, int __pyx_v_negatives_len, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_wi, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_wo, int *__pyx_v_negatives, int __pyx_v_bucket, int __pyx_v_size) {
   int __pyx_v_local_token_count;
   int __pyx_v_nexamples;
   float __pyx_v_loss;
@@ -2983,7 +2983,7 @@ static __pyx_ctuple_int__and_int__and_float __pyx_f_6gensim_6models_14sent2vec_i
  *                 nexamples += 1
  *                 context.assign(words.begin(), words.end())             # <<<<<<<<<<<<<<
  *                 context[j] = 0
- *                 add_ngrams_train(context, word_ngrams, dropoutk, bucket, size)
+ *                 add_ngrams_train(context, word_ngrams, dropout_k, bucket, size)
  */
         try {
           __pyx_v_context.assign(__pyx_v_words.begin(), __pyx_v_words.end());
@@ -3002,7 +3002,7 @@ static __pyx_ctuple_int__and_int__and_float __pyx_f_6gensim_6models_14sent2vec_i
  *                 nexamples += 1
  *                 context.assign(words.begin(), words.end())
  *                 context[j] = 0             # <<<<<<<<<<<<<<
- *                 add_ngrams_train(context, word_ngrams, dropoutk, bucket, size)
+ *                 add_ngrams_train(context, word_ngrams, dropout_k, bucket, size)
  *                 loss += update(context, words[j], lr, hidden, grad, vector_size,
  */
         (__pyx_v_context[__pyx_v_j]) = 0;
@@ -3010,15 +3010,15 @@ static __pyx_ctuple_int__and_int__and_float __pyx_f_6gensim_6models_14sent2vec_i
         /* "gensim/models/sent2vec_inner.pyx":191
  *                 context.assign(words.begin(), words.end())
  *                 context[j] = 0
- *                 add_ngrams_train(context, word_ngrams, dropoutk, bucket, size)             # <<<<<<<<<<<<<<
+ *                 add_ngrams_train(context, word_ngrams, dropout_k, bucket, size)             # <<<<<<<<<<<<<<
  *                 loss += update(context, words[j], lr, hidden, grad, vector_size,
  *                                negpos, neg, negatives_len, wi, wo, negatives)
  */
-        __pyx_f_6gensim_6models_14sent2vec_inner_add_ngrams_train(__pyx_v_context, __pyx_v_word_ngrams, __pyx_v_dropoutk, __pyx_v_bucket, __pyx_v_size);
+        __pyx_f_6gensim_6models_14sent2vec_inner_add_ngrams_train(__pyx_v_context, __pyx_v_word_ngrams, __pyx_v_dropout_k, __pyx_v_bucket, __pyx_v_size);
 
         /* "gensim/models/sent2vec_inner.pyx":192
  *                 context[j] = 0
- *                 add_ngrams_train(context, word_ngrams, dropoutk, bucket, size)
+ *                 add_ngrams_train(context, word_ngrams, dropout_k, bucket, size)
  *                 loss += update(context, words[j], lr, hidden, grad, vector_size,             # <<<<<<<<<<<<<<
  *                                negpos, neg, negatives_len, wi, wo, negatives)
  *                 context.clear()
@@ -3072,7 +3072,7 @@ static __pyx_ctuple_int__and_int__and_float __pyx_f_6gensim_6models_14sent2vec_i
  * 
  * 
  * cdef (int, int, float) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t *pdiscard, int max_line_size,             # <<<<<<<<<<<<<<
- *                              int word_ngrams, int dropoutk, float lr, REAL_t *hidden, REAL_t *grad,
+ *                              int word_ngrams, int dropout_k, float lr, REAL_t *hidden, REAL_t *grad,
  *                              int vector_size, int *negpos, int neg, int negatives_len,
  */
 
@@ -3193,7 +3193,7 @@ static PyObject *__pyx_pf_6gensim_6models_14sent2vec_inner__do_train_job_fast(CY
   int __pyx_v_size;
   int __pyx_v_bucket;
   int __pyx_v_word_ngrams;
-  int __pyx_v_dropoutk;
+  int __pyx_v_dropout_k;
   std::vector<std::vector<int> >  __pyx_v_word_ids;
   std::vector<int>  __pyx_v_ids;
   int __pyx_v_local_token_count;
@@ -3446,7 +3446,7 @@ static PyObject *__pyx_pf_6gensim_6models_14sent2vec_inner__do_train_job_fast(CY
  *     cdef int size = <int> (model.dict.size)
  *     cdef int bucket = <int> (model.dict.bucket)             # <<<<<<<<<<<<<<
  *     cdef int word_ngrams = <int> (model.word_ngrams)
- *     cdef int dropoutk = <int> (model.dropoutk)
+ *     cdef int dropout_k = <int> (model.dropout_k)
  */
   __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_dict); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 215, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -3461,7 +3461,7 @@ static PyObject *__pyx_pf_6gensim_6models_14sent2vec_inner__do_train_job_fast(CY
  *     cdef int size = <int> (model.dict.size)
  *     cdef int bucket = <int> (model.dict.bucket)
  *     cdef int word_ngrams = <int> (model.word_ngrams)             # <<<<<<<<<<<<<<
- *     cdef int dropoutk = <int> (model.dropoutk)
+ *     cdef int dropout_k = <int> (model.dropout_k)
  *     srand(model.seed)
  */
   __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_word_ngrams); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 216, __pyx_L1_error)
@@ -3473,19 +3473,19 @@ static PyObject *__pyx_pf_6gensim_6models_14sent2vec_inner__do_train_job_fast(CY
   /* "gensim/models/sent2vec_inner.pyx":217
  *     cdef int bucket = <int> (model.dict.bucket)
  *     cdef int word_ngrams = <int> (model.word_ngrams)
- *     cdef int dropoutk = <int> (model.dropoutk)             # <<<<<<<<<<<<<<
+ *     cdef int dropout_k = <int> (model.dropout_k)             # <<<<<<<<<<<<<<
  *     srand(model.seed)
  * 
  */
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_dropoutk); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_dropout_k); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 217, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_6); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 217, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_v_dropoutk = ((int)__pyx_t_3);
+  __pyx_v_dropout_k = ((int)__pyx_t_3);
 
   /* "gensim/models/sent2vec_inner.pyx":218
  *     cdef int word_ngrams = <int> (model.word_ngrams)
- *     cdef int dropoutk = <int> (model.dropoutk)
+ *     cdef int dropout_k = <int> (model.dropout_k)
  *     srand(model.seed)             # <<<<<<<<<<<<<<
  * 
  *     cdef vector[vector[int]] word_ids
@@ -3738,9 +3738,9 @@ static PyObject *__pyx_pf_6gensim_6models_14sent2vec_inner__do_train_job_fast(CY
  *     with nogil:
  *         local_token_count, nexamples, loss = _do_train_job_util(word_ids, pdiscard,             # <<<<<<<<<<<<<<
  *                                                                 max_line_size, word_ngrams,
- *                                                                 dropoutk, lr, hidden,
+ *                                                                 dropout_k, lr, hidden,
  */
-        __pyx_t_14 = __pyx_f_6gensim_6models_14sent2vec_inner__do_train_job_util(__pyx_v_word_ids, __pyx_v_pdiscard, __pyx_v_max_line_size, __pyx_v_word_ngrams, __pyx_v_dropoutk, __pyx_v_lr, __pyx_v_hidden, __pyx_v_grad, __pyx_v_vector_size, (&__pyx_v_negpos), __pyx_v_neg, __pyx_v_negatives_len, __pyx_v_wi, __pyx_v_wo, __pyx_v_negatives, __pyx_v_bucket, __pyx_v_size);
+        __pyx_t_14 = __pyx_f_6gensim_6models_14sent2vec_inner__do_train_job_util(__pyx_v_word_ids, __pyx_v_pdiscard, __pyx_v_max_line_size, __pyx_v_word_ngrams, __pyx_v_dropout_k, __pyx_v_lr, __pyx_v_hidden, __pyx_v_grad, __pyx_v_vector_size, (&__pyx_v_negpos), __pyx_v_neg, __pyx_v_negatives_len, __pyx_v_wi, __pyx_v_wo, __pyx_v_negatives, __pyx_v_bucket, __pyx_v_size);
         __pyx_t_3 = __pyx_t_14.f0;
         __pyx_t_15 = __pyx_t_14.f1;
         __pyx_t_1 = __pyx_t_14.f2;
@@ -6383,7 +6383,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_bucket, __pyx_k_bucket, sizeof(__pyx_k_bucket), 0, 0, 1, 1},
   {&__pyx_n_s_dict, __pyx_k_dict, sizeof(__pyx_k_dict), 0, 0, 1, 1},
   {&__pyx_n_s_do_train_job_fast, __pyx_k_do_train_job_fast, sizeof(__pyx_k_do_train_job_fast), 0, 0, 1, 1},
-  {&__pyx_n_s_dropoutk, __pyx_k_dropoutk, sizeof(__pyx_k_dropoutk), 0, 0, 1, 1},
+  {&__pyx_n_s_dropout_k, __pyx_k_dropout_k, sizeof(__pyx_k_dropout_k), 0, 0, 1, 1},
   {&__pyx_n_s_fblas, __pyx_k_fblas, sizeof(__pyx_k_fblas), 0, 0, 1, 1},
   {&__pyx_n_s_find, __pyx_k_find, sizeof(__pyx_k_find), 0, 0, 1, 1},
   {&__pyx_n_s_float32, __pyx_k_float32, sizeof(__pyx_k_float32), 0, 0, 1, 1},
@@ -6552,7 +6552,7 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  *     cdef float lr = <float> lr_
  */
-  __pyx_tuple__11 = PyTuple_Pack(30, __pyx_n_s_model, __pyx_n_s_sentences, __pyx_n_s_lr, __pyx_n_s_hidden, __pyx_n_s_grad, __pyx_n_s_lr_2, __pyx_n_s_vector_size, __pyx_n_s_negatives, __pyx_n_s_negpos, __pyx_n_s_neg, __pyx_n_s_wi, __pyx_n_s_wo, __pyx_n_s_negatives_len, __pyx_n_s_hidden_2, __pyx_n_s_grad_2, __pyx_n_s_pdiscard, __pyx_n_s_max_line_size, __pyx_n_s_size, __pyx_n_s_bucket, __pyx_n_s_word_ngrams, __pyx_n_s_dropoutk, __pyx_n_s_word_ids, __pyx_n_s_ids, __pyx_n_s_i, __pyx_n_s_local_token_count, __pyx_n_s_nexamples, __pyx_n_s_loss, __pyx_n_s_sentence, __pyx_n_s_word, __pyx_n_s_h); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 200, __pyx_L1_error)
+  __pyx_tuple__11 = PyTuple_Pack(30, __pyx_n_s_model, __pyx_n_s_sentences, __pyx_n_s_lr, __pyx_n_s_hidden, __pyx_n_s_grad, __pyx_n_s_lr_2, __pyx_n_s_vector_size, __pyx_n_s_negatives, __pyx_n_s_negpos, __pyx_n_s_neg, __pyx_n_s_wi, __pyx_n_s_wo, __pyx_n_s_negatives_len, __pyx_n_s_hidden_2, __pyx_n_s_grad_2, __pyx_n_s_pdiscard, __pyx_n_s_max_line_size, __pyx_n_s_size, __pyx_n_s_bucket, __pyx_n_s_word_ngrams, __pyx_n_s_dropout_k, __pyx_n_s_word_ids, __pyx_n_s_ids, __pyx_n_s_i, __pyx_n_s_local_token_count, __pyx_n_s_nexamples, __pyx_n_s_loss, __pyx_n_s_sentence, __pyx_n_s_word, __pyx_n_s_h); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__11);
   __Pyx_GIVEREF(__pyx_tuple__11);
   __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(5, 0, 30, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_prerna135_Documents_GitHu, __pyx_n_s_do_train_job_fast, 200, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) __PYX_ERR(0, 200, __pyx_L1_error)
