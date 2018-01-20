@@ -292,7 +292,7 @@ class Sent2Vec(SaveLoad):
     """Class for training and using neural networks described in [1]_"""
 
     def __init__(self, sentences=None, size=100, lr=0.2, lr_update_rate=100, epochs=5, min_count=5, neg=10,
-                 word_ngrams=2, bucket=2000000, t=0.0001, minn=3, maxn=6, dropoutk=2, seed=42,
+                 word_ngrams=2, bucket=2000000, t=0.0001, minn=3, maxn=6, dropout_k=2, seed=42,
                  min_lr=0.001, batch_words=10000, workers=3, max_vocab_size=30000000):
         """
 
@@ -322,7 +322,7 @@ class Sent2Vec(SaveLoad):
             Min length of char ngrams.
         maxn : int, optional
             Max length of char ngrams.
-        dropoutk : int, optional
+        dropout_k : int, optional
             Number of ngrams dropped when training a model.
         seed : int, optional
             For the random number generator for reproducible reasons.
@@ -356,7 +356,7 @@ class Sent2Vec(SaveLoad):
         self.t = t
         self.minn = minn
         self.maxn = maxn
-        self.dropoutk = dropoutk
+        self.dropout_k = dropout_k
         self.dict = None
         self.min_lr = min_lr
         self.min_lr_yet_reached = lr

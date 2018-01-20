@@ -167,7 +167,7 @@ cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size
 
 
 cdef (int, int, float) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t *pdiscard, int max_line_size,
-                             int word_ngrams, int dropoutk, float lr, REAL_t *hidden, REAL_t *grad,
+                             int word_ngrams, int dropout_k, float lr, REAL_t *hidden, REAL_t *grad,
                              int vector_size, int *negpos, int neg, int negatives_len,
                              REAL_t *wi, REAL_t *wo, int *negatives, int bucket, int size)nogil:
 
@@ -188,7 +188,7 @@ cdef (int, int, float) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t 
                 nexamples += 1
                 context.assign(words.begin(), words.end())
                 context[j] = 0
-                add_ngrams_train(context, word_ngrams, dropoutk, bucket, size)
+                add_ngrams_train(context, word_ngrams, dropout_k, bucket, size)
                 loss += update(context, words[j], lr, hidden, grad, vector_size,
                                negpos, neg, negatives_len, wi, wo, negatives)
                 context.clear()
@@ -214,7 +214,7 @@ def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
     cdef int size = <int> (model.dict.size)
     cdef int bucket = <int> (model.dict.bucket)
     cdef int word_ngrams = <int> (model.word_ngrams)
-    cdef int dropoutk = <int> (model.dropoutk)
+    cdef int dropout_k = <int> (model.dropout_k)
     srand(model.seed)
 
     cdef vector[vector[int]] word_ids
@@ -232,7 +232,7 @@ def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
     with nogil:
         local_token_count, nexamples, loss = _do_train_job_util(word_ids, pdiscard,
                                                                 max_line_size, word_ngrams,
-                                                                dropoutk, lr, hidden,
+                                                                dropout_k, lr, hidden,
                                                                 grad, vector_size, &negpos,
                                                                 neg, negatives_len, wi, wo,
                                                                 negatives, bucket, size)
