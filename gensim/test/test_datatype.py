@@ -17,13 +17,6 @@ from gensim.models.keyedvectors import KeyedVectors
 
 
 class TestDataType(unittest.TestCase):
-    def test_binary(self):
-        path = datapath('test.kv.bin')
-        kv = KeyedVectors.load_word2vec_format(path, binary=True,
-                                               datatype=np.float64)
-        self.assertAlmostEqual(kv['horse.n.01'][0], -0.0008546282343595379)
-        self.assertEqual(kv['horse.n.01'][0].dtype, np.float64)
-
     def test_text(self):
         path = datapath('test.kv.txt')
         kv = KeyedVectors.load_word2vec_format(path, binary=False,
