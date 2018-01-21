@@ -204,6 +204,9 @@ class Doc2Vec(BaseWordEmbedddingsModel):
         if 'iter' in kwargs:
             kwargs['epochs'] = kwargs['iter']
 
+        if 'size' in kwargs:
+            kwargs['vector_size'] = kwargs['size']
+
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
             null_word=dm_concat,
