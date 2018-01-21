@@ -59,7 +59,6 @@ class LowCorpus(IndexedCorpus):
     {0: u'computer', 1: u'eps', 2: u'graph', 3: u'human', 4: u'interface', 5: u'minors', 6: u'response', 7: u'survey',
     8: u'system', 9: u'time', 10: u'trees', 11: u'user'}
 
-
     """
     def __init__(self, fname, id2word=None, line2words=split_on_space):
         """Initialize the corpus from a file.
@@ -114,6 +113,14 @@ class LowCorpus(IndexedCorpus):
         )
 
     def _calculate_num_docs(self):
+        """Read first line in input data.
+
+        Return
+        ------
+        int
+            Number of documents.
+
+        """
         # the first line in input data is the number of documents (integer). throws exception on bad input.
         with utils.smart_open(self.fname) as fin:
             try:
@@ -187,8 +194,7 @@ class LowCorpus(IndexedCorpus):
 
         Notes
         -----
-        This function is automatically called by `LowCorpus.serialize`; don't
-        call it directly, call `serialize` instead.
+        This function is automatically called by `LowCorpus.serialize`; don't call it directly,call `serialize` instead.
 
         Parameters
         ----------
