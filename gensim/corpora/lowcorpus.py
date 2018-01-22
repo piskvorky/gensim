@@ -68,7 +68,7 @@ class LowCorpus(IndexedCorpus):
         fname : str
             File name.
         id2word : str, optional
-            If provided, it is a dictionary mapping between word_ids (integers) and words (strings).
+            It is a dictionary mapping between word_ids (integers) and words (strings), if provided.
             Otherwise, the mapping is constructed from the documents.
         line2words : str, optional
             Function which converts lines into tokens. Defaults to simple splitting on spaces.
@@ -76,10 +76,13 @@ class LowCorpus(IndexedCorpus):
         Attributes
         ----------
         fname : str
+            File name.
         line2words : str
+            Function which converts lines into tokens. Defaults to simple splitting on spaces.
         use_wordids : bool
-            If True, then return documents as (wordIndex, wordCount) 2-tuples, otherwise - (word, wordCount) 2-tuples.
+            Return documents as (wordIndex, wordCount) 2-tuples, if False - (word, wordCount) 2-tuples.
         id2word : dict
+            Mapping between words and their ids.
         num_terms : int
             Length of word2id.
 
@@ -245,6 +248,7 @@ class LowCorpus(IndexedCorpus):
         Parameters
         ----------
         offset : int
+            Distance from beginning of the file.
 
         Return
         list of tuples
@@ -282,6 +286,7 @@ class LowCorpus(IndexedCorpus):
 
     @property
     def id2word(self):
+        """Return mapping between words and their ids."""
         return self._id2word
 
     @id2word.setter

@@ -17,7 +17,7 @@ logger = logging.getLogger('gensim.corpora.malletcorpus')
 
 
 class MalletCorpus(LowCorpus):
-    """
+    """List_Of_Words corpus handles input in Mallet format.
 
     Notes
     -----
@@ -35,6 +35,15 @@ class MalletCorpus(LowCorpus):
         [document #N id] [label] [text of the document...]
 
     Note that language/label is *not* considered in Gensim.
+
+    Examples
+    --------
+    >>> from gensim.test.utils import datapath
+    >>> from gensim.corpora import malletcorpus
+    >>> data = malletcorpus.MalletCorpus(datapath("testcorpus.mallet"))
+    >>> print data.id2word
+    {0: u'computer', 1: u'eps', 2: u'graph', 3: u'human', 4: u'interface', 5: u'minors', 6: u'response',
+    7: u'survey', 8: u'system', 9: u'time', 10: u'trees', 11: u'user'}
 
     """
     def __init__(self, fname, id2word=None, metadata=False):
@@ -55,17 +64,7 @@ class MalletCorpus(LowCorpus):
         metadata : str, optional
             THIS PARAMETER WILL BE IGNORED.
 
-        Examples
-        --------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.corpora import malletcorpus
-        >>> data = malletcorpus.MalletCorpus(datapath("testcorpus.mallet"))
-        >>> print data.id2word
-        {0: u'computer', 1: u'eps', 2: u'graph', 3: u'human', 4: u'interface', 5: u'minors', 6: u'response',
-        7: u'survey', 8: u'system', 9: u'time', 10: u'trees', 11: u'user'}
-
-
-        """
+       """
         self.metadata = metadata
         LowCorpus.__init__(self, fname, id2word)
 
@@ -173,6 +172,7 @@ class MalletCorpus(LowCorpus):
         Parameters
         ----------
         offset : int
+            Distance from beginning of the file.
 
         Return
         list of tuples
