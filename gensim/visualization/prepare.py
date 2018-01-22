@@ -1,3 +1,5 @@
+# code modified from https://github.com/bmabey/pyLDAvis
+
 from __future__ import absolute_import
 from past.builtins import basestring
 from collections import namedtuple
@@ -100,11 +102,11 @@ def js_TSNE(distributions, **kwargs):
     return model.fit_transform(dist_matrix)
 
 
-def _doc_coordinates(mds, doc_topic_dists, doc_tag):
+def _doc_coordinates(mds, doc_topic_dists, doc_tag, doc_texts):
     K = doc_topic_dists.shape[0]
     mds_res = mds(doc_topic_dists)
     assert mds_res.shape == (K, 2)
-    mds_df = pd.DataFrame({'x': mds_res[:,0], 'y': mds_res[:,1], 'docs': doc_tag})
+    mds_df = pd.DataFrame({'x': mds_res[:,0], 'y': mds_res[:,1], 'docs': doc_tag, 'doc_texts':doc_texts})
     return mds_df
 
 def _topic_coordinates(mds, topic_word_dists, topic_proportion):
@@ -131,7 +133,7 @@ def _info(dists, fst, scnd):
 
 
 def prepare(doc_topic_dists, doc_word_dists, topic_word_dists, word_topic_dists, 
-            vocab, doc_tag, doc_lengths, mds=js_PCoA):
+            vocab, doc_tag, doc_texts, doc_lengths, mds=js_PCoA):
     """Transforms the topic model distributions and related corpus data into
     the data structures needed for the visualization.
     """
@@ -153,6 +155,7 @@ def prepare(doc_topic_dists, doc_word_dists, topic_word_dists, word_topic_dists,
 
     vocab = pd.Series(vocab, name='vocab')
     doc_tag = pd.Series(doc_tag, name='docs')
+    doc_texts = pd.Series(doc_texts, name='doc_texts')
 
     topic_freq = np.dot(doc_topic_dists.T, doc_lengths)
     topic_proportion = topic_freq / topic_freq.sum()

@@ -460,6 +460,16 @@ var TopicModelVis = function(to_select, data_or_file_name) {
             .attr("stroke", "black")
             .text("docs_tooltip");
 
+        var docs_text_tooltip = d3.select("body")
+            .append("div")
+            .style("position", "relative")
+            .style("z-index", "100")
+            .style("height", "100vh")
+            .style("overflow", "scroll")
+            .style("visibility", "hidden")
+            .attr("stroke", "black")
+            .text("docs_text_tooltip");
+
         // draw circles
         docpoints.append("circle")
             .attr("class", "docdot")
@@ -503,11 +513,17 @@ var TopicModelVis = function(to_select, data_or_file_name) {
                 state_save(true);
                 doc_on(this);
             })
+            .on("dblclick", function(d) {
+                docs_text_tooltip.text(d.doc_texts); 
+                docs_text_tooltip.style("visibility", "visible");
+            })
             .on("mousemove", function(){
                 docs_tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+                docs_text_tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
             })
             .on("mouseout", function(d) {
                 docs_tooltip.style("visibility", "hidden");
+                docs_text_tooltip.style("visibility", "hidden");
                 if (vis_state.doc != d.docs) doc_off(this);
                 if (vis_state.doc > 0) doc_on(document.getElementById(docID + vis_state.doc));
             });
