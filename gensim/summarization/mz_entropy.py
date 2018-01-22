@@ -11,52 +11,47 @@ import scipy
 
 
 def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True, threshold=0.0):
-    """Extract keywords from text using the Montemurro and Zanette entropy
-    algorithm. [1]_
+    """Extract keywords from text using the Montemurro and Zanette entropy algorithm. [1]_
 
     Parameters
     ----------
     text: str
-        document to summarize
+        Document for summarization.
     blocksize: int, optional
-        size of blocks to use in analysis, default is 1024
+        Size of blocks to use in analysis.
     scores: bool, optional
-        Whether to return score with keywords, default is False
+        Whether to return score with keywords.
     split: bool, optional
-        Whether to return results as list, default is False
+        Whether to return results as list.
     weighted: bool, optional
-        Whether to weight scores by word frequency. Default is True.
-        False can useful for shorter texts, and allows automatic thresholding
+        Whether to weight scores by word frequency.
+        False can useful for shorter texts, and allows automatic thresholding.
     threshold: float or 'auto', optional
-        minimum score for returned keywords, default 0.0
-        'auto' calculates the threshold as n_blocks / (n_blocks + 1.0) + 1.0e-8
-        Use 'auto' with weighted=False)
+        Minimum score for returned keywords,  'auto' calculates the threshold as n_blocks / (n_blocks + 1.0) + 1e-8,
+        use 'auto' with `weighted=False`.
 
     Returns
     -------
     results: str
-        newline separated keywords if `split` == False OR
+        newline separated keywords if `split` == False **OR**
     results: list(str)
-        list of keywords if `scores` == False OR
+        list of keywords if `scores` == False **OR**
     results: list(tuple(str, float))
         list of (keyword, score) tuples if `scores` == True
 
     Results are returned in descending order of score regardless of the format.
 
-    Notes
-    -----
+    Note
+    ----
     This algorithm looks for keywords that contribute to the structure of the
-    text on scales of blocksize words of larger. It is suitable for extracting
+    text on scales of `blocksize` words of larger. It is suitable for extracting
     keywords representing the major themes of long texts.
 
     References
     ----------
-    [1] Marcello A Montemurro, Damian Zanette,
-        "Towards the quantification of the semantic information encoded in
-        written language"
-        Advances in Complex Systems, Volume 13, Issue 2 (2010), pp. 135-153
-        DOI: 10.1142/S0219525910002530
-        https://arxiv.org/abs/0907.1558
+    .. [1] Marcello A Montemurro, Damian Zanette, "Towards the quantification of the semantic information encoded in
+           written language". Advances in Complex Systems, Volume 13, Issue 2 (2010), pp. 135-153,
+           DOI: 10.1142/S0219525910002530, https://arxiv.org/abs/0907.1558
 
     """
     text = to_unicode(text)
