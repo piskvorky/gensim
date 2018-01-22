@@ -351,8 +351,10 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
     """Realize the BackMapping translation matrix which map the source model's document vector
     to the target model's document vector(old model).
 
-    We map it to the other language space by computing z = Wx, then return the
-    word whose representation is close to z.
+    BackMapping translation matrix is used to learn a mapping for two document vector space which we
+    specify as source document vector and target document vector. The target document vector are trained
+    on superset corpus of source document vector, we can incrementally increase the vector in
+    the old model through the BackMapping translation matrix.
 
     the details use seen the notebook [3]_.
 
@@ -366,23 +368,24 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
     >>> src_model = Doc2Vec.load(datapath("small_tag_doc_5_iter50"))
     >>> dst_model = Doc2Vec.load(datapath("large_tag_doc_10_iter50"))
     >>>
-    >>> model_trans = BackMappingTranslationMatrix(data, src_model, dst_model)
+    >>> model_trans = BackMappingTranslationMatrix(src_model, dst_model)
     >>> trans_matrix = model_trans.train(data)
     >>>
     >>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
 
     """
-    def __init__(self, tagged_docs, source_lang_vec, target_lang_vec, random_state=None):
+    def __init__(self, source_lang_vec, target_lang_vec, tagged_docs=None, random_state=None):
         """
 
         Parameters
         ----------
-        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
-            Documents that will be used for training
         source_lang_vec : :class:`~gensim.models.doc2vec.Doc2Vec`
             Source Doc2Vec model.
         target_lang_vec : :class:`~gensim.models.doc2vec.Doc2Vec`
             Target Doc2Vec model.
+        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional.
+            Documents that will be used for training, both the source language document vector and
+            target language document vector trained on those tagged documents.
         random_state : {None, int, array_like}, optional
             Seed for random state.
 
@@ -394,13 +397,17 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         self.random_state = utils.get_random_state(random_state)
         self.translation_matrix = None
 
+        if tagged_docs is not None:
+            self.train(tagged_docs)
+
     def train(self, tagged_docs):
         """Build the translation matrix that mapping from the source model's vector to target model's vector
 
         Parameters
         ----------
-        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
-            THIS ARGUMENT WILL BE IGNORED.
+        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, Documents
+            that will be used for training, both the source language document vector and
+            target language document vector trained on those tagged documents.
 
         Returns
         -------
@@ -408,8 +415,8 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
             Translation matrix that mapping from the source model's vector to target model's vector.
 
         """
-        m1 = [self.source_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_docs]
-        m2 = [self.target_lang_vec.docvecs[item.tags].flatten() for item in self.tagged_docs]
+        m1 = [self.source_lang_vec.docvecs[item.tags].flatten() for item in tagged_docs]
+        m2 = [self.target_lang_vec.docvecs[item.tags].flatten() for item in tagged_docs]
 
         self.translation_matrix = np.linalg.lstsq(m2, m1, -1)[0]
         return self.translation_matrix
@@ -420,7 +427,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         Parameters
         ----------
         target_doc_vec : numpy.ndarray
-            Document vector
+            Document vector from the target document, whose document are not in the source model.
 
         Returns
         -------

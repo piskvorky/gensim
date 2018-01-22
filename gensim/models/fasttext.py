@@ -536,9 +536,10 @@ class FastText(Word2Vec):
                 self.neg_labels = zeros(self.negative + 1)
                 self.neg_labels[0] = 1.
 
-        Word2Vec.train(
-            self, sentences, total_examples=self.corpus_count, epochs=self.iter,
-            start_alpha=self.alpha, end_alpha=self.min_alpha)
+        super(FastText, self).train(
+            sentences, total_examples=total_examples, total_words=total_words, epochs=epochs, start_alpha=start_alpha,
+            end_alpha=end_alpha, word_count=word_count, queue_factor=queue_factor, report_delay=report_delay
+        )
         self.get_vocab_word_vecs()
 
     def __getitem__(self, word):
