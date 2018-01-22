@@ -59,10 +59,10 @@ class HashDictionary(utils.SaveLoad, dict):
 
     Examples
     --------
-    >>> from gensim.corpora import hashdictionary
+    >>> from gensim.corpora import HashDictionary
     >>>
     >>> texts = [['human', 'interface', 'computer']]
-    >>> dct = hashdictionary.HashDictionary(texts)
+    >>> dct = HashDictionary(texts)
     >>> dct.doc2bow(texts[0])
     [(10608, 1), (12466, 1), (31002, 1)]
 
@@ -171,10 +171,10 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Examples
         --------
-        >>> from gensim.corpora import hashdictionary
+        >>> from gensim.corpora import HashDictionary
         >>>
-        >>> corpus = ["máma mele maso".split(), "ema má máma".split()]
-        >>> dct = hashdictionary.HashDictionary(corpus)  # pass several documents
+        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+        >>> dct = HashDictionary(corpus)
         >>> "sparta" in dct.token2id
         False
         >>> dct.add_documents([["this","is","sparta"],["just","joking"]])  # add more documents in dictionary
@@ -221,11 +221,13 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Examples
         --------
-        >>> from gensim.corpora import hashdictionary
-        >>> data = hashdictionary.HashDictionary(["máma mele maso".split(), "ema má máma".split()])
-        >>> data.doc2bow(["this","is","máma"])
+        >>> from gensim.corpora import HashDictionary
+        >>>
+        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+        >>> dct = HashDictionary(corpus)
+        >>> dct.doc2bow(["this","is","máma"])
         [(1721, 1), (5280, 1), (22493, 1)]
-        >>> data.doc2bow(["this","is","máma"], False, True)
+        >>> dct.doc2bow(["this","is","máma"], return_missing=True)
         ([(1721, 1), (5280, 1), (22493, 1)], {})
 
         """
@@ -286,9 +288,10 @@ class HashDictionary(utils.SaveLoad, dict):
         --------
         >>> from gensim.corpora import HashDictionary
         >>>
-        >>> data = HashDictionary(["máma mele maso".split(), "ema má máma".split()])
-        >>> data.filter_extremes(1, 0.5, 1)
-        >>> print data.token2id
+        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+        >>> dct = HashDictionary(corpus)
+        >>> dct.filter_extremes(no_below=1, no_above=0.5, keep_n=1)
+        >>> print dct.token2id
         {'maso': 15025}
 
         """
@@ -329,7 +332,8 @@ class HashDictionary(utils.SaveLoad, dict):
         >>> from gensim.corpora import HashDictionary
         >>> from gensim.test.utils import get_tmpfile
         >>>
-        >>> data = HashDictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
+        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+        >>> data = HashDictionary(corpus)
         >>> data.save_as_text(get_tmpfile("dictionary_in_text_format"))
 
         """
