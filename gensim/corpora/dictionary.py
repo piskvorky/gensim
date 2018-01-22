@@ -177,9 +177,11 @@ class Dictionary(utils.SaveLoad, Mapping):
         >>> corpus = ["máma mele maso".split(), "ema má máma".split()]
 
         >>> dct = Dictionary(corpus)
-        >>> assert len(dct) == 5
+        >>> len(dct)
+        5
         >>> dct.add_documents([["this","is","sparta"],["just","joking"]])
-        >>> assert len(dct) == 10
+        >>> len(dct)
+        10
 
         """
         for docno, document in enumerate(documents):
@@ -298,38 +300,43 @@ class Dictionary(utils.SaveLoad, Mapping):
         return [self.token2id.get(word, unknown_word_index) for word in document]
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
-        """Filter out tokens (very frequent and very rare).
+        """Filter tokens in dictionary by frequency.
 
         Parameters
         ----------
         no_below : int, optional
-            Keep less than `no_below` documents.
+            Keep tokens which are contained in at least `no_below` documents.
         no_above : float, optional
-            Keep more than `no_below` documents (fraction of total corpus size, not an absolute number).
+            Keep tokens which are contained in no more than `no_above` documents
+            (fraction of total corpus size, not an absolute number).
         keep_n : int, optional
             Keep only the first `keep_n` most frequent tokens.
-        keep_tokens : list of str, optional
-            Keep token if it is in `keep_tokens` (regardless of another parameters).
+        keep_tokens : iterable of str
+            Iterable of tokens that **must** stay in dictionary after filtering.
 
         Notes
         -----
-        Filter out tokens that appear in:
+        For tokens that appear in:
 
-        #. Less than `no_below` documents (absolute number).
-        #. More than `no_above` documents (fraction of total corpus size, *not* absolute number).
-        #. If tokens are given in keep_tokens, they will be kept regardless of the `no_below` and `no_above` settings.
-        #. After (1), (2) and (3), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
+        #. Less than `no_below` documents (absolute number) or \n
+        #. More than `no_above` documents (fraction of total corpus size, **not absolute number**).
+        #. After (1) and (2), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
+
 
         After the pruning, shrink resulting gaps in word ids.
         Due to the gap shrinking, the same word may have a different word id before and after the call to this function!
 
         Examples
         --------
-        >>> from gensim.corpora import dictionary
-        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split()])
-        >>> data.filter_extremes(1, 0.5, 1)
-        >>> print data
-        Dictionary(1 unique tokens: [u'maso'])
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+        >>> dct = Dictionary(corpus)
+        >>> len(dct)
+        5
+        >>> dct.filter_extremes(no_below=1, no_above=0.5, keep_n=1)
+        >>> len(dct)
+        1
 
         """
         no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
@@ -372,10 +379,13 @@ class Dictionary(utils.SaveLoad, Mapping):
         --------
         >>> from gensim.corpora import Dictionary
         >>>
-        >>> dct = Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
-        >>> assert len(dct) == 5
+        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+        >>> dct = Dictionary(corpus)
+        >>> len(dct)
+        5
         >>> dct.filter_n_most_frequent(2)
-        >>> assert len(dct) == 3
+        >>> len(dct)
+        3
 
         """
         # determine which tokens to keep
@@ -390,39 +400,32 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.info("resulting dictionary: %s", self)
 
     def filter_tokens(self, bad_ids=None, good_ids=None):
-        """Remove the selected `bad_ids` tokens from all dictionary mappings, or, keep selected `good_ids`
-        in the mapping and remove the rest.
+        """Remove the selected `bad_ids` tokens from :class:`~gensim.corpora.dictionary.Dictionary`.
+        Alternative - keep selected `good_ids` in :class:`~gensim.corpora.dictionary.Dictionary` and remove the rest.
 
         Parameters
         ----------
-        bad_ids : collection of int, optional
+        bad_ids : iterable of int, optional
             Collection of word ids to be removed.
         good_ids : collection of int, optional
             Keep selected collection of word ids and remove the rest.
 
         Examples
         --------
-        >>> # bad ids:
-        >>> from gensim.corpora import dictionary
-        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
-        >>> # show current ids in dictionary mapping
-        >>> data.token2id
-        {u'm\xe1ma': 0, u'maso': 1, u'ema': 3, u'm\xe1': 4, u'mele': 2}
+        >>> from gensim.corpora import Dictionary
         >>>
-        >>> data.filter_tokens([0,4])
-        >>> print data
-        Dictionary(3 unique tokens: [u'maso', u'ema', u'mele'])
-
-        >>> # good ids:
-        >>> from gensim.corpora import dictionary
-        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
-        >>> # show current ids in dictionary mapping
-        >>> data.token2id
-        {u'm\xe1ma': 0, u'maso': 1, u'ema': 3, u'm\xe1': 4, u'mele': 2}
-        >>>
-        >>> data.filter_tokens(None,[0,4])
-        >>> print data
-        Dictionary(2 unique tokens: [u'm\xe1ma', u'm\xe1'])
+        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+        >>> dct = Dictionary(corpus)
+        >>> 'ema' in dct.token2id
+        True
+        >>> dct.filter_tokens(bad_ids=[dct.token2id['ema']])
+        >>> 'ema' in dct.token2id
+        False
+        >>> len(dct)
+        4
+        >>> dct.filter_tokens(good_ids=[dct.token2id['maso']])
+        >>> len(dct)
+        1
 
         """
         if bad_ids is not None:
@@ -436,15 +439,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.compactify()
 
     def compactify(self):
-        """Assign new word ids to all words.
-
-        Notes
-        -----
-        This is done to make the ids more compact, e.g. after some tokens have
-        been removed via :func:`filter_tokens` and there are gaps in the id series.
-        Calling this method will remove the gaps.
-
-        """
+        """Assign new word ids to all words, shrinking gaps."""
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
@@ -469,9 +464,11 @@ class Dictionary(utils.SaveLoad, Mapping):
         -----
         Format::
 
-        `num_docs`
-        `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
-
+            num_docs
+            id_1[TAB]word_1[TAB]document_frequency_1[NEWLINE]
+            id_2[TAB]word_2[TAB]document_frequency_2[NEWLINE]
+            ....
+            id_k[TAB]word_k[TAB]document_frequency_k[NEWLINE]
 
         Warnings
         --------
@@ -484,10 +481,17 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-        >>> from gensim.corpora import dictionary
-        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
-        >>> data.save_as_text("testdata")
-        Got file "testdata.txt" with specified format (look at Notes).
+        >>> from gensim.corpora import Dictionary
+        >>> from gensim.test.utils import get_tmpfile
+        >>>
+        >>> tmp_fname = get_tmpfile("dictionary")
+        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+        >>>
+        >>> dct = Dictionary(corpus)
+        >>> dct.save_as_text(tmp_fname)
+        >>>
+        >>> loaded_dct = Dictionary.load_from_text("testdata")
+        >>> assert dct.token2id == loaded_dct.token2id
 
         """
         logger.info("saving dictionary mapping to %s", fname)
@@ -530,13 +534,15 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-        TODO fix example
         >>> from gensim.corpora import Dictionary
         >>>
         >>> corpus_1, corpus_2 = [["a", "b", "c"]], [["a", "f", "f"]]
         >>> dct_1, dct_2 = Dictionary(corpus_1), Dictionary(corpus_2)
-        >>>
+        >>> dct_1.doc2bow(corpus_2[0])
+        [(0, 1)]
         >>> transformer = dct_1.merge_with(dct_2)
+        >>> dct_1.doc2bow(corpus_2[0])
+        [(0, 1), (3, 2)]
 
         """
         old2new = {}
@@ -645,7 +651,8 @@ class Dictionary(utils.SaveLoad, Mapping):
         >>>
         >>> corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
         >>> dct = Dictionary.from_corpus(corpus)
-        >>> assert len(dct) == 3
+        >>> len(dct)
+        3
 
         """
         result = Dictionary()
