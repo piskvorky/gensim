@@ -34,7 +34,7 @@ class CsvCorpus(interfaces.CorpusABC):
         Parameters
         ----------
         fname : str
-            Path to corpus in CSV format.
+            Path to corpus.
         labels : bool
             If True - ignore first column (class labels).
 

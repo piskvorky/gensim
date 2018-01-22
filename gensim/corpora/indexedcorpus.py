@@ -49,7 +49,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         Parameters
         ----------
         fname : str
-            Path to indexed corpus.
+            Path to corpus.
         index_fname : str, optional
             Path to index, if not provided - used `fname.index`.
 
@@ -73,9 +73,9 @@ class IndexedCorpus(interfaces.CorpusABC):
         Parameters
         ----------
         fname : str
-            Path to output filename
+            Path to output file.
         corpus : iterable of iterable of (int, float)
-            Corpus in BoW format
+            Corpus in BoW format.
         id2word : dict of (str, str), optional
             Mapping id -> word.
         index_fname : str, optional

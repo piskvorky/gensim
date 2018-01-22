@@ -41,9 +41,14 @@ class BleiCorpus(IndexedCorpus):
         Parameters
         ----------
         fname : str
-            File path to Serialized corpus.
+            Path to corpus.
         fname_vocab : str, optional
-            Vocabulary file. If `fname_vocab` is None, searching for the vocab.txt or `fname_vocab`.vocab file.
+            Vocabulary file. If `fname_vocab` is None, searching one of variants:
+
+            * `fname`.vocab
+            * `fname`/vocab.txt
+            * `fname_without_ext`.vocab
+            * `fname_folder`/vocab.txt
 
         Raises
         ------
@@ -120,9 +125,9 @@ class BleiCorpus(IndexedCorpus):
         Parameters
         ----------
         fname : str
-            Path to output filename.
+            Path to output file.
         corpus : iterable of iterable of (int, float)
-            Input corpus
+            Input corpus in BoW format.
         id2word : dict of (str, str), optional
             Mapping id -> word for `corpus`.
         metadata : bool, optional
@@ -160,8 +165,8 @@ class BleiCorpus(IndexedCorpus):
         return offsets
 
     def docbyoffset(self, offset):
-        """Get document corresponding to `offset`,
-        offset can be given from :meth:`~gensim.corpora.bleicorpus.BleiCorpus.save_corpus`.
+        """Get document corresponding to `offset`.
+        Offset can be given from :meth:`~gensim.corpora.bleicorpus.BleiCorpus.save_corpus`.
 
         Parameters
         ----------

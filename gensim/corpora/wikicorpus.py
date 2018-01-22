@@ -168,7 +168,7 @@ def remove_template(s):
     Parameters
     ----------
     s : str
-        String containing markup template
+        String containing markup template.
 
     Returns
     -------
@@ -250,7 +250,7 @@ def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, 
     token_min_len : int
         Minimal token length.
     token_max_len : int
-        Maximal token length
+        Maximal token length.
     lower : bool
          If True - convert `content` to lower case.
 
@@ -299,7 +299,7 @@ def extract_pages(f, filter_namespaces=False):
     f : file
         File-like object.
     filter_namespaces : list of str or bool
-         Namespaces that will be extracted
+         Namespaces that will be extracted.
 
     Yields
     ------
@@ -517,7 +517,7 @@ class WikiCorpus(TextCorpus):
         Notes
         -----
         This iterates over the **texts**. If you want vectors, just use the standard corpus interface
-        instead of this method
+        instead of this method:
 
         >>> for vec in wiki_corpus:
         >>>     print(vec)

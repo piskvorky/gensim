@@ -49,7 +49,7 @@ class SvmLightCorpus(IndexedCorpus):
         Parameters
         ----------
         fname: str
-            Path to corpus in SVMlight format.
+            Path to corpus.
         store_labels : bool, optional
             Whether to store labels (~SVM target class). They currently have no application but stored
             in `self.labels` for convenience by default.
@@ -138,8 +138,8 @@ class SvmLightCorpus(IndexedCorpus):
             # TODO: it brakes if gets None from line2doc
 
     def line2doc(self, line):
-        """Get a document from a single line in SVMlight format,
-        inverse of :meth:`~gensim.corpora.svmlightcorpus.SvmLightCorpus.doc2line`.
+        """Get a document from a single line in SVMlight format.
+        This method inverse of :meth:`~gensim.corpora.svmlightcorpus.SvmLightCorpus.doc2line`.
 
         Parameters
         ----------
@@ -166,8 +166,8 @@ class SvmLightCorpus(IndexedCorpus):
 
     @staticmethod
     def doc2line(doc, label=0):
-        """Convert BoW representation of document in SVMlight format,
-        inverse of :meth:`~gensim.corpora.svmlightcorpus.SvmLightCorpus.line2doc`.
+        """Convert BoW representation of document in SVMlight format.
+        This method inverse of :meth:`~gensim.corpora.svmlightcorpus.SvmLightCorpus.line2doc`.
 
         Parameters
         ----------
