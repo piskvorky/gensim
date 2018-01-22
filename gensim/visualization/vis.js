@@ -452,23 +452,13 @@ var TopicModelVis = function(to_select, data_or_file_name) {
                 .data(docMdsData)
                 .enter();
 
-        // text to indicate doc
-        docpoints.append("text")
-            .attr("class", "doc_txt")
-            .attr("x", function(d) {
-                return (doc_xScale(+d.x));
-            })
-            .attr("y", function(d) {
-                return (doc_yScale(+d.y) + 4);
-            })
+        var docs_tooltip = d3.select("body")
+            .append("div")
+            .style("position", "absolute")
+            .style("z-index", "10")
+            .style("visibility", "hidden")
             .attr("stroke", "black")
-            .attr("opacity", 1)
-            .style("text-anchor", "middle")
-            .style("font-size", "11px")
-            .style("fontWeight", 100)
-            .text(function(d) {
-                return d.docs;
-            });
+            .text("docs_tooltip");
 
         // draw circles
         docpoints.append("circle")
@@ -488,7 +478,12 @@ var TopicModelVis = function(to_select, data_or_file_name) {
             .attr("id", function(d) {
                 return (docID + d.docs);
             })
+            .text(function(d) {
+                return d.docs;
+            })
             .on("mouseover", function(d) {
+                docs_tooltip.text(d.docs); 
+                docs_tooltip.style("visibility", "visible");
                 var old_doc = docID + vis_state.doc;
                 if (vis_state.doc > 0 && old_doc!= this.id) {
                     doc_off(document.getElementById(old_doc));
@@ -508,7 +503,11 @@ var TopicModelVis = function(to_select, data_or_file_name) {
                 state_save(true);
                 doc_on(this);
             })
+            .on("mousemove", function(){
+                docs_tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+            })
             .on("mouseout", function(d) {
+                docs_tooltip.style("visibility", "hidden");
                 if (vis_state.doc != d.docs) doc_off(this);
                 if (vis_state.doc > 0) doc_on(document.getElementById(docID + vis_state.doc));
             });
