@@ -298,7 +298,18 @@ class Dictionary(utils.SaveLoad, Mapping):
         return [self.token2id.get(word, unknown_word_index) for word in document]
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
-        """Filter out tokens.
+        """Filter out tokens (very frequent and very rare).
+
+        Parameters
+        ----------
+        no_below : int, optional
+            Keep less than `no_below` documents.
+        no_above : float, optional
+            Keep more than `no_below` documents (fraction of total corpus size, not an absolute number).
+        keep_n : int, optional
+            Keep only the first `keep_n` most frequent tokens.
+        keep_tokens : list of str, optional
+            Keep token if it is in `keep_tokens` (regardless of another parameters).
 
         Notes
         -----
@@ -311,17 +322,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         After the pruning, shrink resulting gaps in word ids.
         Due to the gap shrinking, the same word may have a different word id before and after the call to this function!
-
-        Parameters
-        ----------
-        no_below : int, optional
-            Keep less than `no_below` documents.
-        no_above : float, optional
-            Keep more than `no_below` documents (fraction of total corpus size, not an absolute number).
-        keep_n : int, optional
-            Keep only the first `keep_n` most frequent tokens.
-        keep_tokens : list of str, optional
-            Keep token if it is in `keep_tokens` (regardless of another parameters).
 
         Examples
         --------
@@ -363,23 +363,19 @@ class Dictionary(utils.SaveLoad, Mapping):
     def filter_n_most_frequent(self, remove_n):
         """Filter out the 'remove_n' most frequent tokens that appear in the documents.
 
-        Notes
-        -----
-        After the pruning, shrink resulting gaps in word ids.
-        **Note**: Due to the gap shrinking, the same word may have a different
-        word id before and after the call to this function!
-
         Parameters
         ----------
         remove_n : int
-            Number of the most frequent tokens.
+            Number of the most frequent tokens that will be removed.
 
         Examples
         --------
-        >>> from gensim.corpora import dictionary
-        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
-        >>> data.filter_n_most_frequent(2)
-        Dictionary(3 unique tokens: [u'maso', u'ema', u'mele'])
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> dct = Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
+        >>> assert len(dct) == 5
+        >>> dct.filter_n_most_frequent(2)
+        >>> assert len(dct) == 3
 
         """
         # determine which tokens to keep
@@ -460,23 +456,31 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.dfs = {idmap[tokenid]: freq for tokenid, freq in iteritems(self.dfs)}
 
     def save_as_text(self, fname, sort_by_word=True):
-        """Save this Dictionary to a text file.
+        """Save :class:`~gensim.corpora.dictionary.Dictionary` to a text file.
 
         Parameters
         ----------
         fname : str
-            File name.
+            Path to output file.
         sort_by_word : bool, optional
-            Check if it is necessary to sort by word.
+            if True - sort by word in lexicographical order.
 
         Notes
         -----
-        Format:
+        Format::
+
         `num_docs`
         `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
-        Sorted by word, or by decreasing word frequency.
-        Hint: text format should be use for corpus inspection. Use `save`/`load`
-        to store in binary format (pickle) for improved performance.
+
+
+        Warnings
+        --------
+        Text format should be use for corpus inspection. Use :meth:`~gensim.corpora.dictionary.Dictionary.save` and
+        :meth:`~gensim.corpora.dictionary.Dictionary.load` to store in binary format (pickle) for better performance.
+
+        See Also
+        --------
+        :meth:`~gensim.corpora.dictionary.Dictionary.load_from_text`
 
         Examples
         --------
@@ -504,35 +508,35 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Notes
         -----
-        The purpose is to merge two corpora
-        created using two different dictionaries, one from `self` and one from `other`.
+        The purpose is to merge two corpora created using two different dictionaries: `self` and `other`.
         `other` can be any id=>word mapping (a dict, a Dictionary object, ...).
-        Return a transformation object which, when accessed as `result[doc_from_other_corpus]`,
-        will convert documents from a corpus built using the `other` dictionary
-        into a document using the new, merged dictionary (see :class:`gensim.interfaces.TransformationABC`).
+
+        Get a transformation object which, when accessed as `result[doc_from_other_corpus]`, will convert documents
+        from a corpus built using the `other` dictionary into a document using the new, merged dictionary.
+
+        Warnings
+        --------
+        This method will change `self` dictionary.
 
         Parameters
         ----------
         other : :class:`~gensim.corpora.dictionary.Dictionary`
-            Can be any id=>word mapping (a dict, a Dictionary object, ...).
+            Other dictionary.
 
         Return
         ------
-        :class:`gensim.models.__init__.VocabTransform`
+        :class:`gensim.models.VocabTransform`
             Transformation object.
-        #TODO: probably, i'm wrong.
 
         Examples
         --------
-        >>> from gensim.corpora import dictionary
-        >>> import itertools
-        >>> dict1 = dictionary.Dictionary(["máma mele maso".split()])
-        >>> dict2 = dictionary.Dictionary(["ema má máma hasta".split()])  # ids not compatible with dict1!
-        >>> dict2_to_dict1 = dict1.merge_with(dict2)
-        >>> # now we can merge corpora from the two incompatible dictionaries into one
-        >>> merged_corpus = itertools.chain([["máma mele maso".split()], dict2_to_dict1["ema má máma hasta".split()]])
-        #>>> merged_corpus = itertools.chain(["máma mele maso".split()], dict2_to_dict1["ema má máma hasta".split()])
-        #TODO: Monday meeting; список списков строк; не работает
+        TODO fix example
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> corpus_1, corpus_2 = [["a", "b", "c"]], [["a", "f", "f"]]
+        >>> dct_1, dct_2 = Dictionary(corpus_1), Dictionary(corpus_2)
+        >>>
+        >>> transformer = dct_1.merge_with(dct_2)
 
         """
         old2new = {}
@@ -561,24 +565,31 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     @staticmethod
     def load_from_text(fname):
-        """Load a previously stored Dictionary from a text file. Mirror function to `save_as_text`.
+        """Load a previously stored :class:`~gensim.corpora.dictionary.Dictionary` from a text file.
+        Mirror function to :meth:`~gensim.corpora.dictionary.Dictionary.save_as_text`.
 
         Parameters
         ----------
         fname: str
-            File name.
+            Path to file produced by :meth:`~gensim.corpora.dictionary.Dictionary.save_as_text`.
+
+        See Also
+        --------
+        :meth:`~gensim.corpora.dictionary.Dictionary.save_as_text`
 
         Examples
         --------
-        >>> # first, let's save some data
-        >>> from gensim.corpora import dictionary
-        >>> data = dictionary.Dictionary(["máma mele maso".split(), "ema má máma".split(), "má máma".split()])
-        >>> data.save_as_text("testdata")
+        >>> from gensim.corpora import Dictionary
+        >>> from gensim.test.utils import get_tmpfile
         >>>
-        >>> # then we will load it
-        >>> loaded_dict = dictionary.Dictionary.load_from_text("testdata")
-        >>> print loaded_dict
-        Dictionary(5 unique tokens: [u'maso', u'm\xe1', u'm\xe1ma', u'ema', u'mele'])
+        >>> tmp_fname = get_tmpfile("dictionary")
+        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+        >>>
+        >>> dct = Dictionary(corpus)
+        >>> dct.save_as_text(tmp_fname)
+        >>>
+        >>> loaded_dct = Dictionary.load_from_text("testdata")
+        >>> assert dct.token2id == loaded_dct.token2id
 
         """
         result = Dictionary()
@@ -606,34 +617,35 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     @staticmethod
     def from_corpus(corpus, id2word=None):
-        """Create Dictionary from an existing corpus.
-
-        Notes
-        -----
-        This can be useful if you only have a term-document BOW matrix (represented by `corpus`),
-        but not the original text corpus. \n
-        This will scan the term-document count matrix for all word ids that appear in it,
-        then construct and return Dictionary which maps each `word_id -> id2word[word_id]`. \n
-        `id2word` is an optional dictionary that maps the `word_id` to a token.
-        In case `id2word` isn't specified the mapping `id2word[word_id] = str(word_id)` will be used.
+        """Create :class:`~gensim.corpora.dictionary.Dictionary` from an existing corpus.
 
         Parameters
         ----------
-        corpus : iterable of iterable of str
-            Corpus for dictionary.
+        corpus : iterable of iterable of (int, number)
+            Corpus in BoW format.
+        id2word : dict of (int, object)
+            Mapping id -> word. If None, the mapping `id2word[word_id] = str(word_id)` will be used.
 
-        Return
-        ------
+        Notes
+        -----
+        This can be useful if you only have a term-document BOW matrix (represented by `corpus`), but not the original
+        text corpus. This method will scan the term-document count matrix for all word ids that appear in it,
+        then construct :class:`~gensim.corpora.dictionary.Dictionary` which maps each `word_id -> id2word[word_id]`.
+        `id2word` is an optional dictionary that maps the `word_id` to a token.
+        In case `id2word` isn't specified the mapping `id2word[word_id] = str(word_id)` will be used.
+
+        Returns
+        -------
         :class:`~gensim.corpora.dictionary.Dictionary`
-            Dictionary instance.
+            Inferred dictionary from corpus.
 
         Examples
         --------
-        >>> from gensim.corpora import dictionary
+        >>> from gensim.corpora import Dictionary
+        >>>
         >>> corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
-        >>> corp_dict = dictionary.Dictionary.from_corpus(corpus)
-        >>> print corp_dict
-        Dictionary(3 unique tokens: [u'1', u'0', u'2'])
+        >>> dct = Dictionary.from_corpus(corpus)
+        >>> assert len(dct) == 3
 
         """
         result = Dictionary()
