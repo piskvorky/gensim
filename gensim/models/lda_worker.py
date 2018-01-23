@@ -88,6 +88,10 @@ class Worker(object):
         logger.info("finished processing job #%i", self.jobsdone - 1)
 
     @Pyro4.expose
+    def ping(self):
+        return True
+
+    @Pyro4.expose
     @utils.synchronous('lock_update')
     def getstate(self):
         logger.info("worker #%i returning its state after %s jobs", self.myid, self.jobsdone)
