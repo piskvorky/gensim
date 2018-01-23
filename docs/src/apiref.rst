@@ -54,7 +54,6 @@ Modules:
     models/wrappers/ldavowpalwabbit.rst
     models/wrappers/wordrank
     models/wrappers/varembed
-    models/wrappers/fasttext
     similarities/docsim
     similarities/index
     sklearn_api/atmodel
