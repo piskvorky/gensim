@@ -1,6 +1,5 @@
 """
-This package contains interfaces and functionality to compute pair-wise document
-similarities within a corpus of documents.
+Computation of pair-wise document similarities over a corpus of documents.
 """
 
 from gensim import parsing, matutils, interfaces, corpora, models, similarities, summarization, utils  # noqa:F401
