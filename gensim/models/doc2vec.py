@@ -65,7 +65,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables
 from six.moves import xrange
 from six import string_types, integer_types, itervalues
-from gensim.models.base_any2vec import BaseWordEmbedddingsModel
+from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
 from types import GeneratorType
 
@@ -114,7 +114,7 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
         return self._replace(word_count=self.word_count + word_count, doc_count=self.doc_count + 1)
 
 
-class Doc2Vec(BaseWordEmbedddingsModel):
+class Doc2Vec(BaseWordEmbeddingsModel):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
 
     def __init__(self, documents=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,

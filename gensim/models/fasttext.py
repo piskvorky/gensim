@@ -36,7 +36,7 @@ from numpy import ones, vstack, empty, float32 as REAL
 
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables
 from gensim.models.keyedvectors import Vocab, FastTextKeyedVectors
-from gensim.models.base_any2vec import BaseWordEmbedddingsModel
+from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.utils_any2vec import compute_ngrams, ft_hash
 
 from six import iteritems
@@ -58,7 +58,7 @@ except ImportError:
 FASTTEXT_FILEFORMAT_MAGIC = 793712314
 
 
-class FastText(BaseWordEmbedddingsModel):
+class FastText(BaseWordEmbeddingsModel):
     """Class for training, using and evaluating word representations learned using method
     described in [1]_ aka Fasttext.
 

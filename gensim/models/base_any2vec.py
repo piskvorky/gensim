@@ -278,7 +278,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         super(BaseAny2VecModel, self).save(fname_or_handle, **kwargs)
 
 
-class BaseWordEmbedddingsModel(BaseAny2VecModel):
+class BaseWordEmbeddingsModel(BaseAny2VecModel):
     """Base class containing common methods for training, using & evaluating word embeddings learning
     models (`Word2Vec`, `FastText`).
     """
@@ -310,7 +310,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         self.min_alpha_yet_reached = float(alpha)
         self.corpus_count = 0
 
-        super(BaseWordEmbedddingsModel, self).__init__(
+        super(BaseWordEmbeddingsModel, self).__init__(
             workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -525,7 +525,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
         self.min_alpha = end_alpha or self.min_alpha
         self.compute_loss = compute_loss
         self.running_training_loss = 0.0
-        return super(BaseWordEmbedddingsModel, self).train(
+        return super(BaseWordEmbeddingsModel, self).train(
             sentences, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
@@ -588,7 +588,7 @@ class BaseWordEmbedddingsModel(BaseAny2VecModel):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        model = super(BaseWordEmbedddingsModel, cls).load(*args, **kwargs)
+        model = super(BaseWordEmbeddingsModel, cls).load(*args, **kwargs)
         if model.negative and hasattr(model.wv, 'index2word'):
             model.vocabulary.make_cum_table(model.wv)  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):

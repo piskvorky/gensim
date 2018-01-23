@@ -113,7 +113,7 @@ import warnings
 
 from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.models.keyedvectors import Vocab, Word2VecKeyedVectors
-from gensim.models.base_any2vec import BaseWordEmbedddingsModel
+from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 
 try:
     from queue import Queue, Empty
@@ -144,7 +144,7 @@ except ImportError:
         "Please make sure you have installed Cython and BLAS.")
 
 
-class Word2Vec(BaseWordEmbedddingsModel):
+class Word2Vec(BaseWordEmbeddingsModel):
     """Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
 
     If you're finished training a model (=no more updates, only querying)
