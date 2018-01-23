@@ -360,6 +360,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         .. [#taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations,
                     in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
         .. [#deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
+
         Parameters
         ----------
         sentences : iterable of iterables

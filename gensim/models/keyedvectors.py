@@ -523,7 +523,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     def most_similar_cosmul(self, positive=None, negative=None, topn=10):
         """
         Find the top-N most similar words, using the multiplicative combination objective
-        proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
+        proposed by Omer Levy and Yoav Goldberg. Positive words still contribute
         positively towards the similarity, negative words negatively, but with less
         susceptibility to one large distance dominating the calculation.
 
@@ -539,7 +539,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
           >>> trained_model.most_similar_cosmul(positive=['baghdad', 'england'], negative=['london'])
           [(u'iraq', 0.8488819003105164), ...]
 
-        .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
+        .. Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
 
         """
         if positive is None:

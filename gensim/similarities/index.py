@@ -53,18 +53,17 @@ except ImportError:
 
 
 class AnnoyIndexer(object):
-    """This class allows to use `Annoy <https://github.com/spotify/annoy>`_ as indexer for ``most_similar`` method
+    """This class allows to use `Annoy <https://github.com/spotify/annoy>`_ as indexer for `most_similar` method
     from :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
-    :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.word2vec.Word2VecKeyedVectors` classes.
+    :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` classes.
+
     """
 
     def __init__(self, model=None, num_trees=None):
         """
         Parameters
         ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
-                :class:`~gensim.models.word2vec.Word2VecKeyedVectors`
-                or :class:`~gensim.models.fasttext.FastText`, optional
+        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`, optional
             Model, that will be used as source for index.
         num_trees : int, optional
             Number of trees for Annoy indexer.
