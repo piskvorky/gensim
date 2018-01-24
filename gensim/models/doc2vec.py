@@ -57,7 +57,7 @@ from timeit import default_timer
 
 from numpy import zeros, sum as np_sum, add as np_add, concatenate, \
     repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
-    sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide, integer
+    sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide, integer, require as np_require
 
 
 from gensim.utils import call_on_class_only, deprecated
@@ -385,12 +385,12 @@ class DocvecsArray(utils.SaveLoad):
     def reset_weights(self, model):
         length = max(len(self.doctags), self.count)
         if self.mapfile_path:
-            self.doctag_syn0 = np_memmap(
+            self.doctag_syn0 = np_require(np_memmap(
                 self.mapfile_path + '.doctag_syn0', dtype=REAL, mode='w+', shape=(length, model.vector_size)
-            )
-            self.doctag_syn0_lockf = np_memmap(
+            ), requirements=['O'])
+            self.doctag_syn0_lockf = np_require(np_memmap(
                 self.mapfile_path + '.doctag_syn0_lockf', dtype=REAL, mode='w+', shape=(length,)
-            )
+            ), requirements=['O'])
             self.doctag_syn0_lockf.fill(1.0)
         else:
             self.doctag_syn0 = empty((length, model.vector_size), dtype=REAL)
@@ -400,6 +400,52 @@ class DocvecsArray(utils.SaveLoad):
             # construct deterministic seed from index AND model seed
             seed = "%d %s" % (model.seed, self.index_to_doctag(i))
             self.doctag_syn0[i] = model.seeded_vector(seed)
+
+
+    def update_weights(self, model):
+        """
+        Copy all the existing docvecs weights, and reset the weights for the newly
+        added vocabulary.
+        """
+        logger.info("updating docvecs weights")
+
+        # Raise an error if an online update is run before initial training on a corpus
+        if not len(self.doctag_syn0):
+            raise RuntimeError(
+                "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
+                "First build the vocabulary of your model with a corpus before doing an online update."
+            )
+
+        old_size = self.doctag_syn0.shape[0]
+        new_size = max(len(self.doctags), self.count)
+        if new_size > old_size:
+            logger.info("increasing docvecs size from %d to %d", old_size, new_size)
+
+            gained_docvecs = new_size - old_size
+
+            newsyn0 = empty((gained_docvecs, model.vector_size), dtype=REAL)
+
+            # randomize the remaining docvecs
+            for i in xrange(old_size, new_size):
+                # construct deterministic seed from index AND model seed
+                seed = "%d %s" % (model.seed, self.index_to_doctag(i))
+                newsyn0[i - old_size] = model.seeded_vector(seed)
+
+            if self.mapfile_path:
+                self.doctag_syn0.resize((new_size, model.vector_size), refcheck=False)
+                self.doctag_syn0_lockf = np_memmap.resize((new_size,), refcheck=False)
+
+                # copy newsyn0 into doctag_syn0
+                self.doctag_syn0[old_size:,:] = newsyn0
+
+                # do not suppress learning for already learned doctags
+                self.doctag_syn0_lockf.fill(1.0)
+
+            else:
+                self.doctag_syn0 = vstack([self.doctag_syn0, newsyn0])
+
+                # do not suppress learning for already learned doctags
+                self.doctag_syn0_lockf = ones((new_size,), dtype=REAL)
 
     def init_sims(self, replace=False):
         """
@@ -653,6 +699,12 @@ class Doc2Vec(Word2Vec):
         if self.dm and self.dm_concat:
             self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
 
+        self.neg_labels = []
+        if self.negative > 0:
+            # precompute negative labels optimization for pure-python training
+            self.neg_labels = zeros(self.negative + 1)
+            self.neg_labels[0] = 1.
+
         self.docvecs = docvecs or DocvecsArray(docvecs_mapfile)
         self.comment = comment
         if documents is not None:
@@ -678,6 +730,14 @@ class Doc2Vec(Word2Vec):
             logger.info("using concatenative %d-dimensional layer1", self.layer1_size)
         super(Doc2Vec, self).reset_weights()
         self.docvecs.reset_weights(self)
+
+    def update_weights(self):
+        if self.dm and self.dm_concat:
+            # expand l1 size to match concatenated tags+words length
+            self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
+            logger.info("using concatenative %d-dimensional layer1", self.layer1_size)
+        super(Doc2Vec, self).update_weights()
+        self.docvecs.update_weights(self)
 
     def reset_from(self, other_model):
         """Reuse shareable structures from other_model."""
