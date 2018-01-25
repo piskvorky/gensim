@@ -94,9 +94,17 @@ References
 
 
 def find_interlinks(raw):
-    """
-    Find all interlinks to other articles in the dump. `raw` is either unicode
-    or utf-8 encoded string.
+    """Find all interlinks to other articles in the dump.
+
+    Parameters
+    ----------
+    raw : str
+        Unicode or utf-8 encoded string.
+
+    Returns
+    -------
+    dict
+        Mapping from the linked article to the actual text found.
     """
     filtered = filter_wiki(raw, promote_remaining=False, simplify_links=False)
     interlinks_raw = re.findall(RE_P16, filtered)

@@ -49,7 +49,7 @@ class TestSegmentWiki(unittest.TestCase):
                 pass
 
     def test_segment_all_articles(self):
-        title, sections, interlinks = next(segment_all_articles(self.fname))
+        title, sections, interlinks = next(segment_all_articles(self.fname, include_interlinks=True))
 
         # Check title
         self.assertEqual(title, self.expected_title)
@@ -84,7 +84,7 @@ class TestSegmentWiki(unittest.TestCase):
 
     def test_segment_and_write_all_articles(self):
         tmpf = get_tmpfile('script.tst.json')
-        segment_and_write_all_articles(self.fname, tmpf, workers=1)
+        segment_and_write_all_articles(self.fname, tmpf, workers=1, include_interlinks=True)
 
         # Get the first line from the text file we created.
         with open(tmpf) as f:
