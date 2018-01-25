@@ -5,8 +5,7 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Contains base classes required for implementing any2vec algorithms.
-"""
+"""Contains base classes required for implementing any2vec algorithms."""
 from gensim import utils
 import logging
 from timeit import default_timer
@@ -27,16 +26,19 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAny2VecModel(utils.SaveLoad):
-    """Base class for training, using and evaluating any2vec model. Contains implementation for multi-threaded training.
+    """Base class for training, using and evaluating any2vec model.
+    Contains implementation for multi-threaded training.
+
     """
 
-    def __init__(self, workers=3, vector_size=100, epochs=5,
-                 callbacks=(), batch_words=10000):
+    def __init__(self, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000):
         """Initialize model parameters.
+
         A subclass should initialize the following attributes:
         - self.kv (instance of concrete implementation of `BaseKeyedVectors` interface)
         - self.vocabulary (instance of concrete implementation of `BaseVocabBuilder` abstract class)
         - self.trainables (instance of concrete implementation of `BaseTrainables` abstract class)
+
         """
         self.vector_size = int(vector_size)
         self.workers = int(workers)
@@ -48,7 +50,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         self.callbacks = callbacks
 
     def _get_job_params(self, cur_epoch):
-        """Return job parameters required for each batch"""
+        """Get job parameters required for each batch."""
         raise NotImplementedError()
 
     def _set_train_params(self, **kwargs):
@@ -56,19 +58,19 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _update_job_params(self, job_params, epoch_progress, cur_epoch):
-        """Return updated job parameters based on the epoch_progress and cur_epoch"""
+        """Get updated job parameters based on the epoch_progress and cur_epoch."""
         raise NotImplementedError()
 
     def _get_thread_working_mem(self):
-        """Return private working memory per thread"""
+        """Get private working memory per thread."""
         raise NotImplementedError()
 
     def _raw_word_count(self, job):
-        """Return the number of words in a given job."""
+        """Get the number of words in a given job."""
         raise NotImplementedError()
 
     def _clear_post_train(self):
-        """Resets certain properties of the model post training. eg. `keyedvectors.vectors_norm`"""
+        """Resets certain properties of the model post training. eg. `keyedvectors.vectors_norm`."""
         raise NotImplementedError()
 
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
@@ -76,7 +78,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
-        """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided"""
+        """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided."""
         raise NotImplementedError()
 
     def _worker_loop(self, job_queue, progress_queue):
@@ -279,8 +281,10 @@ class BaseAny2VecModel(utils.SaveLoad):
 
 
 class BaseWordEmbeddingsModel(BaseAny2VecModel):
-    """Base class containing common methods for training, using & evaluating word embeddings learning
-    models (`Word2Vec`, `FastText`).
+    """
+    Base class containing common methods for training, using & evaluating word embeddings learning models.
+    For example - `Word2Vec`, `FastText`, etc.
+
     """
 
     def _clear_post_train(self):
@@ -427,20 +431,11 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-        keep_raw_vocab : bool
-            If not true, delete the raw vocabulary after the scaling is done and free up RAM.
-        trim_rule : function
-            Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
-            be trimmed away, or handled using the default (discard if word count < min_count).
-            Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
-            or a callable that accepts parameters (word, count, min_count) and returns either
-            :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
-            of the model.
-        progress_per : int
-            Indicates how many words to process before showing/updating the progress.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
+        progress_per : int
+            Indicates how many words to process before showing/updating the progress.
+
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(sentences, progress_per=progress_per, **kwargs)
         self.corpus_count = corpus_count
@@ -450,8 +445,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
-        """
-        Build vocabulary from a dictionary of word frequencies.
+        """Build vocabulary from a dictionary of word frequencies.
         Build model vocabulary from a passed dictionary that contains (word,word count).
         Words must be of type unicode strings.
 
@@ -476,9 +470,11 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Examples
         --------
-        >>> from gensim.models.word2vec import Word2Vec
+        >>> from gensim.models import Word2Vec
+        >>>
         >>> model= Word2Vec()
         >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
+
         """
         logger.info("Processing provided word frequencies")
         # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq)
@@ -531,7 +527,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
     def _get_job_params(self, cur_epoch):
-        """Return the parameter required for each batch."""
+        """Get the parameter required for each batch."""
         alpha = self.alpha - ((self.alpha - self.min_alpha) * float(cur_epoch) / self.epochs)
         return alpha
 
@@ -550,7 +546,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         return work, neu1
 
     def _raw_word_count(self, job):
-        """Return the number of words in a given job."""
+        """Get the number of words in a given job."""
         return sum(len(sentence) for sentence in job)
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
