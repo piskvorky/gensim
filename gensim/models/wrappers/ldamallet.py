@@ -5,26 +5,29 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Python wrapper for Latent Dirichlet Allocation (LDA) from MALLET, the Java topic modelling
+"""Python wrapper for Latent Dirichlet Allocation (LDA) from MALLET, the Java topic modelling
 toolkit [1]_.
 
 This module allows both LDA model estimation from a training corpus and inference of topic
 distribution on new, unseen documents, using an (optimized version of) collapsed
 gibbs sampling from MALLET.
 
+Notes
+-----
 MALLET's LDA training requires O(#corpus_words) of memory, keeping the entire corpus in RAM.
 If you find yourself running out of memory, either decrease the `workers` constructor
 parameter, or use `LdaModel` which needs only O(1) memory.
 
 The wrapped model can NOT be updated with new documents for online training -- use gensim's `LdaModel` for that.
 
-Example:
-
+Examples
+--------
     >>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet',
     ... corpus=my_corpus, num_topics=20, id2word=dictionary)
     >>> print model[my_vector]  # print LDA topics of a document
 
+References
+----------
 .. [1] http://mallet.cs.umass.edu/
 
 """
@@ -51,32 +54,34 @@ logger = logging.getLogger(__name__)
 
 class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
     """
-    Class for LDA training using MALLET. Communication between MALLET and Python
-    takes place by passing around data files on disk and calling Java with subprocess.call().
+    Class for LDA training using MALLET.
+
+    Communication between MALLET and Python takes place by passing around data files
+    on disk and calling Java with subprocess.call().
 
     """
 
     def __init__(self, mallet_path, corpus=None, num_topics=100, alpha=50, id2word=None, workers=4, prefix=None,
                  optimize_interval=0, iterations=1000, topic_threshold=0.0):
-        """
-        `mallet_path` is path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`.
+        """This is basically for sparse topic distribution.
 
-        `corpus` is a gensim corpus, aka a stream of sparse document vectors.
-
-        `id2word` is a mapping between tokens ids and token.
-
-        `workers` is the number of threads, for parallel training.
-
-        `prefix` is the string prefix under which all data files will be stored;
-        default: system temp + random filename prefix.
-
-        `optimize_interval` optimize hyperparameters every N iterations (sometimes leads to Java exception;
-        0 to switch off hyperparameter optimization).
-
-        `iterations` is the number of sampling iterations.
-
-        `topic_threshold` is the threshold of the probability above which we consider a topic.
-        This is basically for sparse topic distribution.
+        Parameters
+        ----------
+        mallet_path : str
+            path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`.
+        corpus : sparse vector
+            gensim corpus, stream of sparse document vectors.
+        id2word : dict
+            mapping between tokens ids and words from corpus.raining.
+        prefix : str
+            string prefix under which all data files will be stored.
+            default: system temp + random filename prefix.
+        optimize_interval : int
+            optimize hyperparameters every N iterations (sometimes leads to Java exception 0 to switch off hyperparameter optimization).
+        iterations : int
+            number of sampling iterations.
+        topic_threshold : float
+            threshold of the probability above which we consider a topic.
 
         """
         self.mallet_path = mallet_path
@@ -124,10 +129,17 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         return self.prefix + 'wordweights.txt'
 
     def corpus2mallet(self, corpus, file_like):
-        """
-        Write out `corpus` in a file format that MALLET understands: one document per line:
+        """Write out `corpus` in a file format that MALLET understands: one document per line:
 
-          document id[SPACE]label (not used)[SPACE]whitespace delimited utf8-encoded tokens[NEWLINE]
+        document id[SPACE]label (not used)[SPACE]whitespace delimited utf8-encoded tokens[NEWLINE]
+
+        Parameters
+        ----------
+        corpus : sparse vector
+            gensim corpus, stream of sparse document vectors.
+        file_like : file-like object
+            opened file that mallet recognises.
+
         """
         for docno, doc in enumerate(corpus):
             if self.id2word:
@@ -137,9 +149,15 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             file_like.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
 
     def convert_input(self, corpus, infer=False, serialize_corpus=True):
-        """
-        Serialize documents (lists of unicode tokens) to a temporary text file,
+        """Serialize documents (lists of unicode tokens) to a temporary text file,
         then convert that text file to MALLET format `outfile`.
+
+        Parameters
+        ----------
+        corpus : sparse vector
+            gensim corpus, stream of sparse document vectors.
+        infer : bool
+            set `True` while using .infer
 
         """
         if serialize_corpus:
@@ -221,28 +239,46 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         return word_topics
 
     def load_document_topics(self):
-        """
-        Returns:
-            An iterator over the topic distribution of training corpus, by reading
-            the doctopics.txt generated during training.
+        """Loads document topics from doctopics.txt
+
+        Returns
+        -------
+        iterator
+            over the topic distribution of training corpus,
+            by reading the doctopics.txt generated during training.
         """
         return self.read_doctopics(self.fdoctopics())
 
     def get_topics(self):
-        """
-        Returns:
-            np.ndarray: `num_topics` x `vocabulary_size` array of floats which represents
+        """function to get topic
+
+        Returns
+        -------
+        np.ndarray
+            `num_topics` x `vocabulary_size` array of floats which represents
             the term topic matrix learned during inference.
         """
         topics = self.word_topics
         return topics / topics.sum(axis=1)[:, None]
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
-        """
-        Print the `num_words` most probable words for `num_topics` number of topics.
-        Set `num_topics=-1` to print all topics.
+        """print the `num_words` most probable words for `num_topics` number of topics.
 
-        Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
+        Parameters
+        ----------
+        num_topics: int
+            Set `-1` to print all topics.
+        num_words : int
+            number of words.
+        log : bool
+            to enable logging.
+        formatted : bool
+            Set `True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
+
+        Returns
+        -------
+        shown : list
+            topics as a list of strings.
 
         """
         if num_topics < 0 or num_topics >= self.num_topics:
@@ -279,14 +315,22 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         return beststr
 
     def get_version(self, direc_path):
-        """"
+        """"function to return the version of `mallet`.
 
-        function to return the version of `mallet`
+        Parameters
+        ----------
+        direc_path : str
+            path to mallet file.
+
+        Returns
+        -------
+        str
+            version of mallet.
 
         """
         try:
-            """
-            Check version of mallet via jar file
+            """Check version of mallet via jar file.
+            
             """
             archive = zipfile.ZipFile(direc_path, 'r')
             if u'cc/mallet/regression/' not in archive.namelist():
@@ -304,8 +348,20 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
                 return "Can't parse pom.xml version file"
 
     def read_doctopics(self, fname, eps=1e-6, renorm=True):
-        """
-        Yield document topic vectors from MALLET's "doc-topics" format, as sparse gensim vectors.
+        """Yield document topic vectors from MALLET's "doc-topics" format, as sparse gensim vectors.
+
+        Parameters
+        ----------
+        fname : str
+            file name.
+        eps : float
+            number of times.
+        renorm : bool
+
+        Yields
+        ------
+        doc : list
+            document topic vectors.
 
         """
         mallet_version = self.get_version(self.mallet_path)
@@ -374,18 +430,25 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
 
 def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
-    """
-    Function to convert mallet model to gensim LdaModel. This works by copying the
-    training model weights (alpha, beta...) from a trained mallet model into the
-    gensim model.
+    """Function to convert mallet model to gensim LdaModel.
 
-    Args:
-        mallet_model : Trained mallet model
-        gamma_threshold : To be used for inference in the new LdaModel.
-        iterations : number of iterations to be used for inference in the new LdaModel.
+    This works by copying the training model weights (alpha, beta...) from a trained
+    mallet model into the gensim model.
 
-    Returns:
-        model_gensim : LdaModel instance; copied gensim LdaModel
+    Parameters
+    ----------
+    mallet_model
+        Trained mallet model
+    gamma_threshold : float
+        To be used for inference in the new LdaModel.
+    iterations : int
+        number of iterations to be used for inference in the new LdaModel.
+
+    Returns
+    -------
+    model_gensim
+        LdaModel instance, copied gensim LdaModel.
+
     """
     model_gensim = LdaModel(
         id2word=mallet_model.id2word, num_topics=mallet_model.num_topics,
