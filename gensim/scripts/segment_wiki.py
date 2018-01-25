@@ -75,7 +75,7 @@ def segment_all_articles(file_path, min_article_character=200, workers=None, inc
     Yields
     ------
     (str, list of (str, str), (Optionally) dict of str: str)
-        Structure contains (title, [(section_heading, section_content), ...], (Optionally) {linked_article: interlink_text}).
+        Structure contains (title, [(section_heading, section_content), ...], (Optionally) {interlinks}).
 
     """
     with smart_open(file_path, 'rb') as xml_fileobj:
@@ -200,7 +200,7 @@ def segment(page_xml, include_interlinks=False):
     Returns
     -------
     (str, list of (str, str), (Optionally) dict of (str: str))
-        Structure contains (title, [(section_heading, section_content), ...], (Optionally) {linked_article: interlink_text}).
+        Structure contains (title, [(section_heading, section_content), ...], (Optionally) {interlinks}).
 
     """
     elem = cElementTree.fromstring(page_xml)
@@ -296,7 +296,7 @@ class _WikiSectionsCorpus(WikiCorpus):
         Yields
         ------
         (str, list of (str, str), dict of (str: str))
-            Structure contains (title, [(section_heading, section_content), ...], (Optionally){linked_article: interlink_text}).
+            Structure contains (title, [(section_heading, section_content), ...], (Optionally){interlinks}).
 
         """
         skipped_namespace, skipped_length, skipped_redirect = 0, 0, 0
