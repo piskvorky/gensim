@@ -62,12 +62,12 @@ class Wordrank(KeyedVectors):
         Parameters
         ----------
         wr_path : str
-            absolute path to the Wordrank directory.
+            Absolute path to the Wordrank directory.
         corpus_file : str
-            filename of the text file to be used for training the Wordrank model.
+            Filename of the text file to be used for training the Wordrank model.
             Expects file to contain space-separated tokens in a single line
         out_name : str
-            name of the directory which will be created (in wordrank folder) to save
+            Name of the directory which will be created (in wordrank folder) to save
             embeddings and training data.It will contain following contents:
 
                 Word Embeddings saved after every dump_period and stored in a file model_word_current\ iter.txt
@@ -76,47 +76,47 @@ class Wordrank(KeyedVectors):
                 'wiki.toy' - word-word coccurence values, 'meta' - vocab and coccurence lengths
 
         size : int
-            dimensionality of the feature vectors.
+            Dimensionality of the feature vectors.
         window : int
-            number of context words to the left (and to the right, if symmetric = 1).
+            Number of context words to the left (and to the right, if symmetric = 1).
         symmetric : int
-            set 0 to only use left context words, else use left and right both.
+            Set 0 to only use left context words, else use left and right both.
         min_count : int
-            ignore all words with total frequency lower than this.
+            Ignore all words with total frequency lower than this.
         max_vocab_size : int
-            upper bound on vocabulary size, i.e. keep the <int> most frequent words.
+            Upper bound on vocabulary size, i.e. keep the <int> most frequent words.
             Default is 0 for no limit.
         sgd_num : int
-            number of SGD taken for each data point.
+            Number of SGD taken for each data point.
         lrate : float
-            learning rate (too high diverges, give Nan).
+            Learning rate (too high diverges, give Nan).
         period : int
-            period of xi variable updates
+            Period of xi variable updates
         iter : int
-            number of iterations (epochs) over the corpus.
+            Number of iterations (epochs) over the corpus.
         epsilon : float
-            power scaling value for weighting function.
+            Power scaling value for weighting function.
         dump_period : int
-            period after which embeddings should be dumped.
+            Period after which embeddings should be dumped.
         reg : int
-            value of regularization parameter.
+            Value of regularization parameter.
         alpha : int
-            alpha parameter of gamma distribution.
+            Alpha parameter of gamma distribution.
         beta : int
-            beta parameter of gamma distribution.
+            Beta parameter of gamma distribution.
         loss : str
-            name of the loss (logistic, hinge).
+            Name of the loss (logistic, hinge).
         memory : float
-            soft limit for memory consumption, in GB.
+            Soft limit for memory consumption, in GB.
         np : int
-            number of copies to execute. (mpirun option)
+            Number of copies to execute. (mpirun option)
         cleanup_files : bool
-            if True, delete directory and files used by this wrapper,
+            If True, delete directory and files used by this wrapper,
             setting to False can be useful for debugging
         sorted_vocab : int
-            if 1 (default), sort the vocabulary by descending frequency before assigning word indexes.
+            If 1 (default), sort the vocabulary by descending frequency before assigning word indexes.
         ensemble : int
-            if 0 (default), use ensemble of word and context vectors
+            If 0 (default), use ensemble of word and context vectors
 
         """
 

@@ -57,15 +57,15 @@ class VarEmbed(KeyedVectors):
         Parameters
         ----------
         vectors : dict
-            pickle file containing the word vectors.
+            Pickle file containing the word vectors.
         morfessor_model : str
-            path to the trained morfessor model.
+            Path to the trained morfessor model.
             suse_morphemes False(default) use of morpheme embeddings in output.
 
         Returns
         -------
         result : VarEmbed
-            load the word vectors into matrix.
+            Load the word vectors into matrix.
 
         """
         result = cls()

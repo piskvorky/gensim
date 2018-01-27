@@ -91,52 +91,52 @@ class LdaVowpalWabbit(utils.SaveLoad):
         Parameters
         ----------
         vw_path : str
-            path to Vowpal Wabbit's 'vw' executable.
-        corpus : sparse vector
-            an iterable training corpus.
+            Path to Vowpal Wabbit's 'vw' executable.
+        corpus : iterable of iterable of (int, int)
+            Collection of texts in BoW format.
             If given, training will start immediately, otherwise the model is left untrained (presumably
             because you want to call `update()` manually).
         num_topics : int
-            number of requested latent topics to be extracted from the training corpus.
+            Number of requested latent topics to be extracted from the training corpus.
             Corresponds to VW's '--lda <num_topics>' argument.
         id2word : dict
-            mapping from word ids (integers) to words (strings).It is used to determine the
+            Mapping from word ids (integers) to words (strings).It is used to determine the
             vocabulary size, as well as for debugging and topic printing.
         chunksize : int
-            number of documents examined in each batch.
+            Number of documents examined in each batch.
             Corresponds to VW's '--minibatch <batch_size>' argument.
         passes : int
-            number of passes over the dataset to use.
+            Number of passes over the dataset to use.
             Corresponds to VW's '--passes <passes>' argument.
         alpha : float
-            float effecting sparsity of per-document topic weights.
+            Float effecting sparsity of per-document topic weights.
             This is applied symmetrically, and should be set higher to when documents
             are thought to look more similar.
             Corresponds to VW's '--lda_alpha <alpha>' argument.
         eta : float
-            affects the sparsity of topic distributions.
+            Affects the sparsity of topic distributions.
             This is applied symmetrically, and should be set higher when topics
             are thought to look more similar.
             Corresponds to VW's '--lda_rho <rho>' argument.
         decay : float
-            learning rate decay, affects how quickly learnt values are forgotten.
+            Learning rate decay, affects how quickly learnt values are forgotten.
             Should be set to a value between 0.5 and 1.0 to guarantee convergence.
             Corresponds to VW's '--power_t <tau>' argument.
         offset: int
-            learning offset, set to higher values to slow down learning on early iterations of the algorithm.
+            Learning offset, set to higher values to slow down learning on early iterations of the algorithm.
             Corresponds to VW's '--initial_t <tau>' argument.
         gamma_threshold : float
-            affects when learning loop will be broken out of, higher values will result in earlier loop completion.
+            Affects when learning loop will be broken out of, higher values will result in earlier loop completion.
             Corresponds to VW's '--epsilon <eps>' argument.
         random_seed : int
-            sets Vowpal Wabbit's random seed when learning.
+            Sets Vowpal Wabbit's random seed when learning.
             Corresponds to VW's '--random_seed <seed>' argument.
         cleanup_files : bool
-            whether or not to delete temporary directory and files
+            Whether or not to delete temporary directory and files
             used by this wrapper. Setting to False can be useful for debugging,
             or for re-using Vowpal Wabbit files elsewhere.
         tmp_prefix : str
-            to prefix temporary working directory name.
+            To prefix temporary working directory name.
 
         """
         # default parameters are taken from Vowpal Wabbit's defaults, and
@@ -193,8 +193,8 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         Parameters
         ----------
-        corpus : sparse vector
-            an iterable training corpus.
+        corpus : iterable of iterable of (int, int)
+            Collection of texts in BoW format.
 
         """
         logger.debug('Training new model from corpus')
@@ -217,8 +217,8 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         Parameters
         ----------
-        corpus : sparse vector
-            an iterable training corpus.
+        corpus : iterable of iterable of (int, int)
+            Collection of texts in BoW format.
 
         """
         if not os.path.exists(self._model_filename):
@@ -246,12 +246,12 @@ class LdaVowpalWabbit(utils.SaveLoad):
         Parameters
         ----------
         chunk : list
-            chunk of documents.
+            Chunk of documents.
 
         Returns
         -------
         bound : int
-            per-word lower bound on log perplexity.
+            Per-word lower bound on log perplexity.
 
         """
         vw_data = self._predict(chunk)[1]
@@ -400,14 +400,14 @@ class LdaVowpalWabbit(utils.SaveLoad):
         Parameters
         ----------
         corpus_size : int
-            size of corpus.
+            Size of corpus.
         update : bool
-            set `True` to further train an existing model.
+            Set `True` to further train an existing model.
 
         Returns
         -------
         cmd : list
-            list of all training parameters.
+            List of all training parameters.
 
         """
         cmd = [
@@ -495,12 +495,12 @@ class LdaVowpalWabbit(utils.SaveLoad):
         Parameters
         ----------
         chunk : list
-            chunk of documents.
+            Chunk of documents.
 
         Returns
         -------
         predictions : ndarray
-            tuple of prediction matrix.
+            Tuple of prediction matrix.
         vw_data : dict
             Vowpal Wabbit data.
 
@@ -599,12 +599,12 @@ def corpus_to_vw(corpus):
 
     Parameters
     ----------
-    corpus : sparse vector
-            gensim corpus, stream of sparse document vectors.
+    corpus : iterable of iterable of (int, int)
+        Collection of texts in BoW format.
 
     Yields
     ------
-    lines in Vowpal Wabbit format.
+    Lines in Vowpal Wabbit format.
 
     """
     for entries in corpus:
@@ -621,15 +621,15 @@ def write_corpus_as_vw(corpus, filename):
 
     Parameters
     ----------
-    corpus : sparse vector
-            gensim corpus, stream of sparse document vectors.
+    corpus : iterable of iterable of (int, int)
+        Collection of texts in BoW format.
     filename : str
-        name of the file.
+        Name of the file.
 
     Returns
     -------
     corpus_size : int
-        number of lines written
+        Number of lines written
 
     """
     logger.debug("Writing corpus to: %s", filename)
@@ -652,11 +652,11 @@ def _parse_vw_output(text):
     Parameters
     ----------
     text : str
-        unicode text.
+        Unicode text.
     Returns
     -------
     data : dict
-        field average loss, lower bound on mean per-word log-perplexity.
+        Field average loss, lower bound on mean per-word log-perplexity.
 
     """
     data = {}
@@ -691,12 +691,12 @@ def _bit_length(num):
     Parameters
     ----------
     num : int
-        number to encode.
+        Number to encode.
 
     Returns
     -------
     int
-        number of bits needed to encode given number.
+        Number of bits needed to encode given number.
 
     """
     return len(bin(num).lstrip('-0b'))

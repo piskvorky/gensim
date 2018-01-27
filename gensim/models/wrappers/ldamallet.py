@@ -53,8 +53,7 @@ logger = logging.getLogger(__name__)
 
 
 class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
-    """
-    Class for LDA training using MALLET.
+    """Class for LDA training using MALLET.
 
     Communication between MALLET and Python takes place by passing around data files
     on disk and calling Java with subprocess.call().
@@ -68,20 +67,20 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         Parameters
         ----------
         mallet_path : str
-            path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`.
-        corpus : sparse vector
-            gensim corpus, stream of sparse document vectors.
+            Path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`.
+        corpus : iterable of iterable of (int, int)
+            Collection of texts in BoW format.
         id2word : dict
-            mapping between tokens ids and words from corpus.raining.
+            Mapping between tokens ids and words from corpus.raining.
         prefix : str
-            string prefix under which all data files will be stored.
+            String prefix under which all data files will be stored.
             default: system temp + random filename prefix.
         optimize_interval : int
-            optimize hyperparameters every N iterations (sometimes leads to Java exception 0 to switch off hyperparameter optimization).
+            Optimize hyperparameters every N iterations (sometimes leads to Java exception 0 to switch off hyperparameter optimization).
         iterations : int
-            number of sampling iterations.
+            Number of sampling iterations.
         topic_threshold : float
-            threshold of the probability above which we consider a topic.
+            Threshold of the probability above which we consider a topic.
 
         """
         self.mallet_path = mallet_path
@@ -135,10 +134,10 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : sparse vector
-            gensim corpus, stream of sparse document vectors.
+        corpus : iterable of iterable of (int, int)
+            Collection of texts in BoW format.
         file_like : file-like object
-            opened file that mallet recognises.
+            Opened file that mallet recognises.
 
         """
         for docno, doc in enumerate(corpus):
@@ -154,10 +153,10 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : sparse vector
-            gensim corpus, stream of sparse document vectors.
+        corpus : iterable of iterable of (int, int)
+            Collection of texts in BoW format.
         infer : bool
-            set `True` while using .infer
+            Set `True` while using .infer.
 
         """
         if serialize_corpus:
@@ -244,7 +243,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         Returns
         -------
         iterator
-            over the topic distribution of training corpus,
+            Over the topic distribution of training corpus,
             by reading the doctopics.txt generated during training.
         """
         return self.read_doctopics(self.fdoctopics())
@@ -269,16 +268,16 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         num_topics: int
             Set `-1` to print all topics.
         num_words : int
-            number of words.
+            Number of words.
         log : bool
-            to enable logging.
+            To enable logging.
         formatted : bool
             Set `True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
 
         Returns
         -------
         shown : list
-            topics as a list of strings.
+            Topics as a list of strings.
 
         """
         if num_topics < 0 or num_topics >= self.num_topics:
@@ -320,12 +319,12 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         Parameters
         ----------
         direc_path : str
-            path to mallet file.
+            Path to mallet file.
 
         Returns
         -------
         str
-            version of mallet.
+            Version of mallet.
 
         """
         try:
@@ -353,15 +352,15 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         Parameters
         ----------
         fname : str
-            file name.
+            File name.
         eps : float
-            number of times.
+            Number of times.
         renorm : bool
 
         Yields
         ------
         doc : list
-            document topic vectors.
+            Document topic vectors.
 
         """
         mallet_version = self.get_version(self.mallet_path)
@@ -442,7 +441,7 @@ def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
     gamma_threshold : float
         To be used for inference in the new LdaModel.
     iterations : int
-        number of iterations to be used for inference in the new LdaModel.
+        Number of iterations to be used for inference in the new LdaModel.
 
     Returns
     -------

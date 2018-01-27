@@ -51,29 +51,29 @@ class DtmModel(utils.SaveLoad):
         Parameters
         ----------
         dtm_path : str
-            path to the dtm executable,  e.g. `C:/dtm/dtm-win64.exe`.
-        corpus : sparse vector
-            gensim corpus, stream of sparse document vectors.
+            Path to the dtm executable,  e.g. `C:/dtm/dtm-win64.exe`.
+        corpus : iterable of iterable of (int, int)
+            Collection of texts in BoW format.
         id2word : dict
-            mapping between tokens ids and words from corpus.
+            Mapping between tokens ids and words from corpus.
         mode : str
-            controls the mode of the mode: 'fit' is for training, 'time' for analyzing documents through time according to a DTM, basically a held out set.
+            Controls the mode of the mode: 'fit' is for training, 'time' for analyzing documents through time according to a DTM, basically a held out set.
         model : str
-            controls the choice of model. 'fixed' is for DIM and 'dtm' for DTM.
+            Controls the choice of model. 'fixed' is for DIM and 'dtm' for DTM.
         lda_sequence_min_iter : int
-             min iteration of LDA.
+             Min iteration of LDA.
         lda_sequence_max_iter : int
-            max iteration of LDA.
+            Max iteration of LDA.
         lda_max_em_iter : int
-             max em optiimzatiion iterations in LDA.
+             Max em optiimzatiion iterations in LDA.
         alpha : int
-            hyperparameter that affects sparsity of the document-topics for the LDA models in each timeslice.
+            Hyperparameter that affects sparsity of the document-topics for the LDA models in each timeslice.
         top_chain_var : int
-            hyperparameter that affects.
+            Hyperparameter that affects.
         rng_seed : int, optional
-             random seed.
+             Random seed.
         initialize_lda : bool, optional
-             initialize DTM with LDA.
+             Initialize DTM with LDA.
 
         """
         if not os.path.isfile(dtm_path):
@@ -191,14 +191,14 @@ class DtmModel(utils.SaveLoad):
 
         Parameters
         ----------
-        corpus : sparse vector
-            gensim corpus, stream of sparse document vectors.
+        corpus : iterable of iterable of (int, int)
+            Collection of texts in BoW format.
         time_slices : list
-            list of time stamps
+            List of time stamps
         mode : str
-            controls the mode of the mode: 'fit' is for training, 'time' for analyzing documents through time according to a DTM, basically a held out set.
+            Controls the mode of the mode: 'fit' is for training, 'time' for analyzing documents through time according to a DTM, basically a held out set.
         model : str
-            controls the choice of model. 'fixed' is for DIM and 'dtm' for DTM.
+            Controls the choice of model. 'fixed' is for DIM and 'dtm' for DTM.
 
         """
         self.convert_input(corpus, time_slices)
@@ -271,20 +271,20 @@ class DtmModel(utils.SaveLoad):
         Parameters
         ----------
         num_topics : int
-            number of topics to print. Set `-1` to print all topics.
+            Number of topics to print. Set `-1` to print all topics.
         times : int
-            number of times.
+            Number of times.
         num_words : int
-            number of words.
+            Number of words.
         log : bool
-            to enable logging.
+            To enable logging.
         formatted : bool
             Set `True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
 
         Returns
         -------
         shown : list
-            topics as a list of strings.
+            Topics as a list of strings.
 
         """
         if num_topics < 0 or num_topics >= self.num_topics:
@@ -317,17 +317,17 @@ class DtmModel(utils.SaveLoad):
         Parameters
         ----------
         topicid : int
-            id of topic.
+            Id of topic.
         topn : int
-            top number of topics.
+            Top number of topics.
         num_words : int, optional
-            number of words.
+            Number of words.
         time : int
 
         Returns
         -------
         beststr : list
-            most probable words, as a list of `(word_probability, word)` 2-tuples.
+            Most probable words, as a list of `(word_probability, word)` 2-tuples.
 
         """
         if num_words is not None:  # deprecated num_words is used
@@ -351,17 +351,17 @@ class DtmModel(utils.SaveLoad):
         Parameters
         ----------
         topicid : int
-            id of topic.
+            Id of topic.
         topn : int
-            top number of topics.
+            Top number of topics.
         num_words : int, optional
-            number of words.
+            Number of words.
         time : int
 
         Returns
         -------
         string
-            the given topic.
+            The given topic.
 
         """
         if num_words is not None:  # deprecated num_words is used
@@ -379,22 +379,22 @@ class DtmModel(utils.SaveLoad):
 
         Parameters
         ----------
-        corpus : sparse vector
-            gensim corpus, stream of sparse document vectors.
+        corpus : iterable of iterable of (int, int)
+            Collection of texts in BoW format.
         time : int
 
         Returns
         -------
         doc_topic
-            document-topic proportions.
+            Document-topic proportions.
         topic_term
-            calculated term of topic suitable for pyLDAvis format.
+            Calculated term of topic suitable for pyLDAvis format.
         doc_lengths
-            length of each documents in corpus.
+            Length of each documents in corpus.
         term_frequency
-            frequency of each word from vocab.
+            Frequency of each word from vocab.
         vocab
-            list of mapping between tokens ids and words from corpus.
+            List of mapping between tokens ids and words from corpus.
 
         """
         topic_term = np.exp(self.lambda_[:, :, time]) / np.exp(self.lambda_[:, :, time]).sum()
@@ -415,19 +415,19 @@ class DtmModel(utils.SaveLoad):
         return doc_topic, topic_term, doc_lengths, term_frequency, vocab
 
     def dtm_coherence(self, time, num_words=20):
-        """returns all topics of a particular time-slice without probabilitiy values for it to be used.
+        """Returns all topics of a particular time-slice without probabilitiy values for it to be used.
         for either "u_mass" or "c_v" coherence.
 
         Parameters
         ----------
         num_words : int
-            number of words.
+            Number of words.
         time : int
 
         Returns
         -------
         coherence_topics : list
-            all topics of a particular time-slice without probabilitiy values for it to be used.
+            All topics of a particular time-slice without probabilitiy values for it to be used.
 
         TODO:
             because of print format right now can only return for 1st time-slice.
