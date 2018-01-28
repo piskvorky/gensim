@@ -396,6 +396,28 @@ def sparse2full(doc, length):
     return result
 
 
+def sparse2coo(doc, length, dtype=np.float32):
+    """Convert a document in BoW format into a sparse matrix in the coo format.
+
+    Parameters
+    ----------
+    doc : list of (int, number)
+        A vector in the gensim document format.
+    length : int
+        The length of the result vector.
+    dtype : numpy.dtype, optional
+        Data-type of the output similarity matrix. Defaults to `numpy.float32`.
+
+    Returns
+    -------
+    scipy.sparse.coo_matrix
+        The constructed sparse matrix.
+
+    """
+    col = [0] * len(doc)
+    row, data = zip(*doc)
+    return scipy.sparse.coo_matrix((data, (row, col)), shape=(length, 1), dtype=dtype)
+
 def full2sparse(vec, eps=1e-9):
     """Convert a dense array into the BoW format.
 
@@ -796,12 +818,6 @@ def softcossim(vec1, vec2, similarity_matrix):
        of Features in Vector Space Model", 2014.
     """
 
-    def sparse2coo(vec):
-        col = [0] * len(vec)
-        row, data = zip(*vec)
-        return scipy.sparse.coo_matrix((data, (row, col)), shape=(similarity_matrix.shape[0], 1),
-                                       dtype=similarity_matrix.dtype)
-
     def softdot(vec1, vec2):
         vec1 = vec1.tocsr()
         vec2 = vec2.tocsc()
@@ -815,8 +831,9 @@ def softcossim(vec1, vec2, similarity_matrix):
 
     if not vec1 or not vec2:
         return 0.0
-    vec1 = sparse2coo(vec1)
-    vec2 = sparse2coo(vec2)
+    num_terms = similarity_matrix.shape[0]
+    vec1 = sparse2coo(vec1, num_terms, dtype=similarity_matrix.dtype)
+    vec2 = sparse2coo(vec2, num_terms, dtype=similarity_matrix.dtype)
     vec1len = softdot(vec1, vec1)
     vec2len = softdot(vec2, vec2)
     assert vec1len > 0.0 and vec2len > 0.0, u"sparse documents must not contain any explicit zero" \
