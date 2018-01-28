@@ -618,7 +618,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         self.normalize = False
 
         # index is simply an array from 0 to size of corpus.
-        self.index = numpy.array(range(len(corpus)))
+        self.index = numpy.arange(len(corpus))
 
         # Remove the columns of the similarity matrix that correspond to terms outside corpus.
         nonzero_columns = sorted(set((index for document in corpus for index, _ in document)))
@@ -708,7 +708,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         self.normalize = False
 
         # index is simply an array from 0 to size of corpus.
-        self.index = numpy.array(range(len(corpus)))
+        self.index = numpy.arange(len(corpus))
 
         if normalize_w2v_and_replace:
             # Normalize vectors in word2vec class to length 1.
