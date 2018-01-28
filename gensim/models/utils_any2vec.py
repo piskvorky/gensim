@@ -18,7 +18,7 @@ from six import iteritems
 logger = logging.getLogger(__name__)
 
 
-def compute_ngrams(word, min_n, max_n):
+def _compute_ngrams(word, min_n, max_n):
     """Returns the list of all possible ngrams for a given word.
 
     Parameters
@@ -45,7 +45,7 @@ def compute_ngrams(word, min_n, max_n):
     return ngrams
 
 
-def ft_hash(string):
+def _ft_hash(string):
     """Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
     used in [1]_.
 
@@ -70,7 +70,7 @@ def ft_hash(string):
     return h
 
 
-def save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total_vec=None):
+def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total_vec=None):
         """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 
@@ -114,8 +114,8 @@ def save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total
                     fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
 
 
-def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                         limit=None, datatype=REAL):
+def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+                          limit=None, datatype=REAL):
     """Load the input-hidden weight matrix from the original C word2vec-tool format.
 
     Note that the information stored in the file is incomplete (the binary tree is missing),

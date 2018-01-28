@@ -82,7 +82,7 @@ from six import string_types, integer_types
 from six.moves import xrange, zip
 from scipy import stats
 from gensim.utils import deprecated
-from gensim.models.utils_any2vec import save_word2vec_format, load_word2vec_format, compute_ngrams
+from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams
 
 logger = logging.getLogger(__name__)
 
@@ -207,18 +207,22 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         self.index2word = value
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors instead")
     def syn0(self):
         return self.vectors
 
     @syn0.setter
+    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors instead")
     def syn0(self, value):
         self.vectors = value
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_norm instead")
     def syn0norm(self):
         return self.vectors_norm
 
     @syn0norm.setter
+    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_norm instead")
     def syn0norm(self, value):
         self.vectors_norm = value
 
@@ -950,7 +954,7 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
 
         """
         # from gensim.models.word2vec import save_word2vec_format
-        save_word2vec_format(
+        _save_word2vec_format(
             fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)
 
     @classmethod
@@ -994,7 +998,7 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
 
         """
         # from gensim.models.word2vec import load_word2vec_format
-        return load_word2vec_format(
+        return _load_word2vec_format(
             Word2VecKeyedVectors, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
             limit=limit, datatype=datatype)
 
@@ -1455,7 +1459,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             return True
         else:
             # from gensim.models.fasttext import compute_ngrams
-            char_ngrams = compute_ngrams(word, self.min_n, self.max_n)
+            char_ngrams = _compute_ngrams(word, self.min_n, self.max_n)
             return any(ng in self.ngrams for ng in char_ngrams)
 
     def save(self, *args, **kwargs):
@@ -1486,7 +1490,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         else:
             # from gensim.models.fasttext import compute_ngrams
             word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=np.float32)
-            ngrams = compute_ngrams(word, self.min_n, self.max_n)
+            ngrams = _compute_ngrams(word, self.min_n, self.max_n)
             ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:
                 ngram_weights = self.vectors_ngrams_norm
@@ -1539,5 +1543,5 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
 
         """
         # from gensim.models.word2vec import save_word2vec_format
-        save_word2vec_format(
+        _save_word2vec_format(
             fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)

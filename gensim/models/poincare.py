@@ -53,7 +53,7 @@ from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.models.keyedvectors import Vocab, BaseKeyedVectors
-from gensim.models.utils_any2vec import save_word2vec_format, load_word2vec_format
+from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format
 from numpy import float32 as REAL
 
 try:
@@ -835,7 +835,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
          (in case word vectors are appended with document vectors afterwards)
 
         """
-        save_word2vec_format(fname, self.vocab, self.syn0, fvocab=fvocab, binary=binary, total_vec=total_vec)
+        _save_word2vec_format(fname, self.vocab, self.syn0, fvocab=fvocab, binary=binary, total_vec=total_vec)
 
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
@@ -868,7 +868,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         or incompatibility with optimized routines.)
 
         """
-        return load_word2vec_format(
+        return _load_word2vec_format(
             PoincareKeyedVectors, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
             limit=limit, datatype=datatype)
 
