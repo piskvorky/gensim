@@ -611,17 +611,17 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         logger.info("constructing a term similarity matrix")
         similarity_matrix = sparse.identity(len(dictionary), dtype=dtype, format="lil")
         # Traverse rows.
-        num_rows = len(dictionary)
-        for w1_index in range(num_rows):
-            if w1_index % ceil(num_rows / 10) == 0:
-                logger.info("PROGRESS: at row %i / %i", w1_index + 1, num_rows)
+        matrix_order = len(dictionary)
+        for w1_index in range(matrix_order):
+            if w1_index % ceil(matrix_order / 10) == 0:
+                logger.info("PROGRESS: at row %i / %i", w1_index + 1, matrix_order)
             w1 = dictionary[w1_index]
             if w1 not in self.vocab:
                 continue  # A word from the dictionary not present in the word2vec model.
             # Traverse upper triangle columns.
-            if len(dictionary) <= nonzero_limit + 1:  # Traverse all columns.
+            if matrix_order <= nonzero_limit + 1:  # Traverse all columns.
                 columns = ((w2_index, self.similarity(w1, dictionary[w2_index]))
-                           for w2_index in range(w1_index + 1, num_rows)
+                           for w2_index in range(w1_index + 1, matrix_order)
                            if w1_index != w2_index and dictionary[w2_index] in self.vocab)
             else:  # Traverse only columns corresponding to the embeddings closest to w1.
                 num_nonzero = similarity_matrix[w1_index].getnnz() - 1
@@ -640,7 +640,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
                     similarity_matrix[w1_index, w2_index] = element
                     similarity_matrix[w2_index, w1_index] = element
         logger.info("constructed a term similarity matrix with %0.2f %% nonzero entries",
-                    100.0 * similarity_matrix.getnnz() / num_rows**2)
+                    100.0 * similarity_matrix.getnnz() / matrix_order**2)
         return similarity_matrix.tocsc()
 
     def wmdistance(self, document1, document2):
