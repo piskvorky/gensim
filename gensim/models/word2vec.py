@@ -1141,7 +1141,7 @@ class Word2VecVocab(utils.SaveLoad):
         self.cum_table = None  # for negative sampling
         self.raw_vocab = None
 
-    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None, **kwargs):
+    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
         sentence_no = -1

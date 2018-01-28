@@ -694,7 +694,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         report['doctag_syn0'] = self.docvecs.count * self.vector_size * dtype(REAL).itemsize
         return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
 
-    def build_vocab(self, documents, update=False, progress_per=10000, **kwargs):
+    def build_vocab(self, documents, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
@@ -721,10 +721,11 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             If true, the new words in `sentences` will be added to model's vocab.
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            documents, self.docvecs, progress_per=progress_per, **kwargs)
+            documents, self.docvecs, progress_per=progress_per, trim_rule=trim_rule)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, **kwargs)
+
         report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
         self.trainables.prepare_weights(
             self.hs, self.negative, self.wv, self.docvecs, update=update)
@@ -788,7 +789,7 @@ class Doc2VecVocab(Word2VecVocab):
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=sorted_vocab, null_word=null_word)
 
-    def scan_vocab(self, documents, docvecs, progress_per=10000, trim_rule=None, **kwargs):
+    def scan_vocab(self, documents, docvecs, progress_per=10000, trim_rule=None):
         logger.info("collecting all words and their counts")
         document_no = -1
         total_words = 0

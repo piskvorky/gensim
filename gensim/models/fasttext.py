@@ -313,7 +313,7 @@ class FastText(BaseWordEmbeddingsModel):
 
     @syn0_vocab_lockf.deleter
     @deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_vocab_lockf instead")
-    def syn0_lockf(self):
+    def syn0_vocab_lockf(self):
         del self.trainables.vectors_vocab_lockf
 
     @property
@@ -331,7 +331,7 @@ class FastText(BaseWordEmbeddingsModel):
     def syn0_ngrams_lockf(self):
         del self.trainables.vectors_ngrams_lockf
 
-    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
+    def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
@@ -381,8 +381,8 @@ class FastText(BaseWordEmbeddingsModel):
             self.vocabulary.old_vocab_len = len(self.wv.vocab)
             self.trainables.old_hash2index_len = len(self.wv.hash2index)
 
-        return super(FastText, self).build_vocab(
-            sentences, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, progress_per=progress_per, update=update)
+        return super(FastText, self).build_vocab(sentences, update=update, progress_per=progress_per,
+                                                 keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule)
 
     def _set_train_params(self, **kwargs):
         pass

@@ -454,7 +454,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
         )
 
-    def build_vocab(self, sentences, update=False, progress_per=10000, **kwargs):
+    def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
@@ -471,7 +471,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Indicates how many words to process before showing/updating the progress.
 
         """
-        total_words, corpus_count = self.vocabulary.scan_vocab(sentences, progress_per=progress_per, **kwargs)
+        total_words, corpus_count = self.vocabulary.scan_vocab(sentences, progress_per=progress_per)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, **kwargs)
