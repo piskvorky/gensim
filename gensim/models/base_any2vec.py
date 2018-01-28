@@ -332,86 +332,107 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     # for backward compatibility (aliases pointing to corresponding variables in trainables, vocabulary)
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.epochs instead")
     def iter(self):
         return self.epochs
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.syn1 instead")
     def syn1(self):
         return self.trainables.syn1
 
     @syn1.setter
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.syn1 instead")
     def syn1(self, value):
         self.trainables.syn1 = value
 
     @syn1.deleter
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.syn1 instead")
     def syn1(self):
         del self.trainables.syn1
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.syn1neg instead")
     def syn1neg(self):
         return self.trainables.syn1neg
 
     @syn1neg.setter
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.syn1neg instead")
     def syn1neg(self, value):
         self.trainables.syn1neg = value
 
     @syn1neg.deleter
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.syn1neg instead")
     def syn1neg(self):
         del self.trainables.syn1neg
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_lockf instead")
     def syn0_lockf(self):
         return self.trainables.vectors_lockf
 
     @syn0_lockf.setter
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_lockf instead")
     def syn0_lockf(self, value):
         self.trainables.vectors_lockf = value
 
     @syn0_lockf.deleter
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_lockf instead")
     def syn0_lockf(self):
         del self.trainables.vectors_lockf
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.layer1_size instead")
     def layer1_size(self):
         return self.trainables.layer1_size
 
     @layer1_size.setter
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.layer1_size instead")
     def layer1_size(self, value):
         self.trainables.layer1_size = value
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.hashfxn instead")
     def hashfxn(self):
         return self.trainables.hashfxn
 
     @hashfxn.setter
+    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.hashfxn instead")
     def hashfxn(self, value):
         self.trainables.hashfxn = value
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.vocabulary.sample instead")
     def sample(self):
         return self.vocabulary.sample
 
     @sample.setter
+    @deprecated("Attribute will be removed in 4.0.0, use self.vocabulary.sample instead")
     def sample(self, value):
         self.vocabulary.sample = value
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.vocabulary.min_count instead")
     def min_count(self):
         return self.vocabulary.min_count
 
     @min_count.setter
+    @deprecated("Attribute will be removed in 4.0.0, use self.vocabulary.min_count instead")
     def min_count(self, value):
         self.vocabulary.min_count = value
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.vocabulary.cum_table instead")
     def cum_table(self):
         return self.vocabulary.cum_table
 
     @cum_table.setter
+    @deprecated("Attribute will be removed in 4.0.0, use self.vocabulary.cum_table instead")
     def cum_table(self, value):
         self.vocabulary.cum_table = value
 
     @cum_table.deleter
+    @deprecated("Attribute will be removed in 4.0.0, use self.vocabulary.cum_table instead")
     def cum_table(self):
         del self.vocabulary.cum_table
 
