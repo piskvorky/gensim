@@ -56,7 +56,6 @@ except ImportError:
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
-
     def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
         """Update CBOW model by training on a sequence of sentences.
         Each sentence is a list of string tokens, which are looked up in the model's
@@ -113,7 +112,6 @@ except ImportError:
                 train_cbow_pair(model, word, subwords_indices, l1, alpha, is_ft=True)
             result += len(word_vocabs)
         return result
-
 
     def train_batch_sg(model, sentences, alpha, work=None, neu1=None):
         """Update skip-gram model by training on a sequence of sentences.

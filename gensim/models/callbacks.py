@@ -334,9 +334,9 @@ class Callback(object):
 
 class CallbackAny2Vec(object):
     """Base class to build callbacks. Callbacks are used to apply custom functions over the model at specific points
-    during training (epoch start, batch end etc.). To implement a Callback, subclass :class:`~gensim.models.callbacks.CallbackAny2Vec`,
-    look at the example below which creates a callback to save a training model
-    after each epoch:
+    during training (epoch start, batch end etc.). To implement a Callback, subclass
+    :class:`~gensim.models.callbacks.CallbackAny2Vec`, look at the example below
+    which creates a callback to save a training model after each epoch:
 
     >>> from gensim.test.utils import common_texts as sentences
     >>> from gensim.models.callbacks import CallbackAny2Vec

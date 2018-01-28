@@ -83,7 +83,6 @@ except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
 
-
     def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
                             train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
                             word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
@@ -117,7 +116,6 @@ except ImportError:
                 )
 
         return len(doc_words)
-
 
     def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
                           learn_doctags=True, learn_words=True, learn_hidden=True,
@@ -171,7 +169,6 @@ except ImportError:
                     word_vectors[i] += neu1e * word_locks[i]
 
         return len(word_vocabs)
-
 
     def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None, neu1=None, learn_doctags=True,
                                  learn_words=True, learn_hidden=True, word_vectors=None, word_locks=None,
