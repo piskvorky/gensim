@@ -622,8 +622,8 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         # Remove the columns of the similarity matrix that correspond to terms outside corpus.
         nonzero_columns = sorted(set((index for document in corpus for index, _ in document)))
-        identity_matrix = scipy.sparse.identity(similarity_matrix.shape[0],
-                                                dtype=similarity_matrix.dtype, format="csr")
+        identity_matrix = scipy.sparse.identity(
+            similarity_matrix.shape[0], dtype=similarity_matrix.dtype, format="csr")
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", scipy.sparse.SparseEfficiencyWarning)
             identity_matrix[nonzero_columns] = similarity_matrix.T[nonzero_columns]
