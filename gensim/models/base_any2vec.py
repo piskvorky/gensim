@@ -13,9 +13,10 @@ import threading
 from six.moves import xrange
 from six import itervalues
 from gensim import matutils
-from numpy import float32 as REAL, ones, random, dtype
+from numpy import float32 as REAL, ones, random, dtype, zeros
 from types import GeneratorType
 from gensim.utils import deprecated
+import warnings
 
 try:
     from queue import Queue
@@ -298,7 +299,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
                  trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
-                 min_alpha=0.0001, compute_loss=False, **kwargs):
+                 min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
         self.sg = int(sg)
         if vector_size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
@@ -316,6 +317,18 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         super(BaseWordEmbeddingsModel, self).__init__(
             workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
+
+        if fast_version < 0:
+            warnings.warn(
+                "C extension not loaded, training will be slow. "
+                "Install a C compiler and reinstall gensim for fast training."
+            )
+            self.neg_labels = []
+            if self.negative > 0:
+                # precompute negative labels optimization for pure-python training
+                self.neg_labels = zeros(self.negative + 1)
+                self.neg_labels[0] = 1.
+
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -538,6 +551,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
               queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
+
         self.alpha = start_alpha or self.alpha
         self.min_alpha = end_alpha or self.min_alpha
         self.compute_loss = compute_loss
