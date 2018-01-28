@@ -620,17 +620,19 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
                 continue  # A word from the dictionary not present in the word2vec model.
             # Traverse upper triangle columns.
             if matrix_order <= nonzero_limit + 1:  # Traverse all columns.
-                columns = ((w2_index, self.similarity(w1, dictionary[w2_index]))
-                           for w2_index in range(w1_index + 1, matrix_order)
-                           if w1_index != w2_index and dictionary[w2_index] in self.vocab)
+                columns = (
+                    (w2_index, self.similarity(w1, dictionary[w2_index]))
+                    for w2_index in range(w1_index + 1, matrix_order)
+                    if w1_index != w2_index and dictionary[w2_index] in self.vocab)
             else:  # Traverse only columns corresponding to the embeddings closest to w1.
                 num_nonzero = similarity_matrix[w1_index].getnnz() - 1
-                columns = ((dictionary.token2id[w2], similarity)
-                           for _, (w2, similarity)
-                           in zip(range(nonzero_limit - num_nonzero),
-                                  self.most_similar(positive=[w1],
-                                                    topn=nonzero_limit - num_nonzero))
-                           if w2 in dictionary.token2id and w1_index < dictionary.token2id[w2])
+                columns = (
+                    (dictionary.token2id[w2], similarity)
+                    for _, (w2, similarity)
+                    in zip(
+                        range(nonzero_limit - num_nonzero),
+                        self.most_similar(positive=[w1], topn=nonzero_limit - num_nonzero))
+                    if w2 in dictionary.token2id and w1_index < dictionary.token2id[w2])
                 columns = sorted(columns, key=lambda x: x[0])
             for w2_index, similarity in columns:
                 assert w1_index < w2_index
