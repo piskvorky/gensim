@@ -47,6 +47,7 @@ to trim unneeded model memory = use (much) less RAM.
 
 import logging
 import os
+import warnings
 
 try:
     from queue import Queue
@@ -202,9 +203,11 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             )
 
         if 'iter' in kwargs:
+            warnings.warn("The parameter `iter` is deprecated, will be removed in 4.0.0, use `epochs` instead.")
             kwargs['epochs'] = kwargs['iter']
 
         if 'size' in kwargs:
+            warnings.warn("The parameter `size` is deprecated, will be removed in 4.0.0, use `vector_size` instead.")
             kwargs['vector_size'] = kwargs['size']
 
         super(Doc2Vec, self).__init__(
