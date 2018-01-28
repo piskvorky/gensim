@@ -191,7 +191,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
-        callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
+        callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
 
         """
@@ -346,7 +346,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Multiplier for size of queue (number of workers * queue_factor).
         report_delay : float
             Seconds to wait before reporting progress.
-        callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
+        callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
         """
         super(Doc2Vec, self).train(

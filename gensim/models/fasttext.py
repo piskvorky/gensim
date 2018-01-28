@@ -148,7 +148,7 @@ class FastText(BaseWordEmbeddingsModel):
         bucket : int
             Character ngrams are hashed into a fixed number of buckets, in order to limit the
             memory usage of the model. This option specifies the number of buckets used by the model.
-        callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
+        callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
 
         Examples
@@ -331,7 +331,7 @@ class FastText(BaseWordEmbeddingsModel):
             Multiplier for size of queue (number of workers * queue_factor).
         report_delay : float
             Seconds to wait before reporting progress.
-        callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
+        callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
 
         Examples

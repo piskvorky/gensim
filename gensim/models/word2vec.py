@@ -231,7 +231,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
         compute_loss: bool
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
-        callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
+        callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
 
         Examples
@@ -325,7 +325,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             Seconds to wait before reporting progress.
         compute_loss: bool
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
-        callbacks : :obj: `list` of :obj: `~gensim.callbacks.Callback`
+        callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
 
         Examples
