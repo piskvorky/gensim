@@ -565,7 +565,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
 
 class SoftCosineSimilarity(interfaces.SimilarityABC):
-    """Document similarity (like MatrixSimilarity) that uses Soft Cosine Similarity as a similarity
+    """Document similarity (like MatrixSimilarity) that uses Soft Cosine Measure as a similarity
     measure.
 
     Parameters
@@ -582,7 +582,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
     gensim.models.keyedvectors.EuclideanKeyedVectors.similarity_matrix
         A term similarity matrix produced from term embeddings.
     gensim.matutils.softcossim
-        The Soft Cosine Similarity.
+        The Soft Cosine Measure.
 
     Examples
     --------

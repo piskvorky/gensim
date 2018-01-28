@@ -756,9 +756,9 @@ def cossim(vec1, vec2):
 
 
 def softcossim(vec1, vec2, similarity_matrix):
-    """Return Soft Cosine Similarity between two vectors given a term similarity matrix.
+    """Return Soft Cosine Measure between two vectors given a term similarity matrix.
 
-    Return Soft Cosine Similarity between two sparse vectors given a sparse term similarity matrix
+    Return Soft Cosine Measure between two sparse vectors given a sparse term similarity matrix
     in the `scipy.sparse.csc_matrix` format. The similarity is a number between <-1.0, 1.0>, higher
     is more similar.
 
@@ -774,7 +774,7 @@ def softcossim(vec1, vec2, similarity_matrix):
     Returns
     -------
     similarity_matrix.dtype
-        The Soft Cosine Similarity between `vec1` and `vec2`.
+        The Soft Cosine Measure between `vec1` and `vec2`.
 
     Raises
     ------
@@ -786,11 +786,11 @@ def softcossim(vec1, vec2, similarity_matrix):
     gensim.models.keyedvectors.EuclideanKeyedVectors.similarity_matrix
         A term similarity matrix produced from term embeddings.
     gensim.similarities.docsim.SoftCosineSimilarity
-        A class for performing corpus-based similarity queries with Soft Cosine Similarity.
+        A class for performing corpus-based similarity queries with Soft Cosine Measure.
 
     References
     ----------
-    Soft Cosine Similarity was perhaps first defined by [sidorovetal14]_.
+    Soft Cosine Measure was perhaps first defined by [sidorovetal14]_.
 
     .. [sidorovetal14] Grigori Sidorov et al., "Soft Similarity and Soft Cosine Measure: Similarity
        of Features in Vector Space Model", 2014.

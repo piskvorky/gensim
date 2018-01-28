@@ -562,10 +562,10 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
     def similarity_matrix(self, corpus, dictionary, threshold=0.0, exponent=2.0,
                           nonzero_limit=100, dtype=REAL):
-        """Constructs a term similarity matrix for computing Soft Cosine Similarity.
+        """Constructs a term similarity matrix for computing Soft Cosine Measure.
 
         Constructs a a sparse term similarity matrix in the `scipy.sparse.csc_matrix` format for
-        computing Soft Cosine Similarity between documents.
+        computing Soft Cosine Measure between documents.
 
         Parameters
         ----------
@@ -582,7 +582,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         nonzero_limit : int, optional
             The maximum number of non-zero elements outside the diagonal in a single row or column
             of the term similarity matrix. Setting `nonzero_limit` to a constant ensures that the
-            time complexity of computing the Soft Cosine Similarity will be linear in the document
+            time complexity of computing the Soft Cosine Measure will be linear in the document
             length rather than quadratic. Defaults to `100`.
         dtype : numpy.dtype, optional
             Data-type of the term similarity matrix. Defaults to `numpy.float32`.
@@ -595,9 +595,9 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         See Also
         --------
         gensim.matutils.softcossim
-            The Soft Cosine Similarity.
+            The Soft Cosine Measure.
         gensim.similarities.docsim.SoftCosineSimilarity
-            A class for performing corpus-based similarity queries with Soft Cosine Similarity.
+            A class for performing corpus-based similarity queries with Soft Cosine Measure.
 
         References
         ----------
