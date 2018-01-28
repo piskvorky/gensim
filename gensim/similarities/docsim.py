@@ -586,17 +586,18 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
     Examples
     --------
+    >>> from gensim.corpora import Dictionary
+    >>> import gensim.downloader as api
     >>> from gensim.models import Word2Vec
     >>> from gensim.similarities import SoftCosineSimilarity
     >>> from gensim.utils import simple_preprocess
-    >>> from gensim.corpora import Dictionary
-    >>> # Given a document collection "corpus", train a word2vec model.
+    >>> # Prepare the model
+    >>> corpus = api.load("text8")
     >>> model = Word2Vec(corpus, workers=3, size=100)
-    >>> # Construct a bag-of-words corpus, a dictionary, and a term similarity matrix.
     >>> dictionary = Dictionary(corpus)
-    >>> corpus = [dictionary.doc2bow(document) for document in corpus]
+    >>> bow_corpus = [dictionary.doc2bow(document) for document in corpus]
     >>> similarity_matrix = model.wv.similarity_matrix(dictionary)
-    >>> index = SoftCosineSimilarity(corpus, similarity_matrix, num_best=10)
+    >>> index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
     >>> # Make a query.
     >>> query = 'Yummy! Great view of the Bellagio Fountain show.'
     >>> sims = index[dictionary.doc2bow(simple_preprocess(query))]
