@@ -595,7 +595,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
     >>> # Construct a bag-of-words corpus, a dictionary, and a term similarity matrix.
     >>> dictionary = Dictionary(corpus)
     >>> corpus = [dictionary.doc2bow(document) for document in corpus]
-    >>> similarity_matrix = model.wv.similarity_matrix(corpus, dictionary)
+    >>> similarity_matrix = model.wv.similarity_matrix(dictionary)
     >>> index = SoftCosineSimilarity(corpus, similarity_matrix, num_best=10)
     >>> # Make a query.
     >>> query = 'Yummy! Great view of the Bellagio Fountain show.'

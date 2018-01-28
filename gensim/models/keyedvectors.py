@@ -560,8 +560,8 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
 
-    def similarity_matrix(self, corpus, dictionary, threshold=0.0, exponent=2.0,
-                          nonzero_limit=100, dtype=REAL):
+    def similarity_matrix(self, dictionary, threshold=0.0, exponent=2.0, nonzero_limit=100,
+                          dtype=REAL):
         """Constructs a term similarity matrix for computing Soft Cosine Measure.
 
         Constructs a a sparse term similarity matrix in the `scipy.sparse.csc_matrix` format for
@@ -569,10 +569,9 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
         Parameters
         ----------
-        corpus : list of lists of (int, float) two-tuples
-            A list of documents in the gensim document format.
         dictionary : gensim.corpora.Dictionary
-            A dictionary associated with the corpus.
+            A dictionary that specifies a mapping between words and the indices of rows and columns
+            of the resulting term similarity matrix.
         threshold : float, optional
             Only pairs of words whose embeddings are more similar than `threshold` are considered
             when building the sparse term similarity matrix. Defaults to `0.0`.
