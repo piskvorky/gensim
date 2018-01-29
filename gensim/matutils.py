@@ -418,6 +418,7 @@ def sparse2coo(doc, length, dtype=np.float32):
     row, data = zip(*doc)
     return scipy.sparse.coo_matrix((data, (row, col)), shape=(length, 1), dtype=dtype)
 
+
 def full2sparse(vec, eps=1e-9):
     """Convert a dense array into the BoW format.
 
