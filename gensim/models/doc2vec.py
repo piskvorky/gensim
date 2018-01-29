@@ -724,7 +724,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             documents, self.docvecs, progress_per=progress_per, trim_rule=trim_rule)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
-            self.hs, self.negative, self.wv, update=update, **kwargs)
+            self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
+            **kwargs)
 
         report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
         self.trainables.prepare_weights(

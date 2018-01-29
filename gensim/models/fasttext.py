@@ -381,8 +381,9 @@ class FastText(BaseWordEmbeddingsModel):
             self.vocabulary.old_vocab_len = len(self.wv.vocab)
             self.trainables.old_hash2index_len = len(self.wv.hash2index)
 
-        return super(FastText, self).build_vocab(sentences, update=update, progress_per=progress_per,
-                                                 keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule)
+        return super(FastText, self).build_vocab(
+            sentences, update=update, progress_per=progress_per,
+            keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
 
     def _set_train_params(self, **kwargs):
         pass
