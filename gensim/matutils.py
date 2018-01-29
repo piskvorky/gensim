@@ -897,9 +897,9 @@ def hellinger(vec1, vec2):
     if isbow(vec1) and isbow(vec2):
         # if it is a BoW format, instead of converting to dense we use dictionaries to calculate appropriate distance
         vec1, vec2 = dict(vec1), dict(vec2)
-        indexs = set(vec1.keys() + vec2.keys())
+        indices = set(list(vec1.keys()) + list(vec2.keys()))
         sim = np.sqrt(
-            0.5 * sum((np.sqrt(vec1.get(index, 0.0)) - np.sqrt(vec2.get(index, 0.0)))**2 for index in indexs)
+            0.5 * sum((np.sqrt(vec1.get(index, 0.0)) - np.sqrt(vec2.get(index, 0.0)))**2 for index in indices)
         )
         return sim
     else:
