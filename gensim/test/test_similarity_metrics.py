@@ -105,12 +105,21 @@ class TestHellinger(unittest.TestCase):
 
     def test_distributions(self):
 
-        # checking bag of words as inputs
+        # checking different length bag of words as inputs
         vec_1 = [(2, 0.1), (3, 0.4), (4, 0.1), (5, 0.1), (1, 0.1), (7, 0.2)]
         vec_2 = [(1, 0.1), (3, 0.8), (4, 0.1)]
         result = matutils.hellinger(vec_1, vec_2)
-        expected = 0.185241936534
+        expected = 0.484060507634
         self.assertAlmostEqual(expected, result)
+
+        # checking symmetrical bag of words inputs return same distance
+        vec_1 = [(2, 0.1), (3, 0.4), (4, 0.1), (5, 0.1), (1, 0.1), (7, 0.2)]
+        vec_2 = [(1, 0.1), (3, 0.8), (4, 0.1), (8, 0.1), (10, 0.8), (9, 0.1)]
+        result = matutils.hellinger(vec_1, vec_2)
+        result_symmetric = matutils.hellinger(vec_2, vec_1)
+        expected = 0.856921568786
+        self.assertAlmostEqual(expected, result)
+        self.assertAlmostEqual(expected, result_symmetric)
 
         # checking ndarray, csr_matrix as inputs
         vec_1 = np.array([[1, 0.3], [0, 0.4], [2, 0.3]])
