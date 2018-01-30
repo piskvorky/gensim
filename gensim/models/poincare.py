@@ -1519,7 +1519,7 @@ class LexicalEntailmentEvaluation(object):
         assert min_term_1 is not None and min_term_2 is not None
         vector_1, vector_2 = embedding.word_vec(min_term_1), embedding.word_vec(min_term_2)
         norm_1, norm_2 = np.linalg.norm(vector_1), np.linalg.norm(vector_2)
-        return -1 * (1 + self.alpha * (norm_2 - norm_1)) * distance
+        return -1 * (1 + self.alpha * (norm_2 - norm_1)) * min_distance
 
     @staticmethod
     def find_matching_terms(trie, word):
