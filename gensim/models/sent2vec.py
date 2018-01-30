@@ -25,7 +25,7 @@ Or
 
 The sentence vectors are stored in a numpy array
 
->>> vector = model.sentence_vectors(['computer', 'interface']) # vector of a sentence
+>>> vector = model[['computer', 'interface']] # vector of a sentence
 
 You can perform the NLP similarity task with the model
 
@@ -673,7 +673,7 @@ class Sent2Vec(SaveLoad):
 
         """
 
-        return dot(matutils.unitvec(self.sentence_vectors(sent1)), matutils.unitvec(self.sentence_vectors(sent2)))
+        return dot(matutils.unitvec(self[sent1]), matutils.unitvec(self[sent2]))
 
 
 class TorontoCorpus(object):
