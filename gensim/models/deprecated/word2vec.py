@@ -113,9 +113,10 @@ import threading
 import itertools
 import warnings
 
-from gensim.models.deprecated.utils import keep_vocab_item, call_on_class_only
+from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.models.deprecated.keyedvectors import KeyedVectors, Vocab
 from gensim.models.word2vec import Word2Vec as NewWord2Vec
+from gensim.models.deprecated.old_saveload import SaveLoad
 
 try:
     from queue import Queue, Empty
@@ -128,7 +129,7 @@ from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
 
 from scipy.special import expit
 
-from gensim.models.deprecated import utils
+from gensim import utils
 from gensim import matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
@@ -471,7 +472,7 @@ def score_cbow_pair(model, word, l1):
     return sum(lprob)
 
 
-class Word2Vec(utils.SaveLoad):
+class Word2Vec(SaveLoad):
     """
     Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
 
@@ -1602,7 +1603,7 @@ class Word2Vec(utils.SaveLoad):
 
         super(Word2Vec, self).save(*args, **kwargs)
 
-    save.__doc__ = utils.SaveLoad.save.__doc__
+    save.__doc__ = SaveLoad.save.__doc__
 
     @classmethod
     def load(cls, *args, **kwargs):

@@ -59,11 +59,12 @@ from numpy import zeros, sum as np_sum, add as np_add, concatenate, \
     repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
     sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide, integer
 
-from gensim.models.deprecated import utils
+from gensim import utils
 from gensim.utils import call_on_class_only, deprecated
 from gensim.models.deprecated.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg
 from gensim.models.deprecated.keyedvectors import KeyedVectors
 from gensim.models.doc2vec import Doc2Vec as NewDoc2Vec
+from gensim.models.deprecated.old_saveload import SaveLoad
 
 from gensim import matutils  # utility fnc for pickling, common scipy operations etc
 from six.moves import xrange, zip
@@ -333,7 +334,7 @@ class LabeledSentence(TaggedDocument):
     pass
 
 
-class DocvecsArray(utils.SaveLoad):
+class DocvecsArray(SaveLoad):
     """
     Default storage of doc vectors during/after training, in a numpy array.
 
