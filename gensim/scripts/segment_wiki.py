@@ -361,7 +361,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '-i', '--include-interlinks',
-        help="Whether or not the mapping of interlinks found in each article should be included.",
+        help='Include a mapping for interlinks to other articles in the dump. The mappings format is: '
+             '"interlinks": {"article_title_1": "interlink_text_1", "article_title_2": "interlink_text_2", ...}',
         action='store_true'
     )
     args = parser.parse_args()
