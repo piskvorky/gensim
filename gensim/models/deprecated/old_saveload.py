@@ -11,10 +11,6 @@ from __future__ import with_statement
 import logging
 
 try:
-    from html.entities import name2codepoint as n2cp
-except ImportError:
-    from htmlentitydefs import name2codepoint as n2cp
-try:
     import cPickle as _pickle
 except ImportError:
     import pickle as _pickle
