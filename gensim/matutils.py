@@ -699,13 +699,17 @@ def unitvec(vec, norm='l2'):
             return vec
 
     if isinstance(vec, np.ndarray):
-        vec = np.asarray(vec, dtype=float)
+        vec = np.asarray(vec, dtype=vec.dtype)
         if norm == 'l1':
             veclen = np.sum(np.abs(vec))
         if norm == 'l2':
             veclen = blas_nrm2(vec)
         if veclen > 0.0:
-            return blas_scal(1.0 / veclen, vec)
+            if np.issubdtype(vec.dtype, np.int) == True:
+                vec = vec.astype(np.float)
+                return blas_scal(1.0 / veclen, vec).astype(vec.dtype)
+            else:
+                return blas_scal(1.0 / veclen, vec).astype(vec.dtype)
         else:
             return vec
 
