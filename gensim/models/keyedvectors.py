@@ -57,7 +57,6 @@ and so on.
 from __future__ import division  # py3 "true division"
 
 import logging
-from math import ceil
 
 try:
     from queue import Queue, Empty
@@ -613,8 +612,8 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         # Traverse rows.
         matrix_order = len(dictionary)
         for w1_index in range(matrix_order):
-            if w1_index % ceil(matrix_order / 10) == 0:
-                logger.info("PROGRESS: at row %i / %i", w1_index + 1, matrix_order)
+            if w1_index % 1000 == 0:
+                logger.info("PROGRESS: at %.02f%% rows", 100.0 * (w1_index + 1) / matrix_order)
             w1 = dictionary[w1_index]
             if w1 not in self.vocab:
                 continue  # A word from the dictionary not present in the word2vec model.
@@ -641,7 +640,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
                     element = similarity**exponent
                     similarity_matrix[w1_index, w2_index] = element
                     similarity_matrix[w2_index, w1_index] = element
-        logger.info("constructed a term similarity matrix with %0.2f %% nonzero entries",
+        logger.info("constructed a term similarity matrix with %0.6f %% nonzero elements",
                     100.0 * similarity_matrix.getnnz() / matrix_order**2)
         return similarity_matrix.tocsc()
 
