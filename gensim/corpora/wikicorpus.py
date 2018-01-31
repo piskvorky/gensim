@@ -22,7 +22,6 @@ References
 
 """
 
-
 import bz2
 import logging
 import multiprocessing
@@ -44,7 +43,6 @@ ARTICLE_MIN_WORDS = 50
 # default thresholds for lengths of individual tokens
 TOKEN_MIN_LEN = 2
 TOKEN_MAX_LEN = 15
-
 
 RE_P0 = re.compile(r'<!--.*?-->', re.DOTALL | re.UNICODE)
 """Comments."""
@@ -78,6 +76,8 @@ RE_P14 = re.compile(r'\[\[Category:[^][]*\]\]', re.UNICODE)
 """Categories."""
 RE_P15 = re.compile(r'\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
 """Remove File and Image templates."""
+RE_P16 = re.compile(r'\[{2}(.*?)\]{2}', re.UNICODE)
+"""Capture interlinks text and article linked"""
 
 IGNORED_NAMESPACES = [
     'Wikipedia', 'Category', 'File', 'Portal', 'Template',
@@ -93,8 +93,8 @@ References
 """
 
 
-def filter_wiki(raw):
-    """Filter out wiki markup from `raw`, leaving only text.
+def find_interlinks(raw):
+    """Find all interlinks to other articles in the dump.
 
     Parameters
     ----------
@@ -103,24 +103,60 @@ def filter_wiki(raw):
 
     Returns
     -------
+    dict
+        Mapping from the linked article to the actual text found.
+    """
+    filtered = filter_wiki(raw, promote_remaining=False, simplify_links=False)
+    interlinks_raw = re.findall(RE_P16, filtered)
+
+    interlinks = {}
+    for parts in [i.split('|') for i in interlinks_raw]:
+        actual_title = parts[0]
+        try:
+            interlink_text = parts[1]
+            interlinks[actual_title] = interlink_text
+        except IndexError:
+            interlinks[actual_title] = actual_title
+
+    legit_interlinks = {i: j for i, j in interlinks.items() if '[' not in i and ']' not in i}
+    return legit_interlinks
+
+
+def filter_wiki(raw, promote_remaining=True, simplify_links=True):
+    """Filter out wiki markup from `raw`, leaving only text.
+
+    Parameters
+    ----------
+    raw : str
+        Unicode or utf-8 encoded string.
+    promote_remaining : bool
+        Whether uncaught markup should be promoted to plain text.
+    simplify_links : bool
+        Whether links should be simplified keeping only their description text.
+
+    Returns
+    -------
     str
         `raw` without markup.
-
     """
     # parsing of the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
     text = utils.to_unicode(raw, 'utf8', errors='ignore')
     text = utils.decode_htmlentities(text)  # '&amp;nbsp;' --> '\xa0'
-    return remove_markup(text)
+    return remove_markup(text, promote_remaining, simplify_links)
 
 
-def remove_markup(text):
+def remove_markup(text, promote_remaining=True, simplify_links=True):
     """Filter out wiki markup from `text`, leaving only text.
 
     Parameters
     ----------
     text : str
         String containing markup.
+    promote_remaining : bool
+        Whether uncaught markup should be promoted to plain text.
+    simplify_links : bool
+        Whether links should be simplified keeping only their description text.
 
     Returns
     -------
@@ -145,8 +181,11 @@ def remove_markup(text):
         text = re.sub(RE_P11, '', text)  # remove all remaining tags
         text = re.sub(RE_P14, '', text)  # remove categories
         text = re.sub(RE_P5, '\\3', text)  # remove urls, keep description
-        text = re.sub(RE_P6, '\\2', text)  # simplify links, keep description only
+
+        if simplify_links:
+            text = re.sub(RE_P6, '\\2', text)  # simplify links, keep description only
         # remove table markup
+
         text = text.replace('||', '\n|')  # each table cell on a separate line
         text = re.sub(RE_P12, '\n', text)  # remove formatting lines
         text = re.sub(RE_P13, '\n\\3', text)  # leave only cell content
@@ -156,9 +195,9 @@ def remove_markup(text):
         if old == text or iters > 2:
             break
 
-    # the following is needed to make the tokenizer see '[[socialist]]s' as a single word 'socialists'
-    # TODO is this really desirable?
-    text = text.replace('[', '').replace(']', '')  # promote all remaining markup to plain text
+    if promote_remaining:
+        text = text.replace('[', '').replace(']', '')  # promote all remaining markup to plain text
+
     return text
 
 
@@ -333,7 +372,7 @@ def extract_pages(f, filter_namespaces=False):
                     text = None
 
             pageid = elem.find(pageid_path).text
-            yield title, text or "", pageid     # empty page will yield None
+            yield title, text or "", pageid  # empty page will yield None
 
             # Prune the element tree, as per
             # http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
@@ -461,6 +500,7 @@ class WikiCorpus(TextCorpus):
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format and mapping
 
     """
+
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
                  filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
                  token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
