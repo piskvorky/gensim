@@ -705,15 +705,8 @@ def unitvec(vec, norm='l2'):
         if norm == 'l2':
             veclen = blas_nrm2(vec)
         if veclen > 0.0:
-            '''EDIT: included .astype(vec.dtype)'''
-            if vec.dtype == 'int16':
-                vec = vec.astype(np.float16)
-                return blas_scal(1.0 / veclen, vec).astype(vec.dtype)
-            elif vec.dtype == 'int32':
-                vec = vec.astype(np.float32)
-                return blas_scal(1.0 / veclen, vec).astype(vec.dtype)
-            elif vec.dtype == 'int64':
-                vec = vec.astype(np.float64)
+            if np.issubdtype(vec.dtype, np.int) == True:
+                vec = vec.astype(np.float)
                 return blas_scal(1.0 / veclen, vec).astype(vec.dtype)
             else:
                 return blas_scal(1.0 / veclen, vec).astype(vec.dtype)
