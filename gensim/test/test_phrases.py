@@ -165,7 +165,10 @@ class PhrasesCommon:
         bigram_phraser = Phraser(bigram_phrases)
         trigram_phrases = Phrases(bigram_phraser[self.sentences])
         trigram_phraser = Phraser(trigram_phrases)
-        self.assertNotEqual(trigram_phraser[bigram_phraser[self.sentences]].__len__(), 0)
+        trigrams = trigram_phraser[bigram_phraser[self.sentences]]
+        fst, snd = list(trigrams), list(trigrams)
+        self.assertEqual(fst, snd)
+        self.assertNotEqual(snd, [])
 
     def testEmptyInputsOnBigramConstruction(self):
         """Test that empty inputs don't throw errors and return the expected result."""
