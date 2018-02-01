@@ -76,10 +76,8 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
     from gensim.models.word2vec_inner import FAST_VERSION  # blas-adaptation shared from word2vec
-    logger.info("Using FAST VERSION=%d", FAST_VERSION)
 
 except ImportError:
-    logger.warning('Slow version of %s is being used', __name__)
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
 
