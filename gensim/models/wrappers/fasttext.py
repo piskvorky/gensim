@@ -34,5 +34,5 @@ Example:
 
 
 """
-from gensim.models.deprecated.fasttext_wrapper import FastText, FastTextKeyedVectors,\
-    ft_hash, compute_ngrams  # noqa:F401
+from gensim.models.deprecated.fasttext_wrapper import FastText, FastTextKeyedVectors  # noqa:F401
+from gensim.models.deprecated.fasttext_wrapper import ft_hash, compute_ngrams  # noqa:F401
