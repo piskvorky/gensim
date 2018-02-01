@@ -684,7 +684,7 @@ class FastText(BaseWordEmbeddingsModel):
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
                 model.trainables.vectors_ngrams_lockf = ones(len(model.trainables.vectors), dtype=REAL)
             return model
-        except ImportError:
+        except AttributeError:
             logger.info('Model saved using code from earlier Gensim Version. Re-loading old model in a compatible way.')
             from gensim.models.deprecated.fasttext import load_old_fasttext
             return load_old_fasttext(*args, **kwargs)
