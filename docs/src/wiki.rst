@@ -45,6 +45,7 @@ First let's load the corpus iterator and dictionary, created in the second step 
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
+    >>> # mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm.bz2') # use this if you compressed the TFIDF output (recommended)
 
     >>> print(mm)
     MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)
@@ -99,6 +100,7 @@ As with Latent Semantic Analysis above, first load the corpus iterator and dicti
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
+    >>> # mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm.bz2') # use this if you compressed the TFIDF output
 
     >>> print(mm)
     MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)

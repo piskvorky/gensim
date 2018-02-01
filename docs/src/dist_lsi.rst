@@ -127,6 +127,7 @@ the corpus iterator with::
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
+    >>> # mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm.bz2') # use this if you compressed the TFIDF output
 
     >>> print(mm)
     MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)
