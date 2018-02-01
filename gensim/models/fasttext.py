@@ -331,6 +331,11 @@ class FastText(BaseWordEmbeddingsModel):
     def syn0_ngrams_lockf(self):
         del self.trainables.vectors_ngrams_lockf
 
+    @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.wv.num_ngram_vectors instead")
+    def num_ngram_vectors(self):
+        return self.wv.num_ngram_vectors
+
     def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
