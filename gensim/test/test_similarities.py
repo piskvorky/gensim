@@ -18,8 +18,8 @@ import scipy
 
 from gensim.models import word2vec
 from gensim.models import doc2vec
-from gensim.models import fasttext
 from gensim.models import KeyedVectors
+from gensim.models.wrappers import fasttext
 from gensim import matutils, similarities
 from gensim.models import Word2Vec
 from gensim.test.utils import (datapath, get_tmpfile,
@@ -472,8 +472,12 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertLoadedIndexEqual(index, model)
 
     def testFastText(self):
+        ft_home = os.environ.get('FT_HOME', None)
+        ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
+        if not ft_path:
+            return
         corpus_file = datapath('lee.cor')
-        model = fasttext.FastText(corpus_file)
+        model = fasttext.FastText.train(ft_path, corpus_file)
         model.init_sims()
         index = self.indexer(model, 10)
 
