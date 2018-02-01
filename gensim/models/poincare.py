@@ -52,7 +52,9 @@ from six import string_types
 from smart_open import smart_open
 
 from gensim import utils, matutils
-from gensim.models.keyedvectors import KeyedVectorsBase, Vocab
+from gensim.models.keyedvectors import Vocab, BaseKeyedVectors
+from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format
+from numpy import float32 as REAL
 
 try:
     from autograd import grad  # Only required for optionally verifying gradients while training
@@ -130,7 +132,7 @@ class PoincareModel(utils.SaveLoad):
 
         """
         self.train_data = train_data
-        self.kv = PoincareKeyedVectors()
+        self.kv = PoincareKeyedVectors(size)
         self.size = size
         self.train_alpha = alpha  # Learning rate for training
         self.burn_in_alpha = burn_in_alpha  # Learning rate for burn-in
@@ -754,16 +756,121 @@ class PoincareBatch(object):
         self._loss_computed = True
 
 
-class PoincareKeyedVectors(KeyedVectorsBase):
+class PoincareKeyedVectors(BaseKeyedVectors):
     """Class to contain vectors and vocab for the :class:`~gensim.models.poincare.PoincareModel` training class.
 
     Used to perform operations on the vectors such as vector lookup, distance etc.
 
     """
 
-    def __init__(self):
-        super(PoincareKeyedVectors, self).__init__()
+    def __init__(self, vector_size):
+        super(PoincareKeyedVectors, self).__init__(vector_size)
         self.max_distance = 0
+        self.index2word = []
+
+    @property
+    def vectors(self):
+        return self.syn0
+
+    @vectors.setter
+    def vectors(self, value):
+        self.syn0 = value
+
+    @property
+    def index2entity(self):
+        return self.index2word
+
+    @index2entity.setter
+    def index2entity(self, value):
+        self.index2word = value
+
+    def word_vec(self, word):
+        """
+        Accept a single word as input.
+        Returns the word's representations in vector space, as a 1D numpy array.
+
+        Example::
+
+          >>> trained_model.word_vec('office')
+          array([ -1.40128313e-02, ...])
+
+        """
+        return super(PoincareKeyedVectors, self).get_vector(word)
+
+    def words_closer_than(self, w1, w2):
+        """
+        Returns all words that are closer to `w1` than `w2` is to `w1`.
+
+        Parameters
+        ----------
+        w1 : str
+            Input word.
+        w2 : str
+            Input word.
+
+        Returns
+        -------
+        list (str)
+            List of words that are closer to `w1` than `w2` is to `w1`.
+
+        Examples
+        --------
+
+        >>> model.words_closer_than('carnivore.n.01', 'mammal.n.01')
+        ['dog.n.01', 'canine.n.02']
+
+        """
+        return super(PoincareKeyedVectors, self).closer_than(w1, w2)
+
+    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
+        """
+        Store the input-hidden weight matrix in the same format used by the original
+        C word2vec-tool, for compatibility.
+
+         `fname` is the file used to save the vectors in
+         `fvocab` is an optional file used to save the vocabulary
+         `binary` is an optional boolean indicating whether the data is to be saved
+         in binary word2vec format (default: False)
+         `total_vec` is an optional parameter to explicitly specify total no. of vectors
+         (in case word vectors are appended with document vectors afterwards)
+
+        """
+        _save_word2vec_format(fname, self.vocab, self.syn0, fvocab=fvocab, binary=binary, total_vec=total_vec)
+
+    @classmethod
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+                             limit=None, datatype=REAL):
+        """
+        Load the input-hidden weight matrix from the original C word2vec-tool format.
+
+        Note that the information stored in the file is incomplete (the binary tree is missing),
+        so while you can query for word similarity etc., you cannot continue training
+        with a model loaded this way.
+
+        `binary` is a boolean indicating whether the data is in binary word2vec format.
+        `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory.
+        Word counts are read from `fvocab` filename, if set (this is the file generated
+        by `-save-vocab` flag of the original C tool).
+
+        If you trained the C model using non-utf8 encoding for words, specify that
+        encoding in `encoding`.
+
+        `unicode_errors`, default 'strict', is a string suitable to be passed as the `errors`
+        argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
+        file may include word tokens truncated in the middle of a multibyte unicode character
+        (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
+
+        `limit` sets a maximum number of word-vectors to read from the file. The default,
+        None, means read all.
+
+        `datatype` (experimental) can coerce dimensions to a non-default float type (such
+        as np.float16) to save memory. (Such types may result in much slower bulk operations
+        or incompatibility with optimized routines.)
+
+        """
+        return _load_word2vec_format(
+            PoincareKeyedVectors, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
+            limit=limit, datatype=datatype)
 
     @staticmethod
     def vector_distance(vector_1, vector_2):
