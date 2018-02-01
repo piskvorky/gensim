@@ -11,41 +11,40 @@ and metadata formats for Embedding Visualization.
 
 To use the generated TSV 2D tensor and metadata file in the Projector 
 Visualizer, please follow next steps:
-1) Open http://projector.tensorflow.org/
-2) Choose "Load Data" from the left menu.
-3) Select "Choose file" in "Load a TSV file of vectors." and choose you local 
-"_tensor.tsv" file.
-4) Select "Choose file" in "Load a TSV file of metadata." and choose you local 
-"_metadata.tsv" file.
+
+#. Open http://projector.tensorflow.org/
+#. Choose "Load Data" from the left menu.
+#. Select "Choose file" in "Load a TSV file of vectors." and choose you local "_tensor.tsv" file.
+#. Select "Choose file" in "Load a TSV file of metadata." and choose you local "_metadata.tsv" file.
 
 For more information about TensorBoard TSV format please visit:
 https://www.tensorflow.org/versions/master/how_tos/embedding_viz/
 
-Usage
------
-python -m gensim.scripts.word2vec2tensor --input <Word2Vec_model_file> --output <TSV_tensor_filename_prefix> [--binary] <Word2Vec_binary_flag>
+Usage:
+------
+python -m gensim.scripts.word2vec2tensor --input <Word2Vec_model_file> --output <TENSOR_PREFIX> [--binary] <Word2Vec_binary_flag>
 
-Parameters
-----------
+Parameters:
+-----------
 Word2Vec_model_file
-    Input Word2Vec file.
+    Path to input Word2Vec file.
 
-TSV_tensor_filename_prefix
+TENSOR_PREFIX
     Prefix for produced files.
 
 Word2Vec_binary_flag, optional
-    Use True if provided Word2Vec in binary format.
+    Use True if provided Word2Vec is in binary format.
 
-Produces
---------
-TENSOR_PREFIX_tensor.tsv
+Produces:
+---------
+<TENSOR_PREFIX>_tensor.tsv
     2D tensor file.
-TENSOR_PREFIX_metadata.tsv
+<TENSOR_PREFIX>_metadata.tsv
     Word Embedding metadata file.
 
-Example
--------
-python -m gensim.scripts.word2vec2tensor --input my_w2v.txt --output visual
+Example:
+--------
+>>> python -m gensim.scripts.word2vec2tensor --input my_w2v.txt --output visual
 
 """
 

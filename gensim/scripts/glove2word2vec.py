@@ -10,29 +10,30 @@
 presented in text format and almost identical except included number of vectors
 and its dimension which is only difference regard to GloVe.
 
-This script uses https://github.com/RaRe-Technologies/smart_open library for 
+This script uses `smart_open <https://github.com/RaRe-Technologies/smart_open>`_ library for
 reading and writing files.
 
 
-Usage
------
+Usage:
+------
 python -m gensim.scripts.glove2word2vec --input <GloVe_file> --output <word2vec_file>
 
-Parameters
-----------
-GloVe_file : str
-    Input file in GloVe format.
-word2vec_file : str
-    Output filename to be converted in word2vec format.
-
-Produces
---------
+Parameters:
+-----------
+GloVe_file
+    Path to input file in GloVe format.
 word2vec_file
-    Output file converted in word2vec format.
+    Path to output file to be converted in word2vec format.
 
-Examples
+Produces:
+---------
+word2vec_file
+    File converted in word2vec format.
+
+Example:
 --------
-You may test it with `test_glove.txt` :file:`~gensim.parsing.test.test_glove.txt`:
+You may test it with `test_glove.txt <https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/test/test_data/test_glove.txt>`_.
+
 >>> python -m gensim.scripts.glove2word2vec --input test_glove.txt --output test_word2vec.txt
 
 """
