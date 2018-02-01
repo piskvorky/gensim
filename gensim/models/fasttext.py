@@ -48,11 +48,9 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.fasttext_inner import train_batch_sg, train_batch_cbow
     from gensim.models.fasttext_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
-    logger.info("Using FAST VERSION=%d", FAST_VERSION)
 
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
-    logger.warning('Slow version of Fasttext is being used')
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
