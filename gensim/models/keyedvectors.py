@@ -559,8 +559,8 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
 
-    def similarity_matrix(self, dictionary, threshold=0.0, exponent=2.0, nonzero_limit=100,
-                          dtype=REAL):
+    def similarity_matrix(self, dictionary, tfidf=None, threshold=0.0, exponent=2.0,
+                          nonzero_limit=100, dtype=REAL):
         """Constructs a term similarity matrix for computing Soft Cosine Measure.
 
         Constructs a a sparse term similarity matrix in the `scipy.sparse.csc_matrix` format for
@@ -571,6 +571,11 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         dictionary : gensim.corpora.Dictionary
             A dictionary that specifies a mapping between words and the indices of rows and columns
             of the resulting term similarity matrix.
+        tfidf : gensim.models.TfidfModel, optional
+            A model that specifies the relative importance of the terms in the dictionary. The
+            rows of the term similarity matrix will be build in an increasing order of importance
+            of terms, or in the order of term identifiers if no tfidf model is specified. Defaults
+            to `None`.
         threshold : float, optional
             Only pairs of words whose embeddings are more similar than `threshold` are considered
             when building the sparse term similarity matrix. Defaults to `0.0`.
@@ -608,15 +613,28 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         """
 
         logger.info("constructing a term similarity matrix")
-        similarity_matrix = sparse.identity(len(dictionary), dtype=dtype, format="lil")
-        # Traverse rows.
         matrix_order = len(dictionary)
-        for w1_index in range(matrix_order):
-            if w1_index % 1000 == 0:
-                logger.info("PROGRESS: at %.02f%% rows", 100.0 * (w1_index + 1) / matrix_order)
+        matrix_nonzero = [1] * matrix_order
+        matrix = sparse.identity(matrix_order, dtype=dtype, format="dok")
+        num_skipped = 0
+        # Decide the order of rows.
+        if tfidf is None:
+            word_indices = range(matrix_order)
+        else:
+            assert max(tfidf.idfs) < matrix_order
+            word_indices = [
+                index for index, _ in sorted(tfidf.idfs.items(), key=lambda x: x[1], reverse=True)]
+        # Traverse rows.
+        for row_number, w1_index in enumerate(word_indices):
+            if row_number % 1000 == 0:
+                logger.info(
+                    "PROGRESS: at %.02f%% rows (%d / %d, %d skipped, %.06f%% density)",
+                    100.0 * (row_number + 1) / matrix_order, row_number + 1, matrix_order,
+                    num_skipped, 100.0 * matrix.getnnz() / matrix_order**2)
             w1 = dictionary[w1_index]
             if w1 not in self.vocab:
-                continue  # A word from the dictionary not present in the word2vec model.
+                num_skipped += 1
+                continue  # A word from the dictionary is not present in the word2vec model.
             # Traverse upper triangle columns.
             if matrix_order <= nonzero_limit + 1:  # Traverse all columns.
                 columns = (
@@ -624,25 +642,26 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
                     for w2_index in range(w1_index + 1, matrix_order)
                     if w1_index != w2_index and dictionary[w2_index] in self.vocab)
             else:  # Traverse only columns corresponding to the embeddings closest to w1.
-                num_nonzero = similarity_matrix[w1_index].getnnz() - 1
+                num_nonzero = matrix_nonzero[w1_index] - 1
                 columns = (
                     (dictionary.token2id[w2], similarity)
                     for _, (w2, similarity)
                     in zip(
                         range(nonzero_limit - num_nonzero),
                         self.most_similar(positive=[w1], topn=nonzero_limit - num_nonzero))
-                    if w2 in dictionary.token2id and w1_index < dictionary.token2id[w2])
+                    if w2 in dictionary.token2id)
                 columns = sorted(columns, key=lambda x: x[0])
             for w2_index, similarity in columns:
-                assert w1_index < w2_index
                 # Ensure that we don't exceed `nonzero_limit` by mirroring the upper triangle.
-                if similarity > threshold and similarity_matrix[w2_index].getnnz() <= nonzero_limit:
+                if similarity > threshold and matrix_nonzero[w2_index] <= nonzero_limit:
                     element = similarity**exponent
-                    similarity_matrix[w1_index, w2_index] = element
-                    similarity_matrix[w2_index, w1_index] = element
+                    matrix[w1_index, w2_index] = element
+                    matrix_nonzero[w1_index] += 1
+                    matrix[w2_index, w1_index] = element
+                    matrix_nonzero[w2_index] += 1
         logger.info("constructed a term similarity matrix with %0.6f %% nonzero elements",
-                    100.0 * similarity_matrix.getnnz() / matrix_order**2)
-        return similarity_matrix.tocsc()
+                    100.0 * matrix.getnnz() / matrix_order**2)
+        return matrix.tocsc()
 
     def wmdistance(self, document1, document2):
         """
