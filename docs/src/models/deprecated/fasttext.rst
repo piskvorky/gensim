@@ -1,5 +1,5 @@
-:mod:`models.fasttext` -- [DEPRECATED VERSION, use gensim.models.FastText instead] FastText model
-=================================================================================================
+:mod:`models.deprecated.fasttext` -- FastText model
+===================================================
 
 .. automodule:: gensim.models.deprecated.fasttext
     :synopsis: FastText model

@@ -59,6 +59,7 @@ Modules:
     models/deprecated/fasttext
     models/deprecated/word2vec
     models/deprecated/keyedvectors
+    models/deprecated/fasttext_wrapper
     similarities/docsim
     similarities/index
     sklearn_api/atmodel
@@ -98,4 +99,3 @@ Modules:
     summarization/syntactic_unit
     summarization/textcleaner
     viz/poincare
-

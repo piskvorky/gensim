@@ -6,6 +6,13 @@
 
 
 """
+Warnings
+--------
+.. deprecated:: 3.3.0
+   Use :mod:`gensim.models.doc2vec` instead.
+
+
+
 Deep learning via the distributed memory and distributed bag of words models from
 [1]_, using either hierarchical softmax or negative sampling [2]_ [3]_. See [#tutorial]_
 

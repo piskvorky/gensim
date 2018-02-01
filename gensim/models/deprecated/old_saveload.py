@@ -3,8 +3,16 @@
 #
 # Copyright (C) 2018 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-"""Class containing the old SaveLoad class with modeified `unpickle` function is support loading models saved using
+"""
+Warnings
+--------
+.. deprecated:: 3.3.0
+   Use :mod:`gensim.utils` instead.
+
+
+Class containing the old SaveLoad class with modeified `unpickle` function is support loading models saved using
 an older gensim version.
+
 """
 from __future__ import with_statement
 

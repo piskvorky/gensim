@@ -10,8 +10,7 @@
 Warnings
 --------
 .. deprecated:: 3.2.0
-   Use :class:`gensim.models.fasttext.FastText` instead of :class:`gensim.models.wrappers.fasttext.FastText`.
-
+   Use :mod:`gensim.models.fasttext` instead.
 
 
 Python wrapper around word representation learning from FastText, a library for efficient learning

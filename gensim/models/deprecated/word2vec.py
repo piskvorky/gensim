@@ -6,6 +6,12 @@
 
 
 """
+Warnings
+--------
+.. deprecated:: 3.3.0
+   Use :mod:`gensim.models.word2vec` instead.
+
+
 Produce word vectors with deep learning via word2vec's "skip-gram and CBOW models", using either
 hierarchical softmax or negative sampling [1]_ [2]_.
 

@@ -5,6 +5,12 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
+Warnings
+--------
+.. deprecated:: 3.3.0
+   Use :mod:`gensim.models.keyedvectors` instead.
+
+
 Word vector storage and similarity look-ups.
 Common code independent of the way the vectors are trained(Word2Vec, FastText, WordRank, VarEmbed etc)
 

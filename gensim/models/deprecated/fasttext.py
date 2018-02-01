@@ -3,7 +3,14 @@
 # Authors: Chinmaya Pancholi <chinmayapancholi13@gmail.com>, Shiva Manne <s.manne@rare-technologies.com>
 # Copyright (C) 2017 RaRe Technologies s.r.o.
 
-"""Learn word representations via fasttext's "skip-gram and CBOW models", using either
+"""
+Warnings
+--------
+.. deprecated:: 3.3.0
+   Use :mod:`gensim.models.fasttext` instead.
+
+
+Learn word representations via fasttext's "skip-gram and CBOW models", using either
 hierarchical softmax or negative sampling [1]_.
 
 Notes
