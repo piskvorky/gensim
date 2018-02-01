@@ -175,7 +175,9 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(all(model.docvecs['_*0'] == model.docvecs[0]))
         self.assertTrue(max(d.offset for d in model.docvecs.doctags.values()) < len(model.docvecs.doctags))
         self.assertTrue(
-            max(model.docvecs._int_index(str_key, model.docvecs.doctags, model.docvecs.max_rawint) for str_key in model.docvecs.doctags.keys())
+            max(
+                model.docvecs._int_index(str_key, model.docvecs.doctags, model.docvecs.max_rawint)
+                for str_key in model.docvecs.doctags.keys())
             < len(model.docvecs.doctag_syn0)
         )
         # verify docvecs.most_similar() returns string doctags rather than indexes
@@ -582,4 +584,3 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     logging.info("using optimization %s", doc2vec.FAST_VERSION)
     unittest.main()
-

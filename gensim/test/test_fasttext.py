@@ -9,12 +9,11 @@ import struct
 import numpy as np
 
 from gensim import utils
-from gensim.models import keyedvectors
 from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as FT_wrapper
-from gensim.models.keyedvectors import Vocab, Word2VecKeyedVectors
+from gensim.models.keyedvectors import Word2VecKeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, common_texts as sentences
 
 logger = logging.getLogger(__name__)
