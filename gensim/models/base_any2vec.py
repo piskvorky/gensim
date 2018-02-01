@@ -349,6 +349,11 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def iter(self):
         return self.epochs
 
+    @iter.setter
+    @deprecated("Attribute will be removed in 4.0.0, use self.epochs instead")
+    def iter(self, value):
+        self.epochs = value
+
     @property
     @deprecated("Attribute will be removed in 4.0.0, use self.trainables.syn1 instead")
     def syn1(self):
