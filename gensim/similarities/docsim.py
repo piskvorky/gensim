@@ -54,7 +54,6 @@ import logging
 import itertools
 import os
 import heapq
-import warnings
 
 import numpy
 import scipy.sparse
