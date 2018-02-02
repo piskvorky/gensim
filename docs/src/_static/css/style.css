@@ -596,7 +596,7 @@ a.googlegroups{
 
 #middle1{
     float:left;
-    width:540px;
+    width:440px;
     padding-top: 53px;
 }
 
@@ -613,13 +613,13 @@ a.googlegroups{
 
 #right1 {
     float:right;
-    width: 351px;
+    width: 451px;
     padding-top: 53px;
 }
 
 .consulting-banner {
     background-color: #ff2010;
-    background-color: rgba(255, 32, 16, 0.2);
+    background-color: rgba(255, 32, 16, 0.4);
     padding: 1px 10px;
     -moz-border-radius: 15px;
     border-radius: 15px;

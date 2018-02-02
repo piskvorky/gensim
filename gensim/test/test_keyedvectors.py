@@ -15,7 +15,7 @@ import unittest
 import numpy as np
 
 from gensim.corpora import Dictionary
-from gensim.models.keyedvectors import EuclideanKeyedVectors
+from gensim.models import KeyedVectors as EuclideanKeyedVectors
 from gensim.test.utils import datapath
 
 

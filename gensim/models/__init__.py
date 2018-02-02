@@ -23,6 +23,7 @@ from .fasttext import FastText  # noqa:F401
 from .translation_matrix import TranslationMatrix, BackMappingTranslationMatrix  # noqa:F401
 
 from . import wrappers  # noqa:F401
+from . import deprecated  # noqa:F401
 
 from gensim import interfaces, utils
 
