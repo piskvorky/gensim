@@ -142,7 +142,7 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testTotalWordCount(self):
         model = word2vec.Word2Vec(size=10, min_count=0, seed=42)
-        total_words = model.scan_vocab(sentences)
+        total_words = model.vocabulary.scan_vocab(sentences)[0]
         self.assertEqual(total_words, 29)
 
     def testOnlineLearning(self):
@@ -730,6 +730,28 @@ class TestWord2VecModel(unittest.TestCase):
         # negative sampling scheme not used
         model_without_neg = word2vec.Word2Vec(sentences, min_count=1, negative=0)
         self.assertRaises(RuntimeError, model_without_neg.predict_output_word, ['system', 'human'])
+
+    def testLoadOldModel(self):
+        """Test loading word2vec models from previous version"""
+
+        model_file = 'word2vec_old'
+        model = word2vec.Word2Vec.load(datapath(model_file))
+        self.assertTrue(model.wv.vectors.shape == (12, 100))
+        self.assertTrue(len(model.wv.vocab) == 12)
+        self.assertTrue(len(model.wv.index2word) == 12)
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.wv.vector_size))
+        self.assertTrue(model.trainables.vectors_lockf.shape == (12,))
+        self.assertTrue(model.vocabulary.cum_table.shape == (12,))
+
+        # Model stored in multiple files
+        model_file = 'word2vec_old_sep'
+        model = word2vec.Word2Vec.load(datapath(model_file))
+        self.assertTrue(model.wv.vectors.shape == (12, 100))
+        self.assertTrue(len(model.wv.vocab) == 12)
+        self.assertTrue(len(model.wv.index2word) == 12)
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.wv.vector_size))
+        self.assertTrue(model.trainables.vectors_lockf.shape == (12,))
+        self.assertTrue(model.vocabulary.cum_table.shape == (12,))
 
     @log_capture()
     def testBuildVocabWarning(self, l):

@@ -1,8 +1,8 @@
-:mod:`models.wrappers.fasttext` -- FastText Word Embeddings
-===========================================================
+:mod:`models.wrappers.fasttext` -- Wrapper for FastText implementation from Facebook
+====================================================================================
 
 .. automodule:: gensim.models.wrappers.fasttext
-    :synopsis: FastText Embeddings
+    :synopsis: FastText
     :members:
     :inherited-members:
     :undoc-members:
