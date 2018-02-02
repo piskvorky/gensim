@@ -207,7 +207,7 @@ class UciCorpus(UciReader, IndexedCorpus):
             id2word = utils.dict_from_corpus(corpus)
             num_terms = len(id2word)
         else:
-            num_terms = 1 + max([-1] + id2word.keys())
+            num_terms = 1 + max([-1] + list(id2word))
 
         # write out vocabulary
         fname_vocab = utils.smart_extension(fname, '.vocab')
