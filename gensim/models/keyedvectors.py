@@ -80,7 +80,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.corpora.dictionary import Dictionary
 from six import string_types, integer_types
 from six.moves import xrange, zip
-from scipy import stats
+from scipy import sparse, stats
 from gensim.utils import deprecated
 from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams
 
