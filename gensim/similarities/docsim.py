@@ -609,6 +609,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
     def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256):
         self.corpus = corpus
+        self.similarity_matrix = similarity_matrix
         self.num_best = num_best
         self.chunksize = chunksize
 
@@ -619,15 +620,6 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         # index is simply an array from 0 to size of corpus.
         self.index = numpy.arange(len(corpus))
-
-        # Remove the columns of the similarity matrix that correspond to terms outside corpus.
-        nonzero_columns = sorted(set((index for document in corpus for index, _ in document)))
-        identity_matrix = scipy.sparse.identity(
-            similarity_matrix.shape[0], dtype=similarity_matrix.dtype, format="csr")
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", scipy.sparse.SparseEfficiencyWarning)
-            identity_matrix[nonzero_columns] = similarity_matrix.T[nonzero_columns]
-        self.similarity_matrix = identity_matrix.T
 
     def __len__(self):
         return len(self.corpus)

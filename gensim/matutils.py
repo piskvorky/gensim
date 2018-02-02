@@ -9,6 +9,7 @@
 from __future__ import with_statement
 
 
+from itertools import chain
 import logging
 import math
 
@@ -394,29 +395,6 @@ def sparse2full(doc, length):
     # overwrite some of the zeroes with explicit values
     result[list(doc)] = list(itervalues(doc))
     return result
-
-
-def sparse2coo(doc, length, dtype=np.float32):
-    """Convert a document in BoW format into a sparse matrix in the coo format.
-
-    Parameters
-    ----------
-    doc : list of (int, number)
-        A vector in the gensim document format.
-    length : int
-        The length of the result vector.
-    dtype : numpy.dtype, optional
-        Data-type of the output similarity matrix. Defaults to `numpy.float32`.
-
-    Returns
-    -------
-    scipy.sparse.coo_matrix
-        The constructed sparse matrix.
-
-    """
-    col = [0] * len(doc)
-    row, data = zip(*doc)
-    return scipy.sparse.coo_matrix((data, (row, col)), shape=(length, 1), dtype=dtype)
 
 
 def full2sparse(vec, eps=1e-9):
@@ -819,11 +797,6 @@ def softcossim(vec1, vec2, similarity_matrix):
        of Features in Vector Space Model", 2014.
     """
 
-    def softdot(vec1, vec2):
-        vec1 = vec1.tocsr()
-        vec2 = vec2.tocsc()
-        return (vec1.T).dot(similarity_matrix).dot(vec2)[0, 0]
-
     if not isinstance(similarity_matrix, scipy.sparse.csc_matrix):
         if isinstance(similarity_matrix, scipy.sparse.csr_matrix):
             similarity_matrix = similarity_matrix.T
@@ -832,21 +805,24 @@ def softcossim(vec1, vec2, similarity_matrix):
 
     if not vec1 or not vec2:
         return 0.0
-    num_terms = similarity_matrix.shape[0]
-    vec1 = sparse2coo(vec1, num_terms, dtype=similarity_matrix.dtype)
-    vec2 = sparse2coo(vec2, num_terms, dtype=similarity_matrix.dtype)
-    vec1len = softdot(vec1, vec1)
-    vec2len = softdot(vec2, vec2)
+
+    vec1 = dict(vec1)
+    vec2 = dict(vec2)
+    word_indices = sorted(set(chain(vec1, vec2)))
+    dtype = similarity_matrix.dtype
+    vec1 = np.array([vec1[i] if i in vec1 else 0 for i in word_indices], dtype=dtype)
+    vec2 = np.array([vec2[i] if i in vec2 else 0 for i in word_indices], dtype=dtype)
+    dense_matrix = similarity_matrix[[[i] for i in word_indices], word_indices].todense()
+    vec1len = vec1.T.dot(dense_matrix).dot(vec1)[0, 0]
+    vec2len = vec2.T.dot(dense_matrix).dot(vec2)[0, 0]
+
     assert vec1len > 0.0 and vec2len > 0.0, u"sparse documents must not contain any explicit zero" \
             " entries and the similarity matrix S must satisfy x^T * S * x > 0 for any nonzero" \
             " bag-of-words vector x."
-    result = softdot(vec1, vec2)
+
+    result = vec1.T.dot(dense_matrix).dot(vec2)[0, 0]
     result /= math.sqrt(vec1len) * math.sqrt(vec2len)  # rescale by vector lengths
-    if result > 1.0:
-        return 1.0
-    if result < -1.0:
-        return -1.0
-    return result
+    return np.clip(result, -1.0, 1.0)
 
 
 def isbow(vec):
