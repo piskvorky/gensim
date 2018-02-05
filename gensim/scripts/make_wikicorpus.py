@@ -17,44 +17,19 @@ If you have the `pattern` package installed, this script will use a fancy
 lemmatization to get a lemma of each token (instead of plain alphabetic
 tokenizer). The package is available at https://github.com/clips/pattern.
 
-Usage:
-------
-python -m gensim.scripts.make_wikicorpus <WIKI_XML_DUMP> <OUTPUT_PREFIX> [VOCABULARY_SIZE]
-
-Parameters:
------------
-WIKI_XML_DUMP
-    Path to dumped Wikipedia articles.
-OUTPUT_PREFIX
-    Prefix for output files.
-VOCABULARY_SIZE
-    Size of dictionary used in processing. Most frequent words are taken except
-    tokens appeared in more than 10% of all documents. If not specified default
-    value is 100 000.
-
-Produces:
----------
-<OUTPUT_PREFIX>_wordids.txt
-    Mapping between words and their integer ids.
-<OUTPUT_PREFIX>_bow.mm
-    Bag-of-words (word counts) representation, in Matrix Matrix format.
-<OUTPUT_PREFIX>_tfidf.mm
-    TF-IDF representation.
-<OUTPUT_PREFIX>.tfidf_model
-    TF-IDF model dump.
-
 Data:
 -----
 .. data:: DEFAULT_DICT_SIZE - Default VOCABULARY_SIZE (number of most frequent words appeared in more than 10% of all documents used in processing.
 
-Example:
---------
->>> python -m gensim.scripts.make_wikicorpus ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki
+
+.. program-output:: python -m gensim.scripts.make_wikicorpus --help
+
 """
 
 import logging
 import os.path
 import sys
+import argparse
 
 from gensim.corpora import Dictionary, HashDictionary, MmCorpus, WikiCorpus
 from gensim.models import TfidfModel
@@ -74,19 +49,30 @@ if __name__ == '__main__':
     logging.root.setLevel(level=logging.INFO)
     logger.info("running %s", ' '.join(sys.argv))
 
-    # check and process input arguments
-    if len(sys.argv) < 3:
-        print(globals()['__doc__'] % locals())
-        sys.exit(1)
-    inp, outp = sys.argv[1:3]
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""\
+        This script converts Wikipedia articles to (sparse) vectors. Articles 
+        should provided in XML format and compressed using bzip2 archiver. 
+        Script produces 4 files:
+            * <PREFIX>_wordids.txt - Mapping between words and its integer ids.
+            * <PREFIX>_bow.mm - Bag-of-words (word counts) representation, in Matrix Market format.
+            * <PREFIX>_tfidf.mm - TF-IDF representation.
+            * <PREFIX>.tfidf_model - TF-IDF model dump.""")
+    parser.add_argument("-i", "--input", required=True,
+                        help="Path to dumped Wikipedia articles.")
+    parser.add_argument("-o", "--output", required=True,
+                        help="Prefix for output files")
+    parser.add_argument(
+        "-v", "--vocabulary", required=False, default=DEFAULT_DICT_SIZE, type=int,
+        help="Size of dictionary used in processing. 100 000 as default, optional."
+    )
+    args = parser.parse_args()
 
-    if not os.path.isdir(os.path.dirname(outp)):
-        raise SystemExit("Error: The output directory does not exist. Create the directory and try again.")
+    inp = args.input
+    outp = args.output
+    keep_words = args.vocabulary
 
-    if len(sys.argv) > 3:
-        keep_words = int(sys.argv[3])
-    else:
-        keep_words = DEFAULT_DICT_SIZE
     online = 'online' in program
     lemmatize = 'lemma' in program
     debug = 'nodebug' not in program
