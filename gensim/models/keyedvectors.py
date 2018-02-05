@@ -480,7 +480,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         -----
         The constructed matrix corresponds to the matrix Mrel defined in section 2.1 of
         `Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3: Soft-Cosine Semantic Similarity
-        between Questions for Community Question Answering", 2017 <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`__
+        between Questions for Community Question Answering", 2017
+        <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`__.
 
         """
 
