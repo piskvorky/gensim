@@ -86,6 +86,38 @@ class TestDoc2VecModel(unittest.TestCase):
         binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_word, binary=True)
         self.assertEqual(len(model.wv.vocab), len(binary_model_dv.vocab))
 
+    def testLoadOldModel(self):
+        """Test loading doc2vec models from previous version"""
+
+        model_file = 'doc2vec_old'
+        model = doc2vec.Doc2Vec.load(datapath(model_file))
+        self.assertTrue(model.wv.vectors.shape == (3955, 100))
+        self.assertTrue(len(model.wv.vocab) == 3955)
+        self.assertTrue(len(model.wv.index2word) == 3955)
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.trainables.vectors_lockf.shape == (3955, ))
+        self.assertTrue(model.vocabulary.cum_table.shape == (3955, ))
+
+        self.assertTrue(model.docvecs.vectors_docs.shape == (300, 100))
+        self.assertTrue(model.trainables.vectors_docs_lockf.shape == (300, ))
+        self.assertTrue(model.docvecs.max_rawint == 299)
+        self.assertTrue(model.docvecs.count == 300)
+
+        # Model stored in multiple files
+        model_file = 'doc2vec_old_sep'
+        model = doc2vec.Doc2Vec.load(datapath(model_file))
+        self.assertTrue(model.wv.vectors.shape == (3955, 100))
+        self.assertTrue(len(model.wv.vocab) == 3955)
+        self.assertTrue(len(model.wv.index2word) == 3955)
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.trainables.vectors_lockf.shape == (3955, ))
+        self.assertTrue(model.vocabulary.cum_table.shape == (3955, ))
+
+        self.assertTrue(model.docvecs.vectors_docs.shape == (300, 100))
+        self.assertTrue(model.trainables.vectors_docs_lockf.shape == (300, ))
+        self.assertTrue(model.docvecs.max_rawint == 299)
+        self.assertTrue(model.docvecs.count == 300)
+
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(unicode_tags=True), min_count=1)
@@ -143,7 +175,9 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(all(model.docvecs['_*0'] == model.docvecs[0]))
         self.assertTrue(max(d.offset for d in model.docvecs.doctags.values()) < len(model.docvecs.doctags))
         self.assertTrue(
-            max(model.docvecs._int_index(str_key) for str_key in model.docvecs.doctags.keys())
+            max(
+                model.docvecs._int_index(str_key, model.docvecs.doctags, model.docvecs.max_rawint)
+                for str_key in model.docvecs.doctags.keys())
             < len(model.docvecs.doctag_syn0)
         )
         # verify docvecs.most_similar() returns string doctags rather than indexes
