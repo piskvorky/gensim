@@ -3,7 +3,11 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
+"""This module provides some code scaffolding to simplify use of built dictionary
+for constructing sparse bag-of-word vectors (= sequences of `(word_id, word_weight)` 2-tuples).
+
+Notes
+-----
 Text corpora usually reside on disk, as text files in one format or another
 In a common scenario, we need to build a dictionary (a `word->integer id`
 mapping), which is then used to construct sparse bag-of-word vectors
@@ -67,6 +71,8 @@ class TextCorpus(interfaces.CorpusABC):
     """Helper class to simplify the pipeline of getting bag-of-words vectors (= a
     gensim corpus) from plain text.
 
+    Notes
+    -----
     This is an abstract base class: override the `get_texts()` and `__len__()`
     methods to match your particular input.
 
@@ -111,31 +117,58 @@ class TextCorpus(interfaces.CorpusABC):
     5.  remove words less than 3 characters long
     6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
 
+    Attributes
+    ----------
+    input : str
+        Path to top-level directory to traverse for corpus documents.
+    metadata : bool
+        True to yield metadata with each document, else False (default).
+    character_filters : iterable of callable
+        Each will be applied to the text of each document in order, and should return a single string with
+        the modified text.
+    tokenizer : callable
+        Takes as input the document text, preprocessed by all filters in `character_filters`; should return
+        an iterable of tokens (strings).
+    token_filters : iterable of callable
+        Each will be applied to the iterable of tokens in order, and should return another iterable of tokens.
+    length: int
+        Number of files.
+    dictionary : dict
+        Dictionary.
+
     """
 
     def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None,
                  tokenizer=None, token_filters=None):
         """
-        Args:
-            input (str): path to top-level directory to traverse for corpus documents.
-            dictionary (Dictionary): if a dictionary is provided, it will not be updated
-                with the given corpus on initialization. If none is provided, a new dictionary
-                will be built for the given corpus. If no corpus is given, the dictionary will
-                remain uninitialized.
-            metadata (bool): True to yield metadata with each document, else False (default).
-            character_filters (iterable of callable): each will be applied to the text of each
-                document in order, and should return a single string with the modified text.
-                For Python 2, the original text will not be unicode, so it may be useful to
-                convert to unicode as the first character filter. The default character filters
-                lowercase, convert to unicode (strict utf8), perform ASCII-folding, then collapse
-                multiple whitespaces.
-            tokenizer (callable): takes as input the document text, preprocessed by all filters
-                in `character_filters`; should return an iterable of tokens (strings).
-            token_filters (iterable of callable): each will be applied to the iterable of tokens
-                in order, and should return another iterable of tokens. These filters can add,
-                remove, or replace tokens, or do nothing at all. The default token filters
-                remove tokens less than 3 characters long and remove stopwords using the list
-                in `gensim.parsing.preprocessing.STOPWORDS`.
+        Parameters
+        ----------
+        input : str
+            Path to top-level directory to traverse for corpus documents.
+        dictionary : dict
+            If a dictionary is provided, it will not be updated with the given corpus on initialization.
+            If none is provided, a new dictionary will be built for the given corpus. If no corpus is given,
+            the dictionary will remain uninitialized.
+        metadata : bool
+            True to yield metadata with each document, else False (default).
+        character_filters : iterable of callable #TODO IVAN, IT HURTS
+            Each will be applied to the text of each document in order, and should return a single string with
+            the modified text. For Python 2, the original text will not be unicode, so it may be useful to
+            convert to unicode as the first character filter. The default character filters
+            lowercase, convert to unicode (strict utf8), perform ASCII-folding, then collapse
+            multiple whitespaces.
+        tokenizer : callable
+            Takes as input the document text, preprocessed by all filters in `character_filters`; should return
+            an iterable of tokens (strings).
+        token_filters : iterable of callable
+            Each will be applied to the iterable of tokens in order, and should return another iterable of tokens.
+            These filters can add, remove, or replace tokens, or do nothing at all. The default token filters
+            remove tokens less than 3 characters long and remove stopwords using the list in
+            `gensim.parsing.preprocessing.STOPWORDS`.
+
+        Examples
+        --------
+
         """
         self.input = input
         self.metadata = metadata
@@ -157,9 +190,21 @@ class TextCorpus(interfaces.CorpusABC):
         self.init_dictionary(dictionary)
 
     def init_dictionary(self, dictionary):
-        """If `dictionary` is None, initialize to an empty Dictionary, and then if there
+        """Initialize/update dictionary.
+
+        Parameters
+        ----------
+        dictionary : dict
+            Dictionary.
+
+        Notes
+        -----
+        If `dictionary` is None, initialize to an empty Dictionary, and then if there
         is an `input` for the corpus, add all documents from that `input`. If the
         `dictionary` is already initialized, simply set it as the corpus's `dictionary`.
+
+        Examples
+        --------
         """
         self.dictionary = dictionary if dictionary is not None else Dictionary()
         if self.input is not None:

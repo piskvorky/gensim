@@ -5,15 +5,7 @@
 # Copyright (C) 2015 Radim Rehurek and gensim team.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Corpus in "Shards" format (storing data in separate files).
-
-Notes
-----
-The corpus is intended for situations where you need to use your data
-as numpy arrays for some iterative processing (like training something
-using SGD, which usually involves heavy matrix multiplication).
-
-"""
+"""Corpus in "Shards" format (storing data in separate files)."""
 
 from __future__ import print_function
 
@@ -46,7 +38,10 @@ class ShardedCorpus(IndexedCorpus):
     "shards".
 
     This corpus is designed for situations where you need to train a model
-    on matrices, with a large number of iterations. (It should be faster than
+    on matrices, with a large number of iterations (like training something
+    using SGD, which usually involves heavy matrix multiplication).
+
+    (It should be faster than
     gensim's other IndexedCorpus implementations for this use case; check the
     `benchmark_datasets.py` script. It should also serialize faster.)
 
@@ -138,6 +133,37 @@ class ShardedCorpus(IndexedCorpus):
     currently open and on a `__getitem__` request, either returns an item from
     the current shard, or opens a new one. The shard size is constant, except
     for the last shard.
+
+    Attributes
+    ----------
+    output_prefix : str
+        The absolute path to the file from which shard filenames should be derived.
+    shardsize : int
+        How many data points should be in one shard.
+    n_docs : int
+        Number of documents.
+    offsets : list
+        Distance from first shard.
+    n_shards : int
+        Number of shards.
+    dim : int
+        Specify beforehand what the dimension of a dataset item should be.
+        This number may change during initialization/loading.
+    sparse_serialization : bool
+        Save the data in a sparse form (as csr matrices), if set. Otherwise, this is to speed up retrieval when you
+        know you will be using sparse matrices.
+    sparse_retrieval : bool
+        Retrieve data as sparse vectors (numpy csr matrices), if set. Otherwise, return ndarrays.
+    gensim : bool
+        Will convert the output to gensim sparse vectors (list of tuples (id, value)) to make it behave like
+        any other gensim corpus, if set.
+    current_shard : ndarray
+        The current shard itself (numpy ndarray).
+    current_shard_n : int
+        Current shard is the current_shard_n-th.
+    current_offset : int
+        The index into the dataset which corresponds to index 0 of current shard.
+
     """
     def __init__(self, output_prefix, corpus, dim=None,
                  shardsize=4096, overwrite=False, sparse_serialization=False,
@@ -203,35 +229,8 @@ class ShardedCorpus(IndexedCorpus):
             Will convert the output to gensim sparse vectors (list of tuples (id, value)) to make it behave like
             any other gensim corpus, if set. This **will** slow the dataset down.
 
-        Attributes
-        ----------
-        output_prefix : str
-            The absolute path to the file from which shard filenames should be derived.
-        shardsize : int
-            How many data points should be in one shard.
-        n_docs : int
-            Number of documents.
-        offsets : list
-            Distance from first shard.
-        n_shards : int
-            Number of shards.
-        dim : int
-            Specify beforehand what the dimension of a dataset item should be.
-            This number may change during initialization/loading.
-        sparse_serialization : bool
-            Save the data in a sparse form (as csr matrices), if set. Otherwise, this is to speed up retrieval when you
-            know you will be using sparse matrices.
-        sparse_retrieval : bool
-            Retrieve data as sparse vectors (numpy csr matrices), if set. Otherwise, return ndarrays.
-        gensim : bool
-            Will convert the output to gensim sparse vectors (list of tuples (id, value)) to make it behave like
-            any other gensim corpus, if set.
-        current_shard : ndarray
-            The current shard itself (numpy ndarray).
-        current_shard_n : int
-            Current shard is the current_shard_n-th.
-        current_offset : int
-            The index into the dataset which corresponds to index 0 of current shard.
+        Examples
+        --------
 
         """
         self.output_prefix = output_prefix
@@ -435,7 +434,7 @@ class ShardedCorpus(IndexedCorpus):
         offset : int
             Distance from the first document.
 
-        Returns
+        Return
         -------
         bool
 
@@ -453,7 +452,7 @@ class ShardedCorpus(IndexedCorpus):
         offset : int
             Distance from the first document.
 
-        Returns
+        Return
         -------
         bool
 
@@ -630,6 +629,13 @@ class ShardedCorpus(IndexedCorpus):
         return n_features
 
     def __len__(self):
+        """
+        Return
+        ------
+        int
+            Number of documents in corpus.
+
+        """
         return self.n_docs
 
     def _ensure_shard(self, offset):
@@ -646,14 +652,34 @@ class ShardedCorpus(IndexedCorpus):
                 self.load_shard(shard_n)
 
     def get_by_offset(self, offset):
-        """As opposed to getitem, this one only accepts ints as offsets."""
+        """Retrieve the given row of the dataset. As opposed to getitem, this one only accepts ints as offsets.
+
+        Parameters
+        ----------
+        offset : int
+            Distance from the first document.
+
+        Return
+        -------
+        numpy ndarray
+            The shard itself.
+
+        """
         self._ensure_shard(offset)
         result = self.current_shard[offset - self.current_offset]
         return result
 
     def __getitem__(self, offset):
-        """
-        Retrieve the given row of the dataset. Supports slice notation.
+        """Retrieve the given row of the dataset. Supports slice notation.
+
+        Parameters
+        ----------
+        offset : int or slice notation #TODO: IVAN, HELP
+
+        Return
+        -------
+        numpy ndarray
+            The shard itself.
 
         """
         if isinstance(offset, list):
@@ -761,17 +787,31 @@ class ShardedCorpus(IndexedCorpus):
             return s_result
 
     def __add_to_slice(self, s_result, result_start, result_stop, start, stop):
-        """
-        Add the rows of the current shard from `start` to `stop`
-        into rows `result_start` to `result_stop` of `s_result`.
+        """Add the rows of the current shard.
 
+        Parameters
+        ----------
+        s_result : ndarray
+        result_start : int
+        result_stop : int
+        start: int
+        stop : int
+
+        Return
+        -------
+        ndarray / dense / sparse
+            Supplemented shard.
+
+        Notes
+        -----
+        From `start` to `stop` into rows `result_start` to `result_stop` of `s_result`.
         Operation is based on the self.sparse_serialize setting. If the shard
         contents are dense, then s_result is assumed to be an ndarray that
         already supports row indices `result_start:result_stop`. If the shard
         contents are sparse, assumes that s_result has `result_start` rows
         and we should add them up to `result_stop`.
 
-        Returns the resulting s_result.
+        Return the resulting s_result.
         """
         if (result_stop - result_start) != (stop - start):
             raise ValueError(
@@ -812,9 +852,20 @@ class ShardedCorpus(IndexedCorpus):
         return s_result
 
     def _getitem_sparse2gensim(self, result):
-        """
-        Change given sparse result matrix to gensim sparse vectors.
+        """Change given sparse result matrix to gensim sparse vectors.
 
+        Parameters
+        ----------
+        result : sparse
+            Sparse result matrix.
+
+        Return
+        ------
+        gensim
+            Gensim sparse vectors.
+
+        Notes
+        -----
         Uses the internals of the sparse matrix to make this fast.
 
         """
@@ -828,7 +879,18 @@ class ShardedCorpus(IndexedCorpus):
         return output
 
     def _getitem_dense2gensim(self, result):
-        """Change given dense result matrix to gensim sparse vectors."""
+        """Change given dense result matrix to gensim sparse vectors.
+
+        Parameters
+        ----------
+        result : dense
+            Dense result matrix.
+
+        Return
+        ------
+        gensim
+            Gensim sparse vectors.
+        """
         if len(result.shape) == 1:
             output = gensim.matutils.full2sparse(result)
         else:
@@ -838,16 +900,12 @@ class ShardedCorpus(IndexedCorpus):
 
     # Overriding the IndexedCorpus and other corpus superclass methods
     def __iter__(self):
-        """
-        Yield dataset items one by one (generator).
-
-        """
+        """Yield dataset items one by one (generator)."""
         for i in xrange(len(self)):
             yield self[i]
 
     def save(self, *args, **kwargs):
-        """
-        Save itself (the wrapper) in clean state (after calling `reset()`)
+        """Save itself (the wrapper) in clean state (after calling `reset()`)
         to the output_prefix file. If you wish to save to a different file,
         use the `fname` argument as the first positional arg.
 
@@ -865,17 +923,40 @@ class ShardedCorpus(IndexedCorpus):
 
     @classmethod
     def load(cls, fname, mmap=None):
-        """
-        Load itself in clean state. `mmap` has no effect here.
+        """Load itself in clean state. `mmap` has no effect here.
+
+        Parameters
+        ----------
+        fname : str
+            Path to file.
+
+        mmap : trash
+        NOT USED.
+
         """
         return super(ShardedCorpus, cls).load(fname, mmap)
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False, **kwargs):
-        """
-        Implement a serialization interface. Do not call directly;
-        use the `serialize` method instead.
+        """Save corpus into file. Implement a serialization interface.
+        Do not call directly; use the `serialize` method instead.
 
+        Parameters
+        ----------
+        fname : str
+            Path for saving file.
+        corpus : gensim.interfaces.CorpusABC
+            The source corpus from which to build the dataset.
+        id2word : dict , optional
+            Ignored.
+        progress_cnt : int , optional
+            Ignored.
+        metadata : bool , optional
+            Ignored.
+        kwargs : TODO: IVAN, HELP
+
+        Notes
+        -----
         Note that you might need some ShardedCorpus init parameters, most
         likely the dimension (`dim`). Again, pass these as `kwargs` to the
         `serialize` method.
@@ -895,10 +976,29 @@ class ShardedCorpus(IndexedCorpus):
     @classmethod
     def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None,
                   labels=None, metadata=False, **kwargs):
-        """
-        Iterate through the document stream `corpus`, saving the documents
-        as a ShardedCorpus to `fname`.
+        """Iterate through the document stream `corpus`, saving the documents as a ShardedCorpus to `fname`.
 
+        Parameters
+        ----------
+        fname : str
+            Path for saving file.
+        corpus : gensim.interfaces.CorpusABC
+            The source corpus from which to build the dataset.
+        id2word : dict , optional
+            Ignored.
+        index_fname : int, optional
+            Ignored.
+        progress_cnt : int , optional
+            Ignored.
+        labels : Ignored.
+            Ignored.
+        metadata : bool , optional
+            Ignored.
+        kwargs : TODO: IVAN, HELP
+
+
+        Notes
+        -----
         Use this method instead of calling `save_corpus` directly.
         You may need to supply some kwargs that are used upon dataset creation
         (namely: `dim`, unless the dataset can infer the dimension from the
@@ -906,5 +1006,7 @@ class ShardedCorpus(IndexedCorpus):
 
         Ignore the parameters id2word, index_fname, progress_cnt, labels
         and metadata. They currently do nothing and are here only to
-        provide a compatible method signature with superclass."""
+        provide a compatible method signature with superclass.
+
+        """
         serializer.save_corpus(fname, corpus, id2word=id2word, progress_cnt=progress_cnt, metadata=metadata, **kwargs)
