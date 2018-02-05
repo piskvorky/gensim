@@ -105,8 +105,11 @@ def ascarray(a, name=''):
 
 
 class Projection(utils.SaveLoad):
+    def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS, extra_dims=P2_EXTRA_DIMS, dtype=np.float32):
+=======
     def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS,
-                 extra_dims=P2_EXTRA_DIMS, dtype=np.float64):
+                 extra_dims=P2_EXTRA_DIMS, dtype=np.float32):
+
         """
         Construct the (U, S) projection from a corpus `docs`. The projection can
         be later updated by merging it with another Projection via `self.merge()`.
@@ -294,7 +297,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 onepass = True
         self.onepass = onepass
         self.extra_samples, self.power_iters = extra_samples, power_iters
-        self.dtype = dtype
+        self.dtype = np.float64
 
         if corpus is None and self.id2word is None:
             raise ValueError(
@@ -310,7 +313,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.docs_processed = 0
         self.projection = Projection(
-            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples, dtype=dtype
+            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples, dtype=np.float32
         )
 
         self.numworkers = 1
@@ -403,7 +406,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         # serial version, there is only one "worker" (myself) => process the job directly
                         update = Projection(
                             self.num_terms, self.num_topics, job, extra_dims=self.extra_samples,
-                            power_iters=self.power_iters, dtype=self.dtype
+                            power_iters=self.power_iters, dtype=np.float32
                         )
                         del job
                         self.projection.merge(update, decay=decay)
@@ -420,7 +423,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             update = Projection(
                 self.num_terms, self.num_topics, corpus.tocsc(), extra_dims=self.extra_samples,
-                power_iters=self.power_iters, dtype=self.dtype
+                power_iters=self.power_iters, dtype=np.float32
             )
             self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents", corpus.shape[1])
@@ -678,7 +681,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     # first phase: construct the orthonormal action matrix Q = orth(Y) = orth((A * A.T)^q * A * O)
     # build Y in blocks of `chunksize` documents (much faster than going one-by-one
     # and more memory friendly than processing all documents at once)
-    y = np.zeros(dtype=dtype, shape=(num_terms, samples))
+    y = np.zeros(dtype=float32, shape=(num_terms, samples))
     logger.info("1st phase: constructing %s action matrix", str(y.shape))
 
     if scipy.sparse.issparse(corpus):

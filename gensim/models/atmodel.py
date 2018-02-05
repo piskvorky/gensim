@@ -67,12 +67,11 @@ class AuthorTopicState(LdaState):
 
     """
 
-    def __init__(self, eta, lambda_shape, gamma_shape):
-        self.eta = eta
-        self.sstats = np.zeros(lambda_shape)
-        self.gamma = np.zeros(gamma_shape)
+    def __init__(self, eta, lambda_shape, gamma_shape,dtype=np.float64):
+        self.eta = eta.astype(dtype, copy=False)
+        self.sstats = np.zeros(lambda_shape, dtype)
+        self.gamma = np.zeros(gamma_shape, dtype)
         self.numdocs = 0
-        self.dtype = np.float64  # To be compatible with LdaState
 
 
 def construct_doc2author(corpus, author2doc):
@@ -124,7 +123,7 @@ class AuthorTopicModel(LdaModel):
                  chunksize=2000, passes=1, iterations=50, decay=0.5, offset=1.0,
                  alpha='symmetric', eta='symmetric', update_every=1, eval_every=10,
                  gamma_threshold=0.001, serialized=False, serialization_path=None,
-                 minimum_probability=0.01, random_state=None):
+                 minimum_probability=0.01, random_state=None,dtype=np.float64):
         """
         If the iterable corpus and one of author2doc/doc2author dictionaries are given,
         start training straight away. If not given, the model is left untrained
@@ -207,9 +206,13 @@ class AuthorTopicModel(LdaModel):
         ... corpus, num_topics=50, author2doc=author2doc, id2word=id2word, alpha='auto', eval_every=5)
 
         """
+
+        self.dtype = np.float64
+
         # NOTE: this doesn't call constructor of a base class, but duplicates most of this code
         # so we have to set dtype to float64 default here
-        self.dtype = np.float64
+        
+
 
         # NOTE: as distributed version of this model is not implemented, "distributed" is set to false. Some of the
         # infrastructure to implement a distributed author-topic model is already in place,
@@ -257,6 +260,7 @@ class AuthorTopicModel(LdaModel):
 
         self.author2id = {}
         self.id2author = {}
+        self.dtype = np.float64
 
         self.serialized = serialized
         if serialized and not serialization_path:
