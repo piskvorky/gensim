@@ -19,6 +19,8 @@ import sys
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.append(os.path.abspath('.'))
 
+import sphinx_gallery
+
 # -- General configuration -----------------------------------------------------
 
 html_theme = 'gensim_theme'
@@ -29,6 +31,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
+    'sphinx_gallery.gen_gallery',
     'sphinx.ext.imgmath'
 ]
 autoclass_content = "both"
@@ -43,6 +46,15 @@ source_suffix = '.rst'
 
 # The encoding of source files.
 # source_encoding = 'utf-8'
+
+# Generate the plots for the gallery
+plot_gallery = True
+
+sphinx_gallery_conf = {
+    'doc_module': 'gensim',
+    'backreferences_dir': os.path.join('modules', 'generated'),
+    'reference_url': {'gensim': None}
+}
 
 # The master toctree document.
 master_doc = 'indextoc'

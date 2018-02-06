@@ -28,10 +28,6 @@ Models
     logentropy_model.LogEntropyModel
     normmodel.NormModel
     translation_matrix.TranslationMatrix
-    lsi_dispatcher.Dispatcher
-    lsi_worker.Worker
-    lda_dispatcher.Dispatcher
-    lda_worker.Worker
     atmodel.AuthorTopicModel
     word2vec.Word2Vec
     keyedvectors.KeyedVectors
@@ -43,6 +39,29 @@ Models
     coherencemodel.CoherenceModel
     basemodel.BaseTopicModel
     callbacks.Callback
+
+Workers
+-------
+.. currentmodule:: gensim.models
+
+.. autosummary::
+    :toctree: generated/
+    :template: class.rst
+
+    lsi_worker.Worker
+    lda_worker.Worker
+
+
+Dispatchers
+-----------
+.. currentmodule:: gensim.models
+
+.. autosummary::
+    :toctree: generated/
+    :template: class.rst
+
+    lsi_dispatcher.Dispatcher
+    lda_dispatcher.Dispatcher
 
 Wrappers
 --------
@@ -113,7 +132,7 @@ Functions
     :no-members:
     :no-inherited-members:
 
-Classes
+Corpora
 -------
 .. currentmodule:: gensim.corpora
 
@@ -123,8 +142,6 @@ Classes
 
     bleicorpus.BleiCorpus
     csvcorpus.CsvCorpus
-    dictionary.Dictionary
-    hashdictionary.HashDictionary
     indexedcorpus.IndexedCorpus
     lowcorpus.LowCorpus
     malletcorpus.MalletCorpus
@@ -134,6 +151,17 @@ Classes
     textcorpus.TextCorpus
     ucicorpus.UciCorpus
     wikicorpus.WikiCorpus
+
+Dictionaries
+------------
+.. currentmodule:: gensim.corpora
+
+.. autosummary::
+    :toctree: generated/
+    :template: class.rst
+
+    dictionary.Dictionary
+    hashdictionary.HashDictionary
 
 .. _similarities_ref:
 
@@ -208,6 +236,16 @@ Functions
     :no-members:
     :no-inherited-members:
 
+Classes
+-------
+.. currentmodule:: gensim.summarization
+
+.. autosummary::
+    :toctree: generated/
+    :template: class.rst
+
+    bm25.BM25
+
 Functions
 ---------
 .. currentmodule:: gensim.summarization
@@ -270,58 +308,6 @@ Functions
 
     poincare.poincare_2d_visualization
     poincare.poincare_distance_heatmap
-
-.. _topic_coherence_ref:
-
-:mod:`gensim.topic_coherence`: Topic Coherence
-==============================================
-
-.. automodule:: gensim.topic_coherence
-    :no-members:
-    :no-inherited-members:
-
-Classes
--------
-.. currentmodule:: gensim.topic_coherence
-
-.. autosummary::
-    :toctree: generated/
-    :template: class.rst
-
-    indirect_confirmation_measure.ContextVectorComputer
-    text_analysis.BaseAnalyzer
-    text_analysis.UsesDictionary
-    text_analysis.InvertedIndexBased
-    text_analysis.CorpusAccumulator
-    text_analysis.WindowedTextsAnalyzer
-    text_analysis.InvertedIndexAccumulator
-    text_analysis.WordOccurrenceAccumulator
-    text_analysis.PatchedWordOccurrenceAccumulator
-    text_analysis.ParallelWordOccurrenceAccumulator
-    text_analysis.AccumulatingWorker
-    text_analysis.WordVectorsAccumulator
-
-Functions
----------
-.. currentmodule:: gensim.topic_coherence
-
-.. autosummary::
-    :toctree: generated/
-    :template: function.rst
-
-    aggregation.arithmetic_mean
-    direct_confirmation_measure.log_conditional_probability
-    direct_confirmation_measure.aggregate_segment_sims
-    direct_confirmation_measure.log_ratio_measure
-    indirect_confirmation_measure.word2vec_similarity
-    indirect_confirmation_measure.cosine_similarity
-    probability_estimation.p_boolean_document
-    probability_estimation.p_boolean_sliding_window
-    probability_estimation.p_word2vec
-    probability_estimation.unique_ids_from_segments
-    segmentation.s_one_pre
-    segmentation.s_one_one
-    segmentation.s_one_set
 
 .. _interfaces_ref:
 

@@ -48,9 +48,9 @@ Thumbs.db
 .settings/
 .eggs
 cython_debug
-docs/src/_build/
-docs/src/generated/
-docs/src/auto_examples/
+docs/_build/
+docs/generated/
+docs/auto_examples/
 docs/_static
 docs/notebooks/.ipynb_checkpoints
 dedan_gensim.tmproj

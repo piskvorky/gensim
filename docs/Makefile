@@ -6,6 +6,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    = -W
+# SPHINXOPTS =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
@@ -33,13 +34,15 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/*
 	-rm -rf generated/*
+	-rm -rf modules/generated/
+	-rm -rf auto_examples/*
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	rm -r $(BUILDDIR)/html/_sources
-	cp -r $(BUILDDIR)/html/* ../
+	cp -r $(BUILDDIR)/html/* .
 	@echo
-	@echo "Build finished. The HTML pages are in ../"
+	@echo "Build finished. The HTML pages are in /docs"
 
 upload:
 	scp -r _build/html/* rr:public_html/gensim/
