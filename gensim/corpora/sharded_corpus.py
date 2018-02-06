@@ -231,7 +231,30 @@ class ShardedCorpus(IndexedCorpus):
 
         Examples
         --------
-
+        >>> # Generate ShardedCorpus
+        >>>
+        >>> import os
+        >>> import random
+        >>> import numpy as np
+        >>> import shutil
+        >>> from scipy import sparse
+        >>> from gensim.utils import is_corpus
+        >>> from gensim.corpora.sharded_corpus import ShardedCorpus
+        >>> from gensim.utils import mock_data, xrange
+        >>>
+        >>> dim = 1000
+        >>> random_string = ''.join([random.choice('1234567890') for _ in xrange(8)]
+        >>> tmp_dir = 'test-temp-' + random_string
+        >>> os.makedirs(tmp_dir)
+        >>> tmp_fname = os.path.join(tmp_dir, 'shcorp.' + random_string + '.tmp')
+        >>> data = mock_data(dim=1000)
+        >>>
+        >>> corpus = ShardedCorpus(tmp_fname, data, dim=dim, shardsize=100)
+        >>>
+        >>> # Serialize it
+        >>>
+        >>> output_prefix = 'mydata.shdat'
+        >>> ShardedCorpus.serialize(output_prefix, corpus, dim=1000)
         """
         self.output_prefix = output_prefix
         self.shardsize = shardsize
