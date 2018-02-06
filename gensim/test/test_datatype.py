@@ -25,8 +25,6 @@ class TestDataType(unittest.TestCase):
 
     def test_high_precision(self):
         kv = self.load_model(np.float64)
-        import pdb
-        pdb.set_trace()
         self.assertAlmostEqual(kv['horse.n.01'][0], -0.0008546282343595379)
         self.assertEqual(kv['horse.n.01'][0].dtype, np.float64)
 
@@ -46,8 +44,6 @@ class TestDataType(unittest.TestCase):
         model1 = KeyedVectors.load_word2vec_format(path, datatype=np.float16)
         model1.save_word2vec_format(binary_path, binary=True)
         model2 = KeyedVectors.load_word2vec_format(binary_path, datatype=np.float64, binary=True)
-        import pdb
-        pdb.set_trace()
         self.assertAlmostEqual(model1["horse.n.01"][0], np.float16(model2["horse.n.01"][0]))
 
 
