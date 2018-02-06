@@ -693,7 +693,7 @@ class TorontoCorpus(object):
     def __iter__(self):
         for fname in os.listdir(self.dirname):
             fname = os.path.join(self.dirname, fname)
-            if not os.path.isfile(fname):
+            if not os.path.isfile(fname) or ".txt" not in fname:
                 continue
             for line in utils.smart_open(fname):
                 if line not in ['\n', '\r\n']:

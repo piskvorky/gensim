@@ -27,15 +27,15 @@ from word2vec_inner cimport bisect_left, random_int32, \
 from word2vec import FAST_VERSION
 
 cdef int ONE = 1
-cdef float ONEF = <float>1.0
+cdef REAL_t ONEF = <REAL_t>1.0
 DEF EXP_TABLE_SIZE = 1000
 DEF MAX_EXP = 6
 
-cdef float negative_sampling(const int target, const float lr, float *grad, float *wo, float *hidden,
-                              const int vector_size, const int neg, int *negatives,
+cdef REAL_t negative_sampling(const int target, const REAL_t lr, REAL_t *grad, REAL_t *wo,
+                              REAL_t *hidden, const int vector_size, const int neg, int *negatives,
                               int *negpos, const int negatives_len)nogil:
 
-    cdef float loss = <float> 0.0
+    cdef REAL_t loss = <REAL_t> 0.0
     cdef int label_true, label_false
     label_true = <int> 1
     label_false = <int> 0
@@ -49,7 +49,7 @@ cdef float negative_sampling(const int target, const float lr, float *grad, floa
     return loss
 
 
-cdef float sigmoid(const float val)nogil:
+cdef REAL_t sigmoid(const REAL_t val)nogil:
 
     if val < -MAX_EXP:
         return 0.0
@@ -59,7 +59,7 @@ cdef float sigmoid(const float val)nogil:
         return EXP_TABLE[<int>((val + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
     
 
-cdef float log(const float val)nogil:
+cdef REAL_t log(const REAL_t val)nogil:
 
     if val > 1.0:
         return 0.0
@@ -67,12 +67,13 @@ cdef float log(const float val)nogil:
         return LOG_TABLE[<int>(val * EXP_TABLE_SIZE)]
 
 
-cdef float binary_logistic(const int target, const int label, const float lr,
-                            const int vector_size, float *wo, float *grad, float *hidden)nogil:
+cdef REAL_t binary_logistic(const int target, const int label, const REAL_t lr,
+                            const int vector_size, REAL_t *wo, REAL_t *grad,
+                            REAL_t *hidden)nogil:
 
-    cdef float temp = our_dot(&vector_size, &wo[target], &ONE, hidden, &ONE)
-    cdef float score = sigmoid(temp)
-    cdef float alpha = lr * (<float>label - score)
+    cdef REAL_t temp = our_dot(&vector_size, &wo[target], &ONE, hidden, &ONE)
+    cdef REAL_t score = sigmoid(temp)
+    cdef REAL_t alpha = lr * (<REAL_t>label - score)
     our_saxpy(&vector_size, &alpha, &wo[target], &ONE, grad, &ONE)
     our_saxpy(&vector_size, &alpha, hidden, &ONE, &wo[target], &ONE)
     if label == 1:
@@ -93,12 +94,12 @@ cdef int get_negative(const int target, int *negatives,
     return negative
 
 
-cdef float update(vector[int] &context, int target, float lr, REAL_t *hidden, REAL_t *grad,
+cdef REAL_t update(vector[int] &context, int target, REAL_t lr, REAL_t *hidden, REAL_t *grad,
                   int vector_size, int *negpos, int neg, int negatives_len,
                   REAL_t *wi, REAL_t *wo, int *negatives)nogil:
 
-    cdef float alpha = ONEF / <float>(context.size())
-    cdef float loss
+    cdef REAL_t alpha = ONEF / <REAL_t>(context.size())
+    cdef REAL_t loss
     cdef int i
 
     for i from 0 <= i < context.size():
@@ -112,7 +113,7 @@ cdef float update(vector[int] &context, int target, float lr, REAL_t *hidden, RE
 
 
 # TODO fix me with thread-safe version
-cdef float random_uniform()nogil:
+cdef REAL_t random_uniform()nogil:
 
     return rand() / (RAND_MAX + 1.0)
 
@@ -166,14 +167,14 @@ cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size
             line.push_back(size + h)
 
 
-cdef (int, int, float) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t *pdiscard, int max_line_size,
-                             int word_ngrams, int dropout_k, float lr, REAL_t *hidden, REAL_t *grad,
+cdef (int, int, REAL_t) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t *pdiscard, int max_line_size,
+                             int word_ngrams, int dropout_k, REAL_t lr, REAL_t *hidden, REAL_t *grad,
                              int vector_size, int *negpos, int neg, int negatives_len,
                              REAL_t *wi, REAL_t *wo, int *negatives, int bucket, int size)nogil:
 
     cdef int local_token_count = 0
     cdef int nexamples = 0
-    cdef float loss = <float> 0.0
+    cdef REAL_t loss = <REAL_t> 0.0
     cdef vector[int] words, context
     cdef int i, j, ntokens_temp
 
@@ -199,7 +200,7 @@ cdef (int, int, float) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t 
 
 def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
 
-    cdef float lr = <float> lr_
+    cdef REAL_t lr = <REAL_t> lr_
     cdef int vector_size = <int> model.vector_size
     cdef int *negatives = <int *> np.PyArray_DATA(model.negatives)
     cdef int negpos = <int> model.negpos
@@ -220,7 +221,7 @@ def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
     cdef vector[vector[int]] word_ids
     cdef vector[int] ids
     cdef int i, local_token_count, nexamples
-    cdef float loss
+    cdef REAL_t loss
 
     for sentence in sentences_:
         for word in sentence:
