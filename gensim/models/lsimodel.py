@@ -49,7 +49,6 @@ with dual core Xeon 2.0GHz, 4GB RAM, ATLAS
 
 """
 
-
 import logging
 import sys
 
@@ -65,20 +64,29 @@ from gensim.models import basemodel
 
 logger = logging.getLogger(__name__)
 
-
 # accuracy defaults for the multi-pass stochastic algo
 P2_EXTRA_DIMS = 100  # set to `None` for dynamic P2_EXTRA_DIMS=k
 P2_EXTRA_ITERS = 2
 
 
 def clip_spectrum(s, k, discard=0.001):
-    """
-    Given eigenvalues `s`, return how many factors should be kept to avoid
-    storing spurious (tiny, numerically instable) values.
+    """Find how many factors should be kept to avoid storing spurious (tiny, numerically unstable) values.
 
-    This will ignore the tail of the spectrum with relative combined mass < min(`discard`, 1/k).
+    Parameters
+    ----------
+    s : list of float
+        Eigenvalues of the original matrix.
+    k : int
+        Maximum desired rank (number of factors)
+    discard: float
+        Percentage of the spectrum's energy to be discarded.
 
-    The returned value is clipped against `k` (= never return more than `k`).
+    Returns
+    -------
+    int
+        Rank (number of factors) of the reduced matrix.
+
+
     """
     # compute relative contribution of eigenvalues towards the energy spectrum
     rel_spectrum = np.abs(1.0 - np.cumsum(s / np.sum(s)))
@@ -91,6 +99,22 @@ def clip_spectrum(s, k, discard=0.001):
 
 
 def asfarray(a, name=''):
+    """
+    Return an array laid out in Fortran order in memory.
+
+    Parameters
+    ----------
+    a : array_like
+        Input array.
+    name : str, optional
+        Array name, used for logging purposes.
+
+    Returns
+    -------
+    out : ndarray
+        The input `a` in Fortran, or column-major, order.
+
+    """
     if not a.flags.f_contiguous:
         logger.debug("converting %s array %s to FORTRAN order", a.shape, name)
         a = np.asfortranarray(a)
@@ -98,6 +122,22 @@ def asfarray(a, name=''):
 
 
 def ascarray(a, name=''):
+    """
+    Return a contiguous array in memory (C order).
+
+    Parameters
+    ----------
+    a : array_like
+        Input array.
+    name : str, optional
+        Array name, used for logging purposes.
+
+    Returns
+    -------
+    out : ndarray
+        Contiguous array of same shape and content as `a`.
+
+    """
     if not a.flags.contiguous:
         logger.debug("converting %s array %s to C order", a.shape, name)
         a = np.ascontiguousarray(a)
@@ -105,16 +145,35 @@ def ascarray(a, name=''):
 
 
 class Projection(utils.SaveLoad):
+    """Objects of this class are lower dimension projections of a Term-Passage matrix."""
+
     def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS,
                  extra_dims=P2_EXTRA_DIMS, dtype=np.float64):
-        """
-        Construct the (U, S) projection from a corpus `docs`. The projection can
-        be later updated by merging it with another Projection via `self.merge()`.
+        """Construct the (U, S) projection from a corpus.
 
+        The projection can be later updated by merging it with another Projection via `self.merge()`.
         This is the class taking care of the 'core math'; interfacing with corpora,
         splitting large corpora into chunks and merging them etc. is done through
         the higher-level `LsiModel` class.
+
+        Parameters
+        ----------
+        m : int
+            Number of features or terms in the corpus.
+        k : int
+            Desired rank of the decomposed matrix.
+        docs : stream of vectors, optional
+            Input corpus as a stream (does not have to fit in RAM).
+        use_svdlibc : bool, optional
+            Whether sparce SVD should be used. Defaults to False in which case our own version is used instead.
+        power_iters: int, optional
+            Number of power iteration steps to be used. Can improve accuracy.
+        extra_dims : int, optional
+            Extra samples to be used besides the rank `k`. Can improve accuracy.
+        dtype : type, optional
+            Enforces a type for elements of the decomposed matrix.
         """
+
         self.m, self.k = m, k
         self.power_iters = power_iters
         self.extra_dims = extra_dims
@@ -138,21 +197,41 @@ class Projection(utils.SaveLoad):
                 ut, s, vt = sparsesvd.sparsesvd(docs, k + 30)
                 u = ut.T
                 del ut, vt
-                k = clip_spectrum(s**2, self.k)
+                k = clip_spectrum(s ** 2, self.k)
             self.u = u[:, :k].copy()
             self.s = s[:k].copy()
         else:
             self.u, self.s = None, None
 
     def empty_like(self):
+        """An empty Projection (no corpus) with the same parameters as the current object.
+
+        Returns
+        -------
+        Projection
+            An empty copy (no corpus) of the current object.
+
+        """
         return Projection(self.m, self.k, power_iters=self.power_iters, extra_dims=self.extra_dims)
 
     def merge(self, other, decay=1.0):
-        """
-        Merge this Projection with another.
+        """Merge this Projection with another.
 
         The content of `other` is destroyed in the process, so pass this function a
-        copy of `other` if you need it further.
+        copy of `other` if you need it further. The `other` Projection is expected to
+        contain the same number of features.
+
+        Parameters
+        ----------
+        other : Projection
+            The Projection object to be merged into the current one. It will be deleted after merging.
+        decay : float, optional
+            Weight of existing observations relatively to new ones.
+            Setting `decay` < 1.0 causes re-orientation towards new data trends in the
+            input document stream, by giving less emphasis to old observations. This allows
+            LSA to gradually "forget" old observations (documents) and give more
+            preference to new ones.
+
         """
         if other.u is None:
             # the other projection is empty => do nothing
@@ -207,7 +286,7 @@ class Projection(utils.SaveLoad):
             u_k, s_k, _ = scipy.linalg.svd(np.dot(k, k.T), full_matrices=False)
             s_k = np.sqrt(s_k)  # go back from eigen values to singular values
 
-        k = clip_spectrum(s_k**2, self.k)
+        k = clip_spectrum(s_k ** 2, self.k)
         u1_k, u2_k, s_k = np.array(u_k[:n1, :k]), np.array(u_k[n1:, :k]), s_k[:k]
 
         # update & rotate current basis U = [U, U']*[U1_k, U2_k]
@@ -228,16 +307,14 @@ class Projection(utils.SaveLoad):
 
 
 class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    """
-    Objects of this class allow building and maintaining a model for Latent
-    Semantic Indexing (also known as Latent Semantic Analysis).
+    """Objects of this class allow building and maintaining a model for Latent Semantic Indexing.
 
     The main methods are:
 
     1. constructor, which initializes the projection into latent topics space,
-    2. the ``[]`` method, which returns representation of any input document in the
+    2. the ``[]`` method, which returns the representation of any input document in the
        latent space,
-    3. `add_documents()` for incrementally updating the model with new documents.
+    3. `add_documents()` which incrementally updates the model with new documents.
 
     The left singular vectors are stored in `lsi.projection.u`, singular values
     in `lsi.projection.s`. Right singular vectors can be reconstructed from the output
@@ -252,29 +329,42 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
                  decay=1.0, distributed=False, onepass=True,
                  power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS, dtype=np.float64):
-        """
-        `num_topics` is the number of requested factors (latent dimensions).
+        """ Construct an `LsiModel` object.
 
+        Either `corpus` or `id2word` must be supplied in order to train the model.
         After the model has been trained, you can estimate topics for an
         arbitrary, unseen document, using the ``topics = self[document]`` dictionary
         notation. You can also add new training documents, with ``self.add_documents``,
         so that training can be stopped and resumed at any time, and the
         LSI transformation is available at any point.
 
-        If you specify a `corpus`, it will be used to train the model. See the
-        method `add_documents` for a description of the `chunksize` and `decay` parameters.
+        Parameters
+        ----------
+        corpus : stream of vectors, optional
+            If specified, it will be used to train the model.
+        num_topics : int, optional
+            Number of requested factors (latent dimensions)
+        id2word : dict of {int: str}, optional
+            ID to word mapping, optional.
+        chunksize :  int, optional
+            Number of documents to be used in each training chunk.
+        decay : float, optional
+            Weight of existing observations relatively to new ones.
+        distributed : bool, optional
+            Whether distributed computing should be used.
+        onepass : bool, optional
+            Whether the one-pass algorithm should be used for training.
+            Pass `False` to force a multi-pass stochastic algorithm.
+        power_iters: int, optional
+            Number of power iteration steps to be used.
+            Increasing the number of power iterations improves accuracy, but lowers performance
+        extra_samples : int, optional
+            Extra samples to be used besides the rank `k`. Can improve accuracy.
+        dtype : type, optional
+            Enforces a type for elements of the decomposed matrix.
 
-        Turn `onepass` off to force a multi-pass stochastic algorithm.
-
-        `power_iters` and `extra_samples` affect the accuracy of the stochastic
-        multi-pass algorithm, which is used either internally (`onepass=True`) or
-        as the front-end algorithm (`onepass=False`). Increasing the number of
-        power iterations improves accuracy, but lowers performance. See [3]_ for
-        some hard numbers.
-
-        Turn on `distributed` to enable distributed computing.
-
-        Example:
+        Examples
+        --------
 
         >>> lsi = LsiModel(corpus, num_topics=10)
         >>> print(lsi[doc_tfidf]) # project some document into LSI space
@@ -343,19 +433,26 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.add_documents(corpus)
 
     def add_documents(self, corpus, chunksize=None, decay=None):
-        """
-        Update singular value decomposition to take into account a new
-        corpus of documents.
+        """Update singular value decomposition to take into account a new corpus of documents.
 
         Training proceeds in chunks of `chunksize` documents at a time. The size of
         `chunksize` is a tradeoff between increased speed (bigger `chunksize`)
         vs. lower memory footprint (smaller `chunksize`). If the distributed mode
         is on, each chunk is sent to a different worker/computer.
 
-        Setting `decay` < 1.0 causes re-orientation towards new data trends in the
-        input document stream, by giving less emphasis to old observations. This allows
-        LSA to gradually "forget" old observations (documents) and give more
-        preference to new ones.
+        Parameters
+        ----------
+        corpus : stream of vectors
+            If specified, it will be used to train the model.
+        chunksize :  int, optional
+            Number of documents to be used in each training chunk.
+        decay : float, optional
+            Weight of existing observations relatively to new ones.
+            Setting `decay` < 1.0 causes re-orientation towards new data trends in the
+            input document stream, by giving less emphasis to old observations. This allows
+            LSA to gradually "forget" old observations (documents) and give more
+            preference to new ones.
+
         """
         logger.info("updating model with new documents")
 
@@ -427,17 +524,33 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.docs_processed += corpus.shape[1]
 
     def __str__(self):
+        """Produce a human readable representation of the current object.
+
+        Returns
+        -------
+        str
+            A human readable string of the current object's parameters.
+        """
         return "LsiModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (
             self.num_terms, self.num_topics, self.decay, self.chunksize
         )
 
     def __getitem__(self, bow, scaled=False, chunksize=512):
-        """
-        Return latent representation, as a list of (topic_id, topic_value) 2-tuples.
+        """Compute the latent representation of a corpus.
 
-        This is done by folding input document into the latent topic space.
+        Parameters
+        ----------
+        bow : iterable of (int, int)
+            The corpus in a bag of words representation.
+        scaled : bool, optional
+            Whether topics should be scaled by the inverse of singular values (default: no scaling).
+        chunksize :  int, optional
+            Number of documents to be used in each training chunk.
 
-        If `scaled` is set, scale topics by the inverse of singular values (default: no scaling).
+        Returns
+        -------
+        list of (int, float)
+            Latent representation of topics as a list of (topic_id, topic_value) 2-tuples.
 
         """
         assert self.projection.u is not None, "decomposition not initialized yet"
@@ -490,15 +603,19 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return result
 
     def get_topics(self):
-        """
-        Returns:
-            np.ndarray: `num_topics` x `vocabulary_size` array of floats which represents
-            the term topic matrix learned during inference.
+        """Return the topic vectors.
 
-        Note:
+        Notes
+        -----
             The number of topics can actually be smaller than `self.num_topics`,
             if there were not enough factors (real rank of input matrix smaller than
             `self.num_topics`).
+
+        Returns
+        -------
+        np.ndarray of floats
+            The term topic matrix learned during inference. Shape is: [`num_topics`, `vocabulary_size`]
+
         """
         projections = self.projection.u.T
         num_topics = len(projections)
@@ -510,13 +627,26 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return np.array(topics)
 
     def show_topic(self, topicno, topn=10):
-        """
-        Return a specified topic (=left singular vector), 0 <= `topicno` < `self.num_topics`,
-        as a string.
+        """Find the words that define a topic along with their contribution.
 
-        Return only the `topn` words which contribute the most to the direction
-        of the topic (both negative and positive).
+        This is actually the left singular vector of the specified topic. The most important
+        words in defining the topic (in both directions) are included in the string,
+        along with their contribution to the topic.
 
+        Parameters
+        ----------
+        topicno : int
+            The topics id number. Obviously 0 <= `topicno` < `self.num_topics`.
+        topn : int
+            Number of words to be included in the string representation.
+
+        Returns
+        -------
+        str
+            The specified topic string representation.
+
+        Examples
+        --------
         >>> lsimodel.show_topic(10, topn=5)
         [("category", -0.340), ("$M$", 0.298), ("algebra", 0.183), ("functor", -0.174), ("operator", -0.168)]
 
@@ -532,14 +662,28 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return [(self.id2word[val], 1.0 * c[val] / norm) for val in most]
 
     def show_topics(self, num_topics=-1, num_words=10, log=False, formatted=True):
-        """
-        Return `num_topics` most significant topics (return all by default).
-        For each topic, show `num_words` most significant words (10 words by default).
 
-        The topics are returned as a list -- a list of strings if `formatted` is
-        True, or a list of `(word, probability)` 2-tuples if False.
+        """Return the most significant topics.
 
-        If `log` is True, also output this result to log.
+        For each topic, show `num_words` most significant words. The topics are returned as a list of strings
+        if `formatted` is True, or a list of `(word, probability)` 2-tuples if `formatted` is False. All topics
+        are included by default but a number of them can be selected ordered by significance.
+
+        Parameters
+        ----------
+        num_topics : int, optional
+            The number of topics to be selected (all by default), ordered by significance.
+        num_words : int, optional
+            The number of words to be included per topics, ordered by significance.
+        log : bool
+            Whether the output should be also written to the log.
+        formatted : bool
+            Whether to represent each topic as a string.
+
+        Returns
+        -------
+        str or list of (str, float)
+            Either a string or a list of `(word, probability)` representation for each topic.
 
         """
         shown = []
@@ -557,12 +701,19 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return shown
 
     def print_debug(self, num_topics=5, num_words=10):
-        """
-        Print (to log) the most salient words of the first `num_topics` topics.
+        """Print (to log) the most salient words of the first `num_topics` topics.
 
         Unlike `print_topics()`, this looks for words that are significant for a
         particular topic *and* not for others. This *should* result in a more
         human-interpretable description of topics.
+
+        Parameters
+        ----------
+        num_topics : int, optional
+            The number of topics to be selected (all by default), ordered by significance.
+        num_words : int, optional
+            The number of words to be included per topics, ordered by significance.
+
         """
         # only wrap the module-level fnc
         print_debug(
@@ -572,26 +723,62 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         )
 
     def save(self, fname, *args, **kwargs):
-        """
-        Save the model to file.
+        """Save the model to a file.
 
         Large internal arrays may be stored into separate files, with `fname` as prefix.
 
-        Note: do not save as a compressed file if you intend to load the file back with `mmap`.
+        Note
+        ----
+        Do not save as a compressed file if you intend to load the file back with `mmap`.
+
+        Parameters
+        ----------
+        fname : str
+            Path to output file.
+        *args
+        Variable length argument list.
+        **kwargs
+            Arbitrary keyword arguments.
+
+        See Also
+        --------
+        :meth:`~gensim.models.LsiModel.load`
 
         """
+
         if self.projection is not None:
             self.projection.save(utils.smart_extension(fname, '.projection'), *args, **kwargs)
         super(LsiModel, self).save(fname, *args, ignore=['projection', 'dispatcher'], **kwargs)
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
-        """
-        Load a previously saved object from file (also see `save`).
+        """Load a previously saved object (using :meth:`~gensim.utils.SaveLoad.save`) from file.
 
         Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
 
-            >>> LsiModel.load(fname, mmap='r')
+
+        Parameters
+        ----------
+        fname : str
+            Path to file that contains needed object.
+        *args
+        Variable length argument list.
+        **kwargs
+            Arbitrary keyword arguments.
+
+        See Also
+        --------
+        :meth:`~gensim.models.LsiModel.save`
+
+        Returns
+        -------
+        object
+            Object loaded from `fname`.
+
+        Raises
+        ------
+        IOError
+            When methods are called on instance (should be called from class).
 
         """
         kwargs['mmap'] = kwargs.get('mmap', None)
@@ -605,6 +792,23 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
 
 def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
+    """Log the most salient words per topic.
+
+    Parameters
+    ----------
+    id2token : dict of {int: str}
+        Mapping from ID to word in the Dictionary.
+    u : ndarray
+        The 2D U decomposition matrix.
+    s : ndarray
+        The 1D reduced array of eigenvalues used for decomposition.
+    topics : list of
+    num_words : int, optional
+        Number of words to be included for each topic.
+    num_neg : int, optional
+        Number of words with a negative contribution to a topic that should be included.
+
+    """
     if num_neg is None:
         # by default, print half as many salient negative words as positive
         num_neg = num_words / 2
@@ -646,12 +850,9 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
 
 def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
                    power_iters=0, dtype=np.float64, eps=1e-6):
-    """
-    Run truncated Singular Value Decomposition (SVD) on a sparse input.
+    """Run truncated Singular Value Decomposition (SVD) on a sparse input.
 
-    Return (U, S): the left singular vectors and the singular values of the input
-    data stream `corpus` [4]_. The corpus may be larger than RAM (iterator of vectors).
-
+    The corpus may be larger than RAM (iterator of vectors) [4]_..
     This may return less than the requested number of top `rank` factors, in case
     the input itself is of lower rank. The `extra_dims` (oversampling) and especially
     `power_iters` (power iterations) parameters affect accuracy of the decomposition.
@@ -665,6 +866,32 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
 
     .. [4] If `corpus` is a scipy.sparse matrix instead, it is assumed the whole
        corpus fits into core memory and a different (more efficient) code path is chosen.
+
+    Parameters
+    ----------
+    corpus : Stream or sparse matrix of (int, int).
+        Input corpus as a stream (does not have to fit in RAM) or a sparse matrix of shape: [`num_terms`, num_documents]
+    rank : int
+        Desired number of factors to be retained after decomposition.
+    num_terms : int
+        The number of terms found in the vocabulary.
+    chunksize :  int, optional
+            Number of documents to be used in each training chunk.
+    extra_dims : int, optional
+        Extra samples to be used besides the rank `k`. Can improve accuracy.
+    power_iters: int, optional
+        Number of power iteration steps to be used.
+        Increasing the number of power iterations improves accuracy, but lowers performance.
+    dtype : type, optional
+        Enforces a type for elements of the decomposed matrix.
+    eps: float
+        Percentage of the spectrum's energy to be discarded.
+
+    Returns
+    -------
+    (np.ndarray, array)
+        The left singular vectors and the singular values of the input data stream.
+
     """
     rank = int(rank)
     if extra_dims is None:
@@ -773,7 +1000,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     del qt
 
     logger.info("computing the final decomposition")
-    keep = clip_spectrum(s**2, rank, discard=eps)
+    keep = clip_spectrum(s ** 2, rank, discard=eps)
     u = u[:, :keep].copy()
     s = s[:keep]
     u = np.dot(q, u)
