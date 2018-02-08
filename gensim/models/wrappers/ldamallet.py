@@ -20,11 +20,26 @@ parameter, or use `LdaModel` which needs only O(1) memory.
 
 The wrapped model can NOT be updated with new documents for online training -- use gensim's `LdaModel` for that.
 
+Installation
+------------
+$ sudo apt-get install default-jdk
+$ sudo apt-get install ant
+$ git clone git@github.com:mimno/Mallet.git
+$ cd Mallet/
+$ ant
+
+References
+----------
+.. [1] https://github.com/mimno/Mallet
+
 Examples
 --------
-    >>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet',
-    ... corpus=my_corpus, num_topics=20, id2word=dictionary)
-    >>> print model[my_vector]  # print LDA topics of a document
+    >>> from gensim.models.wrappers import LdaMallet
+    >>> model = LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet',
+    ...                   corpus=my_corpus,
+    ...                   num_topics=20,
+    ...                   id2word=dictionary)
+    >>> print model[my_vector]  # print LDA topics of a documents
 
 References
 ----------

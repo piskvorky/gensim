@@ -10,10 +10,25 @@
 
 This module allows for DTM and DIM model estimation from a training corpus.
 
+Installation
+------------
+$ git clone git@github.com:blei-lab/dtm.git
+$ sudo aptitude install libgsl0-dev
+$ cd dtm/dtm
+$ make
+
+References
+----------
+https://github.com/blei-lab/dtm
+
 Examples
 --------
->>> model = gensim.models.wrappers.DtmModel('dtm-win64.exe', my_corpus, my_timeslices,
-...                num_topics=20, id2word=dictionary)
+>>> from gensim.models.wrappers import DtmModel
+>>> model = DtmModel('dtm-win64.exe',
+...                  my_corpus,
+...                  my_timeslices,
+...                  num_topics=20,
+...                  id2word=dictionary)
 
 References
 ----------

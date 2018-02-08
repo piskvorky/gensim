@@ -7,9 +7,34 @@
 The wrapped model can NOT be updated with new documents for online training -- use gensim's
 `Word2Vec` for that.
 
+Installation
+------------
+On Linux
+    $ sudo yum install boost-devel (on RedHat/Centos)
+    $ sudo apt-get install libboost-all-dev (on Ubuntu)
+On MacOS
+    $ brew install cmake
+    $ brew install wget
+    $ brew install boost
+    $ brew install mercurial
+
+$ git clone https://bitbucket.org/shihaoji/wordrank
+$ cd wordrank/
+# replace icc to gcc in install.sh
+$ ./install.sh
+
+References
+----------
+https://github.com/shihaoji/wordrank
+
 Examples
 --------
->>> model = gensim.models.wrappers.Wordrank.train('/Users/dummy/wordrank', corpus_file='text8', out_name='wr_model')
+>>>from gensim.models.wrappers import Wordrank
+>>> model = Wordrank.train('/Users/dummy/wordrank',
+...                         corpus_file='text8',
+...                         out_name='wr_model',
+...                         iter=11,
+...                         dump_period=5)
 >>> print model[word]  # prints vector for given words
 
 References

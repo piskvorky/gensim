@@ -15,7 +15,6 @@ The wrapped model can not be updated with new documents for online training.
 References
 ----------
 .. [1] https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings
-
 .. [2] http://arxiv.org/pdf/1608.01056.pdf
 
 """

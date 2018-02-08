@@ -9,6 +9,18 @@
 This uses Matt Hoffman's online algorithm, for LDA [2]_, i.e. the same
 algorithm that Gensim's LdaModel is based on.
 
+Installation
+------------
+$ git clone https://github.com/JohnLangford/vowpal_wabbit.git
+$ cd vowpal_wabbit
+$ make
+$ make test #(optional)
+$ sudo make install
+
+References
+----------
+https://github.com/JohnLangford/vowpal_wabbit
+
 Warnings
 --------
 Currently working and tested with Vowpal Wabbit versions 7.10 to 8.1.1.
@@ -21,10 +33,11 @@ Tested with python 2.6, 2.7, and 3.4.
 Examples
 --------
     >>> # train model
-    >>> lda = gensim.models.wrappers.LdaVowpalWabbit('/usr/local/bin/vw',
-                                                     corpus=corpus,
-                                                     num_topics=20,
-                                                     id2word=dictionary)
+    >>> from gensim.models.wrappers import LdaVowpalWabbit
+    >>> lda = LdaVowpalWabbit('/usr/local/bin/vw',
+    ...                        corpus=corpus,
+    ...                        num_topics=20,
+    ...                        id2word=dictionary)
 
     >>> # update an existing model
     >>> lda.update(another_corpus)
@@ -38,7 +51,7 @@ Examples
     >>> # save/load the trained model:
 
     >>> lda.save('vw_lda.model')
-    >>> lda = gensim.models.wrappers.LdaVowpalWabbit.load('vw_lda.model')
+    >>> lda = LdaVowpalWabbit.load('vw_lda.model')
 
     >>> # get bound on log perplexity for given test set
     >>> print(lda.log_perpexity(test_corpus))
