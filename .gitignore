@@ -1,8 +1,3 @@
-# aneesh's ignores
-.gitignore
-test.py
-*.pyd
-
 # Compiled source #
 ###################
 *.com
