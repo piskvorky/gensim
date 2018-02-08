@@ -9,7 +9,7 @@
 """This script helps to convert data in word2vec format into Tensorflow 2D
 tensor and metadata formats for Embedding Visualization.
 
-To use the generated TSV 2D tensor and metadata file in the Projector 
+To use the generated TSV 2D tensor and metadata file in the Projector
 Visualizer, please follow next steps:
 
 #. Open http://projector.tensorflow.org/
@@ -35,15 +35,15 @@ logger = logging.getLogger(__name__)
 
 
 def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
-    """Converts Word2Vec model and writes two files 2D tensor TSV file (ends 
+    """Converts Word2Vec model and writes two files 2D tensor TSV file (ends
     with _tensor.tsv) and metadata file (ends with _metadata.tsv).
 
     Parameters
     ----------
     word2vec_model_path : str
         Path to input Word2Vec file.
-    tensor_filename : str 
-        Prefix for output files. 
+    tensor_filename : str
+        Prefix for output files.
     binary : bool, optional
         True if input file in binary format.
 

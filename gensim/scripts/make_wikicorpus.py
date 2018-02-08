@@ -6,7 +6,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """This script converts Wikipedia articles to (sparse) vectors. Articles should
-provided in XML format and compressed using bzip2 archiver. Scripts creates 
+provided in XML format and compressed using bzip2 archiver. Scripts creates
 files with tf-idf representation and model dump, word-id mapping and bag of
 words in matrix format.
 
@@ -19,7 +19,8 @@ tokenizer). The package is available at https://github.com/clips/pattern.
 
 Data:
 -----
-.. data:: DEFAULT_DICT_SIZE - Default VOCABULARY_SIZE (number of most frequent words appeared in more than 10% of all documents used in processing.
+.. data:: DEFAULT_DICT_SIZE - Default VOCABULARY_SIZE (number of most frequent words appeared in more than 10% of all
+          documents used in processing.
 
 
 .. program-output:: python -m gensim.scripts.make_wikicorpus --help

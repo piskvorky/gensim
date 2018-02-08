@@ -6,7 +6,8 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""This script allows to convert GloVe vectors into the word2vec. Both files are
+"""
+This script allows to convert GloVe vectors into the word2vec. Both files are
 presented in text format and almost identical except that word2vec includes
 number of vectors and its dimension which is only difference regard to GloVe.
 
@@ -14,9 +15,9 @@ This script uses `smart_open <https://github.com/RaRe-Technologies/smart_open>`_
 library for reading and writing files.
 
 .. program-output:: python -m gensim.scripts.glove2word2vec --help
+   :ellipsis: 0, -6
 
 """
-
 import sys
 import logging
 import argparse
@@ -27,19 +28,17 @@ logger = logging.getLogger(__name__)
 
 
 def get_glove_info(glove_file_name):
-    """Returns number of vectors in provided `glove_file_name` and dimension of
-    vectors. Please note it assumes given file is correct and then only
-    dimension of the first vector taken.
-    
+    """Get number of vectors in provided `glove_file_name` and dimension of vectors.
+
     Parameters
     ----------
     glove_file_name : str
-        Filename.
-    
+        Path to file in GloVe format.
+
     Returns
     -------
-    tuple of int
-        Number of vectors (lines) of given file and its dimension.
+    (int, int)
+        Number of vectors (lines) of input file and its dimension.
 
     """
     with smart_open(glove_file_name) as f:
@@ -50,20 +49,18 @@ def get_glove_info(glove_file_name):
 
 
 def glove2word2vec(glove_input_file, word2vec_output_file):
-    """Converts `glove_input_file` in GloVe format to word2vec format with
-    filename specified in `word2vec_output_file`. Returns Returns number of
-    vectors `glove_input_file` and its dimension.
-    
+    """Convert `glove_input_file` in GloVe format to word2vec format and write it to `word2vec_output_file`.
+
     Parameters
     ----------
-    glove_file_name : str
-        Input file in GloVe format.
+    glove_input_file : str
+        Path to file in GloVe format.
     word2vec_output_file: str
-        Output file in word2vec format.
-    
+        Path to output file.
+
     Returns
     -------
-    tuple of int
+    (int, int)
         Number of vectors (lines) of input file and its dimension.
 
     """
@@ -79,19 +76,11 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.root.setLevel(level=logging.INFO)
-    logger.info("running %s", ' '.join(sys.argv))
-
-    parser = argparse.ArgumentParser(
-        description="This script converts GloVe file to word2vec format.")
-    parser.add_argument("-i", "--input", required=True,
-                        help="Input file, in GloVe format (read-only).")
-    parser.add_argument(
-        "-o", "--output", required=True,
-        help="Output file, in word2vec text format (will be overwritten)."
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-i", "--input", required=True, help="Path to input file in GloVe format")
+    parser.add_argument("-o", "--output", required=True, help="Path to output file")
     args = parser.parse_args()
 
-    # do the actual conversion
+    logger.info("running %s", ' '.join(sys.argv))
     num_lines, num_dims = glove2word2vec(args.input, args.output)
     logger.info('Converted model with %i vectors and %i dimensions', num_lines, num_dims)
