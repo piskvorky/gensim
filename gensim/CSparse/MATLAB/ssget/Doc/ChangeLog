@@ -1,0 +1,7 @@
+Sept 12, 2017: ssget 2.0.0
+
+    * collection renamed to SuiteSparse MatrixCollection
+    * UFget renamed to ssget
+    * relocated to https://sparse.tamu.edu
+    * DownloadTimeStamp removed from the index
+
