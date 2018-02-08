@@ -11,8 +11,29 @@ This script allows to convert GloVe vectors into the word2vec. Both files are
 presented in text format and almost identical except that word2vec includes
 number of vectors and its dimension which is only difference regard to GloVe.
 
-This script uses `smart_open <https://github.com/RaRe-Technologies/smart_open>`_
-library for reading and writing files.
+Notes
+-----
+
+GloVe format (real example can be founded `on Stanford size <https://nlp.stanford.edu/projects/glove/>`_) ::
+
+    word1 0.123 0.134 0.532 0.152
+    word2 0.934 0.412 0.532 0.159
+    word3 0.334 0.241 0.324 0.188
+    ...
+    word9 0.334 0.241 0.324 0.188
+
+
+Word2Vec format (real example can be founded `on w2v old repository <https://code.google.com/archive/p/word2vec/>`_) ::
+
+    9 4
+    word1 0.123 0.134 0.532 0.152
+    word2 0.934 0.412 0.532 0.159
+    word3 0.334 0.241 0.324 0.188
+    ...
+    word9 0.334 0.241 0.324 0.188
+
+
+Command line arguments
 
 .. program-output:: python -m gensim.scripts.glove2word2vec --help
    :ellipsis: 0, -6
@@ -76,7 +97,7 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__[:-115], formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-i", "--input", required=True, help="Path to input file in GloVe format")
     parser.add_argument("-o", "--output", required=True, help="Path to output file")
     args = parser.parse_args()
