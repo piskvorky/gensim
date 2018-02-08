@@ -1,3 +1,5 @@
+random
+
 # Compiled source #
 ###################
 *.com
@@ -5,7 +7,7 @@
 *.dll
 *.exe
 *.o
-*.so
+*.so'
 *.pyc
 
 # Packages #
