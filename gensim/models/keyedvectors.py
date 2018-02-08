@@ -199,6 +199,11 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         self.index2word = []
 
     @property
+    @deprecated("Attribute will be removed in 4.0.0, use self instead")
+    def wv(self):
+        return self
+
+    @property
     def index2entity(self):
         return self.index2word
 
