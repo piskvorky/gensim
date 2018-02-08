@@ -757,24 +757,25 @@ def cossim(vec1, vec2):
 
 
 def softcossim(vec1, vec2, similarity_matrix):
-    """Return Soft Cosine Measure between two vectors given a term similarity matrix.
+    """Get Soft Cosine Measure between two vectors given a term similarity matrix.
 
     Return Soft Cosine Measure between two sparse vectors given a sparse term similarity matrix
-    in the `scipy.sparse.csc_matrix` format. The similarity is a number between <-1.0, 1.0>, higher
-    is more similar.
+    in the :class:`scipy.sparse.csc_matrix` format. The similarity is a number between <-1.0, 1.0>,
+    higher is more similar.
 
     Parameters
     ----------
-    vec1 : list of (int, float) two-tuples
-        A query vector in the gensim document format.
-    vec2 : list of (int, float) two-tuples of ints
-        A document vector in the gensim document format.
-    similarity_matrix : scipy.sparse.csc_matrix
-        A term similarity matrix.
+    vec1 : list of (int, float)
+        A query vector in the BoW format.
+    vec2 : list of (int, float)
+        A document vector in the BoW format.
+    similarity_matrix : {:class:`scipy.sparse.csc_matrix`, :class:`scipy.sparse.csr_matrix`}
+        A term similarity matrix, typically produced by
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`.
 
     Returns
     -------
-    similarity_matrix.dtype
+    `similarity_matrix.dtype`
         The Soft Cosine Measure between `vec1` and `vec2`.
 
     Raises
@@ -784,9 +785,9 @@ def softcossim(vec1, vec2, similarity_matrix):
 
     See Also
     --------
-    gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix
+    :meth:`gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`
         A term similarity matrix produced from term embeddings.
-    gensim.similarities.docsim.SoftCosineSimilarity
+    :class:`gensim.similarities.docsim.SoftCosineSimilarity`
         A class for performing corpus-based similarity queries with Soft Cosine Measure.
 
     References
@@ -794,9 +795,9 @@ def softcossim(vec1, vec2, similarity_matrix):
     Soft Cosine Measure was perhaps first defined by [sidorovetal14]_.
 
     .. [sidorovetal14] Grigori Sidorov et al., "Soft Similarity and Soft Cosine Measure: Similarity
-       of Features in Vector Space Model", 2014.
-    """
+       of Features in Vector Space Model", 2014, http://www.cys.cic.ipn.mx/ojs/index.php/CyS/article/view/2043/1921.
 
+    """
     if not isinstance(similarity_matrix, scipy.sparse.csc_matrix):
         if isinstance(similarity_matrix, scipy.sparse.csr_matrix):
             similarity_matrix = similarity_matrix.T
@@ -816,9 +817,10 @@ def softcossim(vec1, vec2, similarity_matrix):
     vec1len = vec1.T.dot(dense_matrix).dot(vec1)[0, 0]
     vec2len = vec2.T.dot(dense_matrix).dot(vec2)[0, 0]
 
-    assert vec1len > 0.0 and vec2len > 0.0, u"sparse documents must not contain any explicit zero" \
-            " entries and the similarity matrix S must satisfy x^T * S * x > 0 for any nonzero" \
-            " bag-of-words vector x."
+    assert \
+        vec1len > 0.0 and vec2len > 0.0, \
+        u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
+        u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
 
     result = vec1.T.dot(dense_matrix).dot(vec2)[0, 0]
     result /= math.sqrt(vec1len) * math.sqrt(vec2len)  # rescale by vector lengths
