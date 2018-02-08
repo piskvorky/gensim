@@ -5,54 +5,36 @@
 # Copyright (C) 2012 Lars Buitinck <larsmans@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This script converts Wikipedia articles to (sparse) vectors. Articles should
-provided in XML format and compressed using bzip2 archiver. Scripts creates 
-files with tf-idf reapresentation and model dump, word-id mapping and bag of 
-words in matrix format.
 
-Note that Matrix Market files can then be compressed (e.g., by bzip2) 
-to save disk space, gensim's corpus iterators can work with compressed input.
+"""
+USAGE: %(program)s WIKI_XML_DUMP OUTPUT_PREFIX [VOCABULARY_SIZE]
+
+Convert articles from a Wikipedia dump to (sparse) vectors. The input is a
+bz2-compressed dump of Wikipedia articles, in XML format.
+
+This actually creates three files:
+
+* `OUTPUT_PREFIX_wordids.txt`: mapping between words and their integer ids
+* `OUTPUT_PREFIX_bow.mm`: bag-of-words (word counts) representation, in
+  Matrix Matrix format
+* `OUTPUT_PREFIX_tfidf.mm`: TF-IDF representation
+* `OUTPUT_PREFIX.tfidf_model`: TF-IDF model dump
+
+The output Matrix Market files can then be compressed (e.g., by bzip2) to save
+disk space; gensim's corpus iterators can work with compressed input, too.
+
+`VOCABULARY_SIZE` controls how many of the most frequent words to keep (after
+removing tokens that appear in more than 10%% of all documents). Defaults to
+100,000.
 
 If you have the `pattern` package installed, this script will use a fancy
 lemmatization to get a lemma of each token (instead of plain alphabetic
-tokenizer). The package is available at https://github.com/clips/pattern.
+tokenizer). The package is available at https://github.com/clips/pattern .
 
-Usage
------
-    python -m gensim.scripts.make_wikicorpus <WIKI_XML_DUMP> <OUTPUT_PREFIX> [VOCABULARY_SIZE]
-
-Parameters
-----------
-WIKI_XML_DUMP
-    Path to dumped Wikipedia articles.
-OUTPUT_PREFIX
-    Output directory.
-VOCABULARY_SIZE
-    Size of dictionary used in processing. Most frequent words are taken except
-    tokens appeared in more than 10% of all documents. If not specified default
-    value is 100 000.
-
-Produces
---------
-OUTPUT_PREFIX_wordids.txt
-    Mapping between words and their integer ids.
-OUTPUT_PREFIX_bow.mm 
-    Bag-of-words (word counts) representation, in Matrix Matrix format. 
-OUTPUT_PREFIX_tfidf.mm
-    TF-IDF representation.
-OUTPUT_PREFIX.tfidf_model
-    TF-IDF model dump.
-
-Data
-----
-.. data:: DEFAULT_DICT_SIZE - Default value of VOCABULARY_SIZE (number of most
-frequent words appeared in more than 10% of all documents using in processing.
-
-Example
--------
-python -m gensim.scripts.make_wikicorpus ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki
-
+Example:
+  python -m gensim.scripts.make_wikicorpus ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki
 """
+
 
 import logging
 import os.path
