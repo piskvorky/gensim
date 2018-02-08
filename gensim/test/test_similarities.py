@@ -296,7 +296,6 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
 
     def factoryMethod(self):
         # Override factoryMethod.
-
         return self.cls(texts, self.w2v_model)
 
     def testFull(self, num_best=None):
@@ -383,7 +382,6 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
 
     def factoryMethod(self):
         # Override factoryMethod.
-
         return self.cls(self.corpus, self.similarity_matrix)
 
     def testFull(self, num_best=None):
@@ -406,10 +404,8 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
             self.assertAlmostEqual(expected, numpy.sum(sims))
 
     def testNonIncreasing(self):
-        ''' Check that similarities are non-increasing when `num_best` is not
-        `None`.'''
-        # NOTE: this could be implemented for other similarities as well (i.e.
-        # in _TestSimilarityABC).
+        """ Check that similarities are non-increasing when `num_best` is not `None`."""
+        # NOTE: this could be implemented for other similarities as well (i.e. in _TestSimilarityABC).
 
         index = self.cls(self.corpus, self.similarity_matrix, num_best=5)
         query = self.dictionary.doc2bow(texts[0])
@@ -487,7 +483,6 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
 
     def factoryMethod(self):
         # Override factoryMethod.
-
         return self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
 
     def testSharding(self):

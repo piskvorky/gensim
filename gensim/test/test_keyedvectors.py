@@ -41,22 +41,18 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
         # checking that thresholding works as expected
         similarity_matrix = self.similarity_matrix(corpus, dictionary, threshold=0.45).todense()
-        expected = 18
-        self.assertEquals(expected, np.sum(similarity_matrix == 0))
+        self.assertEquals(18, np.sum(similarity_matrix == 0))
 
         # checking that exponent works as expected
         similarity_matrix = self.similarity_matrix(corpus, dictionary, exponent=1.0).todense()
-        expected = 9.5788956
-        self.assertAlmostEqual(expected, np.sum(similarity_matrix))
+        self.assertAlmostEqual(9.5788956, np.sum(similarity_matrix))
 
         # checking that nonzero_limit works as expected
         similarity_matrix = self.similarity_matrix(corpus, dictionary, nonzero_limit=4).todense()
-        expected = 4
-        self.assertEquals(expected, np.sum(similarity_matrix == 0))
+        self.assertEquals(4, np.sum(similarity_matrix == 0))
 
         similarity_matrix = self.similarity_matrix(corpus, dictionary, nonzero_limit=3).todense()
-        expected = 20
-        self.assertEquals(expected, np.sum(similarity_matrix == 0))
+        self.assertEquals(20, np.sum(similarity_matrix == 0))
 
     def test_most_similar(self):
         """Test most_similar returns expected results."""
