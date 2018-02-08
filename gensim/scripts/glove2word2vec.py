@@ -6,8 +6,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-This script allows to convert GloVe vectors into the word2vec. Both files are
+"""This script allows to convert GloVe vectors into the word2vec. Both files are
 presented in text format and almost identical except that word2vec includes
 number of vectors and its dimension which is only difference regard to GloVe.
 
@@ -33,7 +32,27 @@ Word2Vec format (real example can be founded `on w2v old repository <https://cod
     word9 0.334 0.241 0.324 0.188
 
 
+How to use
+----------
+>>> from gensim.test.utils import datapath, get_tmpfile
+>>> from gensim.utils import check_output
+>>> from gensim.models import KeyedVectors
+>>>
+>>> glove_file = datapath('test_glove.txt')
+>>> tmp_file = get_tmpfile("test_word2vec.txt")
+>>>
+>>> # call glove2word2vec script
+>>> # other way (from CLI): python -m gensim.scripts.glove2word2vec --input <glove_file> --output <w2v_file>
+>>> _ = check_output(args=[
+...         sys.executable, '-m', 'gensim.scripts.glove2word2vec',
+...         '--input', glove_file, '--output', tmp_file
+... ])
+>>>
+>>> model = KeyedVectors.load_word2vec_format(tmp_file)
+
+
 Command line arguments
+----------------------
 
 .. program-output:: python -m gensim.scripts.glove2word2vec --help
    :ellipsis: 0, -6
@@ -96,8 +115,8 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    parser = argparse.ArgumentParser(description=__doc__[:-115], formatter_class=argparse.RawDescriptionHelpFormatter)
+    logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=logging.INFO)
+    parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-i", "--input", required=True, help="Path to input file in GloVe format")
     parser.add_argument("-o", "--output", required=True, help="Path to output file")
     args = parser.parse_args()
