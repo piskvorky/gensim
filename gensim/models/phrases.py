@@ -83,15 +83,19 @@ from collections import defaultdict
 import functools as ft
 import itertools as it
 from math import log
-from inspect import getargspec
 import pickle
 import six
 
-from six import iteritems, string_types, next
+from six import iteritems, string_types, PY2, next
 
 from gensim import utils, interfaces
 
 logger = logging.getLogger(__name__)
+
+if PY2:
+    from inspect import getargspec
+else:
+    from inspect import getfullargspec
 
 
 def _is_single(obj):
@@ -314,10 +318,16 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             'worda_count', 'wordb_count', 'bigram_count', 'len_vocab', 'min_count', 'corpus_word_count'
         ]
         if callable(scoring):
-            if all(parameter in getargspec(scoring)[0] for parameter in scoring_parameters):
-                self.scoring = scoring
+            if PY2:
+                if all(parameter in getargspec(scoring)[0] for parameter in scoring_parameters):
+                    self.scoring = scoring
+                else:
+                    raise ValueError('scoring function missing expected parameters')
             else:
-                raise ValueError('scoring function missing expected parameters')
+                if all(parameter in getfullargspec(scoring)[0] for parameter in scoring_parameters):
+                    self.scoring = scoring
+                else:
+                    raise ValueError('scoring function missing expected parameters')
 
         self.min_count = min_count
         self.threshold = threshold
