@@ -81,7 +81,6 @@ class TestHellinger(unittest.TestCase):
         self.model = self.class_(common_corpus, id2word=common_dictionary, num_topics=2, passes=100)
 
     def test_inputs(self):
-
         # checking empty inputs
         vec_1 = []
         vec_2 = []
@@ -104,7 +103,6 @@ class TestHellinger(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test_distributions(self):
-
         # checking different length bag of words as inputs
         vec_1 = [(2, 0.1), (3, 0.4), (4, 0.1), (5, 0.1), (1, 0.1), (7, 0.2)]
         vec_2 = [(1, 0.1), (3, 0.8), (4, 0.1)]
@@ -175,7 +173,6 @@ class TestKL(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test_distributions(self):
-
         # checking bag of words as inputs
         vec_1 = [(2, 0.1), (3, 0.4), (4, 0.1), (5, 0.1), (1, 0.1), (7, 0.2)]
         vec_2 = [(1, 0.1), (3, 0.8), (4, 0.1)]
@@ -215,14 +212,12 @@ class TestKL(unittest.TestCase):
 
 class TestJaccard(unittest.TestCase):
     def test_inputs(self):
-
         # all empty inputs will give a divide by zero exception
         vec_1 = []
         vec_2 = []
         self.assertRaises(ZeroDivisionError, matutils.jaccard, vec_1, vec_2)
 
     def test_distributions(self):
-
         # checking bag of words as inputs
         vec_1 = [(2, 1), (3, 4), (4, 1), (5, 1), (1, 1), (7, 2)]
         vec_2 = [(1, 1), (3, 8), (4, 1)]
@@ -247,7 +242,6 @@ class TestJaccard(unittest.TestCase):
 
 class TestSoftCosineSimilarity(unittest.TestCase):
     def test_inputs(self):
-
         # checking empty inputs
         vec_1 = []
         vec_2 = []
@@ -267,7 +261,6 @@ class TestSoftCosineSimilarity(unittest.TestCase):
             matutils.softcossim(vec_1, vec_2, np.matrix([]))
 
     def test_distributions(self):
-
         # checking bag of words as inputs
         vec_1 = [(0, 1.0), (2, 1.0)]  # hello world
         vec_2 = [(1, 1.0), (2, 1.0)]  # hi world
