@@ -1,0 +1,15 @@
+certifi/__init__.py,sha256=QSRy1UztE-i09IuGIKKuc190k07lt6ktabbelPMIZoc,63
+certifi/__main__.py,sha256=FiOYt1Fltst7wk9DRa6GCoBr8qBUxlNQu_MKJf04E6s,41
+certifi/cacert.pem,sha256=7CEXfLHxDwvDpwVu0y_2lfJYk63cU-KUKI_DL1Lq8Uo,271088
+certifi/core.py,sha256=xPQDdG_siy5A7BfqGWa7RJhcA61xXEqPiSrw9GNyhHE,836
+certifi-2018.1.18.dist-info/DESCRIPTION.rst,sha256=jXrtxvB2mFIsHbuK8aP8RXrMx5yecyAIMZ2cn8Xb_ro,1679
+certifi-2018.1.18.dist-info/LICENSE.txt,sha256=anCkv2sBABbVmmS4rkrY3H9e8W8ftFPMLs13HFo0ETE,1048
+certifi-2018.1.18.dist-info/METADATA,sha256=mEn3NzwdDqk5m8P7xy4ThWe0f0fnWrgDPTiF_WsKMVw,2570
+certifi-2018.1.18.dist-info/RECORD,,
+certifi-2018.1.18.dist-info/WHEEL,sha256=5wvfB7GvgZAbKBSE9uX9Zbi6LCL-_KgezgHblXhCRnM,113
+certifi-2018.1.18.dist-info/metadata.json,sha256=QJ0o4guOVYx7CMB_el5dN5f6EubxySvzsyNUnFcOBmE,1006
+certifi-2018.1.18.dist-info/top_level.txt,sha256=KMu4vUCfsjLrkPbSNdgdekS-pVJzBAJFO__nI8NF6-U,8
+certifi-2018.1.18.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+certifi/__pycache__/core.cpython-36.pyc,,
+certifi/__pycache__/__init__.cpython-36.pyc,,
+certifi/__pycache__/__main__.cpython-36.pyc,,

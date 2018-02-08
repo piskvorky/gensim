@@ -1,0 +1,10 @@
+# created by tools/tclZIC.tcl - do not edit
+
+set TZData(:Indian/Mauritius) {
+    {-9223372036854775808 13800 0 LMT}
+    {-1988164200 14400 0 MUT}
+    {403041600 18000 1 MUST}
+    {417034800 14400 0 MUT}
+    {1224972000 18000 1 MUST}
+    {1238274000 14400 0 MUT}
+}

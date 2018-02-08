@@ -1,0 +1,10 @@
+# created by tools/tclZIC.tcl - do not edit
+
+set TZData(:Asia/Dili) {
+    {-9223372036854775808 30140 0 LMT}
+    {-1830414140 28800 0 TLT}
+    {-879152400 32400 0 JST}
+    {-766054800 32400 0 TLT}
+    {199897200 28800 0 WITA}
+    {969120000 32400 0 TLT}
+}

@@ -1,0 +1,31 @@
+Metadata-Version: 2.0
+Name: python-dateutil
+Version: 2.6.1
+Summary: Extensions to the standard Python datetime module
+Home-page: https://dateutil.readthedocs.io
+Author: Paul Ganssle
+Author-email: dateutil@python.org
+License: Simplified BSD
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.2
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Software Development :: Libraries
+Requires: six
+Requires-Dist: six (>=1.5)
+
+
+The dateutil module provides powerful extensions to the
+datetime module available in the Python standard library.
+
+

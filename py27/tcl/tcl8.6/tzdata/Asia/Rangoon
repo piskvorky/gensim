@@ -1,0 +1,9 @@
+# created by tools/tclZIC.tcl - do not edit
+
+set TZData(:Asia/Rangoon) {
+    {-9223372036854775808 23080 0 LMT}
+    {-2840163880 23080 0 RMT}
+    {-1577946280 23400 0 BURT}
+    {-873268200 32400 0 JST}
+    {-778410000 23400 0 MMT}
+}

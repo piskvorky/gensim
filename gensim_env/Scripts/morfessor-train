@@ -1,0 +1,47 @@
+#!d:\projects\gensim\gensim_env\scripts\python.exe
+
+import argparse
+import sys
+
+import morfessor
+from morfessor import _logger
+
+
+def main(argv):
+    parser = morfessor.get_default_argparser()
+    parser.prog = "morfessor-train"
+    parser.epilog = """
+Simple usage example (train a model and save it to model.pickled):
+
+  %(prog)s -s model.pickled training_corpus.txt
+
+Interactive use (read corpus from user):
+
+  %(prog)s -m online -v 2 -
+
+"""
+
+    keep_options = ['savesegfile', 'savefile', 'trainmode', 'dampening',
+                    'encoding', 'list', 'skips', 'annofile', 'develfile',
+                    'fullretrain', 'threshold', 'morphtypes', 'morphlength',
+                    'corpusweight', 'annotationweight', 'help', 'version']
+    for action_group in parser._action_groups:
+        for arg in action_group._group_actions:
+            if arg.dest not in keep_options:
+                arg.help = argparse.SUPPRESS
+
+    parser.add_argument('trainfiles', metavar='<file>', nargs='+',
+                        help='training data files')
+
+    try:
+        args = parser.parse_args(argv)
+        morfessor.main(args)
+    except morfessor.ArgumentException as e:
+        parser.error(e)
+    except Exception as e:
+        _logger.error("Fatal Error {} {}".format(type(e), e))
+        raise
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

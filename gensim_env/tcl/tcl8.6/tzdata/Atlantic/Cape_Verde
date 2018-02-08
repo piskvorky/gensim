@@ -1,0 +1,9 @@
+# created by tools/tclZIC.tcl - do not edit
+
+set TZData(:Atlantic/Cape_Verde) {
+    {-9223372036854775808 -5644 0 LMT}
+    {-1988144756 -7200 0 CVT}
+    {-862610400 -3600 1 CVST}
+    {-764118000 -7200 0 CVT}
+    {186120000 -3600 0 CVT}
+}

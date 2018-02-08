@@ -83,15 +83,19 @@ from collections import defaultdict
 import functools as ft
 import itertools as it
 from math import log
-from inspect import getargspec
 import pickle
 import six
 
-from six import iteritems, string_types, next
+from six import iteritems, string_types, PY2, next
 
 from gensim import utils, interfaces
 
 logger = logging.getLogger(__name__)
+
+if PY2:
+    from inspect import getargspec
+else:
+    from inspect import getfullargspec as getargspec
 
 
 def _is_single(obj):

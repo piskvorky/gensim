@@ -1,0 +1,22 @@
+#!d:\projects\gensim\gensim_env\scripts\python.exe
+
+import sys
+
+import morfessor
+from morfessor import _logger
+
+
+def main(argv):
+    parser = morfessor.get_default_argparser()
+    try:
+        args = parser.parse_args(argv)
+        morfessor.main(args)
+    except morfessor.ArgumentException as e:
+        parser.error(e)
+    except Exception as e:
+        _logger.error("Fatal Error %s %s" % (type(e), e))
+        raise
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

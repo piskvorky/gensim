@@ -1,0 +1,10 @@
+# created by tools/tclZIC.tcl - do not edit
+
+set TZData(:Asia/Kolkata) {
+    {-9223372036854775808 21208 0 LMT}
+    {-2840162008 21200 0 HMT}
+    {-891582800 23400 0 BURT}
+    {-872058600 19800 0 IST}
+    {-862637400 23400 1 IST}
+    {-764145000 19800 0 IST}
+}

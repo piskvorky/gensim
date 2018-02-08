@@ -149,10 +149,6 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.assertEqual(self.vectors.rank('war', 'war'), 1)
         self.assertEqual(self.vectors.rank('war', 'terrorism'), 3)
 
-    def test_wv_property(self):
-        """Test that the deprecated `wv` property returns `self`. To be removed in v4.0.0."""
-        self.assertTrue(self.vectors is self.vectors.wv)
-
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
