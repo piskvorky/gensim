@@ -80,7 +80,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.corpora.dictionary import Dictionary
 from six import string_types, integer_types
 from six.moves import xrange, zip
-from scipy import stats
+from scipy import sparse, stats
 from gensim.utils import deprecated
 from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams
 
@@ -191,8 +191,8 @@ class BaseKeyedVectors(utils.SaveLoad):
 
 
 class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
-    """Class containing common methods for operations over word vectors.
-    """
+    """Class containing common methods for operations over word vectors."""
+
     def __init__(self, vector_size):
         super(WordEmbeddingsKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_norm = None
@@ -431,6 +431,113 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
+
+    def similarity_matrix(self, dictionary, tfidf=None, threshold=0.0, exponent=2.0, nonzero_limit=100, dtype=REAL):
+        """Constructs a term similarity matrix for computing Soft Cosine Measure.
+
+        Constructs a a sparse term similarity matrix in the :class:`scipy.sparse.csc_matrix` format for computing
+        Soft Cosine Measure between documents.
+
+        Parameters
+        ----------
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
+            A dictionary that specifies a mapping between words and the indices of rows and columns
+            of the resulting term similarity matrix.
+        tfidf : :class:`gensim.models.tfidfmodel.TfidfModel`, optional
+            A model that specifies the relative importance of the terms in the dictionary. The rows
+            of the term similarity matrix will be build in an increasing order of importance of terms,
+            or in the order of term identifiers if None.
+        threshold : float, optional
+            Only pairs of words whose embeddings are more similar than `threshold` are considered
+            when building the sparse term similarity matrix.
+        exponent : float, optional
+            The exponent applied to the similarity between two word embeddings when building the term similarity matrix.
+        nonzero_limit : int, optional
+            The maximum number of non-zero elements outside the diagonal in a single row or column
+            of the term similarity matrix. Setting `nonzero_limit` to a constant ensures that the
+            time complexity of computing the Soft Cosine Measure will be linear in the document
+            length rather than quadratic.
+        dtype : numpy.dtype, optional
+            Data-type of the term similarity matrix.
+
+        Returns
+        -------
+        :class:`scipy.sparse.csc_matrix`
+            Term similarity matrix.
+
+        See Also
+        --------
+        :func:`gensim.matutils.softcossim`
+            The Soft Cosine Measure.
+        :class:`gensim.similarities.docsim.SoftCosineSimilarity`
+            A class for performing corpus-based similarity queries with Soft Cosine Measure.
+
+
+        Notes
+        -----
+        The constructed matrix corresponds to the matrix Mrel defined in section 2.1 of
+        `Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3: Soft-Cosine Semantic Similarity
+        between Questions for Community Question Answering", 2017
+        <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`__.
+
+        """
+        logger.info("constructing a term similarity matrix")
+        matrix_order = len(dictionary)
+        matrix_nonzero = [1] * matrix_order
+        matrix = sparse.identity(matrix_order, dtype=dtype, format="dok")
+        num_skipped = 0
+        # Decide the order of rows.
+        if tfidf is None:
+            word_indices = range(matrix_order)
+        else:
+            assert max(tfidf.idfs) < matrix_order
+            word_indices = [
+                index for index, _ in sorted(tfidf.idfs.items(), key=lambda x: x[1], reverse=True)
+            ]
+
+        # Traverse rows.
+        for row_number, w1_index in enumerate(word_indices):
+            if row_number % 1000 == 0:
+                logger.info(
+                    "PROGRESS: at %.02f%% rows (%d / %d, %d skipped, %.06f%% density)",
+                    100.0 * (row_number + 1) / matrix_order, row_number + 1, matrix_order,
+                    num_skipped, 100.0 * matrix.getnnz() / matrix_order**2)
+            w1 = dictionary[w1_index]
+            if w1 not in self.vocab:
+                num_skipped += 1
+                continue  # A word from the dictionary is not present in the word2vec model.
+            # Traverse upper triangle columns.
+            if matrix_order <= nonzero_limit + 1:  # Traverse all columns.
+                columns = (
+                    (w2_index, self.similarity(w1, dictionary[w2_index]))
+                    for w2_index in range(w1_index + 1, matrix_order)
+                    if w1_index != w2_index and dictionary[w2_index] in self.vocab)
+            else:  # Traverse only columns corresponding to the embeddings closest to w1.
+                num_nonzero = matrix_nonzero[w1_index] - 1
+                columns = (
+                    (dictionary.token2id[w2], similarity)
+                    for _, (w2, similarity)
+                    in zip(
+                        range(nonzero_limit - num_nonzero),
+                        self.most_similar(positive=[w1], topn=nonzero_limit - num_nonzero)
+                    )
+                    if w2 in dictionary.token2id
+                )
+                columns = sorted(columns, key=lambda x: x[0])
+
+            for w2_index, similarity in columns:
+                # Ensure that we don't exceed `nonzero_limit` by mirroring the upper triangle.
+                if similarity > threshold and matrix_nonzero[w2_index] <= nonzero_limit:
+                    element = similarity**exponent
+                    matrix[w1_index, w2_index] = element
+                    matrix_nonzero[w1_index] += 1
+                    matrix[w2_index, w1_index] = element
+                    matrix_nonzero[w2_index] += 1
+        logger.info(
+            "constructed a term similarity matrix with %0.6f %% nonzero elements",
+            100.0 * matrix.getnnz() / matrix_order**2
+        )
+        return matrix.tocsc()
 
     def wmdistance(self, document1, document2):
         """
