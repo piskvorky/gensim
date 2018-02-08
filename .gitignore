@@ -1,8 +1,7 @@
 # aneesh's ignores
-.ipynb_checkpoints
-test_script.py
-py27
-gensim_env
+.gitignore
+test.py
+*.pyd
 
 # Compiled source #
 ###################

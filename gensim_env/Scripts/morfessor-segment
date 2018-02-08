@@ -1,0 +1,46 @@
+#!d:\projects\gensim\gensim_env\scripts\python.exe
+
+import argparse
+import sys
+
+import morfessor
+from morfessor import _logger
+
+
+def main(argv):
+    parser = morfessor.get_default_argparser()
+    parser.prog = "morfessor-segment"
+    parser.epilog = """
+Simple usage example (load model.pickled and use it to segment test corpus):
+
+  %(prog)s -l model.pickled -o test_corpus.segmented test_corpus.txt
+
+Interactive use (read corpus from user):
+
+  %(prog)s -l model.pickled -
+
+"""
+
+    keep_options = ['encoding', 'loadfile', 'loadsegfile', 'outfile']
+                    # FIXME Disabled to work around an argparse bug
+                    #'help', 'version']
+    for action_group in parser._action_groups:
+        for arg in action_group._group_actions:
+            if arg.dest not in keep_options:
+                arg.help = argparse.SUPPRESS
+
+    parser.add_argument('testfiles', metavar='<file>', nargs='+',
+                        help='corpus files to segment')
+
+    try:
+        args = parser.parse_args(argv)
+        morfessor.main(args)
+    except morfessor.ArgumentException as e:
+        parser.error(e)
+    except Exception as e:
+        _logger.error("Fatal Error %s %s" % (type(e), e))
+        raise
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
