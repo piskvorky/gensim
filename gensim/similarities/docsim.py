@@ -564,49 +564,57 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
 
 class SoftCosineSimilarity(interfaces.SimilarityABC):
-    """Document similarity (like MatrixSimilarity) that uses Soft Cosine Measure as a similarity
-    measure.
-
-    Parameters
-    ----------
-    corpus: list of lists of (int, float) two-tuples
-        A list of documents in the gensim document format.
-    similarity_matrix : scipy.sparse.csc_matrix
-        A term similarity matrix.
-    num_best : int
-        The number of results to retrieve for a query.
-
-    See Also
-    --------
-    gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix
-        A term similarity matrix produced from term embeddings.
-    gensim.matutils.softcossim
-        The Soft Cosine Measure.
-
-    Examples
-    --------
-    >>> from gensim.corpora import Dictionary
-    >>> import gensim.downloader as api
-    >>> from gensim.models import Word2Vec
-    >>> from gensim.similarities import SoftCosineSimilarity
-    >>> from gensim.utils import simple_preprocess
-    >>> # Prepare the model
-    >>> corpus = api.load("text8")
-    >>> model = Word2Vec(corpus, workers=3, size=100)
-    >>> dictionary = Dictionary(corpus)
-    >>> bow_corpus = [dictionary.doc2bow(document) for document in corpus]
-    >>> similarity_matrix = model.wv.similarity_matrix(dictionary)
-    >>> index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
-    >>> # Make a query.
-    >>> query = 'Yummy! Great view of the Bellagio Fountain show.'
-    >>> sims = index[dictionary.doc2bow(simple_preprocess(query))]
-
-    See `Tutorial Notebook
-    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
-    for more examples.
-    """
+    """Document similarity (like MatrixSimilarity) that uses Soft Cosine Measure as a similarity measure."""
 
     def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256):
+        """
+
+        Parameters
+        ----------
+        corpus: iterable of list of (int, float)
+            A list of documents in the BoW format.
+        similarity_matrix : :class:`scipy.sparse.csc_matrix`
+            A term similarity matrix, typically produced by
+            :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`.
+        num_best : int, optional
+            The number of results to retrieve for a query, if None - return similarities with all elements from corpus.
+        chunksize: int, optional
+            Size of one corpus chunk.
+
+
+        See Also
+        --------
+        :meth:`gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`
+            A term similarity matrix produced from term embeddings.
+        :func:`gensim.matutils.softcossim`
+            The Soft Cosine Measure.
+
+        Examples
+        --------
+        >>> from gensim.corpora import Dictionary
+        >>> import gensim.downloader as api
+        >>> from gensim.models import Word2Vec
+        >>> from gensim.similarities import SoftCosineSimilarity
+        >>> from gensim.utils import simple_preprocess
+        >>>
+        >>> # Prepare the model
+        >>> corpus = api.load("text8")
+        >>> model = Word2Vec(corpus, workers=3, size=100)
+        >>> dictionary = Dictionary(corpus)
+        >>> bow_corpus = [dictionary.doc2bow(document) for document in corpus]
+        >>> similarity_matrix = model.wv.similarity_matrix(dictionary)
+        >>> index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
+        >>>
+        >>> # Make a query.
+        >>> query = 'Yummy! Great view of the Bellagio Fountain show.'
+        >>> # calculate similarity between query and each doc from bow_corpus
+        >>> sims = index[dictionary.doc2bow(simple_preprocess(query))]
+
+        See `Tutorial Notebook
+        <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
+        for more examples.
+
+        """
         self.corpus = corpus
         self.similarity_matrix = similarity_matrix
         self.num_best = num_best
