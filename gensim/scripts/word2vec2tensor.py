@@ -6,21 +6,35 @@
 # Copyright (C) 2016 Radim Rehurek <radim@rare-technologies.com>
 
 
-"""This script helps to convert data in word2vec format into Tensorflow 2D
-tensor and metadata formats for Embedding Visualization.
+"""This script allows converting word-vectors from word2vec format into Tensorflow 2D tensor and metadata format.
+This script used for for word-vector visualization on `Embedding Visualization <http://projector.tensorflow.org/>`_.
 
-To use the generated TSV 2D tensor and metadata file in the Projector
-Visualizer, please follow next steps:
+
+How to use
+----------
+#. Convert your word-vector with this script (for example, we'll use model from
+   `gensim-data <https://rare-technologies.com/new-download-api-for-pretrained-nlp-models-and-datasets-in-gensim/>`_) ::
+
+    python -m gensim.downloader -d glove-wiki-gigaword-50  # download model in word2vec format
+    python -m gensim.scripts.word2vec2tensor -i ~/gensim-data/glove-wiki-gigaword-50/glove-wiki-gigaword-50.gz \
+                                             -o /tmp/my_model_prefix
 
 #. Open http://projector.tensorflow.org/
-#. Choose "Load Data" from the left menu.
-#. Select "Choose file" in "Load a TSV file of vectors." and choose you local "_tensor.tsv" file.
-#. Select "Choose file" in "Load a TSV file of metadata." and choose you local "_metadata.tsv" file.
+#. Click "Load Data" button from the left menu.
+#. Select "Choose file" in "Load a TSV file of vectors." and choose "/tmp/my_model_prefix_tensor.tsv" file.
+#. Select "Choose file" in "Load a TSV file of metadata." and choose "/tmp/my_model_prefix_metadata.tsv" file.
+#. ???
+#. PROFIT!
 
 For more information about TensorBoard TSV format please visit:
 https://www.tensorflow.org/versions/master/how_tos/embedding_viz/
 
+
+Command line arguments
+----------------------
+
 .. program-output:: python -m gensim.scripts.word2vec2tensor --help
+   :ellipsis: 0, -7
 
 """
 
@@ -35,13 +49,14 @@ logger = logging.getLogger(__name__)
 
 
 def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
-    """Converts Word2Vec model and writes two files 2D tensor TSV file (ends
-    with _tensor.tsv) and metadata file (ends with _metadata.tsv).
+    """Convert file in Word2Vec format and writes two files 2D tensor TSV file.
+
+    File "tensor_filename"_tensor.tsv contains word-vectors, "tensor_filename"_metadata.tsv contains words.
 
     Parameters
     ----------
     word2vec_model_path : str
-        Path to input Word2Vec file.
+        Path to file in Word2Vec format.
     tensor_filename : str
         Prefix for output files.
     binary : bool, optional
@@ -64,29 +79,16 @@ def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.root.setLevel(level=logging.INFO)
-    logger.info("running %s", ' '.join(sys.argv))
-
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""\
-        This script helps to convert data in word2vec format to
-        Tensorflow 2D tensor and metadata formats for Embedding
-        Visualization. It produces 2 files:
-            * <TENSOR_PREFIX>_tensor.tsv - 2D tensor file.
-            * <TENSOR_PREFIX>_metadata.tsv - Word Embedding metadata file.""")
-    parser.add_argument("-i", "--input", required=True,
-                        help="Path to input word2vec file")
-    parser.add_argument("-o", "--output", required=True,
-                        help="Prefix for output files")
+    logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=logging.INFO)
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=__doc__[:-138])
+    parser.add_argument("-i", "--input", required=True, help="Path to input file in word2vec format")
+    parser.add_argument("-o", "--output", required=True, help="Prefix path for output files")
     parser.add_argument(
-        "-b", "--binary", required=False,
-        help="Set True if word2vec model in binary format, optional."
+        "-b", "--binary", action='store_const', const=True, default=False,
+        help="Set this flag if word2vec model in binary format (default: %(default)s)"
     )
     args = parser.parse_args()
 
-    # word2vec2tensor(args.input, args.output, args.binary)
-    print(args.input, args.output, args.binary)
-
+    logger.info("running %s", ' '.join(sys.argv))
+    word2vec2tensor(args.input, args.output, args.binary)
     logger.info("finished running %s", os.path.basename(sys.argv[0]))
