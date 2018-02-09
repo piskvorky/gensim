@@ -455,44 +455,38 @@ class TextCorpus(interfaces.CorpusABC):
 
 
 class TextDirectoryCorpus(TextCorpus):
-    """Read documents recursively from a directory, where each file/line of each file is interpreted
-    as a plain text document.
+    """Read documents recursively from a directory.
+    Each file/line (depends on `lines_are_documents`) is interpreted as a plain text document.
+
     """
 
     def __init__(self, input, dictionary=None, metadata=False, min_depth=0, max_depth=None,
                  pattern=None, exclude_pattern=None, lines_are_documents=False, **kwargs):
         """
+
         Parameters
         ----------
         input : str
-            Input file path.
-        dictionary : dict, optional
-            Mapping between words and their ids.
+            Path to input file/folder.
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
+            If a dictionary is provided, it will not be updated with the given corpus on initialization.
+            If None - new dictionary will be built for the given corpus.
+            If `input` is None, the dictionary will remain uninitialized.
+        metadata : bool, optional
+            If True - yield metadata with each document.
         min_depth : int, optional
             Minimum depth in directory tree at which to begin searching for files.
         max_depth : int, optional
             Max depth in directory tree at which files will no longer be considered.
-        pattern : {str, Pattern}, optional
-            Regex to use for file name inclusion; all those files *not* matching this pattern will be ignored.
-        exclude_pattern : {str, Pattern}, optional
-            Regex to use for file name exclusion; all files matching this pattern will be ignored.
+            If None - not limited.
+        pattern : str, optional
+            Regex to use for file name inclusion, all those files *not* matching this pattern will be ignored.
+        exclude_pattern : str, optional
+            Regex to use for file name exclusion, all files matching this pattern will be ignored.
         lines_are_documents : bool, optional
-        Each line of each file is considered to be a document, if True.
-        Otherwise, each file is considered to be a document.
-        kwargs: keyword arguments passed through to the `TextCorpus` constructor. This is
-            in addition to the non-kwargs `input`, `dictionary`, and `metadata`. See
-            `TextCorpus.__init__` docstring for more details on these. #TODO Ivan, help
-
-
-        Examples
-        --------
-        >>> from gensim import interfaces, utils
-        >>> from gensim.corpora.dictionary import Dictionary
-        >>> from gensim.corpora.textcorpus import TextCorpus, TextDirectoryCorpus
-        >>> from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
-        >>> from gensim.utils import deaccent, simple_tokenize,
-        >>> from gensim.test.utils import datapath
-        >>> tdc = TextDirectoryCorpus(datapath('head500.noblanks.cor.bz2'))
+            If True - each line is considered a document, otherwise - each file is one document.
+        kwargs: keyword arguments passed through to the `TextCorpus` constructor.
+            See :meth:`gemsim.corpora.textcorpus.TextCorpus.__init__` docstring for more details on these.
 
         """
         self._min_depth = min_depth
@@ -548,9 +542,14 @@ class TextDirectoryCorpus(TextCorpus):
         self.length = None
 
     def iter_filepaths(self):
-        """Lazily yield paths to each file in the directory structure within the specified
-        range of depths. If a filename pattern to match was given, further filter to only
-        those filenames that match.
+        """Generate (lazily)  paths to each file in the directory structure within the specified range of depths.
+        If a filename pattern to match was given, further filter to only those filenames that match.
+
+        Yields
+        ------
+        str
+            Path to file
+
         """
         for depth, dirpath, dirnames, filenames in walk(self.input):
             if self.min_depth <= depth <= self.max_depth:
@@ -563,12 +562,13 @@ class TextDirectoryCorpus(TextCorpus):
                     yield os.path.join(dirpath, name)
 
     def getstream(self):
-        """Yield documents from the underlying plain text collection (of one or more files).
-        Each item yielded from this method will be considered a document by subsequent
-        preprocessing methods.
+        """Generate documents from the underlying plain text collection (of one or more files).
 
-        If `lines_are_documents` was set to True, items will be lines from files. Otherwise
-        there will be one item per file, containing the entire contents of the file.
+        Yields
+        ------
+        str
+            One document (if lines_are_documents - True), otherwise - each file is one document.
+
         """
         num_texts = 0
         for path in self.iter_filepaths():
@@ -584,11 +584,20 @@ class TextDirectoryCorpus(TextCorpus):
         self.length = num_texts
 
     def __len__(self):
+        """Get length of corpus.
+
+        Returns
+        -------
+        int
+            Length of corpus.
+
+        """
         if self.length is None:
             self._cache_corpus_length()
         return self.length
 
     def _cache_corpus_length(self):
+        """Calculate length of corpus and cache it to `self.length`."""
         if not self.lines_are_documents:
             self.length = sum(1 for _ in self.iter_filepaths())
         else:
