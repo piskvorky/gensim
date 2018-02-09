@@ -132,118 +132,97 @@ def strip_multiple_whitespaces(s):
 
 
 class TextCorpus(interfaces.CorpusABC):
-    """Helper class to simplify the pipeline of getting bag-of-words vectors (= a
-    gensim corpus) from plain text.
+    """Helper class to simplify the pipeline of getting BoW vectors from plain text.
 
     Notes
     -----
-    This is an abstract base class: override the `get_texts()` and `__len__()`
-    methods to match your particular input.
+    This is an abstract base class: override the :meth:`~gensim.corpora.textcorpus.TextCorpus.get_texts` and
+    :meth:`~gensim.corpora.textcorpus.TextCorpus.__len__` methods to match your particular input.
 
-    Given a filename (or a file-like object) in constructor, the corpus object
-    will be automatically initialized with a dictionary in `self.dictionary` and
-    will support the `iter` corpus method. You have a few different ways of utilizing
-    this class via subclassing or by construction with different preprocessing arguments.
+    Given a filename (or a file-like object) in constructor, the corpus object will be automatically initialized
+    with a dictionary in `self.dictionary` and will support the :meth:`~gensim.corpora.textcorpus.TextCorpus.__iter__`
+    corpus method.  You have a few different ways of utilizing this class via subclassing or by construction with
+    different preprocessing arguments.
 
-    The `iter` method converts the lists of tokens produced by `get_texts` to BoW format
-    using `Dictionary.doc2bow`. `get_texts` does the following:
+    The :meth:`~gensim.corpora.textcorpus.TextCorpus.__iter__` method converts the lists of tokens produced by
+    :meth:`~gensim.corpora.textcorpus.TextCorpus.get_texts` to BoW format using
+    :meth:`gensim.corpora.dictionary.Dictionary.doc2bow`.
 
-    1.  Calls `getstream` to get a generator over the texts. It yields each document in
-        turn from the underlying text file or files.
-    2.  For each document from the stream, calls `preprocess_text` to produce a list of
-        tokens; if metadata is enabled, it yields a 2-`tuple` with the document number as
-        the second element.
+    :meth:`~gensim.corpora.textcorpus.TextCorpus.get_texts` does the following:
 
+    #. Calls :meth:`~gensim.corpora.textcorpus.TextCorpus.getstream` to get a generator over the texts.
+       It yields each document in turn from the underlying text file or files.
+    #. For each document from the stream, calls :meth:`~gensim.corpora.textcorpus.TextCorpus.preprocess_text` to produce
+       a list of tokens. If metadata=True, it yields a 2-`tuple` with the document number as the second element.
 
     Preprocessing consists of 0+ `character_filters`, a `tokenizer`, and 0+ `token_filters`.
 
-    The preprocessing consists of calling each filter in `character_filters` with the document
-    text; unicode is not guaranteed, and if desired, the first filter should convert to unicode.
-    The output of each character filter should be another string. The output from the final
-    filter is fed to the `tokenizer`, which should split the string into a list of tokens (strings).
-    Afterwards, the list of tokens is fed through each filter in `token_filters`. The final
-    output returned from `preprocess_text` is the output from the final token filter.
+    The preprocessing consists of calling each filter in `character_filters` with the document text.
+    Unicode is not guaranteed, and if desired, the first filter should convert to unicode.
+    The output of each character filter should be another string. The output from the final filter is fed
+    to the `tokenizer`, which should split the string into a list of tokens (strings).
+    Afterwards, the list of tokens is fed through each filter in `token_filters`. The final output returned from
+    :meth:`~gensim.corpora.textcorpus.TextCorpus.preprocess_text` is the output from the final token filter.
 
     So to use this class, you can either pass in different preprocessing functions using the
     `character_filters`, `tokenizer`, and `token_filters` arguments, or you can subclass it.
-    If subclassing: override `getstream` to take text from different input sources in different
-    formats. Overrride `preprocess_text` if you must provide different initial preprocessing,
-    then call the `TextCorpus.preprocess_text` method to apply the normal preprocessing. You
-    can also overrride `get_texts` in order to tag the documents (token lists) with different
-    metadata.
+
+    If subclassing: override :meth:`~gensim.corpora.textcorpus.TextCorpus.getstream` to take text from different input
+    sources in different formats.
+    Override :meth:`~gensim.corpora.textcorpus.TextCorpus.preprocess_text` if you must provide different initial
+    preprocessing, then call the :meth:`~gensim.corpora.textcorpus.TextCorpus.preprocess_text` method to apply
+    the normal preprocessing.
+    You can also override :meth:`~gensim.corpora.textcorpus.TextCorpus.get_texts` in order to tag the documents
+    (token lists) with different metadata.
 
     The default preprocessing consists of:
 
-    1.  lowercase and convert to unicode; assumes utf8 encoding
-    2.  deaccent (asciifolding)
-    3.  collapse multiple whitespaces into a single one
-    4.  tokenize by splitting on whitespace
-    5.  remove words less than 3 characters long
-    6.  remove stopwords; see `gensim.parsing.preprocessing` for the list of stopwords
-
-    Attributes
-    ----------
-    input : str
-        Path to top-level directory to traverse for corpus documents.
-    metadata : bool
-        True to yield metadata with each document, else False (default).
-    character_filters : iterable of callable
-        Each will be applied to the text of each document in order, and should return a single string with
-        the modified text.
-    tokenizer : callable
-        Takes as input the document text, preprocessed by all filters in `character_filters`; should return
-        an iterable of tokens (strings).
-    token_filters : iterable of callable
-        Each will be applied to the iterable of tokens in order, and should return another iterable of tokens.
-    length: int
-        Number of files.
-    dictionary : dict
-        Dictionary.
+    #. :func:`~gensim.corpora.textcorpus.lower_to_unicode` - lowercase and convert to unicode (assumes utf8 encoding)
+    #. :func:`~gensim.utils.deaccent`- deaccent (asciifolding)
+    #. :func:`~gensim.corpora.textcorpus.strip_multiple_whitespaces` - collapse multiple whitespaces into a single one
+    #. :func:`~gensim.utils.simple_tokenize` - tokenize by splitting on whitespace
+    #. :func:`~gensim.corpora.textcorpus.remove_short` - remove words less than 3 characters long
+    #. :func:`~gensim.corpora.textcorpus.remove_stopwords` - remove stopwords
 
     """
 
     def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None,
                  tokenizer=None, token_filters=None):
         """
+
         Parameters
         ----------
         input : str, optional
-            Path to top-level directory to traverse for corpus documents.
-        dictionary : dict, optional
+            Path to top-level directory (file) to traverse for corpus documents.
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
             If a dictionary is provided, it will not be updated with the given corpus on initialization.
-            If none is provided, a new dictionary will be built for the given corpus. If no corpus is given,
-            the dictionary will remain uninitialized.
+            If None - new dictionary will be built for the given corpus.
+            If `input` is None, the dictionary will remain uninitialized.
         metadata : bool, optional
-            True to yield metadata with each document, else False.
+            If True - yield metadata with each document.
         character_filters : iterable of callable, optional
             Each will be applied to the text of each document in order, and should return a single string with
-            the modified text.
-
-            For Python 2, the original text will not be unicode, so it may be useful to
-            convert to unicode as the first character filter. The default character filters
-            lowercase, convert to unicode (strict utf8), perform ASCII-folding, then collapse
-            multiple whitespaces.
+            the modified text. For Python 2, the original text will not be unicode, so it may be useful to
+            convert to unicode as the first character filter.
+            If None - using :func:`~gensim.corpora.textcorpus.lower_to_unicode`,
+            :func:`~gensim.utils.deaccent` and :func:`~gensim.corpora.textcorpus.strip_multiple_whitespaces`.
         tokenizer : callable, optional
-            Takes as input the document text, preprocessed by all filters in `character_filters`; should return
-            an iterable of tokens (strings).
+            Tokenizer for document, if None - using :func:`~gensim.utils.simple_tokenize`.
         token_filters : iterable of callable, optional
             Each will be applied to the iterable of tokens in order, and should return another iterable of tokens.
-
-            These filters can add, remove, or replace tokens, or do nothing at all. The default token filters
-            remove tokens less than 3 characters long and remove stopwords using the list in
-            `gensim.parsing.preprocessing.STOPWORDS`.
+            These filters can add, remove, or replace tokens, or do nothing at all.
+            If None - using :func:`~gensim.corpora.textcorpus.remove_short` and
+            :func:`~gensim.corpora.textcorpus.remove_stopwords`.
 
         Examples
         --------
-        >>> from gensim import interfaces, utils
-        >>> from gensim.corpora.dictionary import Dictionary
+        >>> #TODO Example with inheritance
         >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
-        >>> from gensim.utils import deaccent, simple_tokenize,
         >>> from gensim.test.utils import datapath
-        >>> tc = TextCorpus(datapath('head500.noblanks.cor.bz2'))
-        >>> print tc.dictionary
-        Dictionary(27273 unique tokens: [u'circuitri', u'woodi', u'chthonic', u'polytechniqu', u'honorari']...)
+        >>>
+        >>> corpus = TextCorpus(datapath('head500.noblanks.cor.bz2'))
+        >>> for bow in corpus:
+        ...     pass
 
         """
         self.input = input
@@ -270,28 +249,13 @@ class TextCorpus(interfaces.CorpusABC):
 
         Parameters
         ----------
-        dictionary : list of list of str
-            Dictionary.
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
+            If a dictionary is provided, it will not be updated with the given corpus on initialization.
+            If None - new dictionary will be built for the given corpus.
 
         Notes
         -----
-        If `dictionary` is None, initialize to an empty Dictionary, and then if there
-        is an `input` for the corpus, add all documents from that `input`. If the
-        `dictionary` is already initialized, simply set it as the corpus's `dictionary`.
-
-        Examples
-        --------
-        >>> from gensim import interfaces, utils
-        >>> from gensim.corpora.dictionary import Dictionary
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
-        >>> from gensim.utils import deaccent, simple_tokenize,
-        >>> from gensim.test.utils import datapath
-        >>> tc = TextCorpus(datapath('head500.noblanks.cor.bz2'))
-        >>> dict = [["computer", "human", "interface"], ["computer", "response"]]
-        >>> tc.init_dictionary(dict)
-        >>> tc.dictionary
-        [['computer', 'human', 'interface'], ['computer', 'response']]
+        If self.input is None - make nothing.
 
         """
         self.dictionary = dictionary if dictionary is not None else Dictionary()
@@ -308,9 +272,13 @@ class TextCorpus(interfaces.CorpusABC):
             logger.warning("No input document stream provided; assuming dictionary will be initialized some other way.")
 
     def __iter__(self):
-        """The function that defines a corpus.
+        """Iterate over the corpus.
 
-        Iterating over the corpus must yield sparse vectors, one for each document.
+        Yields
+        ------
+        list of (int, int)
+            Document in BoW format (+ metadata if self.metadata).
+
         """
         if self.metadata:
             for text, metadata in self.get_texts():
@@ -320,12 +288,17 @@ class TextCorpus(interfaces.CorpusABC):
                 yield self.dictionary.doc2bow(text, allow_update=False)
 
     def getstream(self):
-        """Yield documents from the underlying plain text collection (of one or more files).
+        """Generate documents from the underlying plain text collection (of one or more files).
+
+        Yields
+        ------
+        str
+            Document read from plain-text file.
 
         Notes
         -----
-        Each item yielded from this method will be considered a document by subsequent
-        preprocessing methods.
+        After generator end - initialize self.length attribute.
+
         """
         num_texts = 0
         with utils.file_or_filename(self.input) as f:
@@ -336,30 +309,17 @@ class TextCorpus(interfaces.CorpusABC):
         self.length = num_texts
 
     def preprocess_text(self, text):
-        """Apply preprocessing to a single text document. This should perform tokenization
-        in addition to any other desired preprocessing steps.
+        """Apply `self.character_filters`, `self.tokenizer`, `self.token_filters` to a single text document.
 
         Parameters
         ---------
         text : str
-            Document text read from plain-text file.
+            Document read from plain-text file.
 
         Return
         ------
-        Iterable of str
-            Tokens produced from `text` as a result of preprocessing.
-
-        Examples
-        --------
-        >>> from gensim import interfaces, utils
-        >>> from gensim.corpora.dictionary import Dictionary
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
-        >>> from gensim.utils import deaccent, simple_tokenize,
-        >>> from gensim.test.utils import datapath
-        >>> tc = TextCorpus(datapath('head500.noblanks.cor.bz2'))
-        >>> tc.preprocess_text("data")
-        [u'data']
+        list of str
+            List of tokens extracted from `text`.
 
         """
         for character_filter in self.character_filters:
@@ -372,13 +332,22 @@ class TextCorpus(interfaces.CorpusABC):
         return tokens
 
     def step_through_preprocess(self, text):
-        """Yield tuples of functions and their output for each stage of preprocessing.
+        """Apply preprocessor one by one and generate result.
+
+        Warnings
+        --------
         This is useful for debugging issues with the corpus preprocessing pipeline.
 
         Parameters
         ----------
         text : str
             Document text read from plain-text file.
+
+        Yields
+        ------
+        (callable, object)
+            Pre-processor, output from pre-processor (based on `text`)
+
         """
         for character_filter in self.character_filters:
             text = character_filter(text)
@@ -391,21 +360,13 @@ class TextCorpus(interfaces.CorpusABC):
             yield (token_filter, token_filter(tokens))
 
     def get_texts(self):
-        """Iterate over the collection, yielding one document at a time.
+        """Generate documents from corpus.
 
-        Notes
-        -----
-        A document is a sequence of words (strings) that can be fed into `Dictionary.doc2bow`.
-        Each document will be fed through `preprocess_text`. That method should be
-        overridden to provide different preprocessing steps. This method will need
-        to be overridden if the metadata you'd like to yield differs from the line
-        number.
-
-        Return
+        Yields
         ------
-        Generator of lists of str
-            Each list corresponds to a preprocessed document from the corpus `input`. Strings - tokens.
-            #TODO don't return anything
+        list of str
+            Document as sequence of tokens (+ lineno if self.metadata)
+
         """
         lines = self.getstream()
         if self.metadata:
@@ -416,29 +377,33 @@ class TextCorpus(interfaces.CorpusABC):
                 yield self.preprocess_text(line)
 
     def sample_texts(self, n, seed=None, length=None):
-        """Yield n random documents from the corpus without replacement.
-
-        Notes
-        -----
-        Given the number of remaining documents in a corpus, we need to choose n elements.
-        The probability for the current element to be chosen is n/remaining.
-        If we choose it, we just decrease the n and move to the next element.
-        Computing the corpus length may be a costly operation so you can use the optional
-        parameter `length` instead.
+        """Generate `n` random documents from the corpus without replacement.
 
         Parameters
         ----------
         n : int
             Number of documents we want to sample.
-        seed : {int, None}, optional
+        seed : int, optional
             If specified, use it as a seed for local random generator.
-        length : {int, None}, optional
-            Guess of corpus length, if set. It must be positive & not greater than actual corpus length.
+        length : int, optional
+            Value will used as corpus length (because calculate length of corpus can be costly operation).
+            If not specified - will call `__length__`.
+
+        Raises
+        ------
+        ValueError
+            If `n` less than zero or greater than corpus size.
 
         Notes
         -----
-        Yields: list of str : is a document represented as a list of tokens. See get_texts method.
-        Raises: ValueError : when n is invalid or length was set incorrectly.
+        Given the number of remaining documents in a corpus, we need to choose n elements.
+        The probability for the current element to be chosen is `n` / remaining. If we choose it,  we just decrease
+        the `n` and move to the next element.
+
+        Yields
+        ------
+        list of str
+            Sampled document as sequence of tokens.
 
         """
         random_generator = random if seed is None else random.Random(seed)
@@ -470,6 +435,19 @@ class TextCorpus(interfaces.CorpusABC):
             raise ValueError("length {0:d} greater than number of documents in corpus {1:d}".format(length, i + 1))
 
     def __len__(self):
+        """Get length of corpus
+
+        Warnings
+        --------
+        If self.length is None - will read all corpus for calculate this attribute through
+        :meth:`~gensim.corpora.textcorpus.TextCorpus.getstream`.
+
+        Returns
+        -------
+        int
+            Length of corpus.
+
+        """
         if self.length is None:
             # cache the corpus length
             self.length = sum(1 for _ in self.getstream())
@@ -624,6 +602,8 @@ def walk(top, topdown=True, onerror=None, followlinks=False, depth=0):
 
     Parameters
     ----------
+    top : str
+        Root directory.
     topdown : bool, optional
         If True - you can modify dirnames in-place.
     onerror : function, optional
