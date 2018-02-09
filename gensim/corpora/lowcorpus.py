@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Corpus in GibbsLda++ format."""
+"""Corpus in `GibbsLda++ format <http://gibbslda.sourceforge.net/>`_."""
 
 from __future__ import with_statement
 
@@ -38,12 +38,12 @@ def split_on_space(s):
 
 
 class LowCorpus(IndexedCorpus):
-    """BoW corpus handles input in GibbsLda++ format.
+    """Corpus handles input in `GibbsLda++ format <http://gibbslda.sourceforge.net/>`_.
 
-    Format description ::
+    **Format description**
 
-        Both data for training/estimating the model and new data (i.e., previously
-        unseen data) have the same format as follows:
+    Both data for training/estimating the model and new data (i.e., previously unseen data) have the same format
+    as follows ::
 
         [M]
         [document1]
@@ -51,15 +51,12 @@ class LowCorpus(IndexedCorpus):
         ...
         [documentM]
 
-        in which the first line is the total number for documents [M]. Each line
-        after that is one document. [documenti] is the ith document of the dataset
-        that consists of a list of Ni words/terms.
+    in which the first line is the total number for documents [M]. Each line after that is one document.
+    [documenti] is the ith document of the dataset that consists of a list of Ni words/terms ::
 
         [documenti] = [wordi1] [wordi2] ... [wordiNi]
 
-        in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated
-        by the blank character.
-
+    in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated by the blank character.
 
     Examples
     --------
