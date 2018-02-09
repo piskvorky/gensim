@@ -208,18 +208,19 @@ class LowCorpus(IndexedCorpus):
         ----------
         fname : str
             Path to output file.
-        corpus : list of (list of str)
-            Data for creating dictionary.
+        corpus : iterable of iterable of (int, int)
+            Corpus in BoW format.
         id2word : {dict of (int, str), :class:`~gensim.corpora.dictionary.Dictionary`}, optional
             Mapping between word_ids (integers) and words (strings).
             If not provided, the mapping is constructed directly from `corpus`.
-        metadata : str, optional
+        metadata : bool, optional
             THIS PARAMETER WILL BE IGNORED.
 
         Return
         ------
         list of int
-            List of offsets in resulting file for each document (in bytes).
+            List of offsets in resulting file for each document (in bytes),
+            can be used for :meth:`~gensim.corpora.lowcorpus.LowCorpus.docbyoffset`
 
         """
         if id2word is None:
@@ -248,7 +249,7 @@ class LowCorpus(IndexedCorpus):
         return offsets
 
     def docbyoffset(self, offset):
-        """Get the document stored at file position `offset`.
+        """Get the document stored in file by `offset` position.
 
         Parameters
         ----------
@@ -264,8 +265,8 @@ class LowCorpus(IndexedCorpus):
         --------
         >>> from gensim.test.utils import datapath
         >>> from gensim.corpora import LowCorpus
-        >>> data = LowCorpus(datapath("testcorpus.low"))
         >>>
+        >>> data = LowCorpus(datapath("testcorpus.low"))
         >>> data.docbyoffset(1)  # end of first line
         []
         >>> data.docbyoffset(2)  # start of second line
