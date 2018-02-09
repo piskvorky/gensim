@@ -112,7 +112,7 @@ def asfarray(a, name=''):
     Returns
     -------
     out : ndarray
-        The input `a` in Fortran, or column-major, order.
+        The input `a` in Fortran, or column-major order.
 
     """
     if not a.flags.f_contiguous:
@@ -135,7 +135,7 @@ def ascarray(a, name=''):
     Returns
     -------
     out : ndarray
-        Contiguous array of same shape and content as `a`.
+        Contiguous array (row-major order) of same shape and content as `a`.
 
     """
     if not a.flags.contiguous:
@@ -162,14 +162,14 @@ class Projection(utils.SaveLoad):
             Number of features or terms in the corpus.
         k : int
             Desired rank of the decomposed matrix.
-        docs : stream of vectors, optional
-            Input corpus as a stream (does not have to fit in RAM).
+        docs : iterable of iterable of (int, float)
+            Stream of document vectors or sparse matrix (BoW representation).
         use_svdlibc : bool, optional
             Whether sparce SVD should be used. Defaults to False in which case our own version is used instead.
         power_iters: int, optional
-            Number of power iteration steps to be used. Can improve accuracy.
+            Number of power iteration steps to be used. Tune to improve accuracy.
         extra_dims : int, optional
-            Extra samples to be used besides the rank `k`. Can improve accuracy.
+            Extra samples to be used besides the rank `k`. Tune to improve accuracy.
         dtype : type, optional
             Enforces a type for elements of the decomposed matrix.
         """
@@ -340,8 +340,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : stream of vectors, optional
-            If specified, it will be used to train the model.
+        corpus : iterable of iterable of (int, float), optional
+            Stream of document vectors or sparse matrix of shape: [`num_terms`, num_documents].
         num_topics : int, optional
             Number of requested factors (latent dimensions)
         id2word : dict of {int: str}, optional
@@ -442,16 +442,12 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : stream of vectors
-            If specified, it will be used to train the model.
+        corpus : iterable of iterable of (int, float)
+            Stream of document vectors or a sparse matrix of shape: [`num_terms`, num_documents] used to train the model.
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
         decay : float, optional
             Weight of existing observations relatively to new ones.
-            Setting `decay` < 1.0 causes re-orientation towards new data trends in the
-            input document stream, by giving less emphasis to old observations. This allows
-            LSA to gradually "forget" old observations (documents) and give more
-            preference to new ones.
 
         """
         logger.info("updating model with new documents")
@@ -529,7 +525,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Returns
         -------
         str
-            A human readable string of the current object's parameters.
+            A human readable string of the current objects' parameters.
         """
         return "LsiModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (
             self.num_terms, self.num_topics, self.decay, self.chunksize
@@ -550,7 +546,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Returns
         -------
         list of (int, float)
-            Latent representation of topics as a list of (topic_id, topic_value) 2-tuples.
+            Latent representation of topics as a list of (topic_id, topic_value).
 
         """
         assert self.projection.u is not None, "decomposition not initialized yet"
@@ -675,9 +671,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The number of topics to be selected (all by default), ordered by significance.
         num_words : int, optional
             The number of words to be included per topics, ordered by significance.
-        log : bool
+        log : bool, optional
             Whether the output should be also written to the log.
-        formatted : bool
+        formatted : bool, optional
             Whether to represent each topic as a string.
 
         Returns
@@ -736,7 +732,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         fname : str
             Path to output file.
         *args
-        Variable length argument list.
+            Variable length argument list.
         **kwargs
             Arbitrary keyword arguments.
 
@@ -762,7 +758,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         fname : str
             Path to file that contains needed object.
         *args
-        Variable length argument list.
+            Variable length argument list.
         **kwargs
             Arbitrary keyword arguments.
 
@@ -802,7 +798,8 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
         The 2D U decomposition matrix.
     s : ndarray
         The 1D reduced array of eigenvalues used for decomposition.
-    topics : list of
+    topics : list of int
+        The list of topic IDs to be printed
     num_words : int, optional
         Number of words to be included for each topic.
     num_neg : int, optional
@@ -869,7 +866,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
 
     Parameters
     ----------
-    corpus : Stream or sparse matrix of (int, int).
+    corpus : iterable of iterable of (int, float)
         Input corpus as a stream (does not have to fit in RAM) or a sparse matrix of shape: [`num_terms`, num_documents]
     rank : int
         Desired number of factors to be retained after decomposition.
@@ -884,7 +881,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         Increasing the number of power iterations improves accuracy, but lowers performance.
     dtype : type, optional
         Enforces a type for elements of the decomposed matrix.
-    eps: float
+    eps: float, optional
         Percentage of the spectrum's energy to be discarded.
 
     Returns
