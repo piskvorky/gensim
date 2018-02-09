@@ -133,12 +133,12 @@ class MalletCorpus(LowCorpus):
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
-        """Save a corpus in the GibbsLda++ format.
+        """Save a corpus in the Mallet format.
 
         Warnings
         --------
         This function is automatically called by :meth:`gensim.corpora.malletcorpus.MalletCorpus.serialize`,
-        don't call it directly, call :meth:`gensim.corpora.lowcorpus.malletcorpus.MalletCorpus` instead.
+        don't call it directly, call :meth:`gensim.corpora.lowcorpus.malletcorpus.MalletCorpus.serialize` instead.
 
         Parameters
         ----------
