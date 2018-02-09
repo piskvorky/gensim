@@ -443,7 +443,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of iterable of (int, float)
-            Stream of document vectors or a sparse matrix of shape: [`num_terms`, num_documents] used to train the model.
+            Stream of document vectors or a sparse matrix of shape: [`num_terms`, num_documents].
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
         decay : float, optional
