@@ -5,14 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-University of California, Irvine (UCI) Bag-of-Words [1] format.
-
-References
-----------
-.. [1] http://archive.ics.uci.edu/ml/datasets/Bag+of+Words
-
-"""
+"""Corpus in `UCI format <http://archive.ics.uci.edu/ml/datasets/Bag+of+Words>`_."""
 
 from __future__ import with_statement
 
@@ -27,25 +20,18 @@ from gensim.matutils import MmWriter
 from six.moves import xrange
 
 
-logger = logging.getLogger('gensim.corpora.ucicorpus')
+logger = logging.getLogger(__name__)
 
 
 class UciReader(MmReader):
+    """Reader of UCI format for :class:`gensim.corpora.ucicorpus.UciCorpus`."""
     def __init__(self, input):
-        """Initialize the reader.
+        """
 
         Parameters
         ----------
         input : str
-            Path to file, which is expected to be in the UCI Bag-of-Words format.
-
-        Examples
-        -------
-        >>> from gensim.corpora.ucicorpus import UciCorpus, UciReader, UciWriter
-        >>> from gensim.test.utils import datapath
-        >>> ucr = UciReader(datapath('testcorpus.uci'))
-        >>> print ucr
-        MmCorpus(9 documents, 12 features, 28 non-zero entries)
+            Path to file in UCI format.
 
         """
 
@@ -68,20 +54,13 @@ class UciReader(MmReader):
         )
 
     def skip_headers(self, input_file):
-        """Skip headers in file.
+        """Skip headers in `input_file`.
 
         Parameters
         ----------
-        input_file : str
-            File path.
+        input_file : file
+            File object.
 
-        Examples
-        -------
-        >>> from gensim.corpora.ucicorpus import UciCorpus, UciReader, UciWriter
-        >>> from gensim.test.utils import datapath
-        >>> ucr = UciReader(datapath('testcorpus.uci'))
-        >>> ucr.skip_headers(datapath('testcorpus.uci'))
-        >>> #TODO Ivan, does it work?
         """
         for lineno, _ in enumerate(input_file):
             if lineno == 2:
@@ -89,15 +68,13 @@ class UciReader(MmReader):
 
 
 class UciWriter(MmWriter):
-    """Store a corpus in UCI Bag-of-Words format.
+    """Writer of UCI format for :class:`gensim.corpora.ucicorpus.UciCorpus`.
 
     Notes
     ---------
-    This corpus format is identical to MM format, except for
-    different file headers. There is no format line, and the first
-    three lines of the file contain number_docs, num_terms, and num_nnz,
-    one value per line.
-    This implementation is based on matutils.MmWriter, and works the same way.
+    This corpus format is identical to `Matrix Market format<http://math.nist.gov/MatrixMarket/formats.html>,
+    except for different file headers. There is no format line, and the first three lines of the file
+    contain `number_docs`, `num_terms`, and `num_nnz`, one value per line.
 
     """
     MAX_HEADER_LENGTH = 20  # reserve 20 bytes per header value
@@ -130,18 +107,19 @@ class UciWriter(MmWriter):
         Parameters
         ----------
         fname : str
-            File path.
-        corpus: gensim.corpora.ucicorpus.UciCorpus
-            UciCorpus format.
+            Path to output file.
+        corpus: iterable of list of (int, int)
+            Corpus in BoW format.
         progress_cnt : int, optional
-            Progress counter.
+            Progress counter, write log message each `progress_cnt` documents.
         index : bool, optional
-            Return list of int, if True.
+            If True - return offsets, otherwise - nothing.
 
         Return
         ------
-        {none, list of int}
-            If index is True, return offsets.
+        list of int
+            Sequence of offsets to documents (in bytes), only if index=True.
+
         """
         writer = UciWriter(fname)
         writer.write_headers()
@@ -187,20 +165,18 @@ class UciCorpus(UciReader, IndexedCorpus):
         Parameters
         ----------
         fname : str
-            File path to corpus.
+            Path to corpus in UCI format.
         fname_vocab : bool, optional
-            File path to vocabulary.
+            Path to vocab.
 
         Examples
         --------
-        >>> from gensim.corpora.ucicorpus import UciCorpus, UciReader, UciWriter
+        >>> from gensim.corpora import UciCorpus
         >>> from gensim.test.utils import datapath
-        >>> ucc = UciCorpus(datapath('testcorpus.uci'))
-        >>> print ucc
-        MmCorpus(9 documents, 12 features, 28 non-zero entries)
-        >>> ucc2 = UciCorpus(datapath('testcorpus.uci'), datapath('testcorpus.uci.vocab'))
-        >>> print ucc2
-        MmCorpus(9 documents, 12 features, 28 non-zero entries)
+        >>>
+        >>> corpus = UciCorpus(datapath('testcorpus.uci'))
+        >>> for document in corpus:
+        ...     pass
 
         """
         IndexedCorpus.__init__(self, fname)
@@ -217,25 +193,28 @@ class UciCorpus(UciReader, IndexedCorpus):
         self.transposed = True
 
     def __iter__(self):
-        """
-        Interpret a matrix in UCI bag-of-words format as a streamed gensim corpus
-        (yielding one document at a time).
+        """Iterate over the corpus.
+
+        Yields
+        ------
+        list of (int, int)
+            Document in BoW format.
+
         """
         for docId, doc in super(UciCorpus, self).__iter__():
             yield doc  # get rid of docId, return the sparse vector only
 
     def create_dictionary(self):
-        """
-        Utility method to generate gensim-style Dictionary directly from the corpus and vocabulary data.
+        """Generate :class:`gensim.corpora.dictionary.Dictionary` directly from the corpus and vocabulary data.
 
         Return
         ------
-        dict
-            Mapping between words and their ids.
+        :class:`gensim.corpora.dictionary.Dictionary`
+            Dictionary, based on corpus.
 
         Examples
         --------
-        >>> from gensim.corpora.ucicorpus import UciCorpus, UciReader, UciWriter
+        >>> from gensim.corpora.ucicorpus import UciCorpus
         >>> from gensim.test.utils import datapath
         >>> ucc = UciCorpus(datapath('testcorpus.uci'))
         >>> dictionary = ucc.create_dictionary()
@@ -267,26 +246,28 @@ class UciCorpus(UciReader, IndexedCorpus):
     def save_corpus(fname, corpus, id2word=None, progress_cnt=10000, metadata=False):
         """Save a corpus in the UCI Bag-of-Words format.
 
+        Warnings
+        --------
+        This function is automatically called by :meth`gensim.corpora.ucicorpus.UciCorpus.serialize`,
+        don't call it directly, call :meth`gensim.corpora.ucicorpus.UciCorpus.serialize` instead.
+
         Parameters
         ----------
         fname : str
-            File path.
-        corpus: gensim.corpora.ucicorpus.UciCorpus
-            UciCorpus format.
-        id2word : dict, optional
-            Mapping between words and their ids.
-        Progress_cnt : int, optional
-            Progress counter.
-        metadata : NOT USED, optional.
-            NOT USED.
+            Path to output file.
+        corpus: iterable of iterable of (int, int)
+            Corpus in BoW format.
+        id2word : {dict of (int, str), :class:`gensim.corpora.dictionary.Dictionary`}, optional
+            Mapping between words and their ids. If None - will be inferred from `corpus`.
+        progress_cnt : int, optional
+            Progress counter, write log message each `progress_cnt` documents.
+        metadata : bool, optional
+            THIS PARAMETER WILL BE IGNORED.
 
         Notes
         -----
-        There are actually two files saved: `fname` and `fname.vocab`, where
-        `fname.vocab` is the vocabulary file.
+        There are actually two files saved: `fname` and `fname.vocab`, where `fname.vocab` is the vocabulary file.
 
-        This function is automatically called by `UciCorpus.serialize`; don't
-        call it directly, call `serialize` instead.
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
