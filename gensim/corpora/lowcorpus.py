@@ -86,7 +86,7 @@ class LowCorpus(IndexedCorpus):
         id2word : {dict of (int, str), :class:`~gensim.corpora.dictionary.Dictionary`}, optional
             Mapping between word_ids (integers) and words (strings).
             If not provided, the mapping is constructed directly from `fname`.
-        line2words : function, optional
+        line2words : callable, optional
             Function which converts lines(str) into tokens(list of str),
             using :func:`~gensim.corpora.lowcorpus.split_on_space` as default.
 
