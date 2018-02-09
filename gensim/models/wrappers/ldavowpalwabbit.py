@@ -17,10 +17,6 @@ $ make
 $ make test #(optional)
 $ sudo make install
 
-References
-----------
-https://github.com/JohnLangford/vowpal_wabbit
-
 Warnings
 --------
 Currently working and tested with Vowpal Wabbit versions 7.10 to 8.1.1.

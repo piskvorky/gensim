@@ -28,22 +28,19 @@ $ git clone git@github.com:mimno/Mallet.git
 $ cd Mallet/
 $ ant
 
+Examples
+--------
+>>> from gensim.models.wrappers import LdaMallet
+>>> model = LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet',
+...                   corpus=my_corpus,
+...                   num_topics=20,
+...                   id2word=dictionary)
+>>> print model[my_vector]  # print LDA topics of a documents
+
 References
 ----------
 .. [1] https://github.com/mimno/Mallet
-
-Examples
---------
-    >>> from gensim.models.wrappers import LdaMallet
-    >>> model = LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet',
-    ...                   corpus=my_corpus,
-    ...                   num_topics=20,
-    ...                   id2word=dictionary)
-    >>> print model[my_vector]  # print LDA topics of a documents
-
-References
-----------
-.. [1] http://mallet.cs.umass.edu/
+.. [2] http://mallet.cs.umass.edu/
 
 """
 
@@ -343,9 +340,6 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
         """
         try:
-            """Check version of mallet via jar file.
-            
-            """
             archive = zipfile.ZipFile(direc_path, 'r')
             if u'cc/mallet/regression/' not in archive.namelist():
                 return '2.0.7'

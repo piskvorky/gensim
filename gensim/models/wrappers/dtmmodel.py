@@ -12,14 +12,10 @@ This module allows for DTM and DIM model estimation from a training corpus.
 
 Installation
 ------------
-$ git clone git@github.com:blei-lab/dtm.git
+$ git clone https://github.com/blei-lab/dtm.git
 $ sudo aptitude install libgsl0-dev
 $ cd dtm/dtm
 $ make
-
-References
-----------
-https://github.com/blei-lab/dtm
 
 Examples
 --------
@@ -33,6 +29,7 @@ Examples
 References
 ----------
 .. [1] https://github.com/magsilva/dtm/tree/master/bin
+.. [2] https://github.com/blei-lab/dtm
 
 """
 

@@ -23,10 +23,6 @@ $ cd wordrank/
 # replace icc to gcc in install.sh
 $ ./install.sh
 
-References
-----------
-https://github.com/shihaoji/wordrank
-
 Examples
 --------
 >>>from gensim.models.wrappers import Wordrank
@@ -40,7 +36,8 @@ Examples
 References
 ----------
 .. [1] https://bitbucket.org/shihaoji/wordrank/
-.. [2] https://arxiv.org/pdf/1506.02761v3.pdf
+.. [2] https://github.com/shihaoji/wordrank
+.. [3] https://arxiv.org/pdf/1506.02761v3.pdf
 
 Warnings
 --------
