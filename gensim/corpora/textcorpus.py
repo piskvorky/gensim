@@ -618,16 +618,37 @@ class TextDirectoryCorpus(TextCorpus):
 
 
 def walk(top, topdown=True, onerror=None, followlinks=False, depth=0):
-    """This is a mostly copied version of `os.walk` from the Python 2 source code.
-    The only difference is that it returns the depth in the directory tree structure
-    at which each yield is taking place.
+    """Generate the file names in a directory tree by walking the tree either top-down or bottom-up.
+    For each directory in the tree rooted at directory top (including top itself), it yields a 4-tuple
+    (depth, dirpath, dirnames, filenames).
 
     Parameters
     ----------
     topdown : bool, optional
-    onerror : str, optional
+        If True - you can modify dirnames in-place.
+    onerror : function, optional
+        Some function, will be called with one argument, an OSError instance.
+        It can report the error to continue with the walk, or raise the exception to abort the walk.
+        Note that the filename is available as the filename attribute of the exception object.
     followlinks : bool, optional
+        If True - visit directories pointed to by symlinks, on systems that support them.
     depth : int, optional
+        Height of file-tree, don't pass it manually (this used as accumulator for recursion).
+
+    Notes
+    -----
+    This is a mostly copied version of `os.walk` from the Python 2 source code.
+    The only difference is that it returns the depth in the directory tree structure
+    at which each yield is taking place.
+
+    Yields
+    ------
+    (int, str, list of str, list of str)
+        Depth, current path, visited directories, visited non-directories.
+
+    See Also
+    --------
+    `os.walk documentation <https://docs.python.org/2/library/os.html#os.walk>`_
 
     """
     islink, join, isdir = os.path.islink, os.path.join, os.path.isdir
