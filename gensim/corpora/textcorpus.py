@@ -3,31 +3,34 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module provides some code scaffolding to simplify use of built dictionary
-for constructing sparse bag-of-word vectors (= sequences of `(word_id, word_weight)` 2-tuples).
+"""Module provides some code scaffolding to simplify use of built dictionary for constructing BoW vectors.
 
 Notes
 -----
-Text corpora usually reside on disk, as text files in one format or another
-In a common scenario, we need to build a dictionary (a `word->integer id`
-mapping), which is then used to construct sparse bag-of-word vectors
-(= sequences of `(word_id, word_weight)` 2-tuples).
+Text corpora usually reside on disk, as text files in one format or another In a common scenario,
+we need to build a dictionary (a `word->integer id` mapping), which is then used to construct sparse bag-of-word vectors
+(= iterable of `(word_id, word_weight)`).
 
-This module provides some code scaffolding to simplify this pipeline. For
-example, given a corpus where each document is a separate line in file on disk,
-you would override the `TextCorpus.get_texts` method to read one line=document
-at a time, process it (lowercase, tokenize, whatever) and yield it as a sequence
-of words.
+This module provides some code scaffolding to simplify this pipeline. For example, given a corpus where each document
+is a separate line in file on disk, you would override the :meth:`gensim.corpora.textcorpus.TextCorpus.get_texts`
+to read one line=document at a time, process it (lowercase, tokenize, whatever) and yield it as a sequence of words.
 
-Overriding `get_texts` is enough; you can then initialize the corpus with e.g.
-`MyTextCorpus(bz2.BZ2File('mycorpus.txt.bz2'))` and it will behave correctly like a
-corpus of sparse vectors. The `__iter__` methods is automatically set up, and
-dictionary is automatically populated with all `word->id` mappings.
+Overriding :meth:`gensim.corpora.textcorpus.TextCorpus.get_texts` is enough, you can then initialize the corpus
+with e.g. `MyTextCorpus("mycorpus.txt.bz2")` and it will behave correctly like a corpus of sparse vectors.
+The :meth:`~gensim.corpora.textcorpus.TextCorpus.__iter__` method is automatically set up,
+and dictionary is automatically populated with all `word->id` mappings.
 
-The resulting object can be used as input to all gensim models (TFIDF, LSI, ...),
-serialized with any format (Matrix Market, SvmLight, Blei's LDA-C format etc).
+The resulting object can be used as input to some of gensim models (:class:`~gensim.models.tfidfmodel.TfidfModel`,
+:class:`~gensim.models.lsimodel.LsiModel`, :class:`~gensim.models.ldamodel.LdaModel`, ...), serialized with any format
+(`Matrix Market <http://math.nist.gov/MatrixMarket/formats.html>`_,
+`SvmLight <http://svmlight.joachims.org/>`_, `Blei's LDA-C format <https://github.com/blei-lab/lda-c>`_, etc).
 
-See the `gensim.test.test_miislita.CorpusMiislita` class for a simple example.
+
+See Also
+--------
+:class:`gensim.test.test_miislita.CorpusMiislita`
+    Good simple example.
+
 """
 
 
@@ -48,22 +51,83 @@ logger = logging.getLogger(__name__)
 
 
 def remove_stopwords(tokens, stopwords=STOPWORDS):
-    """Remove stopwords using list from `gensim.parsing.preprocessing.STOPWORDS`."""
+    """Remove stopwords using list from `gensim.parsing.preprocessing.STOPWORDS`.
+
+    Parameters
+    ----------
+    tokens : iterable of str
+        Sequence of tokens.
+    stopwords : iterable of str, optional
+        Sequence of stopwords
+
+    Returns
+    -------
+    list of str
+        List of tokens without `stopwords`.
+
+    """
     return [token for token in tokens if token not in stopwords]
 
 
 def remove_short(tokens, minsize=3):
-    """Remove tokens smaller than `minsize` chars, which is 3 by default."""
+    """Remove tokens shorter than `minsize` chars.
+
+    Parameters
+    ----------
+    tokens : iterable of str
+        Sequence of tokens.
+    minsize : int, optimal
+        Minimal length of token (include).
+
+    Returns
+    -------
+    list of str
+        List of tokens without short tokens.
+
+    """
     return [token for token in tokens if len(token) >= minsize]
 
 
 def lower_to_unicode(text, encoding='utf8', errors='strict'):
-    """Lowercase `text` and convert to unicode."""
+    """Lowercase `text` and convert to unicode, using :func:`gensim.utils.any2unicode`.
+
+    Parameters
+    ----------
+    text : str
+        Input text.
+    encoding : str, optional
+        Encoding that will be used for conversion.
+    errors : str, optional
+        Error handling behaviour, used as parameter for `unicode` function (python2 only).
+
+    Returns
+    -------
+    str
+        Unicode version of `text`.
+
+    See Also
+    --------
+    :func:`gensim.utils.any2unicode`
+        Convert any string to unicode-string.
+
+    """
     return utils.to_unicode(text.lower(), encoding, errors)
 
 
 def strip_multiple_whitespaces(s):
-    """Collapse multiple whitespace characters into a single space."""
+    """Collapse multiple whitespace characters into a single space.
+
+    Parameters
+    ----------
+    s : str
+        Input string
+
+    Returns
+    -------
+    str
+        String with collapsed whitespaces.
+
+    """
     return RE_WHITESPACE.sub(" ", s)
 
 
