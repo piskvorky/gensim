@@ -238,9 +238,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         >>> from gensim.corpora.ucicorpus import UciCorpus, UciReader, UciWriter
         >>> from gensim.test.utils import datapath
         >>> ucc = UciCorpus(datapath('testcorpus.uci'))
-        >>> ucc.create_dictionary
-        >>> ucc.id2word
-        {0: 'human', 1: 'interface', 2: 'computer', 3: 'user', 4: 'system', 5: 'response', 6: 'time', 7: 'eps', 8: 'survey', 9: 'trees', 10: 'graph', 11: 'minors'}
+        >>> dictionary = ucc.create_dictionary()
 
         """
         dictionary = Dictionary()
