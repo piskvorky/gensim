@@ -259,7 +259,9 @@ setup(
         Extension('gensim.models.sent2vec_inner',
             sources=['./gensim/models/sent2vec_inner.cpp'],
             include_dirs=[model_dir],
-            language="c++"),
+            language="c++",
+            extra_compile_args = ['-ffast-math', '-O2', '-std=c++11',
+            '-stdlib=libc++', '-mmacosx-version-min=10.7']),
         Extension('gensim.models.fasttext_inner',
             sources=['./gensim/models/fasttext_inner.c'],
             include_dirs=[model_dir])

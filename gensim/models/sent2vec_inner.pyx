@@ -3,6 +3,8 @@
 # cython: wraparound=False
 # cython: cdivision=True
 # coding: utf-8
+# distutils : language = c++
+# distutils : extra_compile_args = -std=c++11
 
 import cython
 import numpy as np
@@ -112,16 +114,21 @@ cdef REAL_t update(vector[int] &context, int target, REAL_t lr, REAL_t *hidden, 
     return loss
 
 
-# TODO fix me with thread-safe version
-cdef REAL_t random_uniform()nogil:
+cdef extern from "<random>" namespace "std":
 
-    return rand() / (RAND_MAX + 1.0)
+    cdef cppclass mt19937 nogil:
+        mt19937()
+        mt19937(int seed)
 
+    cdef cppclass uniform_real_distribution[T] nogil:
+        uniform_real_distribution()
+        uniform_real_distribution(T a, T b)
+        T operator()(mt19937 gen)
 
-# TODO fix me with thread-safe version
-cdef int random_range(int a, int b)nogil:
-
-    return a + <int>(rand() % ((b - a) + 1))
+    cdef cppclass uniform_int_distribution[T] nogil:
+        uniform_int_distribution()
+        uniform_int_distribution(int, int)
+        T operator()(mt19937 gen)
 
 
 cdef int get_line(vector[int] &wids, vector[int] &words, int max_line_size)nogil:
@@ -139,19 +146,20 @@ cdef int get_line(vector[int] &wids, vector[int] &words, int max_line_size)nogil
     return ntokens
 
 
-cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size)nogil:
+cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size, mt19937 gen)nogil:
 
     cdef int num_discarded = 0
     cdef vector[int] discard
     cdef int line_size = line.size()
     cdef int token_to_discard
     cdef int i, j, h
+    cdef uniform_int_distribution[int] dist = uniform_int_distribution[int](0, line_size - 1)
 
     for i from 0<= i < line.size():
         discard.push_back(0)
 
     while num_discarded < k and line_size - num_discarded > 2:
-        token_to_discard = random_range(0, line_size-1)
+        token_to_discard = dist(gen)
         if discard[token_to_discard] == 0:
             discard[token_to_discard] = 1
             num_discarded += 1
@@ -170,7 +178,8 @@ cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size
 cdef (int, int, REAL_t) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t *pdiscard, int max_line_size,
                              int word_ngrams, int dropout_k, REAL_t lr, REAL_t *hidden, REAL_t *grad,
                              int vector_size, int *negpos, int neg, int negatives_len,
-                             REAL_t *wi, REAL_t *wo, int *negatives, int bucket, int size)nogil:
+                             REAL_t *wi, REAL_t *wo, int *negatives, int bucket, int size, mt19937 gen,
+                             uniform_real_distribution[REAL_t] dist)nogil:
 
     cdef int local_token_count = 0
     cdef int nexamples = 0
@@ -184,12 +193,12 @@ cdef (int, int, REAL_t) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t
         words_size = words.size()
         if words_size > 0:
             for j from 0 <= j < words_size:
-                if random_uniform() > pdiscard[words[j]]:
+                if dist(gen) > pdiscard[words[j]]:
                     continue
                 nexamples += 1
                 context.assign(words.begin(), words.end())
                 context[j] = 0
-                add_ngrams_train(context, word_ngrams, dropout_k, bucket, size)
+                add_ngrams_train(context, word_ngrams, dropout_k, bucket, size, gen)
                 loss += update(context, words[j], lr, hidden, grad, vector_size,
                                negpos, neg, negatives_len, wi, wo, negatives)
                 context.clear()
@@ -216,7 +225,9 @@ def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
     cdef int bucket = <int> (model.dict.bucket)
     cdef int word_ngrams = <int> (model.word_ngrams)
     cdef int dropout_k = <int> (model.dropout_k)
-    srand(model.seed)
+    #srand(model.seed)
+    cdef mt19937 gen = mt19937(model.seed)
+    cdef uniform_real_distribution[REAL_t] dist = uniform_real_distribution[REAL_t](0.0, 0.1)
 
     cdef vector[vector[int]] word_ids
     cdef vector[int] ids
@@ -236,6 +247,6 @@ def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
                                                                 dropout_k, lr, hidden,
                                                                 grad, vector_size, &negpos,
                                                                 neg, negatives_len, wi, wo,
-                                                                negatives, bucket, size)
+                                                                negatives, bucket, size, gen, dist)
     model.negpos = negpos
     return local_token_count, nexamples, loss
