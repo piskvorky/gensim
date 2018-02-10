@@ -5,11 +5,6 @@
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Scikit learn interface for gensim for easy use of gensim with scikit-learn
-Follows scikit-learn API conventions
-"""
-
 import numpy as np
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
@@ -97,7 +92,7 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        2D ndarray of float
+        list of (int, int)
             Topic distribution matrix of shape [num_docs, num_topics]
 
         """
