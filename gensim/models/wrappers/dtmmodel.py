@@ -69,7 +69,8 @@ class DtmModel(utils.SaveLoad):
         id2word : dict
             Mapping between tokens ids and words from corpus.
         mode : str
-            Controls the mode of the mode: 'fit' is for training, 'time' for analyzing documents through time according to a DTM, basically a held out set.
+            Controls the mode of the mode: 'fit' is for training, 'time' for analyzing documents through time
+            according to a DTM, basically a held out set.
         model : str
             Controls the choice of model. 'fixed' is for DIM and 'dtm' for DTM.
         lda_sequence_min_iter : int
@@ -208,7 +209,8 @@ class DtmModel(utils.SaveLoad):
         time_slices : list
             List of time stamps
         mode : str
-            Controls the mode of the mode: 'fit' is for training, 'time' for analyzing documents through time according to a DTM, basically a held out set.
+            Controls the mode of the mode: 'fit' is for training, 'time' for analyzing documents through time
+            according to a DTM, basically a held out set.
         model : str
             Controls the choice of model. 'fixed' is for DIM and 'dtm' for DTM.
 
@@ -324,7 +326,7 @@ class DtmModel(utils.SaveLoad):
         return shown
 
     def show_topic(self, topicid, time, topn=50, num_words=None):
-        """Return `num_words` most probable words for the given `topicid`, as a list of `(word_probability, word)` 2-tuples.
+        """Return `num_words` most probable words for the given `topicid`.
 
         Parameters
         ----------

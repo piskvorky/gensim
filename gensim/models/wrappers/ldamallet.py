@@ -88,7 +88,8 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             String prefix under which all data files will be stored.
             default: system temp + random filename prefix.
         optimize_interval : int
-            Optimize hyperparameters every N iterations (sometimes leads to Java exception 0 to switch off hyperparameter optimization).
+            Optimize hyperparameters every N iterations
+            (sometimes leads to Java exception 0 to switch off hyperparameter optimization).
         iterations : int
             Number of sampling iterations.
         topic_threshold : float
