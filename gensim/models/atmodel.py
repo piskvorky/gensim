@@ -922,7 +922,7 @@ class AuthorTopicModel(LdaModel):
             len_input_corpus = sum(1 for _ in corpus)
         if len_input_corpus == 0:
             raise ValueError("AuthorTopicModel.get_new_author_topics() called with an empty corpus")
-            
+
         new_author_name = "placeholder_name"
         corpus_doc_idx = list(range(0, len_input_corpus))
 
@@ -964,9 +964,8 @@ class AuthorTopicModel(LdaModel):
 
         Obtaining topic probabilities of each word, as in LDA (via `per_word_topics`),
         is not supported.
-
         """
-
+        
         author_id = self.author2id[author_name]
 
         if minimum_probability is None:
