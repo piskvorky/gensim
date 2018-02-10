@@ -5,11 +5,6 @@
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Scikit learn interface for gensim for easy use of gensim with scikit-learn
-Follows scikit-learn API conventions
-"""
-
 import numpy as np
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
@@ -20,14 +15,36 @@ from gensim import matutils
 
 
 class LsiTransformer(TransformerMixin, BaseEstimator):
-    """
-    Base LSI module
+    """Base LSI module.
+
+    Scikit learn interface for `gensim.models.lsimodel` for easy use of gensim with scikit-learn.
+    Follows scikit-learn API conventions.
+
     """
 
     def __init__(self, num_topics=200, id2word=None, chunksize=20000,
                  decay=1.0, onepass=True, power_iters=2, extra_samples=100):
-        """
-        Sklearn wrapper for LSI model. See gensim.model.LsiModel for parameter details.
+        """Sklearn wrapper for LSI model.
+
+        Parameters
+        ----------
+        num_topics : int, optional
+            Number of requested factors (latent dimensions)
+        id2word : dict of {int: str}, optional
+            ID to word mapping, optional.
+        chunksize :  int, optional
+            Number of documents to be used in each training chunk.
+        decay : float, optional
+            Weight of existing observations relatively to new ones.
+        onepass : bool, optional
+            Whether the one-pass algorithm should be used for training.
+            Pass `False` to force a multi-pass stochastic algorithm.
+        power_iters: int, optional
+            Number of power iteration steps to be used.
+            Increasing the number of power iterations improves accuracy, but lowers performance
+        extra_samples : int, optional
+            Extra samples to be used besides the rank `k`. Can improve accuracy.
+
         """
         self.gensim_model = None
         self.num_topics = num_topics
@@ -42,6 +59,17 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
         """
         Fit the model according to the given training data.
         Calls gensim.models.LsiModel
+
+        Parameters
+        ----------
+        X : iterable of iterable of (int, float)
+            Stream of document vectors or sparse matrix of shape: [num_terms, num_documents].
+
+        Returns
+        -------
+        LsiTransformer
+            The trained model
+
         """
         if sparse.issparse(X):
             corpus = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
@@ -55,14 +83,18 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """
-        Takes a list of documents as input ('docs').
-        Returns a matrix of topic distribution for the given document bow, where a_ij
-        indicates (topic_i, topic_probability_j).
-        The input `docs` should be in BOW format and can be a list of documents like
-        [[(4, 1), (7, 1)],
-        [(9, 1), (13, 1)], [(2, 1), (6, 1)]]
-        or a single document like : [(4, 1), (7, 1)]
+        """Computes the topic distribution matrix
+
+        Parameters
+        ----------
+        docs : iterable of iterable of (int, float)
+            Stream of document vectors or sparse matrix of shape: [`num_terms`, num_documents].
+
+        Returns
+        -------
+        list of (int, int)
+            Topic distribution matrix of shape [num_docs, num_topics]
+
         """
         if self.gensim_model is None:
             raise NotFittedError(
@@ -78,8 +110,22 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
         return np.reshape(np.array(distribution), (len(docs), self.num_topics))
 
     def partial_fit(self, X):
-        """
-        Train model over X.
+        """Train model over a potentially incomplete set of documents.
+
+        This method can be used in two ways:
+            1. On an unfitted model in which case the model is initialized and trained on `X`.
+            2. On an already fitted model in which case the model is **further** trained on `X`.
+
+        Parameters
+        ----------
+        X : iterable of iterable of (int, float)
+            Stream of document vectors or sparse matrix of shape: [num_terms, num_documents].
+
+        Returns
+        -------
+        LsiTransformer
+            The trained model.
+
         """
         if sparse.issparse(X):
             X = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
