@@ -921,12 +921,8 @@ class AuthorTopicModel(LdaModel):
             logger.warning("input corpus stream has no len(); counting documents")
             len_input_corpus = sum(1 for _ in corpus)
         if len_input_corpus == 0:
-            logger.warning("AuthorTopicModel.get_new_author_topics() called with an empty corpus")
-            return
-        if not len_input_corpus < self.chunksize:
-            logger.warning("AuthorTopicModel.get_new_author_topics() called with to many documents. Use update().")
-            return
-
+            raise ValueError("AuthorTopicModel.get_new_author_topics() called with an empty corpus")
+            
         new_author_name = "placeholder_name"
         corpus_doc_idx = list(range(0, len_input_corpus))
 
