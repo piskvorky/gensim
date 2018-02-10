@@ -74,8 +74,7 @@ except ImportError:
 
 
 class Shard(utils.SaveLoad):
-    """
-    A proxy class that represents a single shard instance within a Similarity
+    """A proxy class that represents a single shard instance within a Similarity
     index.
 
     Basically just wraps (Sparse)MatrixSimilarity so that it mmaps from disk on
@@ -84,6 +83,14 @@ class Shard(utils.SaveLoad):
     """
 
     def __init__(self, fname, index):
+        """
+        Parameters
+        ----------
+        fname : str
+            Path to corpus.
+        index : int
+            Index of sytactic unit in corpus.
+        """
         self.dirname, self.fname = os.path.split(fname)
         self.length = len(index)
         self.cls = index.__class__
@@ -92,12 +99,18 @@ class Shard(utils.SaveLoad):
         self.index = self.get_index()
 
     def fullname(self):
+        """Return fullname of the corpus.
+        """
         return os.path.join(self.dirname, self.fname)
 
     def __len__(self):
+        """Return length of the corpus.
+        """
         return self.length
 
     def __getstate__(self):
+        """Return result of the index processing.
+        """
         result = self.__dict__.copy()
         # (S)MS objects must be loaded via load() because of mmap (simple pickle.load won't do)
         if 'index' in result:
@@ -105,9 +118,13 @@ class Shard(utils.SaveLoad):
         return result
 
     def __str__(self):
+        """Return the number of documents present in a shard.
+        """
         return "%s Shard(%i documents in %s)" % (self.cls.__name__, len(self), self.fullname())
 
     def get_index(self):
+        """Return index vector of the document.
+        """
         if not hasattr(self, 'index'):
             logger.debug("mmaping index from %s", self.fullname())
             self.index = self.cls.load(self.fullname(), mmap='r')
@@ -118,11 +135,25 @@ class Shard(utils.SaveLoad):
 
         The vector is of the same type as the underlying index (ie., dense for
         MatrixSimilarity and scipy.sparse for SparseMatrixSimilarity.
+        
+        Parameters
+        ----------
+        pos : int
+            Integer value for the vector.
+        
         """
         assert 0 <= pos < len(self), "requested position out of range"
         return self.get_index().index[pos]
 
     def __getitem__(self, query):
+        """Return the queried index vector.
+        
+        Parameters
+        ----------
+        query : int
+            Integer value for the vector to be queried.
+        
+        """
         index = self.get_index()
         try:
             index.num_best = self.num_best
@@ -133,6 +164,8 @@ class Shard(utils.SaveLoad):
 
 
 def query_shard(args):
+    """Returns the result for shard querying.
+    """
     query, shard = args  # simulate starmap (not part of multiprocessing in older Pythons)
     logger.debug("querying shard %s num_best=%s in process %s", shard, shard.num_best, os.getpid())
     result = shard[query]
