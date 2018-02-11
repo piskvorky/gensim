@@ -958,14 +958,15 @@ class AuthorTopicModel(LdaModel):
 
     def get_author_topics(self, author_name, minimum_probability=None):
         """
-        Return topic distribution the given author, as a list of
+        Return topic distribution the given author.
+
+        Input as as a list of
         (topic_id, topic_probability) 2-tuples.
         Ignore topics with very low probability (below `minimum_probability`).
-
         Obtaining topic probabilities of each word, as in LDA (via `per_word_topics`),
         is not supported.
         """
-        
+
         author_id = self.author2id[author_name]
 
         if minimum_probability is None:
