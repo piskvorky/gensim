@@ -122,8 +122,16 @@ class Dispatcher(object):
         """
         logger.info("end of input, assigning all remaining jobs")
         logger.debug("jobs done: %s, jobs received: %s", self._jobsdone, self._jobsreceived)
+        i = 0
+        count = 10
         while self._jobsdone < self._jobsreceived:
             time.sleep(0.5)  # check every half a second
+            i += 1
+            if i > count:
+                i = 0
+                for workerid, worker in iteritems(self.workers):
+                    logger.info("checking aliveness for worker %s", workerid)
+                    worker.ping()
 
         logger.info("merging states from %i workers", len(self.workers))
         workers = list(self.workers.values())

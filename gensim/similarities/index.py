@@ -8,7 +8,8 @@
 Intro
 -----
 This module contains integration Annoy with :class:`~gensim.models.word2vec.Word2Vec`,
-:class:`~gensim.models.doc2vec.Doc2Vec` and :class:`~gensim.models.keyedvectors.KeyedVectors`.
+:class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
+:class:`~gensim.models.keyedvectors.KeyedVectors`.
 
 
 What is Annoy
@@ -40,7 +41,9 @@ except ImportError:
 
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
-from gensim.models.keyedvectors import KeyedVectors
+from gensim.models.fasttext import FastText
+from gensim.models import KeyedVectors
+from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors
 try:
     from annoy import AnnoyIndex
 except ImportError:
@@ -50,17 +53,17 @@ except ImportError:
 
 
 class AnnoyIndexer(object):
-    """This class allows to use `Annoy <https://github.com/spotify/annoy>`_ as indexer for ``most_similar`` method
-    from :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`
-    and :class:`~gensim.models.keyedvectors.KeyedVectors` classes.
+    """This class allows to use `Annoy <https://github.com/spotify/annoy>`_ as indexer for `most_similar` method
+    from :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
+    :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` classes.
+
     """
 
     def __init__(self, model=None, num_trees=None):
         """
         Parameters
         ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec` or
-                :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
+        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`, optional
             Model, that will be used as source for index.
         num_trees : int, optional
             Number of trees for Annoy indexer.
@@ -86,12 +89,12 @@ class AnnoyIndexer(object):
         if model and num_trees:
             if isinstance(self.model, Doc2Vec):
                 self.build_from_doc2vec()
-            elif isinstance(self.model, Word2Vec):
+            elif isinstance(self.model, (Word2Vec, FastText)):
                 self.build_from_word2vec()
-            elif isinstance(self.model, KeyedVectors):
+            elif isinstance(self.model, (WordEmbeddingsKeyedVectors, KeyedVectors)):
                 self.build_from_keyedvectors()
             else:
-                raise ValueError("Only a Word2Vec, Doc2Vec or KeyedVectors instance can be used")
+                raise ValueError("Only a Word2Vec, Doc2Vec, FastText or KeyedVectors instance can be used")
 
     def save(self, fname, protocol=2):
         """Save AnnoyIndexer instance.
@@ -157,7 +160,7 @@ class AnnoyIndexer(object):
         """Build an Annoy index using word vectors from a Word2Vec model."""
 
         self.model.init_sims()
-        return self._build_from_model(self.model.wv.syn0norm, self.model.wv.index2word, self.model.vector_size)
+        return self._build_from_model(self.model.wv.vectors_norm, self.model.wv.index2word, self.model.vector_size)
 
     def build_from_doc2vec(self):
         """Build an Annoy index using document vectors from a Doc2Vec model."""
@@ -165,7 +168,7 @@ class AnnoyIndexer(object):
         docvecs = self.model.docvecs
         docvecs.init_sims()
         labels = [docvecs.index_to_doctag(i) for i in range(0, docvecs.count)]
-        return self._build_from_model(docvecs.doctag_syn0norm, labels, self.model.vector_size)
+        return self._build_from_model(docvecs.vectors_docs_norm, labels, self.model.vector_size)
 
     def build_from_keyedvectors(self):
         """Build an Annoy index using word vectors from a KeyedVectors model."""

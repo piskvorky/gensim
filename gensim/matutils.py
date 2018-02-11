@@ -9,6 +9,7 @@
 from __future__ import with_statement
 
 
+from itertools import chain
 import logging
 import math
 
@@ -755,6 +756,77 @@ def cossim(vec1, vec2):
     return result
 
 
+def softcossim(vec1, vec2, similarity_matrix):
+    """Get Soft Cosine Measure between two vectors given a term similarity matrix.
+
+    Return Soft Cosine Measure between two sparse vectors given a sparse term similarity matrix
+    in the :class:`scipy.sparse.csc_matrix` format. The similarity is a number between <-1.0, 1.0>,
+    higher is more similar.
+
+    Parameters
+    ----------
+    vec1 : list of (int, float)
+        A query vector in the BoW format.
+    vec2 : list of (int, float)
+        A document vector in the BoW format.
+    similarity_matrix : {:class:`scipy.sparse.csc_matrix`, :class:`scipy.sparse.csr_matrix`}
+        A term similarity matrix, typically produced by
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`.
+
+    Returns
+    -------
+    `similarity_matrix.dtype`
+        The Soft Cosine Measure between `vec1` and `vec2`.
+
+    Raises
+    ------
+    ValueError
+        When the term similarity matrix is in an unknown format.
+
+    See Also
+    --------
+    :meth:`gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`
+        A term similarity matrix produced from term embeddings.
+    :class:`gensim.similarities.docsim.SoftCosineSimilarity`
+        A class for performing corpus-based similarity queries with Soft Cosine Measure.
+
+    References
+    ----------
+    Soft Cosine Measure was perhaps first defined by [sidorovetal14]_.
+
+    .. [sidorovetal14] Grigori Sidorov et al., "Soft Similarity and Soft Cosine Measure: Similarity
+       of Features in Vector Space Model", 2014, http://www.cys.cic.ipn.mx/ojs/index.php/CyS/article/view/2043/1921.
+
+    """
+    if not isinstance(similarity_matrix, scipy.sparse.csc_matrix):
+        if isinstance(similarity_matrix, scipy.sparse.csr_matrix):
+            similarity_matrix = similarity_matrix.T
+        else:
+            raise ValueError('unknown similarity matrix format')
+
+    if not vec1 or not vec2:
+        return 0.0
+
+    vec1 = dict(vec1)
+    vec2 = dict(vec2)
+    word_indices = sorted(set(chain(vec1, vec2)))
+    dtype = similarity_matrix.dtype
+    vec1 = np.array([vec1[i] if i in vec1 else 0 for i in word_indices], dtype=dtype)
+    vec2 = np.array([vec2[i] if i in vec2 else 0 for i in word_indices], dtype=dtype)
+    dense_matrix = similarity_matrix[[[i] for i in word_indices], word_indices].todense()
+    vec1len = vec1.T.dot(dense_matrix).dot(vec1)[0, 0]
+    vec2len = vec2.T.dot(dense_matrix).dot(vec2)[0, 0]
+
+    assert \
+        vec1len > 0.0 and vec2len > 0.0, \
+        u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
+        u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
+
+    result = vec1.T.dot(dense_matrix).dot(vec2)[0, 0]
+    result /= math.sqrt(vec1len) * math.sqrt(vec2len)  # rescale by vector lengths
+    return np.clip(result, -1.0, 1.0)
+
+
 def isbow(vec):
     """Checks if vector passed is in BoW format.
 
@@ -897,10 +969,9 @@ def hellinger(vec1, vec2):
     if isbow(vec1) and isbow(vec2):
         # if it is a BoW format, instead of converting to dense we use dictionaries to calculate appropriate distance
         vec1, vec2 = dict(vec1), dict(vec2)
-        if len(vec2) < len(vec1):
-            vec1, vec2 = vec2, vec1  # swap references so that we iterate over the shorter vector
+        indices = set(list(vec1.keys()) + list(vec2.keys()))
         sim = np.sqrt(
-            0.5 * sum((np.sqrt(value) - np.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1))
+            0.5 * sum((np.sqrt(vec1.get(index, 0.0)) - np.sqrt(vec2.get(index, 0.0)))**2 for index in indices)
         )
         return sim
     else:
