@@ -103,6 +103,7 @@ http://api.mongodb.org/python/current/installation.html#osx
 
 
 model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
+csparse_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'csparse')
 gensim_dir = os.path.join(os.path.dirname(__file__), 'gensim')
 
 cmdclass = {'build_ext': custom_build_ext}
@@ -258,7 +259,12 @@ setup(
             include_dirs=[model_dir]),
         Extension('gensim.models.fasttext_inner',
             sources=['./gensim/models/fasttext_inner.c'],
-            include_dirs=[model_dir])
+            include_dirs=[model_dir]),
+        Extension('gensim.csparse.psparse',
+            sources=['gensim/csparse/psparse.pyx', 'gensim/csparse/cs_gaxpy.c'],
+            extra_compile_args=['-fopenmp', '-O3', '-ffast-math'],
+            include_dirs = [csparse_dir, csparse_dir + '/CSParse/Include/'],
+            extra_link_args=['-fopenmp'])
     ],
     cmdclass=cmdclass,
     packages=find_packages(),
