@@ -13,6 +13,7 @@
 
 import os
 import sys
+import sphinx_bootstrap_theme
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -21,7 +22,8 @@ sys.path.append(os.path.abspath('.'))
 
 # -- General configuration -----------------------------------------------------
 
-html_theme = 'gensim_theme'
+html_theme = 'bootstrap'
+html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -42,7 +44,7 @@ master_doc = 'indextoc'
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-html_additional_pages = {'index': './_templates/indexcontent.html'}
+html_additional_pages = {'index': os.path.abspath('./_templates/indexcontent.html')}
 
 # General information about the project.
 project = u'gensim'
@@ -107,19 +109,21 @@ pygments_style = 'sphinx'
 # main_colour = "#ffbbbb"
 
 html_theme_options = {
-# "rightsidebar": "false",
-# "stickysidebar": "true",
-# "bodyfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
-# "headfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
-# "sidebarbgcolor": "fuckyou",
-# "footerbgcolor": "#771111",
-# "relbarbgcolor": "#993333",
-# "sidebartextcolor": "#000000",
-# "sidebarlinkcolor": "#330000",
-# "codebgcolor": "#fffff0",
-# "headtextcolor": "#000080",
-# "headbgcolor": "#f0f0ff",
-# "bgcolor": "#ffffff",
+    'navbar_sidebarrel': False,
+    'navbar_links': [
+        ("Introduction", "intro"),
+        ("Tutorials", "tutorial"),
+        ("Install", "install"),
+        ("Support", "support"),
+        ("API", "apiref"),
+        ("About", "about")
+    ],
+    'bootswatch_theme': 'yeti',
+    'navbar_class': 'navbar navbar-expand-lg navbar-dark bg-primary',
+    'navbar_pagenav': False,
+    'globaltoc_depth': 0,
+    'globaltoc_includehidden': "false",
+
 }
 
 
