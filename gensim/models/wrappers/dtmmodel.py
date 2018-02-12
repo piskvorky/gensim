@@ -465,7 +465,7 @@ class DtmModel(utils.SaveLoad):
 
         Returns
         -------
-        list of (float, int)
+        list of (float, str)
             Sequence of probable words, as a list of `(word_probability, word)`.
 
         """
