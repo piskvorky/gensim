@@ -925,13 +925,18 @@ class AuthorTopicModel(LdaModel):
         Infers a topic distribution for a new author over the passed corpus of docs,
         assuming that all documents are from this single new author.
 
-        Args:
-            corpus (list): Bag-of-words representation of the documents to get topics for.
-            minimum_probability (float): Ignore topics with probability below this value
-                (None by default). If set to None, a value of 1e-8 is used to prevent 0s.
-        Returns:
-            topic distribution for the given list of documents `corpus` in bow format,
-            as a list of `(topic_id, topic_probability)` 2-tuples.
+        Parameters
+        ----------
+        corpus : iterable of iterable of (int, int)
+            Corpus in BoW format.
+        minimum_probability : float, optional
+            Ignore topics with probability below this value, if None - 1e-8 is used.
+
+        Returns
+        -------
+        list of (int, float)
+            Topic distribution for the given `corpus`.
+    
         """
 
         # TODO: how should this function look like for get_new_author_topics?
