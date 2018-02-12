@@ -4,6 +4,12 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+"""Scikit learn interface for `gensim.corpora.Dictionary`.
+
+Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
+
+"""
+
 from six import string_types
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
@@ -13,10 +19,11 @@ from gensim.utils import tokenize
 
 
 class Text2BowTransformer(TransformerMixin, BaseEstimator):
-    """Base Text2Bow module
+    """Base Text2Bow module.
 
-    Scikit learn interface for `gensim.models.lsimodel` for easy use of gensim with scikit-learn.
-    Follows scikit-learn API conventions.
+    Wraps :class:`~gensim.corpora.dictionary.Dictionary`.
+    For more information on the inner workings please take a look at
+    the original class.
 
     """
 
@@ -45,7 +52,7 @@ class Text2BowTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        Text2BowTransformer
+        :class:`~gensim.sklearn_api.text2bow.Text2BowTransformer`
             The trained model.
 
         """
@@ -92,7 +99,7 @@ class Text2BowTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        Text2BowTransformer
+        :class:`~gensim.sklearn_api.text2bow.Text2BowTransformer`
             The trained model.
 
         """

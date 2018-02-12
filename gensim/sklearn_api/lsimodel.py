@@ -5,6 +5,21 @@
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+"""Scikit learn interface for `gensim.models.lsimodel`.
+
+Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
+
+Examples
+--------
+Integrate with sklearn Pipelines:
+
+    >>> model = LsiTransformer(num_topics=15, id2word=id2word)
+    >>> clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+    >>> pipe = Pipeline([('features', model,), ('classifier', clf)])
+    >>> pipe.fit(corpus, data.target)
+
+"""
+
 import numpy as np
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
@@ -17,8 +32,9 @@ from gensim import matutils
 class LsiTransformer(TransformerMixin, BaseEstimator):
     """Base LSI module.
 
-    Scikit learn interface for `gensim.models.lsimodel` for easy use of gensim with scikit-learn.
-    Follows scikit-learn API conventions.
+    Wraps :class:`~gensim.model.lsimodel.LsiModel`.
+    For more information on the inner working please take a look at
+    the original class.
 
     """
 
@@ -58,7 +74,7 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
-        Calls gensim.models.LsiModel
+        Calls :meth:`~gensim.models.lsimodel.LsiModel`
 
         Parameters
         ----------
@@ -67,8 +83,8 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        LsiTransformer
-            The trained model
+        :class:`~gensim.sklearn_api.lsimodel.LsiTransformer`
+            The trained model.
 
         """
         if sparse.issparse(X):
@@ -123,7 +139,7 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        LsiTransformer
+        :class:`~gensim.sklearn_api.lsimodel.LsiTransformer`
             The trained model.
 
         """

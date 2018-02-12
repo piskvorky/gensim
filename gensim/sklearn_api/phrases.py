@@ -4,9 +4,10 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Scikit learn interface for gensim for easy use of gensim with scikit-learn
-Follows scikit-learn API conventions
+"""Scikit learn interface for `gensim.models.phrases`.
+
+Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
+
 """
 
 from six import string_types
@@ -19,8 +20,9 @@ from gensim import models
 class PhrasesTransformer(TransformerMixin, BaseEstimator):
     """Base Phrases module
 
-    Scikit learn interface for `gensim.models.phrases` for easy use of gensim with scikit-learn.
-    Follows scikit-learn API conventions.
+    Wraps :class:`~gensim.models.phrases.Phrases`.
+    For more information on the inner workings please take a look at
+    the original class.
 
     """
 
@@ -92,7 +94,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        PhrasesTransformer
+        :class:`~gensim.sklearn_api.phrases.PhrasesTransformer`
             The trained model.
 
         """
@@ -144,7 +146,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        PhrasesTransformer
+        :class:`~gensim.sklearn_api.phrases.PhrasesTransformer`
             The trained model.
 
         """
