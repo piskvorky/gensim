@@ -1,5 +1,4 @@
 import unittest
-import os
 import numpy as np
 from gensim.models import word2vec
 
@@ -21,26 +20,12 @@ try:
 except ImportError:
     raise unittest.SkipTest("Test requires Keras to be installed, which is not available")
 
-sentences = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import common_texts
 
 
 class TestKerasWord2VecWrapper(unittest.TestCase):
     def setUp(self):
-        self.model_cos_sim = word2vec.Word2Vec(sentences, size=100, min_count=1, hs=1)
-        # self.model_twenty_ng = word2vec.Word2Vec(word2vec.LineSentence(datapath('20_newsgroup_keras_w2v_data.txt')), min_count=1)
+        self.model_cos_sim = word2vec.Word2Vec(common_texts, size=100, min_count=1, hs=1)
         self.model_twenty_ng = word2vec.Word2Vec(min_count=1)
 
     def testWord2VecTraining(self):
@@ -89,7 +74,8 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
 
     def testEmbeddingLayer20NewsGroup(self):
         """
-        Test Keras 'Embedding' layer returned by 'get_embedding_layer' function for a smaller version of the 20NewsGroup classification problem.
+        Test Keras 'Embedding' layer returned by 'get_embedding_layer' function
+        for a smaller version of the 20NewsGroup classification problem.
         """
         MAX_SEQUENCE_LENGTH = 1000
 
@@ -155,7 +141,9 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         fit_ret_val = model.fit(x_train, y_train, epochs=1)
 
         # verify the type of the object returned after training
-        self.assertTrue(type(fit_ret_val) == keras.callbacks.History)  # value returned is a `History` instance. Its `history` attribute contains all information collected during training.
+        # value returned is a `History` instance.
+        # Its `history` attribute contains all information collected during training.
+        self.assertTrue(type(fit_ret_val) == keras.callbacks.History)
 
 
 if __name__ == '__main__':

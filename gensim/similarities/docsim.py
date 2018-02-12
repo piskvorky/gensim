@@ -336,18 +336,21 @@ class Similarity(interfaces.SimilarityABC):
             # the following uses a lot of lazy evaluation and (optionally) parallel
             # processing, to improve query latency and minimize memory footprint.
             offsets = numpy.cumsum([0] + [len(shard) for shard in self.shards])
-            convert = lambda doc, shard_no: [(doc_index + offsets[shard_no], sim) for doc_index, sim in doc]
+
+            def convert(shard_no, doc):
+                return [(doc_index + offsets[shard_no], sim) for doc_index, sim in doc]
+
             is_corpus, query = utils.is_corpus(query)
             is_corpus = is_corpus or hasattr(query, 'ndim') and query.ndim > 1 and query.shape[0] > 1
             if not is_corpus:
                 # user asked for num_best most similar and query is a single doc
-                results = (convert(result, shard_no) for shard_no, result in enumerate(shard_results))
+                results = (convert(shard_no, result) for shard_no, result in enumerate(shard_results))
                 result = heapq.nlargest(self.num_best, itertools.chain(*results), key=lambda item: item[1])
             else:
                 # the trickiest combination: returning num_best results when query was a corpus
                 results = []
                 for shard_no, result in enumerate(shard_results):
-                    shard_result = [convert(doc, shard_no) for doc in result]
+                    shard_result = [convert(shard_no, doc) for doc in result]
                     results.append(shard_result)
                 result = []
                 for parts in izip(*results):
@@ -483,7 +486,9 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         """
         if num_features is None:
-            logger.warning("scanning corpus to determine the number of features (consider setting `num_features` explicitly)")
+            logger.warning(
+                "scanning corpus to determine the number of features (consider setting `num_features` explicitly)"
+            )
             num_features = 1 + utils.get_max_id(corpus)
 
         self.num_features = num_features
@@ -558,6 +563,108 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.index.shape[1])
 
 
+class SoftCosineSimilarity(interfaces.SimilarityABC):
+    """Document similarity (like MatrixSimilarity) that uses Soft Cosine Measure as a similarity measure."""
+
+    def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256):
+        """
+
+        Parameters
+        ----------
+        corpus: iterable of list of (int, float)
+            A list of documents in the BoW format.
+        similarity_matrix : :class:`scipy.sparse.csc_matrix`
+            A term similarity matrix, typically produced by
+            :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`.
+        num_best : int, optional
+            The number of results to retrieve for a query, if None - return similarities with all elements from corpus.
+        chunksize: int, optional
+            Size of one corpus chunk.
+
+
+        See Also
+        --------
+        :meth:`gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`
+            A term similarity matrix produced from term embeddings.
+        :func:`gensim.matutils.softcossim`
+            The Soft Cosine Measure.
+
+        Examples
+        --------
+        >>> from gensim.corpora import Dictionary
+        >>> import gensim.downloader as api
+        >>> from gensim.models import Word2Vec
+        >>> from gensim.similarities import SoftCosineSimilarity
+        >>> from gensim.utils import simple_preprocess
+        >>>
+        >>> # Prepare the model
+        >>> corpus = api.load("text8")
+        >>> model = Word2Vec(corpus, workers=3, size=100)
+        >>> dictionary = Dictionary(corpus)
+        >>> bow_corpus = [dictionary.doc2bow(document) for document in corpus]
+        >>> similarity_matrix = model.wv.similarity_matrix(dictionary)
+        >>> index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
+        >>>
+        >>> # Make a query.
+        >>> query = 'Yummy! Great view of the Bellagio Fountain show.'
+        >>> # calculate similarity between query and each doc from bow_corpus
+        >>> sims = index[dictionary.doc2bow(simple_preprocess(query))]
+
+        See `Tutorial Notebook
+        <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
+        for more examples.
+
+        """
+        self.corpus = corpus
+        self.similarity_matrix = similarity_matrix
+        self.num_best = num_best
+        self.chunksize = chunksize
+
+        # Normalization of features is undesirable, since soft cosine similarity requires special
+        # normalization using the similarity matrix. Therefore, we would just be normalizing twice,
+        # increasing the numerical error.
+        self.normalize = False
+
+        # index is simply an array from 0 to size of corpus.
+        self.index = numpy.arange(len(corpus))
+
+    def __len__(self):
+        return len(self.corpus)
+
+    def get_similarities(self, query):
+        """
+        **Do not use this function directly; use the self[query] syntax instead.**
+        """
+        if isinstance(query, numpy.ndarray):
+            # Convert document indexes to actual documents.
+            query = [self.corpus[i] for i in query]
+
+        if not query or not isinstance(query[0], list):
+            query = [query]
+
+        n_queries = len(query)
+        result = []
+        for qidx in range(n_queries):
+            # Compute similarity for each query.
+            qresult = [matutils.softcossim(document, query[qidx], self.similarity_matrix)
+                       for document in self.corpus]
+            qresult = numpy.array(qresult)
+
+            # Append single query result to list of all results.
+            result.append(qresult)
+
+        if len(result) == 1:
+            # Only one query.
+            result = result[0]
+        else:
+            result = numpy.array(result)
+
+        return result
+
+    def __str__(self):
+        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.similarity_matrix.shape[0])
+
+
 class WmdSimilarity(interfaces.SimilarityABC):
     """
     Document similarity (like MatrixSimilarity) that uses the negative of WMD
@@ -574,7 +681,8 @@ class WmdSimilarity(interfaces.SimilarityABC):
     .. Matt Kusner et al. "From Word Embeddings To Document Distances".
 
     Example:
-        # See Tutorial Notebook for more examples https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb
+        # See Tutorial Notebook for more examples
+        https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb
         >>> # Given a document collection "corpus", train word2vec model.
         >>> model = word2vec(corpus)
         >>> instance = WmdSimilarity(corpus, model, num_best=10)
@@ -599,7 +707,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         self.normalize = False
 
         # index is simply an array from 0 to size of corpus.
-        self.index = numpy.array(range(len(corpus)))
+        self.index = numpy.arange(len(corpus))
 
         if normalize_w2v_and_replace:
             # Normalize vectors in word2vec class to length 1.
@@ -616,7 +724,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
             # Convert document indexes to actual documents.
             query = [self.corpus[i] for i in query]
 
-        if not isinstance(query[0], list):
+        if not query or not isinstance(query[0], list):
             query = [query]
 
         n_queries = len(query)

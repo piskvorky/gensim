@@ -4,13 +4,12 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-This module contains math helper functions.
-"""
+"""This module contains math helper functions."""
 
 from __future__ import with_statement
 
 
+from itertools import chain
 import logging
 import math
 
@@ -28,16 +27,45 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange, zip as izip
 
 
-blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
-
 logger = logging.getLogger(__name__)
 
 
-def argsort(x, topn=None, reverse=False):
-    """
-    Return indices of the `topn` smallest elements in array `x`, in ascending order.
+def blas(name, ndarray):
+    """Helper for getting BLAS function, used :func:`scipy.linalg.get_blas_funcs`.
 
-    If reverse is True, return the greatest elements instead, in descending order.
+    Parameters
+    ----------
+    name : str
+        Name(s) of BLAS functions without type prefix.
+    ndarray : numpy.ndarray
+        Arrays can be given to determine optimal prefix of BLAS routines.
+
+    Returns
+    -------
+    fortran object
+        Fortran function for needed operation.
+
+    """
+    return scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
+
+
+def argsort(x, topn=None, reverse=False):
+    """Get indices of the `topn` smallest elements in array `x`.
+
+    Parameters
+    ----------
+    x : array_like
+        Array to sort.
+    topn : int, optional
+        Number of indices of the smallest(greatest) elements to be returned if given,
+        otherwise - indices of all elements will be returned in ascending(descending) order.
+    reverse : bool, optional
+        If True - return the `topn` greatest elements, in descending order.
+
+    Returns
+    -------
+    numpy.ndarray
+        Array of `topn` indices that.sort the array in the required order.
 
     """
     x = np.asarray(x)  # unify code path for when `x` is not a np array (list, tuple...)
@@ -55,16 +83,38 @@ def argsort(x, topn=None, reverse=False):
 
 
 def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=None, printprogress=0):
-    """
-    Convert a streamed corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
+    """Convert a streamed corpus in BoW format into a sparse matrix `scipy.sparse.csc_matrix`,
     with documents as columns.
 
+    Notes
+    -----
     If the number of terms, documents and non-zero elements is known, you can pass
     them here as parameters and a more memory efficient code path will be taken.
 
-    The input corpus may be a non-repeatable stream (generator).
+    Parameters
+    ----------
+    corpus : iterable of iterable of (int, number)
+        Input corpus in BoW format
+    num_terms : int, optional
+        If provided, the `num_terms` attributes in the corpus will be ignored.
+    dtype : data-type, optional
+        Data type of output matrix.
+    num_docs : int, optional
+        If provided, the `num_docs` attributes in the corpus will be ignored.
+    num_nnz : int, optional
+        If provided, the `num_nnz` attributes in the corpus will be ignored.
+    printprogress : int, optional
+        Print progress for every `printprogress` number of documents,
+        If 0 - nothing will be printed.
 
-    This is the mirror function to `Sparse2Corpus`.
+    Returns
+    -------
+    scipy.sparse.csc_matrix
+        Sparse matrix inferred based on `corpus`.
+
+    See Also
+    --------
+    :class:`~gensim.matutils.Sparse2Corpus`
 
     """
     try:
@@ -116,9 +166,22 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
 
 
 def pad(mat, padrow, padcol):
-    """
-    Add additional rows/columns to a np.matrix `mat`. The new rows/columns
-    will be initialized with zeros.
+    """Add additional rows/columns to `mat`. The new rows/columns will be initialized with zeros.
+
+    Parameters
+    ----------
+    mat : numpy.ndarray
+        Input 2D matrix
+    padrow : int
+        Number of additional rows
+    padcol : int
+        Number of additional columns
+
+    Returns
+    -------
+    numpy.matrixlib.defmatrix.matrix
+        Matrix with needed padding.
+
     """
     if padrow < 0:
         padrow = 0
@@ -132,7 +195,25 @@ def pad(mat, padrow, padcol):
 
 
 def zeros_aligned(shape, dtype, order='C', align=128):
-    """Like `np.zeros()`, but the array will be aligned at `align` byte boundary."""
+    """Get array aligned at `align` byte boundary.
+
+    Parameters
+    ----------
+    shape : int or (int, int)
+        Shape of array.
+    dtype : data-type
+        Data type of array.
+    order : {'C', 'F'}, optional
+        Whether to store multidimensional data in C- or Fortran-contiguous (row- or column-wise) order in memory.
+    align : int, optional
+        Boundary for alignment in bytes.
+
+    Returns
+    -------
+    numpy.ndarray
+        Aligned array.
+
+    """
     nbytes = np.prod(shape, dtype=np.int64) * np.dtype(dtype).itemsize
     buffer = np.zeros(nbytes + align, dtype=np.uint8)  # problematic on win64 ("maximum allowed dimension exceeded")
     start_index = -buffer.ctypes.data % align
@@ -140,11 +221,38 @@ def zeros_aligned(shape, dtype, order='C', align=128):
 
 
 def ismatrix(m):
+    """Check does `m` numpy.ndarray or `scipy.sparse` matrix.
+
+    Parameters
+    ----------
+    m : object
+        Candidate for matrix
+
+    Returns
+    -------
+    bool
+        True if `m` is matrix, False otherwise.
+
+    """
     return isinstance(m, np.ndarray) and m.ndim == 2 or scipy.sparse.issparse(m)
 
 
 def any2sparse(vec, eps=1e-9):
-    """Convert a np/scipy vector into gensim document format (=list of 2-tuples)."""
+    """Convert a numpy.ndarray or `scipy.sparse` vector into gensim BoW format.
+
+    Parameters
+    ----------
+    vec : {`numpy.ndarray`, `scipy.sparse`}
+        Input vector
+    eps : float, optional
+        Value used for threshold, all coordinates less than `eps` will not be presented in result.
+
+    Returns
+    -------
+    list of (int, float)
+        Vector in BoW format.
+
+    """
     if isinstance(vec, np.ndarray):
         return dense2vec(vec, eps)
     if scipy.sparse.issparse(vec):
@@ -153,8 +261,22 @@ def any2sparse(vec, eps=1e-9):
 
 
 def scipy2scipy_clipped(matrix, topn, eps=1e-9):
-    """
-    Return a scipy.sparse vector/matrix consisting of 'topn' elements of the greatest magnitude (absolute value).
+    """Get a `scipy.sparse` vector / matrix consisting of 'topn' elements of the greatest magnitude (absolute value).
+
+    Parameters
+    ----------
+    matrix : `scipy.sparse`
+        Input vector / matrix.
+    topn : int
+        Number of greatest (by module) elements, that will be in result.
+    eps : float
+        PARAMETER IGNORED.
+
+    Returns
+    -------
+    `scipy.sparse.csr.csr_matrix`
+        Clipped matrix.
+
     """
     if not scipy.sparse.issparse(matrix):
         raise ValueError("'%s' is not a scipy sparse vector." % matrix)
@@ -186,28 +308,50 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
         matrix_indices = np.concatenate(matrix_indices).ravel()
         matrix_data = np.concatenate(matrix_data).ravel()
         # Instantiate and return a sparse csr_matrix which preserves the order of indices/data.
-        return scipy.sparse.csr.csr_matrix((matrix_data, matrix_indices, matrix_indptr), shape=(matrix.shape[0], np.max(matrix_indices) + 1))
+        return scipy.sparse.csr.csr_matrix(
+            (matrix_data, matrix_indices, matrix_indptr),
+            shape=(matrix.shape[0], np.max(matrix_indices) + 1)
+        )
 
 
 def scipy2sparse(vec, eps=1e-9):
-    """Convert a scipy.sparse vector into gensim document format (=list of 2-tuples)."""
+    """Convert a scipy.sparse vector BoW format.
+
+    Parameters
+    ----------
+    vec : `scipy.sparse`
+        Sparse vector
+
+    eps : float, optional
+        Value used for threshold, all coordinates less than `eps` will not be presented in result.
+
+    Returns
+    -------
+    list of (int, float)
+        Vector in BoW format.
+
+    """
     vec = vec.tocsr()
     assert vec.shape[0] == 1
     return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if np.abs(val) > eps]
 
 
 class Scipy2Corpus(object):
-    """
-    Convert a sequence of dense/sparse vectors into a streamed gensim corpus object.
+    """Convert a sequence of dense/sparse vectors into a streamed gensim corpus object.
 
-    This is the mirror function to `corpus2csc`.
+    See Also
+    --------
+    :func:`~gensim.matutils.corpus2csc`
 
     """
 
     def __init__(self, vecs):
         """
-        `vecs` is a sequence of dense and/or sparse vectors, such as a 2d np array,
-        or a scipy.sparse.csc_matrix, or any sequence containing a mix of 1d np/scipy vectors.
+
+        Parameters
+        ----------
+        vecs : iterable of {`numpy.ndarray`, `scipy.sparse`}
+            Input vectors.
 
         """
         self.vecs = vecs
@@ -224,11 +368,23 @@ class Scipy2Corpus(object):
 
 
 def sparse2full(doc, length):
-    """
-    Convert a document in sparse document format (=sequence of 2-tuples) into a dense
-    np array (of size `length`).
+    """Convert a document in BoW format into dense numpy array.
 
-    This is the mirror function to `full2sparse`.
+    Parameters
+    ----------
+    doc : list of (int, number)
+        Document in BoW format
+    length : int
+        Length of result vector
+
+    Returns
+    -------
+    numpy.ndarray
+        Dense variant of `doc` vector.
+
+    See Also
+    --------
+    :func:`~gensim.matutils.full2sparse`
 
     """
     result = np.zeros(length, dtype=np.float32)  # fill with zeroes (default value)
@@ -242,12 +398,23 @@ def sparse2full(doc, length):
 
 
 def full2sparse(vec, eps=1e-9):
-    """
-    Convert a dense np array into the sparse document format (sequence of 2-tuples).
+    """Convert a dense array into the BoW format.
 
-    Values of magnitude < `eps` are treated as zero (ignored).
+    Parameters
+    ----------
+    vec : numpy.ndarray
+        Input dense vector
+    eps : float
+        Threshold value, if coordinate in `vec` < eps, this will not be presented in result.
 
-    This is the mirror function to `sparse2full`.
+    Returns
+    -------
+    list of (int, float)
+        BoW format of `vec`.
+
+    See Also
+    --------
+    :func:`~gensim.matutils.sparse2full`
 
     """
     vec = np.asarray(vec, dtype=float)
@@ -259,8 +426,25 @@ dense2vec = full2sparse
 
 
 def full2sparse_clipped(vec, topn, eps=1e-9):
-    """
-    Like `full2sparse`, but only return the `topn` elements of the greatest magnitude (abs).
+    """Like :func:`~gensim.matutils.full2sparse`, but only return the `topn` elements of the greatest magnitude (abs).
+
+    Parameters
+    ----------
+    vec : numpy.ndarray
+        Input dense vector
+    topn : int
+        Number of greatest (abs) elements that will be presented in result.
+    eps : float
+        Threshold value, if coordinate in `vec` < eps, this will not be presented in result.
+
+    Returns
+    -------
+    list of (int, float)
+        Clipped vector in BoW format.
+
+    See Also
+    --------
+    :func:`~gensim.matutils.full2sparse`
 
     """
     # use np.argpartition/argsort and only form tuples that are actually returned.
@@ -274,15 +458,27 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
 
 
 def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
-    """
-    Convert corpus into a dense np array (documents will be columns). You
-    must supply the number of features `num_terms`, because dimensionality
-    cannot be deduced from the sparse vectors alone.
+    """Convert corpus into a dense numpy array (documents will be columns).
 
-    You can optionally supply `num_docs` (=the corpus length) as well, so that
-    a more memory-efficient code path is taken.
+    Parameters
+    ----------
+    corpus : iterable of iterable of (int, number)
+        Input corpus in BoW format.
+    num_terms : int
+        Number of terms in dictionary (will be used as size of output vector.
+    num_docs : int, optional
+        Number of documents in corpus.
+    dtype : data-type, optional
+        Data type of output matrix
 
-    This is the mirror function to `Dense2Corpus`.
+    Returns
+    -------
+    numpy.ndarray
+        Dense array that present `corpus`.
+
+    See Also
+    --------
+    :class:`~gensim.matutils.Dense2Corpus`
 
     """
     if num_docs is not None:
@@ -297,23 +493,43 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
 
 
 class Dense2Corpus(object):
+    """Treat dense numpy array as a streamed gensim corpus in BoW format.
+
+    Notes
+    -----
+    No data copy is made (changes to the underlying matrix imply changes in the corpus).
+
+    See Also
+    --------
+    :func:`~gensim.matutils.corpus2dense`
+    :class:`~gensim.matutils.Sparse2Corpus`
+
     """
-    Treat dense np array as a sparse, streamed gensim corpus.
-
-    No data copy is made (changes to the underlying matrix imply changes in the
-    corpus).
-
-    This is the mirror function to `corpus2dense`.
-
-    """
-
     def __init__(self, dense, documents_columns=True):
+        """
+
+        Parameters
+        ----------
+        dense : numpy.ndarray
+            Corpus in dense format.
+        documents_columns : bool, optional
+            If True - documents will be column, rows otherwise.
+
+        """
         if documents_columns:
             self.dense = dense.T
         else:
             self.dense = dense
 
     def __iter__(self):
+        """Iterate over corpus
+
+        Yields
+        ------
+        list of (int, float)
+            Document in BoW format.
+
+        """
         for doc in self.dense:
             yield full2sparse(doc.flat)
 
@@ -322,20 +538,39 @@ class Dense2Corpus(object):
 
 
 class Sparse2Corpus(object):
+    """Convert a matrix in scipy.sparse format into a streaming gensim corpus.
+
+    See Also
+    --------
+    :func:`~gensim.matutils.corpus2csc`
+    :class:`~gensim.matutils.Dense2Corpus`
+
     """
-    Convert a matrix in scipy.sparse format into a streaming gensim corpus.
-
-    This is the mirror function to `corpus2csc`.
-
-    """
-
     def __init__(self, sparse, documents_columns=True):
+        """
+
+        Parameters
+        ----------
+        sparse : `scipy.sparse`
+            Corpus scipy sparse format
+        documents_columns : bool, optional
+            If True - documents will be column, rows otherwise.
+
+        """
         if documents_columns:
             self.sparse = sparse.tocsc()
         else:
             self.sparse = sparse.tocsr().T  # make sure shape[1]=number of docs (needed in len())
 
     def __iter__(self):
+        """
+
+        Yields
+        ------
+        list of (int, float)
+            Document in BoW format.
+
+        """
         for indprev, indnow in izip(self.sparse.indptr, self.sparse.indptr[1:]):
             yield list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
 
@@ -343,8 +578,18 @@ class Sparse2Corpus(object):
         return self.sparse.shape[1]
 
     def __getitem__(self, document_index):
-        """
-        Return a single document in the corpus by its index (between 0 and `len(self)-1`).
+        """Get a single document in the corpus by its index.
+
+        Parameters
+        ----------
+        document_index : int
+            Index of document
+
+        Returns
+        -------
+        list of (int, number)
+            Document in BoW format.
+
         """
         indprev = self.sparse.indptr[document_index]
         indnow = self.sparse.indptr[document_index + 1]
@@ -352,6 +597,19 @@ class Sparse2Corpus(object):
 
 
 def veclen(vec):
+    """Calculate length of vector
+
+    Parameters
+    ----------
+    vec : list of (int, number)
+        Input vector in BoW format.
+
+    Returns
+    -------
+    float
+        Length of `vec`.
+
+    """
     if len(vec) == 0:
         return 0.0
     length = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
@@ -360,6 +618,21 @@ def veclen(vec):
 
 
 def ret_normalized_vec(vec, length):
+    """Normalize vector.
+
+    Parameters
+    ----------
+    vec : list of (int, number)
+        Input vector in BoW format.
+    length : float
+        Length of vector
+
+    Returns
+    -------
+    list of (int, number)
+        Normalized vector in BoW format.
+
+    """
     if length != 1.0:
         return [(termid, val / length) for termid, val in vec]
     else:
@@ -394,12 +667,24 @@ blas_scal = blas('scal', np.array([], dtype=float))
 
 
 def unitvec(vec, norm='l2'):
-    """
-    Scale a vector to unit length. The only exception is the zero vector, which
-    is returned back unchanged.
+    """Scale a vector to unit length.
 
-    Output will be in the same format as input (i.e., gensim vector=>gensim vector,
-    or np array=>np array, scipy.sparse=>scipy.sparse).
+    Parameters
+    ----------
+    vec : {numpy.ndarray, scipy.sparse, list of (int, float)}
+        Input vector in any format
+    norm : {'l1', 'l2'}, optional
+        Normalization that will be used.
+
+    Returns
+    -------
+    {numpy.ndarray, scipy.sparse, list of (int, float)}
+        Normalized vector in same format as `vec`.
+
+    Notes
+    -----
+    Zero-vector will be unchanged.
+
     """
     if norm not in ('l1', 'l2'):
         raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
@@ -442,9 +727,21 @@ def unitvec(vec, norm='l2'):
 
 
 def cossim(vec1, vec2):
-    """
-    Return cosine similarity between two sparse vectors.
+    """Get cosine similarity between two sparse vectors.
     The similarity is a number between <-1.0, 1.0>, higher is more similar.
+
+    Parameters
+    ----------
+    vec1 : list of (int, float)
+        Vector in BoW format
+    vec2 : list of (int, float)
+        Vector in BoW format
+
+    Returns
+    -------
+    float
+        Cosine similarity between `vec1` and `vec2`.
+
     """
     vec1, vec2 = dict(vec1), dict(vec2)
     if not vec1 or not vec2:
@@ -459,10 +756,90 @@ def cossim(vec1, vec2):
     return result
 
 
-def isbow(vec):
+def softcossim(vec1, vec2, similarity_matrix):
+    """Get Soft Cosine Measure between two vectors given a term similarity matrix.
+
+    Return Soft Cosine Measure between two sparse vectors given a sparse term similarity matrix
+    in the :class:`scipy.sparse.csc_matrix` format. The similarity is a number between <-1.0, 1.0>,
+    higher is more similar.
+
+    Parameters
+    ----------
+    vec1 : list of (int, float)
+        A query vector in the BoW format.
+    vec2 : list of (int, float)
+        A document vector in the BoW format.
+    similarity_matrix : {:class:`scipy.sparse.csc_matrix`, :class:`scipy.sparse.csr_matrix`}
+        A term similarity matrix, typically produced by
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`.
+
+    Returns
+    -------
+    `similarity_matrix.dtype`
+        The Soft Cosine Measure between `vec1` and `vec2`.
+
+    Raises
+    ------
+    ValueError
+        When the term similarity matrix is in an unknown format.
+
+    See Also
+    --------
+    :meth:`gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`
+        A term similarity matrix produced from term embeddings.
+    :class:`gensim.similarities.docsim.SoftCosineSimilarity`
+        A class for performing corpus-based similarity queries with Soft Cosine Measure.
+
+    References
+    ----------
+    Soft Cosine Measure was perhaps first defined by [sidorovetal14]_.
+
+    .. [sidorovetal14] Grigori Sidorov et al., "Soft Similarity and Soft Cosine Measure: Similarity
+       of Features in Vector Space Model", 2014, http://www.cys.cic.ipn.mx/ojs/index.php/CyS/article/view/2043/1921.
+
     """
-    Checks if vector passed is in bag of words representation or not.
-    Vec is considered to be in bag of words format if it is 2-tuple format.
+    if not isinstance(similarity_matrix, scipy.sparse.csc_matrix):
+        if isinstance(similarity_matrix, scipy.sparse.csr_matrix):
+            similarity_matrix = similarity_matrix.T
+        else:
+            raise ValueError('unknown similarity matrix format')
+
+    if not vec1 or not vec2:
+        return 0.0
+
+    vec1 = dict(vec1)
+    vec2 = dict(vec2)
+    word_indices = sorted(set(chain(vec1, vec2)))
+    dtype = similarity_matrix.dtype
+    vec1 = np.array([vec1[i] if i in vec1 else 0 for i in word_indices], dtype=dtype)
+    vec2 = np.array([vec2[i] if i in vec2 else 0 for i in word_indices], dtype=dtype)
+    dense_matrix = similarity_matrix[[[i] for i in word_indices], word_indices].todense()
+    vec1len = vec1.T.dot(dense_matrix).dot(vec1)[0, 0]
+    vec2len = vec2.T.dot(dense_matrix).dot(vec2)[0, 0]
+
+    assert \
+        vec1len > 0.0 and vec2len > 0.0, \
+        u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
+        u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
+
+    result = vec1.T.dot(dense_matrix).dot(vec2)[0, 0]
+    result /= math.sqrt(vec1len) * math.sqrt(vec2len)  # rescale by vector lengths
+    return np.clip(result, -1.0, 1.0)
+
+
+def isbow(vec):
+    """Checks if vector passed is in BoW format.
+
+    Parameters
+    ----------
+    vec : object
+        Input vector in any format
+
+    Returns
+    -------
+    bool
+        True if vector in BoW format, False otherwise.
+
     """
     if scipy.sparse.issparse(vec):
         vec = vec.todense().tolist()
@@ -477,9 +854,22 @@ def isbow(vec):
 
 
 def convert_vec(vec1, vec2, num_features=None):
-    """
-    Convert vectors to appropriate forms required by entropy input.
-    Checks for sparsity and bag of word format.
+    """Convert vectors to dense format
+
+    Parameters
+    ----------
+    vec1 : {scipy.sparse, list of (int, float)}
+        Input vector.
+    vec2 : {scipy.sparse, list of (int, float)}
+        Input vector.
+    num_features : int, optional
+        Number of features in vector.
+
+    Returns
+    -------
+    (numpy.ndarray, numpy.ndarray)
+        (`vec1`, `vec2`) in dense format.
+
     """
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
@@ -506,20 +896,49 @@ def convert_vec(vec1, vec2, num_features=None):
 
 
 def kullback_leibler(vec1, vec2, num_features=None):
-    """
-    A distance metric between two probability distributions.
-    Returns a distance value in range <0, +∞> where values closer to 0 mean less distance (and a higher similarity)
-    Uses the scipy.stats.entropy method to identify kullback_leibler convergence value.
-    If the distribution draws from a certain number of docs, that value must be passed.
+    """Calculate Kullback-Leibler distance between two probability distributions using `scipy.stats.entropy`.
+
+    Parameters
+    ----------
+    vec1 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    vec2 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    num_features : int, optional
+        Number of features in vector.
+
+    Returns
+    -------
+    float
+        Kullback-Leibler distance between `vec1` and `vec2`.
+        Value in range [0, +∞) where values closer to 0 mean less distance (and a higher similarity).
+
     """
     vec1, vec2 = convert_vec(vec1, vec2, num_features=num_features)
     return entropy(vec1, vec2)
 
 
 def jensen_shannon(vec1, vec2, num_features=None):
-    """
-    A method of measuring the similarity between two probability distributions.
-    It is a symmetrized and finite version of the Kullback–Leibler divergence.
+    """Calculate Jensen-Shannon distance between two probability distributions using `scipy.stats.entropy`.
+
+    Parameters
+    ----------
+    vec1 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    vec2 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    num_features : int, optional
+        Number of features in vector.
+
+    Returns
+    -------
+    float
+        Jensen-Shannon distance between `vec1` and `vec2`.
+
+    Notes
+    -----
+    This is symmetric and finite "version" of :func:`gensim.matutils.kullback_leibler`.
+
     """
     vec1, vec2 = convert_vec(vec1, vec2, num_features=num_features)
     avg_vec = 0.5 * (vec1 + vec2)
@@ -527,20 +946,33 @@ def jensen_shannon(vec1, vec2, num_features=None):
 
 
 def hellinger(vec1, vec2):
-    """
-    Hellinger distance is a distance metric to quantify the similarity between two probability distributions.
-    Distance between distributions will be a number between <0,1>, where 0 is minimum distance (maximum similarity) and 1 is maximum distance (minimum similarity).
+    """Calculate Hellinger distance between two probability distributions.
+
+    Parameters
+    ----------
+    vec1 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    vec2 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+
+    Returns
+    -------
+    float
+        Hellinger distance between `vec1` and `vec2`.
+        Value in range [0, 1], where 0 is min distance (max similarity) and 1 is max distance (min similarity).
+
     """
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
     if scipy.sparse.issparse(vec2):
         vec2 = vec2.toarray()
     if isbow(vec1) and isbow(vec2):
-        # if it is a bag of words format, instead of converting to dense we use dictionaries to calculate appropriate distance
+        # if it is a BoW format, instead of converting to dense we use dictionaries to calculate appropriate distance
         vec1, vec2 = dict(vec1), dict(vec2)
-        if len(vec2) < len(vec1):
-            vec1, vec2 = vec2, vec1  # swap references so that we iterate over the shorter vector
-        sim = np.sqrt(0.5 * sum((np.sqrt(value) - np.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
+        indices = set(list(vec1.keys()) + list(vec2.keys()))
+        sim = np.sqrt(
+            0.5 * sum((np.sqrt(vec1.get(index, 0.0)) - np.sqrt(vec2.get(index, 0.0)))**2 for index in indices)
+        )
         return sim
     else:
         sim = np.sqrt(0.5 * ((np.sqrt(vec1) - np.sqrt(vec2))**2).sum())
@@ -548,11 +980,20 @@ def hellinger(vec1, vec2):
 
 
 def jaccard(vec1, vec2):
-    """
-    A distance metric between bags of words representation.
-    Returns 1 minus the intersection divided by union, where union is the sum of the size of the two bags.
-    If it is not a bag of words representation, the union and intersection is calculated in the traditional manner.
-    Returns a value in range <0,1> where values closer to 0 mean less distance and thus higher similarity.
+    """Calculate Jaccard distance between vectors.
+
+    Parameters
+    ----------
+    vec1 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+    vec2 : {scipy.sparse, numpy.ndarray, list of (int, float)}
+        Distribution vector.
+
+    Returns
+    -------
+    float
+        Jaccard distance between `vec1` and `vec2`.
+        Value in range [0, 1], where 0 is min distance (max similarity) and 1 is max distance (min similarity).
 
     """
 
@@ -585,9 +1026,20 @@ def jaccard(vec1, vec2):
 
 
 def jaccard_distance(set1, set2):
-    """
-    Calculate a distance between set representation (1 minus the intersection divided by union).
-    Return a value in range <0, 1> where values closer to 0 mean smaller distance and thus higher similarity.
+    """Calculate Jaccard distance between two sets
+
+    Parameters
+    ----------
+    set1 : set
+        Input set.
+    set2 : set
+        Input set.
+
+    Returns
+    -------
+    float
+        Jaccard distance between `set1` and `set2`.
+        Value in range [0, 1], where 0 is min distance (max similarity) and 1 is max distance (min similarity).
     """
 
     union_cardinality = len(set1 | set2)
@@ -598,23 +1050,44 @@ def jaccard_distance(set1, set2):
 
 
 def dirichlet_expectation(alpha):
-    """
-    For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
+    """For a vector :math:`\\theta \sim Dir(\\alpha)`, compute :math:`E[log \\theta]`.
+
+    Parameters
+    ----------
+    alpha : numpy.ndarray
+        Input vector or matrix.
+
+    Returns
+    -------
+    numpy.ndarray:
+        :math:`E[log \\theta]`
 
     """
     if len(alpha.shape) == 1:
         result = psi(alpha) - psi(np.sum(alpha))
     else:
         result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
-    return result.astype(alpha.dtype)  # keep the same precision as input
+    return result.astype(alpha.dtype, copy=False)  # keep the same precision as input
 
 
 def qr_destroy(la):
-    """
-    Return QR decomposition of `la[0]`. Content of `la` gets destroyed in the process.
+    """Get QR decomposition of `la[0]`.
 
+    Notes
+    -----
     Using this function should be less memory intense than calling `scipy.linalg.qr(la[0])`,
     because the memory used in `la[0]` is reclaimed earlier.
+
+
+    Returns
+    -------
+    (numpy.ndarray, numpy.ndarray)
+        Matrices :math:`Q` and :math:`R`.
+
+    Warnings
+    --------
+    Content of `la` gets destroyed in the process.
+
     """
     a = np.asfortranarray(la[0])
     del la[0], la  # now `a` is the only reference to the input matrix
@@ -638,24 +1111,31 @@ def qr_destroy(la):
 
 
 class MmWriter(object):
-    """
-    Store a corpus in Matrix Market format.
+    """Store a corpus in Matrix Market format.
 
-    Note that the output is written one document at a time, not the whole
-    matrix at once (unlike scipy.io.mmread). This allows us to process corpora
-    which are larger than the available RAM.
+    Notes
+    -----
+    Output is written one document at a time, not the whole matrix at once (unlike `scipy.io.mmread`).
+    This allows us to process corpora which are larger than the available RAM.
 
-    NOTE: the output file is created in a single pass through the input corpus, so
-    that the input can be a once-only stream (iterator).
-    To achieve this, a fake MM header is written first, statistics are collected
-    during the pass (shape of the matrix, number of non-zeroes), followed by a seek
-    back to the beginning of the file, rewriting the fake header with proper values.
+    The output file is created in a single pass through the input corpus, so that the input can be
+    a once-only stream (iterator). To achieve this, a fake MM header is written first, statistics are collected
+    during the pass (shape of the matrix, number of non-zeroes), followed by a seek back to the beginning of the file,
+    rewriting the fake header with proper values.
 
     """
 
     HEADER_LINE = b'%%MatrixMarket matrix coordinate real general\n'  # the only supported MM format
 
     def __init__(self, fname):
+        """
+
+        Parameters
+        ----------
+        fname : str
+            Path to output file
+
+        """
         self.fname = fname
         if fname.endswith(".gz") or fname.endswith('.bz2'):
             raise NotImplementedError("compressed output not supported with MmWriter")
@@ -663,6 +1143,18 @@ class MmWriter(object):
         self.headers_written = False
 
     def write_headers(self, num_docs, num_terms, num_nnz):
+        """Write headers to file
+
+        Parameters
+        ----------
+        num_docs : int
+            Number of documents in corpus
+        num_terms : int
+            Number of term in corpus
+        num_nnz : int
+            Number of non-zero elements in corpus
+
+        """
         self.fout.write(MmWriter.HEADER_LINE)
 
         if num_nnz < 0:
@@ -670,12 +1162,27 @@ class MmWriter(object):
             logger.info("saving sparse matrix to %s", self.fname)
             self.fout.write(utils.to_utf8(' ' * 50 + '\n'))  # 48 digits must be enough for everybody
         else:
-            logger.info("saving sparse %sx%s matrix with %i non-zero entries to %s", num_docs, num_terms, num_nnz, self.fname)
+            logger.info(
+                "saving sparse %sx%s matrix with %i non-zero entries to %s",
+                num_docs, num_terms, num_nnz, self.fname
+            )
             self.fout.write(utils.to_utf8('%s %s %s\n' % (num_docs, num_terms, num_nnz)))
         self.last_docno = -1
         self.headers_written = True
 
     def fake_headers(self, num_docs, num_terms, num_nnz):
+        """Write "fake" headers to file.
+
+        Parameters
+        ----------
+        num_docs : int
+            Number of documents in corpus
+        num_terms : int
+            Number of term in corpus
+        num_nnz : int
+            Number of non-zero elements in corpus
+
+        """
         stats = '%i %i %i' % (num_docs, num_terms, num_nnz)
         if len(stats) > 50:
             raise ValueError('Invalid stats: matrix too large!')
@@ -683,26 +1190,62 @@ class MmWriter(object):
         self.fout.write(utils.to_utf8(stats))
 
     def write_vector(self, docno, vector):
-        """
-        Write a single sparse vector to the file.
+        """Write a single sparse vector to the file.
 
-        Sparse vector is any iterable yielding (field id, field value) pairs.
+        Parameters
+        ----------
+        docno : int
+            Number of document.
+        vector : list of (int, float)
+            Vector in BoW format.
+
+        Returns
+        -------
+        (int, int)
+            Max word index in vector and len of vector. If vector is empty, return (-1, 0).
+
         """
         assert self.headers_written, "must write Matrix Market file headers before writing data!"
         assert self.last_docno < docno, "documents %i and %i not in sequential order!" % (self.last_docno, docno)
         vector = sorted((i, w) for i, w in vector if abs(w) > 1e-12)  # ignore near-zero entries
         for termid, weight in vector:  # write term ids in sorted order
-            self.fout.write(utils.to_utf8("%i %i %s\n" % (docno + 1, termid + 1, weight)))  # +1 because MM format starts counting from 1
+            # +1 because MM format starts counting from 1
+            self.fout.write(utils.to_utf8("%i %i %s\n" % (docno + 1, termid + 1, weight)))
         self.last_docno = docno
         return (vector[-1][0], len(vector)) if vector else (-1, 0)
 
     @staticmethod
     def write_corpus(fname, corpus, progress_cnt=1000, index=False, num_terms=None, metadata=False):
-        """
-        Save the vector space representation of an entire corpus to disk.
+        """Save the corpus to disk in Matrix Market format.
 
-        Note that the documents are processed one at a time, so the whole corpus
-        is allowed to be larger than the available RAM.
+        Parameters
+        ----------
+        fname : str
+            Filename of the resulting file.
+        corpus : iterable of iterable of (int, float)
+            Corpus in Bow format
+        progress_cnt : int, optional
+            Print progress for every `progress_cnt` number of documents.
+        index : bool, optional
+            If True, the offsets will be return, otherwise return None.
+        num_terms : int, optional
+            If provided, the `num_terms` attributes in the corpus will be ignored.
+        metadata : bool, optional
+            If True, a metadata file will be generated.
+
+        Returns
+        -------
+        offsets : {list of int, None}
+            List of offsets or nothing.
+
+        Notes
+        -----
+        Documents are processed one at a time, so the whole corpus is allowed to be larger than the available RAM.
+
+        See Also
+        --------
+        :func:`~gensim.corpora.mmcorpus.MmCorpus.save_corpus`
+
         """
         mw = MmWriter(fname)
 
@@ -745,7 +1288,10 @@ class MmWriter(object):
         num_terms = num_terms or _num_terms
 
         if num_docs * num_terms != 0:
-            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)", num_docs, num_terms, 100.0 * num_nnz / (num_docs * num_terms), num_nnz, num_docs * num_terms)
+            logger.info(
+                "saved %ix%i matrix, density=%.3f%% (%i/%i)",
+                num_docs, num_terms, 100.0 * num_nnz / (num_docs * num_terms), num_nnz, num_docs * num_terms
+            )
 
         # now write proper headers, by seeking and overwriting the spaces written earlier
         mw.fake_headers(num_docs, num_terms, num_nnz)
@@ -755,41 +1301,45 @@ class MmWriter(object):
             return offsets
 
     def __del__(self):
-        """
-        Automatic destructor which closes the underlying file.
+        """Automatic destructor which closes the underlying file.
 
-        There must be no circular references contained in the object for __del__
-        to work! Closing the file explicitly via the close() method is preferred
-        and safer.
+        Notes
+        -----
+        There must be no circular references contained in the object for __del__ to work!
+        Closing the file explicitly via the close() method is preferred and safer.
+
         """
         self.close()  # does nothing if called twice (on an already closed file), so no worries
 
     def close(self):
+        """Close file."""
         logger.debug("closing %s", self.fname)
         if hasattr(self, 'fout'):
             self.fout.close()
 
 
 class MmReader(object):
-    """
-    Wrap a term-document matrix on disk (in matrix-market format), and present it
-    as an object which supports iteration over the rows (~documents).
+    """Wrap a term-document matrix on disk (in matrix-market format),
+    and present it as an object which supports iteration over the rows (~documents).
 
-    Note that the file is read into memory one document at a time, not the whole
-    matrix at once (unlike scipy.io.mmread). This allows us to process corpora
-    which are larger than the available RAM.
+    Notes
+    ------
+    File is read into memory one document at a time, not the whole matrix at once (unlike `scipy.io.mmread`).
+    This allows us to process corpora which are larger than the available RAM.
+
     """
 
     def __init__(self, input, transposed=True):
         """
-        Initialize the matrix reader.
 
-        The `input` refers to a file on local filesystem, which is expected to
-        be in the sparse (coordinate) Matrix Market format. Documents are assumed
-        to be rows of the matrix (and document features are columns).
+        Parameters
+        ----------
+        input : {str, file-like object}
+            Path to input file or file-like object (in Matrix Market format).
+        transposed : bool, optional
+            "Orientation" of document. By default, documents should be rows of the matrix,
+            otherwise, needed to set this to False
 
-        `input` is either a string (file path) or a file-like object that supports
-        `seek()` (e.g. gzip.GzipFile, bz2.BZ2File).
         """
         logger.info("initializing corpus reader from %s", input)
         self.input, self.transposed = input, transposed
@@ -797,8 +1347,10 @@ class MmReader(object):
             try:
                 header = utils.to_unicode(next(lines)).strip()
                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
-                    raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
-                                    (self.input, header))
+                    raise ValueError(
+                        "File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
+                        (self.input, header)
+                    )
             except StopIteration:
                 pass
 
@@ -811,7 +1363,10 @@ class MmReader(object):
                         self.num_docs, self.num_terms = self.num_terms, self.num_docs
                     break
 
-        logger.info("accepted corpus with %i documents, %i features, %i non-zero entries", self.num_docs, self.num_terms, self.num_nnz)
+        logger.info(
+            "accepted corpus with %i documents, %i features, %i non-zero entries",
+            self.num_docs, self.num_terms, self.num_nnz
+        )
 
     def __len__(self):
         return self.num_docs
@@ -821,8 +1376,13 @@ class MmReader(object):
                 (self.num_docs, self.num_terms, self.num_nnz))
 
     def skip_headers(self, input_file):
-        """
-        Skip file headers that appear before the first document.
+        """Skip file headers that appear before the first document.
+
+        Parameters
+        ----------
+        input_file : file-like object
+            Opened file.
+
         """
         for line in input_file:
             if line.startswith(b'%'):
@@ -830,14 +1390,20 @@ class MmReader(object):
             break
 
     def __iter__(self):
-        """
-        Iteratively yield vectors from the underlying file, in the format (row_no, vector),
-        where vector is a list of (col_no, value) 2-tuples.
+        """Iterate over all corpus.
 
-        Note that the total number of vectors returned is always equal to the
+        Yields
+        ------
+        (prev_id, document) : (int, list of (int, number)
+            Number of document and document in BoW format.
+
+        Notes
+        -----
+        Total number of vectors returned is always equal to the
         number of rows specified in the header; empty documents are inserted and
         yielded where appropriate, even if they are not explicitly stored in the
         Matrix Market file.
+
         """
         with utils.file_or_filename(self.input) as lines:
             self.skip_headers(lines)
@@ -847,7 +1413,8 @@ class MmReader(object):
                 docid, termid, val = utils.to_unicode(line).split()  # needed for python3
                 if not self.transposed:
                     termid, docid = docid, termid
-                docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)  # -1 because matrix market indexes are 1-based => convert to 0-based
+                # -1 because matrix market indexes are 1-based => convert to 0-based
+                docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)
                 assert previd <= docid, "matrix columns must come in ascending order"
                 if docid != previd:
                     # change of document: return the document read so far (its id is prevId)
@@ -875,15 +1442,27 @@ class MmReader(object):
             yield previd, []
 
     def docbyoffset(self, offset):
-        """Return document at file offset `offset` (in bytes)"""
+        """Get document at file offset `offset` (in bytes)
+
+        Parameters
+        ----------
+        offset : int
+            Offset (in bytes).
+
+        Returns
+        -------
+        list of (int, number)
+            Document in BoW format, reached by `offset`.
+
+        """
         # empty documents are not stored explicitly in MM format, so the index marks
         # them with a special offset, -1.
         if offset == -1:
             return []
         if isinstance(self.input, string_types):
-            fin = utils.smart_open(self.input)
+            fin, close_fin = utils.smart_open(self.input), True
         else:
-            fin = self.input
+            fin, close_fin = self.input, False
 
         fin.seek(offset)  # works for gzip/bz2 input, too
         previd, document = -1, []
@@ -891,12 +1470,16 @@ class MmReader(object):
             docid, termid, val = line.split()
             if not self.transposed:
                 termid, docid = docid, termid
-            docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)  # -1 because matrix market indexes are 1-based => convert to 0-based
+            # -1 because matrix market indexes are 1-based => convert to 0-based
+            docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)
             assert previd <= docid, "matrix columns must come in ascending order"
             if docid != previd:
                 if previd >= 0:
-                    return document
+                    break
                 previd = docid
 
             document.append((termid, val,))  # add another field to the current document
+
+        if close_fin:
+            fin.close()
         return document

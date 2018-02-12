@@ -1,5 +1,397 @@
 Changes
 ===========
+## 3.3.0, 2018-01-02
+
+:star2: New features:
+* Re-designed all "*2vec" implementations (__[@manneshiva](https://github.com/manneshiva)__, [#1777](https://github.com/RaRe-Technologies/gensim/pull/1777))
+    - Modular organization of `Word2Vec`, `Doc2Vec`, `FastText`, etc ..., making it easier to add new models in the future and re-use code
+    - Fully backward compatible (even with loading models stored by a previous Gensim version)
+    - [Detailed documentation for the *2vec refactoring project](https://github.com/manneshiva/gensim/wiki/Any2Vec-Refactoring-Summary)
+
+* Improve `gensim.scripts.segment_wiki` by retaining interwiki links. Fix #1712
+ (__[@steremma](https://github.com/steremma)__, [PR #1839](https://github.com/RaRe-Technologies/gensim/pull/1839))
+    - Optionally extract interlinks from Wikipedia pages (use the `--include-interlinks` option). This will output one additional JSON dict for each article:
+        ```
+        {
+            "interlinks": {
+                "article title 1": "interlink text 1",
+                "article title 2": "interlink text 2",
+                ...
+            }
+        }
+        ```
+
+    - Example: extract the Wikipedia graph with article links as edges, from a raw Wikipedia dump:
+        ```bash
+        python -m gensim.scripts.segment_wiki --include-interlinks --file ~/Downloads/enwiki-latest-pages-articles.xml.bz2 --output ~/Desktop/enwiki-latest.jsonl.gz
+        ```
+        - Read this field from the `segment_wiki` output:
+
+        ```python
+        import json
+        from smart_open import smart_open
+
+        with smart_open("enwiki-latest.jsonl.gz") as infile:
+            for doc in infile:
+                doc = json.loads(doc)
+
+                src_node = doc['title']
+                dst_nodes = doc['interlinks'].keys()
+
+                print(u"Source node: {}".format(src_node))
+                print(u"Destination nodes: {}".format(u", ".join(dst_nodes)))
+                break
+
+        """
+        OUTPUT:
+
+        Source node: Anarchism
+        Destination nodes: anarcha-feminist, Ivan Illich, Adolf Brand, Josiah Warren, will (philosophy), anarcha-feminism, Anarchism in Mexico, Lysander Spooner, English Civil War, G8, Sebastien Faure, Nihilist movement, Sébastien Faure, Left-wing politics, imamate, Pierre Joseph Proudhon, anarchist communism, Università popolare (Italian newspaper), 1848 Revolution, Synthesis anarchism, labour movement, anarchist communists, collectivist anarchism, polyamory, post-humanism, postcolonialism, anti war movement, State (polity), security culture, Catalan people, Stoicism, Progressive education, stateless society, Umberto I of Italy, German language, Anarchist schools of thought, NEFAC, Jacques Ellul, Spanish Communist Party, Crypto-anarchism, ruling class, non-violence, Platformist, The History of Sexuality, Revolutions of 1917–23, Federación Anarquista Ibérica, propaganda of the deed, William B. Greene, Platformism, mutually exclusive, Fraye Arbeter Shtime, Adolf Hitler, oxymoron, Paris Commune, Anarchism in Italy#Postwar years and today, Oranienburg, abstentionism, Free Society, Henry David Thoreau, privative alpha, George I of Greece, communards, Gustav Landauer, Lucifer the Lightbearer, Moses Harman, coercion, regicide, rationalist, Resistance during World War II, Christ (title), Bohemianism, individualism, Crass, black bloc, Spanish Revolution of 1936, Erich Mühsam, Empress Elisabeth of Austria, Free association (communism and anarchism), general strike, Francesc Ferrer i Guàrdia, Catalan anarchist pedagogue and free-thinker, veganarchism, Traditional knowledge, Japanese Anarchist Federation, Diogenes of Sinope, Hierarchy, sexual revolution, Naturism, Bavarian Soviet Republic, February Revolution, Eugene Varlin, Renaissance humanism, Mexican Liberal Party, Friedrich Engels, Fernando Tarrida del Mármol, Caliphate, Marxism, Jesus, John Cage, Umanita Nova, Anarcho-pacifism, Peter Kropotkin, Religious anarchism, Anselme Bellegarrigue, civilisation, moral obligation, hedonist, Free Territory (Ukraine), -ism, neo-liberalism, Austrian School, philosophy, freethought, Joseph Goebbels, Conservatism, anarchist economics, Cavalier, Maximilien de Robespierre, Comstockery, Dorothy Day, Anarchism in France, Fédération anarchiste, World Economic Forum, Amparo Poch y Gascón, Sex Pistols, women's rights, collectivisation, Taoism, common ownership, William Batchelder Greene, Collective farming, popular education, biphobia, targeted killings, Protestant Christianity, state socialism, Marie François Sadi Carnot, Stephen Pearl Andrews, World Trade Organization, Communist Party of Spain (main), Pluto Press, Levante, Spain, Alexander Berkman, Wilhelm Weitling, Kharijites, Bolshevik, Liberty (1881–1908), Anarchist Aragon, social democrats, Dielo Truda, Post-left anarchy, Age of Enlightenment, Blanquism, Walden, mutual aid (organization), Far-left politics, privative, revolutions of 1848, anarchism and nationalism, punk rock, Étienne de La Boétie, Max Stirner, Jacobin (politics), agriculture, anarchy, Confederacion General del Trabajo de España, toleration, reformism, International Anarchist Congress of Amsterdam, The Ego and Its Own, Ukraine, Civil Disobedience (Thoreau), Spanish Civil War, David Graeber, Anarchism and issues related to love and sex, James Guillaume, Insurrectionary anarchism, Political repression, International Workers' Association, Barcelona, Bulgaria, Voline, Zeno of Citium, anarcho-communists, organized religion, libertarianism, bisexuality, Ricardo Flores Magón, Henri Zisly, Eight-hour day, Freetown Christiania, heteronormativity, Mikhail Bakunin, Propagandaministerium, Ezra Heywood, individual reappropriation, Modern School (United States), archon, Confédération nationale du travail, socialist movement, History of Islam, Max Nettlau, Political Justice, Reichstag fire, Anti-Christianity, decentralised, Issues in anarchism#Communism, deschooling, Christian movement, squatter, Anarchism in Germany, Catalonia, Louise Michel, Solidarity Federation, What is Property?, European individualist anarchism, Pierre-Joseph Proudhon, Mexican Revolution, wikt:anarchism, Blackshirts, Jewish anarchism, Russian Civil War, property rights, anti-authoritarian, individual reclamation, propaganda by the deed, from each according to his ability, to each according to his need, Feminist movement, Confiscation, social anarchism, Anarchism in Russia, Daniel Guérin, Uruguayan Anarchist Federation, Anarcha-feminism, Enragés, Cynicism (philosophy), workers' council, The Word (free love), Allen Ginsberg, Campaign for Nuclear Disarmament, antimilitarism, Workers' self-management, Federación Obrera Regional Argentina, self-governance, free market, Carlos I of Portugal, Simon Critchley, Anti-clericalism, heterosexual, Layla AbdelRahim, Mexican Anarchist Federation, Anarchism and Marxism, October Revolution, Anti-nuclear movement, Joseph Déjacque, Bolsheviks, Luigi Fabbri, morality, Communist party, Sam Dolgoff, united front, Ammon Hennacy, social ecology, commune (intentional community), Oscar Wilde, French Revolution, egoist anarchism, Comintern, transphobia, anarchism without adjectives, social control, means of production, Michel Onfray, Anarchism in France#The Fourth Republic (1945–1958), syndicalism, Anarchism in Spain, Iberian Anarchist Federation, International of Anarchist Federations, Emma Goldman, Netherlands, anarchist free school, International Workingmen's Association, Queer anarchism, Cantonal Revolution, trade unionism, Karl Marx, LGBT community, humanism, Anti-fascism, Carrara, political philosophy, Anarcho-transhumanism, libertarian socialist, Russian Revolution (1917), Two Cheers for Anarchism: Six Easy Pieces on Autonomy, Dignity, and Meaningful Work and Play, Emile Armand, insurrectionary anarchism, individual, Zhuang Zhou, Free Territory, White movement, Greenwich Village, Virginia Bolten, transcendentalist, public choice theory, wikt:brigand, Issues in anarchism#Participation in statist democracy, free love, Mutualism (economic theory), Anarchist St. Imier International, censorship, federalist, 6 February 1934 crisis, biennio rosso, anti-clerical, centralism, Anarchism: A Documentary History of Libertarian Ideas, minarchism, James C. Scott, First International, homosexuality, political theology, spontaneous order, Oranienburg concentration camp, anarcho-communism, negative liberty, post-modernism, Anarchism in Italy, Leopold Kohr, union of egoists, counterculture, Miguel Gimenez Igualada, philosophical anarchism, International Libertarian Solidarity, homosexual, Counterculture of the 1960s, Errico Malatesta, strikebreaker, Workers' Party of Marxist Unification, Clifford Harper, Reification (fallacy), patriarchy, anarchist law, Apostle (Christian), market (economics), Summerhill School, positive liberty, socialism, feminism, Direct action, Melchor Rodríguez García, William Godwin, Nazi concentration camps, Synthesist anarchism, Margaret Anderson, Han Ryner, Federation of Organized Trades and Labor Unions, technology, Workers Solidarity Movement, Edmund Burke, Encyclopædia Britannica, state (polity), Herbert Read, Park Güell, utilitarian, far right leagues, Limited government, self-ownership, Pejorative, homophobia, Industrial Workers of the World, The Dispossessed, Hague Congress (1872), Stalinism, Reciprocity (cultural anthropology), Fernand Pelloutier, individualist anarchism in France, The False Principle of our Education, individualist anarchism, Pierre Monatte, Soviet Union, counter-economics, Rudolf Rocker, Anarchism and capitalism, Parma, Black Rose Books, lesbian, Arditi del Popolo, Emile Armand (1872–1962), who propounded the virtues of free love in the Parisian anarchist milieu of the early 20th century, collectivism, Development criticism, John Henry Mackay, Benoît Broutchoux, Illegalism, Laozi, feminist, Christiaan Cornelissen, Syndicalist Workers' Federation, anarcho-syndicalism, Andalusia, Renzo Novatore, trade union, autonomist marxism, dictatorship of the proletariat, Mujeres Libres, Voltairine de Cleyre, Post-anarchism, participatory economics, Confederación Nacional del Trabajo, Syncretic politics, direct democracy, Jean-Jacques Rousseau, Green anarchism, Surrealism, labour unions, A. S. Neill, christian anarchist, Bonnot Gang, Anti-capitalism, Anarchism in Brazil, simple living, enlightened self-interest, Confédération générale du travail, class conflict, International Workers' Day, Hébertists, Gerrard Winstanley, Francoism, anarcho-pacifist, Andrej Grubacic, individualist anarchist and social anarchist thinkers., April Carter, private property, penal colonies, Libertarian socialism, Camillo Berneri, Christian anarchism, transhumanism, Lucifer, the Light-Bearer, Edna St. Vincent Millay, unschooling, Leo Tolstoy, M. E. Lazarus, Spanish Anarchists, Buddhist anarchism, ideology, William McKinley, anarcho-primitivism, Francesc Pi i Margall, :Category:Anarchism by country, International Workers Association, Anarcho-capitalism, Lois Waisbrooker, wikt:Solidarity, Baja California, social revolution, Unione Sindacale Italiana, Lev Chernyi, Alex Comfort, Sonnenburg, Leon Czolgosz, Volin, utopian, Argentine Libertarian Federation, Nudism, Left-wing market anarchism, insurrection, definitional concerns in anarchist theory, infinitive, affinity group, World Trade Organization Ministerial Conference of 1999 protest activity, class struggle, nonviolence, John Zerzan, poststructuralist, Noam Chomsky, Second Fitna, Julian Beck, Philadelphes, League of Peace and Freedom, Fédération Anarchiste, Kronstadt rebellion, Cold War, André Breton, Silvio Gesell, libertarian anarchism, voluntary association, anti-globalisation movement, birth control, L. Susan Brown, anarcho-naturism, personal property, Roundhead, Harold Barclay, The Joy of Sex, Council communism, Lucía Sánchez Saornil, tyrannicide, Neopaganism, lois scélérates, Johann Most, Anarchist Catalonia, Albert Camus, Protests of 1968, Alexander II of Russia, Spain's economy, Federazione Anarchica Italiana, Cuba, German Revolution of 1918–1919, stirner, Property is theft, Situationist International, law and economics
+
+        ```
+
+* Add support for [SMART notation](https://nlp.stanford.edu/IR-book/html/htmledition/document-and-query-weighting-schemes-1.html) for `TfidfModel`. Fix #1785 (__[@markroxor](https://github.com/markroxor)__, [#1791](https://github.com/RaRe-Technologies/gensim/pull/1791))
+    - Natural extension of `TfidfModel` to allow different weighting and normalization schemes
+        ```python
+        from gensim.corpora import Dictionary
+        from gensim.models import TfidfModel
+        import gensim.downloader as api
+
+        data = api.load("text8")
+        dct = Dictionary(data)
+        corpus = [dct.doc2bow(line) for line in data]
+
+        # Train Tfidf model using the SMART notation, smartirs="ntc" where
+        # 'n' - natural term frequency
+        # 't' - idf document frequency
+        # 'c' - cosine normalization
+        #
+        # More information about possible values available in documentation or https://nlp.stanford.edu/IR-book/html/htmledition/document-and-query-weighting-schemes-1.html
+
+        model = TfidfModel(corpus, id2word=dct, smartirs="ntc")
+        vectorized_corpus = list(model[corpus])
+
+        ```
+    - [SMART Information Retrieval System (wiki)](https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System)
+
+* Add CircleCI for building Gensim documentation. Fix #1807 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1822](https://github.com/RaRe-Technologies/gensim/pull/1822))
+    - An easy way to preview the rendered documentation (especially, if don't use Linux)
+        - Go to "Details" link of CircleCI in your PR, click on the "Artifacts" tab, choose the HTML file that you want to view; a new tab will open with the rendered HTML page
+    - Integration with Github, to see the documentation directly from the pull request page
+        - Install a user-script plugin: [greasemonkey (for firefox)](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/) or [tampermonkey (for chrome)](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en)
+        - Add [this user-script](https://gist.github.com/menshikh-iv/bfe9b8ef2db10e9511aa9fe5935a7289) to the plugin
+        - Now you’ll see a new button "See CircleCI doc for this PR" in each PR in the Gensim repository. Click it to see the full rendered documentation.
+
+
+:red_circle: Bug fixes:
+* Fix import in `get_my_ip`. Fix #1771 (__[@darindf](https://github.com/darindf)__, [#1772](https://github.com/RaRe-Technologies/gensim/pull/1772))
+* Fix tox.ini/setup.cfg configuration (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1815](https://github.com/RaRe-Technologies/gensim/pull/1815))
+* Fix formula in `gensim.summarization.bm25`. Fix #1828 (__[@sj29-innovate](https://github.com/sj29-innovate)__, [#1833](https://github.com/RaRe-Technologies/gensim/pull/1833))
+* Fix the train method of `TranslationMatrix` (__[@robotcator](https://github.com/robotcator)__, [#1838](https://github.com/RaRe-Technologies/gensim/pull/1838))
+* Fix positional params used for `gensim.models.CoherenceModel` in `gensim.models.callbacks` (__[@Alexjmsherman](https://github.com/Alexjmsherman)__, [#1823](https://github.com/RaRe-Technologies/gensim/pull/1823))
+* Fix parameter setting for `FastText.train`. Fix #1818 (__[@sj29-innovate](https://github.com/sj29-innovate)__, [#1837](https://github.com/RaRe-Technologies/gensim/pull/1837))
+* Pin python2 explicitly for building documentation (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1840](https://github.com/RaRe-Technologies/gensim/pull/1840))
+* Remove dispatcher deadlock for distributed LDA (__[@darindf](https://github.com/darindf)__, [#1817](https://github.com/RaRe-Technologies/gensim/pull/1817))
+* Fix `score_function` from `LexicalEntailmentEvaluation`. Fix #1858 (__[@hachibaka](https://github.com/hachibaka)__, [#1863](https://github.com/RaRe-Technologies/gensim/pull/1863))
+* Fix symmetrical case for hellinger distance. Fix #1854 (__[@caiyulun](https://github.com/caiyulun)__, [#1860](https://github.com/RaRe-Technologies/gensim/pull/1860))
+* Remove wrong logging at import. Fix #1706 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1871](https://github.com/RaRe-Technologies/gensim/pull/1871))
+
+
+:books: Tutorial and doc improvements:
+* Refactor documentation API Reference for `gensim.summarization` (__[@yurkai](https://github.com/yurkai)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1709](https://github.com/RaRe-Technologies/gensim/pull/1709))
+* Fix docstrings for `gensim.similarities.index`. Partial fix #1666 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1681](https://github.com/RaRe-Technologies/gensim/pull/1681))
+* Fix docstrings for `gensim.models.translation_matrix` (__[@KokuKUSIAKU](https://github.com/KokuKUSIAKU)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1806](https://github.com/RaRe-Technologies/gensim/pull/1806))
+* Fix docstrings for `gensim.models.rpmodel` (__[@jazzmuesli](https://github.com/jazzmuesli)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1802](https://github.com/RaRe-Technologies/gensim/pull/1802))
+* Fix docstrings for `gensim.utils` (__[@kakshay21](https://github.com/kakshay21)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1797](https://github.com/RaRe-Technologies/gensim/pull/1797))
+* Fix docstrings for `gensim.matutils` (__[@Cheukting](https://github.com/Cheukting)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1804](https://github.com/RaRe-Technologies/gensim/pull/1804))
+* Fix docstrings for `gensim.models.logentropy_model` (__[@minggli](https://github.com/minggli)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1803](https://github.com/RaRe-Technologies/gensim/pull/1803))
+* Fix docstrings for `gensim.models.normmodel` (__[@AustenLamacraft](https://github.com/AustenLamacraft)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1805](https://github.com/RaRe-Technologies/gensim/pull/1805))
+* Refactor API reference `gensim.topic_coherence`. Fix #1669 (__[@CLearERR](https://github.com/CLearERR)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1714](https://github.com/RaRe-Technologies/gensim/pull/1714))
+* Fix documentation for `gensim.corpora.dictionary` and `gensim.corpora.hashdictionary`. Partial fix #1671 (__[@CLearERR](https://github.com/CLearERR)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1814](https://github.com/RaRe-Technologies/gensim/pull/1814))
+* Fix documentation for `gensim.corpora`. Partial fix #1671 (__[@anotherbugmaster](https://github.com/anotherbugmaster)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1729](https://github.com/RaRe-Technologies/gensim/pull/1729))
+* Update banner in doc pages (__[@piskvorky](https://github.com/piskvorky)__, [#1865](https://github.com/RaRe-Technologies/gensim/pull/1865))
+* Fix errors in the doc2vec-lee notebook (__[@PeterHamilton](https://github.com/PeterHamilton)__, [#1841](https://github.com/RaRe-Technologies/gensim/pull/1841))
+* Add wordnet mammal train file for Poincare notebook (__[@jayantj](https://github.com/jayantj)__, [#1781](https://github.com/RaRe-Technologies/gensim/pull/1781))
+* Update Poincare notebooks (#1774) (__[@jayantj](https://github.com/jayantj)__, [#1774](https://github.com/RaRe-Technologies/gensim/pull/1774))
+* Update contributing guide. Fix #1786 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1793](https://github.com/RaRe-Technologies/gensim/pull/1793))
+* Add `model_to_dict` one-liner to word2vec notebook. Fix #1269 (__[@kakshay21](https://github.com/kakshay21)__, [#1776](https://github.com/RaRe-Technologies/gensim/pull/1776))
+* Add word embedding viz to word2vec notebook. Fix #1419 (__[@markroxor](https://github.com/markroxor)__, [#1800](https://github.com/RaRe-Technologies/gensim/pull/1800))
+* Fix description of `sg` parameter for `gensim.models.FastText` (__[@akutuzov](https://github.com/akutuzov)__, [#1801](https://github.com/RaRe-Technologies/gensim/pull/1801))
+* Fix typo in `doc2vec-IMDB`. Fix #1788 (__[@apoorvaeternity](https://github.com/apoorvaeternity)__, [#1796](https://github.com/RaRe-Technologies/gensim/pull/1796))
+* Remove outdated bz2 examples from tutorials[2] (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1868](https://github.com/RaRe-Technologies/gensim/pull/1868))
+* Remove outdated `bz2` + `MmCorpus` examples from tutorials (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1867](https://github.com/RaRe-Technologies/gensim/pull/1867))
+
+
+
+:+1: Improvements:
+* Refactor tests for `gensim.corpora.WikiCorpus` (__[@steremma](https://github.com/steremma)__, [#1821](https://github.com/RaRe-Technologies/gensim/pull/1821))
+
+
+:warning: Deprecations (will be removed in the next major release)
+* Remove
+    - `gensim.models.wrappers.fasttext` (obsoleted by the new native `gensim.models.fasttext` implementation)
+    - `gensim.examples`
+    - `gensim.nosy`
+    - `gensim.scripts.word2vec_standalone`
+    - `gensim.scripts.make_wiki_lemma`
+    - `gensim.scripts.make_wiki_online`
+    - `gensim.scripts.make_wiki_online_lemma`
+    - `gensim.scripts.make_wiki_online_nodebug`
+    - `gensim.scripts.make_wiki` (all of these obsoleted by the new native  `gensim.scripts.segment_wiki` implementation)
+    - "deprecated" functions and attributes
+
+* Move
+    - `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+    - `gensim.summarization` ➡ `gensim.models.summarization`
+    - `gensim.topic_coherence` ➡ `gensim.models._coherence`
+    - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+    - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
+
+## 3.2.0, 2017-12-09
+
+:star2: New features:
+
+* New download API for corpora and pre-trained models (__[@chaitaliSaini](https://github.com/chaitaliSaini)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1705](https://github.com/RaRe-Technologies/gensim/pull/1705) & [#1632](https://github.com/RaRe-Technologies/gensim/pull/1632) & [#1492](https://github.com/RaRe-Technologies/gensim/pull/1492))
+    - Download large NLP datasets in one line of Python, then use with memory-efficient data streaming:
+        ```python
+        import gensim.downloader as api
+
+        for article in api.load("wiki-english-20171001"):
+            pass
+
+        ```
+    - Don’t waste time searching for good word embeddings, use the curated ones we included:
+        ```python
+        import gensim.downloader as api
+
+        model = api.load("glove-twitter-25")
+        model.most_similar("engineer")
+
+        # [('specialist', 0.957542896270752),
+        #  ('developer', 0.9548177123069763),
+        #  ('administrator', 0.9432312846183777),
+        #  ('consultant', 0.93915855884552),
+        #  ('technician', 0.9368376135826111),
+        #  ('analyst', 0.9342101216316223),
+        #  ('architect', 0.9257484674453735),
+        #  ('engineering', 0.9159940481185913),
+        #  ('systems', 0.9123805165290833),
+        #  ('consulting', 0.9112802147865295)]
+        ```
+    - [Blog post](https://rare-technologies.com/new-api-for-pretrained-nlp-models-and-datasets-in-gensim/) introducing the API and design decisions.
+  - [Notebook with examples](https://github.com/RaRe-Technologies/gensim/blob/be4500e4f0616ec2864c2ce70cb5d4db4b46512d/docs/notebooks/downloader_api_tutorial.ipynb)
+
+* New model: Poincaré embeddings (__[@jayantj](https://github.com/jayantj)__, [#1696](https://github.com/RaRe-Technologies/gensim/pull/1696) & [#1700](https://github.com/RaRe-Technologies/gensim/pull/1700) & [#1757](https://github.com/RaRe-Technologies/gensim/pull/1757) & [#1734](https://github.com/RaRe-Technologies/gensim/pull/1734))
+    - Embed a graph (taxonomy) in the same way as word2vec embeds words:
+        ```python
+        from gensim.models.poincare import PoincareRelations, PoincareModel
+        from gensim.test.utils import datapath
+
+        data = PoincareRelations(datapath('poincare_hypernyms.tsv'))
+        model = PoincareModel(data)
+        model.kv.most_similar("cat.n.01")
+
+        # [('kangaroo.n.01', 0.010581353439700418),
+        # ('gib.n.02', 0.011171531439892076),
+        # ('striped_skunk.n.01', 0.012025106076442395),
+        # ('metatherian.n.01', 0.01246679759214648),
+        # ('mammal.n.01', 0.013281303506525968),
+        # ('marsupial.n.01', 0.013941330203709653)]
+        ```
+    - [Tutorial notebook on Poincaré embeddings](https://github.com/RaRe-Technologies/gensim/blob/920c029ca97f961c8df264672c34936607876694/docs/notebooks/Poincare%20Tutorial.ipynb)
+    - [Model introduction and the journey of its implementation](https://rare-technologies.com/implementing-poincare-embeddings/)
+    - [Original paper](https://arxiv.org/abs/1705.08039) on arXiv
+
+* Optimized FastText (__[@manneshiva](https://github.com/manneshiva)__, [#1742](https://github.com/RaRe-Technologies/gensim/pull/1742))
+  - New fast multithreaded implementation of FastText, natively in Python/Cython. Deprecates the existing wrapper for Facebook’s C++ implementation.
+    ```python
+    import gensim.downloader as api
+    from gensim.models import FastText
+
+    model = FastText(api.load("text8"))
+    model.most_similar("cat")
+
+    # [('catnip', 0.8538144826889038),
+    #  ('catwalk', 0.8136177062988281),
+    #  ('catchy', 0.7828493118286133),
+    #  ('caf', 0.7826495170593262),
+    #  ('bobcat', 0.7745151519775391),
+    #  ('tomcat', 0.7732658386230469),
+    #  ('moat', 0.7728310823440552),
+    #  ('caye', 0.7666271328926086),
+    #  ('catv', 0.7651021480560303),
+    #  ('caveat', 0.7643581628799438)]
+
+
+    ```
+
+* Binary pre-compiled wheels for Windows, OSX and Linux (__[@menshikh-iv](https://github.com/menshikh-iv)__, [MacPython/gensim-wheels/#7](https://github.com/MacPython/gensim-wheels/pull/7))
+    - Users no longer need to have a C compiler for using the fast (Cythonized) version of word2vec, doc2vec, etc.
+    - Faster Gensim pip installation
+
+* Added `DeprecationWarnings` to deprecated methods and parameters, with a clear schedule for removal.
+
+:+1: Improvements:
+* Add Montemurro and Zanette's entropy based keyword extraction algorithm. Fix #665 (__[@PeteBleackley](https://github.com/PeteBleackley)__, [#1738](https://github.com/RaRe-Technologies/gensim/pull/1738))
+* Fix flake8 E731, E402, refactor tests & sklearn API code. Partial fix #1644  (__[@horpto](https://github.com/horpto)__, [#1689](https://github.com/RaRe-Technologies/gensim/pull/1689))
+* Reduce distribution size. Fix #1698 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1699](https://github.com/RaRe-Technologies/gensim/pull/1699))
+* Improve `scan_vocab` speed, `build_vocab_from_freq` method (__[@jodevak](https://github.com/jodevak)__, [#1695](https://github.com/RaRe-Technologies/gensim/pull/1695))
+* Improve `segment_wiki` script (__[@piskvorky](https://github.com/piskvorky)__, [#1707](https://github.com/RaRe-Technologies/gensim/pull/1707))
+* Add custom `dtype` support for `LdaModel`. Partially fix #1576 (__[@xelez](https://github.com/xelez)__, [#1656](https://github.com/RaRe-Technologies/gensim/pull/1656))
+* Add `doc2idx` method for `gensim.corpora.Dictionary`. Fix #1634 (__[@roopalgarg](https://github.com/roopalgarg)__, [#1720](https://github.com/RaRe-Technologies/gensim/pull/1720))
+* Add tox and pytest to gensim, integration with Travis and Appveyor. Fix #1613, #1644 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1721](https://github.com/RaRe-Technologies/gensim/pull/1721))
+* Add flag for hiding outdated data for `gensim.downloader.info` (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1736](https://github.com/RaRe-Technologies/gensim/pull/1736))
+* Add reproducible order between python versions for `gensim.corpora.Dictionary` (__[@formi23](https://github.com/formi23)__, [#1715](https://github.com/RaRe-Technologies/gensim/pull/1715))
+* Update `tox.ini`, `setup.cfg`, `README.md` (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1741](https://github.com/RaRe-Technologies/gensim/pull/1741))
+* Add custom `logsumexp` for `LdaModel` (__[@arlenk](https://github.com/arlenk)__, [#1745](https://github.com/RaRe-Technologies/gensim/pull/1745))
+
+:red_circle: Bug fixes:
+* Fix ranking formula in `gensim.summarization.bm25`. Fix #1718 (__[@souravsingh](https://github.com/souravsingh)__, [#1726](https://github.com/RaRe-Technologies/gensim/pull/1726))
+* Fixed incompatibility in persistence for `FastText` wrapper. Fix #1642 (__[@chinmayapancholi13](https://github.com/chinmayapancholi13)__, [#1723](https://github.com/RaRe-Technologies/gensim/pull/1723))
+* Fix `gensim.sklearn_api` bug with `documents_columns` parameter. Fix #1676 (__[@chinmayapancholi13](https://github.com/chinmayapancholi13)__, [#1704](https://github.com/RaRe-Technologies/gensim/pull/1704))
+* Fix slowdown of CI, remove pytest-cov (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1728](https://github.com/RaRe-Technologies/gensim/pull/1728))
+* Replace outdated packages in Dockerfile (__[@rbahumi](https://github.com/rbahumi)__, [#1730](https://github.com/RaRe-Technologies/gensim/pull/1730))
+* Replace `num_words` to `topn` in `LdaMallet.show_topics`. Fix #1747 (__[@apoorvaeternity](https://github.com/apoorvaeternity)__, [#1749](https://github.com/RaRe-Technologies/gensim/pull/1749))
+* Fix `os.rename` from `gensim.downloader` when 'src' and 'dst' on different partitions (__[@anotherbugmaster](https://github.com/anotherbugmaster)__, [#1733](https://github.com/RaRe-Technologies/gensim/pull/1733))
+* Fix `DeprecationWarning` from `logsumexp` (__[@dreamgonfly](https://github.com/dreamgonfly)__, [#1703](https://github.com/RaRe-Technologies/gensim/pull/1703))
+* Fix backward compatibility problem in `Phrases.load`. Fix #1751 (__[@alexgarel](https://github.com/alexgarel)__, [#1758](https://github.com/RaRe-Technologies/gensim/pull/1758))
+* Fix `load_word2vec_format` from `FastText`. Fix #1743 (__[@manneshiva](https://github.com/manneshiva)__, [#1755](https://github.com/RaRe-Technologies/gensim/pull/1755))
+* Fix ipython kernel version in `Dockerfile`. Fix #1762 (__[@rbahumi](https://github.com/rbahumi)__, [#1764](https://github.com/RaRe-Technologies/gensim/pull/1764))
+* Fix writing in `segment_wiki` (__[@horpto](https://github.com/horpto)__, [#1763](https://github.com/RaRe-Technologies/gensim/pull/1763))
+* Fix write method of file requires byte-like object in `segment_wiki` (__[@horpto](https://github.com/horpto)__, [#1750](https://github.com/RaRe-Technologies/gensim/pull/1750))
+* Fix incorrect vectors learned during online training for `FastText`. Fix #1752 (__[@manneshiva](https://github.com/manneshiva)__, [#1756](https://github.com/RaRe-Technologies/gensim/pull/1756))
+* Fix `dtype` of `model.wv.syn0_vocab` on updating `vocab` for `FastText`. Fix  #1759 (__[@manneshiva](https://github.com/manneshiva)__, [#1760](https://github.com/RaRe-Technologies/gensim/pull/1760))
+* Fix hashing-trick from `FastText.build_vocab`. Fix #1765 (__[@manneshiva](https://github.com/manneshiva)__, [#1768](https://github.com/RaRe-Technologies/gensim/pull/1768))
+* Add explicit `DeprecationWarning` for all outdated stuff. Fix #1753 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1769](https://github.com/RaRe-Technologies/gensim/pull/1769))
+* Fix epsilon according to `dtype` in `LdaModel` (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1770](https://github.com/RaRe-Technologies/gensim/pull/1770))
+
+:books: Tutorial and doc improvements:
+* Update perf numbers of `segment_wiki` (__[@piskvorky](https://github.com/piskvorky)__, [#1708](https://github.com/RaRe-Technologies/gensim/pull/1708))
+* Update docstring for `gensim.summarization.summarize`. Fix #1575 (__[@fbarrios](https://github.com/fbarrios)__, [#1702](https://github.com/RaRe-Technologies/gensim/pull/1702))
+* Refactor API Reference for `gensim.parsing`. Fix #1664 (__[@CLearERR](https://github.com/CLearERR)__, [#1684](https://github.com/RaRe-Technologies/gensim/pull/1684))
+* Fix typos in doc2vec-wikipedia notebook (__[@youqad](https://github.com/youqad)__, [#1727](https://github.com/RaRe-Technologies/gensim/pull/1727))
+* Fix PyPI long description rendering (__[@edigaryev](https://github.com/edigaryev)__, [#1739](https://github.com/RaRe-Technologies/gensim/pull/1739))
+* Fix twitter badge src  (__[@menshikh-iv](https://github.com/menshikh-iv)__)
+* Fix maillist badge color (__[@menshikh-iv](https://github.com/menshikh-iv)__)
+
+:warning: Deprecations (will be removed in the next major release)
+* Remove
+    - `gensim.examples`
+    - `gensim.nosy`
+    - `gensim.scripts.word2vec_standalone`
+    - `gensim.scripts.make_wiki_lemma`
+    - `gensim.scripts.make_wiki_online`
+    - `gensim.scripts.make_wiki_online_lemma`
+    - `gensim.scripts.make_wiki_online_nodebug`
+    - `gensim.scripts.make_wiki`
+
+* Move
+    - `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+    - `gensim.summarization` ➡ `gensim.models.summarization`
+    - `gensim.topic_coherence` ➡ `gensim.models._coherence`
+    - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+    - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
+
+## 3.1.0, 2017-11-06
+
+
+:star2: New features:
+* Massive optimizations to LSI model training (__[@isamaru](https://github.com/isamaru)__, [#1620](https://github.com/RaRe-Technologies/gensim/pull/1620) & [#1622](https://github.com/RaRe-Technologies/gensim/pull/1622))
+  - LSI model allows use of single precision (float32), to consume  *40% less memory* while being *40% faster*.
+  - LSI model can now also accept CSC matrix as input, for further memory and speed boost.
+  - Overall, if your entire corpus fits in RAM: 3x faster LSI training (SVD) in 4x less memory!
+    ```python
+    # just an example; the corpus stream is up to you
+    streaming_corpus = gensim.corpora.MmCorpus("my_tfidf_corpus.mm.gz")
+
+    # convert your corpus to a CSC sparse matrix (assumes the entire corpus fits in RAM)
+    in_memory_csc_matrix = gensim.matutils.corpus2csc(streaming_corpus, dtype=np.float32)
+
+    # then pass the CSC to LsiModel directly
+    model = LsiModel(corpus=in_memory_csc_matrix, num_topics=500, dtype=np.float32)
+    ```
+  - Even if you continue to use streaming corpora (your training dataset is too large for RAM), you should see significantly faster processing times and a lower memory footprint. In our experiments with a very large LSI model, we saw a drop from 29 GB peak RAM and 38 minutes (before) to 19 GB peak RAM and 26 minutes (now):
+    ```python
+    model = LsiModel(corpus=streaming_corpus, num_topics=500, dtype=np.float32)
+    ```
+* Add common terms to Phrases. Fix #1258 (__[@alexgarel](https://github.com/alexgarel)__, [#1568](https://github.com/RaRe-Technologies/gensim/pull/1568))
+  - Phrases allows to use common terms in bigrams. Before, if you are searching to reveal ngrams like `car_with_driver` and `car_without_driver`, you can either remove stop words before processing, but you will only find `car_driver`, or you won't find any of those forms (because they have three words, but also because high frequency of with will avoid them to be scored correctly), inspired by [ES common grams token filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-common-grams-tokenfilter.html).
+    ```python
+    phr_old = Phrases(corpus)
+    phr_new = Phrases(corpus, common_terms=stopwords.words('en'))
+
+    print(phr_old[["we", "provide", "car", "with", "driver"]])  # ["we", "provide", "car_with", "driver"]
+    print(phr_new[["we", "provide", "car", "with", "driver"]])  # ["we", "provide", "car_with_driver"]
+    ```
+* New [segment_wiki.py](https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/scripts/segment_wiki.py) script (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1483](https://github.com/RaRe-Technologies/gensim/pull/1483) & [#1694](https://github.com/RaRe-Technologies/gensim/pull/1694))
+  - CLI script for processing a raw Wikipedia dump (the xml.bz2 format provided by WikiMedia) to extract its articles in a plain text format. It extracts each article's title, section names and section content and saves them as json-line:
+    ```bash
+    python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 | gzip > enwiki-latest-pages-articles.json.gz
+    ```
+       Processing the entire English Wikipedia dump (13.5 GB, link [here](https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2)) takes about 2.5 hours (i7-6700HQ, SSD).
+
+       The output format is one article per line, serialized into JSON:
+       ```python
+          for line in smart_open('enwiki-latest-pages-articles.json.gz'):  # read the file we just created
+              article = json.loads(line)
+              print("Article title: %s" % article['title'])
+              for section_title, section_text in zip(article['section_titles'], article['section_texts']):
+                  print("Section title: %s" % section_title)
+                  print("Section text: %s" % section_text)
+        ```
+
+:+1: Improvements:
+* Speedup FastText tests (__[@horpto](https://github.com/horpto)__, [#1686](https://github.com/RaRe-Technologies/gensim/pull/1686))
+* Add optimization for `SlicedCorpus.__len__` (__[@horpto](https://github.com/horpto)__, [#1679](https://github.com/RaRe-Technologies/gensim/pull/1679))
+* Make `word_vec` return immutable vector. Fix #1651 (__[@CLearERR](https://github.com/CLearERR)__, [#1662](https://github.com/RaRe-Technologies/gensim/pull/1662))
+* Drop Win x32 support & add rolling builds (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1652](https://github.com/RaRe-Technologies/gensim/pull/1652))
+* Fix scoring function in Phrases. Fix #1533, #1635 (__[@michaelwsherman](https://github.com/michaelwsherman)__, [#1573](https://github.com/RaRe-Technologies/gensim/pull/1573))
+* Add configuration for flake8 to setup.cfg (__[@mcobzarenco](https://github.com/mcobzarenco)__, [#1636](https://github.com/RaRe-Technologies/gensim/pull/1636))
+* Add `build_vocab_from_freq` to Word2Vec, speedup scan\_vocab (__[@jodevak](https://github.com/jodevak)__, [#1599](https://github.com/RaRe-Technologies/gensim/pull/1599))
+* Add `most_similar_to_given` method for KeyedVectors (__[@TheMathMajor](https://github.com/TheMathMajor)__, [#1582](https://github.com/RaRe-Technologies/gensim/pull/1582))
+* Add `__getitem__` method to Sparse2Corpus to allow direct queries (__[@isamaru](https://github.com/isamaru)__, [#1621](https://github.com/RaRe-Technologies/gensim/pull/1621))
+
+:red_circle: Bug fixes:
+* Add single core mode to CoherenceModel. Fix #1683 (__[@horpto](https://github.com/horpto)__, [#1685](https://github.com/RaRe-Technologies/gensim/pull/1685))
+* Fix ResourceWarnings in tests. Partially fix #1519 (__[@horpto](https://github.com/horpto)__, [#1660](https://github.com/RaRe-Technologies/gensim/pull/1660))
+* Fix DeprecationWarnings generated by deprecated assertEquals. Partial fix #1519 (__[@poornagurram](https://github.com/poornagurram)__, [#1658](https://github.com/RaRe-Technologies/gensim/pull/1658))
+* Fix DeprecationWarnings for regex string literals. Fix #1646 (__[@franklsf95](https://github.com/franklsf95)__, [#1649](https://github.com/RaRe-Technologies/gensim/pull/1649))
+* Fix pagerank algorithm. Fix #805 (__[@xelez](https://github.com/xelez)__, [#1653](https://github.com/RaRe-Technologies/gensim/pull/1653))
+* Fix FastText inconsistent dtype. Fix #1637 (__[@mcobzarenco](https://github.com/mcobzarenco)__, [#1638](https://github.com/RaRe-Technologies/gensim/pull/1638))
+* Fix `test_filename_filtering` test (__[@nehaljwani](https://github.com/nehaljwani)__, [#1647](https://github.com/RaRe-Technologies/gensim/pull/1647))
+
+:books: Tutorial and doc improvements:
+* Fix code/docstring style (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1650](https://github.com/RaRe-Technologies/gensim/pull/1650))
+* Update error message for supervised FastText. Fix #1498 (__[@ElSaico](https://github.com/ElSaico)__, [#1645](https://github.com/RaRe-Technologies/gensim/pull/1645))
+* Add "DOI badge" to README. Fix #1610 (__[@dphov](https://github.com/dphov)__, [#1639](https://github.com/RaRe-Technologies/gensim/pull/1639))
+* Remove duplicate annoy notebook. Fix #1415 (__[@Karamax](https://github.com/Karamax)__, [#1640](https://github.com/RaRe-Technologies/gensim/pull/1640))
+* Fix duplication and wrong markup in docs (__[@horpto](https://github.com/horpto)__, [#1633](https://github.com/RaRe-Technologies/gensim/pull/1633))
+* Refactor dendrogram & topic network notebooks (__[@parulsethi](https://github.com/parulsethi)__, [#1571](https://github.com/RaRe-Technologies/gensim/pull/1571))
+* Fix release badge (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1631](https://github.com/RaRe-Technologies/gensim/pull/1631))
+
+:warning: Deprecation part (will come into force in the next major release)
+* Remove
+	- `gensim.examples`
+	- `gensim.nosy`
+	- `gensim.scripts.word2vec_standalone`
+	- `gensim.scripts.make_wiki_lemma`
+	- `gensim.scripts.make_wiki_online`
+	- `gensim.scripts.make_wiki_online_lemma`
+	- `gensim.scripts.make_wiki_online_nodebug`
+	- `gensim.scripts.make_wiki`
+
+* Move
+	- `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+	- `gensim.summarization` ➡ `gensim.models.summarization`
+	- `gensim.topic_coherence` ➡ `gensim.models._coherence`
+	- `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+	- `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
+Also, we'll create `experimental` subpackage for unstable models. Specific lists will be available in the next major release.
+
+
 ## 3.0.1, 2017-10-12
 
 

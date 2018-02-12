@@ -62,19 +62,18 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
     def transform(self, docs):
         """
         Return the topic proportions for the documents passed.
-        The input `docs` should be in BOW format and can be a list of documents like : [ [(4, 1), (7, 1)], [(9, 1), (13, 1)], [(2, 1), (6, 1)] ]
+        The input `docs` should be in BOW format and can be a list of documents like
+        [[(4, 1), (7, 1)],
+        [(9, 1), (13, 1)], [(2, 1), (6, 1)]]
         or a single document like : [(4, 1), (7, 1)]
         """
         if self.gensim_model is None:
-            raise NotFittedError("This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method.")
+            raise NotFittedError(
+                "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
+            )
 
         # The input as array of array
-        check = lambda x: [x] if isinstance(x[0], tuple) else x
-        docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
-
-        for k, v in enumerate(docs):
-            transformed_author = self.gensim_model[v]
-            X[k] = transformed_author
-
-        return np.reshape(np.array(X), (len(docs), self.num_topics))
+        if isinstance(docs[0], tuple):
+            docs = [docs]
+        proportions = [self.gensim_model[doc] for doc in docs]
+        return np.reshape(np.array(proportions), (len(docs), self.num_topics))

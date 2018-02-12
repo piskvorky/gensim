@@ -12,8 +12,8 @@ Follows scikit-learn API conventions
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
-import gensim
 from gensim.models import TfidfModel
+import gensim
 
 
 class TfIdfTransformer(TransformerMixin, BaseEstimator):
@@ -22,7 +22,7 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
     """
 
     def __init__(self, id2word=None, dictionary=None, wlocal=gensim.utils.identity,
-                 wglobal=gensim.models.tfidfmodel.df2idf, normalize=True):
+                 wglobal=gensim.models.tfidfmodel.df2idf, normalize=True, smartirs="ntc"):
         """
         Sklearn wrapper for Tf-Idf model.
         """
@@ -32,13 +32,16 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
         self.wlocal = wlocal
         self.wglobal = wglobal
         self.normalize = normalize
+        self.smartirs = smartirs
 
     def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
         """
-        self.gensim_model = TfidfModel(corpus=X, id2word=self.id2word, dictionary=self.dictionary,
-            wlocal=self.wlocal, wglobal=self.wglobal, normalize=self.normalize)
+        self.gensim_model = TfidfModel(
+            corpus=X, id2word=self.id2word, dictionary=self.dictionary, wlocal=self.wlocal,
+            wglobal=self.wglobal, normalize=self.normalize, smartirs=self.smartirs,
+        )
         return self
 
     def transform(self, docs):
@@ -51,12 +54,6 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
             )
 
         # input as python lists
-        check = lambda x: [x] if isinstance(x[0], tuple) else x
-        docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
-
-        for k, v in enumerate(docs):
-            transformed_doc = self.gensim_model[v]
-            X[k] = transformed_doc
-
-        return X
+        if isinstance(docs[0], tuple):
+            docs = [docs]
+        return [self.gensim_model[doc] for doc in docs]

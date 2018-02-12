@@ -48,6 +48,7 @@ class TestBaseTopicModel(object):
         vocab_size = len(self.model.id2word)
         for topic in topics:
             self.assertTrue(isinstance(topic, np.ndarray))
-            self.assertEqual(topic.dtype, np.float64)
+            # Note: started moving to np.float32 as default
+            # self.assertEqual(topic.dtype, np.float64)
             self.assertEqual(vocab_size, topic.shape[0])
             self.assertAlmostEqual(np.sum(topic), 1.0, 5)
