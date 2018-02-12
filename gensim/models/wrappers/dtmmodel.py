@@ -163,7 +163,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train_out/lda-seq/' + 'lhoods.dat'
@@ -174,7 +174,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train_out/lda-seq/' + 'gam.dat'
@@ -185,7 +185,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train_out/lda-seq/' + 'topic-{i}-var-e-log-prob.dat'
@@ -196,7 +196,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train_out/lda-seq/' + 'topic-{i}-var-obs.dat'
@@ -207,7 +207,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train_out/lda-seq/' + 'influence_time-{i}'
@@ -218,7 +218,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train_out'
@@ -229,7 +229,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train_out/' + 'em_log.dat'
@@ -240,7 +240,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train_out/' + 'initial-lda.alpha'
@@ -251,7 +251,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train_out/' + 'initial-lda.beta'
@@ -262,7 +262,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train_out/' + 'initial-lda-ss.dat'
@@ -273,7 +273,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train-mult.dat'
@@ -284,7 +284,7 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train'
@@ -295,13 +295,14 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file
+            Path to file.
 
         """
         return self.prefix + 'train-seq.dat'
 
     def convert_input(self, corpus, time_slices):
-        """Convert corpus into LDA-C format and save to temporary text file.
+        """Convert corpus into LDA-C format by :class:`~gensim.corpora.bleicorpus.BleiCorpus` and save to temp file.
+        Path to temporary file produced by :meth:`~gensim.models.wrappers.dtmmodel.DtmModel.ftimeslices`.
 
         Parameters
         ----------
