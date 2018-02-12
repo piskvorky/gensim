@@ -99,8 +99,7 @@ def clip_spectrum(s, k, discard=0.001):
 
 
 def asfarray(a, name=''):
-    """
-    Return an array laid out in Fortran order in memory.
+    """Return an array laid out in Fortran order in memory.
 
     Parameters
     ----------
@@ -111,7 +110,7 @@ def asfarray(a, name=''):
 
     Returns
     -------
-    out : ndarray
+    np.ndarray
         The input `a` in Fortran, or column-major order.
 
     """
@@ -122,8 +121,7 @@ def asfarray(a, name=''):
 
 
 def ascarray(a, name=''):
-    """
-    Return a contiguous array in memory (C order).
+    """Return a contiguous array in memory (C order).
 
     Parameters
     ----------
@@ -134,7 +132,7 @@ def ascarray(a, name=''):
 
     Returns
     -------
-    out : ndarray
+    np.ndarray
         Contiguous array (row-major order) of same shape and content as `a`.
 
     """
@@ -145,16 +143,21 @@ def ascarray(a, name=''):
 
 
 class Projection(utils.SaveLoad):
-    """Objects of this class are lower dimension projections of a Term-Passage matrix."""
+    """Objects of this class are lower dimension projections of a Term-Passage matrix.
+
+    This is the class taking care of the 'core math'; interfacing with corpora,
+    splitting large corpora into chunks and merging them etc. is done through
+    the higher-level :class:`~gensim.models.lsimodel.LsiModel` class.
+
+    Notes
+    -----
+    The projection can be later updated by merging it with another Projection via `self.merge()`.
+
+    """
 
     def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS,
                  extra_dims=P2_EXTRA_DIMS, dtype=np.float64):
         """Construct the (U, S) projection from a corpus.
-
-        The projection can be later updated by merging it with another Projection via `self.merge()`.
-        This is the class taking care of the 'core math'; interfacing with corpora,
-        splitting large corpora into chunks and merging them etc. is done through
-        the higher-level `LsiModel` class.
 
         Parameters
         ----------
@@ -172,6 +175,7 @@ class Projection(utils.SaveLoad):
             Extra samples to be used besides the rank `k`. Tune to improve accuracy.
         dtype : type, optional
             Enforces a type for elements of the decomposed matrix.
+
         """
 
         self.m, self.k = m, k
@@ -208,8 +212,8 @@ class Projection(utils.SaveLoad):
 
         Returns
         -------
-        Projection
-            An empty copy (no corpus) of the current object.
+        :class:`~gensim.models.lsimodel.Projection`
+            An empty copy (no corpus) of the current projection.
 
         """
         return Projection(self.m, self.k, power_iters=self.power_iters, extra_dims=self.extra_dims)
@@ -223,7 +227,7 @@ class Projection(utils.SaveLoad):
 
         Parameters
         ----------
-        other : Projection
+        other : :class:`~gensim.models.lsimodel.Projection`
             The Projection object to be merged into the current one. It will be deleted after merging.
         decay : float, optional
             Weight of existing observations relatively to new ones.
@@ -319,8 +323,15 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     The left singular vectors are stored in `lsi.projection.u`, singular values
     in `lsi.projection.s`. Right singular vectors can be reconstructed from the output
     of `lsi[training_corpus]`, if needed. See also FAQ [2]_.
-
     Model persistency is achieved via its load/save methods.
+
+    Notes
+    -----
+    After the model has been trained, you can estimate topics for an
+    arbitrary, unseen document, using the ``topics = self[document]`` dictionary
+    notation. You can also add new training documents, with ``self.add_documents``,
+    so that training can be stopped and resumed at any time, and the
+    LSI transformation is available at any point.
 
     .. [2] https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q4-how-do-you-output-the-u-s-vt-matrices-of-lsi
 
@@ -329,14 +340,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
                  decay=1.0, distributed=False, onepass=True,
                  power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS, dtype=np.float64):
-        """ Construct an `LsiModel` object.
+        """Construct an `LsiModel` object.
 
         Either `corpus` or `id2word` must be supplied in order to train the model.
-        After the model has been trained, you can estimate topics for an
-        arbitrary, unseen document, using the ``topics = self[document]`` dictionary
-        notation. You can also add new training documents, with ``self.add_documents``,
-        so that training can be stopped and resumed at any time, and the
-        LSI transformation is available at any point.
 
         Parameters
         ----------
@@ -794,9 +800,9 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
     ----------
     id2token : dict of {int: str}
         Mapping from ID to word in the Dictionary.
-    u : ndarray
+    u : np.ndarray
         The 2D U decomposition matrix.
-    s : ndarray
+    s : np.ndarray
         The 1D reduced array of eigenvalues used for decomposition.
     topics : list of int
         The list of topic IDs to be printed
@@ -855,8 +861,8 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     `power_iters` (power iterations) parameters affect accuracy of the decomposition.
 
     This algorithm uses `2+power_iters` passes over the input data. In case you can only
-    afford a single pass, set `onepass=True` in :class:`LsiModel` and avoid using
-    this function directly.
+    afford a single pass, set `onepass=True` in :class:`~gensim.models.lsimodel.LsiModel`
+    and avoid using this function directly.
 
     The decomposition algorithm is based on
     **Halko, Martinsson, Tropp. Finding structure with randomness, 2009.**
@@ -886,7 +892,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
 
     Returns
     -------
-    (np.ndarray, array)
+    (np.ndarray 2D, np.ndarray 1D)
         The left singular vectors and the singular values of the input data stream.
 
     """
