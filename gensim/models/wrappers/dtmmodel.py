@@ -6,30 +6,33 @@
 # Based on Copyright (C) 2014 Radim Rehurek <radimrehurek@seznam.cz>
 
 
-"""Python wrapper for Dynamic Topic Models (DTM) and the Document Influence Model (DIM)  [1].
-
-This module allows for DTM and DIM model estimation from a training corpus.
+"""Python wrapper for `Dynamic Topic Models (DTM) <http://www.cs.columbia.edu/~blei/papers/BleiLafferty2006a.pdf>`_
+and the `Document Influence Model (DIM) <http://www.cs.columbia.edu/~blei/papers/GerrishBlei2010.pdf>`_.
 
 Installation
 ------------
-$ git clone https://github.com/blei-lab/dtm.git
-$ sudo aptitude install libgsl0-dev
-$ cd dtm/dtm
-$ make
+
+You have 2 ways, how to make binaries:
+
+#. Use precompiled binaries for your OS version from `/magsilva/dtm/ <https://github.com/magsilva/dtm/tree/master/bin>`_
+#. Compile binaries manually from `/blei-lab/dtm <https://github.com/blei-lab/dtm.git>`_
+   (original instruction available in https://github.com/blei-lab/dtm/blob/master/README.md), or use this ::
+
+    git clone https://github.com/blei-lab/dtm.git
+    sudo apt-get install libgsl0-dev
+    cd dtm/dtm
+    make
 
 Examples
 --------
+>>> from gensim.test.utils import common_corpus, common_dictionary
 >>> from gensim.models.wrappers import DtmModel
->>> model = DtmModel('dtm-win64.exe',
-...                  my_corpus,
-...                  my_timeslices,
-...                  num_topics=20,
-...                  id2word=dictionary)
-
-References
-----------
-.. [1] https://github.com/magsilva/dtm/tree/master/bin
-.. [2] https://github.com/blei-lab/dtm
+>>>
+>>> path_to_dtm_binary = "/path/to/dtm/binary"
+>>> model = DtmModel(
+...    path_to_dtm_binary, corpus=common_corpus, id2word=common_dictionary,
+...    time_slices=[1] * len(common_corpus)
+... )
 
 """
 
@@ -49,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 
 class DtmModel(utils.SaveLoad):
-    """Class for DTM training using DTM binary.
+    """DTM wrapper using DTM binary.
 
     Communication between DTM and Python takes place by passing around data files on disk and executing
     the DTM binary as a subprocess.
@@ -60,33 +63,40 @@ class DtmModel(utils.SaveLoad):
                  id2word=None, prefix=None, lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10,
                  alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
         """
+
         Parameters
         ----------
         dtm_path : str
-            Path to the dtm executable,  e.g. `C:/dtm/dtm-win64.exe`.
+            Path to the dtm binary, e.g. `C:/dtm/dtm-win64.exe`.
         corpus : iterable of iterable of (int, int)
             Collection of texts in BoW format.
-        id2word : dict
-            Mapping between tokens ids and words from corpus.
-        mode : str
+        time_slices : list of int
+            Sequence of timestamps.
+        mode : {'fit', 'time'}, optional
             Controls the mode of the mode: 'fit' is for training, 'time' for analyzing documents through time
             according to a DTM, basically a held out set.
-        model : str
-            Controls the choice of model. 'fixed' is for DIM and 'dtm' for DTM.
-        lda_sequence_min_iter : int
+        model : {'fixed', 'dtm'}, optional
+            Control model that will be runned: 'fixed' is for DIM and 'dtm' for DTM.
+        num_topics : int, optional
+            Number of topics.
+        id2word : :class:`~gensim.corpora.dictionary.Dictionary`, optional
+            Mapping between tokens ids and words from corpus.
+        prefix : str, optional
+            Prefix for produced temporary files.
+        lda_sequence_min_iter : int, optional
              Min iteration of LDA.
-        lda_sequence_max_iter : int
+        lda_sequence_max_iter : int, optional
             Max iteration of LDA.
-        lda_max_em_iter : int
-             Max em optiimzatiion iterations in LDA.
-        alpha : int
+        lda_max_em_iter : int, optional
+             Max em optimization iterations in LDA.
+        alpha : int, optional
             Hyperparameter that affects sparsity of the document-topics for the LDA models in each timeslice.
-        top_chain_var : int
+        top_chain_var : int, optional
             Hyperparameter that affects.
         rng_seed : int, optional
              Random seed.
         initialize_lda : bool, optional
-             Initialize DTM with LDA.
+             If True - initialize DTM with LDA.
 
         """
         if not os.path.isfile(dtm_path):
@@ -187,7 +197,14 @@ class DtmModel(utils.SaveLoad):
         return self.prefix + 'train-seq.dat'
 
     def convert_input(self, corpus, time_slices):
-        """Serialize documents in LDA-C format to a temporary text file.
+        """Convert corpus into LDA-C format and save to temporary text file.
+
+        Parameters
+        ----------
+        corpus : iterable of iterable of (int, float)
+            Corpus in BoW format.
+        time_slices : list of int
+            Sequence of timestamps.
 
         """
         logger.info("serializing temporary corpus to %s", self.fcorpustxt())
@@ -200,19 +217,19 @@ class DtmModel(utils.SaveLoad):
                 fout.write(utils.to_utf8(str(sl) + "\n"))
 
     def train(self, corpus, time_slices, mode, model):
-        """Train DTM model using specified corpus and time slices.
+        """Train DTM model.
 
         Parameters
         ----------
         corpus : iterable of iterable of (int, int)
             Collection of texts in BoW format.
-        time_slices : list
-            List of time stamps
-        mode : str
+        time_slices : list of int
+            Sequence of timestamps.
+        mode : {'fit', 'time'}, optional
             Controls the mode of the mode: 'fit' is for training, 'time' for analyzing documents through time
             according to a DTM, basically a held out set.
-        model : str
-            Controls the choice of model. 'fixed' is for DIM and 'dtm' for DTM.
+        model : {'fixed', 'dtm'}, optional
+            Control model that will be runned: 'fixed' is for DIM and 'dtm' for DTM.
 
         """
         self.convert_input(corpus, time_slices)
@@ -280,25 +297,27 @@ class DtmModel(utils.SaveLoad):
         return self.show_topics(num_topics, times, num_words, log=True)
 
     def show_topics(self, num_topics=10, times=5, num_words=10, log=False, formatted=True):
-        """Print the `num_words` most probable words for `num_topics` number of topics at 'times' time slices.
+        """Get the `num_words` most probable words for `num_topics` number of topics at 'times' time slices.
 
         Parameters
         ----------
-        num_topics : int
-            Number of topics to print. Set `-1` to print all topics.
-        times : int
+        num_topics : int, optional
+            Number of topics to return, set `-1` to get all topics.
+        times : int, optional
             Number of times.
-        num_words : int
+        num_words : int, optional
             Number of words.
-        log : bool
-            To enable logging.
-        formatted : bool
-            Set `True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
+        log : bool, optional
+            THIS PARAMETER WILL BE IGNORED.
+        formatted : bool, optional
+            If `True` - return the topics as a list of strings, otherwise as lists of (weight, word) pairs.
 
         Returns
         -------
-        shown : list
-            Topics as a list of strings.
+        list of str
+            Topics as a list of strings (if formatted=True) **OR**
+        list of (float, str)
+            Topics as list of (weight, word) pairs (if formatted=False)
 
         """
         if num_topics < 0 or num_topics >= self.num_topics:
@@ -326,22 +345,23 @@ class DtmModel(utils.SaveLoad):
         return shown
 
     def show_topic(self, topicid, time, topn=50, num_words=None):
-        """Return `num_words` most probable words for the given `topicid`.
+        """Get `num_words` most probable words for the given `topicid`.
 
         Parameters
         ----------
         topicid : int
             Id of topic.
-        topn : int
-            Top number of topics.
-        num_words : int, optional
-            Number of words.
         time : int
+            Timestamp.
+        topn : int, optional
+            Top number of topics that you'll receive.
+        num_words : int, optional
+            DEPRECATED PARAMETER, use `topn` instead.
 
         Returns
         -------
-        beststr : list
-            Most probable words, as a list of `(word_probability, word)` 2-tuples.
+        list of (float, int)
+            Sequence of probable words, as a list of `(word_probability, word)`.
 
         """
         if num_words is not None:  # deprecated num_words is used
@@ -360,22 +380,23 @@ class DtmModel(utils.SaveLoad):
         return beststr
 
     def print_topic(self, topicid, time, topn=10, num_words=None):
-        """Return the given topic, formatted as a string.
+        """Get the given topic, formatted as a string.
 
         Parameters
         ----------
         topicid : int
             Id of topic.
-        topn : int
-            Top number of topics.
-        num_words : int, optional
-            Number of words.
         time : int
+            Timestamp.
+        topn : int, optional
+            Top number of topics that you'll receive.
+        num_words : int, optional
+            DEPRECATED PARAMETER, use `topn` instead.
 
         Returns
         -------
-        string
-            The given topic.
+        str
+            The given topic in string format, like '0.132*someword + 0.412*otherword + ...'.
 
         """
         if num_words is not None:  # deprecated num_words is used
@@ -385,30 +406,31 @@ class DtmModel(utils.SaveLoad):
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
 
     def dtm_vis(self, corpus, time):
-        """returns term_frequency, vocab, doc_lengths, topic-term distributions and doc_topic distributions,
-        specified by pyLDAvis format.
-
-        all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
-        input parameter is the year to do the visualisation.
+        """Get data specified by pyLDAvis format.
 
         Parameters
         ----------
-        corpus : iterable of iterable of (int, int)
+        corpus : iterable of iterable of (int, float)
             Collection of texts in BoW format.
         time : int
+            Sequence of timestamp.
+
+        Notes
+        -----
+        All of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
 
         Returns
         -------
-        doc_topic
+        doc_topic : numpy.ndarray
             Document-topic proportions.
-        topic_term
+        topic_term : numpy.ndarray
             Calculated term of topic suitable for pyLDAvis format.
-        doc_lengths
+        doc_lengths : list of int
             Length of each documents in corpus.
-        term_frequency
+        term_frequency : numpy.ndarray
             Frequency of each word from vocab.
-        vocab
-            List of mapping between tokens ids and words from corpus.
+        vocab : list of str
+            List of words from docpus.
 
         """
         topic_term = np.exp(self.lambda_[:, :, time]) / np.exp(self.lambda_[:, :, time]).sum()
@@ -429,23 +451,25 @@ class DtmModel(utils.SaveLoad):
         return doc_topic, topic_term, doc_lengths, term_frequency, vocab
 
     def dtm_coherence(self, time, num_words=20):
-        """Returns all topics of a particular time-slice without probabilitiy values for it to be used.
-        for either "u_mass" or "c_v" coherence.
+        """Get all topics of a particular time-slice without probability values for it to be used.
+        For either "u_mass" or "c_v" coherence.
 
         Parameters
         ----------
         num_words : int
             Number of words.
         time : int
+            Timestamp
 
         Returns
         -------
-        coherence_topics : list
-            All topics of a particular time-slice without probabilitiy values for it to be used.
+        coherence_topics : list of list of str
+            All topics of a particular time-slice without probability values for it to be used.
 
-        TODO:
-            because of print format right now can only return for 1st time-slice.
-            should we fix the coherence printing or make changes to the print statements to mirror DTM python?
+        Warnings
+        --------
+        TODO: because of print format right now can only return for 1st time-slice, should we fix the coherence
+        printing or make changes to the print statements to mirror DTM python?
 
         """
         coherence_topics = []
