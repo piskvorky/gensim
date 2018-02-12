@@ -5,14 +5,16 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-USAGE: %(program)s
 
-    Worker ("slave") process used in computing distributed LSI. Run this script \
-on every node in your cluster. If you wish, you may even run it multiple times \
-on a single machine, to make better use of multiple cores (just beware that \
+Worker ("slave") process used in computing distributed LSI. Run this script
+on every node in your cluster. If you wish, you may even run it multiple times
+on a single machine, to make better use of multiple cores (just beware that
 memory footprint increases accordingly).
 
-Example: python -m gensim.models.lsi_worker
+Examples
+--------
+    python -m gensim.models.lsi_worker
+
 """
 
 
@@ -38,10 +40,27 @@ SAVE_DEBUG = 0  # save intermediate models after every SAVE_DEBUG updates (0 for
 
 class Worker(object):
     def __init__(self):
+        """Partly initializes the model.
+
+        A full initialization requires a call to `self.initialize` as well.
+
+        """
         self.model = None
 
     @Pyro4.expose
     def initialize(self, myid, dispatcher, **model_params):
+        """Fully initializes the worker.
+
+        Parameters
+        ----------
+        myid : int
+            An ID number used to identify this worker in the dispatcher object.
+        dispatcher : :class:`~gensim.models.lsi_dispatcher.Dispatcher`
+            The dispatcher responsible for scheduling this worker.
+        **model_params
+            Keyword parameters to initialize the inner LSI model.
+
+        """
         self.lock_update = threading.Lock()
         self.jobsdone = 0  # how many jobs has this worker completed?
         # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
@@ -54,9 +73,7 @@ class Worker(object):
     @Pyro4.expose
     @Pyro4.oneway
     def requestjob(self):
-        """
-        Request jobs from the dispatcher, in a perpetual loop until `getstate()` is called.
-        """
+        """Request jobs from the dispatcher, in a perpetual loop until `self.getstate()` is called."""
         if self.model is None:
             raise RuntimeError("worker must be initialized before receiving jobs")
 
@@ -76,6 +93,14 @@ class Worker(object):
 
     @utils.synchronous('lock_update')
     def processjob(self, job):
+        """Incrementally proccesses the job and potentially logs progress.
+
+        Parameters
+        ----------
+        job : iterable of iterable of (int, float)
+            The corpus to be used for further training the LSI model.
+
+        """
         self.model.add_documents(job)
         self.jobsdone += 1
         if SAVE_DEBUG and self.jobsdone % SAVE_DEBUG == 0:
@@ -85,6 +110,14 @@ class Worker(object):
     @Pyro4.expose
     @utils.synchronous('lock_update')
     def getstate(self):
+        """Logs and returns the LSI model's current projection.
+
+        Returns
+        -------
+        :class:`~gensim.models.lsimodel.Projection`
+            The current projection.
+
+        """
         logger.info("worker #%i returning its state after %s jobs", self.myid, self.jobsdone)
         assert isinstance(self.model.projection, lsimodel.Projection)
         self.finished = True
@@ -93,18 +126,20 @@ class Worker(object):
     @Pyro4.expose
     @utils.synchronous('lock_update')
     def reset(self):
+        """Resets the worker by deleting its current projection."""
         logger.info("resetting worker #%i", self.myid)
         self.model.projection = self.model.projection.empty_like()
         self.finished = False
 
     @Pyro4.oneway
     def exit(self):
+        """Terminates the worker. """
         logger.info("terminating worker #%i", self.myid)
         os._exit(0)
-# endclass Worker
 
 
 def main():
+    """The main script. """
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logger.info("running %s", " ".join(sys.argv))
 
