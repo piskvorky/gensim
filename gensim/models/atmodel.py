@@ -936,9 +936,8 @@ class AuthorTopicModel(LdaModel):
         -------
         list of (int, float)
             Topic distribution for the given `corpus`.
-    
-        """
 
+        """
         # TODO: how should this function look like for get_new_author_topics?
         def rho():
             return pow(self.offset + 1 + 1, -self.decay)
