@@ -67,7 +67,7 @@ class DtmModel(utils.SaveLoad):
         Parameters
         ----------
         dtm_path : str
-            Path to the dtm binary, e.g. `C:/dtm/dtm-win64.exe`.
+            Path to the dtm binary, e.g. `/home/username/dtm/dtm/main`.
         corpus : iterable of iterable of (int, int)
             Collection of texts in BoW format.
         time_slices : list of int
@@ -80,7 +80,7 @@ class DtmModel(utils.SaveLoad):
         num_topics : int, optional
             Number of topics.
         id2word : :class:`~gensim.corpora.dictionary.Dictionary`, optional
-            Mapping between tokens ids and words from corpus.
+            Mapping between tokens ids and words from corpus, if not specified - will be inferred from `corpus`.
         prefix : str, optional
             Prefix for produced temporary files.
         lda_sequence_min_iter : int, optional
@@ -158,42 +158,146 @@ class DtmModel(utils.SaveLoad):
             self.train(corpus, time_slices, mode, model)
 
     def fout_liklihoods(self):
+        """Get path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train_out/lda-seq/' + 'lhoods.dat'
 
     def fout_gamma(self):
+        """Get path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train_out/lda-seq/' + 'gam.dat'
 
     def fout_prob(self):
+        """Get template of path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train_out/lda-seq/' + 'topic-{i}-var-e-log-prob.dat'
 
     def fout_observations(self):
+        """Get template of path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train_out/lda-seq/' + 'topic-{i}-var-obs.dat'
 
     def fout_influence(self):
+        """Get template of path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train_out/lda-seq/' + 'influence_time-{i}'
 
     def foutname(self):
+        """Get path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train_out'
 
     def fem_steps(self):
+        """Get path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train_out/' + 'em_log.dat'
 
     def finit_alpha(self):
+        """Get path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train_out/' + 'initial-lda.alpha'
 
     def finit_beta(self):
+        """Get path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train_out/' + 'initial-lda.beta'
 
     def flda_ss(self):
+        """Get path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train_out/' + 'initial-lda-ss.dat'
 
     def fcorpustxt(self):
+        """Get path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train-mult.dat'
 
     def fcorpus(self):
+        """Get path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train'
 
     def ftimeslices(self):
+        """Get path to temporary file.
+
+        Returns
+        -------
+        str
+            Path to file
+
+        """
         return self.prefix + 'train-seq.dat'
 
     def convert_input(self, corpus, time_slices):
