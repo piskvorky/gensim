@@ -282,6 +282,9 @@ class TfidfModel(interfaces.TransformationABC):
         self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
         self.num_docs, self.num_nnz, self.idfs = None, None, None
         self.smartirs = smartirs
+        self.pivot_norm = pivot_norm
+        self.slope = slope
+        self.pivot = pivot
 
         # If smartirs is not None, override wlocal, wglobal and normalize
         if smartirs is not None:
@@ -393,7 +396,7 @@ class TfidfModel(interfaces.TransformationABC):
 
         # Need to check if self.pivot_norm variable is in the local scope or not to
         # mantain backward compatibility.
-        if 'self.pivot_norm' in locals() and self.pivot_norm is True:
+        if hasattr(self, 'pivot_norm') and self.pivot_norm is True:
             norm_vector = np.array(norm_vector)
             sparse_norm_wts = np.array(norm_vector)[:, 1]
             n_samples = sparse_norm_wts.shape[0]
