@@ -42,18 +42,24 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
                  decay=1.0, onepass=True, power_iters=2, extra_samples=100):
         """Sklearn wrapper for LSI model.
 
-        Parameters are propagated to the original models constructor. For an explanation
-        please refer to :meth:`~gensim.models.lsimodel.LsiModel.__init__`
-
         Parameters
         ----------
         num_topics : int, optional
+            Number of requested factors (latent dimensions)
         id2word : dict of {int: str}, optional
+            ID to word mapping, optional.
         chunksize :  int, optional
+            Number of documents to be used in each training chunk.
         decay : float, optional
+            Weight of existing observations relatively to new ones.
         onepass : bool, optional
+            Whether the one-pass algorithm should be used for training.
+            Pass `False` to force a multi-pass stochastic algorithm.
         power_iters: int, optional
+            Number of power iteration steps to be used.
+            Increasing the number of power iterations improves accuracy, but lowers performance
         extra_samples : int, optional
+            Extra samples to be used besides the rank `k`. Can improve accuracy.
 
         """
         self.gensim_model = None

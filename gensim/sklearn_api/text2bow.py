@@ -30,13 +30,12 @@ class Text2BowTransformer(TransformerMixin, BaseEstimator):
     def __init__(self, prune_at=2000000, tokenizer=tokenize):
         """Sklearn wrapper for Text2Bow model.
 
-        Parameters are propagated to the original models constructor. For an explanation
-        please refer to :meth:`~gensim.corpora.dictionary.Dictionary.__init__`
-
         Parameters
         ----------
         prune_at : int, optional
+            Total number of unique words. Dictionary will keep not more than `prune_at` words.
         tokenizer : callable (str -> list of str), optional
+            A callable to split a document into a list of each terms
 
         """
         self.gensim_model = None

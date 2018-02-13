@@ -30,17 +30,50 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
                  delimiter=b'_', progress_per=10000, scoring='default'):
         """Sklearn wrapper for Phrases model.
 
-        Parameters are propagated to the original models constructor. For an explanation
-        please refer to :meth:`~gensim.models.phrases.Phrases.__init__`
-
         Parameters
         ----------
         min_count : int
+            Terms with a count lower than this will be ignored
         threshold : float
+            Only phrases scoring above this will be accepted, see `scoring` below.
         max_vocab_size : int
+            Maximum size of the vocabulary.
+            Used to control pruning of less common words, to keep memory under control.
+            The default of 40M needs about 3.6GB of RAM;
         delimiter : str
+            Character used to join collocation tokens. Should be a byte string (e.g. b'_').
         progress_per : int
+            Training will report to the logger every that many phrases are learned.
         scoring : str or callable
+            Specifies how potential phrases are scored for comparison to the `threshold`
+            setting. `scoring` can be set with either a string that refers to a built-in scoring function,
+            or with a function with the expected parameter names. Two built-in scoring functions are available
+            by setting `scoring` to a string:
+
+            'default': from [1]_.
+            'npmi': normalized pointwise mutual information, from [2]_.
+
+            'npmi' is more robust when dealing with common words that form part of common bigrams, and
+            ranges from -1 to 1, but is slower to calculate than the default.
+
+            To use a custom scoring function, create a function with the following parameters and set the `scoring`
+            parameter to the custom function. You must use all the parameters in your function call, even if the
+            function does not require all the parameters.
+
+                worda_count: number of occurrances in `sentences` of the first token in the phrase being scored
+                wordb_count: number of occurrances in `sentences` of the second token in the phrase being scored
+                bigram_count: number of occurrances in `sentences` of the phrase being scored
+                len_vocab: the number of unique tokens in `sentences`
+                min_count: the `min_count` setting of the Phrases class
+                corpus_word_count: the total number of (non-unique) tokens in `sentences`
+
+            A scoring function without any of these parameters (even if the parameters are not used) will
+            raise a ValueError on initialization of the Phrases class. The scoring function must be pic
+
+        References
+        ----------
+        .. [1] "Efficient Estimaton of Word Representations in Vector Space" by Mikolov, et. al.
+        .. [2] "Normalized (Pointwise) Mutual Information in Colocation Extraction" by Gerlof Bouma.
 
         """
         self.gensim_model = None
