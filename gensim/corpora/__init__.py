@@ -5,7 +5,6 @@ This package contains implementations of various streaming corpus I/O format.
 # bring corpus classes directly into package namespace, to save some typing
 from .indexedcorpus import IndexedCorpus  # noqa:F401 must appear before the other classes
 
-
 from .mmcorpus import MmCorpus  # noqa:F401
 from .bleicorpus import BleiCorpus  # noqa:F401
 from .svmlightcorpus import SvmLightCorpus  # noqa:F401
