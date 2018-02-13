@@ -261,7 +261,7 @@ setup(
             sources=['./gensim/models/fasttext_inner.c'],
             include_dirs=[model_dir]),
         Extension('gensim.csparse.psparse',
-            sources=['gensim/csparse/psparse.pyx', 'gensim/csparse/cs_gaxpy.c'],
+            sources=['gensim/csparse/psparse.pyx', 'gensim/csparse/CSParse/Source/cs_gaxpy.c'],
             extra_compile_args=['-fopenmp', '-O3', '-ffast-math'],
             include_dirs = [csparse_dir, csparse_dir + '/CSParse/Include/'],
             extra_link_args=['-fopenmp'])

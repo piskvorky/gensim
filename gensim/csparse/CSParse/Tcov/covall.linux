@@ -1,7 +1,0 @@
-#!/bin/csh
-        ./gcovs cs*.c |& awk -f cov.awk | sort -n > cov.out
-        sort -n cov.out > cov.sort
-        ./covs > covs.out
-        echo -n "statments not yet tested: "
-        grep "#####" *gcov | wc -l
-        ./cover *v > cover.out
