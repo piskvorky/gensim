@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+"""
+Reader for corpus in the Matrix Market format.
+
+"""
+
 from __future__ import with_statement
 
 from gensim import utils
@@ -6,14 +16,11 @@ from six import string_types
 from six.moves import xrange
 import logging
 
-cimport cython
-from libc.stdio cimport sscanf
-
 
 logger = logging.getLogger(__name__)
 
 
-cdef class MmReader(object):
+class MmReader(object):
     """
     matrix market file reader
 
@@ -36,14 +43,9 @@ cdef class MmReader(object):
     which are larger than the available RAM.
 
     """
-    cdef public input
-    cdef public bint transposed
-    cdef public int num_docs, num_terms, num_nnz
 
     def __init__(self, input, transposed=True):
         """
-        MmReader(input, transposed=True):
-
         Create matrix reader
 
         Parameters
@@ -58,7 +60,7 @@ cdef class MmReader(object):
             else, expects term_id, doc_id, value
 
         """
-        logger.info("initializing cython corpus reader from %s", input)
+        logger.info("initializing corpus reader from %s", input)
         self.input, self.transposed = input, transposed
         with utils.file_or_filename(self.input) as lines:
             try:
@@ -94,8 +96,6 @@ cdef class MmReader(object):
 
     def skip_headers(self, input_file):
         """
-        skip_headers(self, input_file)
-
         Skip file headers that appear before the first document.
 
         Parameters
@@ -111,8 +111,6 @@ cdef class MmReader(object):
 
     def __iter__(self):
         """
-        __iter__()
-
         Iterate through vectors from underlying matrix
 
         Yields
@@ -129,25 +127,16 @@ cdef class MmReader(object):
         Matrix Market file.
 
         """
-        cdef int docid, termid, previd
-        cdef double val = 0
-
         with utils.file_or_filename(self.input) as lines:
             self.skip_headers(lines)
 
             previd = -1
             for line in lines:
-
-                if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
-                    raise ValueError("unable to parse line: {}".format(line))
-
+                docid, termid, val = utils.to_unicode(line).split()  # needed for python3
                 if not self.transposed:
                     termid, docid = docid, termid
-
                 # -1 because matrix market indexes are 1-based => convert to 0-based
-                docid -= 1
-                termid -= 1
-
+                docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)
                 assert previd <= docid, "matrix columns must come in ascending order"
                 if docid != previd:
                     # change of document: return the document read so far (its id is prevId)
@@ -176,8 +165,6 @@ cdef class MmReader(object):
 
     def docbyoffset(self, offset):
         """
-        docbyoffset(offset)
-
         Return document at file offset `offset` (in bytes)
 
         Parameters
@@ -190,13 +177,10 @@ cdef class MmReader(object):
         list of (termid, val)
             "vector" of terms for document at offset
             vector of terms is represented as a list of (termid, val) tuples
-
         """
+
         # empty documents are not stored explicitly in MM format, so the index marks
         # them with a special offset, -1.
-        cdef int docid, termid, previd
-        cdef double val
-
         if offset == -1:
             return []
         if isinstance(self.input, string_types):
@@ -207,16 +191,11 @@ cdef class MmReader(object):
         fin.seek(offset)  # works for gzip/bz2 input, too
         previd, document = -1, []
         for line in fin:
-            if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
-                raise ValueError("unable to parse line: {}".format(line))
-
+            docid, termid, val = line.split()
             if not self.transposed:
                 termid, docid = docid, termid
-
             # -1 because matrix market indexes are 1-based => convert to 0-based
-            docid -= 1
-            termid -= 1
-
+            docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)
             assert previd <= docid, "matrix columns must come in ascending order"
             if docid != previd:
                 if previd >= 0:
