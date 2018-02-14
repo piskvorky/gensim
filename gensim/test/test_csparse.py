@@ -22,7 +22,7 @@ class TestCSparse(unittest.TestCase):
         def matmul(X, Y): return X @ Y
         def pmatmul(X, Y): return pmultiply(X, Y)
 
-        X_rows, X_cols, factors = 10000, 50000, 1000
+        X_rows, X_cols, factors = 10000, 100000, 10000
 
         X = rand(X_rows, X_cols, format="csc")
         Y = asfortranarray(normal(0.0, 1.0, (X.shape[1], factors)))
@@ -34,18 +34,19 @@ class TestCSparse(unittest.TestCase):
             t_pmatmul = Timer(partial(pmatmul, X, Y)).timeit(1)
 
             assert(t_pmatmul < t_matmul)
-            
-            print(f'''cpus: {cpus}
+
+        assert_array_equal(matmul(X, Y), pmatmul(X, Y))
+
+        print(f'''cpus: {cpus}
 X.shape[0]: {X_rows}
 X.shape[1]: {X_cols}
 Y.shape[0]: {X_cols}
 Y.shape[1]: {factors}
 matmul: {t_matmul:.4} seconds
 pmatmul: {t_pmatmul:.4} seconds
-speedup: {t_matmul / t_pmatmul:.4} times faster''')
-
-        assert_array_equal(matmul(X, Y), pmatmul(X, Y))
-
+speedup: {t_matmul / t_pmatmul:.4} times faster
+asserted: X @ Y == pmultiply(X, Y)''')
+        
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
