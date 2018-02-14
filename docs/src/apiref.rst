@@ -55,6 +55,11 @@ Modules:
     models/wrappers/wordrank
     models/wrappers/varembed
     models/wrappers/fasttext
+    models/deprecated/doc2vec
+    models/deprecated/fasttext
+    models/deprecated/word2vec
+    models/deprecated/keyedvectors
+    models/deprecated/fasttext_wrapper
     similarities/docsim
     similarities/index
     sklearn_api/atmodel
@@ -88,6 +93,7 @@ Modules:
     summarization/commons
     summarization/graph
     summarization/keywords
+    summarization/mz_entropy
     summarization/pagerank_weighted
     summarization/summariser
     summarization/syntactic_unit

@@ -10,7 +10,7 @@
 Warnings
 --------
 .. deprecated:: 3.2.0
-   Use :class:`gensim.models.fasttext.FastText` instead of :class:`gensim.models.wrappers.fasttext.FastText`.
+   Use :mod:`gensim.models.fasttext` instead.
 
 
 
@@ -34,6 +34,7 @@ Example:
 
 
 """
+
 
 
 import logging
@@ -459,3 +460,4 @@ def ft_hash(string):
         h = h * np.uint32(16777619)
     np.seterr(**old_settings)
     return h
+
