@@ -8,8 +8,8 @@ delete temporary directory (and included files) after use. For your quick
 tests you may use tiny toy dataset, its dictionary and corpus which were
 used in Gensim tutorial.
 
-Attributes
-----------
+Attributes:
+-----------
 module_path : str
     Full path to this module directory.
 
@@ -22,8 +22,8 @@ common_dictionary : :class:`~gensim.corpora.Dictionary`
 common_corpus : list of list of (int, int)
     Corpus of toy dataset.
 
-Examples
---------
+Examples:
+---------
 It's easy to keep objects in temporary folder and reuse'em if needed:
 
 >>> from gensim.models import word2vec
@@ -100,7 +100,7 @@ def datapath(fname):
     >>> from gensim.test.utils import datapath
     >>> os.path.exists(datapath("test_glove.txt"))
     True
-    
+
     """
 
     return os.path.join(module_path, 'test_data', fname)
