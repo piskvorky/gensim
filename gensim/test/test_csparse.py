@@ -19,30 +19,21 @@ import scipy
 class TestCSparse(unittest.TestCase):
     def testPmultiply(self):
 
-        def matmul(X, Y): return X @ Y
+        def matmul(X, Y): return X  Y
         def pmatmul(X, Y): return pmultiply(X, Y)
 
-        X_rows, X_cols, factors = 10000, 50000, 1000
+        X_rows, X_cols, factors = 1, 100000, 1000
 
         X = rand(X_rows, X_cols, format="csc")
         Y = asfortranarray(normal(0.0, 1.0, (X.shape[1], factors)))
 
         cpus = cpu_count()
-        
+
         if cpus > 1:
             t_matmul = Timer(partial(matmul, X, Y)).timeit(1)
             t_pmatmul = Timer(partial(pmatmul, X, Y)).timeit(1)
 
-            assert(t_pmatmul < t_matmul)
-            
-            print(f'''cpus: {cpus}
-X.shape[0]: {X_rows}
-X.shape[1]: {X_cols}
-Y.shape[0]: {X_cols}
-Y.shape[1]: {factors}
-matmul: {t_matmul:.4} seconds
-pmatmul: {t_pmatmul:.4} seconds
-speedup: {t_matmul / t_pmatmul:.4} times faster''')
+            assert t_pmatmul < t_matmul
 
         assert_array_equal(matmul(X, Y), pmatmul(X, Y))
 

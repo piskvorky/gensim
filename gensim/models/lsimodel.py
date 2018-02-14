@@ -62,6 +62,7 @@ from six.moves import xrange
 
 from gensim import interfaces, matutils, utils
 from gensim.models import basemodel
+from gensim.csparse.psparse import pmultiply
 
 logger = logging.getLogger(__name__)
 
@@ -678,15 +679,19 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     # first phase: construct the orthonormal action matrix Q = orth(Y) = orth((A * A.T)^q * A * O)
     # build Y in blocks of `chunksize` documents (much faster than going one-by-one
     # and more memory friendly than processing all documents at once)
-    y = np.zeros(dtype=dtype, shape=(num_terms, samples))
+
     logger.info("1st phase: constructing %s action matrix", str(y.shape))
 
     if scipy.sparse.issparse(corpus):
         m, n = corpus.shape
         assert num_terms == m, "mismatch in number of features: %i in sparse matrix vs. %i parameter" % (m, num_terms)
         o = np.random.normal(0.0, 1.0, (n, samples)).astype(y.dtype)  # draw a random gaussian matrix
-        sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices,
-                                corpus.data, o.ravel(), y.ravel())  # y = corpus * o
+
+        y = pmultiply(corpus.data, o)
+
+        # sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices,
+        #                         corpus.data, o.ravel(), y.ravel())  # y = corpus * o
+
         del o
 
         # unlike np, scipy.sparse `astype()` copies everything, even if there is no change to dtype!
@@ -704,6 +709,8 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
             q = [corpus * q]
             q, _ = matutils.qr_destroy(q)  # orthonormalize the range after each power iteration step
     else:
+        y = np.zeros(dtype=dtype, shape=(num_terms, samples))
+
         num_docs = 0
         for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
             logger.info('PROGRESS: at document #%i', (chunk_no * chunksize))
