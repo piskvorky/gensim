@@ -14,13 +14,17 @@
 #define CS_DATE "Sept 12, 2017"       /* CSparse release date */
 #define CS_COPYRIGHT "Copyright (c) Timothy A. Davis, 2006-2016"
 
-#ifdef MATLAB_MEX_FILE
-#undef csi
-#define csi mwSignedIndex
-#endif
-#ifndef csi
-#define csi ptrdiff_t
-#endif
+/* #ifdef MATLAB_MEX_FILE */
+/* #undef csi */
+/* #define csi mwSignedIndex */
+/* #endif */
+/* #ifndef csi */
+/* #define csi ptrdiff_t */
+/* #endif */
+
+// FORCE use of 32 bit int offsets, because thats what scipy uses so we can
+// avoid a copy.
+#define csi int32_t
 
 /* --- primary CSparse routines and data structures ------------------------- */
 typedef struct cs_sparse    /* matrix in compressed-column or triplet form */
