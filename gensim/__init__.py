@@ -10,9 +10,7 @@ import platform
 import sys
 import numpy
 import scipy
-import argparse
 import gensim
-import smart_open
 from gensim.models.word2vec import FAST_VERSION
 
 
@@ -32,15 +30,16 @@ if len(logger.handlers) == 0:  # To ensure reload() doesn't add another one
 
 
 def package_info():
-    """Get the versions of Gensim and its dependencies, the location where Gensim is installed and platform on which the system is running.
-    
+    """Get the versions of Gensim and its dependencies, the location where Gensim is\
+ installed and platform on which the system is running.
+
     Returns
     -------
-    dict 
+    dict
         Returns a dictionary containing the versions pof Gensim, Python, NumPy, SciPy and platform information.
 
     .. program-output:: python -m gensim --info
-    """    
+    """
     dict = {}
     dict["platform"] = platform.platform()
     dict["python"] = sys.version
@@ -49,6 +48,5 @@ def package_info():
     dict["gensim"] = gensim.__version__, gensim.__file__
 #    dict["smart_open"] = smart_open.__version__
     dict["fast_version"] = FAST_VERSION
-    
-    return dict
 
+    return dict
