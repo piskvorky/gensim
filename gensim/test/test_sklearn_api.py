@@ -832,16 +832,15 @@ class TestD2VTransformer(unittest.TestCase):
         self.assertEqual(matrix.shape[1], self.model.size)
 
     def testFitTransform(self):
-        numpy.random.seed(0)
         model = D2VTransformer(min_count=1)
 
-        #fit and transform multiple documents
+        # fit and transform multiple documents
         docs = [w2v_texts[0], w2v_texts[1], w2v_texts[2]]
         matrix = model.fit_transform(docs)
         self.assertEqual(matrix.shape[0], 3)
         self.assertEqual(matrix.shape[1], model.size)
 
-        #fit and transform one document
+        # fit and transform one document
         doc = w2v_texts[0]
         matrix = model.fit_transform(doc)
         self.assertEqual(matrix.shape[0], 1)

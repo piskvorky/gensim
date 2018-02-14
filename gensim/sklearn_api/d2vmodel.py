@@ -64,7 +64,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         Fit the model according to the given training data.
         Calls gensim.models.Doc2Vec
         """
-        if all(isinstance(word, doc2vec.TaggedDocument) for word in X):
+        if isinstance(X[0], doc2vec.TaggedDocument):
             d2v_sentences = X
         else:
             d2v_sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(X)]
