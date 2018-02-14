@@ -38,6 +38,8 @@ def package_info():
     -------
     dict 
         Returns a dictionary containing the versions pof Gensim, Python, NumPy, SciPy and platform information.
+
+    .. program-output:: python -m gensim --info
     """    
     dict = {}
     dict["platform"] = platform.platform()
