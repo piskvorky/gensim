@@ -26,7 +26,7 @@ try:
     logger.info('Fast version of MmReader is being used')
 except ImportError:
     # else fall back to python/numpy
-    from gensim.corpora.mmreader import MmReader
+    from gensim.matutils import MmReader
     FAST_VERSION = -1
     logger.warning('Slow version of MmReader is being used')
 
