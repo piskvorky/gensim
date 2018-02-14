@@ -19,7 +19,7 @@ import scipy
 class TestCSparse(unittest.TestCase):
     def testPmultiply(self):
 
-        def matmul(X, Y): return X  Y
+        def matmul(X, Y): return X * Y
         def pmatmul(X, Y): return pmultiply(X, Y)
 
         X_rows, X_cols, factors = 1, 100000, 1000
