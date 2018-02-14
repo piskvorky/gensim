@@ -68,6 +68,18 @@ class AuthorTopicState(LdaState):
     """
 
     def __init__(self, eta, lambda_shape, gamma_shape):
+        """Ïnitializes parameters for the Author-Topic model.
+        
+        Parameters
+        ----------
+        eta: float
+            Dirichlet topic parameter for sparsity.
+        lambda_shape: float
+            Initialize topic parameters.
+        gamma_shape: int
+            Initialize topic parameters.
+            
+        """
         self.eta = eta
         self.sstats = np.zeros(lambda_shape)
         self.gamma = np.zeros(gamma_shape)
@@ -76,7 +88,16 @@ class AuthorTopicState(LdaState):
 
 
 def construct_doc2author(corpus, author2doc):
-    """Make a mapping from document IDs to author IDs."""
+    """Make a mapping from document IDs to author IDs.
+    
+    Parameters
+    ----------
+    corpus: list of list of str
+        Corpus of documents.
+    author2doc: dict
+        Mapping of authors to documents.
+    
+    """
     doc2author = {}
     for d, _ in enumerate(corpus):
         author_ids = []
@@ -88,7 +109,13 @@ def construct_doc2author(corpus, author2doc):
 
 
 def construct_author2doc(doc2author):
-    """Make a mapping from author IDs to document IDs."""
+    """Make a mapping from author IDs to document IDs.
+    
+    Parameters
+    ----------
+    doc2author: dict
+        Mapping of documents to authors.
+    """
 
     # First get a set of all authors.
     authors_ids = set()
@@ -107,18 +134,7 @@ def construct_author2doc(doc2author):
 
 
 class AuthorTopicModel(LdaModel):
-    """
-    The constructor estimates the author-topic model parameters based
-    on a training corpus:
-
-    >>> model = AuthorTopicModel(corpus, num_topics=10, author2doc=author2doc, id2word=id2word)
-
-    The model can be updated (trained) with new documents via
-
-    >>> model.update(other_corpus, other_author2doc)
-
-    Model persistency is achieved through its `load`/`save` methods.
-    """
+    """The constructor estimates the author-topic model parameters based on a training corpus."""
 
     def __init__(self, corpus=None, num_topics=100, id2word=None, author2doc=None, doc2author=None,
                  chunksize=2000, passes=1, iterations=50, decay=0.5, offset=1.0,
@@ -126,77 +142,61 @@ class AuthorTopicModel(LdaModel):
                  gamma_threshold=0.001, serialized=False, serialization_path=None,
                  minimum_probability=0.01, random_state=None):
         """
-        If the iterable corpus and one of author2doc/doc2author dictionaries are given,
-        start training straight away. If not given, the model is left untrained
-        (presumably because you want to call the `update` method manually).
+        API for Author-Topic model.
+        
+        Parameters
+        ----------
+        num_topic: int, optional
+            Number of topics to be extracted from the training corpus.
 
-        `num_topics` is the number of requested latent topics to be extracted from
-        the training corpus.
+        id2word: dict of {int: str}, optional
+            A mapping from word ids (integers) to words (strings).
 
-        `id2word` is a mapping from word ids (integers) to words (strings). It is
-        used to determine the vocabulary size, as well as for debugging and topic
-        printing.
+        author2doc: dict 
+            A dictionary where keys are the names of authors and values are lists of 
+            documents that the author contributes to.
 
-        `author2doc` is a dictionary where the keys are the names of authors, and the
-        values are lists of documents that the author contributes to.
+        doc2author: dict
+            A dictionary where the keys are document IDs and the values are lists of author names. 
 
-        `doc2author` is a dictionary where the keys are document IDs (indexes to corpus)
-        and the values are lists of author names. I.e. this is the reverse mapping of
-        `author2doc`. Only one of the two, `author2doc` and `doc2author` have to be
-        supplied.
+        passes: int
+            Number of times the model makes a pass over the entire training data.
 
-        `passes` is the number of times the model makes a pass over the entire trianing
-        data.
+        iterations: int
+            Maximum number of times the model loops over each document
+        
+        chunksize: int 
+            Controls the size of the mini-batches.
 
-        `iterations` is the maximum number of times the model loops over each document
-        (M-step). The iterations stop when convergence is reached.
+        alpha: float
+            Hyperparameters for author-topic model.Supports special values of 'asymmetric' 
+            and 'auto': the former uses a fixed normalized asymmetric 1.0/topicno prior, 
+            the latter learns an asymmetric prior directly from your data.
+            
+        eta: float
+            Hyperparameters for author-topic model.
+            
+        eval_every: int
+            Calculate and estimate log perplexity for latest mini-batch.
+            
+        decay: float
+            Controls how old documents are forgotten.
+            
+        offset: float
+            Controls down-weighting of iterations.
+            
+        minimum_probability: float 
+            Controls filtering the topics returned for a document (bow).
 
-        `chunksize` controls the size of the mini-batches.
+        random_state: int or a numpy.random.RandomState object. 
+        Set the state of the random number generator inside the author-topic model.
+        
+        serialized: bool 
+            Indicates whether the input corpora to the model are simple lists 
+            or saved to the hard-drive.
 
-        `alpha` and `eta` are hyperparameters that affect sparsity of the author-topic
-        (theta) and topic-word (lambda) distributions. Both default to a symmetric
-        1.0/num_topics prior.
-
-        `alpha` can be set to an explicit array = prior of your choice. It also
-        support special values of 'asymmetric' and 'auto': the former uses a fixed
-        normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
-        prior directly from your data.
-
-        `eta` can be a scalar for a symmetric prior over topic/word
-        distributions, or a vector of shape num_words, which can be used to
-        impose (user defined) asymmetric priors over the word distribution.
-        It also supports the special value 'auto', which learns an asymmetric
-        prior over words directly from your data. `eta` can also be a matrix
-        of shape num_topics x num_words, which can be used to impose
-        asymmetric priors over the word distribution on a per-topic basis
-        (can not be learned from data).
-
-        Calculate and log perplexity estimate from the latest mini-batch every
-        `eval_every` model updates. Set to None to disable perplexity estimation.
-
-        `decay` and `offset` parameters are the same as Kappa and Tau_0 in
-        Hoffman et al, respectively. `decay` controls how quickly old documents are
-        forgotten, while `offset` down-weights early iterations.
-
-        `minimum_probability` controls filtering the topics returned for a document (bow).
-
-        `random_state` can be an integer or a numpy.random.RandomState object. Set the
-        state of the random number generator inside the author-topic model, to ensure
-        reproducibility of your experiments, for example.
-
-        `serialized` indicates whether the input corpora to the model are simple
-        in-memory lists (`serialized = False`) or saved to the hard-drive
-        (`serialized = True`). Note that this behaviour is quite different from
-        other Gensim models. If your data is too large to fit in to memory, use
-        this functionality. Note that calling `AuthorTopicModel.update` with new
-        data may be cumbersome as it requires all the existing data to be
-        re-serialized.
-
-        `serialization_path` must be set to a filepath, if `serialized = True` is
-        used. Use, for example, `serialization_path = /tmp/serialized_model.mm` or use your
-        working directory by setting `serialization_path = serialized_model.mm`. An existing
-        file *cannot* be overwritten; either delete the old file or choose a different
-        name.
+        serialization_path: str 
+        Must be set to a filepath, if `serialized = True` is used. 
 
         Example:
 
