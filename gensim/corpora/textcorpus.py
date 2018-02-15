@@ -216,14 +216,14 @@ class TextCorpus(interfaces.CorpusABC):
 
         Examples
         --------
-        >>> #TODO Example with inheritance
         >>> from gensim.corpora.textcorpus import TextCorpus
         >>> from gensim import corpora
         >>> from gensim.test.utils import datapath
+        >>> from gensim import utils
         >>>
         >>> class CorpusMiislita(corpora.TextCorpus):
         >>>     stoplist = set('for a of the and to in on'.split())
-
+        >>>
         >>>     def get_texts(self):
         >>>         for doc in self.getstream():
         >>>             yield [word for word in utils.to_unicode(doc).lower().split()
@@ -235,9 +235,12 @@ class TextCorpus(interfaces.CorpusABC):
         >>>         self.length = sum(1 for _ in self.get_texts())
         >>>         return self.length
         >>>
-        >>> corpus = TextCorpus(datapath('head500.noblanks.cor.bz2'))
-        >>> for bow in corpus:
-        >>>     pass
+        >>> corpus = CorpusMiislita(datapath('head500.noblanks.cor.bz2'))
+        >>> corpus.get_texts()
+        <generator object get_texts at 0x7fa932f397d0>
+        >>> corpus.__len__()
+        250
+
 
         """
         self.input = input
