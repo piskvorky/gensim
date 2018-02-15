@@ -13,14 +13,15 @@ Examples
 
     >>> from gensim.sklearn_api import Text2BowTransformer
     >>>
-    >>> # Get some random text.
-    >>> texts = [['complier system computer loading computer system']]
+    >>> # Get a corpus as an iterable of unicode strings.
+    >>> texts = [u'complier system computer', u'loading computer system']
     >>>
-    >>> # Create a transformer allowing 3 words only.
+    >>> # Create a transformer..
     >>> model = Text2BowTransformer()
-
-    >>> # Use sklearn style `fit_transform` to get the BOW representation.
-    >>> texts_bow = model.fit_transform(texts)
+    >>>
+    >>> # Use sklearn style `fit_transform` to get the BOW representation of each document.
+    >>> model.fit_transform(texts)
+    [[(0, 1), (1, 1), (2, 1)], [(1, 1), (2, 1), (3, 1)]]
 
 """
 
