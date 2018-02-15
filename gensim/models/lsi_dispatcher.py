@@ -20,6 +20,7 @@ How to use
 
     python -m gensim.models.lsi_dispatcher SIZE_OF_JOBS_QUEUE
 
+
 Command line arguments
 ----------------------
     .. program-output:: python -m gensim.models.lsi_dispatcher --help
