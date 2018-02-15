@@ -5,7 +5,6 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-
 Worker ("slave") process used in computing distributed LSI. Run this script
 on every node in your cluster. If you wish, you may even run it multiple times
 on a single machine, to make better use of multiple cores (just beware that
@@ -14,7 +13,7 @@ memory footprint increases accordingly).
 How to use
 ----------
 
-#. Launch a worker instance on a node of your cluster ::
+#. Launch a worker instance on a node of your cluster
 
     python -m gensim.models.lsi_worker
 
@@ -22,6 +21,7 @@ How to use
 Command line arguments
 ----------------------
     .. program-output:: python -m gensim.models.lsi_worker --help
+
     :ellipsis: 0, -5
 
 """
@@ -152,7 +152,9 @@ def main():
     """The main script. """
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
+    args = parser.parse_args()
+
     logger.info("running %s", " ".join(sys.argv))
 
     utils.pyro_daemon('gensim.lsi_worker', Worker(), random_suffix=True)

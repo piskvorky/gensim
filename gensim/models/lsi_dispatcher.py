@@ -16,7 +16,7 @@ as many workers as you like on your machines **before** launching the dispatcher
 How to use
 ----------
 
-#. Launch a dispatcher on the master node of your cluster ::
+#. Launch a dispatcher on the master node of your cluster
 
     python -m gensim.models.lsi_dispatcher SIZE_OF_JOBS_QUEUE
 
@@ -24,6 +24,7 @@ How to use
 Command line arguments
 ----------------------
     .. program-output:: python -m gensim.models.lsi_dispatcher --help
+
     :ellipsis: 0, -5
 
 """
