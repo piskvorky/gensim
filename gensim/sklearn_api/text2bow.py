@@ -8,6 +8,20 @@
 
 Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
 
+Examples
+--------
+
+    >>> from gensim.sklearn_api import Text2BowTransformer
+    >>>
+    >>> # Get some random text.
+    >>> texts = [['complier system computer loading computer system']]
+    >>>
+    >>> # Create a transformer allowing 3 words only.
+    >>> model = Text2BowTransformer()
+
+    >>> # Use sklearn style `fit_transform` to get the BOW representation.
+    >>> texts_bow = model.fit_transform(texts)
+
 """
 
 from six import string_types

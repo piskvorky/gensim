@@ -13,10 +13,25 @@ Examples
 --------
 Integrate with sklearn Pipelines:
 
+    >>> from sklearn.pipeline import Pipeline
+    >>> from sklearn import linear_model
+    >>> from sklearn.datasets import fetch_20newsgroups
+    >>> from gensim.sklearn_api import LsiTransformer
+    >>> from gensim.corpora import Dictionary
+    >>>
+    >>> # Create an ID to word mapping using some corpus included in sklearn.
+    >>> cats = ['rec.sport.baseball', 'sci.crypt']
+    >>> data = fetch_20newsgroups(subset='train', categories=cats, shuffle=True)
+    >>> id2word = Dictionary([_.split() for _ in data.data])
+
+    >>> # Create stages for our pipeline (including gensim and sklearn models alike).
     >>> model = LsiTransformer(num_topics=15, id2word=id2word)
     >>> clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
     >>> pipe = Pipeline([('features', model,), ('classifier', clf)])
-    >>> pipe.fit(corpus, data.target)
+
+    >>> # Fit our pipeline to some corpus
+    >>> corpus = [id2word.doc2bow(i.split()) for i in data.data]
+    >>> fitted_pipeline = pipe.fit(corpus, data.target)
 
 """
 
