@@ -275,7 +275,15 @@ class TfidfModel(interfaces.TransformationABC):
                 * `c` - cosine.
 
             For more information visit [1]_.
-
+        pivot_norm : bool, optional
+            If pivot_norm is True, then pivoted document length normalization will be applied.
+        slope : float, optional
+            It is the parameter required by pivoted document length normalization which determines the slope to which
+            the `old normalization` can be tilted.
+        pivot : int/float, optional
+            Pivot is the point before which we consider a document to be short and after which the document is
+            considered long. It can be found by plotting the retrieval and relevence curves of a set of documents using
+            a general normalization function. The point where both these curves coincide is the pivot point.
         """
 
         self.id2word = id2word
@@ -313,6 +321,19 @@ class TfidfModel(interfaces.TransformationABC):
             # NOTE: everything is left uninitialized; presumably the model will
             # be initialized in some other way
             pass
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """
+        Load a previously saved TfidfModel class. Handles backwards compatibility from
+            older TfidfModel versions which did not use pivoted document normalization.
+        """
+        model = super(TfidfModel, cls).load(*args, **kwargs)
+        if not hasattr(model, 'pivot_norm'):
+            logger.info('older version of %s loaded without pivot_norm arg', cls.__name__)
+            logger.info('Setting pivot_norm to False.')
+            model.pivot_norm = False
+        return model
 
     def __str__(self):
         return "TfidfModel(num_docs=%s, num_nnz=%s)" % (self.num_docs, self.num_nnz)
@@ -396,7 +417,7 @@ class TfidfModel(interfaces.TransformationABC):
 
         # Need to check if self.pivot_norm variable is in the local scope or not to
         # mantain backward compatibility.
-        if hasattr(self, 'pivot_norm') and self.pivot_norm is True:
+        if self.pivot_norm is True:
             norm_vector = np.array(norm_vector)
             sparse_norm_wts = np.array(norm_vector)[:, 1]
             n_samples = sparse_norm_wts.shape[0]
@@ -405,8 +426,9 @@ class TfidfModel(interfaces.TransformationABC):
                 self.pivot = sparse_norm_wts.mean()
 
             pivoted_norm = (1 - self.slope) * self.pivot + self.slope * sparse_norm_wts
+
             _diag_pivoted_norm = sp.spdiags(1. / pivoted_norm, diags=0, m=n_samples,
-                                            n=n_samples, format='csr')
+                n=n_samples, format='csr')
 
             norm_vector[:, 1] = _diag_pivoted_norm.dot(np.array(vector)[:, 1])
             norm_vector = norm_vector.tolist()
