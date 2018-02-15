@@ -73,6 +73,7 @@ Modules:
     sklearn_api/text2bow
     sklearn_api/tfidf
     sklearn_api/w2vmodel
+    test/utils
     topic_coherence/aggregation
     topic_coherence/direct_confirmation_measure
     topic_coherence/indirect_confirmation_measure
