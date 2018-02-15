@@ -399,6 +399,23 @@ class DtmModel(utils.SaveLoad):
                 self.influences_time.append(influence)
 
     def print_topics(self, num_topics=10, times=5, num_words=10):
+        """Alias for :meth:`~gensim.models.wrappers.dtmmodel.DtmModel.show_topics`.
+
+        Parameters
+        ----------
+        num_topics : int, optional
+            Number of topics to return, set `-1` to get all topics.
+        times : int, optional
+            Number of times.
+        num_words : int, optional
+            Number of words.
+
+        Returns
+        -------
+        list of str
+            Topics as a list of strings
+
+        """
         return self.show_topics(num_topics, times, num_words, log=True)
 
     def show_topics(self, num_topics=10, times=5, num_words=10, log=False, formatted=True):

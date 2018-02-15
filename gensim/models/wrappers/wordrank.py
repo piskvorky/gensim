@@ -9,14 +9,14 @@ The wrapped model can NOT be updated with new documents for online training -- u
 
 Installation
 ------------
-Use `official guide <https://github.com/shihaoji/wordrank>`_ or this one ::
+Use `official guide <https://github.com/shihaoji/wordrank>`_ or this one
 
-On Linux
+* On Linux ::
 
     sudo yum install boost-devel #(on RedHat/Centos)
     sudo apt-get install libboost-all-dev #(on Ubuntu)
 
-On MacOS
+* On MacOS ::
 
     brew install cmake
     brew install wget
