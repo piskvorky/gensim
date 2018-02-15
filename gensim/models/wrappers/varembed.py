@@ -90,7 +90,14 @@ class VarEmbed(KeyedVectors):
         return result
 
     def load_word_embeddings(self, word_embeddings, word_to_ix):
-        """ Loads the word embeddings.
+        """Loads the word embeddings.
+
+        Parameters
+        ----------
+        word_embeddings : dict
+            Pickle file containing the word vectors.
+        word_to_ix : dict of (str, int)
+            Mapping word to index.
 
         """
         logger.info("Loading the vocabulary")
@@ -113,6 +120,16 @@ class VarEmbed(KeyedVectors):
 
     def add_morphemes_to_embeddings(self, morfessor_model, morpho_embeddings, morpho_to_ix):
         """ Method to include morpheme embeddings into varembed vectors.
+
+        Parameters
+        ----------
+        morfessor_model : `<int><space><CONSTRUCTION>[<space>+<space><CONSTRUCTION>]*`
+            Pickled object from a file. See for more
+            `(details) <http://morfessor.readthedocs.io/en/latest/filetypes.html>`
+        morpho_embeddings : dict
+            Pickle file containing morpho embeddings.
+        morpho_to_ix : dict
+            Mapping morpho to index.
 
         Warnings
         --------

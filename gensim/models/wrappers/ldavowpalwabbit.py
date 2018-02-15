@@ -11,11 +11,13 @@ algorithm that Gensim's LdaModel is based on.
 
 Installation
 ------------
-$ git clone https://github.com/JohnLangford/vowpal_wabbit.git
-$ cd vowpal_wabbit
-$ make
-$ make test #(optional)
-$ sudo make install
+Use `official guide <https://github.com/JohnLangford/vowpal_wabbit>`_ or this one ::
+
+    git clone https://github.com/JohnLangford/vowpal_wabbit.git
+    cd vowpal_wabbit
+    make
+    make test #(optional)
+    sudo make install
 
 Warnings
 --------
@@ -324,6 +326,11 @@ class LdaVowpalWabbit(utils.SaveLoad):
     def save(self, fname, *args, **kwargs):
         """Serialise this model to file with given name.
 
+        Parameters
+        ----------
+        fname : str
+            Name to save the model.
+
         """
         if os.path.exists(self._model_filename):
             # Vowpal Wabbit uses its own binary model file, read this into
@@ -346,6 +353,11 @@ class LdaVowpalWabbit(utils.SaveLoad):
     @classmethod
     def load(cls, fname, *args, **kwargs):
         """Load LDA model from file with given name.
+
+        Parameters
+        ----------
+        fname : str
+            Name to load the model.
 
         """
         lda_vw = super(LdaVowpalWabbit, cls).load(fname, *args, **kwargs)
@@ -378,12 +390,22 @@ class LdaVowpalWabbit(utils.SaveLoad):
     def _init_temp_dir(self, prefix='tmp'):
         """Create a working temporary directory with given prefix.
 
+        Parameters
+        ----------
+        prefix : str
+            Prefix of the temporary directory.
+
         """
         self.tmp_dir = tempfile.mkdtemp(prefix=prefix)
         logger.info('using %s as temp dir', self.tmp_dir)
 
     def _get_vw_predict_command(self, corpus_size):
         """Get list of command line arguments for running prediction.
+
+        Parameters
+        ----------
+        corpus_size : int
+            Size of the corpus.
 
         """
         cmd = [
@@ -452,6 +474,11 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
     def _get_vw_update_command(self, corpus_size):
         """Get list of command line arguments to update a model.
+
+        Parameters
+        ----------
+        corpus_size : int
+            Size of the corpus.
 
         """
         return self._get_vw_train_command(corpus_size, update=True)
@@ -550,12 +577,28 @@ class LdaVowpalWabbit(utils.SaveLoad):
     def _get_filename(self, name):
         """Get path to given filename in temp directory.
 
+        Parameters
+        ----------
+        name : str
+            Name of the file.
+
+        Returns
+        -------
+        str
+            Path to a file.
+
+
         """
         return os.path.join(self.tmp_dir, name)
 
     @property
     def _model_filename(self):
         """Get path to file to write Vowpal Wabbit model to.
+
+        Returns
+        -------
+        str
+            Path to file to write Vowpal Wabbit model to.
 
         """
         return self._get_filename('model.vw')
@@ -564,12 +607,22 @@ class LdaVowpalWabbit(utils.SaveLoad):
     def _cache_filename(self):
         """Get path to file to write Vowpal Wabbit cache to.
 
+        Returns
+        -------
+        str
+            Path to file to write Vowpal Wabbit cache to.
+
         """
         return self._get_filename('cache.vw')
 
     @property
     def _corpus_filename(self):
         """Get path to file to write Vowpal Wabbit corpus to.
+
+        Returns
+        -------
+        str
+            Path to file to write Vowpal Wabbit corpus to.
 
         """
         return self._get_filename('corpus.vw')
@@ -578,12 +631,22 @@ class LdaVowpalWabbit(utils.SaveLoad):
     def _topics_filename(self):
         """Get path to file to write Vowpal Wabbit topics to.
 
+        Returns
+        -------
+        str
+            Path to file to write Vowpal Wabbit topics to.
+
         """
         return self._get_filename('topics.vw')
 
     @property
     def _predict_filename(self):
         """Get path to file to write Vowpal Wabbit predictions to.
+
+        Returns
+        -------
+        str
+            Path to file to write Vowpal Wabbit predictions to.
 
         """
         return self._get_filename('predict.vw')
@@ -680,6 +743,16 @@ def _parse_vw_output(text):
 def _run_vw_command(cmd):
     """Execute given Vowpal Wabbit command, log stdout and stderr.
 
+    Parameters
+    ----------
+    cmd : str
+        Given Vowpal Wabbit command to execute.
+
+    Returns
+    -------
+    output : str
+        Log stdout and stderr.
+
     """
     logger.info("Running Vowpal Wabbit command: %s", ' '.join(cmd))
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -727,8 +800,8 @@ def vwmodel2ldamodel(vw_model, iterations=50):
 
     Returns
     -------
-    model_gensim : LdaModel object
-        LdaModel instance or copied gensim LdaModel.
+    :class:`~gensim.models.ldamodel.LdaModel`
+        Gensim native LDA.
 
     """
     model_gensim = LdaModel(

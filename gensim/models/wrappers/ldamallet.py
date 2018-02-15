@@ -122,23 +122,23 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             self.train(corpus)
 
     def finferencer(self):
-        """Get path to temporary file.
+        """Get path to inferencer.mallet file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to inferencer.mallet file.
 
         """
         return self.prefix + 'inferencer.mallet'
 
     def ftopickeys(self):
-        """Get path to temporary file.
+        """Get path to topic keys text file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to topic keys text file.
 
         """
         return self.prefix + 'topickeys.txt'
@@ -155,45 +155,45 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         return self.prefix + 'state.mallet.gz'
 
     def fdoctopics(self):
-        """Get path to temporary file.
+        """Get path to document topic text file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to document topic text file.
 
         """
         return self.prefix + 'doctopics.txt'
 
     def fcorpustxt(self):
-        """Get path to temporary file.
+        """Get path to corpus text file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to corpus text file.
 
         """
         return self.prefix + 'corpus.txt'
 
     def fcorpusmallet(self):
-        """Get path to temporary file.
+        """Get path to corpus.mallet file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to corpus.mallet file.
 
         """
         return self.prefix + 'corpus.mallet'
 
     def fwordweights(self):
-        """Get path to temporary file.
+        """Get path to word weight file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to word weight file.
 
         """
         return self.prefix + 'wordweights.txt'

@@ -158,23 +158,23 @@ class DtmModel(utils.SaveLoad):
             self.train(corpus, time_slices, mode, model)
 
     def fout_liklihoods(self):
-        """Get path to temporary file.
+        """Get path to temporary lhood data file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to lhood data file.
 
         """
         return self.prefix + 'train_out/lda-seq/' + 'lhoods.dat'
 
     def fout_gamma(self):
-        """Get path to temporary file.
+        """Get path to temporary gamma data file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to gamma data file.
 
         """
         return self.prefix + 'train_out/lda-seq/' + 'gam.dat'
@@ -224,45 +224,45 @@ class DtmModel(utils.SaveLoad):
         return self.prefix + 'train_out'
 
     def fem_steps(self):
-        """Get path to temporary file.
+        """Get path to temporary em_step data file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to em_step data file.
 
         """
         return self.prefix + 'train_out/' + 'em_log.dat'
 
     def finit_alpha(self):
-        """Get path to temporary file.
+        """Get path to initially trained lda alpha file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to initially trained lda alpha file.
 
         """
         return self.prefix + 'train_out/' + 'initial-lda.alpha'
 
     def finit_beta(self):
-        """Get path to temporary file.
+        """Get path to initially trained lda beta file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to initially trained lda beta file.
 
         """
         return self.prefix + 'train_out/' + 'initial-lda.beta'
 
     def flda_ss(self):
-        """Get path to temporary file.
+        """Get path to initial lda binary file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to initial lda binary file.
 
         """
         return self.prefix + 'train_out/' + 'initial-lda-ss.dat'
@@ -273,29 +273,29 @@ class DtmModel(utils.SaveLoad):
         Returns
         -------
         str
-            Path to file.
+            Path to multiple train binary file.
 
         """
         return self.prefix + 'train-mult.dat'
 
     def fcorpus(self):
-        """Get path to temporary file.
+        """Get path to corpus file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to corpus file.
 
         """
         return self.prefix + 'train'
 
     def ftimeslices(self):
-        """Get path to temporary file.
+        """Get path to time slices binary file.
 
         Returns
         -------
         str
-            Path to file.
+            Path to time slices binary file.
 
         """
         return self.prefix + 'train-seq.dat'

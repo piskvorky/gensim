@@ -9,19 +9,24 @@ The wrapped model can NOT be updated with new documents for online training -- u
 
 Installation
 ------------
-On Linux
-    $ sudo yum install boost-devel (on RedHat/Centos)
-    $ sudo apt-get install libboost-all-dev (on Ubuntu)
-On MacOS
-    $ brew install cmake
-    $ brew install wget
-    $ brew install boost
-    $ brew install mercurial
+Use `official guide <https://github.com/shihaoji/wordrank>`_ or this one ::
 
-$ git clone https://bitbucket.org/shihaoji/wordrank
-$ cd wordrank/
-# replace icc to gcc in install.sh
-$ ./install.sh
+On Linux
+
+    sudo yum install boost-devel #(on RedHat/Centos)
+    sudo apt-get install libboost-all-dev #(on Ubuntu)
+
+On MacOS
+
+    brew install cmake
+    brew install wget
+    brew install boost
+    brew install mercurial
+
+    git clone https://bitbucket.org/shihaoji/wordrank
+    cd wordrank/
+    # replace icc to gcc in install.sh
+    ./install.sh
 
 Examples
 --------
@@ -36,8 +41,7 @@ Examples
 References
 ----------
 .. [1] https://bitbucket.org/shihaoji/wordrank/
-.. [2] https://github.com/shihaoji/wordrank
-.. [3] https://arxiv.org/pdf/1506.02761v3.pdf
+.. [2] https://arxiv.org/pdf/1506.02761v3.pdf
 
 Warnings
 --------
@@ -248,6 +252,19 @@ class Wordrank(KeyedVectors):
     def load_wordrank_model(cls, model_file, vocab_file=None, context_file=None, sorted_vocab=1, ensemble=1):
         """Loads wordrank model
 
+        Parameters
+        ----------
+        model_file : str
+            Model to load for wordrank in word2vec format.
+        vocab_file : str, optional
+            File name of the vocabulary.
+        context_file : str, optional
+            Input glove file name to convert to word2vec format.
+        sorted_vocab : int
+            If 1 (default), sort the vocabulary by descending frequency before assigning word indexes.
+        ensemble : int
+            If 0 (default), use ensemble of word and context vectors
+
         """
         glove2word2vec(model_file, model_file + '.w2vformat')
         model = cls.load_word2vec_format('%s.w2vformat' % model_file)
@@ -259,6 +276,11 @@ class Wordrank(KeyedVectors):
 
     def sort_embeddings(self, vocab_file):
         """Sort embeddings according to word frequency.
+
+        Parameters
+        ----------
+        vocab_file : str
+            File name of the vocabulary.
 
         """
         counts = {}
@@ -284,6 +306,18 @@ class Wordrank(KeyedVectors):
 
     def ensemble_embedding(self, word_embedding, context_embedding):
         """Replace syn0 with the sum of context and word embeddings.
+
+        Parameters
+        ----------
+        word_embedding : str
+            Input model file.
+        context_embedding : str
+            Input glove file name to convert to word2vec format.
+
+        Returns
+        -------
+        :class:`~gensim.models.WordEmbeddingsKeyedVectors`
+            Gensim native word embedding.
 
         """
         glove2word2vec(context_embedding, context_embedding + '.w2vformat')
