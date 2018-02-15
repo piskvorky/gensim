@@ -1,10 +1,11 @@
 """This package contains interfaces and functionality to compute pair-wise document similarities within a corpus
 of documents.
 
-Also provide CLI interface
+Also provide CLI interface ::
 
-Command line arguments
-----------------------
+    python -m gensim --help
+
+
 .. program-output:: python -m gensim --help
    :ellipsis: 0, -4
 
@@ -58,7 +59,7 @@ def package_info():
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description=__doc__[:-112], formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=__doc__[:-65], formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--info", help="Information about Gensim package", action="store_true")
     args = parser.parse_args()
 
