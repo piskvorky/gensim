@@ -11,9 +11,18 @@ on every node in your cluster. If you wish, you may even run it multiple times
 on a single machine, to make better use of multiple cores (just beware that
 memory footprint increases accordingly).
 
-Examples
---------
+How to use
+----------
+
+#. Launch a worker instance on a node of your cluster ::
+
     python -m gensim.models.lsi_worker
+
+
+Command line arguments
+----------------------
+    .. program-output:: python -m gensim.models.lsi_worker --help
+    :ellipsis: 0, -5
 
 """
 
@@ -22,6 +31,7 @@ from __future__ import with_statement
 import os
 import sys
 import logging
+import argparse
 import threading
 import tempfile
 try:
@@ -141,17 +151,12 @@ class Worker(object):
 def main():
     """The main script. """
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     logger.info("running %s", " ".join(sys.argv))
 
-    program = os.path.basename(sys.argv[0])
-    # make sure we have enough cmd line parameters
-    if len(sys.argv) < 1:
-        print(globals()["__doc__"] % locals())
-        sys.exit(1)
-
     utils.pyro_daemon('gensim.lsi_worker', Worker(), random_suffix=True)
-
-    logger.info("finished running %s", program)
+    logger.info("finished running %s", parser.prog)
 
 
 if __name__ == '__main__':

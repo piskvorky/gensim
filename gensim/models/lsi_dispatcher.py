@@ -13,9 +13,17 @@ Notes
 The dispatches expects to find worker scripts already running. Make sure you run
 as many workers as you like on your machines **before** launching the dispatcher.
 
-Examples
---------
+How to use
+----------
+
+#. Launch a dispatcher on the master node of your cluster ::
+
     python -m gensim.models.lsi_dispatcher SIZE_OF_JOBS_QUEUE
+
+Command line arguments
+----------------------
+    .. program-output:: python -m gensim.models.lsi_dispatcher --help
+    :ellipsis: 0, -5
 
 """
 
@@ -24,6 +32,7 @@ from __future__ import with_statement
 import os
 import sys
 import logging
+import argparse
 import threading
 import time
 from six import iteritems, itervalues
@@ -242,21 +251,16 @@ class Dispatcher(object):
 
 def main():
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('maxsize', type=int, help='Maximum number of jobs to be kept pre-fetched in the queue.',
+                        default=MAX_JOBS_QUEUE)
+    args = parser.parse_args()
+
     logger.info("running %s", " ".join(sys.argv))
 
-    program = os.path.basename(sys.argv[0])
-    # make sure we have enough cmd line parameters
-    if len(sys.argv) < 1:
-        print(globals()["__doc__"] % locals())
-        sys.exit(1)
+    utils.pyro_daemon('gensim.lsi_dispatcher', Dispatcher(maxsize=args.maxsize))
 
-    if len(sys.argv) < 2:
-        maxsize = MAX_JOBS_QUEUE
-    else:
-        maxsize = int(sys.argv[1])
-    utils.pyro_daemon('gensim.lsi_dispatcher', Dispatcher(maxsize=maxsize))
-
-    logger.info("finished running %s", program)
+    logger.info("finished running %s", parser.prog)
 
 
 if __name__ == '__main__':
