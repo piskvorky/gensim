@@ -80,6 +80,7 @@ Modules:
     topic_coherence/probability_estimation
     topic_coherence/segmentation
     topic_coherence/text_analysis
+    scripts/package_info
     scripts/glove2word2vec
     scripts/make_wikicorpus
     scripts/word2vec_standalone
