@@ -1,4 +1,4 @@
-"""Script get basic information about gensim & dependencies (useful for bug-reporting).
+"""Get basic information about gensim & dependencies (useful for bug-reporting).
 
 Examples
 --------
@@ -15,7 +15,7 @@ or using CLI interface
     python -m gensim.scripts.package_info --info
 
 
-.. program-output:: python -m gensim --help
+.. program-output:: python -m gensim.scripts.package_info --help
    :ellipsis: 0, -4
 """
 import argparse
