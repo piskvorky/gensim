@@ -11,7 +11,7 @@ module_path : str
 common_texts : list of list of str
     Toy dataset.
 
-common_dictionary : :class:`~gensim.corpora.Dictionary`
+common_dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
     Dictionary of toy dataset.
 
 common_corpus : list of list of (int, int)
