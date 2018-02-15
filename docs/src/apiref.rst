@@ -99,3 +99,4 @@ Modules:
     summarization/syntactic_unit
     summarization/textcleaner
     viz/poincare
+    gensim.rst
