@@ -682,7 +682,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         list of (int, str)
             If `formatted=True`, return sequence with (topic_id, string representation of topics) **OR**
         list of (int, list of (str, float))
-            Otherwise, return sequence with (topic_id, [(word, value), ... ])
+            Otherwise, return sequence with (topic_id, [(word, value), ... ]).
 
         """
         shown = []
