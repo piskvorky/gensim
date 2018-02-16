@@ -4,29 +4,56 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Worker ("slave") process used in computing distributed LSI. Run this script
-on every node in your cluster. If you wish, you may even run it multiple times
-on a single machine, to make better use of multiple cores (just beware that
-memory footprint increases accordingly).
+""":class:`~gensim.models.lsi_worker.Worker` ("slave") process used in computing
+distributed :class:`~gensim.models.lsimodel.LsiModel`.
+
+Run this script on every node in your cluster. If you wish, you may even run it multiple times on a single machine,
+to make better use of multiple cores (just beware that memory footprint increases accordingly).
+
+Warnings
+--------
+Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`.
+Distributed version works only in local network.
+
 
 How to use
-----------
 
-#. Launch a worker instance on a node of your cluster
+#. Install needed dependencies (Pyro4) ::
 
-    python -m gensim.models.lsi_worker
+    pip install gensim[distributed]
+
+#. Setup serialization (on each machine) ::
+
+    export PYRO_SERIALIZERS_ACCEPTED=pickle
+    export PYRO_SERIALIZER=pickle
+
+#. Run nameserver ::
+
+    python -m Pyro4.naming -n 0.0.0.0 &
+
+#. Run workers (on each machine) ::
+
+    python -m gensim.models.lsi_worker &
+
+#. Run dispatcher ::
+
+    python -m gensim.models.lsi_dispatcher &
+
+#. Run :class:`~gensim.models.lsimodel.LsiModel` in distributed mode ::
+
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.models import LsiModel
+    >>>
+    >>> model = LsiModel(common_corpus, id2word=common_dictionary, distributed=True)
 
 
 Command line arguments
 ----------------------
-    .. program-output:: python -m gensim.models.lsi_worker --help
 
-    :ellipsis: 0, -5
+.. program-output:: python -m gensim.models.lsi_worker --help
+   :ellipsis: 0, -3
 
 """
-
-
 from __future__ import with_statement
 import os
 import sys
@@ -42,7 +69,7 @@ import Pyro4
 from gensim.models import lsimodel
 from gensim import utils
 
-logger = logging.getLogger('gensim.models.lsi_worker')
+logger = logging.getLogger(__name__)
 
 
 SAVE_DEBUG = 0  # save intermediate models after every SAVE_DEBUG updates (0 for never)
@@ -52,7 +79,7 @@ class Worker(object):
     def __init__(self):
         """Partly initializes the model.
 
-        A full initialization requires a call to `self.initialize` as well.
+        A full initialization requires a call to :meth:`~gensim.models.lsi_worker.Worker.initialize`.
 
         """
         self.model = None
@@ -68,7 +95,7 @@ class Worker(object):
         dispatcher : :class:`~gensim.models.lsi_dispatcher.Dispatcher`
             The dispatcher responsible for scheduling this worker.
         **model_params
-            Keyword parameters to initialize the inner LSI model.
+            Keyword parameters to initialize the inner LSI model, see :class:`~gensim.models.lsimodel.LsiModel`.
 
         """
         self.lock_update = threading.Lock()
@@ -83,7 +110,10 @@ class Worker(object):
     @Pyro4.expose
     @Pyro4.oneway
     def requestjob(self):
-        """Request jobs from the dispatcher, in a perpetual loop until `self.getstate()` is called."""
+        """Request jobs from the dispatcher, in a perpetual loop until
+        :meth:`~gensim.models.lsi_worker.Worker.getstate()` is called.
+
+        """
         if self.model is None:
             raise RuntimeError("worker must be initialized before receiving jobs")
 
@@ -103,12 +133,12 @@ class Worker(object):
 
     @utils.synchronous('lock_update')
     def processjob(self, job):
-        """Incrementally proccesses the job and potentially logs progress.
+        """Incrementally processes the job and potentially logs progress.
 
         Parameters
         ----------
-        job : iterable of iterable of (int, float)
-            The corpus to be used for further training the LSI model.
+        job : iterable of list of (int, float)
+            Corpus in BoW format.
 
         """
         self.model.add_documents(job)
@@ -120,7 +150,7 @@ class Worker(object):
     @Pyro4.expose
     @utils.synchronous('lock_update')
     def getstate(self):
-        """Logs and returns the LSI model's current projection.
+        """Log and get the LSI model's current projection.
 
         Returns
         -------
@@ -143,23 +173,18 @@ class Worker(object):
 
     @Pyro4.oneway
     def exit(self):
-        """Terminates the worker. """
+        """Terminates the worker."""
         logger.info("terminating worker #%i", self.myid)
         os._exit(0)
 
 
-def main():
+if __name__ == '__main__':
     """The main script. """
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
-    args = parser.parse_args()
+    _ = parser.parse_args()
 
     logger.info("running %s", " ".join(sys.argv))
-
     utils.pyro_daemon('gensim.lsi_worker', Worker(), random_suffix=True)
     logger.info("finished running %s", parser.prog)
-
-
-if __name__ == '__main__':
-    main()

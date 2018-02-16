@@ -369,7 +369,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         decay : float, optional
             Weight of existing observations relatively to new ones.
         distributed : bool, optional
-            Whether distributed computing should be used.
+            If True - distributed mode (parallel execution on several machines) will be used.
         onepass : bool, optional
             Whether the one-pass algorithm should be used for training.
             Pass `False` to force a multi-pass stochastic algorithm.
