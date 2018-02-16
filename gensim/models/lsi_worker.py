@@ -12,7 +12,7 @@ to make better use of multiple cores (just beware that memory footprint increase
 
 Warnings
 --------
-Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`.
+Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`_.
 Distributed version works only in local network.
 
 
