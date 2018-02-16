@@ -360,7 +360,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape: [`num_terms`, num_documents].
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
         num_topics : int, optional
             Number of requested factors (latent dimensions)
         id2word : dict of {int: str}, optional
@@ -447,7 +447,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}
-            Stream of document vectors or sparse matrix of shape: [`num_terms`, num_documents].
+            Stream of document vectors or sparse matrix of shape (`num_terms`, num_documents).
         chunksize : int, optional
             Number of documents to be used in each training chunk, will use `self.chunksize` if not specified.
         decay : float, optional
@@ -612,18 +612,17 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return result
 
     def get_topics(self):
-        """Return the topic vectors.
+        """Get the topic vectors.
 
         Notes
         -----
-            The number of topics can actually be smaller than `self.num_topics`,
-            if there were not enough factors (real rank of input matrix smaller than
-            `self.num_topics`).
+        The number of topics can actually be smaller than `self.num_topics`, if there were not enough factors
+        (real rank of input matrix smaller than `self.num_topics`).
 
         Returns
         -------
-        np.ndarray of floats
-            The term topic matrix learned during inference. Shape is: [`num_topics`, `vocabulary_size`]
+        np.ndarray
+            The term topic matrix with shape (`num_topics`, `vocabulary_size`)
 
         """
         projections = self.projection.u.T
@@ -636,28 +635,22 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return np.array(topics)
 
     def show_topic(self, topicno, topn=10):
-        """Find the words that define a topic along with their contribution.
+        """Get the words that define a topic along with their contribution.
 
-        This is actually the left singular vector of the specified topic. The most important
-        words in defining the topic (in both directions) are included in the string,
-        along with their contribution to the topic.
+        This is actually the left singular vector of the specified topic. The most important words in defining the topic
+        (in both directions) are included in the string, along with their contribution to the topic.
 
         Parameters
         ----------
         topicno : int
-            The topics id number. Obviously 0 <= `topicno` < `self.num_topics`.
+            The topics id number.
         topn : int
-            Number of words to be included in the string representation.
+            Number of words to be included to the result.
 
         Returns
         -------
-        str
-            The specified topic string representation.
-
-        Examples
-        --------
-        >>> lsimodel.show_topic(10, topn=5)
-        [("category", -0.340), ("$M$", 0.298), ("algebra", 0.183), ("functor", -0.174), ("operator", -0.168)]
+        list of (str, float)
+            Topic representation in BoW format.
 
         """
         # size of the projection matrix can actually be smaller than `self.num_topics`,
@@ -671,28 +664,25 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return [(self.id2word[val], 1.0 * c[val] / norm) for val in most]
 
     def show_topics(self, num_topics=-1, num_words=10, log=False, formatted=True):
-
-        """Return the most significant topics.
-
-        For each topic, show `num_words` most significant words. The topics are returned as a list of strings
-        if `formatted` is True, or a list of `(word, probability)` 2-tuples if `formatted` is False. All topics
-        are included by default but a number of them can be selected ordered by significance.
+        """Get the most significant topics.
 
         Parameters
         ----------
         num_topics : int, optional
-            The number of topics to be selected (all by default), ordered by significance.
+            The number of topics to be selected, if -1 - all topics will be in result (ordered by significance).
         num_words : int, optional
-            The number of words to be included per topics, ordered by significance.
+            The number of words to be included per topics (ordered by significance).
         log : bool, optional
-            Whether the output should be also written to the log.
+            If True - log topics with logger.
         formatted : bool, optional
-            Whether to represent each topic as a string.
+            If True - each topic represented as string, otherwise - in BoW format.
 
         Returns
         -------
-        str or list of (str, float)
-            Either a string or a list of `(word, probability)` representation for each topic.
+        list of (int, str)
+            If `formatted=True`, return sequence with (topic_id, string representation of topics) **OR**
+        list of (int, list of (str, float))
+            Otherwise, return sequence with (topic_id, [(word, value), ... ])
 
         """
         shown = []
@@ -712,16 +702,18 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def print_debug(self, num_topics=5, num_words=10):
         """Print (to log) the most salient words of the first `num_topics` topics.
 
-        Unlike `print_topics()`, this looks for words that are significant for a
-        particular topic *and* not for others. This *should* result in a more
-        human-interpretable description of topics.
+        Unlike :meth:`~gensim.models.lsimodel.LsiModel.print_topics`, this looks for words that are significant for
+        a particular topic *and* not for others. This *should* result in a
+        more human-interpretable description of topics.
+
+        Alias for :func:`~gensim.models.lsimodel.print_debug`.
 
         Parameters
         ----------
         num_topics : int, optional
-            The number of topics to be selected (all by default), ordered by significance.
+            The number of topics to be selected (ordered by significance).
         num_words : int, optional
-            The number of words to be included per topics, ordered by significance.
+            The number of words to be included per topics (ordered by significance).
 
         """
         # only wrap the module-level fnc
@@ -734,10 +726,12 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def save(self, fname, *args, **kwargs):
         """Save the model to a file.
 
+        Notes
+        -----
         Large internal arrays may be stored into separate files, with `fname` as prefix.
 
-        Note
-        ----
+        Warnings
+        --------
         Do not save as a compressed file if you intend to load the file back with `mmap`.
 
         Parameters
@@ -751,7 +745,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         See Also
         --------
-        :meth:`~gensim.models.LsiModel.load`
+        :meth:`~gensim.models.lsimodel.LsiModel.load`
 
         """
 
@@ -761,15 +755,16 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
-        """Load a previously saved object (using :meth:`~gensim.utils.SaveLoad.save`) from file.
+        """Load a previously saved object using :meth:`~gensim.models.lsimodel.LsiModel.save from file.
 
+        Notes
+        -----
         Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
-
 
         Parameters
         ----------
         fname : str
-            Path to file that contains needed object.
+            Path to file that contains LsiModel.
         *args
             Variable length argument list.
         **kwargs
@@ -777,12 +772,12 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         See Also
         --------
-        :meth:`~gensim.models.LsiModel.save`
+        :meth:`~gensim.models.lsimodel.LsiModel.save`
 
         Returns
         -------
-        object
-            Object loaded from `fname`.
+        :class:`~gensim.models.lsimodel.LsiModel:
+            Loaded instance.
 
         Raises
         ------
