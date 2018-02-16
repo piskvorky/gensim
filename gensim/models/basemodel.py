@@ -12,7 +12,7 @@ class BaseTopicModel(object):
         Returns
         -------
         str
-            String representation of topic, like `` -0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + ... ``.
+            String representation of topic, like '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + ... '.
 
         """
         return ' + '.join(['%.3f*"%s"' % (v, k) for k, v in self.show_topic(topicno, topn)])

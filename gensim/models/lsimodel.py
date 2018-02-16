@@ -326,14 +326,13 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     Notes
     -----
-    The left singular vectors are stored in :attr:`gensim.models.lsimodel.LsiModel.projection.u`,
-    singular values in :attr:`gensim.models.lsimodel.LsiModel.projection.s`,
-    right singular vectors can be reconstructed from the output of ``model[training_corpus]``, if needed.
-
+    * :attr:`gensim.models.lsimodel.LsiModel.projection.u` - left singular vectors,
+    * :attr:`gensim.models.lsimodel.LsiModel.projection.s` - singular values,
+    * ``model[training_corpus]`` - right singular vectors (can be reconstructed if needed).
 
     See Also
     --------
-    `FAQ about LSI matricies
+    `FAQ about LSI matrices
     <https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q4-how-do-you-output-the-u-s-vt-matrices-of-lsi>`_.
 
     Examples
