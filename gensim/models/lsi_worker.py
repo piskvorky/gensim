@@ -16,7 +16,9 @@ Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`.
 Distributed version works only in local network.
 
 
-How to use
+How to use distributed :class:`~gensim.models.lsimodel.LsiModel`
+----------------------------------------------------------------
+
 
 #. Install needed dependencies (Pyro4) ::
 
@@ -180,7 +182,7 @@ class Worker(object):
 
 if __name__ == '__main__':
     """The main script. """
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
     parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
     _ = parser.parse_args()
