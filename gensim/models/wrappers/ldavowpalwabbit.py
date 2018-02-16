@@ -762,21 +762,19 @@ def corpus_to_vw(corpus):
 
 
 def write_corpus_as_vw(corpus, filename):
-    """Iterate over corpus, writing each document as a line to given file.
-
-    Returns the number of lines written.
+    """Covert `corpus` to  Vowpal Wabbit format and save it to `filename`.
 
     Parameters
     ----------
-    corpus : iterable of iterable of (int, int)
+    corpus : iterable of list of (int, int)
         Collection of texts in BoW format.
     filename : str
-        Name of the file.
+        Path to output file.
 
     Returns
     -------
-    corpus_size : int
-        Number of lines written
+    int
+        Number of lines in `filename`.
 
     """
     logger.debug("Writing corpus to: %s", filename)
@@ -793,17 +791,15 @@ def write_corpus_as_vw(corpus, filename):
 def _parse_vw_output(text):
     """Get dict of useful fields from Vowpal Wabbit's output.
 
-    Currently returns field 'average_loss', which is a lower bound on mean
-    per-word log-perplexity (i.e. same as the value LdaModel.bound() returns).
-
     Parameters
     ----------
     text : str
-        Unicode text.
+        Text from vw file.
+
     Returns
     -------
-    data : dict
-        Field average loss, lower bound on mean per-word log-perplexity.
+    dict of (str, float)
+        Dictionary with field "average_loss", lower bound on mean per-word log-perplexity.
 
     """
     data = {}
@@ -825,8 +821,13 @@ def _run_vw_command(cmd):
 
     Returns
     -------
-    output : str
-        Log stdout and stderr.
+    str
+        Stdout and stderr.
+
+    Raises
+    ------
+    subprocess.CalledProcessError
+        If something goes wrong.
 
     """
     logger.info("Running Vowpal Wabbit command: %s", ' '.join(cmd))
@@ -843,7 +844,7 @@ def _run_vw_command(cmd):
 
 # if python2.6 support is ever dropped, can change to using int.bit_length()
 def _bit_length(num):
-    """Return number of bits needed to encode given number.
+    """Get number of bits needed to encode given number.
 
     Parameters
     ----------
@@ -860,22 +861,22 @@ def _bit_length(num):
 
 
 def vwmodel2ldamodel(vw_model, iterations=50):
-    """
-    Function to convert vowpal wabbit model to gensim LdaModel.
+    """Convert :class:`~gensim.models.wrappers.ldavowpalwabbit.LdaVowpalWabbit` to
+    :class:`~gensim.models.ldamodel.LdaModel`.
 
-    This works by simply copying the training model weights (alpha, beta...) from a trained
-    vwmodel into the gensim model.
+    This works by simply copying the training model weights (alpha, beta...) from a trained vwmodel
+    into the gensim model.
 
     Parameters
     ----------
-    vw_model : vwModel object
-        Trained vowpal wabbit model.
+    vw_model : :class:`~gensim.models.wrappers.ldavowpalwabbit.LdaVowpalWabbit`
+        Trained Vowpal Wabbit model.
     iterations : int
-        Number of iterations to be used for inference of the new LdaModel.
+        Number of iterations to be used for inference of the new :class:`~gensim.models.ldamodel.LdaModel`.
 
     Returns
     -------
-    :class:`~gensim.models.ldamodel.LdaModel`
+    :class:`~gensim.models.ldamodel.LdaModel`.
         Gensim native LDA.
 
     """
