@@ -45,6 +45,8 @@ class TestDataType(unittest.TestCase):
         model1.save_word2vec_format(binary_path, binary=True)
         model2 = KeyedVectors.load_word2vec_format(binary_path, datatype=np.float64, binary=True)
         self.assertAlmostEqual(model1["horse.n.01"][0], np.float16(model2["horse.n.01"][0]))
+        self.assertEqual(model1["horse.n.01"][0].dtype, np.float16)
+        self.assertEqual(model2["horse.n.01"][0].dtype, np.float64)
 
 
 if __name__ == '__main__':
