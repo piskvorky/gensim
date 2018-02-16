@@ -318,29 +318,35 @@ class Projection(utils.SaveLoad):
 
 
 class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    """Objects of this class allow building and maintaining a model for Latent Semantic Indexing.
+    """Model for `Latent Semantic Indexing
+    <https://en.wikipedia.org/wiki/Latent_semantic_analysis#Latent_semantic_indexing>`_.
 
-    The main methods are:
-
-    1. constructor, which initializes the projection into latent topics space,
-    2. the ``[]`` method, which returns the representation of any input document in the
-       latent space,
-    3. `add_documents()` which incrementally updates the model with new documents.
-
-    The left singular vectors are stored in `lsi.projection.u`, singular values
-    in `lsi.projection.s`. Right singular vectors can be reconstructed from the output
-    of `lsi[training_corpus]`, if needed. See also FAQ [2]_.
-    Model persistency is achieved via its load/save methods.
+    Algorithm of decomposition described in `"Fast and Faster: A Comparison of Two Streamed
+    Matrix Decomposition Algorithms" <https://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_.
 
     Notes
     -----
-    After the model has been trained, you can estimate topics for an
-    arbitrary, unseen document, using the ``topics = self[document]`` dictionary
-    notation. You can also add new training documents, with ``self.add_documents``,
-    so that training can be stopped and resumed at any time, and the
-    LSI transformation is available at any point.
+    The left singular vectors are stored in :attr:`gensim.models.lsimodel.LsiModel.projection.u`,
+    singular values in :attr:`gensim.models.lsimodel.LsiModel.projection.s`,
+    right singular vectors can be reconstructed from the output of ``model[training_corpus]``, if needed.
 
-    .. [2] https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q4-how-do-you-output-the-u-s-vt-matrices-of-lsi
+
+    See Also
+    --------
+    `FAQ about LSI matricies
+    <https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q4-how-do-you-output-the-u-s-vt-matrices-of-lsi>`_.
+
+    Examples
+    --------
+    >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
+    >>> from gensim.models import LsiModel
+    >>>
+    >>> model = LsiModel(common_corpus[:3], id2word=common_dictionary)  # train model
+    >>> vector = model[common_corpus[4]]  # apply model to BoW document
+    >>> model.add_documents(common_corpus[4:])  # update model with new documents
+    >>> tmp_fname = get_tmpfile("lsi.model")
+    >>> model.save(tmp_fname)  # save model
+    >>> loaded_model = LsiModel.load(tmp_fname)  # load model
 
     """
 
@@ -353,7 +359,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of iterable of (int, float), optional
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
             Stream of document vectors or sparse matrix of shape: [`num_terms`, num_documents].
         num_topics : int, optional
             Number of requested factors (latent dimensions)
@@ -375,16 +381,6 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Extra samples to be used besides the rank `k`. Can improve accuracy.
         dtype : type, optional
             Enforces a type for elements of the decomposed matrix.
-
-        Examples
-        --------
-
-        >>> lsi = LsiModel(corpus, num_topics=10)
-        >>> print(lsi[doc_tfidf]) # project some document into LSI space
-        >>> lsi.add_documents(corpus2) # update LSI on additional documents
-        >>> print(lsi[doc_tfidf])
-
-        .. [3] http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf
 
         """
         self.id2word = id2word
@@ -446,21 +442,22 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.add_documents(corpus)
 
     def add_documents(self, corpus, chunksize=None, decay=None):
-        """Update singular value decomposition to take into account a new corpus of documents.
-
-        Training proceeds in chunks of `chunksize` documents at a time. The size of
-        `chunksize` is a tradeoff between increased speed (bigger `chunksize`)
-        vs. lower memory footprint (smaller `chunksize`). If the distributed mode
-        is on, each chunk is sent to a different worker/computer.
+        """Update model with new `corpus`.
 
         Parameters
         ----------
-        corpus : iterable of iterable of (int, float)
-            Stream of document vectors or a sparse matrix of shape: [`num_terms`, num_documents].
-        chunksize :  int, optional
-            Number of documents to be used in each training chunk.
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}
+            Stream of document vectors or sparse matrix of shape: [`num_terms`, num_documents].
+        chunksize : int, optional
+            Number of documents to be used in each training chunk, will use `self.chunksize` if not specified.
         decay : float, optional
-            Weight of existing observations relatively to new ones.
+            Weight of existing observations relatively to new ones,  will use `self.decay` if not specified.
+
+        Notes
+        -----
+        Training proceeds in chunks of `chunksize` documents at a time. The size of `chunksize` is a tradeoff
+        between increased speed (bigger `chunksize`) vs. lower memory footprint (smaller `chunksize`).
+        If the distributed mode is on, each chunk is sent to a different worker/computer.
 
         """
         logger.info("updating model with new documents")
@@ -533,33 +530,36 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.docs_processed += corpus.shape[1]
 
     def __str__(self):
-        """Produce a human readable representation of the current object.
+        """Get a human readable representation of model.
 
         Returns
         -------
         str
-            A human readable string of the current objects' parameters.
+            A human readable string of the current objects parameters.
+
         """
         return "LsiModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (
             self.num_terms, self.num_topics, self.decay, self.chunksize
         )
 
     def __getitem__(self, bow, scaled=False, chunksize=512):
-        """Compute the latent representation of a corpus.
+        """Get the latent representation for `bow`.
 
         Parameters
         ----------
-        bow : iterable of (int, int)
-            The corpus in a bag of words representation.
+        bow : {list of (int, int), iterable of list of (int, int)}
+            Document or corpus in BoW representation.
         scaled : bool, optional
-            Whether topics should be scaled by the inverse of singular values (default: no scaling).
+            If True - topics will be scaled by the inverse of singular values.
         chunksize :  int, optional
-            Number of documents to be used in each training chunk.
+            Number of documents to be used in each applying chunk.
 
         Returns
         -------
         list of (int, float)
-            Latent representation of topics as a list of (topic_id, topic_value).
+            Latent representation of topics in BoW format for document **OR**
+        :class:`gensim.matutils.Dense2Corpus`
+            Latent representation of corpus in BoW format if `bow` is corpus.
 
         """
         assert self.projection.u is not None, "decomposition not initialized yet"
@@ -805,14 +805,14 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
 
     Parameters
     ----------
-    id2token : dict of {int: str}
+    id2token : :class:`~gensim.corpora.dictionary.Dictionary`
         Mapping from ID to word in the Dictionary.
     u : np.ndarray
         The 2D U decomposition matrix.
     s : np.ndarray
         The 1D reduced array of eigenvalues used for decomposition.
     topics : list of int
-        The list of topic IDs to be printed
+        Sequence of topic IDs to be printed
     num_words : int, optional
         Number of words to be included for each topic.
     num_neg : int, optional
