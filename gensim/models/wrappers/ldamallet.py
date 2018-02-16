@@ -62,13 +62,17 @@ logger = logging.getLogger(__name__)
 
 
 class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
-    """LDA wrapper using `MALLET <http://mallet.cs.umass.edu/>`_.
+    """Python wrapper for LDA using `MALLET <http://mallet.cs.umass.edu/>`_.
 
     Communication between MALLET and Python takes place by passing around data files on disk
     and calling Java with subprocess.call().
 
-    """
+    Warnings
+    --------
+    This is **only** python wrapper for `MALLET LDA <http://mallet.cs.umass.edu/>`_,
+    you need to install original implementation first and pass the path to binary to ``mallet_path``.
 
+    """
     def __init__(self, mallet_path, corpus=None, num_topics=100, alpha=50, id2word=None, workers=4, prefix=None,
                  optimize_interval=0, iterations=1000, topic_threshold=0.0):
         """

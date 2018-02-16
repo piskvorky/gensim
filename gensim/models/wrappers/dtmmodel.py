@@ -52,13 +52,17 @@ logger = logging.getLogger(__name__)
 
 
 class DtmModel(utils.SaveLoad):
-    """DTM wrapper using DTM binary.
+    """Python wrapper using `DTM implementation <https://github.com/magsilva/dtm/tree/master/bin>`_.
 
     Communication between DTM and Python takes place by passing around data files on disk and executing
     the DTM binary as a subprocess.
 
-    """
+    Warnings
+    --------
+    This is **only** python wrapper for `DTM implementation <https://github.com/magsilva/dtm/tree/master/bin>`_,
+    you need to install original implementation first and pass the path to binary to ``dtm_path``.
 
+    """
     def __init__(self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100,
                  id2word=None, prefix=None, lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10,
                  alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):

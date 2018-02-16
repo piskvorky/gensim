@@ -25,8 +25,14 @@ logger = logging.getLogger(__name__)
 
 
 class VarEmbed(KeyedVectors):
-    """Varembed wrapper using `Varembed model <https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings>`_."""
+    """Python wrapper using `Varembed <https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings>`_.
 
+    Warnings
+    --------
+    This is **only** python wrapper for `Varembed <https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings>`_,
+    this allows to load pre-trained models only.
+
+    """
     def __init__(self):
         self.vector_size = 0
         self.vocab_size = 0

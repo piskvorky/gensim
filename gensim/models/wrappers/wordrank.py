@@ -2,10 +2,8 @@
 # Copyright (C) 2017 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Python wrapper around word representation learning from Wordrank.
-
-The wrapped model can NOT be updated with new documents for online training -- use gensim's
-`Word2Vec` for that.
+"""Python wrapper around `Wordrank <https://bitbucket.org/shihaoji/wordrank/>`_.
+Original paper: `"WordRank: Learning Word Embeddings via Robust Ranking " <https://arxiv.org/pdf/1506.02761v3.pdf>`_.
 
 Installation
 ------------
@@ -15,6 +13,11 @@ Use `official guide <https://github.com/shihaoji/wordrank>`_ or this one
 
     sudo yum install boost-devel #(on RedHat/Centos)
     sudo apt-get install libboost-all-dev #(on Ubuntu)
+
+    git clone https://bitbucket.org/shihaoji/wordrank
+    cd wordrank/
+    # replace icc to gcc in install.sh
+    ./install.sh
 
 * On MacOS ::
 
@@ -30,18 +33,13 @@ Use `official guide <https://github.com/shihaoji/wordrank>`_ or this one
 
 Examples
 --------
->>>from gensim.models.wrappers import Wordrank
->>> model = Wordrank.train('/Users/dummy/wordrank',
-...                         corpus_file='text8',
-...                         out_name='wr_model',
-...                         iter=11,
-...                         dump_period=5)
->>> print model[word]  # prints vector for given words
 
-References
-----------
-.. [1] https://bitbucket.org/shihaoji/wordrank/
-.. [2] https://arxiv.org/pdf/1506.02761v3.pdf
+>>> from gensim.models.wrappers import Wordrank
+>>>
+>>> path_to_wordrank_binary = '/path/to/wordrank/binary'
+>>> model = Wordrank.train(path_to_wordrank_binary, corpus_file='text8', out_name='wr_model')
+>>>
+>>> print model["hello"]  # prints vector for given words
 
 Warnings
 --------
@@ -68,14 +66,18 @@ logger = logging.getLogger(__name__)
 
 
 class Wordrank(KeyedVectors):
-    """Class for word vector training using Wordrank.
+    """Python wrapper using `Wordrank implementation <https://bitbucket.org/shihaoji/wordrank/>`_
 
     Communication between Wordrank and Python takes place by working with data
     files on disk and calling the Wordrank binary and glove's helper binaries
     (for preparing training data) with subprocess module.
 
-    """
+    Warnings
+    --------
+    This is **only** python wrapper for `Wordrank implementation <https://bitbucket.org/shihaoji/wordrank/>`_,
+    you need to install original implementation first and pass the path to binary to ``wr_path``.
 
+    """
     @classmethod
     def train(cls, wr_path, corpus_file, out_name, size=100, window=15, symmetric=1, min_count=5, max_vocab_size=0,
               sgd_num=100, lrate=0.001, period=10, iter=90, epsilon=0.75, dump_period=10, reg=0, alpha=100,

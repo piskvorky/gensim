@@ -89,13 +89,17 @@ logger = logging.getLogger(__name__)
 
 
 class LdaVowpalWabbit(utils.SaveLoad):
-    """LDA wrapper using `Vowpal Wabbit's online LDA <https://github.com/JohnLangford/vowpal_wabbit/>`_.
+    """Python wrapper using `Vowpal Wabbit's online LDA <https://github.com/JohnLangford/vowpal_wabbit/>`_.
 
     Communication between Vowpal Wabbit and Python takes place by passing around data files
     on disk and calling the 'vw' binary with the subprocess module.
 
-    """
+    Warnings
+    --------
+    This is **only** python wrapper for `Vowpal Wabbit's online LDA <https://github.com/JohnLangford/vowpal_wabbit/>`_,
+    you need to install original implementation first and pass the path to binary to ``vw_path``.
 
+    """
     def __init__(self, vw_path, corpus=None, num_topics=100, id2word=None,
                  chunksize=256, passes=1, alpha=0.1, eta=0.1, decay=0.5,
                  offset=1, gamma_threshold=0.001, random_seed=None,
