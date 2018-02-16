@@ -18,7 +18,7 @@ from gensim.models.keyedvectors import KeyedVectors
 
 class TestDataType(unittest.TestCase):
     def load_model(self, datatype):
-        path = datapath('test.kv.txt')
+        path = datapath('high_precision.kv.txt')
         kv = KeyedVectors.load_word2vec_format(path, binary=False,
                                                datatype=datatype)
         return kv
@@ -39,8 +39,8 @@ class TestDataType(unittest.TestCase):
         self.assertEqual(kv['horse.n.01'][0].dtype, np.float16)
 
     def test_type_conversion(self):
-        path = datapath('test.kv.txt')
-        binary_path = datapath('test.kv.bin')
+        path = datapath('high_precision.kv.txt')
+        binary_path = datapath('high_precision.kv.bin')
         model1 = KeyedVectors.load_word2vec_format(path, datatype=np.float16)
         model1.save_word2vec_format(binary_path, binary=True)
         model2 = KeyedVectors.load_word2vec_format(binary_path, datatype=np.float64, binary=True)
