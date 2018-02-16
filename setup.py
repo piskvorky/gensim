@@ -268,6 +268,8 @@ setup(
 
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
+    
+    license='LGPLv2.1',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
         'LSA, LSI, Latent Dirichlet Allocation, LDA, '
@@ -307,7 +309,7 @@ setup(
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern'],
+        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern', 'sphinxcontrib.programoutput'],
     },
 
     include_package_data=True,
