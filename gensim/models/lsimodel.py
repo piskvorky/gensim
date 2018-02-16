@@ -739,9 +739,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         fname : str
             Path to output file.
         *args
-            Variable length argument list.
+            Variable length argument list, see :meth:`gensim.utils.SaveLoad.save`.
         **kwargs
-            Arbitrary keyword arguments.
+            Arbitrary keyword arguments, see :meth:`gensim.utils.SaveLoad.save`.
 
         See Also
         --------
@@ -755,7 +755,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
-        """Load a previously saved object using :meth:`~gensim.models.lsimodel.LsiModel.save from file.
+        """Load a previously saved object using :meth:`~gensim.models.lsimodel.LsiModel.save` from file.
 
         Notes
         -----
@@ -766,9 +766,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         fname : str
             Path to file that contains LsiModel.
         *args
-            Variable length argument list.
+            Variable length argument list, see :meth:`gensim.utils.SaveLoad.load`.
         **kwargs
-            Arbitrary keyword arguments.
+            Arbitrary keyword arguments, see :meth:`gensim.utils.SaveLoad.load`.
 
         See Also
         --------
@@ -776,7 +776,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Returns
         -------
-        :class:`~gensim.models.lsimodel.LsiModel:
+        :class:`~gensim.models.lsimodel.LsiModel`
             Loaded instance.
 
         Raises
