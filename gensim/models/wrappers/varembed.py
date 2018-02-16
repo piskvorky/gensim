@@ -4,18 +4,13 @@
 # Copyright (C) 2017 Anmol Gulati <anmol01gulati@gmail.com>
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 
-"""Python wrapper around word representation learning from Varembed models,
-a library for efficient learning of word representations
-and sentence classification [1].
+"""Python wrapper around `Varembed model <https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings>`_.
+Original paper:`"Morphological Priors for Probabilistic Neural Word Embeddings" <http://arxiv.org/pdf/1608.01056.pdf>`_.
 
-This module allows ability to obtain word vectors for out-of-vocabulary words, for the Varembed model[2].
-
-The wrapped model can not be updated with new documents for online training.
-
-References
-----------
-.. [1] https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings
-.. [2] http://arxiv.org/pdf/1608.01056.pdf
+Notes
+-----
+* This module allows ability to obtain word vectors for out-of-vocabulary words, for the Varembed model.
+* The wrapped model can not be updated with new documents for online training.
 
 """
 
@@ -30,16 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class VarEmbed(KeyedVectors):
-    """Class for word vectors using Varembed models.
-
-    Contains methods to load a varembed model and implements functionality like `most_similar`,
-    `similarity` by extracting vectors into numpy matrix.
-
-    References
-    ----------
-    .. [1]https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings
-
-    """
+    """Varembed wrapper using `Varembed model <https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings>`_."""
 
     def __init__(self):
         self.vector_size = 0
@@ -49,22 +35,17 @@ class VarEmbed(KeyedVectors):
     def load_varembed_format(cls, vectors, morfessor_model=None):
         """Load the word vectors into matrix from the varembed output vector files.
 
-        Warnings
-        --------
-        Using morphemes requires Python 2.7 version or above.
-
         Parameters
         ----------
         vectors : dict
             Pickle file containing the word vectors.
-        morfessor_model : str
+        morfessor_model : str, optional
             Path to the trained morfessor model.
-            suse_morphemes False(default) use of morpheme embeddings in output.
 
         Returns
         -------
-        result : VarEmbed
-            Load the word vectors into matrix.
+        :class:`~gensim.models.wrappers.varembed.VarEmbed`
+            Ready to use instance.
 
         """
         result = cls()
@@ -94,8 +75,8 @@ class VarEmbed(KeyedVectors):
 
         Parameters
         ----------
-        word_embeddings : dict
-            Pickle file containing the word vectors.
+        word_embeddings : numpy.ndarray
+            Matrix with word-embeddings.
         word_to_ix : dict of (str, int)
             Mapping word to index.
 
@@ -119,21 +100,16 @@ class VarEmbed(KeyedVectors):
         logger.info("Loaded matrix of %d size and %d dimensions", self.vocab_size, self.vector_size)
 
     def add_morphemes_to_embeddings(self, morfessor_model, morpho_embeddings, morpho_to_ix):
-        """ Method to include morpheme embeddings into varembed vectors.
+        """Include morpheme embeddings into vectors.
 
         Parameters
         ----------
-        morfessor_model : `<int><space><CONSTRUCTION>[<space>+<space><CONSTRUCTION>]*`
-            Pickled object from a file. See for more
-            `(details) <http://morfessor.readthedocs.io/en/latest/filetypes.html>`
+        morfessor_model : :class:`morfessor.baseline.BaselineModel`
+            Morfessor model.
         morpho_embeddings : dict
-            Pickle file containing morpho embeddings.
+            Pickle file containing morpheme embeddings.
         morpho_to_ix : dict
-            Mapping morpho to index.
-
-        Warnings
-        --------
-        Allowed only in Python versions 2.7 and above.
+            Mapping morpheme to index.
 
         """
         for word in self.vocab:
