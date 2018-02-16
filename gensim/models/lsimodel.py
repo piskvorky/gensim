@@ -5,12 +5,11 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Module for Latent Semantic Analysis (aka Latent Semantic Indexing) in Python.
+"""Module for `Latent Semantic Analysis (aka Latent Semantic Indexing)
+<https://en.wikipedia.org/wiki/Latent_semantic_analysis#Latent_semantic_indexing>`_.
 
-Implements fast truncated SVD (Singular Value Decomposition). The SVD
-decomposition can be updated with new observations at any time, for an online,
-incremental, memory-efficient training.
+Implements fast truncated SVD (Singular Value Decomposition). The SVD decomposition can be updated with new observations
+at any time, for an online, incremental, memory-efficient training.
 
 This module actually contains several algorithms for decomposition of large corpora, a
 combination of which effectively and transparently allows building LSI models for:
@@ -28,7 +27,6 @@ Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim
 (2G corpus positions, 3.2M documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix),
 requesting the top 400 LSI factors:
 
-
 ====================================================== ============ ==================
  algorithm                                             serial       distributed
 ====================================================== ============ ==================
@@ -41,6 +39,16 @@ requesting the top 400 LSI factors:
 
 *distributed* = cluster of four logical nodes on three physical machines, each
 with dual core Xeon 2.0GHz, 4GB RAM, ATLAS
+
+
+Examples
+--------
+>>> from gensim.test.utils import common_dictionary, common_corpus
+>>> from gensim.models import LsiModel
+>>>
+>>> model = LsiModel(common_corpus, id2word=common_dictionary)
+>>> vectorized_corpus = model[common_corpus]  # vectorize input copus in BoW format
+
 
 .. [1] The stochastic algo could be distributed too, but most time is already spent
    reading/decompressing the input from disk in its 4 passes. The extra network
@@ -93,17 +101,16 @@ def clip_spectrum(s, k, discard=0.001):
     # ignore the last `discard` mass (or 1/k, whichever is smaller) of the spectrum
     small = 1 + len(np.where(rel_spectrum > min(discard, 1.0 / k))[0])
     k = min(k, small)  # clip against k
-    logger.info("keeping %i factors (discarding %.3f%% of energy spectrum)",
-                k, 100 * rel_spectrum[k - 1])
+    logger.info("keeping %i factors (discarding %.3f%% of energy spectrum)", k, 100 * rel_spectrum[k - 1])
     return k
 
 
 def asfarray(a, name=''):
-    """Return an array laid out in Fortran order in memory.
+    """Get an array laid out in Fortran order in memory.
 
     Parameters
     ----------
-    a : array_like
+    a : numpy.ndarray
         Input array.
     name : str, optional
         Array name, used for logging purposes.
@@ -125,7 +132,7 @@ def ascarray(a, name=''):
 
     Parameters
     ----------
-    a : array_like
+    a : numpy.ndarray
         Input array.
     name : str, optional
         Array name, used for logging purposes.
@@ -143,18 +150,17 @@ def ascarray(a, name=''):
 
 
 class Projection(utils.SaveLoad):
-    """Objects of this class are lower dimension projections of a Term-Passage matrix.
+    """Lower dimension projections of a Term-Passage matrix.
 
-    This is the class taking care of the 'core math'; interfacing with corpora,
-    splitting large corpora into chunks and merging them etc. is done through
-    the higher-level :class:`~gensim.models.lsimodel.LsiModel` class.
+    This is the class taking care of the 'core math': interfacing with corpora, splitting large corpora into chunks
+    and merging them etc. This done through the higher-level :class:`~gensim.models.lsimodel.LsiModel` class.
 
     Notes
     -----
-    The projection can be later updated by merging it with another Projection via `self.merge()`.
+    The projection can be later updated by merging it with another :class:`~gensim.models.lsimodel.Projection`
+    via  :meth:`~gensim.models.lsimodel.Projection.merge`.
 
     """
-
     def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS,
                  extra_dims=P2_EXTRA_DIMS, dtype=np.float64):
         """Construct the (U, S) projection from a corpus.
@@ -162,22 +168,22 @@ class Projection(utils.SaveLoad):
         Parameters
         ----------
         m : int
-            Number of features or terms in the corpus.
+            Number of features (terms) in the corpus.
         k : int
             Desired rank of the decomposed matrix.
-        docs : iterable of iterable of (int, float)
-            Stream of document vectors or sparse matrix (BoW representation).
+        docs : {iterable of list of (int, float), scipy.sparse.csc}
+            Corpus in BoW format or as sparse matrix.
         use_svdlibc : bool, optional
-            Whether sparce SVD should be used. Defaults to False in which case our own version is used instead.
+            If True - will use `sparsesvd library <https://pypi.python.org/pypi/sparsesvd/>`_,
+            otherwise - our own version will be used.
         power_iters: int, optional
             Number of power iteration steps to be used. Tune to improve accuracy.
         extra_dims : int, optional
             Extra samples to be used besides the rank `k`. Tune to improve accuracy.
-        dtype : type, optional
+        dtype : numpy.dtype, optional
             Enforces a type for elements of the decomposed matrix.
 
         """
-
         self.m, self.k = m, k
         self.power_iters = power_iters
         self.extra_dims = extra_dims
@@ -208,33 +214,34 @@ class Projection(utils.SaveLoad):
             self.u, self.s = None, None
 
     def empty_like(self):
-        """An empty Projection (no corpus) with the same parameters as the current object.
+        """Get an empty Projection with the same parameters as the current object.
 
         Returns
         -------
         :class:`~gensim.models.lsimodel.Projection`
-            An empty copy (no corpus) of the current projection.
+            An empty copy (without corpus) of the current projection.
 
         """
         return Projection(self.m, self.k, power_iters=self.power_iters, extra_dims=self.extra_dims)
 
     def merge(self, other, decay=1.0):
-        """Merge this Projection with another.
+        """Merge current :class:`~gensim.models.lsimodel.Projection` instance with another.
 
-        The content of `other` is destroyed in the process, so pass this function a
-        copy of `other` if you need it further. The `other` Projection is expected to
-        contain the same number of features.
+        Warnings
+        --------
+        The content of `other` is destroyed in the process, so pass this function a copy of `other`
+        if you need it further. The `other` :class:`~gensim.models.lsimodel.Projection` is expected to contain
+        the same number of features.
 
         Parameters
         ----------
         other : :class:`~gensim.models.lsimodel.Projection`
-            The Projection object to be merged into the current one. It will be deleted after merging.
+            The Projection object to be merged into the current one. It will be destroyed after merging.
         decay : float, optional
             Weight of existing observations relatively to new ones.
-            Setting `decay` < 1.0 causes re-orientation towards new data trends in the
-            input document stream, by giving less emphasis to old observations. This allows
-            LSA to gradually "forget" old observations (documents) and give more
-            preference to new ones.
+            Setting `decay` < 1.0 causes re-orientation towards new data trends in the input document stream,
+            by giving less emphasis to old observations. This allows LSA to gradually "forget" old observations
+            (documents) and give more preference to new ones.
 
         """
         if other.u is None:
@@ -855,45 +862,46 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
                    power_iters=0, dtype=np.float64, eps=1e-6):
     """Run truncated Singular Value Decomposition (SVD) on a sparse input.
 
-    The corpus may be larger than RAM (iterator of vectors) [4]_..
-    This may return less than the requested number of top `rank` factors, in case
-    the input itself is of lower rank. The `extra_dims` (oversampling) and especially
-    `power_iters` (power iterations) parameters affect accuracy of the decomposition.
-
-    This algorithm uses `2+power_iters` passes over the input data. In case you can only
-    afford a single pass, set `onepass=True` in :class:`~gensim.models.lsimodel.LsiModel`
-    and avoid using this function directly.
-
-    The decomposition algorithm is based on
-    **Halko, Martinsson, Tropp. Finding structure with randomness, 2009.**
-
-    .. [4] If `corpus` is a scipy.sparse matrix instead, it is assumed the whole
-       corpus fits into core memory and a different (more efficient) code path is chosen.
-
     Parameters
     ----------
-    corpus : iterable of iterable of (int, float)
-        Input corpus as a stream (does not have to fit in RAM) or a sparse matrix of shape: [`num_terms`, num_documents]
+    corpus : {iterable of list of (int, float), scipy.sparse}
+        Input corpus as a stream (does not have to fit in RAM)
+        or a sparse matrix of shape (`num_terms`, num_documents).
     rank : int
         Desired number of factors to be retained after decomposition.
     num_terms : int
-        The number of terms found in the vocabulary.
+        The number of features (terms) in `corpus`.
     chunksize :  int, optional
-            Number of documents to be used in each training chunk.
+        Number of documents to be used in each training chunk.
     extra_dims : int, optional
         Extra samples to be used besides the rank `k`. Can improve accuracy.
     power_iters: int, optional
-        Number of power iteration steps to be used.
-        Increasing the number of power iterations improves accuracy, but lowers performance.
-    dtype : type, optional
+        Number of power iteration steps to be used. Increasing the number of power iterations improves accuracy,
+        but lowers performance.
+    dtype : numpy.dtype, optional
         Enforces a type for elements of the decomposed matrix.
     eps: float, optional
         Percentage of the spectrum's energy to be discarded.
 
+    Notes
+    -----
+    The corpus may be larger than RAM (iterator of vectors), if `corpus` is a `scipy.sparse.csc` instead,
+    it is assumed the whole corpus fits into core memory and a different (more efficient) code path is chosen.
+    This may return less than the requested number of top `rank` factors, in case the input itself is of lower rank.
+    The `extra_dims` (oversampling) and especially `power_iters` (power iterations) parameters affect accuracy of the
+    decomposition.
+
+    This algorithm uses `2 + power_iters` passes over the input data. In case you can only afford a single pass,
+    set `onepass=True` in :class:`~gensim.models.lsimodel.LsiModel` and avoid using this function directly.
+
+    The decomposition algorithm is based on `"Finding structure with randomness:
+    Probabilistic algorithms for constructing approximate matrix decompositions" <https://arxiv.org/abs/0909.4061>`_.
+
+
     Returns
     -------
     (np.ndarray 2D, np.ndarray 1D)
-        The left singular vectors and the singular values of the input data stream.
+        The left singular vectors and the singular values of the `corpus`.
 
     """
     rank = int(rank)
