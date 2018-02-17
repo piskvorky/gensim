@@ -5,10 +5,13 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """This module contains implementations of basic interfaces used across the
-whole gensim package.
+whole gensim package. These interfaces usable for building corpus,
+transformation and similarity classes.
 
-The interfaces are realized as abstract base classes (ie., some optional functionality
-is provided in the interface itself, so that the interfaces can be subclassed).
+All interfaces are realized as abstract base classes (i.e. some optional
+functionality is provided in the interface itself, so that the interfaces should
+be inherited).
+
 """
 
 from __future__ import with_statement
@@ -35,14 +38,6 @@ class CorpusABC(utils.SaveLoad):
     >>> for attr_id, attr_value in doc:
     >>>     # do something with the attribute
 
-    Note
-    ----
-    Although default :func:`len` method is provided, it is very inefficient
-    because it based on linear scan through the corpus to determine its length.
-    Wherever the corpus size is needed and known in advance (or at least doesn't
-    change so that it can be cached), the :func:`len` method should be
-    overridden.
-
     See :mod:`gensim.corpora.svmlightcorpus` module for an example of a corpus
     class.
 
@@ -52,22 +47,30 @@ class CorpusABC(utils.SaveLoad):
     Use :meth:`gensim.interfacese.save_corpus()` static method for serializing
     actual stream content.
 
+    Note
+    ----
+    Although default :func:`len` method is provided, it is very inefficient
+    because it based on linear scan through the corpus to determine its length.
+    Wherever the corpus size is needed and known in advance (or at least doesn't
+    change so that it can be cached), the :func:`len` method should be
+    overridden.
+
     """
 
     def __iter__(self):
-        """Iterator protocol for corpus object.
+        """Iterator protocol for the corpus.
 
         Raises
         ------
         NotImplementedError
             Since it's abstract class this iterator protocol should be
-            overwritten in inherited class.
+            overwritten in the inherited class.
 
         """
         raise NotImplementedError('cannot instantiate abstract base class')
 
     def save(self, *args, **kwargs):
-        """Saves corpus in-memory stsate (but not documents).
+        """Saves corpus in-memory state (but not documents).
 
         Parameters
         ----------
@@ -103,7 +106,7 @@ class CorpusABC(utils.SaveLoad):
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
-        """Saves provided `corpus` to disk.
+        """Saves given `corpus` to disk.
 
         Some formats support saving the dictionary (`feature_id -> word`
         mapping), which can be provided by the optional `id2word` parameter.
@@ -125,14 +128,14 @@ class CorpusABC(utils.SaveLoad):
         Parameters
         ----------
         fname : str
-            Path to corpus file.
-        corpus :
-            Corpus object to be saved.
-        id2word : {dict of (int, str), :class:`gensim.corpora.Dictioanry`}, optional.
+            Path to corpus output file.
+        corpus : :class:`~gensim.interfaces.CorpusABC`
+            Corpus to be saved.
+        id2word : {dict of (int, str), :class:`~gensim.corpora.Dictionary`}, optional
             Dictionary of corpus.
         metadata : bool, optional
-            If True - ensure that serialize will write out article titles to a
-            pickle file.
+            If True :func:`serialize` will write out article titles to a pickle
+            file.
 
         """
         raise NotImplementedError('cannot instantiate abstract base class')
@@ -146,20 +149,20 @@ class CorpusABC(utils.SaveLoad):
 
 
 class TransformedCorpus(CorpusABC):
-    """Interface for transformed corpus.
-
-    """
+    """Interface (abstract class) for corpus supports transformations."""
     def __init__(self, obj, corpus, chunksize=None, **kwargs):
-        """
+        """Initialization of corpus. Documents storage, corpus should be
+        provided.
 
         Parameters
         ----------
         obj : object
             Object where documents are stored.
-        corpus : :class:`gensim.interfaces.CorpusABC`
+        corpus : :class:`~gensim.interfaces.CorpusABC`
             Given corpus.
-        chunksize : int, optional.
-            If provided iteration by group of documents will performed.
+        chunksize : int, optional
+            If provided more effective processing (by group of documents) will
+            performed.
         kwargs
             Arbitrary keyword arguments.
 
@@ -175,8 +178,15 @@ class TransformedCorpus(CorpusABC):
         return len(self.corpus)
 
     def __iter__(self):
-        """Iterator protocol for corpus. If `chunksize` is set iterator yields
-        group of documents."""
+        """Iterator protocol for corpus. If `chunksize` is set more effective
+        processing will performed. Yields document.
+
+        Yields
+        ------
+        iterable of (int, int)
+            Current document.
+
+        """
         if self.chunksize:
             for chunk in utils.grouper(self.corpus, self.chunksize):
                 for transformed in self.obj.__getitem__(chunk, chunksize=None):
@@ -227,11 +237,18 @@ class TransformationABC(utils.SaveLoad):
     """
 
     def __getitem__(self, vec):
-        """Transforms vector from one vector space into another
+        """Provide access to element of `transformations`.
+
+        Transforms vector from one vector space into another
 
         **or**
 
         Transforms a whole corpus into another.
+
+        Parameters
+        ----------
+        vec : iterable
+            Given vector.
 
         Raises
         ------
@@ -243,20 +260,21 @@ class TransformationABC(utils.SaveLoad):
 
     def _apply(self, corpus, chunksize=None, **kwargs):
         """Applies the transformation to a whole corpus (as opposed to a
-        single document) and return the result as another corpus.
+        single document) and returns the result as another corpus.
 
         Parameters
         ----------
-        corpus :
+        corpus : :class:`~gensim.interfaces.CorpusABC`
             given corpus.
-        chunksize : int, optional.
-            If provided iteration by group of documents will performed.
+        chunksize : int, optional
+            If provided more effective processing (by group of documents) will
+            performed.
         kwargs
             Arbitrary keyword arguments.
 
         Returns
         -------
-        :class:`gensim.interfaces.TransformedCorpus`
+        :class:`~gensim.interfaces.TransformedCorpus`
             Transformed corpus.
 
         """
@@ -281,11 +299,12 @@ class SimilarityABC(utils.SaveLoad):
     """
 
     def __init__(self, corpus):
-        """
+        """Initialization of object. Since it is an abstract class this
+        initialization need to be overwritten in the inherited class.
 
         Parameters
         ----------
-        corpus : class:`gensim.interfaces.CorpusABC`
+        corpus : :class:`~gensim.interfaces.CorpusABC`
             Given corpus.
 
         Raises
@@ -315,7 +334,7 @@ class SimilarityABC(utils.SaveLoad):
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
     def __getitem__(self, query):
-        """Provides access to  similarities of document `query` to all documents
+        """Provides access to similarities of document `query` to all documents
         in the corpus.
 
         **or**
@@ -327,7 +346,7 @@ class SimilarityABC(utils.SaveLoad):
 
         Parameters
         ----------
-        query : {iterable of (int, int), :class:`gensim.interfaces.CorpusABC`}
+        query : {iterable of (int, int), :class:`~gensim.interfaces.CorpusABC`}
             Given document or corpus.
 
         Returns
