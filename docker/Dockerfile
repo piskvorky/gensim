@@ -48,6 +48,7 @@ RUN pip2 install \
     nltk==3.2.2 \
     pandas==0.19.2 \
     spacy==1.8.1 \
+    pyLDAvis==2.1.1 \
     git+https://github.com/mila-udem/blocks.git@7beb788f1fcfc78d56c59a5edf9b4e8d98f8d7d9 \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
@@ -58,6 +59,7 @@ RUN pip3 install \
     nltk==3.2.2 \
     pandas==0.19.2 \
     spacy==1.8.1 \
+    pyLDAvis==2.1.1 \ 
     git+https://github.com/mila-udem/blocks.git@7beb788f1fcfc78d56c59a5edf9b4e8d98f8d7d9 \
     -r https://raw.githubusercontent.com/mila-udem/blocks/stable/requirements.txt
 
