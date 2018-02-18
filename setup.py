@@ -13,6 +13,10 @@ sudo python ./setup.py install
 import os
 import sys
 import warnings
+import tempfile
+import distutils
+import subprocess
+import shutil
 
 import ez_setup
 from setuptools import setup, find_packages, Extension
@@ -22,6 +26,32 @@ if sys.version_info[:2] < (2, 7) or (sys.version_info[:1] == 3 and sys.version_i
     raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
 
 ez_setup.use_setuptools()
+
+# 3-clause BSD: https://github.com/yt-project/yt/blob/master/COPYING.txt
+def test_openmp():
+  
+    tmpdir = tempfile.mkdtemp()
+    curdir = os.getcwd()
+    os.chdir(tmpdir)
+
+    compiler = os.environ.get('CC', distutils.sysconfig.get_config_var('CC')).split()[0]
+
+    fname = 'testopenmp.c'
+
+    with open(fname, 'w') as f:
+        f.write('#include <omp.h>;#include <stdio.h>;int main() {#pragma omp parallel;omp_get_thread_num();omp_get_num_threads();}')
+
+    with open(os.devnull, 'w') as fnull:
+        exit_code = subprocess.call([compiler, '-fopenmp', fname],
+                                    stdout=fnull, stderr=fnull)
+
+    os.chdir(curdir)
+    shutil.rmtree(tmpdir)
+
+    if exit_code == 0: return True
+
+    return False
+
 
 # the following code is adapted from tornado's setup.py:
 # https://github.com/tornadoweb/tornado/blob/master/setup.py
@@ -100,7 +130,6 @@ http://api.mongodb.org/python/current/installation.html#osx
 
         import numpy
         self.include_dirs.append(numpy.get_include())
-
 
 model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 csparse_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'csparse')
@@ -244,13 +273,7 @@ linux_testenv = win_testenv + [
     'keras >= 2.0.4',
 ]
 
-setup(
-    name='gensim',
-    version='3.3.0',
-    description='Python framework for fast Vector Space Modelling',
-    long_description=LONG_DESCRIPTION,
-
-    ext_modules=[
+ext_modules = [
         Extension('gensim.models.word2vec_inner',
             sources=['./gensim/models/word2vec_inner.c'],
             include_dirs=[model_dir]),
@@ -259,13 +282,23 @@ setup(
             include_dirs=[model_dir]),
         Extension('gensim.models.fasttext_inner',
             sources=['./gensim/models/fasttext_inner.c'],
-            include_dirs=[model_dir]),
+            include_dirs=[model_dir])]
+
+if test_openmp():
+    ext_modules += [
         Extension('gensim.csparse.psparse',
             sources=['gensim/csparse/psparse.pyx', 'gensim/csparse/CSParse/Source/cs_gaxpy.c'],
             extra_compile_args=['-fopenmp', '-O3', '-ffast-math'],
             include_dirs = [csparse_dir, csparse_dir + '/CSParse/Include/'],
-            extra_link_args=['-fopenmp'])
-    ],
+            extra_link_args=['-fopenmp'])]
+
+setup(
+    name='gensim',
+    version='3.3.0',
+    description='Python framework for fast Vector Space Modelling',
+    long_description=LONG_DESCRIPTION,
+
+    ext_modules=ext_modules,
     cmdclass=cmdclass,
     packages=find_packages(),
 
