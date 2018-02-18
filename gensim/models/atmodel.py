@@ -69,7 +69,7 @@ class AuthorTopicState(LdaState):
 
     def __init__(self, eta, lambda_shape, gamma_shape):
         """Ïnitializes parameters for the Author-Topic model.
-        
+
         Parameters
         ----------
         eta: float
@@ -78,7 +78,7 @@ class AuthorTopicState(LdaState):
             Initialize topic parameters.
         gamma_shape: int
             Initialize topic parameters.
-            
+
         """
         self.eta = eta
         self.sstats = np.zeros(lambda_shape)
@@ -89,14 +89,14 @@ class AuthorTopicState(LdaState):
 
 def construct_doc2author(corpus, author2doc):
     """Make a mapping from document IDs to author IDs.
-    
+
     Parameters
     ----------
     corpus: list of list of str
         Corpus of documents.
     author2doc: dict
         Mapping of authors to documents.
-    
+
     """
     doc2author = {}
     for d, _ in enumerate(corpus):
@@ -110,7 +110,7 @@ def construct_doc2author(corpus, author2doc):
 
 def construct_author2doc(doc2author):
     """Make a mapping from author IDs to document IDs.
-    
+
     Parameters
     ----------
     doc2author: dict
@@ -143,7 +143,7 @@ class AuthorTopicModel(LdaModel):
                  minimum_probability=0.01, random_state=None):
         """
         API for Author-Topic model.
-        
+
         Parameters
         ----------
         num_topic: int, optional
@@ -152,51 +152,51 @@ class AuthorTopicModel(LdaModel):
         id2word: dict of {int: str}, optional
             A mapping from word ids (integers) to words (strings).
 
-        author2doc: dict 
-            A dictionary where keys are the names of authors and values are lists of 
+        author2doc: dict
+            A dictionary where keys are the names of authors and values are lists of
             documents that the author contributes to.
 
         doc2author: dict
-            A dictionary where the keys are document IDs and the values are lists of author names. 
+            A dictionary where the keys are document IDs and the values are lists of author names.
 
         passes: int
             Number of times the model makes a pass over the entire training data.
 
         iterations: int
             Maximum number of times the model loops over each document
-        
-        chunksize: int 
+
+        chunksize: int
             Controls the size of the mini-batches.
 
         alpha: float
-            Hyperparameters for author-topic model.Supports special values of 'asymmetric' 
-            and 'auto': the former uses a fixed normalized asymmetric 1.0/topicno prior, 
+            Hyperparameters for author-topic model.Supports special values of 'asymmetric'
+            and 'auto': the former uses a fixed normalized asymmetric 1.0/topicno prior,
             the latter learns an asymmetric prior directly from your data.
-            
+
         eta: float
             Hyperparameters for author-topic model.
-            
+
         eval_every: int
             Calculate and estimate log perplexity for latest mini-batch.
-            
+
         decay: float
             Controls how old documents are forgotten.
-            
+
         offset: float
             Controls down-weighting of iterations.
-            
-        minimum_probability: float 
+
+        minimum_probability: float
             Controls filtering the topics returned for a document (bow).
 
-        random_state: int or a numpy.random.RandomState object. 
+        random_state: int or a numpy.random.RandomState object.
         Set the state of the random number generator inside the author-topic model.
-        
-        serialized: bool 
-            Indicates whether the input corpora to the model are simple lists 
+
+        serialized: bool
+            Indicates whether the input corpora to the model are simple lists
             or saved to the hard-drive.
 
-        serialization_path: str 
-        Must be set to a filepath, if `serialized = True` is used. 
+        serialization_path: str
+        Must be set to a filepath, if `serialized = True` is used.
 
         Example:
 
@@ -287,8 +287,8 @@ class AuthorTopicModel(LdaModel):
         self.random_state = utils.get_random_state(random_state)
 
         assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
-                "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
-                (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms)
+            "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
+            (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms)
         )
 
         # VB constants
@@ -435,7 +435,7 @@ class AuthorTopicModel(LdaModel):
                 # phi is computed implicitly below,
                 for ai, a in enumerate(authors_d):
                     tilde_gamma[ai, :] = self.alpha + len(self.author2doc[self.id2author[a]])\
-                                                      * expElogthetad[ai, :] * np.dot(cts / phinorm, expElogbetad.T)
+                        * expElogthetad[ai, :] * np.dot(cts / phinorm, expElogbetad.T)
 
                 # Update gamma.
                 # Interpolation between document d's "local" gamma (tilde_gamma),
@@ -516,7 +516,7 @@ class AuthorTopicModel(LdaModel):
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         subsample_ratio = 1.0 * total_docs / len(chunk)
         perwordbound = self.bound(chunk, chunk_doc_idx, subsample_ratio=subsample_ratio) / \
-                       (subsample_ratio * corpus_words)
+            (subsample_ratio * corpus_words)
         logger.info(
             "%.3f per-word bound, %.1f perplexity estimate based on a corpus of %i documents with %i words",
             perwordbound, np.exp2(-perwordbound), len(chunk), corpus_words
