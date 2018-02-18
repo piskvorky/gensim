@@ -1134,7 +1134,8 @@ class PathLineSentences(object):
 
 
 class Word2VecVocab(utils.SaveLoad):
-    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, use_max_vocab=False, max_vocab=None):
+    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
+        use_max_vocab=False, max_vocab=None):
         self.max_vocab_size = max_vocab_size
         self.min_count = min_count
         self.sample = sample
@@ -1185,7 +1186,7 @@ class Word2VecVocab(utils.SaveLoad):
         if self.use_max_vocab:
             import operator
 
-            if self.max_vocab == None:
+            if self.max_vocab is None:
                 raise ValueError('max_vocab not defined')
 
             sorted_vocab = sorted(vocab.items(), key=operator.itemgetter(1), reverse=True)
