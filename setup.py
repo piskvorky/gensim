@@ -39,11 +39,10 @@ def test_openmp():
     fname = 'testopenmp.c'
 
     with open(fname, 'w') as f:
-        f.write('#include <omp.h>;#include <stdio.h>;int main() {#pragma omp parallel;omp_get_thread_num();omp_get_num_threads();}')
+        f.write('#include <omp.h>\n#include <stdio.h>\nint main() {\n#pragma omp parallel\nomp_get_thread_num();omp_get_num_threads();}')
 
     with open(os.devnull, 'w') as fnull:
-        exit_code = subprocess.call([compiler, '-fopenmp', fname],
-                                    stdout=fnull, stderr=fnull)
+        exit_code = subprocess.call([compiler, '-fopenmp -O3 -ffast-math', fname], stdout=fnull, stderr=fnull)
 
     os.chdir(curdir)
     shutil.rmtree(tmpdir)
@@ -51,7 +50,6 @@ def test_openmp():
     if exit_code == 0: return True
 
     return False
-
 
 # the following code is adapted from tornado's setup.py:
 # https://github.com/tornadoweb/tornado/blob/master/setup.py
@@ -286,10 +284,12 @@ ext_modules = [
 
 if test_openmp():
     ext_modules += [
+        # Extension('gensim.csparse.psparse',
         Extension('gensim.csparse.psparse',
-            sources=['gensim/csparse/psparse.pyx', 'gensim/csparse/CSParse/Source/cs_gaxpy.c'],
+            sources=[os.path.join(['gensim', 'csparse', 'psparse.pyx']),
+                     os.path.join(['gensim', 'csparse', 'CSParse', 'Source', 'cs_gaxpy.c'])],
             extra_compile_args=['-fopenmp', '-O3', '-ffast-math'],
-            include_dirs = [csparse_dir, csparse_dir + '/CSParse/Include/'],
+            include_dirs = [csparse_dir, os.path.join(['CSParse', 'Include'])],
             extra_link_args=['-fopenmp'])]
 
 setup(

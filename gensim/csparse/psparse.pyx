@@ -1,3 +1,9 @@
+#!/usr/bin/env cython
+# cython: boundscheck=False
+# cython: wraparound=False
+# cython: cdivision=True
+# coding: utf-8
+
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
