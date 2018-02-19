@@ -50,6 +50,7 @@ Thumbs.db
 cython_debug
 docs/_build/
 docs/generated/
+docs/modules/generated/
 docs/auto_examples/
 docs/notebooks/.ipynb_checkpoints
 dedan_gensim.tmproj
@@ -72,6 +73,7 @@ data
 *~
 *_out.txt
 docs/*.html
+docs/modules/*.html
 *.inv
 *.js
 !docs/_static/js

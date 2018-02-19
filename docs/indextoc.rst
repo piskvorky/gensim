@@ -10,3 +10,4 @@
    wiki
    apiref
    apiref_nextgen
+   user_guide

@@ -98,6 +98,8 @@ Wrappers
     :no-members:
     :no-inherited-members:
 
+**User guide:** See the :ref:`downloader` section for further details.
+
 Functions
 ---------
 .. currentmodule:: gensim.downloader
