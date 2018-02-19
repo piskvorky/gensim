@@ -38,77 +38,73 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
                  minimum_probability=0.01, random_state=None, scorer='perplexity', dtype=np.float32):
 
         """Sklearn wrapper for LDA model.
+        Based on [1]_.
+
+        Notes
+        -----
+        Configure `passes` and `update_every` params to choose the mode among:
+
+            - online (single-pass): update_every != None and passes == 1
+            - online (multi-pass): update_every != None and passes > 1
+            - batch: update_every == None
+
+        By default, 'online (single-pass)' mode is used for training the LDA model.
+
+        References
+        ----------
+        .. [1] Matthew D. Hoffman, David M. Blei, Francis Bach, "Online Learning for Latent Dirichlet Allocation",
+               NIPS'10 Proceedings of the 23rd International Conference on Neural Information Processing Systems -
+               Volume 1 Pages 856-864, https://www.di.ens.fr/~fbach/mdhnips2010.pdf
 
         Parameters
         ----------
-
         num_topics : int, optional
             The number of requested latent topics to be extracted from the training corpus.
         id2word : dict of (int, str), optional
             Mapping from integer ID to words in the corpus. Used to determine vocabulary size and logging.
         chunksize : int, optional
             If `distributed` is True, this is the number of documents to be handled in each worker job.
-        passes : int
+        passes : int, optional
             Number of passes through the corpus during online training.
-        update_every : int
-            Number of documents to be iterated through for each update. Set to 0 for batch learning, > 1 for online iterative learning.
-        alpha : {np.array, str}
+        update_every : int, optional
+            Number of documents to be iterated through for each update.
+            Set to 0 for batch learning, > 1 for online iterative learning.
+        alpha : {np.array, str}, optional
             Can be set to an 1D array of length equal to the number of expected topics that expresses
             our a-priori belief for the each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
-
                 'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
                 'default': Learns an assymetric prior from the corpus.
-        eta : {np.array, str}
-
-        decay
-        offset
-        eval_every
-        iterations
-        gamma_threshold
-        minimum_probability
-        random_state
-        scorer
-        dtype
-
-
-        `alpha` and `eta` are hyperparameters that affect sparsity of the document-topic
-        (theta) and topic-word (lambda) distributions. Both default to a symmetric
-        1.0/num_topics prior.
-
-        `alpha` can be set to an explicit array = prior of your choice. It also
-        support special values of 'asymmetric' and 'auto': the former uses a fixed
-        normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
-        prior directly from your data.
-
-        `eta` can be a scalar for a symmetric prior over topic/word
-        distributions, or a vector of shape num_words, which can be used to
-        impose (user defined) asymmetric priors over the word distribution.
-        It also supports the special value 'auto', which learns an asymmetric
-        prior over words directly from your data. `eta` can also be a matrix
-        of shape num_topics x num_words, which can be used to impose
-        asymmetric priors over the word distribution on a per-topic basis
-        (can not be learned from data).
-
-        Turn on `distributed` to force distributed computing
-        (see the `web tutorial <http://radimrehurek.com/gensim/distributed.html>`_
-        on how to set up a cluster of machines for gensim).
-
-        Calculate and log perplexity estimate from the latest mini-batch every
-        `eval_every` model updates (setting this to 1 slows down training ~2x;
-        default is 10 for better performance). Set to None to disable perplexity estimation.
-
-        `decay` and `offset` parameters are the same as Kappa and Tau_0 in
-        Hoffman et al, respectively.
-
-        `minimum_probability` controls filtering the topics returned for a document (bow).
-
-        `random_state` can be a np.random.RandomState object or the seed for one.
-
-        `callbacks` a list of metric callbacks to log/visualize evaluation metrics of topic model during training.
-
-        `dtype` is data-type to use during calculations inside model. All inputs are also converted to this dtype.
-        Available types: `numpy.float16`, `numpy.float32`, `numpy.float64`.
+        eta : {float, np.array, str}, optional
+            A-priori belief on word probability. This can be:
+                a scalar for a symmetric prior over topic/word probability
+                a vector : of length num_words to denote an assymetric user defined probability for each word.
+                a matrix of shape (`num_topics`, num_words) to assign a probability for each word condition on each topic.
+                the string 'auto' to learn the asymmetric prior from the data.
+        decay : float, optional
+            A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
+            when each new document is examined. Corresponds to Kappa from [1]_.
+        offset : float, optional
+            Hyperparameter that controls how much we will slow down the first steps the first few iterations.
+            Corresponds to Tau_0 from [1]_.
+        eval_every : int, optional
+            Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
+        iterations : int, optional
+            Maximum number of iterations through the corpus when infering the topic distribution of a corpus.
+        gamma_threshold : float, optional
+            Minimum change in the value of the gamma parameters to continue iterating.
+        minimum_probability : float, optional
+            Topics with a probability lower than this threshold will be filtered out.
+        random_state : {np.random.RandomState, int}, optional
+            Either a randomState object or a seed to generate one. Useful for reproducibility.
+        scorer : str, optional
+            Method to compute a score reflecting how well the model has fit the input corpus.
+            Allowed values are:
+                'perplexity': Minimize the model's perplexity.
+                'mass_u': Use :class:`~gensim.models.coherencemodel.CoherenceModel` to compute a topics coherence.
+        dtype : type, optional
+            Data-type to use during calculations inside model. All inputs are also converted.
+            Available types: `numpy.float16`, `numpy.float32`, `numpy.float64`.
 
         """
 
@@ -131,9 +127,18 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         self.dtype = dtype
 
     def fit(self, X, y=None):
-        """
-        Fit the model according to the given training data.
-        Calls gensim.models.LdaModel
+        """Fit the model according to the given training data.
+
+        Parameters
+        ----------
+        X : {iterable of iterable of (int, int), scipy.sparse matrix}
+            A collection of documents in BOW format used for training the model.
+
+        Returns
+        -------
+        :class:`~gensim.sklearn_api.ldamodel.LdaTransformer`
+            The trained model.
+
         """
         if sparse.issparse(X):
             corpus = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
@@ -151,14 +156,18 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """
-        Takes a list of documents as input ('docs').
-        Returns a matrix of topic distribution for the given document bow, where a_ij
-        indicates (topic_i, topic_probability_j).
-        The input `docs` should be in BOW format and can be a list of documents like
-        [[(4, 1), (7, 1)],
-        [(9, 1), (13, 1)], [(2, 1), (6, 1)]]
-        or a single document like : [(4, 1), (7, 1)]
+        """Return the BOW format for the input documents.
+
+        Parameters
+        ----------
+        docs : iterable of iterable of (int, int)
+            A collection of documents in BOW format to be transformed.
+
+        Returns
+        -------
+        np.array of shape (`len(docs)`, `num_topics`)
+            The topic distribution for each input document.
+
         """
         if self.gensim_model is None:
             raise NotFittedError(
@@ -174,14 +183,22 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         return np.reshape(np.array(distribution), (len(docs), self.num_topics))
 
     def partial_fit(self, X):
-        """
-        Train model over X.
-        By default, 'online (single-pass)' mode is used for training the LDA model.
-        Configure `passes` and `update_every` params at init to choose the mode among :
+        """Train model over a potentially incomplete set of documents.
 
-            - online (single-pass): update_every != None and passes == 1
-            - online (multi-pass): update_every != None and passes > 1
-            - batch: update_every == None
+        Uses the parameters set in the constructor.
+        This method can be used in two ways:
+            1. On an unfitted model in which case the model is initialized and trained on `X`.
+            2. On an already fitted model in which case the model is **updated** by `X`.
+
+        Parameters
+        ----------
+        X : {iterable of iterable of (int, int), scipy.sparse matrix}
+            A collection of documents in BOW format used for training the model.
+
+        Returns
+        -------
+        :class:`~gensim.sklearn_api.ldamodel.LdaTransformer`
+            The trained model.
 
         """
         if sparse.issparse(X):
@@ -201,8 +218,21 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def score(self, X, y=None):
-        """
-        Compute score reflecting how well the model has fit for the input data.
+        """Compute score reflecting how well the model has fitted for the input data.
+
+        The scoring method is set using the `scorer` argument in :meth:`~gensim.sklearn_api.ldamodel.LdaTransformer`.
+        Higher score is better.
+
+        Parameters
+        ----------
+        X : iterable of iterable of (int, int)
+            Input corpus in BOW format.
+
+        Returns
+        -------
+        float
+            The score computed based on the selected method.
+
         """
         if self.scorer == 'perplexity':
             corpus_words = sum(cnt for document in X for _, cnt in document)
@@ -214,4 +244,4 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
             goodcm = models.CoherenceModel(model=self.gensim_model, corpus=X, coherence=self.scorer, topn=3)
             return goodcm.get_coherence()
         else:
-            raise ValueError("Invalid value of `scorer` param supplied")
+            raise ValueError("Invalid value {} supplied for `scorer` param".format(self.scorer))
