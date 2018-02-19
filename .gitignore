@@ -51,7 +51,6 @@ cython_debug
 docs/_build/
 docs/generated/
 docs/auto_examples/
-docs/_static
 docs/notebooks/.ipynb_checkpoints
 dedan_gensim.tmproj
 gensim*.egg-info
