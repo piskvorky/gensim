@@ -74,4 +74,5 @@ data
 docs/*.html
 *.inv
 *.js
+!docs/_static/js
 docs/_images/
