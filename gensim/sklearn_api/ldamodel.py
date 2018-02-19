@@ -5,9 +5,14 @@
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Scikit learn interface for gensim for easy use of gensim with scikit-learn
-follows on scikit learn API conventions
+"""Scikit learn interface for :class:`~gensim.models.ldamodel.LdaModel`.
+
+Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
+
+Examples
+--------
+
+
 """
 
 import numpy as np
@@ -20,20 +25,93 @@ from gensim import matutils
 
 
 class LdaTransformer(TransformerMixin, BaseEstimator):
-    """
-    Base LDA module
+    """Base LDA module.
+
+    Wraps :class:`~gensim.models.ldamodel.LdaModel`.
+    For more information on the inner workings please take a look at
+    the original class.
+
     """
 
     def __init__(self, num_topics=100, id2word=None, chunksize=2000, passes=1, update_every=1, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, scorer='perplexity', dtype=np.float32):
-        """
-        Sklearn wrapper for LDA model. See gensim.model.LdaModel for parameter details.
 
-        `scorer` specifies the metric used in the `score` function.
+        """Sklearn wrapper for LDA model.
 
-        See `gensim.models.LdaModel` class for description of the other parameters.
+        Parameters
+        ----------
+
+        num_topics : int, optional
+            The number of requested latent topics to be extracted from the training corpus.
+        id2word : dict of (int, str), optional
+            Mapping from integer ID to words in the corpus. Used to determine vocabulary size and logging.
+        chunksize : int, optional
+            If `distributed` is True, this is the number of documents to be handled in each worker job.
+        passes : int
+            Number of passes through the corpus during online training.
+        update_every : int
+            Number of documents to be iterated through for each update. Set to 0 for batch learning, > 1 for online iterative learning.
+        alpha : {np.array, str}
+            Can be set to an 1D array of length equal to the number of expected topics that expresses
+            our a-priori belief for the each topics' probability.
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+
+                'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
+                'default': Learns an assymetric prior from the corpus.
+        eta : {np.array, str}
+
+        decay
+        offset
+        eval_every
+        iterations
+        gamma_threshold
+        minimum_probability
+        random_state
+        scorer
+        dtype
+
+
+        `alpha` and `eta` are hyperparameters that affect sparsity of the document-topic
+        (theta) and topic-word (lambda) distributions. Both default to a symmetric
+        1.0/num_topics prior.
+
+        `alpha` can be set to an explicit array = prior of your choice. It also
+        support special values of 'asymmetric' and 'auto': the former uses a fixed
+        normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
+        prior directly from your data.
+
+        `eta` can be a scalar for a symmetric prior over topic/word
+        distributions, or a vector of shape num_words, which can be used to
+        impose (user defined) asymmetric priors over the word distribution.
+        It also supports the special value 'auto', which learns an asymmetric
+        prior over words directly from your data. `eta` can also be a matrix
+        of shape num_topics x num_words, which can be used to impose
+        asymmetric priors over the word distribution on a per-topic basis
+        (can not be learned from data).
+
+        Turn on `distributed` to force distributed computing
+        (see the `web tutorial <http://radimrehurek.com/gensim/distributed.html>`_
+        on how to set up a cluster of machines for gensim).
+
+        Calculate and log perplexity estimate from the latest mini-batch every
+        `eval_every` model updates (setting this to 1 slows down training ~2x;
+        default is 10 for better performance). Set to None to disable perplexity estimation.
+
+        `decay` and `offset` parameters are the same as Kappa and Tau_0 in
+        Hoffman et al, respectively.
+
+        `minimum_probability` controls filtering the topics returned for a document (bow).
+
+        `random_state` can be a np.random.RandomState object or the seed for one.
+
+        `callbacks` a list of metric callbacks to log/visualize evaluation metrics of topic model during training.
+
+        `dtype` is data-type to use during calculations inside model. All inputs are also converted to this dtype.
+        Available types: `numpy.float16`, `numpy.float32`, `numpy.float64`.
+
         """
+
         self.gensim_model = None
         self.num_topics = num_topics
         self.id2word = id2word
