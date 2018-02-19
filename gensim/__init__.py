@@ -1,11 +1,10 @@
-"""
-Computation of pair-wise document similarities over a corpus of documents.
+"""Computation of pair-wise document similarities over a corpus of documents.
 """
 
 from gensim import parsing, matutils, interfaces, corpora, models, similarities, summarization, utils  # noqa:F401
 import logging
 
-__version__ = '3.2.0'
+__version__ = '3.3.0'
 
 
 class NullHandler(logging.Handler):
