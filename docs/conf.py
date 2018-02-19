@@ -40,7 +40,13 @@ autoclass_content = "both"
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
+# Generate stub files for autosummary entries
 autosummary_generate = True
+
+# Only class' own docs in autoclass directive
+autoclass_content = 'both'
+
+autodoc_member_order = 'bysource'
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -53,7 +59,6 @@ sphinx_gallery_conf = {
     'backreferences_dir': os.path.join('modules', 'generated'),
     'reference_url': {'gensim': None},
     'plot_gallery': True
-
 }
 
 # The master toctree document.

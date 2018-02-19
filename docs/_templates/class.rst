@@ -5,10 +5,8 @@
 
 .. autoclass:: {{ objname }}
     :members:
-
-    {% block methods %}
-    .. automethod:: __init__
-    {% endblock %}
+    :special-members:
+    :exclude-members: __init__
 
 .. raw:: html
 
