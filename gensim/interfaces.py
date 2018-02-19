@@ -4,13 +4,11 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains implementations of basic interfaces used across the
-whole gensim package. These interfaces usable for building corpus,
-transformation and similarity classes.
+"""This module contains implementations of basic interfaces used across the whole gensim package.
+These interfaces usable for building corpus, transformation and similarity classes.
 
-All interfaces are realized as abstract base classes (i.e. some optional
-functionality is provided in the interface itself, so that the interfaces should
-be inherited).
+All interfaces are realized as abstract base classes (i.e. some optional functionality is provided in the interface
+itself, so that the interfaces should be inherited).
 
 """
 
@@ -22,55 +20,73 @@ from gensim import utils, matutils
 from six.moves import xrange
 
 
-logger = logging.getLogger('gensim.interfaces')
+logger = logging.getLogger(__name__)
 
 
 class CorpusABC(utils.SaveLoad):
-    """This class implements interface (abstract base class) for corpus
-    classes. A corpus is simply an iterable object, where each iteration step
-    yields one document:
+    """Interface for corpus classes from :mod:`gensim.corpora`.
 
+    Corpus is simply an iterable object, where each iteration step yields one document:
+
+    >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> corpus = MmCorpus(datapath("testcorpus.mm"))
     >>> for doc in corpus:
-    >>>     # do something with the doc...
+    ...     pass # do something with the doc...
 
-    A document is a sequence of `(attr_id, attr_value)` 2-tuples:
+    A document represented in bag-of-word (BoW) format, i.e. list of (attr_id, attr_value),
+    like ``[(1, 0.2), (4, 0.6), ...]``.
 
-    >>> for attr_id, attr_value in doc:
-    >>>     # do something with the attribute
+    >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> corpus = MmCorpus(datapath("testcorpus.mm"))
+    >>> doc = next(iter(corpus))
+    >>> print(doc)
+    [(0, 1.0), (1, 1.0), (2, 1.0)]
 
-    See :mod:`gensim.corpora.svmlightcorpus` module for an example of a corpus
-    class.
+    Remember, that save/load methods save only corpus class (not corpus as data itself),
+    for save/load functionality, please use this pattern :
 
-    Saving the corpus with the `save` method (inherited from
-    :mod:`gensim.utils.SaveLoad`) will only store current in-memory
-    representation of object (its stream state) but not documents themselves.
-    Use :meth:`gensim.interfacese.save_corpus()` static method for serializing
-    actual stream content.
+    >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
+    >>> from gensim.test.utils import datapath, get_tmpfile
+    >>>
+    >>> corpus = MmCorpus(datapath("testcorpus.mm"))
+    >>> tmp_path = get_tmpfile("temp_corpus.mm")
+    >>>
+    >>> MmCorpus.serialize(tmp_path, corpus)  #  serialize corpus to disk in MmCorpus format
+    >>> # MmCorpus.save_corpus(tmp_path, corpus)  # this variant also possible, but if serialize availbe - call it.
+    >>> loaded_corpus = MmCorpus(tmp_path)  # load corpus through constructor
+    >>> for (doc_1, doc_2) in zip(corpus, loaded_corpus):
+    ...     assert doc_1 == doc_2  # check that corpuses exactly same
 
-    Note
-    ----
-    Although default :func:`len` method is provided, it is very inefficient
-    because it based on linear scan through the corpus to determine its length.
-    Wherever the corpus size is needed and known in advance (or at least doesn't
-    change so that it can be cached), the :func:`len` method should be
-    overridden.
+
+    See Also
+    --------
+    :mod:`gensim.corpora`
+        Corpuses in different formats
 
     """
 
     def __iter__(self):
-        """Iterator protocol for the corpus.
+        """Iterate over corpus, **should be overridden in inheritor class**.
 
         Raises
         ------
         NotImplementedError
-            Since it's abstract class this iterator protocol should be
-            overwritten in the inherited class.
+            Since it's abstract class this iterator protocol should be overwritten in the inherited class.
 
         """
         raise NotImplementedError('cannot instantiate abstract base class')
 
     def save(self, *args, **kwargs):
-        """Saves corpus in-memory state (but not documents).
+        """Saves corpus in-memory state.
+
+        Warnings
+        --------
+        This save only "state" of corpus class (not corpus-data at all),
+        for saving data please use :meth:`~gensim.interfaces.CorpusABC.save_corpus` instead`.
 
         Parameters
         ----------
@@ -88,11 +104,7 @@ class CorpusABC(utils.SaveLoad):
         super(CorpusABC, self).save(*args, **kwargs)
 
     def __len__(self):
-        """Returns size of the corpus (number of documents).
-
-        Result obtained by iterating over whole corpus thus it's ineffective.
-        This method is just the least common denominator and should be
-        overridden when possible.
+        """Get size of the corpus (number of documents), **should be overridden in inheritor class**.
 
         Raises
         ------
@@ -101,68 +113,52 @@ class CorpusABC(utils.SaveLoad):
 
         """
         raise NotImplementedError("must override __len__() before calling len(corpus)")
-#        logger.warning("performing full corpus scan to determine its length; was this intended?")
-#        return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
-        """Saves given `corpus` to disk.
+        """Saves given `corpus` to disk, **should be overridden in inheritor class**.
 
-        Some formats support saving the dictionary (`feature_id -> word`
-        mapping), which can be provided by the optional `id2word` parameter.
+        Some formats support saving the dictionary (`feature_id -> word` mapping),
+        which can be provided by the optional `id2word` parameter.
 
-        >>> MmCorpus.save_corpus('file.mm', corpus)
+        Notes
+        -----
+        Some corpus also support an index of where each document begins, so that the documents on disk
+        can be accessed in O(1) time (see the :class:`gensim.corpora.indexedcorpus.IndexedCorpus` base class).
+        In this case, :meth:`~gensim.interfaces.CorpusABC.save_corpus` is automatically called internally by
+        :func:`serialize`, which does :meth:`~gensim.interfaces.CorpusABC.save_corpus` plus saves the index
+        at the same time.
 
-        Some corpus also support an index of where each document begins, so
-        that the documents on disk can be accessed in O(1) time (see the
-        :mod:`gensim.corpora.IndexedCorpus` base class). In this case,
-        :func:`save_corpus` is automatically called internally by
-        :func:`serialize`, which does :func:`save_corpus` plus saves the index
-        at the same time, so you may want to store the corpus with:
-
-        >>> MmCorpus.serialize('file.mm', corpus) # stores index as well, allowing random access to individual documents
-
-        Calling :func:`serialize()` is preferred to calling
-        :func:`save_corpus()`.
+        Calling :func:`serialize() is preferred to calling :meth:`~gensim.interfaces.CorpusABC.save_corpus`.
 
         Parameters
         ----------
         fname : str
-            Path to corpus output file.
-        corpus : :class:`~gensim.interfaces.CorpusABC`
-            Corpus to be saved.
-        id2word : {dict of (int, str), :class:`~gensim.corpora.Dictionary`}, optional
+            Path to output file.
+        corpus : iterable of list of (int, number)
+            Corpus in BoW format.
+        id2word : :class:`~gensim.corpora.Dictionary`, optional
             Dictionary of corpus.
         metadata : bool, optional
-            If True :func:`serialize` will write out article titles to a pickle
-            file.
+            If True, will write some meta-information to `fname` too.
 
         """
         raise NotImplementedError('cannot instantiate abstract base class')
 
-        # example code:
-        logger.info("converting corpus to ??? format: %s", fname)
-        with utils.smart_open(fname, 'wb') as fout:
-            for doc in corpus:  # iterate over the document stream
-                fmt = str(doc)  # format the document appropriately...
-                fout.write(utils.to_utf8("%s\n" % fmt))  # serialize the formatted document to disk
-
 
 class TransformedCorpus(CorpusABC):
-    """Interface (abstract class) for corpus supports transformations."""
+    """Interface for corpus supports transformations."""
     def __init__(self, obj, corpus, chunksize=None, **kwargs):
-        """Initialization of corpus. Documents storage, corpus should be
-        provided.
+        """
 
         Parameters
         ----------
         obj : object
-            Object where documents are stored.
-        corpus : :class:`~gensim.interfaces.CorpusABC`
-            Given corpus.
+            Some corpus class from :mod:`gensim.corpora`.
+        corpus : iterable of list of (int, number)
+            Corpus in BoW format.
         chunksize : int, optional
-            If provided more effective processing (by group of documents) will
-            performed.
+            If provided - more effective processing (by group of documents) will performed.
         kwargs
             Arbitrary keyword arguments.
 
@@ -174,17 +170,18 @@ class TransformedCorpus(CorpusABC):
         self.metadata = False
 
     def __len__(self):
-        """Returns size of the corpus."""
+        """Get size of the corpus."""
         return len(self.corpus)
 
     def __iter__(self):
-        """Iterator protocol for corpus. If `chunksize` is set more effective
-        processing will performed. Yields document.
+        """Iterate over the corpus.
+
+        If `chunksize` is set, works in "batch-manner" (more efficient).
 
         Yields
         ------
-        iterable of (int, int)
-            Current document.
+        list of (int, number)
+            Document in BoW format
 
         """
         if self.chunksize:
@@ -196,7 +193,7 @@ class TransformedCorpus(CorpusABC):
                 yield self.obj[doc]
 
     def __getitem__(self, docno):
-        """Provides access to corpus elements by index `docno`.
+        """Get element from corpus index `docno`.
 
         Parameters
         ----------
@@ -205,13 +202,13 @@ class TransformedCorpus(CorpusABC):
 
         Returns
         -------
-        iterable of (int, int)
-            Selected document of corpus.
+        list of (int, number)
+            Document in BoW format
 
         Raises
         ------
         RuntimeError
-            If corpus doesn't support slicing.
+            If corpus doesn't support slicing (:meth`__getitem__` doesn't exists).
 
         """
         if hasattr(self.corpus, '__getitem__'):
@@ -221,33 +218,29 @@ class TransformedCorpus(CorpusABC):
 
 
 class TransformationABC(utils.SaveLoad):
-    """Interface for transformations. A 'transformation' is any object which
-    accepts a sparse document via the dictionary notation `[]` and returns
-    another sparse document in its stead:
+    """Transformation interface.
 
-    >>> transformed_doc = transformation[doc]
+    A 'transformation' is any object which accepts document in BoW format via the `__getitem__` (notation `[]`)
+    and returns another sparse document in its stead:
 
-    or also:
+    >>> from gensim.models import LsiModel
+    >>> from gensim.test.utils import common_dictionary, common_corpus
+    >>>
+    >>> model = LsiModel(common_corpus, id2word=common_corpus)
+    >>> bow_vector = model[common_corpus[0]]  # model applied through __getitem__ on document from corpus.
+    >>> bow_corpus = model[common_corpus]  # also, we can apply model on full corpus
 
-    >>> transformed_corpus = transformation[corpus]
-
-    See the :mod:`gensim.models.tfidfmodel` module for an example of a
-    transformation.
 
     """
 
     def __getitem__(self, vec):
-        """Provide access to element of `transformations`.
+        """Get element of `transformations`, **should be overridden in inheritor class**.
 
-        Transforms vector from one vector space into another
-
-        **or**
-
-        Transforms a whole corpus into another.
+        Transforms vector from one vector space into another **or** whole corpus into another.
 
         Parameters
         ----------
-        vec : iterable
+        vec : object
             Given vector.
 
         Raises
@@ -259,16 +252,14 @@ class TransformationABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
     def _apply(self, corpus, chunksize=None, **kwargs):
-        """Applies the transformation to a whole corpus (as opposed to a
-        single document) and returns the result as another corpus.
+        """Apply the transformation to a whole corpus and get the result as another corpus.
 
         Parameters
         ----------
-        corpus : :class:`~gensim.interfaces.CorpusABC`
-            given corpus.
+        corpus : iterable of list of (int, number)
+            Corpus in BoW format.
         chunksize : int, optional
-            If provided more effective processing (by group of documents) will
-            performed.
+            If provided - more effective processing (by group of documents) will performed.
         kwargs
             Arbitrary keyword arguments.
 
