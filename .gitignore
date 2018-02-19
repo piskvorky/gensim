@@ -71,7 +71,7 @@ data
 *.model
 *~
 *_out.txt
-*.html
+docs/*.html
 *.inv
 *.js
 docs/_images/
