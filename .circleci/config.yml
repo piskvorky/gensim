@@ -33,7 +33,7 @@ jobs:
             tox -e docs -vv
 
       - store_artifacts:
-          path:  docs/src/_build
+          path:  docs/_build
           destination: documentation
 
       - save_cache:
