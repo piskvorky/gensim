@@ -226,7 +226,7 @@ class TransformationABC(utils.SaveLoad):
     >>> from gensim.models import LsiModel
     >>> from gensim.test.utils import common_dictionary, common_corpus
     >>>
-    >>> model = LsiModel(common_corpus, id2word=common_corpus)
+    >>> model = LsiModel(common_corpus, id2word=common_dictionary)
     >>> bow_vector = model[common_corpus[0]]  # model applied through __getitem__ on document from corpus.
     >>> bow_corpus = model[common_corpus]  # also, we can apply model on full corpus
 
@@ -273,30 +273,40 @@ class TransformationABC(utils.SaveLoad):
 
 
 class SimilarityABC(utils.SaveLoad):
-    """Abstract class for similarity search over a corpus.
+    """Interface for similarity search over a corpus.
 
-    In all instances, there is a corpus against which we want to perform the
-    similarity search.
+    In all instances, there is a corpus against which we want to perform the similarity search.
+    For each similarity search, the input is a document and the output are its similarities
+    to individual corpus documents.
 
-    For each similarity search, the input is a document and the output are its
-    similarities to individual corpus documents.
 
-    Similarity queries are realized by calling ``self[query_document]``.
+    Examples
+    --------
+    >>> from gensim.similarities import MatrixSimilarity
+    >>> from gensim.test.utils import common_dictionary, common_corpus
+    >>>
+    >>> index = MatrixSimilarity(common_corpus)
+    >>> similarities = index.get_similarities(common_corpus[1])  # get similarities between query and corpus
 
-    There is also a convenience wrapper, where iterating over `self` yields
-    similarities of each document in the corpus against the whole corpus (i.e.
-    the query is each corpus document in turn).
+    Notes
+    -----
+    There is also a convenience wrapper, where iterating over `self` yields similarities of each document in the corpus
+    against the whole corpus (i.e. the query is each corpus document in turn).
+
+    See Also
+    --------
+    :mod:`gensim.similarities`
+        Provided different type of indexes for search.
 
     """
 
     def __init__(self, corpus):
-        """Initialization of object. Since it is an abstract class this
-        initialization need to be overwritten in the inherited class.
+        """Initialization of object, **should be overridden in inheritor class**.
 
         Parameters
         ----------
-        corpus : :class:`~gensim.interfaces.CorpusABC`
-            Given corpus.
+        corpus : iterable of list of (int, number)
+            Corpus in BoW format.
 
         Raises
         ------
@@ -307,12 +317,12 @@ class SimilarityABC(utils.SaveLoad):
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
     def get_similarities(self, doc):
-        """Returns similarity measures of documents of corpus to given `doc`.
+        """Get similarity measures of documents of corpus to given `doc`, **should be overridden in inheritor class**.
 
         Parameters
         ----------
-        doc : iterable of (int, int)
-            Given document.
+        doc : list of (int, number)
+            Document in BoW format.
 
         Raises
         ------
@@ -320,30 +330,27 @@ class SimilarityABC(utils.SaveLoad):
             Since it's abstract class this method should be reimplemented later.
 
         """
-        # (Sparse)MatrixSimilarity override this method so that they both use the
-        # same  __getitem__ method, defined below
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
     def __getitem__(self, query):
-        """Provides access to similarities of document `query` to all documents
-        in the corpus.
+        """Get access to similarities of document/corpus `query` to all documents in the corpus.
 
-        **or**
+        Using :meth:`~gensim.interfaces.SimilarityABC.get_similarities`
 
-        If `query` is a corpus (iterable of documents), returns a matrix of
-        similarities of all query documents vs. all corpus document. Using this
-        type of batch query is more efficient than computing the similarities
-        one document after another.
+
+        Notes
+        -----
+        Passing corpus to `query` (instead of document) can be more efficient, because will processed in batching-way.
 
         Parameters
         ----------
-        query : {iterable of (int, int), :class:`~gensim.interfaces.CorpusABC`}
-            Given document or corpus.
+        query : {list of (int, int), iterable of list of (int, int)}
+            Document or corpus in BoW format.
 
         Returns
         -------
         {`scipy.sparse.csr.csr_matrix`, list of (int, float)}
-            Simiarities of given document or corpus and objects corpus.
+            Similarities given document or corpus and objects corpus, depends on `query`.
 
         """
         is_corpus, query = utils.is_corpus(query)
@@ -352,10 +359,7 @@ class SimilarityABC(utils.SaveLoad):
             # advertised in the doc). in fact, input can be a numpy or scipy.sparse matrix
             # as well, but in that case assume tricks are happening and don't normalize
             # anything (self.normalize has no effect).
-            if matutils.ismatrix(query):
-                import warnings  # noqa:F401
-                # warnings.warn("non-gensim input must already come normalized")
-            else:
+            if not matutils.ismatrix(query):
                 if is_corpus:
                     query = [matutils.unitvec(v) for v in query]
                 else:
@@ -379,14 +383,12 @@ class SimilarityABC(utils.SaveLoad):
             return matutils.full2sparse_clipped(result, self.num_best)
 
     def __iter__(self):
-        """Implements iterator protocol. For each index document, computes
-        cosine similarity against all other documents in the index and yields
-        result.
+        """Iterate over all documents, computes similarity against all other documents in the index.
 
         Yields
         ------
-        list of (int, float)
-            Cosine similarity of current document and all documents of corpus.
+        {`scipy.sparse.csr.csr_matrix`, list of (int, float)}
+            Similarity of current document and all documents of corpus.
 
         """
         # turn off query normalization (vectors in the index are assumed to be already normalized)
