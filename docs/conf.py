@@ -47,13 +47,12 @@ source_suffix = '.rst'
 # The encoding of source files.
 # source_encoding = 'utf-8'
 
-# Generate the plots for the gallery
-plot_gallery = True
-
 sphinx_gallery_conf = {
     'doc_module': 'gensim',
     'backreferences_dir': os.path.join('modules', 'generated'),
-    'reference_url': {'gensim': None}
+    'reference_url': {'gensim': None},
+    'plot_gallery': True
+
 }
 
 # The master toctree document.

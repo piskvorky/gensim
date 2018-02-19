@@ -9,3 +9,4 @@
    support
    wiki
    apiref
+   apiref_nextgen
