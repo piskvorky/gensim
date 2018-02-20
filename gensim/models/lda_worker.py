@@ -4,16 +4,66 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Worker ("slave") process used in computing distributed LDA.
+""":class:`~gensim.models.lda_worker.Worker` ("slave") process used in
+computing distributed :class:`~gensim.models.ldamodel.LdaModel`.
 
-Run this script on every node in your cluster. If you wish, you may even 
-run it multiple times on a single machine, to make better use of multiple
+Run this script on every node in your cluster. If you wish, you may even
+run it multiple times on a single machine,to make better use of multiple
 cores (just beware that memory footprint increases accordingly).
-Example: python -m gensim.models.lda_worker
+
+Warnings
+--------
+Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`_.
+Distributed version works only in local network.
+
+
+How to use distributed :class:`~gensim.models.ldamodel.LdaModel`
+----------------------------------------------------------------
+
+
+#. Install needed dependencies (Pyro4) ::
+
+    pip install gensim[distributed]
+
+#. Setup serialization (on each machine) ::
+
+    export PYRO_SERIALIZERS_ACCEPTED=pickle
+    export PYRO_SERIALIZER=pickle
+
+#. Run nameserver ::
+
+    python -m Pyro4.naming -n 0.0.0.0 &
+
+#. Run workers (on each machine) ::
+
+    python -m gensim.models.lda_worker &
+
+#. Run dispatcher ::
+
+    python -m gensim.models.lda_dispatcher &
+
+#. Run :class:`~gensim.models.lsimodel.LsiModel` in distributed mode ::
+
+    >>> from gensim.test.utils import common_corpus,common_dictionary
+    >>> from gensim.models import LsiModel
+    >>>
+    >>> model = LdaModel(common_corpus, id2word=common_dictionary,
+                        distributed=True)
+
+#. You can then infer topic distributions on new, unseen documents, with
+
+    >>> doc_lda = model[doc_bow]
+    The model can be updated (trained) with new documents via
+    >>> lda.update(other_corpus)
+
+
+Command line arguments
+----------------------
+
+.. program-output:: python -m gensim.models.lda_worker --help
+   :ellipsis: 0, -3
 
 """
-
-
 from __future__ import with_statement
 import os
 import sys
@@ -33,7 +83,8 @@ from gensim import utils
 logger = logging.getLogger('gensim.models.lda_worker')
 
 
-# periodically save intermediate models after every SAVE_DEBUG updates (0 for never)
+# periodically save intermediate models after every SAVE_DEBUG updates
+# (0 for never)
 SAVE_DEBUG = 0
 
 LDA_WORKER_PREFIX = 'gensim.lda_worker'
@@ -47,10 +98,10 @@ class Worker(object):
 
     Attributes
     ----------
-    model : :obj: of :class:`~gensim.models.ldamodel.LdaModel`
+    model : :class:`~gensim.models.ldamodel.LdaModel`
 
     """
-    
+
     def __init__(self):
         """Partly initializes the model."""
         self.model = None
@@ -58,7 +109,7 @@ class Worker(object):
     @Pyro4.expose
     def initialize(self, myid, dispatcher, **model_params):
         """Fully initializes the worker.
-        
+
         Parameters
         ----------
         myid : int
@@ -66,12 +117,14 @@ class Worker(object):
         dispatcher : :class:`~gensim.models.lda_dispatcher.Dispatcher`
             The dispatcher responsible for scheduling this worker.
         **model_params
-            Keyword parameters to initialize the inner LDA model, see :class:`~gensim.models.ldamodel.LdaModel`.
+            Keyword parameters to initialize the inner LDA model,
+            see :class:`~gensim.models.ldamodel.LdaModel`.
 
         """
         self.lock_update = threading.Lock()
         self.jobsdone = 0  # how many jobs has this worker completed?
-        # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
+        # id of this worker in the dispatcher;
+        # just a convenience var for easy access/logging TODO remove?
         self.myid = myid
         self.dispatcher = dispatcher
         self.finished = False
@@ -81,9 +134,9 @@ class Worker(object):
     @Pyro4.expose
     @Pyro4.oneway
     def requestjob(self):
-        """
-        Request jobs from the dispatcher, in a perpetual loop until `getstate()` is called.
-        
+        """Request jobs from the dispatcher, in a perpetual loop
+        until `getstate()` is called.
+
         Raises
         ------
         RuntimeError
@@ -91,7 +144,8 @@ class Worker(object):
 
         """
         if self.model is None:
-            raise RuntimeError("worker must be initialized before receiving jobs")
+            raise RuntimeError("worker must be initialized before \
+                receiving jobs")
 
         job = None
         while job is None and not self.finished:
@@ -101,7 +155,8 @@ class Worker(object):
                 # no new job: try again, unless we're finished with all work
                 continue
         if job is not None:
-            logger.info("worker #%s received job #%i", self.myid, self.jobsdone)
+            logger.info("worker #%s received job #%i",
+                        self.myid, self.jobsdone)
             self.processjob(job)
             self.dispatcher.jobdone(self.myid)
         else:
@@ -110,11 +165,12 @@ class Worker(object):
     @utils.synchronous('lock_update')
     def processjob(self, job):
         """Incrementally processes the job and potentially logs progress.
-        
+
         Parameters
         ----------
         job : {iterable of list of (int, float), scipy.sparse.csc}
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of
+            shape (`num_terms`, `num_documents`).
 
         """
         logger.debug("starting to process job #%i", self.jobsdone)
@@ -134,14 +190,15 @@ class Worker(object):
     @utils.synchronous('lock_update')
     def getstate(self):
         """Log and get the LDA model's current state.
-        
+
         Returns
         -------
-        result : :obj: of `~gensim.models.ldamodel.LdaState`
+        result : `~gensim.models.ldamodel.LdaState`
             The current state.
 
         """
-        logger.info("worker #%i returning its state after %s jobs", self.myid, self.jobsdone)
+        logger.info("worker #%i returning its state after %s jobs",
+                    self.myid, self.jobsdone)
         result = self.model.state
         assert isinstance(result, ldamodel.LdaState)
         self.model.clear()  # free up mem in-between two EM cycles
@@ -152,11 +209,12 @@ class Worker(object):
     @utils.synchronous('lock_update')
     def reset(self, state):
         """Reset the worker by setting sufficient stats to 0.
-        
+
         Parameters
         ----------
-        state : :obj: of :class:`~gensim.models.ldamodel.LdaState`
-            Encapsulates information for distributed computation of LdaModel objects.
+        state : :class:`~gensim.models.ldamodel.LdaState`
+            Encapsulates information for distributed computation
+            of LdaModel objects.
 
         """
         assert state is not None
@@ -176,20 +234,24 @@ class Worker(object):
 def main():
     """Set up argument parser,logger and launches pyro daemon."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
-    parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
+    parser.add_argument("--host", help="Nameserver hostname \
+        (default:%(default)s)", default=None)
+    parser.add_argument("--port", help="Nameserver port \
+        (default: %(default)s)", default=None, type=int)
     parser.add_argument(
-        "--no-broadcast", help="Disable broadcast (default: %(default)s)", action='store_const',
-        default=True, const=False
-    )
-    parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
+        "--no-broadcast", help="Disable broadcast \
+        (default: %(default)s)", action='store_const',
+        default=True, const=False)
+    parser.add_argument("--hmac", help="Nameserver hmac key \
+        (default: %(default)s)", default=None)
     parser.add_argument(
-        '-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel",
-        const=logging.INFO, default=logging.WARNING
+        '-v', '--verbose', help='Verbose flag', action='store_const',
+        dest="loglevel", const=logging.INFO, default=logging.WARNING
     )
     args = parser.parse_args()
 
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s\
+                     : %(message)s', level=args.loglevel)
     logger.info("running %s", " ".join(sys.argv))
 
     ns_conf = {
@@ -198,7 +260,8 @@ def main():
         "port": args.port,
         "hmac_key": args.hmac
     }
-    utils.pyro_daemon(LDA_WORKER_PREFIX, Worker(), random_suffix=True, ns_conf=ns_conf)
+    utils.pyro_daemon(LDA_WORKER_PREFIX, Worker(),
+                      random_suffix=True, ns_conf=ns_conf)
     logger.info("finished running %s", " ".join(sys.argv))
 
 
