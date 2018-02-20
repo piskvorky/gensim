@@ -919,14 +919,16 @@ class WmdSimilarity(interfaces.SimilarityABC):
         """
         Parameters
         ----------
-        corpus:
-            List of lists of strings, as in gensim.models.word2vec.
-        w2v_model:
+        corpus: iterable of list of (int, float)
+            A list of documents in the BoW format.
+        w2v_model: :class:`~gensim.models.word2vec.Word2VecTrainables`
             A trained word2vec model.
-        num_best:
+        num_best: int, optional
             Number of results to retrieve.
-        normalize_w2v_and_replace:
+        normalize_w2v_and_replace: bool, optional
             Whether or not to normalize the word2vec vectors to length 1.
+        chunksize : int, optional
+            Size of chunk.
 
         Notes
         -----
@@ -979,8 +981,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         return len(self.corpus)
 
     def get_similarities(self, query):
-        """**Do not use this function directly; use the self[query] syntax instead.**
-        """
+        """**Do not use this function directly; use the self[query] syntax instead.**"""
         if isinstance(query, numpy.ndarray):
             # Convert document indexes to actual documents.
             query = [self.corpus[i] for i in query]
@@ -1022,15 +1023,21 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         """
         Parameters
         ----------
-        corpus :
-        num_features:
-        num_terms:
-        num_docs:
-        num_nnz:
-        num_best:
-        chunksize:
-        dtype:
-        maintain_sparsity:
+        corpus: iterable of list of (int, float)
+            A list of documents in the BoW format.
+        num_features : int, optional
+            Size of the dictionary.
+        num_terms : int, optional
+        num_docs : int, optional
+        num_nnz : int, optional
+        num_best : int, optional
+            If set, return only the `num_best` most similar documents, always leaving out documents with similarity = 0.
+            Otherwise, return a full vector with one float for every document in the index.
+        chunksize : int, optional
+            Size of chunk.
+        dtype : str, optional
+            Function for
+        maintain_sparsity : bool, optional
 
         Notes
         -----
@@ -1044,8 +1051,8 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         causes `get_similarities` to return a sparse matrix instead of a
         dense representation if possible.
 
-        See also  :class:`~gensim.similarities.docsim.Similarity` and  :class:`~gensim.similarities.docsim.MatrixSimilarity`
-        in this module.
+        See also  :class:`~gensim.similarities.docsim.Similarity`
+        and :class:`~gensim.similarities.docsim.MatrixSimilarity` in this module.
         """
 
         self.num_best = num_best
@@ -1088,13 +1095,13 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
     def get_similarities(self, query):
         """Return similarity of sparse vector `query` to all documents in the corpus,
-        as a numpy array.
+        as a numpy array. **Do not use this function directly; use the self[query] syntax instead.**
 
+        Notes
+        -----
         If `query` is a collection of documents, return a 2D array of similarities
         of each document in `query` to all documents in the corpus (=batch query,
         faster than processing each document in turn).
-
-        **Do not use this function directly; use the self[query] syntax instead.**
 
         """
         is_corpus, query = utils.is_corpus(query)
