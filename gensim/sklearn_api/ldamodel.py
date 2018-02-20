@@ -12,6 +12,13 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 Examples
 --------
 
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.sklearn_api import LdaTransformer
+    >>>
+    >>> # Reduce each document to 2 dimensions (topics) using the sklearn interface.
+    >>> model = LdaTransformer(num_topics=2, id2word=common_dictionary, iterations=20, random_state=1)
+    >>> docvecs = model.fit_transform(common_corpus)
+    >>> assert docvecs.shape == (len(common_corpus), 2)
 
 """
 
@@ -77,15 +84,15 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
                 'default': Learns an assymetric prior from the corpus.
         eta : {float, np.array, str}, optional
             A-priori belief on word probability. This can be:
-                a scalar for a symmetric prior over topic/word probability
-                a vector : of length num_words to denote an assymetric user defined probability for each word.
-                a matrix of shape (`num_topics`, num_words) to assign a probability for each word condition on each topic.
+                a scalar for a symmetric prior over topic/word probability.
+                a vector : of length num_words to denote an asymmetric user defined probability for each word.
+                a matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
                 the string 'auto' to learn the asymmetric prior from the data.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
             when each new document is examined. Corresponds to Kappa from [1]_.
         offset : float, optional
-            Hyperparameter that controls how much we will slow down the first steps the first few iterations.
+            Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
             Corresponds to Tau_0 from [1]_.
         eval_every : int, optional
             Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
