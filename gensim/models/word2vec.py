@@ -1212,19 +1212,17 @@ class Word2VecVocab(utils.SaveLoad):
         # if max_vocab is specified instead of min_count
         # pick a min_count which satisfies max_vocab as well as possible
         if self.max_vocab is not None:
-            import operator
 
-            sorted_vocab = sorted(self.raw_vocab.items(), key=operator.itemgetter(1), reverse=True)
-            curr_count = 0
-            calc_min_count = 0
+            sorted_vocab_list = self.raw_vocab.items()
+            sorted_vocab = sorted(sorted_vocab_list, key=lambda word: word[1], reverse=True)
 
-            for item in sorted_vocab:
-                curr_count += item[1]
-                if curr_count < self.max_vocab:
-                    calc_min_count = item[1]
-                else:
-                    break
-            min_count = calc_min_count
+            if self.max_vocab < len(sorted_vocab):
+                calc_min_count = sorted_vocab[self.max_vocab][1]
+            else:
+                calc_min_count = 1
+
+            if calc_min_count > min_count:
+                min_count = calc_min_count
 
         if not update:
             logger.info("Loading a fresh vocabulary")
