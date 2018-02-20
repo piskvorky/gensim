@@ -111,13 +111,13 @@ class Dispatcher(object):
     Attributes
     ----------
     callback : :class: `~Pyro4.core.Proxy`
-        A proxy for some remote object.Intercepts method calls and
+        A proxy for some remote object.Intercepts method calls and \
         dispatches them to the remote object.
     jobs : :class: `~Queue.Queue`
         Constructs a FIFO queue.
     lock_update : :class: `~threading.Lock`
-        This class implements primitive lock objects. Once a thread has
-        acquired a lock, subsequent attempts to acquire it block, until it is
+        This class implements primitive lock objects. Once a thread has \
+        acquired a lock, subsequent attempts to acquire it block, until it is \
         released; any thread may release it.
 
     Warnings
@@ -137,14 +137,14 @@ class Dispatcher(object):
         ----------
         maxsize : int, optional
                 Maximum number of jobs to be kept pre-fetched in the queue.
-        ns_conf : dict of {str:(str,optional),str:(int,optional),
+        ns_conf : dict of {str:(str,optional),str:(int,optional), \
                             str:(bool:optional),str:(str,optional)},optional
-            Sets up the name server configuration for the pyro daemon server
-            of dispatcher.This also helps to keep track of your objects in
-            your netword by using logical object names instead of exact
+            Sets up the name server configuration for the pyro daemon server \
+            of dispatcher.This also helps to keep track of your objects in \
+            your netword by using logical object names instead of exact \
             object name(or id) and its location.
         workers : dict of { int : :class: `~Pyro4.core.Proxy` }
-            Locates all available workers and store their proxies, for
+            Locates all available workers and store their proxies, for \
             subsequent RMI calls.
         }
 
@@ -166,7 +166,7 @@ class Dispatcher(object):
         Raises
         ------
         RuntimeError
-            Description
+            No workers found.Need to have atleast one worker running.
 
         """
         self.jobs = Queue(maxsize=self.maxsize)
@@ -322,8 +322,8 @@ class Dispatcher(object):
         # another job, asynchronously (one-way)
 
     def jobsdone(self):
-        """Wrap :attr:`~gensim.models.lda_dispatcher.Dispatcher._jobsdone`
-        ,needed for remote access through proxies.
+        """Wrap :attr:`~gensim.models.lda_dispatcher.Dispatcher._jobsdone`,
+        needed for remote access through proxies.
 
         Returns
         -------
