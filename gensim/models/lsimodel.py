@@ -62,13 +62,13 @@ import sys
 
 import numpy as np
 import scipy.linalg
-import scipy.sparse
-from scipy.sparse import sparsetools
+from scipy.sparse import issparse
 from six import iterkeys
 from six.moves import xrange
 
 from gensim import interfaces, matutils, utils
 from gensim.models import basemodel
+from gensim.csparse import gaxpy
 
 logger = logging.getLogger(__name__)
 
@@ -201,7 +201,7 @@ class Projection(utils.SaveLoad):
                 except ImportError:
                     raise ImportError("`sparsesvd` module requested but not found; run `easy_install sparsesvd`")
                 logger.info("computing sparse SVD of %s matrix", str(docs.shape))
-                if not scipy.sparse.issparse(docs):
+                if not issparse(docs):
                     docs = matutils.corpus2csc(docs)
                 # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
                 ut, s, vt = sparsesvd.sparsesvd(docs, k + 30)
@@ -467,7 +467,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if decay is None:
             decay = self.decay
 
-        if not scipy.sparse.issparse(corpus):
+        if not issparse(corpus):
             if not self.onepass:
                 # we are allowed multiple passes over the input => use a faster, randomized two-pass algo
                 update = Projection(self.num_terms, self.num_topics, None, dtype=self.dtype)
@@ -910,16 +910,15 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     # first phase: construct the orthonormal action matrix Q = orth(Y) = orth((A * A.T)^q * A * O)
     # build Y in blocks of `chunksize` documents (much faster than going one-by-one
     # and more memory friendly than processing all documents at once)
-    y = np.zeros(dtype=dtype, shape=(num_terms, samples))
+
     logger.info("1st phase: constructing %s action matrix", str(y.shape))
 
-    if scipy.sparse.issparse(corpus):
+    if issparse(corpus):
         m, n = corpus.shape
         assert num_terms == m, "mismatch in number of features: %i in sparse matrix vs. %i parameter" % (m, num_terms)
-        o = np.random.normal(0.0, 1.0, (n, samples)).astype(y.dtype)  # draw a random gaussian matrix
-        sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices,
-                                corpus.data, o.ravel(), y.ravel())  # y = corpus * o
-        del o
+
+        y = gaxpy(corpus.data,
+                  np.random.normal(0.0, 1.0, (n, samples)).astype(dtype))
 
         # unlike np, scipy.sparse `astype()` copies everything, even if there is no change to dtype!
         # so check for equal dtype explicitly, to avoid the extra memory footprint if possible
@@ -948,11 +947,10 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
             assert n <= chunksize  # the very last chunk of A is allowed to be smaller in size
             num_docs += n
             logger.debug("multiplying chunk * gauss")
-            o = np.random.normal(0.0, 1.0, (n, samples)).astype(dtype)  # draw a random gaussian matrix
-            sparsetools.csc_matvecs(
-                m, n, samples, chunk.indptr, chunk.indices,  # y = y + chunk * o
-                chunk.data, o.ravel(), y.ravel()
-            )
+
+            y = gaxpy(chunk.data,
+                      np.random.normal(0.0, 1.0, (n, samples)).astype(dtype))
+
             del chunk, o
         y = [y]
         q, _ = matutils.qr_destroy(y)  # orthonormalize the range
@@ -976,7 +974,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     qt = q[:, :samples].T.copy()
     del q
 
-    if scipy.sparse.issparse(corpus):
+    if issparse(corpus):
         b = qt * corpus
         logger.info("2nd phase: running dense svd on %s matrix", str(b.shape))
         u, s, vt = scipy.linalg.svd(b, full_matrices=False)
