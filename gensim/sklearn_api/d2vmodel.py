@@ -11,7 +11,13 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 Examples
 --------
 
-
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.sklearn_api import D2VTransformer
+    >>>
+    >>> # Lets represent each document using a 50 dimensional vector
+    >>> model = D2VTransformer(min_count=1, size=50)
+    >>> docvecs = model.fit_transform(common_texts)
+    >>> assert docvecs.shape == (len(common_texts), 50)
 
 """
 
@@ -37,7 +43,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
                  docvecs_mapfile=None, comment=None, trim_rule=None, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001, hs=0, negative=5, cbow_mean=1,
                  hashfxn=hash, iter=5, sorted_vocab=1, batch_words=10000):
-        """Sklearn api for Doc2Vec model. See gensim.models.Doc2Vec and gensim.models.Word2Vec for parameter details.
+        """Sklearn api for Doc2Vec model.
 
         Parameters
         ----------
@@ -60,7 +66,8 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             Expected constant number of document tags per document, when using
             dm_concat mode; default is 1.
         docvecs : :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
-            A mapping from a tag to its vector representation. Either this or `docvecs_mapfile` **MUST** be supplied.
+            A mapping from a string or int tag to its vector representation.
+            Either this or `docvecs_mapfile` **MUST** be supplied.
         docvecs_mapfile : str, optional
             Path to a file containing the docvecs mapping.
             If `docvecs` is None, this file will be used to create it.
@@ -72,47 +79,46 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             be trimmed away (:attr:`gensim.utils.RULE_DISCARD`), or handled using the default (:attr:`gensim.utils.RULE_DEFAULT`).
             If None, then :func:`~gensim.utils.keep_vocab_item` will be used.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model.
-        size : int
+        size : int, optional
             Dimensionality of the feature vectors.
-        alpha : float
+        alpha : float, optional
             The initial learning rate.
-        window : int
+        window : int, optional
             The maximum distance between the current and predicted word within a sentence.
-        min_count : int
+        min_count : int, optional
             Ignores all words with total frequency lower than this.
-        max_vocab_size : int
+        max_vocab_size : int, optional
             Limits the RAM during vocabulary building; if there are more unique
             words than this, then prune the infrequent ones. Every 10 million word types need about 1GB of RAM.
             Set to `None` for no limit.
-        sample : float
+        sample : float, optional
             The threshold for configuring which higher-frequency words are randomly downsampled,
             useful range is (0, 1e-5).
-        seed : int
+        seed : int, optional
             Seed for the random number generator. Initial vectors for each word are seeded with a hash of
             the concatenation of word + `str(seed)`. Note that for a fully deterministically-reproducible run,
             you must also limit the model to a single worker thread (`workers=1`), to eliminate ordering jitter
             from OS thread scheduling. (In Python 3, reproducibility between interpreter launches also requires
             use of the `PYTHONHASHSEED` environment variable to control hash randomization).
-        workers : int
-            Use these many worker threads to train the model (=faster training with multicore machines).
-        min_alpha : float
+        workers : int, optional
+            Use this many worker threads to train the model. Will yield a speedup when training with multicore machines.
+        min_alpha : float, optional
             Learning rate will linearly drop to `min_alpha` as training progresses.
-        hs : int {1,0}
+        hs : int {1,0}, optional
             If 1, hierarchical softmax will be used for model training.
             If set to 0, and `negative` is non-zero, negative sampling will be used.
-        negative : int
+        negative : int, optional
             If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
-            should be drawn (usually between 5-20).
-            If set to 0, no negative sampling is used.
-        cbow_mean : int
+            should be drawn (usually between 5-20). If set to 0, no negative sampling is used.
+        cbow_mean : int, optional
             Same as `dm_mean`, unused.
         hashfxn : callable (object -> int), optional
             A hashing function. Used to create an initial random reproducible vector by hashing the random seed.
         iter : int, optional
-            Number of iterations (epochs) over the corpus.
+            Number of epochs to iterate through the corpus.
         sorted_vocab : bool, optional
             Whether the vocabulary should be sorted internally.
-        batch_words : int
+        batch_words : int, optional
             Number of words to be handled by each job.
 
         """
@@ -151,7 +157,8 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         Parameters
         ----------
         X : {iterable of {:class:`~gensim.models.doc2vec.TaggedDocument`, iterable of iterable of str}
-            A collection of tagged documents used for training the model. If these are not tags, their order index will be used to tag them.
+            A collection of tagged documents used for training the model.
+            If these are not tagged, their order integer index will be used to tag them.
 
         Returns
         -------
