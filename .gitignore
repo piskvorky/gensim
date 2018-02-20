@@ -76,5 +76,6 @@ docs/*.html
 docs/modules/*.html
 *.inv
 *.js
-!docs/_static/js
+!docs/_static/js/*.js
+!docs/gensim_theme/static/*.js
 docs/_images/

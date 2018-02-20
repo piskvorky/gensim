@@ -314,7 +314,8 @@ setup(
                                                    'plotly', 'pattern',
                                                    'sphinx_gallery',
                                                    'matplotlib',
-                                                   'sphinxcontrib.programoutput'],
+                                                   'sphinxcontrib.programoutput',
+                                                   'pillow'],
     },
 
     include_package_data=True,
