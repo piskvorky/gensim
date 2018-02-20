@@ -74,7 +74,7 @@ class AuthorTopicState(LdaState):
         ----------
         eta: float
             Dirichlet topic parameter for sparsity.
-        lambda_shape: float
+        lambda_shape: int
             Initialize topic parameters.
         gamma_shape: int
             Initialize topic parameters.
@@ -94,7 +94,7 @@ def construct_doc2author(corpus, author2doc):
     ----------
     corpus: list of list of str
         Corpus of documents.
-    author2doc: dict
+    author2doc: dict of (str, str)
         Mapping of authors to documents.
 
     """
@@ -113,7 +113,7 @@ def construct_author2doc(doc2author):
 
     Parameters
     ----------
-    doc2author: dict
+    doc2author: dict of (str, str)
         Mapping of documents to authors.
     """
 
@@ -148,63 +148,48 @@ class AuthorTopicModel(LdaModel):
         ----------
         num_topic: int, optional
             Number of topics to be extracted from the training corpus.
-
         id2word: dict of {int: str}, optional
             A mapping from word ids (integers) to words (strings).
-
         author2doc: dict
             A dictionary where keys are the names of authors and values are lists of
             documents that the author contributes to.
-
         doc2author: dict
             A dictionary where the keys are document IDs and the values are lists of author names.
-
         passes: int
             Number of times the model makes a pass over the entire training data.
-
         iterations: int
             Maximum number of times the model loops over each document
-
         chunksize: int
             Controls the size of the mini-batches.
-
         alpha: float
             Hyperparameters for author-topic model.Supports special values of 'asymmetric'
             and 'auto': the former uses a fixed normalized asymmetric 1.0/topicno prior,
             the latter learns an asymmetric prior directly from your data.
-
         eta: float
-            Hyperparameters for author-topic model.
-
+            Hyperparameters for author-topic model.\
         eval_every: int
             Calculate and estimate log perplexity for latest mini-batch.
-
         decay: float
             Controls how old documents are forgotten.
-
         offset: float
             Controls down-weighting of iterations.
-
         minimum_probability: float
             Controls filtering the topics returned for a document (bow).
-
         random_state: int or a numpy.random.RandomState object.
-        Set the state of the random number generator inside the author-topic model.
-
+            Set the state of the random number generator inside the author-topic model.
         serialized: bool
             Indicates whether the input corpora to the model are simple lists
             or saved to the hard-drive.
-
         serialization_path: str
-        Must be set to a filepath, if `serialized = True` is used.
+            Must be set to a filepath, if `serialized = True` is used.
 
-        Example:
-
+        Example
+        -------
+        >>> import numpy as np
+        >>> from gensim.models import AuthorTopicModel
         >>> model = AuthorTopicModel(corpus, num_topics=100, author2doc=author2doc, id2word=id2word)  # train model
         >>> model.update(corpus2)  # update the author-topic model with additional documents
 
-        >>> model = AuthorTopicModel(
-        ... corpus, num_topics=50, author2doc=author2doc, id2word=id2word, alpha='auto', eval_every=5)
 
         """
         # NOTE: this doesn't call constructor of a base class, but duplicates most of this code
@@ -306,6 +291,7 @@ class AuthorTopicModel(LdaModel):
             self.update(corpus, author2doc, doc2author, chunks_as_numpy=use_numpy)
 
     def __str__(self):
+        """Return a string representation of AuthorTopicModel class."""
         return "AuthorTopicModel(num_terms=%s, num_topics=%s, num_authors=%s, decay=%s, chunksize=%s)" % \
             (self.num_terms, self.num_topics, self.num_authors, self.decay, self.chunksize)
 
@@ -332,6 +318,11 @@ class AuthorTopicModel(LdaModel):
         are added in the process. If serialization is not used, the corpus, as a list
         of documents, is simply extended.
 
+        Parameters
+        ----------
+        corpus: list of list of str
+            Corpus of documents.
+
         """
         if self.serialized:
             # Re-serialize the entire corpus while appending the new documents.
@@ -354,7 +345,13 @@ class AuthorTopicModel(LdaModel):
             self.corpus.extend(corpus)
 
     def compute_phinorm(self, expElogthetad, expElogbetad):
-        """Efficiently computes the normalizing factor in phi."""
+        """Efficiently computes the normalizing factor in phi.
+
+        Parameters
+        ----------
+        expElogthetad: numpy.ndarray
+        expElogbetad: numpy.ndarray
+        """
         expElogtheta_sum = expElogthetad.sum(axis=0)
         phinorm = expElogtheta_sum.dot(expElogbetad) + 1e-100
 
@@ -378,6 +375,26 @@ class AuthorTopicModel(LdaModel):
 
         Avoids computing the `phi` variational parameter directly using the
         optimization presented in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
+
+        Parameters
+        ----------
+        chunk: int
+            The chunk numer of the sparse document vector on which inference needs to be done.
+        author2doc: dict
+            A dictionary where keys are the names of authors and values are lists of
+            documents that the author contributes to.
+        doc2author: dict
+            A dictionary where the keys are document IDs and the values are lists of author names.
+        rhot: float
+            Value of rho for conducting inference on documents.
+        collect_sstats: boolean, optional
+            If True,  collect sufficient statistics needed to update the model's topic-word
+            distributions, and return a 2-tuple `(gamma_chunk, sstats)`.
+            Otherwise, returns `(gamma_chunk, None)`.`gamma_chunk` is of shape
+            `len(chunk_authors) x self.num_topics`,where `chunk_authors` is the
+            number of authors in the documents in the current chunk.
+        chunk_doc_idx: numpy.ndarray
+            Assigns the value for document index.
 
         """
         try:
@@ -486,8 +503,24 @@ class AuthorTopicModel(LdaModel):
 
     def do_estep(self, chunk, author2doc, doc2author, rhot, state=None, chunk_doc_idx=None):
         """
-        Perform inference on a chunk of documents, and accumulate the collected
+        Performs inference on a chunk of documents, and accumulate the collected
         sufficient statistics in `state` (or `self.state` if None).
+
+        Parameters
+        ----------
+        chunk: int
+            The chunk numer of the sparse document vector on which inference needs to be done.
+        author2doc: dict
+            A dictionary where keys are the names of authors and values are lists of
+            documents that the author contributes to.
+        doc2author: dict
+            A dictionary where the keys are document IDs and the values are lists of author names.
+        rhot: float
+            Value of rho for conducting inference on documents.
+        state: int, optional
+            Initializes the state for a new E-M iteration.
+        chunk_doc_idx: numpy.ndarray
+            Assigns the value for document index.
 
         """
 
@@ -507,6 +540,15 @@ class AuthorTopicModel(LdaModel):
         Calculate and return per-word likelihood bound, using the `chunk` of
         documents as evaluation corpus. Also output the calculated statistics. incl.
         perplexity=2^(-bound), to log at INFO level.
+
+        Parameters
+        ----------
+        chunk: int
+            The chunk numer of the sparse document vector on which inference needs to be done.
+        chunk_doc_idx: numpy.ndarray
+            Assigns the value for document index.
+        total_docs: int
+            Initializes the value for total number of documents.
 
         """
 
@@ -557,21 +599,22 @@ class AuthorTopicModel(LdaModel):
         It is not possible to add new authors to existing documents, as all
         documents in `corpus` are assumed to be new documents.
 
-        Args:
-            corpus (gensim corpus): The corpus with which the author-topic model should be updated.
-
-            author2doc (dict): author to document mapping corresponding to indexes in input
-                corpus.
-
-            doc2author (dict): document to author mapping corresponding to indexes in input
-                corpus.
-
-            chunks_as_numpy (bool): Whether each chunk passed to `.inference` should be a np
-                array of not. np can in some settings turn the term IDs
-                into floats, these will be converted back into integers in
-                inference, which incurs a performance hit. For distributed
-                computing it may be desirable to keep the chunks as np
-                arrays.
+        Parameters
+        ----------
+        corpus: list of list of str
+            The corpus with which the author-topic model should be updated.
+        author2doc: dict
+            A dictionary where keys are the names of authors and values are lists of
+            documents that the author contributes to.
+        doc2author: dict
+            A dictionary where the keys are document IDs and the values are lists of author names.
+        chunks_as_numpy: bool
+            Whether each chunk passed to `.inference` should be a np
+            array of not. np can in some settings turn the term IDs
+            into floats, these will be converted back into integers in
+            inference, which incurs a performance hit. For distributed
+            computing it may be desirable to keep the chunks as np
+            arrays.
 
         For other parameter settings, see :class:`AuthorTopicModel` constructor.
 
@@ -807,8 +850,23 @@ class AuthorTopicModel(LdaModel):
         corrsponding to this test set are provided. There must not be any new authors
         passed to this method. `chunk_doc_idx` is not needed in this case.
 
-        To obtain the per-word bound, compute:
+        Parameters
+        ----------
+        chunk: int
+            The chunk numer of the sparse document vector on which inference needs to be done.
+        author2doc: dict
+            A dictionary where keys are the names of authors and values are lists of
+            documents that the author contributes to.
+        doc2author: dict
+            A dictionary where the keys are document IDs and the values are lists of author names.
+        chunk_doc_idx: numpy.ndarray
+            Assigns the value for document index.
+        subsample_ratio: float, optional
+            Used for calculation of word score for estimation of variational bound.
 
+
+        Example
+        -------
         >>> corpus_words = sum(cnt for document in corpus for _, cnt in document)
         >>> model.bound(corpus, author2doc=author2doc, doc2author=doc2author) / corpus_words
 
@@ -928,6 +986,12 @@ class AuthorTopicModel(LdaModel):
         Obtaining topic probabilities of each word, as in LDA (via `per_word_topics`),
         is not supported.
 
+        Parameters
+        ----------
+        author_name: str
+            Name of the author for which the topic distribution needs to be estimated.
+        minimum_probability: float, optional
+            Sets the minimum probability value for showing the topics of a given author.
         """
 
         author_id = self.author2id[author_name]
@@ -950,9 +1014,16 @@ class AuthorTopicModel(LdaModel):
         Return topic distribution for input author as a list of
         (topic_id, topic_probabiity) 2-tuples.
 
-        Ingores topics with probaility less than `eps`.
+        Ignores topics with probaility less than `eps`.
 
         Do not call this method directly, instead use `model[author_names]`.
+
+        Parameters
+        ----------
+        author_names: str
+            Name of the author for which the topic distribution needs to be estimated.
+        eps: float, optional
+            Sets the minimum probability value for showing the topics of a given author.
 
         """
         if isinstance(author_names, list):
