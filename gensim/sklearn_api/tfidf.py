@@ -11,6 +11,14 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 Examples
 --------
 
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.sklearn_api import TfIdfTransformer
+    >>>
+    >>> # Transform the word counts inversely to their global frequency using the sklearn interface.
+    >>> model = TfIdfTransformer(dictionary=common_dictionary)
+    >>> weighted_corpus = model.fit_transform(common_corpus)
+    >>> weighted_corpus[0]
+    [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
 
 """
 
@@ -39,13 +47,12 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
         ----------
 
         id2word : {dict, :class:`~gensim.corpora.Dictionary`}, optional
-            Mapping token - id, that was used for converting input data to bag of words format.
-        dictionary : :class:`~gensim.corpora.Dictionary`
-            If `dictionary` is specified, it must be a `corpora.Dictionary` object and it will be used.
-            to directly construct the inverse document frequency mapping (then `corpus`, if specified, is ignored).
+            Mapping from int id to word token, that was used for converting input data to bag of words format.
+        dictionary : :class:`~gensim.corpora.Dictionary`, optional
+            If specified it will be used to directly construct the inverse document frequency mapping.
         wlocals : function, optional
-            Function for local weighting, default for `wlocal` is :func:`~gensim.utils.identity`
-            (other options: :func:`math.sqrt`, :func:`math.log1p`, etc).
+            Function for local weighting, default for `wlocal` is :func:`~gensim.utils.identity` which does nothing.
+            Other options include :func:`math.sqrt`, :func:`math.log1p`, etc.
         wglobal : function, optional
             Function for global weighting, default is :func:`~gensim.models.tfidfmodel.df2idf`.
         normalize : bool, optional
@@ -121,7 +128,7 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
         Returns
         -------
         iterable of list (int, float) 2-tuples.
-            The BOW representation of each document.
+            The BOW representation of each document. Will have  the same shape as `docs`.
 
         """
         if self.gensim_model is None:
