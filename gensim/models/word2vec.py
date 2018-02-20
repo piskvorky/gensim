@@ -426,7 +426,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-                 use_max_vocab=False, max_vocab=None):
+                 max_vocab=None):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -511,7 +511,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
         >>> say_vector = model['say']  # get vector for word
 
         """
-        self.use_max_vocab = use_max_vocab
         self.max_vocab = max_vocab
 
         self.callbacks = callbacks
@@ -520,7 +519,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         self.wv = Word2VecKeyedVectors(size)
         self.vocabulary = Word2VecVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=bool(sorted_vocab), null_word=null_word, use_max_vocab=use_max_vocab, max_vocab=max_vocab)
+            sorted_vocab=bool(sorted_vocab), null_word=null_word, max_vocab=max_vocab)
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
@@ -1135,7 +1134,7 @@ class PathLineSentences(object):
 
 class Word2VecVocab(utils.SaveLoad):
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
-        use_max_vocab=False, max_vocab=None):
+        max_vocab=None):
         self.max_vocab_size = max_vocab_size
         self.min_count = min_count
         self.sample = sample
@@ -1143,7 +1142,6 @@ class Word2VecVocab(utils.SaveLoad):
         self.null_word = null_word
         self.cum_table = None  # for negative sampling
         self.raw_vocab = None
-        self.use_max_vocab = use_max_vocab
         self.max_vocab = max_vocab
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
@@ -1183,24 +1181,6 @@ class Word2VecVocab(utils.SaveLoad):
         corpus_count = sentence_no + 1
         self.raw_vocab = vocab
 
-        if self.use_max_vocab:
-            import operator
-
-            if self.max_vocab is None:
-                raise ValueError('max_vocab not defined')
-
-            sorted_vocab = sorted(vocab.items(), key=operator.itemgetter(1), reverse=True)
-            curr_count = 0
-            final_vocab = {}
-            for item in sorted_vocab:
-                curr_count += item[1]
-                if curr_count < self.max_vocab:
-                    final_vocab[item[0]] = item[1]
-                else:
-                    break
-
-            self.raw_vocab = final_vocab
-
         return total_words, corpus_count
 
     def sort_vocab(self, wv):
@@ -1228,6 +1208,23 @@ class Word2VecVocab(utils.SaveLoad):
         min_count = min_count or self.min_count
         sample = sample or self.sample
         drop_total = drop_unique = 0
+
+        # if max_vocab is specified instead of min_count
+        # pick a min_count which satisfies max_vocab as well as possible
+        if self.max_vocab is not None:
+            import operator
+
+            sorted_vocab = sorted(self.raw_vocab.items(), key=operator.itemgetter(1), reverse=True)
+            curr_count = 0
+            calc_min_count = 0
+
+            for item in sorted_vocab:
+                curr_count += item[1]
+                if curr_count < self.max_vocab:
+                    calc_min_count = item[1]
+                else:
+                    break
+            min_count = calc_min_count
 
         if not update:
             logger.info("Loading a fresh vocabulary")
