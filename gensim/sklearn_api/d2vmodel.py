@@ -76,9 +76,10 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         trim_rule : callable ((str, int, int) -> int), optional
             Vocabulary trimming rule that accepts (word, count, min_count).
             Specifies whether certain words should remain in the vocabulary (:attr:`gensim.utils.RULE_KEEP`),
-            be trimmed away (:attr:`gensim.utils.RULE_DISCARD`), or handled using the default (:attr:`gensim.utils.RULE_DEFAULT`).
-            If None, then :func:`~gensim.utils.keep_vocab_item` will be used.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the model.
+            be trimmed away (:attr:`gensim.utils.RULE_DISCARD`), or handled using the default
+            (:attr:`gensim.utils.RULE_DEFAULT`).If None, then :func:`~gensim.utils.keep_vocab_item` will be used.
+            Note: The rule, if given, is only used to prune vocabulary during build_vocab()
+            and is not stored as part of the model.
         size : int, optional
             Dimensionality of the feature vectors.
         alpha : float, optional
