@@ -166,9 +166,14 @@ class AuthorTopicModel(LdaModel):
             and 'auto': the former uses a fixed normalized asymmetric 1.0/topicno prior,
             the latter learns an asymmetric prior directly from your data.
         eta: float
-            Hyperparameters for author-topic model.\
+            Hyperparameters for author-topic model.
+        update_every: int
+            Make updates in topic probaility for latest mini-batch.
         eval_every: int
             Calculate and estimate log perplexity for latest mini-batch.
+        gamma_threshold: float
+            Threshold value of gamma(topic difference between consecutive two topics)
+            until which the iterations continue.
         decay: float
             Controls how old documents are forgotten.
         offset: float
@@ -608,6 +613,23 @@ class AuthorTopicModel(LdaModel):
             documents that the author contributes to.
         doc2author: dict
             A dictionary where the keys are document IDs and the values are lists of author names.
+        chunksize: int
+            Controls the size of the mini-batches.
+        decay: float
+            Controls how old documents are forgotten.
+        offset: float
+            Controls down-weighting of iterations.
+        passes: int
+            Number of times the model makes a pass over the entire training data.
+        update_every: int
+            Make updates in topic probaility for latest mini-batch.
+        eval_every: int
+            Calculate and estimate log perplexity for latest mini-batch.
+        iterations: int
+            Maximum number of times the model loops over each document
+        gamma_threshold: float
+            Threshold value of gamma(topic difference between consecutive two topics)
+            until which the iterations continue.
         chunks_as_numpy: bool
             Whether each chunk passed to `.inference` should be a np
             array of not. np can in some settings turn the term IDs
@@ -615,8 +637,6 @@ class AuthorTopicModel(LdaModel):
             inference, which incurs a performance hit. For distributed
             computing it may be desirable to keep the chunks as np
             arrays.
-
-        For other parameter settings, see :class:`AuthorTopicModel` constructor.
 
         """
 
