@@ -1180,7 +1180,6 @@ class Word2VecVocab(utils.SaveLoad):
         )
         corpus_count = sentence_no + 1
         self.raw_vocab = vocab
-
         return total_words, corpus_count
 
     def sort_vocab(self, wv):
