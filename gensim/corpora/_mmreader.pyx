@@ -19,8 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 cdef class MmReader(object):
-    """
-    matrix market file reader
+    """Matrix market file reader.
 
     Wrap a term-document matrix on disk (in matrix-market format), and present it
     as an object which supports iteration over the rows (~documents).
@@ -28,11 +27,11 @@ cdef class MmReader(object):
     Attributes
     ----------
     num_docs : int
-        number of documents in market matrix file
+        Number of documents in market matrix file.
     num_terms : int
-        number of terms
+        Number of terms.
     num_nnz : int
-        number of non-zero terms
+        Number of non-zero terms.
 
     Notes
     ----------
@@ -53,14 +52,13 @@ cdef class MmReader(object):
 
         Parameters
         ----------
-        input : string or file-like
-            string (file path) or a file-like object that supports
-            `seek()` (e.g. gzip.GzipFile, bz2.BZ2File). File-like objects are
+        input : {str, file-like object}
+            String (file path) or a file-like object that supports
+            `seek()` (e.g. :class:`gzip.GzipFile`, :class:`bz2.BZ2File`). File-like objects are
             not closed automatically.
 
         transposed : bool
-            if True, expects lines to represent doc_id, term_id, value
-            else, expects term_id, doc_id, value
+            if True, expects lines to represent doc_id, term_id, value. Else, expects term_id, doc_id, value.
 
         """
         logger.info("initializing cython corpus reader from %s", input)
@@ -106,7 +104,7 @@ cdef class MmReader(object):
         Parameters
         ----------
         input_file : iterable
-            consumes any lines from start of `input_file` that begin with a %
+            Consumes any lines from start of `input_file` that begin with a % .
 
         """
         for line in input_file:
@@ -118,13 +116,13 @@ cdef class MmReader(object):
         """
         __iter__()
 
-        Iterate through vectors from underlying matrix
+        Iterate through vectors from underlying matrix.
 
         Yields
         ------
-        int, list of (termid, val)
-            document id and "vector" of terms for next document in matrix
-            vector of terms is represented as a list of (termid, val) tuples
+        int, list of (int, str)
+            Document id and "vector" of terms for next document in matrix.
+            Vector of terms is represented as a list of (termid, val) tuples.
 
         Notes
         ------
@@ -180,21 +178,18 @@ cdef class MmReader(object):
             yield previd, []
 
     def docbyoffset(self, offset):
-        """
-        docbyoffset(offset)
-
-        Return document at file offset `offset` (in bytes)
+        """Return document at file offset `offset` (in bytes).
 
         Parameters
         ----------
         offset : int
-            offset, in bytes, of desired document
+            Offset, in bytes, of desired document.
 
         Returns
         ------
-        list of (termid, val)
-            "vector" of terms for document at offset
-            vector of terms is represented as a list of (termid, val) tuples
+        list of (int, str)
+            "Vector" of terms for document at offset.
+            Vector of terms is represented as a list of (termid, val) tuples.
 
         """
         # empty documents are not stored explicitly in MM format, so the index marks

@@ -12,6 +12,7 @@ Modules:
     utils
     matutils
     downloader
+    corpora/_mmreader
     corpora/bleicorpus
     corpora/csvcorpus
     corpora/dictionary
@@ -41,6 +42,7 @@ Modules:
     models/lda_worker
     models/atmodel
     models/word2vec
+    models/word2vec_inner
     models/keyedvectors
     models/doc2vec
     models/fasttext

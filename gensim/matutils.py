@@ -199,7 +199,7 @@ def zeros_aligned(shape, dtype, order='C', align=128):
 
     Parameters
     ----------
-    shape : int or (int, int)
+    shape : int or (int, str)
         Shape of array.
     dtype : data-type
         Data type of array.
@@ -1133,7 +1133,19 @@ class MmWriter(object):
         Parameters
         ----------
         fname : str
-            Path to output file
+            Path to output file.
+
+        Example
+        -------
+        >>> from gensim.matutils import MmWriter
+        >>> from gensim.corpora.mmcorpus import MmCorpus
+        >>> from gensim.test.utils import datapath, common_corpus
+        >>> import gensim.downloader as api
+        >>> from gensim.utils import simple_preprocess
+        >>> corpus = common_corpus
+        >>> MmWriter.write_corpus("newcorp",corpus)
+        >>> new_corpus = MmCorpus.load("newcorp") #TODO: PROBABLY BUG(Ж) IVAN BEWARE
+        >>> print new_corpus
 
         """
         self.fname = fname
@@ -1143,16 +1155,16 @@ class MmWriter(object):
         self.headers_written = False
 
     def write_headers(self, num_docs, num_terms, num_nnz):
-        """Write headers to file
+        """Write headers to file.
 
         Parameters
         ----------
         num_docs : int
-            Number of documents in corpus
+            Number of documents in corpus.
         num_terms : int
-            Number of term in corpus
+            Number of term in corpus.
         num_nnz : int
-            Number of non-zero elements in corpus
+            Number of non-zero elements in corpus.
 
         """
         self.fout.write(MmWriter.HEADER_LINE)
@@ -1176,11 +1188,11 @@ class MmWriter(object):
         Parameters
         ----------
         num_docs : int
-            Number of documents in corpus
+            Number of documents in corpus.
         num_terms : int
-            Number of term in corpus
+            Number of term in corpus.
         num_nnz : int
-            Number of non-zero elements in corpus
+            Number of non-zero elements in corpus.
 
         """
         stats = '%i %i %i' % (num_docs, num_terms, num_nnz)
@@ -1196,7 +1208,7 @@ class MmWriter(object):
         ----------
         docno : int
             Number of document.
-        vector : list of (int, float)
+        vector : list of (int, number)
             Vector in BoW format.
 
         Returns
@@ -1222,8 +1234,8 @@ class MmWriter(object):
         ----------
         fname : str
             Filename of the resulting file.
-        corpus : iterable of iterable of (int, float)
-            Corpus in Bow format
+        corpus : iterable of list of (int, number)
+            Corpus in Bow format.
         progress_cnt : int, optional
             Print progress for every `progress_cnt` number of documents.
         index : bool, optional
@@ -1325,8 +1337,7 @@ except ImportError:
     FAST_VERSION = -1
 
     class MmReader(object):
-        """
-        matrix market file reader
+        """Matrix market file reader.
 
         Wrap a term-document matrix on disk (in matrix-market format), and present it
         as an object which supports iteration over the rows (~documents).
@@ -1343,25 +1354,22 @@ except ImportError:
         Notes
         ----------
         Note that the file is read into memory one document at a time, not the whole
-        matrix at once (unlike scipy.io.mmread). This allows us to process corpora
+        matrix at once (unlike :meth:`~scipy.io.mmread`). This allows us to process corpora
         which are larger than the available RAM.
 
         """
 
         def __init__(self, input, transposed=True):
-            """
-            Create matrix reader
+            """Create matrix reader.
 
             Parameters
             ----------
-            input : string or file-like
-                string (file path) or a file-like object that supports
-                `seek()` (e.g. gzip.GzipFile, bz2.BZ2File). File-like objects are
-                not closed automatically.
+            input : {str, file-like object}
+                string (file path) or a file-like object that supports `seek()`
+                (e.g. :class:`~gzip.GzipFile`, :class:`~bz2.BZ2File`). File-like objects are not closed automatically.
 
-            transposed : bool
-                if True, expects lines to represent doc_id, term_id, value
-                else, expects term_id, doc_id, value
+            transposed : bool, optiona;
+                if True, expects lines to represent doc_id, term_id, value. Else, expects term_id, doc_id, value.
 
             """
             logger.info("initializing corpus reader from %s", input)
@@ -1399,8 +1407,7 @@ except ImportError:
                     (self.num_docs, self.num_terms, self.num_nnz))
 
         def skip_headers(self, input_file):
-            """
-            Skip file headers that appear before the first document.
+            """Skip file headers that appear before the first document.
 
             Parameters
             ----------
@@ -1414,14 +1421,13 @@ except ImportError:
                 break
 
         def __iter__(self):
-            """
-            Iterate through vectors from underlying matrix
+            """Iterate through vectors from underlying matrix
 
             Yields
             ------
-            int, list of (termid, val)
-                document id and "vector" of terms for next document in matrix
-                vector of terms is represented as a list of (termid, val) tuples
+            int, list of (int, str)
+                Document id and "vector" of terms for next document in matrix.
+                Vector of terms is represented as a list of (termid, val) tuples.
 
             Notes
             ------
@@ -1468,19 +1474,18 @@ except ImportError:
                 yield previd, []
 
         def docbyoffset(self, offset):
-            """
-            Return document at file offset `offset` (in bytes)
+            """Return document at file offset `offset` (in bytes).
 
             Parameters
             ----------
             offset : int
-                offset, in bytes, of desired document
+                Offset, in bytes, of desired document.
 
             Returns
             ------
-            list of (termid, val)
-                "vector" of terms for document at offset
-                vector of terms is represented as a list of (termid, val) tuples
+            list of (int, str)
+                "Vector" of terms for document at offset.
+                Vector of terms is represented as a list of (termid, val) tuples.
             """
 
             # empty documents are not stored explicitly in MM format, so the index marks

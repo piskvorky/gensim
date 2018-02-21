@@ -141,7 +141,8 @@ def query_shard(args):
 
 
 class Similarity(interfaces.SimilarityABC):
-    """Compute cosine similarity of a dynamic query against a static corpus of documents ("the index").
+
+    """Compute cosine similarity of a dynamic query against a static corpus of documents ('the index').
 
     Notes
     -----
@@ -152,8 +153,7 @@ class Similarity(interfaces.SimilarityABC):
     """
 
     def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=256, shardsize=32768, norm='l2'):
-        """
-        Construct the index from `corpus`. The index can be later extended by calling the `add_documents` method.
+        """Construct the index from `corpus`. The index can be later extended by calling the `add_documents` method.
 
         Parameters
         ----------
@@ -182,7 +182,7 @@ class Similarity(interfaces.SimilarityABC):
         If you don't specify an output prefix, a random filename in temp will be used.
         If your entire index fits in memory (~hundreds of thousands
         documents for 1GB of RAM), you can also use the :class:`~gensim.similarities.docsim.MatrixSimilarity`
-        or :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`classes directly. These are more simple
+        or :class:`~gensim.similarities.docsim.SparseMatrixSimilarity` classes directly. These are more simple
         but do not scale as well (they keep the entire index in RAM, no sharding).
 
         Examples
@@ -615,7 +615,7 @@ class Similarity(interfaces.SimilarityABC):
 
         Notes
         -----
-        Call `close_shard` internally to spill any unfinished shards to disk first.
+        Call :meth:`~gensim.similarities.Similarity.close_shard` internally to spill any unfinished shards to disk first.
 
         Examples
         --------
@@ -949,14 +949,18 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>> from gensim.test.utils import datapath
         >>> from gensim.similarities import MatrixSimilarity
         >>> import gensim.downloader as api
+        >>> from gensim.models import Word2Vec
+        >>> from gensim.corpora import Dictionary
         >>> from gensim.utils import simple_preprocess
         >>>
         >>> # Create index:
         >>> corpus = TextCorpus(datapath('testcorpus.txt'))
         >>> index = MatrixSimilarity(corpus, num_features=400)
         >>> # Given a document collection "corpus", train word2vec model.
-        >>> model = word2vec(corpus) #TODO: how can i train model
-        >>> instance = WmdSimilarity(corpus, model, num_best=10)
+        >>> model = Word2Vec(corpus, workers=3, size=100)
+        >>> dictionary = Dictionary(corpus)
+        >>> bow_corpus = [dictionary.doc2bow(document) for document in corpus]
+        >>> instance = WmdSimilarity(corpus, model, num_best=10) #TODO : How can i train model?
         >>> # Make query.
         >>> query = 'Trees'
         >>> sims = instance[query]
@@ -1028,16 +1032,20 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         num_features : int, optional
             Size of the dictionary.
         num_terms : int, optional
+            Number of terms.
         num_docs : int, optional
+            Number of documents in market matrix file.
         num_nnz : int, optional
+            Number of non-zero terms.
         num_best : int, optional
             If set, return only the `num_best` most similar documents, always leaving out documents with similarity = 0.
             Otherwise, return a full vector with one float for every document in the index.
         chunksize : int, optional
             Size of chunk.
         dtype : str, optional
-            Function for
+            Function for TODO: what?
         maintain_sparsity : bool, optional
+            Control sparsity.
 
         Notes
         -----
