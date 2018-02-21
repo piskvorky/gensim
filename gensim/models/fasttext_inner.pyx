@@ -247,18 +247,18 @@ cdef void fast_sentence_cbow_hs(
 def train_batch_sg(model, sentences, alpha, _work, _l1):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int sample = (model.sample != 0)
+    cdef int sample = (model.vocabulary.sample != 0)
 
-    cdef REAL_t *syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.syn0_vocab))
-    cdef REAL_t *word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.syn0_vocab_lockf))
-    cdef REAL_t *syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.syn0_ngrams))
-    cdef REAL_t *word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.syn0_ngrams_lockf))
+    cdef REAL_t *syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab))
+    cdef REAL_t *word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_vocab_lockf))
+    cdef REAL_t *syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams))
+    cdef REAL_t *word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_ngrams_lockf))
 
     cdef REAL_t *work
     cdef REAL_t *l1
     
     cdef REAL_t _alpha = alpha
-    cdef int size = model.layer1_size
+    cdef int size = model.wv.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -290,12 +290,12 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     subword_arrays = {} 
 
     if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
-        cum_table_len = len(model.cum_table)
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
@@ -377,17 +377,17 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
 def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int sample = (model.sample != 0)
+    cdef int sample = (model.vocabulary.sample != 0)
     cdef int cbow_mean = model.cbow_mean
 
-    cdef REAL_t *syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.syn0_vocab))
-    cdef REAL_t *word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.syn0_vocab_lockf))
-    cdef REAL_t *syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.syn0_ngrams))
-    cdef REAL_t *word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.syn0_ngrams_lockf))
+    cdef REAL_t *syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab))
+    cdef REAL_t *word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_vocab_lockf))
+    cdef REAL_t *syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams))
+    cdef REAL_t *word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_ngrams_lockf))
 
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
-    cdef int size = model.layer1_size
+    cdef int size = model.wv.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -419,12 +419,12 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     subword_arrays = {}
 
     if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
-        cum_table_len = len(model.cum_table)
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
