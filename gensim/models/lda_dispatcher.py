@@ -91,10 +91,9 @@ logger = logging.getLogger("gensim.models.lda_dispatcher")
 
 
 # How many jobs (=chunks of N documents) to keep "pre-fetched" in a queue?
-# A small number is usually enough, unless iteration over the corpus is
-# very very slow (slower than the actual computation of LDA), in which case
-# you can override this value from command line. ie.
-# run "python ./lda_dispatcher.py 100"
+# A small number is usually enough, unless iteration over the corpus is very very
+# slow (slower than the actual computation of LDA), in which case you can override
+# this value from command line. ie. run "python ./lda_dispatcher.py 100"
 MAX_JOBS_QUEUE = 10
 
 # timeout for the Queue object put/get blocking methods.
@@ -129,8 +128,7 @@ class Dispatcher(object):
     def __init__(self, maxsize=MAX_JOBS_QUEUE, ns_conf=None):
         """Partly initializes the dispatcher.
 
-        A full initialization (including initialization of the workers)
-        requires a call to
+        A full initialization (including initialization of the workers) requires a call to
         :meth:`~gensim.models.lda_dispatcher.Dispatcher.initialize`
 
         Parameters
@@ -144,9 +142,7 @@ class Dispatcher(object):
             your netword by using logical object names instead of exact \
             object name(or id) and its location.
         workers : dict of { int : :class: `~Pyro4.core.Proxy` }
-            Locates all available workers and store their proxies, for \
-            subsequent RMI calls.
-        }
+            Locates all available workers and store their proxies, for subsequent RMI calls.
 
         """
         self.maxsize = maxsize
@@ -176,27 +172,21 @@ class Dispatcher(object):
 
         self.workers = {}
         with utils.getNS(**self.ns_conf) as ns:
-            self.callback = Pyro4.Proxy(ns.list(
-                            prefix=LDA_DISPATCHER_PREFIX)
-                            [LDA_DISPATCHER_PREFIX])
+            self.callback = Pyro4.Proxy(ns.list(prefix=LDA_DISPATCHER_PREFIX)[LDA_DISPATCHER_PREFIX])
             for name, uri in iteritems(ns.list(prefix=LDA_WORKER_PREFIX)):
                 try:
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
-                    logger.info("registering worker #%i at %s", workerid,
-                                uri)
-                    worker.initialize(workerid, dispatcher=self.callback,
-                                      **model_params)
+                    logger.info("registering worker #%i at %s", workerid, uri)
+                    worker.initialize(workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
                 except Pyro4.errors.PyroError:
-                    logger.warning("unresponsive worker at %s,deleting it"
-                                   " from the name server", uri)
+                    logger.warning("unresponsive worker at %s,deleting it from the name server", uri)
                     ns.remove(name)
 
         if not self.workers:
-            raise RuntimeError('no workers found; run some lda_worker '
-                               'scripts on your machines first!')
+            raise RuntimeError('no workers found; run some lda_worker scripts on your machines first!')
 
     @Pyro4.expose
     def getworkers(self):
@@ -227,8 +217,7 @@ class Dispatcher(object):
         """
         logger.info("worker #%i requesting a new job", worker_id)
         job = self.jobs.get(block=True, timeout=1)
-        logger.info("worker #%i got a new job (%i left)", worker_id,
-                    self.jobs.qsize())
+        logger.info("worker #%i got a new job (%i left)", worker_id, self.jobs.qsize())
         return job
 
     @Pyro4.expose
@@ -243,13 +232,11 @@ class Dispatcher(object):
         """
         self._jobsreceived += 1
         self.jobs.put(job, block=True, timeout=HUGE_TIMEOUT)
-        logger.info("added a new job (len(queue)=%i items)",
-                    self.jobs.qsize())
+        logger.info("added a new job (len(queue)=%i items)", self.jobs.qsize())
 
     @Pyro4.expose
     def getstate(self):
-        """
-        Merge states from across all workers and return the result.
+        """Merge states from across all workers and return the result.
 
         Returns
         -------
@@ -258,8 +245,7 @@ class Dispatcher(object):
 
         """
         logger.info("end of input, assigning all remaining jobs")
-        logger.debug("jobs done: %s, jobs received: %s",
-                     self._jobsdone, self._jobsreceived)
+        logger.debug("jobs done: %s, jobs received: %s", self._jobsdone, self._jobsreceived)
         i = 0
         count = 10
         while self._jobsdone < self._jobsreceived:
@@ -318,12 +304,10 @@ class Dispatcher(object):
         """
         self._jobsdone += 1
         logger.info("worker #%s finished job #%i", workerid, self._jobsdone)
-        self.workers[workerid].requestjob()  # tell the worker to ask for
-        # another job, asynchronously (one-way)
+        self.workers[workerid].requestjob()  # tell the worker to ask for another job, asynchronously (one-way)
 
     def jobsdone(self):
-        """Wrap :attr:`~gensim.models.lda_dispatcher.Dispatcher._jobsdone`,
-        needed for remote access through proxies.
+        """Wrap :attr:`~gensim.models.lda_dispatcher.Dispatcher._jobsdone` needed for remote access through proxies.
 
         Returns
         -------
@@ -340,34 +324,31 @@ class Dispatcher(object):
             logger.info("terminating worker %s", workerid)
             worker.exit()
         logger.info("terminating dispatcher")
-        os._exit(0)  # exit the whole process (not just this thread ala
-        # sys.exit())
+        os._exit(0)  # exit the whole process (not just this thread ala sys.exit())
 # endclass Dispatcher
 
 
 def main():
     """Set up argument parser,logger and launches pyro daemon."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--maxsize", help="How many jobs (=chunks of N "
-                        "documents) to keep 'pre-fetched' in a queue "
-                        "(default: %(default)s)", type=int,
-                        default=MAX_JOBS_QUEUE)
-    parser.add_argument("--host", help="Nameserver hostname (default: "
-                        "%(default)s)", default=None)
-    parser.add_argument("--port", help="Nameserver port (default: "
-                        "%(default)s)", default=None, type=int)
-    parser.add_argument("--no-broadcast", help="Disable broadcast (default"
-                        ": %(default)s)", action='store_const', default=True,
-                        const=False)
-    parser.add_argument("--hmac", help="Nameserver hmac key (default: "
-                        "%(default)s)", default=None)
-    parser.add_argument('-v', '--verbose', help='Verbose flag',
-                        action='store_const', dest="loglevel",
-                        const=logging.INFO, default=logging.WARNING)
+    parser.add_argument(
+        "--maxsize",
+        help="How many jobs (=chunks of N documents) to keep 'pre-fetched' in a queue (default: %(default)s)",
+        type=int, default=MAX_JOBS_QUEUE
+    )
+    parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
+    parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
+    parser.add_argument("--no-broadcast", help="Disable broadcast (default: %(default)s)",
+                        action='store_const', default=True, const=False)
+    parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
+    parser.add_argument(
+        '-v', '--verbose',
+        help='Verbose flag',
+        action='store_const', dest="loglevel", const=logging.INFO, default=logging.WARNING
+    )
     args = parser.parse_args()
 
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-                        level=args.loglevel)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
     logger.info("running %s", " ".join(sys.argv))
 
     ns_conf = {
@@ -376,9 +357,7 @@ def main():
         "port": args.port,
         "hmac_key": args.hmac
     }
-    utils.pyro_daemon(LDA_DISPATCHER_PREFIX, Dispatcher(
-                      maxsize=args.maxsize, ns_conf=ns_conf),
-                      ns_conf=ns_conf)
+    utils.pyro_daemon(LDA_DISPATCHER_PREFIX, Dispatcher(maxsize=args.maxsize, ns_conf=ns_conf), ns_conf=ns_conf)
     logger.info("finished running %s", " ".join(sys.argv))
 
 

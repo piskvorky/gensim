@@ -83,8 +83,7 @@ from gensim import utils
 logger = logging.getLogger('gensim.models.lda_worker')
 
 
-# periodically save intermediate models after every SAVE_DEBUG updates
-# (0 for never)
+# periodically save intermediate models after every SAVE_DEBUG updates (0 for never)
 SAVE_DEBUG = 0
 
 LDA_WORKER_PREFIX = 'gensim.lda_worker'
@@ -93,8 +92,7 @@ LDA_WORKER_PREFIX = 'gensim.lda_worker'
 class Worker(object):
     """Used as a Pyro class with exposed methods.
 
-    Exposes every non-private method and property of the class automatically
-    to be available for remote access.
+    Exposes every non-private method and property of the class automatically to be available for remote access.
 
     Attributes
     ----------
@@ -117,14 +115,12 @@ class Worker(object):
         dispatcher : :class:`~gensim.models.lda_dispatcher.Dispatcher`
             The dispatcher responsible for scheduling this worker.
         **model_params
-            Keyword parameters to initialize the inner LDA model,
-            see :class:`~gensim.models.ldamodel.LdaModel`.
+            Keyword parameters to initialize the inner LDA model,see :class:`~gensim.models.ldamodel.LdaModel`.
 
         """
         self.lock_update = threading.Lock()
         self.jobsdone = 0  # how many jobs has this worker completed?
-        # id of this worker in the dispatcher;
-        # just a convenience var for easy access/logging TODO remove?
+        # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
         self.myid = myid
         self.dispatcher = dispatcher
         self.finished = False
@@ -134,8 +130,7 @@ class Worker(object):
     @Pyro4.expose
     @Pyro4.oneway
     def requestjob(self):
-        """Request jobs from the dispatcher, in a perpetual loop
-        until `getstate()` is called.
+        """Request jobs from the dispatcher, in a perpetual loop until `getstate()` is called.
 
         Raises
         ------
@@ -144,8 +139,7 @@ class Worker(object):
 
         """
         if self.model is None:
-            raise RuntimeError("worker must be initialized before \
-                receiving jobs")
+            raise RuntimeError("worker must be initialized before receiving jobs")
 
         job = None
         while job is None and not self.finished:
@@ -155,8 +149,7 @@ class Worker(object):
                 # no new job: try again, unless we're finished with all work
                 continue
         if job is not None:
-            logger.info("worker #%s received job #%i",
-                        self.myid, self.jobsdone)
+            logger.info("worker #%s received job #%i", self.myid, self.jobsdone)
             self.processjob(job)
             self.dispatcher.jobdone(self.myid)
         else:
@@ -197,8 +190,7 @@ class Worker(object):
             The current state.
 
         """
-        logger.info("worker #%i returning its state after %s jobs",
-                    self.myid, self.jobsdone)
+        logger.info("worker #%i returning its state after %s jobs", self.myid, self.jobsdone)
         result = self.model.state
         assert isinstance(result, ldamodel.LdaState)
         self.model.clear()  # free up mem in-between two EM cycles
@@ -213,8 +205,7 @@ class Worker(object):
         Parameters
         ----------
         state : :class:`~gensim.models.ldamodel.LdaState`
-            Encapsulates information for distributed computation
-            of LdaModel objects.
+            Encapsulates information for distributed computation of LdaModel objects.
 
         """
         assert state is not None
@@ -234,24 +225,20 @@ class Worker(object):
 def main():
     """Set up argument parser,logger and launches pyro daemon."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--host", help="Nameserver hostname \
-        (default:%(default)s)", default=None)
-    parser.add_argument("--port", help="Nameserver port \
-        (default: %(default)s)", default=None, type=int)
+    parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
+    parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
     parser.add_argument(
-        "--no-broadcast", help="Disable broadcast \
-        (default: %(default)s)", action='store_const',
-        default=True, const=False)
-    parser.add_argument("--hmac", help="Nameserver hmac key \
-        (default: %(default)s)", default=None)
+        "--no-broadcast", help="Disable broadcast (default: %(default)s)", action='store_const',
+        default=True, const=False
+    )
+    parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
     parser.add_argument(
-        '-v', '--verbose', help='Verbose flag', action='store_const',
-        dest="loglevel", const=logging.INFO, default=logging.WARNING
+        '-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel",
+        const=logging.INFO, default=logging.WARNING
     )
     args = parser.parse_args()
 
-    logging.basicConfig(format='%(asctime)s : %(levelname)s\
-                     : %(message)s', level=args.loglevel)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
     logger.info("running %s", " ".join(sys.argv))
 
     ns_conf = {
@@ -260,8 +247,7 @@ def main():
         "port": args.port,
         "hmac_key": args.hmac
     }
-    utils.pyro_daemon(LDA_WORKER_PREFIX, Worker(),
-                      random_suffix=True, ns_conf=ns_conf)
+    utils.pyro_daemon(LDA_WORKER_PREFIX, Worker(), random_suffix=True, ns_conf=ns_conf)
     logger.info("finished running %s", " ".join(sys.argv))
 
 
