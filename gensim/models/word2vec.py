@@ -1216,12 +1216,20 @@ class Word2VecVocab(utils.SaveLoad):
             sorted_vocab = sorted(sorted_vocab_list, key=lambda word: word[1], reverse=True)
 
             if self.max_vocab < len(sorted_vocab):
-                calc_min_count = sorted_vocab[self.max_vocab][1]
+                if sorted_vocab[self.max_vocab][1] != sorted_vocab[self.max_vocab - 1][1]:
+                    calc_min_count = sorted_vocab[self.max_vocab - 1][1]
+                else:
+                    calc_min_count = sorted_vocab[self.max_vocab - 1][1] + 1
             else:
                 calc_min_count = 1
 
             if calc_min_count > min_count:
+                logger.info("min_count was set to %d due to max_vocab being set to %d" %
+                           (calc_min_count, self.max_vocab))
                 min_count = calc_min_count
+            else:
+                logger.info("specified min_count = %d is larger that min_count calculated \
+                    by max_vocab = %d, using specified min_count" % (min_count, calc_min_count))
 
         if not update:
             logger.info("Loading a fresh vocabulary")
