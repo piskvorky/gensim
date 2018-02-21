@@ -4,7 +4,7 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Scikit learn interface for `gensim.corpora.Dictionary`.
+"""Scikit learn interface for :class:`~gensim.corpora.dictionary.Dictionary`.
 
 Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
 
