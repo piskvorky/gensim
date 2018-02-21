@@ -16,22 +16,10 @@ from gensim import matutils
 from gensim.corpora import IndexedCorpus
 
 
-logger = logging.getLogger('gensim.corpora.mmcorpus')
+logger = logging.getLogger(__name__)
 
 
-try:
-    # try to load fast, cythonized code if possible
-    from gensim.corpora._mmreader import MmReader
-    FAST_VERSION = 1
-    logger.info('Fast version of MmReader is being used')
-except ImportError:
-    # else fall back to python/numpy
-    from gensim.matutils import MmReader
-    FAST_VERSION = -1
-    logger.warning('Slow version of MmReader is being used')
-
-
-class MmCorpus(MmReader, IndexedCorpus):
+class MmCorpus(matutils.MmReader, IndexedCorpus):
     """
     Corpus in matrix market format
 
@@ -70,7 +58,7 @@ class MmCorpus(MmReader, IndexedCorpus):
 
         # avoid calling super(), too confusing
         IndexedCorpus.__init__(self, fname)
-        MmReader.__init__(self, fname)
+        matutils.MmReader.__init__(self, fname)
 
     def __iter__(self):
         """
