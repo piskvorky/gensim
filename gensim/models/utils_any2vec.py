@@ -109,9 +109,10 @@ def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, tota
             for word, vocab_ in sorted(iteritems(vocab), key=lambda item: -item[1].count):
                 row = vectors[vocab_.index]
                 if binary:
+                    row = row.astype(REAL)
                     fout.write(utils.to_utf8(word) + b" " + row.tostring())
                 else:
-                    fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
+                    fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join(repr(val) for val in row))))
 
 
 def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
@@ -205,7 +206,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
                     if ch != b'\n':  # ignore newlines in front of words (some binary files have)
                         word.append(ch)
                 word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
-                weights = fromstring(fin.read(binary_len), dtype=REAL)
+                weights = fromstring(fin.read(binary_len), dtype=REAL).astype(datatype)
                 add_word(word, weights)
         else:
             for line_no in xrange(vocab_size):
@@ -215,7 +216,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
                 parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                 if len(parts) != vector_size + 1:
                     raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
-                word, weights = parts[0], [REAL(x) for x in parts[1:]]
+                word, weights = parts[0], [datatype(x) for x in parts[1:]]
                 add_word(word, weights)
     if result.vectors.shape[0] != len(result.vocab):
         logger.info(

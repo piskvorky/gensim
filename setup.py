@@ -256,9 +256,11 @@ setup(
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
             include_dirs=[model_dir]),
+        Extension('gensim.corpora._mmreader',
+            sources=['./gensim/corpora/_mmreader.c']),
         Extension('gensim.models.fasttext_inner',
             sources=['./gensim/models/fasttext_inner.c'],
-            include_dirs=[model_dir])
+            include_dirs=[model_dir]),
     ],
     cmdclass=cmdclass,
     packages=find_packages(),
@@ -268,6 +270,8 @@ setup(
 
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
+    
+    license='LGPLv2.1',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
         'LSA, LSI, Latent Dirichlet Allocation, LDA, '
