@@ -155,11 +155,11 @@ except ImportError:
         ----------
         model : :class:`~gensim.models.word2vec.Word2Vec`
             `Word2Vec` instance.
-        sentences : iterable of iterables
+        sentences : iterable of list of str
             Iterable of the sentences directly from disk/network.
         alpha : float
             Learning rate.
-        work : :class:`numpy.ndarray`
+        work : 'numpy.ndarray`
             Private working memory for each worker.
         compute_loss: bool
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
@@ -199,11 +199,11 @@ except ImportError:
         ----------
         model : :class:`~gensim.models.word2vec.Word2Vec`
             `Word2Vec` instance.
-        sentences : iterable of iterables
+        sentences : iterable of list of str
             Iterable of the sentences directly from disk/network.
         alpha : float
             Learning rate.
-        work : :class:`numpy.ndarray`
+        work : `numpy.ndarray`
             Private working memory for each worker.
         compute_loss: bool
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
@@ -240,7 +240,7 @@ except ImportError:
         ----------
         model : :class:`~gensim.models.word2vec.Word2Vec`
             `Word2Vec` instance.
-        work : :class:`numpy.ndarray`
+        work : `numpy.ndarray`
             Private working memory for each worker.
         """
         log_prob_sentence = 0.0
@@ -272,7 +272,7 @@ except ImportError:
         ----------
         model : :class:`~gensim.models.word2vec.Word2Vec`
             `Word2Vec` instance.
-        work : :class:`numpy.ndarray`
+        work : `numpy.ndarray`
             Private working memory for each worker.
         """
         log_prob_sentence = 0.0
@@ -683,7 +683,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : iterable of list of str
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
