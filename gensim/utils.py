@@ -139,6 +139,36 @@ def file_or_filename(input):
         return input
 
 
+@contextmanager
+def open_file(input):
+    """ Generates 'with' like behaviour except closing the file object
+
+    Parameters
+    ----------
+    input : str or file-like
+        Filename or file-like object.
+
+    Yields
+    -------
+    str
+        lines from the given file-like object or a new file-like object from the given filename.
+
+    """
+    mgr = file_or_filename(input)
+    exc = False
+    try:
+        yield mgr
+    except Exception:
+        # Handling any unhandled exceptions from the code nested in 'with' statement.
+        exc = True
+        if not isinstance(input, string_types) or not mgr.__exit__(*sys.exc_info()):
+            raise
+        # Try to introspect and silence errors.
+    finally:
+        if not exc and isinstance(input, string_types):
+            mgr.__exit__(None, None, None)
+
+
 def deaccent(text):
     """Remove accentuation from the given string.
 

@@ -225,6 +225,14 @@ class TestMmCorpus(CorpusTestCase):
         # MmCorpus needs file write with seek => doesn't support compressed output (only input)
         pass
 
+    def test_closed_file_object(self):
+        file_obj = open(datapath('testcorpus.mm'))
+        f = file_obj.closed
+        mmcorpus.MmCorpus(file_obj)
+        s = file_obj.closed
+        self.assertEqual(f, 0)
+        self.assertEqual(s, 0)
+
     def test_load(self):
         self.assertEqual(self.corpus.num_docs, 9)
         self.assertEqual(self.corpus.num_terms, 12)
