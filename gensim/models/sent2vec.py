@@ -689,6 +689,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         explicit `epochs` argument **MUST** be provided. In the common and recommended case,
         where :meth:`~gensim.models.sent2vec.Sent2Vec.train()` is only called once,
         the model's cached `epochs` value should be supplied as `epochs` value.
+
         Parameters
         ----------
         sentences : iterable of iterables
@@ -715,6 +716,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
+
         Examples
         --------
         >>> from gensim.models import Sent2Vec
