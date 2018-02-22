@@ -5,11 +5,15 @@
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Scikit learn interface for gensim for easy use of gensim with scikit-learn
-Follows scikit-learn API conventions
-"""
+"""Scikit learn interface for :class:`~gensim.models.ldaseqmodel.LdaSeqModel`.
 
+Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
+
+Examples
+--------
+
+
+"""
 import numpy as np
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
@@ -18,15 +22,60 @@ from gensim import models
 
 
 class LdaSeqTransformer(TransformerMixin, BaseEstimator):
-    """
-    Base LdaSeq module
+    """Base Sequential LDA module.
+
+    Wraps :class:`~gensim.models.ldaseqmodel.LdaSeqModel`.
+    For more information on the inner workings please take a look at
+    the original class.
+
+
     """
 
     def __init__(self, time_slice=None, id2word=None, alphas=0.01, num_topics=10, initialize='gensim', sstats=None,
                  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10, random_state=None,
                  lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
-        """
-        Sklearn wrapper for LdaSeq model. See gensim.models.LdaSeqModel for parameter details.
+        """Sklearn wrapper for  :class:`~gensim.models.ldaseqmodel.LdaSeqModel` model.
+
+        Parameters
+        ----------
+        time_slice : list of int, optional
+            Contains the number of documents in each time-slice.
+        id2word : dict of (int, str)
+            Mapping from an ID to the word it represents in the vocabulary.
+        alphas : float
+            The prior probability of each topic.
+        num_topics : int
+            Number of latent topics to be discovered in the corpus.
+        initialize : str {'gensim', 'own', 'ldamodel'}
+            Controls the initialization of the DTM model. Supports three different modes:
+                - 'gensim', default: Uses gensim's own LDA initialization.
+                - 'own': You can use your own initialization matrix of an LDA model previously trained by passing it to `sstats`.
+                - 'lda_model': Use a previously used LDA model, passing it through the `lda_model` argument.
+        sstats : np.ndarray of shape (vocab_len, `num_topics`)
+            If `initialize` is set to 'own' this will be used to initialize the DTM model.
+        lda_model : :class:`~gensim.models.ldamodel.LdaModel`
+            If `initialize` is set to 'lda_model' this object will be used to create the `sstats` initialization matrix.
+        obs_variance : float
+            Observed variance used to approximate the true and forward variance as shown in _[1].
+
+            References
+            ----------
+            http://repository.cmu.edu/cgi/viewcontent.cgi?article=2036&context=compsci
+        chain_variance : float
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve.
+        passes : int
+            Number of passes over the corpus for the initial :class:`~gensim.models.ldamodel.LdaModel`
+        random_state : {np.random.RandomState, int}
+            Can be a np.random.RandomState object, or the seed to generate one. Used for reproducibility of results.
+        lda_inference_max_iter : int
+            Maximum number of iterations in the inference step of the LDA training.
+        en_min_iter : int
+            Minimum number of iterations until converge of the Expectation-Maximization algorithm
+        en_max_iter : int
+            Maximum number of iterations until converge of the Expectation-Maximization algorithm
+        chunksize : int
+            Number of documents in the corpus do be processed in in a chunk.
+
         """
         self.gensim_model = None
         self.time_slice = time_slice
@@ -46,9 +95,18 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
         self.chunksize = chunksize
 
     def fit(self, X, y=None):
-        """
-        Fit the model according to the given training data.
-        Calls gensim.models.LdaSeqModel
+        """Fit the model according to the given training data.
+
+        Parameters
+        ----------
+        X : {iterable of iterable of (int, int), scipy.sparse matrix}
+            A collection of documents in BOW format used for training the model.
+
+        Returns
+        -------
+        :class:`~gensim.sklearn_api.ldaseqmodel.LdaSeqTransformer`
+            The trained model.
+
         """
         self.gensim_model = models.LdaSeqModel(
             corpus=X, time_slice=self.time_slice, id2word=self.id2word,
@@ -61,11 +119,17 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
 
     def transform(self, docs):
         """
-        Return the topic proportions for the documents passed.
-        The input `docs` should be in BOW format and can be a list of documents like
-        [[(4, 1), (7, 1)],
-        [(9, 1), (13, 1)], [(2, 1), (6, 1)]]
-        or a single document like : [(4, 1), (7, 1)]
+
+        Parameters
+        ----------
+        docs : {iterable of iterable of (int, int), scipy.sparse matrix}
+            A collection of documents in BOW format to be transformed.
+
+        Returns
+        -------
+        np.ndarray of shape (`len(docs)`, `num_topics`)
+            The topic representation of each document.
+
         """
         if self.gensim_model is None:
             raise NotFittedError(
