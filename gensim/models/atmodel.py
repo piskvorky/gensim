@@ -963,7 +963,7 @@ class AuthorTopicModel(LdaModel):
             raise ValueError("AuthorTopicModel.get_new_author_topics() called with an empty corpus")
 
         new_author_name = "placeholder_name"
-        corpus_doc_idx = list(range(self.total_docs, self.total_docs+len_input_corpus))
+        corpus_doc_idx = list(range(self.total_docs, self.total_docs + len_input_corpus))
 
         # Add the new placeholder author to author2id/id2author dictionaries.
         num_new_authors = 1
