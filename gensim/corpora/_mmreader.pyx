@@ -1,8 +1,6 @@
 # Copyright (C) 2018 Radim Rehurek <radimrehurek@seznam.cz>
-"""
-Reader for corpus in the Matrix Market format.
-
-"""
+# cython: embedsignature=True
+"""Reader for corpus in the Matrix Market format."""
 from __future__ import with_statement
 
 from gensim import utils
@@ -19,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 cdef class MmReader(object):
-    """Matrix market file reader.
+    """Matrix market file reader (fast Cython version), used for :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 
     Wrap a term-document matrix on disk (in matrix-market format), and present it
     as an object which supports iteration over the rows (~documents).
@@ -46,18 +44,14 @@ cdef class MmReader(object):
 
     def __init__(self, input, transposed=True):
         """
-        MmReader(input, transposed=True):
-
-        Create matrix reader
 
         Parameters
         ----------
         input : {str, file-like object}
-            String (file path) or a file-like object that supports
-            `seek()` (e.g. :class:`gzip.GzipFile`, :class:`bz2.BZ2File`). File-like objects are
-            not closed automatically.
+            Path to input file in MM format or a file-like object that supports `seek()`
+            (e.g. :class:`~gzip.GzipFile`, :class:`~bz2.BZ2File`).
 
-        transposed : bool
+        transposed : bool, optional
             if True, expects lines to represent doc_id, term_id, value. Else, expects term_id, doc_id, value.
 
         """
@@ -89,6 +83,7 @@ cdef class MmReader(object):
         )
 
     def __len__(self):
+        """Get size of corpus (number of documents)."""
         return self.num_docs
 
     def __str__(self):
@@ -96,15 +91,12 @@ cdef class MmReader(object):
                 (self.num_docs, self.num_terms, self.num_nnz))
 
     def skip_headers(self, input_file):
-        """
-        skip_headers(self, input_file)
-
-        Skip file headers that appear before the first document.
+        """Skip file headers that appear before the first document.
 
         Parameters
         ----------
-        input_file : iterable
-            Consumes any lines from start of `input_file` that begin with a % .
+        input_file : iterable of str
+            Iterable taken from file in MM format.
 
         """
         for line in input_file:
@@ -113,23 +105,18 @@ cdef class MmReader(object):
             break
 
     def __iter__(self):
-        """
-        __iter__()
-
-        Iterate through vectors from underlying matrix.
-
-        Yields
-        ------
-        int, list of (int, str)
-            Document id and "vector" of terms for next document in matrix.
-            Vector of terms is represented as a list of (termid, val) tuples.
+        """Iterate through corpus.
 
         Notes
         ------
-        Note that the total number of vectors returned is always equal to the
-        number of rows specified in the header; empty documents are inserted and
-        yielded where appropriate, even if they are not explicitly stored in the
-        Matrix Market file.
+        Note that the total number of vectors returned is always equal to the number of rows specified
+        in the header, empty documents are inserted and yielded where appropriate, even if they are not explicitly
+        stored in the Matrix Market file.
+
+        Yields
+        ------
+        (int, list of (int, number))
+            Document id and Document in BoW format
 
         """
         cdef int docid, termid, previd
@@ -178,7 +165,7 @@ cdef class MmReader(object):
             yield previd, []
 
     def docbyoffset(self, offset):
-        """Return document at file offset `offset` (in bytes).
+        """Get document at file offset `offset` (in bytes).
 
         Parameters
         ----------
@@ -188,8 +175,7 @@ cdef class MmReader(object):
         Returns
         ------
         list of (int, str)
-            "Vector" of terms for document at offset.
-            Vector of terms is represented as a list of (termid, val) tuples.
+            Document in BoW format.
 
         """
         # empty documents are not stored explicitly in MM format, so the index marks

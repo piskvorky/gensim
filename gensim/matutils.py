@@ -1418,9 +1418,8 @@ except ImportError:
 
             Yields
             ------
-            (int, list of (int, str))
-                Document id and "vector" of terms for next document in matrix.
-                Vector of terms is represented as a list of (termid, val) tuples.
+            (int, list of (int, number))
+                Document id and Document in BoW format
 
             """
             with utils.file_or_filename(self.input) as lines:
@@ -1473,7 +1472,6 @@ except ImportError:
                 Document in BoW format.
 
             """
-
             # empty documents are not stored explicitly in MM format, so the index marks
             # them with a special offset, -1.
             if offset == -1:
