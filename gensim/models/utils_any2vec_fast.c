@@ -1013,7 +1013,7 @@ static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UN
 /* "gensim/models/utils_any2vec_fast.pyx":15
  * 
  * 
- * cpdef compute_ngrams(unicode word, unsigned int min_n, unsigned int max_n):             # <<<<<<<<<<<<<<
+ * cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):             # <<<<<<<<<<<<<<
  *     cdef unicode extended_word = f'<{word}>'
  *     ngrams = []
  */
@@ -1042,7 +1042,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
 
   /* "gensim/models/utils_any2vec_fast.pyx":16
  * 
- * cpdef compute_ngrams(unicode word, unsigned int min_n, unsigned int max_n):
+ * cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):
  *     cdef unicode extended_word = f'<{word}>'             # <<<<<<<<<<<<<<
  *     ngrams = []
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
@@ -1073,7 +1073,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
   __pyx_t_4 = 0;
 
   /* "gensim/models/utils_any2vec_fast.pyx":17
- * cpdef compute_ngrams(unicode word, unsigned int min_n, unsigned int max_n):
+ * cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):
  *     cdef unicode extended_word = f'<{word}>'
  *     ngrams = []             # <<<<<<<<<<<<<<
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
@@ -1275,7 +1275,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
   /* "gensim/models/utils_any2vec_fast.pyx":15
  * 
  * 
- * cpdef compute_ngrams(unicode word, unsigned int min_n, unsigned int max_n):             # <<<<<<<<<<<<<<
+ * cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):             # <<<<<<<<<<<<<<
  *     cdef unicode extended_word = f'<{word}>'
  *     ngrams = []
  */
@@ -1345,7 +1345,7 @@ static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_3compute_ngrams(P
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
-    __pyx_v_word = ((PyObject*)values[0]);
+    __pyx_v_word = values[0];
     __pyx_v_min_n = __Pyx_PyInt_As_unsigned_int(values[1]); if (unlikely((__pyx_v_min_n == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L3_error)
     __pyx_v_max_n = __Pyx_PyInt_As_unsigned_int(values[2]); if (unlikely((__pyx_v_max_n == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L3_error)
   }
@@ -1357,14 +1357,9 @@ static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_3compute_ngrams(P
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_word), (&PyUnicode_Type), 1, "word", 1))) __PYX_ERR(0, 15, __pyx_L1_error)
   __pyx_r = __pyx_pf_6gensim_6models_18utils_any2vec_fast_2compute_ngrams(__pyx_self, __pyx_v_word, __pyx_v_min_n, __pyx_v_max_n);
 
   /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = NULL;
-  __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }

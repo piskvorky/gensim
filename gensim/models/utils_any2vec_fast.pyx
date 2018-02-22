@@ -12,7 +12,7 @@ def ft_hash(unicode string):
     return h
 
 
-cpdef compute_ngrams(unicode word, unsigned int min_n, unsigned int max_n):
+cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):
     cdef unicode extended_word = f'<{word}>'
     ngrams = []
     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
