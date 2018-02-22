@@ -1211,15 +1211,10 @@ class Word2VecVocab(utils.SaveLoad):
         # if max_vocab is specified instead of min_count
         # pick a min_count which satisfies max_vocab as well as possible
         if self.max_vocab is not None:
-
-            sorted_vocab_list = self.raw_vocab.items()
-            sorted_vocab = sorted(sorted_vocab_list, key=lambda word: word[1], reverse=True)
+            sorted_vocab = sorted(self.raw_vocab.keys(), key=lambda word: self.raw_vocab[word], reverse=True)
 
             if self.max_vocab < len(sorted_vocab):
-                if sorted_vocab[self.max_vocab][1] != sorted_vocab[self.max_vocab - 1][1]:
-                    calc_min_count = sorted_vocab[self.max_vocab - 1][1]
-                else:
-                    calc_min_count = sorted_vocab[self.max_vocab - 1][1] + 1
+                calc_min_count = self.raw_vocab[sorted_vocab[self.max_vocab]] + 1
             else:
                 calc_min_count = 1
 
