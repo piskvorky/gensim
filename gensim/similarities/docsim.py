@@ -615,7 +615,8 @@ class Similarity(interfaces.SimilarityABC):
 
         Notes
         -----
-        Call :meth:`~gensim.similarities.Similarity.close_shard` internally to spill any unfinished shards to disk first.
+        Call :meth:`~gensim.similarities.Similarity.close_shard` internally to spill
+        any unfinished shards to disk first.
 
         Examples
         --------
@@ -688,10 +689,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         >>> # Create index:
         >>> corpus = TextCorpus(datapath('testcorpus.txt'))
         >>> index = MatrixSimilarity(corpus, num_features=400)
-        >>> index[corpus.dictionary.doc2bow(simple_preprocess('trees'))]
-        array([ 0.        ,  0.        ,  0.        ,  0.        ,  0.        ,
-        1.        ,  0.70710677,  0.57735026,  0.        ], dtype=float32)
-
+        >>> sims = index[corpus.dictionary.doc2bow(simple_preprocess('trees'))]
 
         """
         if num_features is None:
