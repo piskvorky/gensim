@@ -256,6 +256,8 @@ setup(
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
             include_dirs=[model_dir]),
+        Extension('gensim.corpora._mmreader',
+            sources=['./gensim/corpora/_mmreader.c']),
         Extension('gensim.models.fasttext_inner',
             sources=['./gensim/models/fasttext_inner.c'],
             include_dirs=[model_dir]),
