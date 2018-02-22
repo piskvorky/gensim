@@ -357,7 +357,8 @@ class TestFastText(unittest.TestCase):
         # out-of-vocab word
         out_expected_vec = numpy.array([-0.33959097, -0.21121596, -0.37212455, -0.25057459, 0.11222091,
             0.17517674, 0.26949012, 0.29352987, -0.1930912, -0.09438948])
-        self.assertTrue(numpy.allclose(loaded_model["random_word"], out_expected_vec, atol=1e-4))
+        out_vec = loaded_model["random_word"]
+        self.assertTrue(numpy.allclose(out_vec, out_expected_vec, atol=1e-4))
 
 
 if __name__ == '__main__':
