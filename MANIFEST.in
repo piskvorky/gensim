@@ -14,3 +14,5 @@ include gensim/models/fasttext_inner.c
 include gensim/models/fasttext_inner.pyx
 include gensim/corpora/_mmreader.c
 include gensim/corpora/_mmreader.pyx
+include gensim/models/sent2vec_inner.cpp
+include gensim/models/sent2vec_inner.pyx
