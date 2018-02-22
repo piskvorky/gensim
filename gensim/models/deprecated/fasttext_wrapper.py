@@ -70,7 +70,9 @@ class FastTextKeyedVectors(KeyedVectors):
         self.syn0_vocab_norm = None
         self.syn0_ngrams = None
         self.syn0_ngrams_norm = None
+        self.ngrams = {}
         self.hash2index = {}
+        self.ngrams_word = {}
         self.min_n = 0
         self.max_n = 0
 
@@ -97,18 +99,17 @@ class FastTextKeyedVectors(KeyedVectors):
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
         else:
             word_vec = np.zeros(self.syn0_ngrams.shape[1], dtype=np.float32)
-            hashes = [ft_hash(ng) % self.bucket
-                      for ng in compute_ngrams(word, self.min_n, self.max_n)]
-            hashes = [h for h in hashes if h in self.hash2index]
+            ngrams = compute_ngrams(word, self.min_n, self.max_n)
+            ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:
                 ngram_weights = self.syn0_ngrams_norm
             else:
                 ngram_weights = self.syn0_ngrams
-            for ngram_hash in hashes:
-                word_vec += ngram_weights[self.hash2index[ngram_hash]]
+            for ngram in ngrams:
+                word_vec += ngram_weights[self.ngrams[ngram]]
             if word_vec.any():
-                return word_vec / len(hashes)
-            else:  # No hashes of any ngrams of the word are present in self.hash2index
+                return word_vec / len(ngrams)
+            else:  # No ngrams of the word are present in self.ngrams
                 raise KeyError('all ngrams for word %s absent from model' % word)
 
     def init_sims(self, replace=False):
@@ -142,8 +143,7 @@ class FastTextKeyedVectors(KeyedVectors):
             return True
         else:
             char_ngrams = compute_ngrams(word, self.min_n, self.max_n)
-            return any(ft_hash(ng) % self.bucket in self.hash2index
-                       for ng in char_ngrams)
+            return any(ng in self.ngrams for ng in char_ngrams)
 
     @classmethod
     def load_word2vec_format(cls, *args, **kwargs):
@@ -277,12 +277,6 @@ class FastText(Word2Vec):
         if hasattr(model.wv, 'syn0_all'):
             setattr(model.wv, 'syn0_ngrams', model.wv.syn0_all)
             delattr(model.wv, 'syn0_all')
-        setattr(model.wv, 'bucket', model.wv.syn0_ngrams.shape[0])
-        if not hasattr(model.wv, 'hash2index') and hasattr(model.wv, 'ngrams'):
-            model.wv.hash2index = {}
-            for i, ngram in enumerate(model.wv.ngrams):
-                ngram_hash = ft_hash(ngram) % model.wv.bucket
-                model.wv.hash2index[ngram_hash] = i
         return model
 
     @classmethod
@@ -322,7 +316,6 @@ class FastText(Word2Vec):
         self.hs = loss == 1
         self.sg = model == 2
         self.bucket = bucket
-        self.wv.bucket = bucket
         self.wv.min_n = minn
         self.wv.max_n = maxn
         self.sample = t
@@ -401,6 +394,7 @@ class FastText(Word2Vec):
         vectors are discarded here to save space.
 
         """
+        self.wv.ngrams = {}
         all_ngrams = []
         self.wv.syn0 = np.zeros((len(self.wv.vocab), self.vector_size), dtype=REAL)
 
@@ -412,9 +406,9 @@ class FastText(Word2Vec):
         self.num_ngram_vectors = len(all_ngrams)
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
-            ngram_hash = ft_hash(ngram) % self.bucket
+            ngram_hash = ft_hash(ngram)
             ngram_indices.append(len(self.wv.vocab) + ngram_hash % self.bucket)
-            self.wv.hash2index[ngram_hash] = i
+            self.wv.ngrams[ngram] = i
         self.wv.syn0_ngrams = self.wv.syn0_ngrams.take(ngram_indices, axis=0)
 
         ngram_weights = self.wv.syn0_ngrams
@@ -427,9 +421,7 @@ class FastText(Word2Vec):
         for w, vocab in self.wv.vocab.items():
             word_ngrams = compute_ngrams(w, self.wv.min_n, self.wv.max_n)
             for word_ngram in word_ngrams:
-                ng_hash = ft_hash(word_ngram) % self.bucket
-                self.wv.syn0[vocab.index] += np.array(
-                    ngram_weights[self.wv.hash2index[ng_hash]])
+                self.wv.syn0[vocab.index] += np.array(ngram_weights[self.wv.ngrams[word_ngram]])
 
             self.wv.syn0[vocab.index] /= (len(word_ngrams) + 1)
         logger.info(
