@@ -217,30 +217,25 @@ class TextCorpus(interfaces.CorpusABC):
         Examples
         --------
         >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim import corpora
         >>> from gensim.test.utils import datapath
         >>> from gensim import utils
         >>>
-        >>> class CorpusMiislita(corpora.TextCorpus):
-        >>>     stoplist = set('for a of the and to in on'.split())
         >>>
-        >>>     def get_texts(self):
-        >>>         for doc in self.getstream():
-        >>>             yield [word for word in utils.to_unicode(doc).lower().split()
-        >>>                 if word not in CorpusMiislita.stoplist]
-        >>>
-        >>>     def __len__(self):
-        >>>         if 'length' not in self.__dict__:
-        >>>             logger.info("caching corpus size (calculating number of documents)")
-        >>>         self.length = sum(1 for _ in self.get_texts())
-        >>>         return self.length
+        >>> class CorpusMiislita(TextCorpus):
+        ...     stopwords = set('for a of the and to in on'.split())
+        ...
+        ...     def get_texts(self):
+        ...         for doc in self.getstream():
+        ...             yield [word for word in utils.to_unicode(doc).lower().split() if word not in self.stopwords]
+        ...
+        ...     def __len__(self):
+        ...         self.length = sum(1 for _ in self.get_texts())
+        ...         return self.length
         >>>
         >>> corpus = CorpusMiislita(datapath('head500.noblanks.cor.bz2'))
-        >>> corpus.get_texts()
-        <generator object get_texts at 0x7fa932f397d0>
-        >>> corpus.__len__()
+        >>> len(corpus)
         250
-
+        >>> document = next(iter(corpus.get_texts()))
 
         """
         self.input = input
