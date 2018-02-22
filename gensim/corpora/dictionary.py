@@ -38,6 +38,8 @@ class Dictionary(utils.SaveLoad, Mapping):
         Reverse mapping for token2id, initialized in lazy manner to save memory.
     dfs : dict of (int, int)
         Document frequencies: token_id -> in how many documents contain this token.
+    tfs : dict of (int, int)
+        Token frequencies: token_id -> token frequency from all documents.
     num_docs : int
         Number of documents processed.
     num_pos : int
@@ -70,6 +72,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.token2id = {}
         self.id2token = {}
         self.dfs = {}
+        self.tfs = {}
 
         self.num_docs = 0
         self.num_pos = 0
@@ -257,6 +260,11 @@ class Dictionary(utils.SaveLoad, Mapping):
             for tokenid in iterkeys(result):
                 dfs[tokenid] = dfs.get(tokenid, 0) + 1
 
+            # increase token frequency for each token that appeared in the document
+            tfs = self.tfs
+            for tokenid, count in iteritems(result):
+                tfs[tokenid] = tfs.get(tokenid, 0) + count
+
         # return tokenids, in ascending id order
         result = sorted(iteritems(result))
         if return_missing:
@@ -432,10 +440,12 @@ class Dictionary(utils.SaveLoad, Mapping):
             bad_ids = set(bad_ids)
             self.token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if tokenid not in bad_ids}
             self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if tokenid not in bad_ids}
+            self.tfs = {tokenid: freq for tokenid, freq in iteritems(self.tfs) if tokenid not in bad_ids}
         if good_ids is not None:
             good_ids = set(good_ids)
             self.token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if tokenid in good_ids}
             self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if tokenid in good_ids}
+            self.tfs = {tokenid: freq for tokenid, freq in iteritems(self.tfs) if tokenid in good_ids}
         self.compactify()
 
     def compactify(self):
@@ -449,8 +459,9 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.token2id = {token: idmap[tokenid] for token, tokenid in iteritems(self.token2id)}
         self.id2token = {}
         self.dfs = {idmap[tokenid]: freq for tokenid, freq in iteritems(self.dfs)}
+        self.tfs = {idmap[tokenid]: freq for tokenid, freq in iteritems(self.tfs)}
 
-    def save_as_text(self, fname, sort_by_word=True):
+    def save_as_text(self, fname, sort_by_word=True, output_tfs=False):
         """Save :class:`~gensim.corpora.dictionary.Dictionary` to a text file.
 
         Parameters
@@ -459,6 +470,8 @@ class Dictionary(utils.SaveLoad, Mapping):
             Path to output file.
         sort_by_word : bool, optional
             if True - sort by word in lexicographical order.
+        output_tfs : bool, optional
+            if True - output a fourth column with token frequencies.
 
         Notes
         -----
@@ -469,6 +482,14 @@ class Dictionary(utils.SaveLoad, Mapping):
             id_2[TAB]word_2[TAB]document_frequency_2[NEWLINE]
             ....
             id_k[TAB]word_k[TAB]document_frequency_k[NEWLINE]
+
+            or if output_tfs=True:
+
+            num_docs
+            id_1[TAB]word_1[TAB]document_frequency_1[TAB]token_frequency_1[NEWLINE]
+            id_2[TAB]word_2[TAB]document_frequency_2[TAB]token_frequency_2[NEWLINE]
+            ....
+            id_k[TAB]word_k[TAB]document_frequency_k[TAB]token_frequency_d[NEWLINE]
 
         Warnings
         --------
@@ -500,11 +521,17 @@ class Dictionary(utils.SaveLoad, Mapping):
             fout.write(utils.to_utf8(numdocs_line))
             if sort_by_word:
                 for token, tokenid in sorted(iteritems(self.token2id)):
-                    line = "%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0))
+                    if output_tfs:
+                        line = "%i\t%s\t%i\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0), self.tfs.get(tokenid, 0))
+                    else:
+                        line = "%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0))
                     fout.write(utils.to_utf8(line))
             else:
-                for tokenid, freq in sorted(iteritems(self.dfs), key=lambda item: -item[1]):
-                    line = "%i\t%s\t%i\n" % (tokenid, self[tokenid], freq)
+                for tokenid, dfreq in sorted(iteritems(self.dfs), key=lambda item: -item[1]):
+                    if output_tfs:
+                        line = "%i\t%s\t%i\t%i\n" % (tokenid, self[tokenid], dfreq, self.tfs.get(tokenid, 0))
+                    else:
+                        line = "%i\t%s\t%i\n" % (tokenid, self[tokenid], dfreq)
                     fout.write(utils.to_utf8(line))
 
     def merge_with(self, other):
@@ -553,11 +580,13 @@ class Dictionary(utils.SaveLoad, Mapping):
                 new_id = len(self.token2id)
                 self.token2id[other_token] = new_id
                 self.dfs[new_id] = 0
+                self.tfs[new_id] = 0
             old2new[other_id] = new_id
             try:
                 self.dfs[new_id] += other.dfs[other_id]
+                self.tfs[new_id] += other.tfs[other_id]
             except Exception:
-                # `other` isn't a Dictionary (probably just a dict) => ignore dfs, keep going
+                # `other` isn't a Dictionary (probably just a dict) => ignore dfs and tfs, keep going
                 pass
         try:
             self.num_docs += other.num_docs
@@ -610,7 +639,12 @@ class Dictionary(utils.SaveLoad, Mapping):
                     else:
                         logging.warning("Text does not contain num_docs on the first line.")
                 try:
-                    wordid, word, docfreq = line[:-1].split('\t')
+                    # For backwards compatibility (without token frequencies).
+                    if len(line[:-1].split('\t')) == 4:
+                        wordid, word, docfreq, tokfreq = line[:-1].split('\t')
+                    else:
+                        wordid, word, docfreq = line[:-1].split('\t')
+                        tokfreq = None
                 except Exception:
                     raise ValueError("invalid line in dictionary file %s: %s"
                                      % (fname, line.strip()))
@@ -619,6 +653,8 @@ class Dictionary(utils.SaveLoad, Mapping):
                     raise KeyError('token %s is defined as ID %d and as ID %d' % (word, wordid, result.token2id[word]))
                 result.token2id[word] = wordid
                 result.dfs[wordid] = int(docfreq)
+                if tokfreq:
+                    result.tfs[wordid] = int(tokfreq)
         return result
 
     @staticmethod
@@ -666,6 +702,7 @@ class Dictionary(utils.SaveLoad, Mapping):
                 max_id = max(wordid, max_id)
                 result.num_pos += word_freq
                 result.dfs[wordid] = result.dfs.get(wordid, 0) + 1
+                result.tfs[wordid] = result.tfs.get(wordid, 0) + word_freq
 
         if id2word is None:
             # make sure length(result) == get_max_id(corpus) + 1
@@ -674,8 +711,9 @@ class Dictionary(utils.SaveLoad, Mapping):
             # id=>word mapping given: simply copy it
             result.token2id = {utils.to_unicode(token): idx for idx, token in iteritems(id2word)}
         for idx in itervalues(result.token2id):
-            # make sure all token ids have a valid `dfs` entry
+            # make sure all token ids have a valid `dfs` and `tfs` entry
             result.dfs[idx] = result.dfs.get(idx, 0)
+            result.tfs[idx] = result.tfs.get(idx, 0)
 
         logger.info(
             "built %s from %i documents (total %i corpus positions)",
