@@ -52,17 +52,18 @@ cdef REAL_t negative_sampling(const int target, const REAL_t lr, REAL_t *grad, R
 
 cdef REAL_t sigmoid(const REAL_t val)nogil:
 
-    if val < -MAX_EXP:
+    cdef int temp = <int>((val + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))
+    if val <= -MAX_EXP or temp < 0:
         return 0.0
-    elif val > MAX_EXP:
+    elif val >= MAX_EXP or temp >= EXP_TABLE_SIZE:
         return 1.0
     else:
-        return EXP_TABLE[<int>((val + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        return EXP_TABLE[temp]
     
 
 cdef REAL_t log(const REAL_t val)nogil:
 
-    if val > 1.0:
+    if val >= 1.0:
         return 0.0
     else:
         return LOG_TABLE[<int>(val * EXP_TABLE_SIZE)]
@@ -75,8 +76,8 @@ cdef REAL_t binary_logistic(const int target, const int label, const REAL_t lr,
     cdef REAL_t temp = our_dot(&vector_size, &wo[target], &ONE, hidden, &ONE)
     cdef REAL_t score = sigmoid(temp)
     cdef REAL_t alpha = lr * (<REAL_t>label - score)
-    our_saxpy(&vector_size, &alpha, &wo[target], &ONE, grad, &ONE)
-    our_saxpy(&vector_size, &alpha, hidden, &ONE, &wo[target], &ONE)
+    our_saxpy_noblas(&vector_size, &alpha, &wo[target], &ONE, grad, &ONE)
+    our_saxpy_noblas(&vector_size, &alpha, hidden, &ONE, &wo[target], &ONE)
     if label == 1:
         return -log(score)
     else:
@@ -104,12 +105,12 @@ cdef REAL_t update(vector[int] &context, int target, REAL_t lr, REAL_t *hidden, 
     cdef int i
 
     for i from 0 <= i < context.size():
-        our_saxpy(&vector_size, &ONEF, &wi[context[i]], &ONE, hidden, &ONE)
+        our_saxpy_noblas(&vector_size, &ONEF, &wi[context[i]], &ONE, hidden, &ONE)
     sscal(&vector_size, &alpha, hidden, &ONE)
     loss = negative_sampling(target, lr, grad, wo, hidden, vector_size, neg, negatives, negpos, negatives_len)
     sscal(&vector_size, &alpha, grad, &ONE)
     for i from 0 <= i < context.size():
-        our_saxpy(&vector_size, &ONEF, grad, &ONE, &wi[context[i]], &ONE)
+        our_saxpy_noblas(&vector_size, &ONEF, grad, &ONE, &wi[context[i]], &ONE)
     return loss
 
 
@@ -140,7 +141,7 @@ cdef int get_line(vector[int] &wids, vector[int] &words, int max_line_size)nogil
             continue
         ntokens += 1
         words.push_back(wids[i])
-        if ntokens > max_line_size:
+        if ntokens >= max_line_size:
             break
     return ntokens
 
@@ -151,10 +152,10 @@ cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size
     cdef vector[int] discard
     cdef int line_size = line.size()
     cdef int token_to_discard
-    cdef int i, j, h
+    cdef unsigned int i, j, h
     cdef uniform_int_distribution[int] dist = uniform_int_distribution[int](0, line_size - 1)
 
-    for i from 0<= i < line.size():
+    for i from 0 <= i < line.size():
         discard.push_back(0)
 
     while num_discarded < k and line_size - num_discarded > 2:
@@ -170,8 +171,8 @@ cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size
         for j from i + 1 <= j < line_size:
             if j >= i + n or discard[j] == 1:
                 break
-            h = ((h * (116049371 % bucket)) % bucket + line[j]) % bucket
-            line.push_back(size + h)
+            h = h * 116049371 + line[j]
+            line.push_back(size + h % bucket)
 
 
 cdef (int, int, REAL_t) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t *pdiscard, int max_line_size,
@@ -212,16 +213,16 @@ def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
     cdef int vector_size = <int> model.vector_size
     cdef int *negatives = <int *> np.PyArray_DATA(model.negatives)
     cdef int negpos = <int> model.negpos
-    cdef int neg = <int> model.neg
+    cdef int neg = <int> model.negative
     cdef REAL_t *wi = <REAL_t *> np.PyArray_DATA(model.wi)
     cdef REAL_t *wo = <REAL_t *> np.PyArray_DATA(model.wo)
     cdef int negatives_len = <int> len(model.negatives)
     cdef REAL_t *hidden = <REAL_t *> np.PyArray_DATA(hidden_)
     cdef REAL_t *grad = <REAL_t *> np.PyArray_DATA(grad_)
-    cdef REAL_t *pdiscard = <REAL_t *> np.PyArray_DATA(np.array(model.dict.pdiscard))
-    cdef int max_line_size = <int> (model.dict.max_line_size)
-    cdef int size = <int> (model.dict.size)
-    cdef int bucket = <int> (model.dict.bucket)
+    cdef REAL_t *pdiscard = <REAL_t *> np.PyArray_DATA(np.array(model.vocabulary.pdiscard))
+    cdef int max_line_size = <int> (model.vocabulary.max_line_size)
+    cdef int size = <int> (model.vocabulary.size)
+    cdef int bucket = <int> (model.vocabulary.bucket)
     cdef int word_ngrams = <int> (model.word_ngrams)
     cdef int dropout_k = <int> (model.dropout_k)
     cdef minstd_rand gen = minstd_rand(model.seed)
@@ -234,8 +235,8 @@ def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
 
     for sentence in sentences_:
         for word in sentence:
-            h = model.dict.find(word)
-            ids.push_back(<int> model.dict.word2int[h])
+            h = model.vocabulary.find(word)
+            ids.push_back(<int> model.vocabulary.word2int[h])
         word_ids.push_back(ids)
         ids.clear()
 
