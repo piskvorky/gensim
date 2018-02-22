@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class MmCorpus(matutils.MmReader, IndexedCorpus):
     """Corpus in matrix market format.
+
     Wrap a term-document matrix on disk (in matrix-market format), and present it
     as an object which supports iteration over the rows (~documents).
 
@@ -32,34 +33,29 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
 
     Notes
     ----------
-    Note that the file is read into memory one document at a time, not the whole
-    matrix at once (unlike :meth:`~scipy.io.mmread`). This allows us to process corpora
-    which are larger than the available RAM.
+    Note that the file is read into memory one document at a time, not the whole matrix at once
+    (unlike :meth:`~scipy.io.mmread`). This allows us to process corpora which are larger than the available RAM.
+
+    Example
+    --------
+    >>> from gensim.corpora.mmcorpus import MmCorpus
+    >>> from gensim.test.utils import datapath
+    >>> import gensim.downloader as api
+    >>>
+    >>> corpus = MmCorpus(datapath('test_mmcorpus_with_index.mm'))
+    >>> for document in corpus:
+    ...     pass
 
     """
 
     def __init__(self, fname):
-        """Read corpus in matrix market format.
+        """
 
         Parameters
         ----------
         fname : {str, file-like object}
-            String (file path) or a file-like object that supports
-            `seek()` (e.g. :class:`gzip.GzipFile`, :class:`bz2.BZ2File`).
-
-        Notes
-        -----
-        File-like objects are not closed automatically.
-
-        Example
-        --------
-        >>> from gensim.corpora.mmcorpus import MmCorpus
-        >>> from gensim.test.utils import datapath
-        >>> import gensim.downloader as api
-        >>> from gensim.utils import simple_preprocess
-        >>> corpus = MmCorpus(datapath('test_mmcorpus_with_index.mm'))
-        >>> print corpus
-        MmCorpus(9 documents, 12 features, 28 non-zero entries)
+            Path to file in MM format or a file-like object that supports `seek()`
+            (e.g. :class:`gzip.GzipFile`, :class:`bz2.BZ2File`).
 
         """
 
@@ -68,19 +64,17 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         matutils.MmReader.__init__(self, fname)
 
     def __iter__(self):
-        """Iterate through vectors from underlying matrix.
+        """Iterate through document.
 
         Yields
         ------
         list of (int, str)
-            "Vector" of terms for next document in matrix. Vector of terms is represented as a
-            list of (termid, val) tuples
+            Document in BoW format.
 
         Notes
         ------
-        Note that the total number of vectors returned is always equal to the
-        number of rows specified in the header; empty documents are inserted and
-        yielded where appropriate, even if they are not explicitly stored in the
+        The total number of vectors returned is always equal to the number of rows specified in the header.
+        Empty documents are inserted and yielded where appropriate, even if they are not explicitly stored in the
         Matrix Market file.
 
         """
@@ -114,10 +108,10 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         >>> from gensim.corpora.mmcorpus import MmCorpus
         >>> from gensim.test.utils import datapath
         >>> import gensim.downloader as api
-        >>> from gensim.utils import simple_preprocess
+        >>>
         >>> corpus = MmCorpus(datapath('test_mmcorpus_with_index.mm'))
-        >>> # Do not do it, use `serialize` instead.
-        >>> MmCorpus.save_corpus("random", corpus)
+        >>>
+        >>> MmCorpus.save_corpus("random", corpus) # Do not do it, use `serialize` instead.
         [97, 121, 169, 201, 225, 249, 258, 276, 303]
 
         """

@@ -4,10 +4,7 @@
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains functions and classes for computing similarities across
-a collection of documents in the Vector Space Model.
-
-"""
+"""Computing similarities across a collection of documents in the Vector Space Model."""
 
 
 import logging
