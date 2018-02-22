@@ -1511,4 +1511,3 @@ except ImportError:
             if close_fin:
                 fin.close()
             return document
-            
