@@ -199,7 +199,7 @@ def zeros_aligned(shape, dtype, order='C', align=128):
 
     Parameters
     ----------
-    shape : int or (int, str)
+    shape : int or (int, int)
         Shape of array.
     dtype : data-type
         Data type of array.
@@ -1111,7 +1111,7 @@ def qr_destroy(la):
 
 
 class MmWriter(object):
-    """Store a corpus in Matrix Market format.
+    """Store a corpus in Matrix Market format, used for :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 
     Notes
     -----
@@ -1134,18 +1134,6 @@ class MmWriter(object):
         ----------
         fname : str
             Path to output file.
-
-        Example
-        -------
-        >>> from gensim.matutils import MmWriter
-        >>> from gensim.corpora.mmcorpus import MmCorpus
-        >>> from gensim.test.utils import datapath, common_corpus
-        >>> import gensim.downloader as api
-        >>> from gensim.utils import simple_preprocess
-        >>> corpus = common_corpus
-        >>> MmWriter.write_corpus("newcorp",corpus)
-        >>> new_corpus = MmCorpus.load("newcorp") #TODO: PROBABLY BUG(Ж) IVAN BEWARE
-        >>> print new_corpus
 
         """
         self.fname = fname
@@ -1209,7 +1197,7 @@ class MmWriter(object):
         docno : int
             Number of document.
         vector : list of (int, number)
-            Vector in BoW format.
+            Document in BoW format.
 
         Returns
         -------
@@ -1248,7 +1236,7 @@ class MmWriter(object):
         Returns
         -------
         offsets : {list of int, None}
-            List of offsets or nothing.
+            List of offsets (if index=True) or nothing.
 
         Notes
         -----
@@ -1313,18 +1301,17 @@ class MmWriter(object):
             return offsets
 
     def __del__(self):
-        """Automatic destructor which closes the underlying file.
+        """Close `self.fout` file, alias for :meth:`~gensim.matutils.MmWriter.close`.
 
-        Notes
-        -----
-        There must be no circular references contained in the object for __del__ to work!
+        Warnings
+        --------
         Closing the file explicitly via the close() method is preferred and safer.
 
         """
         self.close()  # does nothing if called twice (on an already closed file), so no worries
 
     def close(self):
-        """Close file."""
+        """Close `self.fout` file."""
         logger.debug("closing %s", self.fname)
         if hasattr(self, 'fout'):
             self.fout.close()
@@ -1337,7 +1324,7 @@ except ImportError:
     FAST_VERSION = -1
 
     class MmReader(object):
-        """Matrix market file reader.
+        """Matrix market file reader, used for :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 
         Wrap a term-document matrix on disk (in matrix-market format), and present it
         as an object which supports iteration over the rows (~documents).
@@ -1353,22 +1340,21 @@ except ImportError:
 
         Notes
         ----------
-        Note that the file is read into memory one document at a time, not the whole
-        matrix at once (unlike :meth:`~scipy.io.mmread`). This allows us to process corpora
-        which are larger than the available RAM.
+        Note that the file is read into memory one document at a time, not the whole matrix at once
+        (unlike :meth:`~scipy.io.mmread`). This allows us to process corpora which are larger than the available RAM.
 
         """
 
         def __init__(self, input, transposed=True):
-            """Create matrix reader.
+            """
 
             Parameters
             ----------
             input : {str, file-like object}
-                string (file path) or a file-like object that supports `seek()`
-                (e.g. :class:`~gzip.GzipFile`, :class:`~bz2.BZ2File`). File-like objects are not closed automatically.
+                Path to input file in MM format or a file-like object that supports `seek()`
+                (e.g. :class:`~gzip.GzipFile`, :class:`~bz2.BZ2File`).
 
-            transposed : bool, optiona;
+            transposed : bool, optional
                 if True, expects lines to represent doc_id, term_id, value. Else, expects term_id, doc_id, value.
 
             """
@@ -1400,6 +1386,7 @@ except ImportError:
             )
 
         def __len__(self):
+            """Get size of corpus (number of documents)."""
             return self.num_docs
 
         def __str__(self):
@@ -1411,8 +1398,8 @@ except ImportError:
 
             Parameters
             ----------
-            input_file : iterable
-                consumes any lines from start of `input_file` that begin with a %
+            input_file : iterable of str
+                Iterable taken from file in MM format.
 
             """
             for line in input_file:
@@ -1421,20 +1408,19 @@ except ImportError:
                 break
 
         def __iter__(self):
-            """Iterate through vectors from underlying matrix
-
-            Yields
-            ------
-            int, list of (int, str)
-                Document id and "vector" of terms for next document in matrix.
-                Vector of terms is represented as a list of (termid, val) tuples.
+            """Iterate through corpus.
 
             Notes
             ------
-            Note that the total number of vectors returned is always equal to the
-            number of rows specified in the header; empty documents are inserted and
-            yielded where appropriate, even if they are not explicitly stored in the
-            Matrix Market file.
+            Note that the total number of vectors returned is always equal to the number of rows specified
+            in the header, empty documents are inserted and yielded where appropriate, even if they are not explicitly
+            stored in the Matrix Market file.
+
+            Yields
+            ------
+            (int, list of (int, str))
+                Document id and "vector" of terms for next document in matrix.
+                Vector of terms is represented as a list of (termid, val) tuples.
 
             """
             with utils.file_or_filename(self.input) as lines:
@@ -1474,7 +1460,7 @@ except ImportError:
                 yield previd, []
 
         def docbyoffset(self, offset):
-            """Return document at file offset `offset` (in bytes).
+            """Get document at file offset `offset` (in bytes).
 
             Parameters
             ----------
@@ -1484,8 +1470,8 @@ except ImportError:
             Returns
             ------
             list of (int, str)
-                "Vector" of terms for document at offset.
-                Vector of terms is represented as a list of (termid, val) tuples.
+                Document in BoW format.
+
             """
 
             # empty documents are not stored explicitly in MM format, so the index marks
