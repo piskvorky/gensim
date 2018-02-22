@@ -5,9 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Corpus in GibbsLda++ format of List-Of-Words.
-"""
+"""Corpus in `GibbsLda++ format <http://gibbslda.sourceforge.net/>`_."""
 
 from __future__ import with_statement
 
@@ -19,21 +17,33 @@ from six import iterkeys
 from six.moves import xrange, zip as izip
 
 
-logger = logging.getLogger('gensim.corpora.lowcorpus')
+logger = logging.getLogger(__name__)
 
 
 def split_on_space(s):
+    """Split line by spaces, used in :class:`gensim.corpora.lowcorpus.LowCorpus`.
+
+    Parameters
+    ----------
+    s : str
+        Some line.
+
+    Returns
+    -------
+    list of str
+        List of tokens from `s`.
+
+    """
     return [word for word in utils.to_unicode(s).strip().split(' ') if word]
 
 
 class LowCorpus(IndexedCorpus):
-    """
-    List_Of_Words corpus handles input in GibbsLda++ format.
+    """Corpus handles input in `GibbsLda++ format <http://gibbslda.sourceforge.net/>`_.
 
-    Quoting http://gibbslda.sourceforge.net/#3.2_Input_Data_Format::
+    **Format description**
 
-        Both data for training/estimating the model and new data (i.e., previously
-        unseen data) have the same format as follows:
+    Both data for training/estimating the model and new data (i.e., previously unseen data) have the same format
+    as follows ::
 
         [M]
         [document1]
@@ -41,26 +51,45 @@ class LowCorpus(IndexedCorpus):
         ...
         [documentM]
 
-        in which the first line is the total number for documents [M]. Each line
-        after that is one document. [documenti] is the ith document of the dataset
-        that consists of a list of Ni words/terms.
+    in which the first line is the total number for documents [M]. Each line after that is one document.
+    [documenti] is the ith document of the dataset that consists of a list of Ni words/terms ::
 
         [documenti] = [wordi1] [wordi2] ... [wordiNi]
 
-        in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated
-        by the blank character.
+    in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated by the blank character.
+
+    Examples
+    --------
+    >>> from gensim.test.utils import datapath, get_tmpfile, common_texts
+    >>> from gensim.corpora import LowCorpus
+    >>> from gensim.corpora import Dictionary
+    >>>
+    >>> # Prepare needed data
+    >>> dictionary = Dictionary(common_texts)
+    >>> corpus = [dictionary.doc2bow(doc) for doc in common_texts]
+    >>>
+    >>> # Write corpus in GibbsLda++ format to disk
+    >>> output_fname = get_tmpfile("corpus.low")
+    >>> LowCorpus.serialize(output_fname, corpus, dictionary)
+    >>>
+    >>> # Read corpus
+    >>> loaded_corpus = LowCorpus(output_fname)
+
     """
     def __init__(self, fname, id2word=None, line2words=split_on_space):
         """
-        Initialize the corpus from a file.
 
-        `id2word` and `line2words` are optional parameters.
-        If provided, `id2word` is a dictionary mapping between word_ids (integers)
-        and words (strings). If not provided, the mapping is constructed from
-        the documents.
+        Parameters
+        ----------
+        fname : str
+            Path to file in GibbsLda++ format.
+        id2word : {dict of (int, str), :class:`~gensim.corpora.dictionary.Dictionary`}, optional
+            Mapping between word_ids (integers) and words (strings).
+            If not provided, the mapping is constructed directly from `fname`.
+        line2words : callable, optional
+            Function which converts lines(str) into tokens(list of str),
+            using :func:`~gensim.corpora.lowcorpus.split_on_space` as default.
 
-        `line2words` is a function which converts lines into tokens. Defaults to
-        simple splitting on spaces.
         """
         IndexedCorpus.__init__(self, fname)
         logger.info("loading corpus from %s", fname)
@@ -91,6 +120,14 @@ class LowCorpus(IndexedCorpus):
         )
 
     def _calculate_num_docs(self):
+        """Get number of documents in file.
+
+        Returns
+        -------
+        int
+            Number of documents.
+
+        """
         # the first line in input data is the number of documents (integer). throws exception on bad input.
         with utils.smart_open(self.fname) as fin:
             try:
@@ -104,6 +141,19 @@ class LowCorpus(IndexedCorpus):
         return self.num_docs
 
     def line2doc(self, line):
+        """Covert line into document in BoW format.
+
+        Parameters
+        ----------
+        line : str
+            Line from input file.
+
+        Returns
+        -------
+        list of (int, int)
+            Document in BoW format
+
+        """
         words = self.line2words(line)
 
         if self.use_wordids:
@@ -132,8 +182,13 @@ class LowCorpus(IndexedCorpus):
         return doc
 
     def __iter__(self):
-        """
-        Iterate over the corpus, returning one bag-of-words vector at a time.
+        """Iterate over the corpus.
+
+        Yields
+        ------
+        list of (int, int)
+            Document in BoW format.
+
         """
         with utils.smart_open(self.fname) as fin:
             for lineno, line in enumerate(fin):
@@ -142,11 +197,31 @@ class LowCorpus(IndexedCorpus):
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
-        """
-        Save a corpus in the List-of-words format.
+        """Save a corpus in the GibbsLda++ format.
 
-        This function is automatically called by `LowCorpus.serialize`; don't
-        call it directly, call `serialize` instead.
+        Warnings
+        --------
+        This function is automatically called by :meth:`gensim.corpora.lowcorpus.LowCorpus.serialize`,
+        don't call it directly, call :meth:`gensim.corpora.lowcorpus.LowCorpus.serialize` instead.
+
+        Parameters
+        ----------
+        fname : str
+            Path to output file.
+        corpus : iterable of iterable of (int, int)
+            Corpus in BoW format.
+        id2word : {dict of (int, str), :class:`~gensim.corpora.dictionary.Dictionary`}, optional
+            Mapping between word_ids (integers) and words (strings).
+            If not provided, the mapping is constructed directly from `corpus`.
+        metadata : bool, optional
+            THIS PARAMETER WILL BE IGNORED.
+
+        Return
+        ------
+        list of int
+            List of offsets in resulting file for each document (in bytes),
+            can be used for :meth:`~gensim.corpora.lowcorpus.LowCorpus.docbyoffset`
+
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
@@ -174,8 +249,29 @@ class LowCorpus(IndexedCorpus):
         return offsets
 
     def docbyoffset(self, offset):
-        """
-        Return the document stored at file position `offset`.
+        """Get the document stored in file by `offset` position.
+
+        Parameters
+        ----------
+        offset : int
+            Offset (in bytes) to begin of document.
+
+        Returns
+        -------
+        list of (int, int)
+            Document in BoW format.
+
+        Examples
+        --------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.corpora import LowCorpus
+        >>>
+        >>> data = LowCorpus(datapath("testcorpus.low"))
+        >>> data.docbyoffset(1)  # end of first line
+        []
+        >>> data.docbyoffset(2)  # start of second line
+        [(0, 1), (3, 1), (4, 1)]
+
         """
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
@@ -183,6 +279,7 @@ class LowCorpus(IndexedCorpus):
 
     @property
     def id2word(self):
+        """Get mapping between words and their ids."""
         return self._id2word
 
     @id2word.setter
