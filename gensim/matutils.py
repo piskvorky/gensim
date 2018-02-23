@@ -1111,7 +1111,7 @@ def qr_destroy(la):
 
 
 class MmWriter(object):
-    """Store a corpus in Matrix Market format.
+    """Store a corpus in Matrix Market format, used for :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 
     Notes
     -----
@@ -1133,7 +1133,7 @@ class MmWriter(object):
         Parameters
         ----------
         fname : str
-            Path to output file
+            Path to output file.
 
         """
         self.fname = fname
@@ -1143,16 +1143,16 @@ class MmWriter(object):
         self.headers_written = False
 
     def write_headers(self, num_docs, num_terms, num_nnz):
-        """Write headers to file
+        """Write headers to file.
 
         Parameters
         ----------
         num_docs : int
-            Number of documents in corpus
+            Number of documents in corpus.
         num_terms : int
-            Number of term in corpus
+            Number of term in corpus.
         num_nnz : int
-            Number of non-zero elements in corpus
+            Number of non-zero elements in corpus.
 
         """
         self.fout.write(MmWriter.HEADER_LINE)
@@ -1176,11 +1176,11 @@ class MmWriter(object):
         Parameters
         ----------
         num_docs : int
-            Number of documents in corpus
+            Number of documents in corpus.
         num_terms : int
-            Number of term in corpus
+            Number of term in corpus.
         num_nnz : int
-            Number of non-zero elements in corpus
+            Number of non-zero elements in corpus.
 
         """
         stats = '%i %i %i' % (num_docs, num_terms, num_nnz)
@@ -1196,8 +1196,8 @@ class MmWriter(object):
         ----------
         docno : int
             Number of document.
-        vector : list of (int, float)
-            Vector in BoW format.
+        vector : list of (int, number)
+            Document in BoW format.
 
         Returns
         -------
@@ -1222,8 +1222,8 @@ class MmWriter(object):
         ----------
         fname : str
             Filename of the resulting file.
-        corpus : iterable of iterable of (int, float)
-            Corpus in Bow format
+        corpus : iterable of list of (int, number)
+            Corpus in Bow format.
         progress_cnt : int, optional
             Print progress for every `progress_cnt` number of documents.
         index : bool, optional
@@ -1236,7 +1236,7 @@ class MmWriter(object):
         Returns
         -------
         offsets : {list of int, None}
-            List of offsets or nothing.
+            List of offsets (if index=True) or nothing.
 
         Notes
         -----
@@ -1301,18 +1301,17 @@ class MmWriter(object):
             return offsets
 
     def __del__(self):
-        """Automatic destructor which closes the underlying file.
+        """Close `self.fout` file, alias for :meth:`~gensim.matutils.MmWriter.close`.
 
-        Notes
-        -----
-        There must be no circular references contained in the object for __del__ to work!
+        Warnings
+        --------
         Closing the file explicitly via the close() method is preferred and safer.
 
         """
         self.close()  # does nothing if called twice (on an already closed file), so no worries
 
     def close(self):
-        """Close file."""
+        """Close `self.fout` file."""
         logger.debug("closing %s", self.fname)
         if hasattr(self, 'fout'):
             self.fout.close()
@@ -1325,8 +1324,7 @@ except ImportError:
     FAST_VERSION = -1
 
     class MmReader(object):
-        """
-        matrix market file reader
+        """Matrix market file reader, used for :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 
         Wrap a term-document matrix on disk (in matrix-market format), and present it
         as an object which supports iteration over the rows (~documents).
@@ -1342,26 +1340,22 @@ except ImportError:
 
         Notes
         ----------
-        Note that the file is read into memory one document at a time, not the whole
-        matrix at once (unlike scipy.io.mmread). This allows us to process corpora
-        which are larger than the available RAM.
+        Note that the file is read into memory one document at a time, not the whole matrix at once
+        (unlike :meth:`~scipy.io.mmread`). This allows us to process corpora which are larger than the available RAM.
 
         """
 
         def __init__(self, input, transposed=True):
             """
-            Create matrix reader
 
             Parameters
             ----------
-            input : string or file-like
-                string (file path) or a file-like object that supports
-                `seek()` (e.g. gzip.GzipFile, bz2.BZ2File). File-like objects are
-                not closed automatically.
+            input : {str, file-like object}
+                Path to input file in MM format or a file-like object that supports `seek()`
+                (e.g. :class:`~gzip.GzipFile`, :class:`~bz2.BZ2File`).
 
-            transposed : bool
-                if True, expects lines to represent doc_id, term_id, value
-                else, expects term_id, doc_id, value
+            transposed : bool, optional
+                if True, expects lines to represent doc_id, term_id, value. Else, expects term_id, doc_id, value.
 
             """
             logger.info("initializing corpus reader from %s", input)
@@ -1392,6 +1386,7 @@ except ImportError:
             )
 
         def __len__(self):
+            """Get size of corpus (number of documents)."""
             return self.num_docs
 
         def __str__(self):
@@ -1399,13 +1394,12 @@ except ImportError:
                     (self.num_docs, self.num_terms, self.num_nnz))
 
         def skip_headers(self, input_file):
-            """
-            Skip file headers that appear before the first document.
+            """Skip file headers that appear before the first document.
 
             Parameters
             ----------
-            input_file : iterable
-                consumes any lines from start of `input_file` that begin with a %
+            input_file : iterable of str
+                Iterable taken from file in MM format.
 
             """
             for line in input_file:
@@ -1414,21 +1408,18 @@ except ImportError:
                 break
 
         def __iter__(self):
-            """
-            Iterate through vectors from underlying matrix
-
-            Yields
-            ------
-            int, list of (termid, val)
-                document id and "vector" of terms for next document in matrix
-                vector of terms is represented as a list of (termid, val) tuples
+            """Iterate through corpus.
 
             Notes
             ------
-            Note that the total number of vectors returned is always equal to the
-            number of rows specified in the header; empty documents are inserted and
-            yielded where appropriate, even if they are not explicitly stored in the
-            Matrix Market file.
+            Note that the total number of vectors returned is always equal to the number of rows specified
+            in the header, empty documents are inserted and yielded where appropriate, even if they are not explicitly
+            stored in the Matrix Market file.
+
+            Yields
+            ------
+            (int, list of (int, number))
+                Document id and Document in BoW format
 
             """
             with utils.file_or_filename(self.input) as lines:
@@ -1468,21 +1459,19 @@ except ImportError:
                 yield previd, []
 
         def docbyoffset(self, offset):
-            """
-            Return document at file offset `offset` (in bytes)
+            """Get document at file offset `offset` (in bytes).
 
             Parameters
             ----------
             offset : int
-                offset, in bytes, of desired document
+                Offset, in bytes, of desired document.
 
             Returns
             ------
-            list of (termid, val)
-                "vector" of terms for document at offset
-                vector of terms is represented as a list of (termid, val) tuples
-            """
+            list of (int, str)
+                Document in BoW format.
 
+            """
             # empty documents are not stored explicitly in MM format, so the index marks
             # them with a special offset, -1.
             if offset == -1:
