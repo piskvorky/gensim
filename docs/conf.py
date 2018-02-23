@@ -31,7 +31,6 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
-    'sphinx_gallery.gen_gallery',
     'sphinx.ext.imgmath',
     'sphinxcontrib.programoutput',
 ]
@@ -58,7 +57,7 @@ sphinx_gallery_conf = {
     'doc_module': 'gensim',
     'backreferences_dir': os.path.join('modules', 'generated'),
     'reference_url': {'gensim': None},
-    'plot_gallery': True
+    'plot_gallery': False,
 }
 
 # The master toctree document.
