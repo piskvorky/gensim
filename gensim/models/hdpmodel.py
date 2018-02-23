@@ -10,8 +10,7 @@
 #
 
 
-"""
-This module encapsulates functionality for the online Hierarchical Dirichlet Process algorithm.
+"""This module encapsulates functionality for the online Hierarchical Dirichlet Process algorithm.
 
 It allows both model estimation from a training corpus and inference of topic
 distribution on new, unseen documents.
@@ -28,6 +27,29 @@ The algorithm:
   * is **streamed**: training documents come in sequentially, no random access,
   * runs in **constant memory** w.r.t. the number of documents: size of the
     training corpus does not affect memory footprint
+
+How to use :class:`~gensim.models.hdpmodel.HdpModel`
+----------------------------------------------------------------
+
+
+#. Run :class:`~gensim.models.hdpmodel.HdpModel` ::
+
+    >>> from gensim.test.utils import common_corpus,common_dictionary
+    >>> from gensim.models import hdpmodel
+    >>>
+    >>> hdp = HdpModel(common_corpus, common_dictionary)
+
+#. You can then infer topic distributions on new, unseen documents, with
+
+    >>> doc_hdp = hdp[doc_bow]
+
+#. To print 20 topics with top 10 most probable words.
+
+    >>> hdp.print_topics(num_topics=20, num_words=10)
+
+#. The model can be updated (trained) with new documents via
+
+    >>> hdp.update(other_corpus)
 
 """
 
@@ -52,8 +74,18 @@ rhot_bound = 0.0
 
 
 def expect_log_sticks(sticks):
-    """
-    For stick-breaking hdp, return the E[log(sticks)]
+    """For stick-breaking hdp, return the E[log(sticks)].
+
+    Parameters
+    ----------
+    sticks : numpy.ndarray
+        Array of values for stick.
+
+    Returns
+    -------
+    numpy.ndarray
+        Computed Elogsticks value.
+
     """
     dig_sum = psi(np.sum(sticks, 0))
     ElogW = psi(sticks[0]) - dig_sum
@@ -67,6 +99,27 @@ def expect_log_sticks(sticks):
 
 
 def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
+    """Performs EM-iteration on a single document for calculation of likelihood for a maximum iteration of `max_iter`.
+
+    Parameters
+    ----------
+    doc_word_ids : int
+        Id of corresponding words in a document.
+    doc_word_counts : int
+        Count of words in a single document.
+    alpha : numpy.ndarray
+        Lda equivalent value of alpha.
+    beta : numpy.ndarray
+        Lda equivalent value of beta.
+    max_iter : int, optional
+        Maximum number of times the expectation will be maximised.
+
+    Returns
+    -------
+    tuple of numpy.ndarrays
+        Returns a tuple of (likelihood,gamma).
+
+    """
     gamma = np.ones(len(alpha))
     expElogtheta = np.exp(dirichlet_expectation(gamma))
     betad = beta[:, doc_word_ids]
@@ -92,34 +145,67 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
 
 
 class SuffStats(object):
+    """Stores suff stats for document(s)."""
     def __init__(self, T, Wt, Dt):
+        """Initialises the suff stats for document(s) in the corpus.
+
+        Parameters
+        ----------
+        T : int
+            Top level truncation level.
+        Wt : int
+            Length of words in the documents.
+        Dt : int
+            chunk size.
+
+        """
         self.m_chunksize = Dt
         self.m_var_sticks_ss = np.zeros(T)
         self.m_var_beta_ss = np.zeros((T, Wt))
 
     def set_zero(self):
+        """Fill the sticks and beta array with 0 scalar value."""
         self.m_var_sticks_ss.fill(0.0)
         self.m_var_beta_ss.fill(0.0)
 
 
 class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    """
-    The constructor estimates Hierachical Dirichlet Process model parameters based
-    on a training corpus:
+    """The constructor estimates Hierachical Dirichlet Process model parameters based on a training corpus.
 
-    >>> hdp = HdpModel(corpus, id2word)
-
-    You can infer topic distributions on new, unseen documents with
-
-    >>> doc_hdp = hdp[doc_bow]
-
-    Inference on new documents is based on the approximately LDA-equivalent topics.
-
-    To print 20 topics with top 10 most probable words
-
-    >>> hdp.print_topics(num_topics=20, num_words=10)
-
-    Model persistency is achieved through its `load`/`save` methods.
+    Attributes
+    ----------
+    lda_alpha : numpy.ndarray
+        Lda equivalent value of alpha.
+    lda_beta : numpy.ndarray
+        Lda equivalent value of beta.
+    m_D : int
+        Number of documents in the corpus.
+    m_Elogbeta : numpy.ndarray:
+        Stores value of dirchlet excpectation, i.e., Computed
+        :math:`E[log \\theta]` for a vector :math:`\\theta \sim Dir(\\alpha)`.
+    m_lambda : numpy.ndarray or scalar
+        Drawn samples from the parameterized gamma distribution.
+    m_lambda_sum : numpy.ndarray or scalar
+        An array with the same shape as m_lambda, with the specified axis (1) removed.
+    m_num_docs_processed : int
+        Number of documents finished processing.This is incremented in size of chunks.
+    m_r : list
+        Acts as normaliser in lazy updation of lambda attribute.
+    m_rhot : float
+        Assigns weight to the information obtained from the mini-chunk and its value it between 0 and 1.
+    m_status_up_to_date : bool
+        Flag to indicate whether lambda and Elogbeta have been updated(T) or not(F).
+    m_timestamp : numpy.ndarray
+        Helps to keep track and perform lazy updates on lambda.
+    m_updatect : int
+        Keeps track of current time and is incremented everytime
+        :meth:`~gensim.models.hdpmodel.HdpModel.update_lambda()` is called.
+    m_var_sticks : numpy.ndarray
+        Array of values for stick.
+    m_varphi_ss : numpy.ndarray
+        Used to Update top level sticks.
+    m_W : int
+        Length of dictionary for the input corpus.
 
     """
 
@@ -127,18 +213,46 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
                  gamma=1, eta=0.01, scale=1.0, var_converge=0.0001,
                  outputdir=None, random_state=None):
-        """
-        `gamma`: first level concentration
-        `alpha`: second level concentration
-        `eta`: the topic Dirichlet
-        `T`: top level truncation level
-        `K`: second level truncation level
-        `kappa`: learning rate
-        `tau`: slow down parameter
-        `max_time`: stop training after this many seconds
-        `max_chunks`: stop after having processed this many chunks (wrap around
-        corpus beginning in another corpus pass, if there are not enough chunks
-        in the corpus)
+        """Fully initialises the hdp model.
+
+        Parameters
+        ----------
+        corpus : list of list of tuple of ints; [ [ (int,int) ]]
+            Corpus of input dataset on which the model will be trained.
+        id2word : :class:`~gensim.corpora.dictionary.Dictionary`
+            Dictionary for the input corpus.
+        max_chunks : None, optional
+            Upper bound on how many chunks to process.It wraps around corpus beginning in another corpus pass,
+            if there are not enough chunks in the corpus
+        max_time : None, optional
+            Upper bound on time(in seconds) for which model will be trained.
+        chunksize : int, optional
+            Tells the number of documents to process at a time.
+        kappa : float, optional
+            Learning rate
+        tau : float, optional
+            Slow down parameter
+        K : int, optional
+            Second level truncation level
+        T : int, optional
+            Top level truncation level
+        alpha : int, optional
+            Second level concentration
+        gamma : int, optional
+            First level concentration
+        eta : float, optional
+            The topic Dirichlet
+        scale : float, optional
+            Weights information from the mini-chunk of corpus to calculate rhot.
+        var_converge : float, optional
+            Lower bound on the right side of convergence. Used when updating variational parameters for a
+            single document.
+        outputdir : str, optional
+            Stores topic and options information in the specified directory.
+        random_state : :class:`~np.random.RandomState`, optional
+            Adds a little random jitter to randomize results around same alpha when trying to fetch a closest
+            corrsponding lda model from :meth:`~gensim.models.hdpmodel.HdpModel.suggested_lda_model()`
+
         """
         self.corpus = corpus
         self.id2word = id2word
@@ -192,6 +306,24 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.update(corpus)
 
     def inference(self, chunk):
+        """Infers the gamma value on a trained corpus.
+
+        Parameters
+        ----------
+        chunk : list of tuple of ints; [ [ (int,int) ]]
+            Bag of words representation for a corpus.
+
+        Returns
+        -------
+        numpy.ndarray
+            gamma value.
+
+        Raises
+        ------
+        RuntimeError
+            Need to train model first to do inference.
+
+        """
         if self.lda_alpha is None or self.lda_beta is None:
             raise RuntimeError("model must be trained to perform inference")
         chunk = list(chunk)
@@ -208,6 +340,20 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return gamma
 
     def __getitem__(self, bow, eps=0.01):
+        """Accessor method for generating topic distribution of given document.
+
+        Parameters
+        ----------
+        bow : sequence of list of tuple of ints; [ (int,int) ]
+            Bag-of-words representation of the document to get topics for.
+        eps : float, optional
+            Ignore topics with probability below `eps`.
+
+        Returns
+        -------
+            topic distribution for the given document `bow`, as a list of `(topic_id, topic_probability)` 2-tuples.
+
+        """
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(corpus)
@@ -217,6 +363,15 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist) if topicvalue >= eps]
 
     def update(self, corpus):
+        """Train the model with new documents, by EM-iterating over `corpus` until
+        any of the conditions is satisfied(time limit expired,chunk limit reached or whole corpus processed ).
+
+        Parameters
+        ----------
+        corpus : list of list of tuple of ints; [ [ (int,int) ]]
+            The corpus on which Hdp model will be updated.
+
+        """
         save_freq = max(1, int(10000 / self.chunksize))  # save every 10k docs, roughly
         chunks_processed = 0
         start_time = time.clock()
@@ -244,6 +399,25 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     logger.info('PROGRESS: finished document %i of %i', self.m_num_docs_processed, self.m_D)
 
     def update_finished(self, start_time, chunks_processed, docs_processed):
+        """Flag to determine whether the Hdp model has been updated with the new corpus or not.
+
+        Parameters
+        ----------
+        start_time : float
+            Indicates the current processor time as a floating point number expressed in seconds. The resolution is
+            typically better on Windows than on Unix by one microsecond due to differing implementation of underlying
+            function calls.
+        chunks_processed : int
+            Indicates progress of the update in terms of the number of chunks processed.
+        docs_processed : int
+            Indicates number of documents finished processing.This is incremented in size of chunks.
+
+        Returns
+        -------
+        bool
+            True if Hdp model is updated, False otherwise.
+
+        """
         return (
             # chunk limit reached
             (self.max_chunks and chunks_processed == self.max_chunks) or
@@ -255,6 +429,24 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             (not self.max_chunks and not self.max_time and docs_processed >= self.m_D))
 
     def update_chunk(self, chunk, update=True, opt_o=True):
+        """Performs lazy update on necessary columns of lambda and variational inference for documents in the chunk.
+
+        Parameters
+        ----------
+        chunk : list of list of tuple of ints; [ [ (int,int) ]]
+            The chunk of corpus on which Hdp model will be updated.
+        update : bool, optional
+            Flag to determine whether to update lambda(T) or not (F).
+        opt_o : bool, optional
+            Passed as argument to :meth:`~gensim.models.hdpmodel.HdpModel.update_lambda()` to determine whether
+            the topics need to be ordered(T) or not(F).
+
+        Returns
+        -------
+        tuple of (float,int)
+            A tuple of likelihood and sum of all the word counts from each document in the corpus.
+
+        """
         # Find the unique words in this chunk...
         unique_words = dict()
         word_list = []
@@ -297,8 +489,29 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return score, count
 
     def doc_e_step(self, ss, Elogsticks_1st, unique_words, doc_word_ids, doc_word_counts, var_converge):
-        """
-        e step for a single doc
+        """Performs e step for a single doc.
+
+        Parameters
+        ----------
+        ss : :class:`~gensim.models.hdpmodel.SuffStats`
+            Suffstats for all document(s) in the chunk.
+        Elogsticks_1st : numpy.ndarray
+            Computed Elogsticks value by stick-breaking process.
+        unique_words : int
+            Number of unique words in the chunk.
+        doc_word_ids : tuple of int
+            Word ids of for a single document.
+        doc_word_counts : tuple of int
+            Word counts of all words in a single document.
+        var_converge : float, optional
+            Lower bound on the right side of convergence. Used when updating variational parameters for a
+            single document.
+
+        Returns
+        -------
+        float
+            Computed value of likelihood for a single document.
+
         """
         chunkids = [unique_words[id] for id in doc_word_ids]
 
@@ -382,6 +595,19 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return likelihood
 
     def update_lambda(self, sstats, word_list, opt_o):
+        """Updates appropriate columns of lambda and top level sticks based on documents.
+
+        Parameters
+        ----------
+        sstats : :class:`~gensim.models.hdpmodel.SuffStats`
+            Suffstats for all document(s) in the chunk.
+        word_list : list of int
+            Contains word id of all the unique words in the chunk of documents on which update is being performed.
+        opt_o : bool, optional
+            Flag to determine whether to invoke a call to :meth:`~gensim.models.hdpmodel.HdpModel.optimal_ordering()`.
+            This decides whether the topics need to be ordered(T) or not(F).
+
+        """
         self.m_status_up_to_date = False
         # rhot will be between 0 and 1, and says how much to weight
         # the information we got from this mini-chunk.
@@ -412,9 +638,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_var_sticks[1] = np.flipud(np.cumsum(var_phi_sum)) + self.m_gamma
 
     def optimal_ordering(self):
-        """
-        ordering the topics
-        """
+        """Performs ordering on the topics."""
         idx = matutils.argsort(self.m_lambda_sum, reverse=True)
         self.m_varphi_ss = self.m_varphi_ss[idx]
         self.m_lambda = self.m_lambda[idx, :]
@@ -422,12 +646,10 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_Elogbeta = self.m_Elogbeta[idx, :]
 
     def update_expectations(self):
-        """
-        Since we're doing lazy updates on lambda, at any given moment
-        the current state of lambda may not be accurate. This function
-        updates all of the elements of lambda and Elogbeta
-        so that if (for example) we want to print out the
-        topics we've learned we'll get the correct behavior.
+        """Since we're doing lazy updates on lambda, at any given moment the current state of lambda may not be
+        accurate. This function updates all of the elements of lambda and Elogbeta so that if (for example) we want to
+        print out the topics we've learned we'll get the correct behavior.
+
         """
         for w in xrange(self.m_W):
             self.m_lambda[:, w] *= np.exp(self.m_r[-1] - self.m_r[self.m_timestamp[w]])
@@ -438,11 +660,28 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_status_up_to_date = True
 
     def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words=None):
-        """
-        Print the `num_words` most probable words for topic `topic_id`.
+        """Print the `num_words` most probable words for topic `topic_id`.
 
-        Set `formatted=True` to return the topics as a list of strings, or
-        `False` as lists of (weight, word) pairs.
+        Parameters
+        ----------
+        topic_id : int
+            Acts as a representative index for a particular topic.
+        topn : int, optional
+            Number of most probable words to show from given `topic_id`.
+        log : bool, optional
+            Logs a message with level INFO on the logger object.
+        formatted : bool, optional
+            Flag to determine whether to return the topics as a list of strings(T), or as lists of
+            (weight, word) pairs(F).
+        num_words : int, optional
+            Number of most probable words to show from given `topic_id`.
+
+         .. note:: The parameter `num_words` is deprecated, will be removed in 4.0.0, please use `topn` instead.
+
+        Returns
+        -------
+        list of tuple of (unicode,numpy.float64) or list of str
+            Topic terms output displayed whose format depends on `formatted` parameter.
 
         """
         if num_words is not None:  # deprecated num_words is used
@@ -458,21 +697,38 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return hdp_formatter.show_topic(topic_id, topn, log, formatted)
 
     def get_topics(self):
-        """
-        Returns:
-            np.ndarray: `num_topics` x `vocabulary_size` array of floats which represents
-            the term topic matrix learned during inference.
+        """Returns the term topic matrix learned during inference.
+
+        Returns
+        -------
+        np.ndarray
+            `num_topics` x `vocabulary_size` array of floats
+
         """
         topics = self.m_lambda + self.m_eta
         return topics / topics.sum(axis=1)[:, None]
 
     def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
-        """
-        Print the `num_words` most probable words for `num_topics` number of topics.
-        Set `num_topics=-1` to print all topics.
+        """Print the `num_words` most probable words for `num_topics` number of topics.
+        Set `num_topics=-1` to print all topics.Set `formatted=True` to return the topics as a list of strings, or
+        `False` as lists of (word, weight) pairs.
 
-        Set `formatted=True` to return the topics as a list of strings, or
-        `False` as lists of (weight, word) pairs.
+        Parameters
+        ----------
+        num_topics : int, optional
+            Number of topics for which most probable `num_words` words will be fetched.
+        num_words :  int, optional
+            Number of most probable words to show from `num_topics` number of topics.
+        log : bool, optional
+            Logs a message with level INFO on the logger object.
+        formatted : bool, optional
+            Flag to determine whether to return the topics as a list of strings(T), or as lists of
+            (word, weight) pairs(F).
+
+        Returns
+        -------
+        list of tuple of (unicode,numpy.float64) or list of str
+            Output format for topic terms depends on the value of `formatted` parameter.
 
         """
         if not self.m_status_up_to_date:
@@ -482,7 +738,16 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return hdp_formatter.show_topics(num_topics, num_words, log, formatted)
 
     def save_topics(self, doc_count=None):
-        """legacy method; use `self.save()` instead"""
+        """Saves all the topics discovered.
+
+        .. note:: This is a legacy method; use `self.save()` instead.
+
+        Parameters
+        ----------
+        doc_count : int, optional
+            Indicates number of documents finished processing and are to be saved.
+
+        """
         if not self.outputdir:
             logger.error("cannot store topics without having specified an output directory")
 
@@ -496,7 +761,11 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         np.savetxt(fname, betas)
 
     def save_options(self):
-        """legacy method; use `self.save()` instead"""
+        """Writes all the values of the attributes for the current model in options.dat file.
+
+        .. note:: This is a legacy method; use `self.save()` instead.
+
+        """
         if not self.outputdir:
             logger.error("cannot store options without having specified an output directory")
             return
@@ -515,8 +784,13 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             fout.write('gamma: %s\n' % str(self.m_gamma))
 
     def hdp_to_lda(self):
-        """
-        Compute the LDA almost equivalent HDP.
+        """Only returns corresponding alpha, beta values of a LDA almost equivalent to current HDP.
+
+        Returns
+        -------
+        tuple of numpy.ndarray
+            Tuple of numpy arrays of alpha and beta.
+
         """
         # alpha
         sticks = self.m_var_sticks[0] / (self.m_var_sticks[0] + self.m_var_sticks[1])
@@ -534,10 +808,14 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return alpha, beta
 
     def suggested_lda_model(self):
-        """
-        Returns closest corresponding ldamodel object corresponding to current hdp model.
-        The hdp_to_lda method only returns corresponding alpha, beta values, and this method returns a trained ldamodel.
-        The num_topics is m_T (default is 150) so as to preserve the matrice shapes when we assign alpha and beta.
+        """Returns a trained ldamodel object which is closest to the current hdp model.The num_topics is m_T
+        (default is 150) so as to preserve the matrice shapes when we assign alpha and beta.
+
+        Returns
+        -------
+        :class:`~gensim.models.ldamodel.LdaModel`
+            Closest corresponding LdaModel to current HdpModel.
+
         """
         alpha, beta = self.hdp_to_lda()
         ldam = ldamodel.LdaModel(
@@ -547,6 +825,19 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return ldam
 
     def evaluate_test_corpus(self, corpus):
+        """Evaluates the model on test corpus.
+
+        Parameters
+        ----------
+        corpus : list of list of tuple of ints; [ [ (int,int) ]]
+            The corpus on which Hdp model will be tested.
+
+        Returns
+        -------
+        float
+            The value of total likelihood obtained by evaluating the model for all documents in the test corpus.
+
+        """
         logger.info('TEST: evaluating test corpus')
         if self.lda_alpha is None or self.lda_beta is None:
             self.lda_alpha, self.lda_beta = self.hdp_to_lda()
@@ -571,9 +862,34 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
 
 class HdpTopicFormatter(object):
+    """Helper class to format the output of topics and most probable words for display."""
+
     (STYLE_GENSIM, STYLE_PRETTY) = (1, 2)
 
     def __init__(self, dictionary=None, topic_data=None, topic_file=None, style=None):
+        """Initialises the :class:`gensim.models.hdpmodel.HdpTopicFormatter` and stores topic data in sorted order.
+
+        Parameters
+        ----------
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`,optional
+            Dictionary for the input corpus.
+        topic_data : numpy.ndarray, optional
+            The term topic matrix.
+        topic_file : file, str, or pathlib.Path
+            File, filename, or generator to read. If the filename extension is .gz or .bz2, the file is first
+            decompressed. Note that generators should return byte strings for Python 3k.
+        style : bool, optional
+            Flag to determine whether to return the topics as a list of strings(T), or as lists of (word, weight)
+            pairs(F).
+        data: numpy.ndarray
+            Sorted topic data in descending order of sum of probabilities for all words in corresponding topic.
+
+        Raises
+        ------
+        ValueError
+            Either no dictionary or no topic data.
+
+        """
         if dictionary is None:
             raise ValueError('no dictionary!')
 
@@ -597,9 +913,44 @@ class HdpTopicFormatter(object):
         self.style = style
 
     def print_topics(self, num_topics=10, num_words=10):
+        """Gives the most probable `num_words` words from `num_topics` topics.
+
+        Parameters
+        ----------
+        num_topics : int, optional
+            Top `num_topics` to be printed.
+        num_words : int, optional
+            Top `num_words` most probable words to be printed from each topic.
+
+        Returns
+        -------
+        list of tuple of (unicode,numpy.float64) or list of str
+            Output format for `num_words` words from `num_topics` topics depends on the value of `self.style` attribute.
+
+        """
         return self.show_topics(num_topics, num_words, True)
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
+        """Gives the most probable `num_words` words from `num_topics` topics.
+
+        Parameters
+        ----------
+        num_topics : int, optional
+            Top `num_topics` to be printed.
+        num_words : int, optional
+            Top `num_words` most probable words to be printed from each topic.
+        log : bool, optional
+            Logs a message with level INFO on the logger object.
+        formatted : bool, optional
+            Flag to determine whether to return the topics as a list of strings(T), or as lists of
+            (word, weight) pairs(F).
+
+        Returns
+        -------
+        list of tuple of (int ,list of tuple of (unicode,numpy.float64) or list of str)
+            Output format for terms from `num_topics` topics depends on the value of `self.style` attribute.
+
+        """
         shown = []
         if num_topics < 0:
             num_topics = len(self.data)
@@ -628,6 +979,27 @@ class HdpTopicFormatter(object):
         return shown
 
     def print_topic(self, topic_id, topn=None, num_words=None):
+        """Prints the `topn` most probable words from topic id `topic_id`.
+
+        Note
+        ----
+        The parameter `num_words` is deprecated, will be removed in 4.0.0, please use `topn` instead.
+
+        Parameters
+        ----------
+        topic_id : int
+            Acts as a representative index for a particular topic.
+        topn : int, optional
+            Number of most probable words to show from given `topic_id`.
+        num_words : int, optional
+            Number of most probable words to show from given `topic_id`.
+
+        Returns
+        -------
+        list of tuple of (unicode,numpy.float64) or list of str
+            Output format for terms from a single topic depends on the value of `formatted` parameter.
+
+        """
         if num_words is not None:  # deprecated num_words is used
             warnings.warn(
                 "The parameter `num_words` is deprecated, will be removed in 4.0.0, please use `topn` instead."
@@ -637,6 +1009,32 @@ class HdpTopicFormatter(object):
         return self.show_topic(topic_id, topn, formatted=True)
 
     def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words=None,):
+        """Gives the most probable `num_words` words for the id `topic_id`.
+
+        Note
+        ----
+        The parameter `num_words` is deprecated, will be removed in 4.0.0, please use `topn` instead.
+
+        Parameters
+        ----------
+        topic_id : int
+            Acts as a representative index for a particular topic.
+        topn : int, optional
+            Number of most probable words to show from given `topic_id`.
+        log : bool, optional
+            Logs a message with level INFO on the logger object.
+        formatted : bool, optional
+            Flag to determine whether to return the topics as a list of strings(T), or as lists of
+            (word, weight) pairs(F).
+        num_words : int, optional
+            Number of most probable words to show from given `topic_id`.
+
+        Returns
+        -------
+        list of tuple of (unicode,numpy.float64) or list of str
+            Output format for terms from a single topic depends on the value of `self.style` attribute.
+
+        """
         if num_words is not None:  # deprecated num_words is used
             warnings.warn(
                 "The parameter `num_words` is deprecated, will be removed in 4.0.0, please use `topn` instead."
@@ -664,9 +1062,39 @@ class HdpTopicFormatter(object):
         return topic[1]
 
     def show_topic_terms(self, topic_data, num_words):
+        """Gives the topic terms along with their probabilities for a single topic data.
+
+        Parameters
+        ----------
+        topic_data : list of tuple of (unicode,numpy.float64)
+            Contains probabilities for each word id belonging to a single topic.
+        num_words : int
+            Number of words for which probabilities are to be extracted from the given single topic data.
+
+        Returns
+        -------
+        list of tuple of (unicode,numpy.float64)
+            A sequence of topic terms and their probabilities.
+
+        """
         return [(self.dictionary[wid], weight) for (weight, wid) in topic_data[:num_words]]
 
     def format_topic(self, topic_id, topic_terms):
+        """Formats the display for a single topic in two different ways.
+
+        Parameters
+        ----------
+        topic_id : int
+            Acts as a representative index for a particular topic.
+        topic_terms : list of tuple of (unicode,numpy.float64)
+            Contains the most probable words from a single topic.
+
+        Returns
+        -------
+        list of tuple of (unicode,numpy.float64) or list of str
+            Output format for topic terms depends on the value of `self.style` attribute.
+
+        """
         if self.STYLE_GENSIM == self.style:
             fmt = ' + '.join(['%.3f*%s' % (weight, word) for (word, weight) in topic_terms])
         else:
