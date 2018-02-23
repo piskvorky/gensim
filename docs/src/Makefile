@@ -41,7 +41,7 @@ html:
 	rm -r $(BUILDDIR)/html/_sources
 	cp -r $(BUILDDIR)/html/* .
 	@echo
-	@echo "Build finished. The HTML pages are in /docs"
+	@echo "Build finished. The HTML pages are in /docs/src"
 
 upload:
 	scp -r _build/html/* rr:public_html/gensim/
