@@ -46,7 +46,7 @@ def logsumexp(x):
     logsumexp(x)
 
     Log of sum of exponentials
-    
+
     Parameters
     ----------
     x : (M, N) array_like

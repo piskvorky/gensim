@@ -3008,7 +3008,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6gensim_9_matutils_3logsumexp(PyObject *__pyx_self, PyObject *__pyx_v_x); /*proto*/
-static char __pyx_doc_6gensim_9_matutils_2logsumexp[] = "\n    logsumexp(x)\n\n    Log of sum of exponentials\n    \n    Parameters\n    ----------\n    x : (M, N) array_like\n    \n    Returns\n    -------\n    float\n        log of sum of exponentials of elements in `x`\n\n    Notes\n    -----\n        for performance, does not support NaNs or > 1d arrays like\n        scipy.special.logsumexp()\n\n    ";
+static char __pyx_doc_6gensim_9_matutils_2logsumexp[] = "\n    logsumexp(x)\n\n    Log of sum of exponentials\n\n    Parameters\n    ----------\n    x : (M, N) array_like\n    \n    Returns\n    -------\n    float\n        log of sum of exponentials of elements in `x`\n\n    Notes\n    -----\n        for performance, does not support NaNs or > 1d arrays like\n        scipy.special.logsumexp()\n\n    ";
 static PyMethodDef __pyx_mdef_6gensim_9_matutils_3logsumexp = {"logsumexp", (PyCFunction)__pyx_pw_6gensim_9_matutils_3logsumexp, METH_O, __pyx_doc_6gensim_9_matutils_2logsumexp};
 static PyObject *__pyx_pw_6gensim_9_matutils_3logsumexp(PyObject *__pyx_self, PyObject *__pyx_v_x) {
   PyObject *__pyx_r = 0;
