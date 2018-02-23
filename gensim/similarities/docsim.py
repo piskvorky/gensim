@@ -255,16 +255,18 @@ class Similarity(interfaces.SimilarityABC):
     >>> # to the index itself (i.e. queries=indexed documents themselves). This special syntax
     >>> # uses the faster, batch queries internally and **is ideal for all-vs-all pairwise similarities**:
     >>> for similarities in index: # yield similarities of the 1st indexed document, then 2nd...
-    >>>     pass
+    ...     pass
 
     See Also
     --------
     :class:`~gensim.similarities.docsim.MatrixSimilarity`
-        Index similarity (dense).
+        Index similarity (dense with cosine distance).
     :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`
-        Index similarity (sparse).
+        Index similarity (sparse with cosine distance).
     :class:`~gensim.similarities.docsim.SoftCosineSimilarity`
-        Index similarity (with soft-cosine).
+        Index similarity (with soft-cosine distance).
+    :class:`~gensim.similarities.docsim.WmdSimilarity`
+        Index similarity (with word-mover distance).
 
     """
 
@@ -726,20 +728,23 @@ class Similarity(interfaces.SimilarityABC):
 
 
 class MatrixSimilarity(interfaces.SimilarityABC):
-    """Compute similarity against a corpus of documents by storing the index matrix
-    in memory. The similarity measure used is cosine between two vectors.
+    """Compute cosine similarity against a corpus of documents by storing the index matrix in memory.
 
-    Use this if your input corpus contains dense vectors (such as documents in LSI space) and fits into RAM.
-    The matrix is internally stored as a dense :class:`numpy.ndarray`. Unless the entire matrix
-    fits into main memory, use :class:`~gensim.similarities.docsim.Similarity` instead.
+    Unless the entire matrix fits into main memory, use :class:`~gensim.similarities.docsim.Similarity` instead.
 
-    See also :class:`~gensim.similarities.docsim.Similarity`
-    and :class:`~gensim.similarities.docsim.SparseMatrixSimilarity` in this module.
+    Examples
+    --------
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.similarities import MatrixSimilarity
+    >>>
+    >>> query = [(1, 2), (5, 4)]
+    >>> index = MatrixSimilarity(common_corpus, num_features=len(common_dictionary))
+    >>> sims = index[query]
 
     """
-
     def __init__(self, corpus, num_best=None, dtype=numpy.float32, num_features=None, chunksize=256, corpus_len=None):
         """
+
         Parameters
         ----------
         corpus : iterable of list of (int, number)
@@ -747,25 +752,14 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         num_best : int, optional
             If set, return only the `num_best` most similar documents, always leaving out documents with similarity = 0.
             Otherwise, return a full vector with one float for every document in the index.
-        dtype : TODO i forgot how do we call this :( , , optional
+        dtype : numpy.dtype
+            Datatype of internal matrix
         num_features : int, optional
             Size of the dictionary.
         chunksize : int, optional
-            Size of block.
+            Size of chunk.
         corpus_len : int, optional
-
-        Examples
-        --------
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.similarities import MatrixSimilarity
-        >>> import gensim.downloader as api
-        >>> from gensim.utils import simple_preprocess
-        >>>
-        >>> # Create index:
-        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> index = MatrixSimilarity(corpus, num_features=400)
-        >>> sims = index[corpus.dictionary.doc2bow(simple_preprocess('trees'))]
+            Size of `corpus`, if not specified - will scan corpus to determine size.
 
         """
         if num_features is None:
@@ -810,41 +804,22 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         return self.index.shape[0]
 
     def get_similarities(self, query):
-        """Return similarity of :class:`scipy.sparse.csr_matrix` vector `query` to all documents in the corpus,
-        as an :class:`numpy.ndarray`. **Do not use this function directly; use the self[query] syntax instead.**
+        """Get similarity between `query` and current index instance.
+
+        Warnings
+        --------
+        Do not use this function directly, use the :class:`~gensim.similarities.docsim.MatrixSimilarity.__getitem__`
+        instead.
 
         Parameters
         ----------
-        query : :class:`scipy.sparse.csr_matrix`
+        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
             Document or collection of documents.
 
         Return
         ------
         :class:`numpy.ndarray`
             Similarity matrix.
-
-        Notes
-        -----
-        If `query` is a collection of documents, return a 2D array of similarities
-        of each document in `query` to all documents in the corpus (=batch query,
-        faster than processing each document in turn).
-
-        TODO: better check it out + i think this example is useless (cause this is`do not use` method)
-
-        Examples
-        --------
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.similarities import MatrixSimilarity
-        >>> import gensim.downloader as api
-        >>> from gensim.utils import simple_preprocess
-        >>>
-        >>> # Create index:
-        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> index = MatrixSimilarity(corpus, num_features=400)
-        >>> index.get_similarities(corpus.dictionary.doc2bow(simple_preprocess('trees')))
-        array([ 0.        ,  0.        ,  0.        ,  0.        ,  0.        ,
-        1.        ,  0.70710677,  0.57735026,  0.        ], dtype=float32)
 
         """
         is_corpus, query = utils.is_corpus(query)
@@ -869,14 +844,36 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         return result  # XXX: removed casting the result from array to list; does anyone care?
 
     def __str__(self):
-        """ Return number of documents."""
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.index.shape[1])
 
 
 class SoftCosineSimilarity(interfaces.SimilarityABC):
-    """Document similarity (like :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`)
-    that uses Soft Cosine Measure as a similarity measure."""
+    """Compute soft cosine similarity against a corpus of documents by storing the index matrix in memory.
 
+    Examples
+    --------
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.corpora import Dictionary
+    >>> from gensim.models import Word2Vec
+    >>> from gensim.similarities import SoftCosineSimilarity
+    >>>
+    >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+    >>> dictionary = Dictionary(common_texts)
+    >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
+    >>>
+    >>> similarity_matrix = model.wv.similarity_matrix(dictionary)  # construct similarity matrix
+    >>> index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
+    >>>
+    >>> # Make a query.
+    >>> query = 'graph trees computer'.split()
+    >>> # calculate similarity between query and each doc from bow_corpus
+    >>> sims = index[dictionary.doc2bow(query)]
+
+    Check out `Tutorial Notebook
+    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
+    for more examples.
+
+    """
     def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256):
         """
 
@@ -899,31 +896,6 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         :func:`gensim.matutils.softcossim`
             The Soft Cosine Measure.
 
-        Examples
-        --------
-        >>> from gensim.corpora import Dictionary
-        >>> import gensim.downloader as api
-        >>> from gensim.models import Word2Vec
-        >>> from gensim.similarities import SoftCosineSimilarity
-        >>> from gensim.utils import simple_preprocess
-        >>>
-        >>> # Prepare the model
-        >>> corpus = api.load("text8")
-        >>> model = Word2Vec(corpus, workers=3, size=100)
-        >>> dictionary = Dictionary(corpus)
-        >>> bow_corpus = [dictionary.doc2bow(document) for document in corpus]
-        >>> similarity_matrix = model.wv.similarity_matrix(dictionary)
-        >>> index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
-        >>>
-        >>> # Make a query.
-        >>> query = 'Yummy! Great view of the Bellagio Fountain show.'
-        >>> # calculate similarity between query and each doc from bow_corpus
-        >>> sims = index[dictionary.doc2bow(simple_preprocess(query))]
-
-        See `Tutorial Notebook
-        <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
-        for more examples.
-
         """
         self.corpus = corpus
         self.similarity_matrix = similarity_matrix
@@ -942,11 +914,15 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         return len(self.corpus)
 
     def get_similarities(self, query):
-        """**Do not use this function directly; use the self[query] syntax instead.**
+        """Get similarity between `query` and current index instance.
+
+        Warnings
+        --------
+        Do not use this function directly; use the self[query] syntax instead.
 
         Parameters
         ----------
-        query : :class:`scipy.sparse.csr_matrix`
+        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
             Document or collection of documents.
 
         Return
@@ -986,11 +962,41 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
 
 class WmdSimilarity(interfaces.SimilarityABC):
-    """Document similarity (like :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`) that uses the negative
-    of WMD as a similarity measure."""
+    """Compute negative WMD similarity against a corpus of documents by storing the index matrix in memory.
+
+    Notes
+    -----
+    See :class:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors` for more information.
+    # See Tutorial Notebook for more examples:
+    `<https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`
+
+    When using this code, please consider citing the following papers:
+    `Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching"
+    <http://www.cs.huji.ac.il/~werman/Papers/ECCV2008.pdf>`_, `Ofir Pele and Michael Werman, "Fast and robust earth
+    mover's distances" <http://www.cs.huji.ac.il/~werman/Papers/ICCV2009.pdf>`_, "Matt Kusner et al. "From Word
+    Embeddings To Document Distances" <http://proceedings.mlr.press/v37/kusnerb15.pdf>`_.
+
+    Example
+    -------
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.corpora import Dictionary
+    >>> from gensim.models import Word2Vec
+    >>> from gensim.similarities import WmdSimilarity
+    >>>
+    >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+    >>> dictionary = Dictionary(common_texts)
+    >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
+    >>>
+    >>> index = WmdSimilarity(bow_corpus, model)
+    >>> # Make query.
+    >>> query = 'trees'
+    >>> sims = index[query]
+
+    """
 
     def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v_and_replace=True, chunksize=256):
         """
+
         Parameters
         ----------
         corpus: iterable of list of (int, float)
@@ -1003,41 +1009,6 @@ class WmdSimilarity(interfaces.SimilarityABC):
             Whether or not to normalize the word2vec vectors to length 1.
         chunksize : int, optional
             Size of chunk.
-
-        Notes
-        -----
-        See :class:`~gensim.models.word2vec.wmdistance` for more
-        information. TODO: there is no wmdistance in word2vec!
-        When a `num_best` value is provided, only the most similar documents are
-        retrieved.
-        # See Tutorial Notebook for more examples:
-        `<https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`
-        When using this code, please consider citing the following papers:
-        .. Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
-        .. Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
-        .. Matt Kusner et al. "From Word Embeddings To Document Distances".
-
-        Example
-        -------
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.similarities import MatrixSimilarity
-        >>> import gensim.downloader as api
-        >>> from gensim.models import Word2Vec
-        >>> from gensim.corpora import Dictionary
-        >>> from gensim.utils import simple_preprocess
-        >>>
-        >>> # Create index:
-        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> index = MatrixSimilarity(corpus, num_features=400)
-        >>> # Given a document collection "corpus", train word2vec model.
-        >>> model = Word2Vec(corpus, workers=3, size=100)
-        >>> dictionary = Dictionary(corpus)
-        >>> bow_corpus = [dictionary.doc2bow(document) for document in corpus]
-        >>> instance = WmdSimilarity(corpus, model, num_best=10) #TODO : How can i train model?
-        >>> # Make query.
-        >>> query = 'Trees'
-        >>> sims = instance[query]
 
         """
         self.corpus = corpus
@@ -1056,10 +1027,27 @@ class WmdSimilarity(interfaces.SimilarityABC):
             w2v_model.init_sims(replace=True)
 
     def __len__(self):
+        """Get size of corpus."""
         return len(self.corpus)
 
     def get_similarities(self, query):
-        """**Do not use this function directly; use the self[query] syntax instead.**"""
+        """Get similarity between `query` and current index instance.
+
+        Warnings
+        --------
+        Do not use this function directly; use the self[query] syntax instead.
+
+        Parameters
+        ----------
+        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+            Document or collection of documents.
+
+        Return
+        ------
+        :class:`numpy.ndarray`
+            Similarity matrix.
+
+        """
         if isinstance(query, numpy.ndarray):
             # Convert document indexes to actual documents.
             query = [self.corpus[i] for i in query]
@@ -1091,8 +1079,25 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
-    """Compute similarity against a corpus of documents by storing the sparse index
-    matrix in memory. The similarity measure used is cosine between two vectors.
+    """Compute cosine similarity against a corpus of documents by storing the index matrix in memory.
+
+    Notes
+    -----
+    Use this if your input corpus contains sparse vectors (such as documents in bag-of-words format) and fits into RAM.
+
+    The matrix is internally stored as a :class:`scipy.sparse.csr_matrix` matrix. Unless the entire
+    matrix fits into main memory, use :class:`~gensim.similarities.docsim.Similarity` instead.
+
+    Takes an optional `maintain_sparsity` argument, setting this to True
+    causes `get_similarities` to return a sparse matrix instead of a
+    dense representation if possible.
+
+    See also
+    --------
+    :class:`~gensim.similarities.docsim.Similarity`
+        Index similarity (wrapper for other inheritors of :class:`~gensim.interfaces.SimilarityABC`).
+    :class:`~gensim.similarities.docsim.MatrixSimilarity`
+        Index similarity (dense with cosine distance).
 
     """
 
@@ -1106,9 +1111,9 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         num_features : int, optional
             Size of the dictionary.
         num_terms : int, optional
-            Number of terms.
+            Number of terms, **must be specified**.
         num_docs : int, optional
-            Number of documents in market matrix file.
+            Number of documents in `corpus`.
         num_nnz : int, optional
             Number of non-zero terms.
         num_best : int, optional
@@ -1116,25 +1121,11 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
             Otherwise, return a full vector with one float for every document in the index.
         chunksize : int, optional
             Size of chunk.
-        dtype : str, optional
-            Function for TODO: what?
+        dtype : numpy.dtype, optional
+            Data type of internal matrix.
         maintain_sparsity : bool, optional
-            Control sparsity.
+            if True - will return sparse arr from :meth:`~gensim.similarities.docsim.SparseSimilarity.get_similarities`.
 
-        Notes
-        -----
-        Use this if your input corpus contains sparse vectors (such as documents in
-        bag-of-words format) and fits into RAM.
-
-        The matrix is internally stored as a :class:`scipy.sparse.csr_matrix` matrix. Unless the entire
-        matrix fits into main memory, use :class:`~gensim.similarities.docsim.Similarity` instead.
-
-        Takes an optional `maintain_sparsity` argument, setting this to True
-        causes `get_similarities` to return a sparse matrix instead of a
-        dense representation if possible.
-
-        See also  :class:`~gensim.similarities.docsim.Similarity`
-        and :class:`~gensim.similarities.docsim.MatrixSimilarity` in this module.
         """
 
         self.num_best = num_best
@@ -1173,17 +1164,27 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
             logger.info("created %r", self.index)
 
     def __len__(self):
+        """Get size of index."""
         return self.index.shape[0]
 
     def get_similarities(self, query):
-        """Return similarity of sparse vector `query` to all documents in the corpus,
-        as a numpy array. **Do not use this function directly; use the self[query] syntax instead.**
+        """Get similarity between `query` and current index instance.
 
-        Notes
-        -----
-        If `query` is a collection of documents, return a 2D array of similarities
-        of each document in `query` to all documents in the corpus (=batch query,
-        faster than processing each document in turn).
+        Warnings
+        --------
+        Do not use this function directly; use the self[query] syntax instead.
+
+        Parameters
+        ----------
+        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+            Document or collection of documents.
+
+        Return
+        ------
+        :class:`numpy.ndarray`
+            Similarity matrix (if maintain_sparsity=False) **OR**
+        :class:`scipy.sparse.csc`
+            otherwise
 
         """
         is_corpus, query = utils.is_corpus(query)
