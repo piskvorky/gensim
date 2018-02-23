@@ -15,26 +15,23 @@ import gensim.matutils as matutils
 # we'll define known, good (slow) version of functions here
 # and compare results from these functions vs. cython ones
 def logsumexp(x):
-    """
-    Log of sum of exponentials
+    """Log of sum of exponentials.
 
     Parameters
     ----------
-    x : array_like
-        Input data
+    x : numpy.ndarray
+        Input 2d matrix.
 
     Returns
     -------
     float
-        log of sum of exponentials of elements in `x`
+        log of sum of exponentials of elements in `x`.
 
-    Notes
-    -----
-        for performance, does not support NaNs or > 1d arrays like
-        scipy.special.logsumexp()
+    Warnings
+    --------
+    By performance reasons, doesn't support NaNs or 1d, 3d, etc arrays like :func:`scipy.special.logsumexp`.
 
     """
-
     x_max = np.max(x)
     x = np.log(np.sum(np.exp(x - x_max)))
     x += x_max
@@ -43,18 +40,19 @@ def logsumexp(x):
 
 
 def mean_absolute_difference(a, b):
-    """
-    Mean absolute difference between two arrays
+    """Mean absolute difference between two arrays.
 
     Parameters
     ----------
-    a : (M,) array_like of float32
-    b : (M,) array_like of float32
+    a : numpy.ndarray
+        Input 1d array.
+    b : numpy.ndarray
+        Input 1d array.
 
     Returns
     -------
     float
-        mean(abs(a - b))
+        mean(abs(a - b)).
 
     """
     return np.mean(np.abs(a - b))
@@ -66,7 +64,7 @@ def dirichlet_expectation(alpha):
     Parameters
     ----------
     alpha : numpy.ndarray
-        Input vector or matrix.
+        Dirichlet parameter 2d matrix or 1d vector, if 2d - each row is treated as a separate parameter vector.
 
     Returns
     -------
@@ -129,7 +127,7 @@ class TestLdaModelInner(unittest.TestCase):
                 # 1 dimensional case
                 input_1d = rs.uniform(.01, 10000, size=(self.num_topics,))
                 known_good = dirichlet_expectation(input_1d)
-                test_values = matutils.dirichlet_expectation_1d(input_1d)
+                test_values = matutils.dirichlet_expectation(input_1d)
 
                 msg = "dirichlet_expectation_1d failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
@@ -137,7 +135,7 @@ class TestLdaModelInner(unittest.TestCase):
                 # 2 dimensional case
                 input_2d = rs.uniform(.01, 10000, size=(1, self.num_topics,))
                 known_good = dirichlet_expectation(input_2d)
-                test_values = matutils.dirichlet_expectation_2d(input_2d)
+                test_values = matutils.dirichlet_expectation(input_2d)
 
                 msg = "dirichlet_expectation_2d failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
