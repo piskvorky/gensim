@@ -4,9 +4,60 @@
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Computing similarities across a collection of documents in the Vector Space Model."""
+"""Computing similarities across a collection of documents in the Vector Space Model.
+
+The main class is :class:`~gensim.similarity.docsim.Similarity`, which builds an index for a given set of documents.
+Once the index is built, you can perform efficient queries like "Tell me how similar is this query document to each
+document in the index?". The result is a vector of numbers as large as the size of the initial set of documents,
+that is, one float for each index document. Alternatively, you can also request only the top-N most
+similar index documents to the query.
 
 
+How It Works
+------------
+The :class:`~gensim.similarity.docsim.Similarity` class splits the index into several smaller sub-indexes ("shards"),
+which are disk-based. If your entire index fits in memory (~hundreds of thousands documents for 1GB of RAM),
+you can also use the :class:`~gensim.similarity.docsim.MatrixSimilarity`
+or :class:`~gensim.similarity.docsim.SparseMatrixSimilarity` classes directly.
+These are more simple but do not scale as well (they keep the entire index in RAM, no sharding).
+
+Once the index has been initialized, you can query for document similarity simply by:
+>>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
+>>>
+>>> index_tmpfile = get_tmpfile("index")
+>>> query = [(1, 2), (6, 1), (7, 2)]
+>>>
+>>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary)) # build the index
+>>> similarities = index[query] # get similarities between the query and all index documents
+
+If you have more query documents, you can submit them all at once, in a batch:
+
+>>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
+>>>
+>>> index_tmpfile = get_tmpfile("index")
+>>> batch_of_documents = common_corpus[:]  # only as example
+>>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary)) # build the index
+>>>
+>>> for similarities in index[batch_of_documents]: # the batch is simply an iterable of documents, aka gensim corpus.
+...     pass
+
+The benefit of this batch (aka "chunked") querying is much better performance.
+To see the speed-up on your machine, run ``python -m gensim.test.simspeed``
+(compare to my results `here <http://groups.google.com/group/gensim/msg/4f6f171a869e4fca?>`_).
+
+There is also a special syntax for when you need similarity of documents in the index
+to the index itself (i.e. queries=indexed documents themselves). This special syntax
+uses the faster, batch queries internally and **is ideal for all-vs-all pairwise similarities**:
+
+>>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
+>>>
+>>> index_tmpfile = get_tmpfile("index")
+>>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary)) # build the index
+>>>
+>>> for similarities in index: # yield similarities of the 1st indexed document, then 2nd...
+...     pass
+
+"""
 import logging
 import itertools
 import os
@@ -31,7 +82,7 @@ except ImportError:
 
 
 class Shard(utils.SaveLoad):
-    """A proxy class that represents a single shard instance within a Similarity index.
+    """A proxy class that represents a single shard instance within :class:`~gensim.similarity.docsim.Similarity` index.
 
     Basically just wraps (Sparse)MatrixSimilarity so that it mmaps from disk on
     request (query).
