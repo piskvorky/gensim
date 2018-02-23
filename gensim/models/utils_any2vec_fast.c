@@ -719,13 +719,13 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_GetAttrStr(PyObject* obj, PyObject
 /* GetBuiltinName.proto */
 static PyObject *__Pyx_GetBuiltinName(PyObject *name);
 
-/* ArgTypeTest.proto */
-static CYTHON_INLINE int __Pyx_ArgTypeTest(PyObject *obj, PyTypeObject *type, int none_allowed,
-    const char *name, int exact);
-
 /* unicode_iter.proto */
 static CYTHON_INLINE int __Pyx_init_unicode_iteration(
     PyObject* ustring, Py_ssize_t *length, void** data, int *kind);
+
+/* ArgTypeTest.proto */
+static CYTHON_INLINE int __Pyx_ArgTypeTest(PyObject *obj, PyTypeObject *type, int none_allowed,
+    const char *name, int exact);
 
 /* PyObjectFormatSimple.proto */
 #if CYTHON_COMPILING_IN_PYPY
@@ -846,6 +846,7 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
 
 /* Module declarations from 'gensim.models.utils_any2vec_fast' */
+static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *, int __pyx_skip_dispatch); /*proto*/
 static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyObject *, unsigned int, unsigned int, int __pyx_skip_dispatch); /*proto*/
 #define __Pyx_MODULE_NAME "gensim.models.utils_any2vec_fast"
 int __pyx_module_is_main_gensim__models__utils_any2vec_fast = 0;
@@ -853,8 +854,6 @@ int __pyx_module_is_main_gensim__models__utils_any2vec_fast = 0;
 /* Implementation of 'gensim.models.utils_any2vec_fast' */
 static PyObject *__pyx_builtin_range;
 static const char __pyx_k_[] = "<";
-static const char __pyx_k_c[] = "c";
-static const char __pyx_k_h[] = "h";
 static const char __pyx_k__2[] = ">";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_test[] = "__test__";
@@ -862,59 +861,29 @@ static const char __pyx_k_word[] = "word";
 static const char __pyx_k_max_n[] = "max_n";
 static const char __pyx_k_min_n[] = "min_n";
 static const char __pyx_k_range[] = "range";
-static const char __pyx_k_string[] = "string";
-static const char __pyx_k_ft_hash[] = "ft_hash";
-static const char __pyx_k_home_jojo_projekte_gensim_gensi[] = "/home/jojo/projekte/gensim/gensim/models/utils_any2vec_fast.pyx";
-static const char __pyx_k_gensim_models_utils_any2vec_fast[] = "gensim.models.utils_any2vec_fast";
 static PyObject *__pyx_kp_u_;
 static PyObject *__pyx_kp_u__2;
-static PyObject *__pyx_n_s_c;
-static PyObject *__pyx_n_s_ft_hash;
-static PyObject *__pyx_n_s_gensim_models_utils_any2vec_fast;
-static PyObject *__pyx_n_s_h;
-static PyObject *__pyx_kp_s_home_jojo_projekte_gensim_gensi;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_max_n;
 static PyObject *__pyx_n_s_min_n;
 static PyObject *__pyx_n_s_range;
-static PyObject *__pyx_n_s_string;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_word;
 static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_string); /* proto */
 static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_2compute_ngrams(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_word, unsigned int __pyx_v_min_n, unsigned int __pyx_v_max_n); /* proto */
 static PyObject *__pyx_int_0;
 static PyObject *__pyx_int_1;
-static PyObject *__pyx_tuple__3;
-static PyObject *__pyx_codeobj__4;
 
 /* "gensim/models/utils_any2vec_fast.pyx":7
  * # coding: utf-8
  * 
- * def ft_hash(unicode string):             # <<<<<<<<<<<<<<
+ * cpdef ft_hash(unicode string):             # <<<<<<<<<<<<<<
  *     cdef unsigned int h = 2166136261
  *     for c in string:
  */
 
-/* Python wrapper */
 static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_1ft_hash(PyObject *__pyx_self, PyObject *__pyx_v_string); /*proto*/
-static PyMethodDef __pyx_mdef_6gensim_6models_18utils_any2vec_fast_1ft_hash = {"ft_hash", (PyCFunction)__pyx_pw_6gensim_6models_18utils_any2vec_fast_1ft_hash, METH_O, 0};
-static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_1ft_hash(PyObject *__pyx_self, PyObject *__pyx_v_string) {
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("ft_hash (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_string), (&PyUnicode_Type), 1, "string", 1))) __PYX_ERR(0, 7, __pyx_L1_error)
-  __pyx_r = __pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(__pyx_self, ((PyObject*)__pyx_v_string));
-
-  /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_string) {
+static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *__pyx_v_string, CYTHON_UNUSED int __pyx_skip_dispatch) {
   unsigned int __pyx_v_h;
   Py_UCS4 __pyx_v_c;
   PyObject *__pyx_r = NULL;
@@ -931,7 +900,7 @@ static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UN
 
   /* "gensim/models/utils_any2vec_fast.pyx":8
  * 
- * def ft_hash(unicode string):
+ * cpdef ft_hash(unicode string):
  *     cdef unsigned int h = 2166136261             # <<<<<<<<<<<<<<
  *     for c in string:
  *         h ^= ord(c)
@@ -939,7 +908,7 @@ static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UN
   __pyx_v_h = 0x811C9DC5;
 
   /* "gensim/models/utils_any2vec_fast.pyx":9
- * def ft_hash(unicode string):
+ * cpdef ft_hash(unicode string):
  *     cdef unsigned int h = 2166136261
  *     for c in string:             # <<<<<<<<<<<<<<
  *         h ^= ord(c)
@@ -993,7 +962,7 @@ static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UN
   /* "gensim/models/utils_any2vec_fast.pyx":7
  * # coding: utf-8
  * 
- * def ft_hash(unicode string):             # <<<<<<<<<<<<<<
+ * cpdef ft_hash(unicode string):             # <<<<<<<<<<<<<<
  *     cdef unsigned int h = 2166136261
  *     for c in string:
  */
@@ -1002,6 +971,47 @@ static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UN
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_8);
+  __Pyx_AddTraceback("gensim.models.utils_any2vec_fast.ft_hash", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = 0;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_1ft_hash(PyObject *__pyx_self, PyObject *__pyx_v_string); /*proto*/
+static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_1ft_hash(PyObject *__pyx_self, PyObject *__pyx_v_string) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("ft_hash (wrapper)", 0);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_string), (&PyUnicode_Type), 1, "string", 1))) __PYX_ERR(0, 7, __pyx_L1_error)
+  __pyx_r = __pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(__pyx_self, ((PyObject*)__pyx_v_string));
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_string) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  __Pyx_RefNannySetupContext("ft_hash", 0);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(__pyx_v_string, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 7, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
   __Pyx_AddTraceback("gensim.models.utils_any2vec_fast.ft_hash", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -1388,6 +1398,7 @@ static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_2compute_ngrams(C
 }
 
 static PyMethodDef __pyx_methods[] = {
+  {"ft_hash", (PyCFunction)__pyx_pw_6gensim_6models_18utils_any2vec_fast_1ft_hash, METH_O, 0},
   {"compute_ngrams", (PyCFunction)__pyx_pw_6gensim_6models_18utils_any2vec_fast_3compute_ngrams, METH_VARARGS|METH_KEYWORDS, 0},
   {0, 0, 0, 0}
 };
@@ -1413,16 +1424,10 @@ static struct PyModuleDef __pyx_moduledef = {
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_u_, __pyx_k_, sizeof(__pyx_k_), 0, 1, 0, 0},
   {&__pyx_kp_u__2, __pyx_k__2, sizeof(__pyx_k__2), 0, 1, 0, 0},
-  {&__pyx_n_s_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 0, 1, 1},
-  {&__pyx_n_s_ft_hash, __pyx_k_ft_hash, sizeof(__pyx_k_ft_hash), 0, 0, 1, 1},
-  {&__pyx_n_s_gensim_models_utils_any2vec_fast, __pyx_k_gensim_models_utils_any2vec_fast, sizeof(__pyx_k_gensim_models_utils_any2vec_fast), 0, 0, 1, 1},
-  {&__pyx_n_s_h, __pyx_k_h, sizeof(__pyx_k_h), 0, 0, 1, 1},
-  {&__pyx_kp_s_home_jojo_projekte_gensim_gensi, __pyx_k_home_jojo_projekte_gensim_gensi, sizeof(__pyx_k_home_jojo_projekte_gensim_gensi), 0, 0, 1, 0},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_max_n, __pyx_k_max_n, sizeof(__pyx_k_max_n), 0, 0, 1, 1},
   {&__pyx_n_s_min_n, __pyx_k_min_n, sizeof(__pyx_k_min_n), 0, 0, 1, 1},
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
-  {&__pyx_n_s_string, __pyx_k_string, sizeof(__pyx_k_string), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_n_s_word, __pyx_k_word, sizeof(__pyx_k_word), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
@@ -1437,23 +1442,8 @@ static int __Pyx_InitCachedBuiltins(void) {
 static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
-
-  /* "gensim/models/utils_any2vec_fast.pyx":7
- * # coding: utf-8
- * 
- * def ft_hash(unicode string):             # <<<<<<<<<<<<<<
- *     cdef unsigned int h = 2166136261
- *     for c in string:
- */
-  __pyx_tuple__3 = PyTuple_Pack(3, __pyx_n_s_string, __pyx_n_s_h, __pyx_n_s_c); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 7, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__3);
-  __Pyx_GIVEREF(__pyx_tuple__3);
-  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(1, 0, 3, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_jojo_projekte_gensim_gensi, __pyx_n_s_ft_hash, 7, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
-  __pyx_L1_error:;
-  __Pyx_RefNannyFinishContext();
-  return -1;
 }
 
 static int __Pyx_InitGlobals(void) {
@@ -1557,18 +1547,6 @@ PyMODINIT_FUNC PyInit_utils_any2vec_fast(void)
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "gensim/models/utils_any2vec_fast.pyx":7
- * # coding: utf-8
- * 
- * def ft_hash(unicode string):             # <<<<<<<<<<<<<<
- *     cdef unsigned int h = 2166136261
- *     for c in string:
- */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_18utils_any2vec_fast_1ft_hash, NULL, __pyx_n_s_gensim_models_utils_any2vec_fast); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 7, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_ft_hash, __pyx_t_1) < 0) __PYX_ERR(0, 7, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
   /* "gensim/models/utils_any2vec_fast.pyx":1
  * #!/usr/bin/env cython             # <<<<<<<<<<<<<<
  * # cython: boundscheck=False
@@ -1633,6 +1611,22 @@ static PyObject *__Pyx_GetBuiltinName(PyObject *name) {
     return result;
 }
 
+/* unicode_iter */
+static CYTHON_INLINE int __Pyx_init_unicode_iteration(
+    PyObject* ustring, Py_ssize_t *length, void** data, int *kind) {
+#if CYTHON_PEP393_ENABLED
+    if (unlikely(__Pyx_PyUnicode_READY(ustring) < 0)) return -1;
+    *kind   = PyUnicode_KIND(ustring);
+    *length = PyUnicode_GET_LENGTH(ustring);
+    *data   = PyUnicode_DATA(ustring);
+#else
+    *kind   = 0;
+    *length = PyUnicode_GET_SIZE(ustring);
+    *data   = (void*)PyUnicode_AS_UNICODE(ustring);
+#endif
+    return 0;
+}
+
 /* ArgTypeTest */
 static void __Pyx_RaiseArgumentTypeInvalid(const char* name, PyObject *obj, PyTypeObject *type) {
     PyErr_Format(PyExc_TypeError,
@@ -1657,22 +1651,6 @@ static CYTHON_INLINE int __Pyx_ArgTypeTest(PyObject *obj, PyTypeObject *type, in
         if (likely(PyObject_TypeCheck(obj, type))) return 1;
     }
     __Pyx_RaiseArgumentTypeInvalid(name, obj, type);
-    return 0;
-}
-
-/* unicode_iter */
-static CYTHON_INLINE int __Pyx_init_unicode_iteration(
-    PyObject* ustring, Py_ssize_t *length, void** data, int *kind) {
-#if CYTHON_PEP393_ENABLED
-    if (unlikely(__Pyx_PyUnicode_READY(ustring) < 0)) return -1;
-    *kind   = PyUnicode_KIND(ustring);
-    *length = PyUnicode_GET_LENGTH(ustring);
-    *data   = PyUnicode_DATA(ustring);
-#else
-    *kind   = 0;
-    *length = PyUnicode_GET_SIZE(ustring);
-    *data   = (void*)PyUnicode_AS_UNICODE(ustring);
-#endif
     return 0;
 }
 

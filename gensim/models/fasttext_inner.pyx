@@ -317,8 +317,10 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                 continue
             indexes[effective_words] = word.index
 
-            subwords = [model.wv.hash2index[ft_hash(subword) % model.bucket]
-                        for subword in compute_ngrams(token, model.wv.min_n, model.wv.max_n)]
+            subwords = [
+                model.wv.hash2index[ft_hash(subword) % model.bucket]
+                for subword in compute_ngrams(token, model.wv.min_n, model.wv.max_n)
+            ]
             word_subwords = np.array([word.index] + subwords, dtype=np.uint32)
             subwords_idx_len[effective_words] = <int>(len(subwords) + 1)
             subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)
@@ -447,8 +449,10 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
                 continue
             indexes[effective_words] = word.index
 
-            subwords = [model.wv.hash2index[ft_hash(subword) % model.bucket]
-                        for subword in compute_ngrams(token, model.wv.min_n, model.wv.max_n)]
+            subwords = [
+                model.wv.hash2index[ft_hash(subword) % model.bucket]
+                for subword in compute_ngrams(token, model.wv.min_n, model.wv.max_n)
+            ]
             word_subwords = np.array(subwords, dtype=np.uint32)
             subwords_idx_len[effective_words] = <int>len(subwords)
             subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)

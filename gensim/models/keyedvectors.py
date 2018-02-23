@@ -1569,8 +1569,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             return True
         else:
             char_ngrams = _compute_ngrams(word, self.min_n, self.max_n)
-            return any(_ft_hash(ng) % self.bucket in self.hash2index
-                       for ng in char_ngrams)
+            return any(_ft_hash(ng) % self.bucket in self.hash2index for ng in char_ngrams)
 
     def save(self, *args, **kwargs):
         """Saves the keyedvectors. This saved model can be loaded again using

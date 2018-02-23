@@ -92,8 +92,7 @@ except ImportError:
 
                 for index in word2_indices:
                     vocab_subwords_indices += [index]
-                    word2_subwords += _compute_ngrams(model.wv.index2word[index],
-                                                      model.min_n, model.max_n)
+                    word2_subwords += _compute_ngrams(model.wv.index2word[index], model.min_n, model.max_n)
 
                 for subword in word2_subwords:
                     ngrams_subwords_indices.append(
@@ -145,8 +144,7 @@ except ImportError:
                 start = max(0, pos - model.window + reduced_window)
 
                 subwords_indices = [word.index]
-                word2_subwords = _compute_ngrams(model.wv.index2word[word.index],
-                                                 model.min_n, model.max_n)
+                word2_subwords = _compute_ngrams(model.wv.index2word[word.index], model.min_n, model.max_n)
 
                 for subword in word2_subwords:
                     subwords_indices.append(model.wv.hash2index[_ft_hash(subword) % model.bucket])
@@ -419,9 +417,10 @@ class FastText(BaseWordEmbeddingsModel):
             num_buckets = len(buckets)
             report['syn0_ngrams'] = len(buckets) * vec_size
         elif self.word_ngrams > 0:
-            logger.warn('subword information is enabled, but no vocabulary '
-                        'could be found, estimated required memory might be '
-                        'inaccurate!')
+            logger.warn(
+                'subword information is enabled, but no vocabulary could be found, estimated required memory might be '
+                'inaccurate!'
+            )
         report['total'] = sum(report.values())
         logger.info(
             "estimated required memory for %i words, %i buckets and %i dimensions: %i bytes",
@@ -849,8 +848,7 @@ class FastTextTrainables(Word2VecTrainables):
             ngrams = _compute_ngrams(w, wv.min_n, wv.max_n)
             ngram_weights = wv.vectors_ngrams
             for ngram in ngrams:
-                word_vec += ngram_weights[
-                    wv.hash2index[_ft_hash(ngram) % self.bucket]]
+                word_vec += ngram_weights[wv.hash2index[_ft_hash(ngram) % self.bucket]]
             word_vec /= (len(ngrams) + 1)
             wv.vectors[v.index] = word_vec
 

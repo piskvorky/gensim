@@ -4,7 +4,7 @@
 # cython: cdivision=True
 # coding: utf-8
 
-def ft_hash(unicode string):
+cpdef ft_hash(unicode string):
     cdef unsigned int h = 2166136261
     for c in string:
         h ^= ord(c)
