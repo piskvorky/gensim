@@ -266,8 +266,7 @@ class TranslationMatrix(utils.SaveLoad):
         topn : int, optional
             Number of words than will be returned as translation for each `source_words`
         gc : int, optional
-            Define the translation algorithm, if `gc == 0` - use standard NN
-            retrieval,
+            Define the translation algorithm, if `gc == 0` - use standard NN retrieval,
             otherwise, use globally corrected neighbour retrieval method (as described in [1]).
         sample_num : int, optional
             Number of word to sample from the source lexicon, if `gc == 1`, then `sample_num` **must** be provided.

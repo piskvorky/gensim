@@ -1,6 +1,4 @@
-"""
-Extraction of documents representations from their raw bag-of-word counts.
-"""
+"""Extraction of documents representations from their raw bag-of-word counts."""
 
 # bring model classes directly into package namespace, to save some typing
 from .coherencemodel import CoherenceModel  # noqa:F401

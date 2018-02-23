@@ -161,7 +161,7 @@ FASTTEXT_FILEFORMAT_MAGIC = 793712314
 
 class FastText(BaseWordEmbeddingsModel):
     """Class for training, using and evaluating word representations learned using method
-    described in [1] aka Fasttext.
+    described `aka Fasttext <https://arxiv.org/abs/1607.04606>`_.
 
     The model can be stored/loaded via its :meth:`~gensim.models.fasttext.FastText.save()` and
     :meth:`~gensim.models.fasttext.FastText.load()` methods, or loaded in a format compatible with the original
