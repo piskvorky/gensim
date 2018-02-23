@@ -1,6 +1,6 @@
 #!/usr/bin/env cython
 # coding: utf-8
-#
+# cython: embedsignature=True
 
 from __future__ import division
 cimport cython
@@ -26,7 +26,7 @@ def mean_absolute_difference(a, b):
     -------
     float
         mean(abs(a - b))
-    
+
     """
 
     if a.shape != b.shape:
@@ -37,8 +37,7 @@ def mean_absolute_difference(a, b):
     elif a.dtype == np.float32:
         return _mean_absolute_difference[float](a, b)
     elif a.dtype == np.float16:
-        return _mean_absolute_difference[float](a.astype(np.float32), 
-                                                b.astype(np.float32))
+        return _mean_absolute_difference[float](a.astype(np.float32), b.astype(np.float32))
 
 
 def logsumexp(x):
@@ -50,7 +49,7 @@ def logsumexp(x):
     Parameters
     ----------
     x : (M, N) array_like
-    
+
     Returns
     -------
     float
@@ -134,11 +133,11 @@ def dirichlet_expectation_1d(alpha):
     dirichlet_expectation_1d(alpha)
 
     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
-    
+
     Parameters
     ----------
     alpha : (M,) array_like
-        Dirichlet parameter vector.  
+        Dirichlet parameter vector.
 
     Returns
     -------
@@ -174,7 +173,7 @@ def digamma(DTYPE_t x):
     Returns
     -------
     digamma : float
-    
+
     """
 
     return _digamma(x)
@@ -182,7 +181,7 @@ def digamma(DTYPE_t x):
 
 @cython.cdivision(True)
 cdef inline DTYPE_t _digamma (DTYPE_t x,) nogil:
-    """ 
+    """
     Digamma over positive floats only
 
     Adapted from:
@@ -197,9 +196,9 @@ cdef inline DTYPE_t _digamma (DTYPE_t x,) nogil:
         Psi ( Digamma ) Function,
         Applied Statistics,
         Volume 25, Number 3, 1976, pages 315-317.
-    
+
     Licensing:
-        This code is distributed under the GNU LGPL license. 
+        This code is distributed under the GNU LGPL license.
 
     """
 
@@ -208,7 +207,7 @@ cdef inline DTYPE_t _digamma (DTYPE_t x,) nogil:
     cdef DTYPE_t r;
     cdef DTYPE_t value;
     cdef DTYPE_t x2;
-    
+
     if ( x <= 0.000001 ):
         value = - euler_mascheroni - 1.0 / x + 1.6449340668482264365 * x;
         return value;
@@ -252,7 +251,7 @@ cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:
     -------
     DTYPE_t
         mean(abs(a - b))
-    
+
     """
 
     cdef DTYPE_t result = 0.0
@@ -265,7 +264,7 @@ cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:
     for i in range(I):
         result += fabs(a[i] - b[i])
     result /= N
-        
+
     return result
 
 
@@ -275,18 +274,18 @@ cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:
 cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:
     """
     Log of sum of exponentials for 2d array
-    
+
     Parameters
     ----------
     x : (M, N) array_like of DTPE_t
-    
+
     Returns
     -------
     DTYPE_t
         log of sum of exponentials of elements in `x`
- 
+
     """
-    
+
     cdef DTYPE_t max_val = data[0, 0]
     cdef DTYPE_t result = 0.0
     cdef size_t i
@@ -294,12 +293,12 @@ cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:
 
     cdef size_t I = data.shape[0]
     cdef size_t J = data.shape[1]
-    
+
     for i in range(I):
         for j in range(J):
             if data[i, j] > max_val:
                 max_val = data[i, j]
-    
+
     for i in range(I):
         for j in range(J):
             result += exp(data[i, j] - max_val)
@@ -314,12 +313,12 @@ cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:
 cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:
     """
     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
-    
+
     Parameters
     ----------
     alpha : 1d array_like
         Dirichlet parameter vector
-    
+
     out : 1d array_like
         log of expected values
 
@@ -344,13 +343,13 @@ cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:
 cdef void _dirichlet_expectation_2d(DTYPE_t[:, :] alpha, DTYPE_t[:, :] out) nogil:
     """
     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
-    
+
     Parameters
     ----------
     alpha : 2d array_like
-        Dirichlet parameter vector.  
+        Dirichlet parameter vector.
         Each row is treated as a parameter vector for its own Dirichlet
-    
+
     out : 2d array_like
         log of expected values
 

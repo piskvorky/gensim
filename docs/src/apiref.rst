@@ -11,6 +11,7 @@ Modules:
     interfaces
     utils
     matutils
+    _matutils
     downloader
     corpora/bleicorpus
     corpora/csvcorpus
