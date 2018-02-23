@@ -450,6 +450,31 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(topic_no, int))
             self.assertTrue(isinstance(probability, float))
 
+    def testNewAuthorTopics(self):
+        model = self.class_(
+            corpus, author2doc=author2doc, id2word=dictionary, num_topics=2,
+            passes=100, random_state=np.random.seed(0)
+        )
+        #temp save model state vars before get_new_author_topics is called
+        state_gamma_len = len(model.state.gamma)
+        author2doc_len = len(model.author2doc)
+        author2id_len = len(model.author2id)
+        id2author_len = len(model.id2author)
+        doc2author_len = len(model.doc2author)
+
+        new_author_topics = model.get_new_author_topics(corpus=corpus[0:2])
+
+        for k, v in new_author_topics:
+            self.assertTrue(isinstance(k, int))
+            self.assertTrue(isinstance(v, float))
+
+        #assure rollback was successful and the model state is as before
+        self.assertEqual(state_gamma_len, len(model.state.gamma))
+        self.assertEqual(author2doc_len, len(model.author2doc))
+        self.assertEqual(author2id_len, len(model.author2id))
+        self.assertEqual(id2author_len, len(model.id2author))
+        self.assertEqual(doc2author_len, len(model.doc2author))
+
     def testPasses(self):
         # long message includes the original error message with a custom one
         self.longMessage = True
