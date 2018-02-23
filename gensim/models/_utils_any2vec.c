@@ -3,7 +3,7 @@
 /* BEGIN: Cython Metadata
 {
     "distutils": {},
-    "module_name": "gensim.models.utils_any2vec_fast"
+    "module_name": "gensim.models._utils_any2vec"
 }
 END: Cython Metadata */
 
@@ -434,8 +434,8 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__gensim__models__utils_any2vec_fast
-#define __PYX_HAVE_API__gensim__models__utils_any2vec_fast
+#define __PYX_HAVE__gensim__models___utils_any2vec
+#define __PYX_HAVE_API__gensim__models___utils_any2vec
 #ifdef _OPENMP
 #include <omp.h>
 #endif /* _OPENMP */
@@ -631,7 +631,7 @@ static const char *__pyx_filename;
 
 
 static const char *__pyx_f[] = {
-  "gensim/models/utils_any2vec_fast.pyx",
+  "gensim/models/_utils_any2vec.pyx",
 };
 
 /*--- Type declarations ---*/
@@ -845,13 +845,13 @@ static int __Pyx_check_binary_version(void);
 static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
 
-/* Module declarations from 'gensim.models.utils_any2vec_fast' */
-static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *, int __pyx_skip_dispatch); /*proto*/
-static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyObject *, unsigned int, unsigned int, int __pyx_skip_dispatch); /*proto*/
-#define __Pyx_MODULE_NAME "gensim.models.utils_any2vec_fast"
-int __pyx_module_is_main_gensim__models__utils_any2vec_fast = 0;
+/* Module declarations from 'gensim.models._utils_any2vec' */
+static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash(PyObject *, int __pyx_skip_dispatch); /*proto*/
+static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObject *, unsigned int, unsigned int, int __pyx_skip_dispatch); /*proto*/
+#define __Pyx_MODULE_NAME "gensim.models._utils_any2vec"
+int __pyx_module_is_main_gensim__models___utils_any2vec = 0;
 
-/* Implementation of 'gensim.models.utils_any2vec_fast' */
+/* Implementation of 'gensim.models._utils_any2vec' */
 static PyObject *__pyx_builtin_range;
 static const char __pyx_k_[] = "<";
 static const char __pyx_k__2[] = ">";
@@ -869,12 +869,12 @@ static PyObject *__pyx_n_s_min_n;
 static PyObject *__pyx_n_s_range;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_word;
-static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_string); /* proto */
-static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_2compute_ngrams(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_word, unsigned int __pyx_v_min_n, unsigned int __pyx_v_max_n); /* proto */
+static PyObject *__pyx_pf_6gensim_6models_14_utils_any2vec_ft_hash(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_string); /* proto */
+static PyObject *__pyx_pf_6gensim_6models_14_utils_any2vec_2compute_ngrams(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_word, unsigned int __pyx_v_min_n, unsigned int __pyx_v_max_n); /* proto */
 static PyObject *__pyx_int_0;
 static PyObject *__pyx_int_1;
 
-/* "gensim/models/utils_any2vec_fast.pyx":7
+/* "gensim/models/_utils_any2vec.pyx":7
  * # coding: utf-8
  * 
  * cpdef ft_hash(unicode string):             # <<<<<<<<<<<<<<
@@ -882,8 +882,8 @@ static PyObject *__pyx_int_1;
  *     for c in string:
  */
 
-static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_1ft_hash(PyObject *__pyx_self, PyObject *__pyx_v_string); /*proto*/
-static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *__pyx_v_string, CYTHON_UNUSED int __pyx_skip_dispatch) {
+static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_1ft_hash(PyObject *__pyx_self, PyObject *__pyx_v_string); /*proto*/
+static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash(PyObject *__pyx_v_string, CYTHON_UNUSED int __pyx_skip_dispatch) {
   unsigned int __pyx_v_h;
   Py_UCS4 __pyx_v_c;
   PyObject *__pyx_r = NULL;
@@ -898,7 +898,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *
   PyObject *__pyx_t_8 = NULL;
   __Pyx_RefNannySetupContext("ft_hash", 0);
 
-  /* "gensim/models/utils_any2vec_fast.pyx":8
+  /* "gensim/models/_utils_any2vec.pyx":8
  * 
  * cpdef ft_hash(unicode string):
  *     cdef unsigned int h = 2166136261             # <<<<<<<<<<<<<<
@@ -907,7 +907,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *
  */
   __pyx_v_h = 0x811C9DC5;
 
-  /* "gensim/models/utils_any2vec_fast.pyx":9
+  /* "gensim/models/_utils_any2vec.pyx":9
  * cpdef ft_hash(unicode string):
  *     cdef unsigned int h = 2166136261
  *     for c in string:             # <<<<<<<<<<<<<<
@@ -925,7 +925,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *
     __pyx_t_2 = __pyx_t_7;
     __pyx_v_c = __Pyx_PyUnicode_READ(__pyx_t_5, __pyx_t_4, __pyx_t_2);
 
-    /* "gensim/models/utils_any2vec_fast.pyx":10
+    /* "gensim/models/_utils_any2vec.pyx":10
  *     cdef unsigned int h = 2166136261
  *     for c in string:
  *         h ^= ord(c)             # <<<<<<<<<<<<<<
@@ -934,7 +934,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *
  */
     __pyx_v_h = (__pyx_v_h ^ ((long)__pyx_v_c));
 
-    /* "gensim/models/utils_any2vec_fast.pyx":11
+    /* "gensim/models/_utils_any2vec.pyx":11
  *     for c in string:
  *         h ^= ord(c)
  *         h *= 16777619             # <<<<<<<<<<<<<<
@@ -945,7 +945,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/models/utils_any2vec_fast.pyx":12
+  /* "gensim/models/_utils_any2vec.pyx":12
  *         h ^= ord(c)
  *         h *= 16777619
  *     return h             # <<<<<<<<<<<<<<
@@ -959,7 +959,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *
   __pyx_t_8 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/utils_any2vec_fast.pyx":7
+  /* "gensim/models/_utils_any2vec.pyx":7
  * # coding: utf-8
  * 
  * cpdef ft_hash(unicode string):             # <<<<<<<<<<<<<<
@@ -971,7 +971,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_8);
-  __Pyx_AddTraceback("gensim.models.utils_any2vec_fast.ft_hash", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.models._utils_any2vec.ft_hash", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -980,13 +980,13 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(PyObject *
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_1ft_hash(PyObject *__pyx_self, PyObject *__pyx_v_string); /*proto*/
-static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_1ft_hash(PyObject *__pyx_self, PyObject *__pyx_v_string) {
+static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_1ft_hash(PyObject *__pyx_self, PyObject *__pyx_v_string); /*proto*/
+static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_1ft_hash(PyObject *__pyx_self, PyObject *__pyx_v_string) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("ft_hash (wrapper)", 0);
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_string), (&PyUnicode_Type), 1, "string", 1))) __PYX_ERR(0, 7, __pyx_L1_error)
-  __pyx_r = __pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(__pyx_self, ((PyObject*)__pyx_v_string));
+  __pyx_r = __pyx_pf_6gensim_6models_14_utils_any2vec_ft_hash(__pyx_self, ((PyObject*)__pyx_v_string));
 
   /* function exit code */
   goto __pyx_L0;
@@ -997,13 +997,13 @@ static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_1ft_hash(PyObject
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_string) {
+static PyObject *__pyx_pf_6gensim_6models_14_utils_any2vec_ft_hash(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_string) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("ft_hash", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6gensim_6models_18utils_any2vec_fast_ft_hash(__pyx_v_string, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 7, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_14_utils_any2vec_ft_hash(__pyx_v_string, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1012,7 +1012,7 @@ static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UN
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("gensim.models.utils_any2vec_fast.ft_hash", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.models._utils_any2vec.ft_hash", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -1020,7 +1020,7 @@ static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UN
   return __pyx_r;
 }
 
-/* "gensim/models/utils_any2vec_fast.pyx":15
+/* "gensim/models/_utils_any2vec.pyx":15
  * 
  * 
  * cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):             # <<<<<<<<<<<<<<
@@ -1028,8 +1028,8 @@ static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_ft_hash(CYTHON_UN
  *     ngrams = []
  */
 
-static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_3compute_ngrams(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyObject *__pyx_v_word, unsigned int __pyx_v_min_n, unsigned int __pyx_v_max_n, CYTHON_UNUSED int __pyx_skip_dispatch) {
+static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_3compute_ngrams(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObject *__pyx_v_word, unsigned int __pyx_v_min_n, unsigned int __pyx_v_max_n, CYTHON_UNUSED int __pyx_skip_dispatch) {
   PyObject *__pyx_v_extended_word = 0;
   PyObject *__pyx_v_ngrams = NULL;
   PyObject *__pyx_v_ngram_length = NULL;
@@ -1050,7 +1050,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
   int __pyx_t_12;
   __Pyx_RefNannySetupContext("compute_ngrams", 0);
 
-  /* "gensim/models/utils_any2vec_fast.pyx":16
+  /* "gensim/models/_utils_any2vec.pyx":16
  * 
  * cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):
  *     cdef unicode extended_word = f'<{word}>'             # <<<<<<<<<<<<<<
@@ -1082,7 +1082,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
   __pyx_v_extended_word = ((PyObject*)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "gensim/models/utils_any2vec_fast.pyx":17
+  /* "gensim/models/_utils_any2vec.pyx":17
  * cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):
  *     cdef unicode extended_word = f'<{word}>'
  *     ngrams = []             # <<<<<<<<<<<<<<
@@ -1094,7 +1094,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
   __pyx_v_ngrams = ((PyObject*)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "gensim/models/utils_any2vec_fast.pyx":18
+  /* "gensim/models/_utils_any2vec.pyx":18
  *     cdef unicode extended_word = f'<{word}>'
  *     ngrams = []
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):             # <<<<<<<<<<<<<<
@@ -1166,7 +1166,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
     __Pyx_XDECREF_SET(__pyx_v_ngram_length, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "gensim/models/utils_any2vec_fast.pyx":19
+    /* "gensim/models/_utils_any2vec.pyx":19
  *     ngrams = []
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
  *         for i in range(0, len(extended_word) - ngram_length + 1):             # <<<<<<<<<<<<<<
@@ -1236,7 +1236,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
       __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "gensim/models/utils_any2vec_fast.pyx":20
+      /* "gensim/models/_utils_any2vec.pyx":20
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
  *         for i in range(0, len(extended_word) - ngram_length + 1):
  *             ngrams.append(extended_word[i:i + ngram_length])             # <<<<<<<<<<<<<<
@@ -1252,7 +1252,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
       __pyx_t_12 = __Pyx_PyList_Append(__pyx_v_ngrams, __pyx_t_1); if (unlikely(__pyx_t_12 == -1)) __PYX_ERR(0, 20, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-      /* "gensim/models/utils_any2vec_fast.pyx":19
+      /* "gensim/models/_utils_any2vec.pyx":19
  *     ngrams = []
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
  *         for i in range(0, len(extended_word) - ngram_length + 1):             # <<<<<<<<<<<<<<
@@ -1262,7 +1262,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
     }
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "gensim/models/utils_any2vec_fast.pyx":18
+    /* "gensim/models/_utils_any2vec.pyx":18
  *     cdef unicode extended_word = f'<{word}>'
  *     ngrams = []
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):             # <<<<<<<<<<<<<<
@@ -1272,7 +1272,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
   }
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "gensim/models/utils_any2vec_fast.pyx":21
+  /* "gensim/models/_utils_any2vec.pyx":21
  *         for i in range(0, len(extended_word) - ngram_length + 1):
  *             ngrams.append(extended_word[i:i + ngram_length])
  *     return ngrams             # <<<<<<<<<<<<<<
@@ -1282,7 +1282,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
   __pyx_r = __pyx_v_ngrams;
   goto __pyx_L0;
 
-  /* "gensim/models/utils_any2vec_fast.pyx":15
+  /* "gensim/models/_utils_any2vec.pyx":15
  * 
  * 
  * cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):             # <<<<<<<<<<<<<<
@@ -1295,7 +1295,7 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_AddTraceback("gensim.models.utils_any2vec_fast.compute_ngrams", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.models._utils_any2vec.compute_ngrams", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_extended_word);
@@ -1308,8 +1308,8 @@ static PyObject *__pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(PyO
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_3compute_ngrams(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_3compute_ngrams(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_3compute_ngrams(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_3compute_ngrams(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_word = 0;
   unsigned int __pyx_v_min_n;
   unsigned int __pyx_v_max_n;
@@ -1363,24 +1363,24 @@ static PyObject *__pyx_pw_6gensim_6models_18utils_any2vec_fast_3compute_ngrams(P
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("compute_ngrams", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 15, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("gensim.models.utils_any2vec_fast.compute_ngrams", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.models._utils_any2vec.compute_ngrams", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6gensim_6models_18utils_any2vec_fast_2compute_ngrams(__pyx_self, __pyx_v_word, __pyx_v_min_n, __pyx_v_max_n);
+  __pyx_r = __pyx_pf_6gensim_6models_14_utils_any2vec_2compute_ngrams(__pyx_self, __pyx_v_word, __pyx_v_min_n, __pyx_v_max_n);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_2compute_ngrams(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_word, unsigned int __pyx_v_min_n, unsigned int __pyx_v_max_n) {
+static PyObject *__pyx_pf_6gensim_6models_14_utils_any2vec_2compute_ngrams(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_word, unsigned int __pyx_v_min_n, unsigned int __pyx_v_max_n) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("compute_ngrams", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6gensim_6models_18utils_any2vec_fast_compute_ngrams(__pyx_v_word, __pyx_v_min_n, __pyx_v_max_n, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 15, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(__pyx_v_word, __pyx_v_min_n, __pyx_v_max_n, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 15, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1389,7 +1389,7 @@ static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_2compute_ngrams(C
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("gensim.models.utils_any2vec_fast.compute_ngrams", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("gensim.models._utils_any2vec.compute_ngrams", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -1398,8 +1398,8 @@ static PyObject *__pyx_pf_6gensim_6models_18utils_any2vec_fast_2compute_ngrams(C
 }
 
 static PyMethodDef __pyx_methods[] = {
-  {"ft_hash", (PyCFunction)__pyx_pw_6gensim_6models_18utils_any2vec_fast_1ft_hash, METH_O, 0},
-  {"compute_ngrams", (PyCFunction)__pyx_pw_6gensim_6models_18utils_any2vec_fast_3compute_ngrams, METH_VARARGS|METH_KEYWORDS, 0},
+  {"ft_hash", (PyCFunction)__pyx_pw_6gensim_6models_14_utils_any2vec_1ft_hash, METH_O, 0},
+  {"compute_ngrams", (PyCFunction)__pyx_pw_6gensim_6models_14_utils_any2vec_3compute_ngrams, METH_VARARGS|METH_KEYWORDS, 0},
   {0, 0, 0, 0}
 };
 
@@ -1410,7 +1410,7 @@ static struct PyModuleDef __pyx_moduledef = {
   #else
     PyModuleDef_HEAD_INIT,
   #endif
-    "utils_any2vec_fast",
+    "_utils_any2vec",
     0, /* m_doc */
     -1, /* m_size */
     __pyx_methods /* m_methods */,
@@ -1456,11 +1456,11 @@ static int __Pyx_InitGlobals(void) {
 }
 
 #if PY_MAJOR_VERSION < 3
-PyMODINIT_FUNC initutils_any2vec_fast(void); /*proto*/
-PyMODINIT_FUNC initutils_any2vec_fast(void)
+PyMODINIT_FUNC init_utils_any2vec(void); /*proto*/
+PyMODINIT_FUNC init_utils_any2vec(void)
 #else
-PyMODINIT_FUNC PyInit_utils_any2vec_fast(void); /*proto*/
-PyMODINIT_FUNC PyInit_utils_any2vec_fast(void)
+PyMODINIT_FUNC PyInit__utils_any2vec(void); /*proto*/
+PyMODINIT_FUNC PyInit__utils_any2vec(void)
 #endif
 {
   PyObject *__pyx_t_1 = NULL;
@@ -1474,7 +1474,7 @@ PyMODINIT_FUNC PyInit_utils_any2vec_fast(void)
           Py_FatalError("failed to import 'refnanny' module");
   }
   #endif
-  __Pyx_RefNannySetupContext("PyMODINIT_FUNC PyInit_utils_any2vec_fast(void)", 0);
+  __Pyx_RefNannySetupContext("PyMODINIT_FUNC PyInit__utils_any2vec(void)", 0);
   if (__Pyx_check_binary_version() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_empty_tuple = PyTuple_New(0); if (unlikely(!__pyx_empty_tuple)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_empty_bytes = PyBytes_FromStringAndSize("", 0); if (unlikely(!__pyx_empty_bytes)) __PYX_ERR(0, 1, __pyx_L1_error)
@@ -1503,7 +1503,7 @@ PyMODINIT_FUNC PyInit_utils_any2vec_fast(void)
   #endif
   /*--- Module creation code ---*/
   #if PY_MAJOR_VERSION < 3
-  __pyx_m = Py_InitModule4("utils_any2vec_fast", __pyx_methods, 0, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
+  __pyx_m = Py_InitModule4("_utils_any2vec", __pyx_methods, 0, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
   #else
   __pyx_m = PyModule_Create(&__pyx_moduledef);
   #endif
@@ -1520,14 +1520,14 @@ PyMODINIT_FUNC PyInit_utils_any2vec_fast(void)
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
-  if (__pyx_module_is_main_gensim__models__utils_any2vec_fast) {
+  if (__pyx_module_is_main_gensim__models___utils_any2vec) {
     if (PyObject_SetAttrString(__pyx_m, "__name__", __pyx_n_s_main) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(0, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "gensim.models.utils_any2vec_fast")) {
-      if (unlikely(PyDict_SetItemString(modules, "gensim.models.utils_any2vec_fast", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "gensim.models._utils_any2vec")) {
+      if (unlikely(PyDict_SetItemString(modules, "gensim.models._utils_any2vec", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
     }
   }
   #endif
@@ -1547,7 +1547,7 @@ PyMODINIT_FUNC PyInit_utils_any2vec_fast(void)
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "gensim/models/utils_any2vec_fast.pyx":1
+  /* "gensim/models/_utils_any2vec.pyx":1
  * #!/usr/bin/env cython             # <<<<<<<<<<<<<<
  * # cython: boundscheck=False
  * # cython: wraparound=False
@@ -1564,11 +1564,11 @@ PyMODINIT_FUNC PyInit_utils_any2vec_fast(void)
   __Pyx_XDECREF(__pyx_t_1);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init gensim.models.utils_any2vec_fast", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init gensim.models._utils_any2vec", __pyx_clineno, __pyx_lineno, __pyx_filename);
     }
     Py_DECREF(__pyx_m); __pyx_m = 0;
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init gensim.models.utils_any2vec_fast");
+    PyErr_SetString(PyExc_ImportError, "init gensim.models._utils_any2vec");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();

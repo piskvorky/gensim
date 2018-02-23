@@ -18,7 +18,7 @@ from six import iteritems
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.utils_any2vec_fast import (
+    from gensim.models._utils_any2vec import (
         ft_hash as _ft_hash,
         compute_ngrams as _compute_ngrams)
 except ImportError:

@@ -1593,6 +1593,7 @@ static const char __pyx_k_RuntimeError[] = "RuntimeError";
 static const char __pyx_k_sentence_idx[] = "sentence_idx";
 static const char __pyx_k_subwords_idx[] = "subwords_idx";
 static const char __pyx_k_cum_table_len[] = "cum_table_len";
+static const char __pyx_k_utils_any2vec[] = "_utils_any2vec";
 static const char __pyx_k_vectors_vocab[] = "vectors_vocab";
 static const char __pyx_k_word_subwords[] = "word_subwords";
 static const char __pyx_k_compute_ngrams[] = "compute_ngrams";
@@ -1607,7 +1608,6 @@ static const char __pyx_k_word_locks_vocab[] = "word_locks_vocab";
 static const char __pyx_k_scipy_linalg_blas[] = "scipy.linalg.blas";
 static const char __pyx_k_word_locks_ngrams[] = "word_locks_ngrams";
 static const char __pyx_k_MAX_WORDS_IN_BATCH[] = "MAX_WORDS_IN_BATCH";
-static const char __pyx_k_utils_any2vec_fast[] = "utils_any2vec_fast";
 static const char __pyx_k_effective_sentences[] = "effective_sentences";
 static const char __pyx_k_vectors_vocab_lockf[] = "vectors_vocab_lockf";
 static const char __pyx_k_vectors_ngrams_lockf[] = "vectors_ngrams_lockf";
@@ -1712,7 +1712,7 @@ static PyObject *__pyx_n_s_train_batch_sg;
 static PyObject *__pyx_n_s_trainables;
 static PyObject *__pyx_n_s_uint32;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
-static PyObject *__pyx_n_s_utils_any2vec_fast;
+static PyObject *__pyx_n_s_utils_any2vec;
 static PyObject *__pyx_n_s_vector_size;
 static PyObject *__pyx_n_s_vectors_ngrams;
 static PyObject *__pyx_n_s_vectors_ngrams_lockf;
@@ -9529,7 +9529,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_trainables, __pyx_k_trainables, sizeof(__pyx_k_trainables), 0, 0, 1, 1},
   {&__pyx_n_s_uint32, __pyx_k_uint32, sizeof(__pyx_k_uint32), 0, 0, 1, 1},
   {&__pyx_kp_u_unknown_dtype_code_in_numpy_pxd, __pyx_k_unknown_dtype_code_in_numpy_pxd, sizeof(__pyx_k_unknown_dtype_code_in_numpy_pxd), 0, 1, 0, 0},
-  {&__pyx_n_s_utils_any2vec_fast, __pyx_k_utils_any2vec_fast, sizeof(__pyx_k_utils_any2vec_fast), 0, 0, 1, 1},
+  {&__pyx_n_s_utils_any2vec, __pyx_k_utils_any2vec, sizeof(__pyx_k_utils_any2vec), 0, 0, 1, 1},
   {&__pyx_n_s_vector_size, __pyx_k_vector_size, sizeof(__pyx_k_vector_size), 0, 0, 1, 1},
   {&__pyx_n_s_vectors_ngrams, __pyx_k_vectors_ngrams, sizeof(__pyx_k_vectors_ngrams), 0, 0, 1, 1},
   {&__pyx_n_s_vectors_ngrams_lockf, __pyx_k_vectors_ngrams_lockf, sizeof(__pyx_k_vectors_ngrams_lockf), 0, 0, 1, 1},
@@ -9963,7 +9963,7 @@ PyMODINIT_FUNC PyInit_fasttext_inner(void)
  *     # in scipy > 0.15, fblas function has been removed
  *     import scipy.linalg.blas as fblas             # <<<<<<<<<<<<<<
  * 
- * from utils_any2vec_fast import compute_ngrams, ft_hash
+ * from _utils_any2vec import compute_ngrams, ft_hash
  */
       __pyx_t_10 = PyList_New(1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 20, __pyx_L4_except_error)
       __Pyx_GOTREF(__pyx_t_10);
@@ -10008,7 +10008,7 @@ PyMODINIT_FUNC PyInit_fasttext_inner(void)
   /* "gensim/models/fasttext_inner.pyx":22
  *     import scipy.linalg.blas as fblas
  * 
- * from utils_any2vec_fast import compute_ngrams, ft_hash             # <<<<<<<<<<<<<<
+ * from _utils_any2vec import compute_ngrams, ft_hash             # <<<<<<<<<<<<<<
  * from word2vec_inner cimport bisect_left, random_int32, \
  *      scopy, saxpy, sdot, dsdot, snrm2, sscal, \
  */
@@ -10020,7 +10020,7 @@ PyMODINIT_FUNC PyInit_fasttext_inner(void)
   __Pyx_INCREF(__pyx_n_s_ft_hash);
   __Pyx_GIVEREF(__pyx_n_s_ft_hash);
   PyList_SET_ITEM(__pyx_t_9, 1, __pyx_n_s_ft_hash);
-  __pyx_t_3 = __Pyx_Import(__pyx_n_s_utils_any2vec_fast, __pyx_t_9, -1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 22, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_Import(__pyx_n_s_utils_any2vec, __pyx_t_9, -1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
   __pyx_t_9 = __Pyx_ImportFrom(__pyx_t_3, __pyx_n_s_compute_ngrams); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 22, __pyx_L1_error)

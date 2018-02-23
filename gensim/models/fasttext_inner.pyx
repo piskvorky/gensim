@@ -19,7 +19,7 @@ except ImportError:
     # in scipy > 0.15, fblas function has been removed
     import scipy.linalg.blas as fblas
 
-from utils_any2vec_fast import compute_ngrams, ft_hash
+from _utils_any2vec import compute_ngrams, ft_hash
 from word2vec_inner cimport bisect_left, random_int32, \
      scopy, saxpy, sdot, dsdot, snrm2, sscal, \
      REAL_t, EXP_TABLE, \
