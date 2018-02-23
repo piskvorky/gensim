@@ -455,7 +455,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             corpus, author2doc=author2doc, id2word=dictionary, num_topics=2,
             passes=100, random_state=np.random.seed(0)
         )
-        #temp save model state vars before get_new_author_topics is called
+        # temp save model state vars before get_new_author_topics is called
         state_gamma_len = len(model.state.gamma)
         author2doc_len = len(model.author2doc)
         author2id_len = len(model.author2id)
@@ -468,7 +468,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(k, int))
             self.assertTrue(isinstance(v, float))
 
-        #assure rollback was successful and the model state is as before
+        # assure rollback was successful and the model state is as before
         self.assertEqual(state_gamma_len, len(model.state.gamma))
         self.assertEqual(author2doc_len, len(model.author2doc))
         self.assertEqual(author2id_len, len(model.author2id))
