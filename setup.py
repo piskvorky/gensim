@@ -13,7 +13,6 @@ sudo python ./setup.py install
 import os
 import sys
 import warnings
-
 import ez_setup
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
@@ -261,6 +260,8 @@ setup(
         Extension('gensim.models.fasttext_inner',
             sources=['./gensim/models/fasttext_inner.c'],
             include_dirs=[model_dir]),
+        Extension('gensim._matutils',
+            sources=['./gensim/_matutils.c']),
     ],
     cmdclass=cmdclass,
     packages=find_packages(),

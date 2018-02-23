@@ -1049,25 +1049,72 @@ def jaccard_distance(set1, set2):
     return 1. - float(len(set1 & set2)) / float(union_cardinality)
 
 
-def dirichlet_expectation(alpha):
-    """For a vector :math:`\\theta \sim Dir(\\alpha)`, compute :math:`E[log \\theta]`.
+try:
+    # try to load fast, cythonized code if possible
+    from gensim._matutils import logsumexp, mean_absolute_difference, dirichlet_expectation
 
-    Parameters
-    ----------
-    alpha : numpy.ndarray
-        Input vector or matrix.
+except ImportError:
+    def logsumexp(x):
+        """Log of sum of exponentials.
 
-    Returns
-    -------
-    numpy.ndarray:
-        :math:`E[log \\theta]`
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Input 2d matrix.
 
-    """
-    if len(alpha.shape) == 1:
-        result = psi(alpha) - psi(np.sum(alpha))
-    else:
-        result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
-    return result.astype(alpha.dtype, copy=False)  # keep the same precision as input
+        Returns
+        -------
+        float
+            log of sum of exponentials of elements in `x`.
+
+        Warnings
+        --------
+        By performance reasons, doesn't support NaNs or 1d, 3d, etc arrays like :func:`scipy.special.logsumexp`.
+
+        """
+        x_max = np.max(x)
+        x = np.log(np.sum(np.exp(x - x_max)))
+        x += x_max
+
+        return x
+
+    def mean_absolute_difference(a, b):
+        """Mean absolute difference between two arrays.
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            Input 1d array.
+        b : numpy.ndarray
+            Input 1d array.
+
+        Returns
+        -------
+        float
+            mean(abs(a - b)).
+
+        """
+        return np.mean(np.abs(a - b))
+
+    def dirichlet_expectation(alpha):
+        """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+
+        Parameters
+        ----------
+        alpha : numpy.ndarray
+            Dirichlet parameter 2d matrix or 1d vector, if 2d - each row is treated as a separate parameter vector.
+
+        Returns
+        -------
+        numpy.ndarray
+            Log of expected values, dimension same as `alpha.ndim`.
+
+        """
+        if len(alpha.shape) == 1:
+            result = psi(alpha) - psi(np.sum(alpha))
+        else:
+            result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
+        return result.astype(alpha.dtype, copy=False)  # keep the same precision as input
 
 
 def qr_destroy(la):
