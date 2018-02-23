@@ -1049,25 +1049,75 @@ def jaccard_distance(set1, set2):
     return 1. - float(len(set1 & set2)) / float(union_cardinality)
 
 
-def dirichlet_expectation(alpha):
-    """For a vector :math:`\\theta \sim Dir(\\alpha)`, compute :math:`E[log \\theta]`.
+try:
+    # try to load fast, cythonized code if possible
+    from gensim._matutils import (logsumexp, mean_absolute_difference,
+                                  dirichlet_expectation)
+except ImportError:
+    def logsumexp(x):
+        """
+        Log of sum of exponentials
 
-    Parameters
-    ----------
-    alpha : numpy.ndarray
-        Input vector or matrix.
+        Parameters
+        ----------
+        x : (M, N) array_like
 
-    Returns
-    -------
-    numpy.ndarray:
-        :math:`E[log \\theta]`
+        Returns
+        -------
+        float
+            log of sum of exponentials of elements in `x`
 
-    """
-    if len(alpha.shape) == 1:
-        result = psi(alpha) - psi(np.sum(alpha))
-    else:
-        result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
-    return result.astype(alpha.dtype, copy=False)  # keep the same precision as input
+        Notes
+        -----
+            for performance, does not support NaNs or > 1d arrays like
+            scipy.special.logsumexp()
+
+        """
+
+        x_max = np.max(x)
+        x = np.log(np.sum(np.exp(x - x_max)))
+        x += x_max
+
+        return x
+
+    def mean_absolute_difference(a, b):
+        """
+        Mean absolute difference between two arrays
+
+        Parameters
+        ----------
+        a : (M,) array_like of float32
+        b : (M,) array_like of float32
+
+        Returns
+        -------
+        float
+            mean(abs(a - b))
+
+        """
+        return np.mean(np.abs(a - b))
+
+    def dirichlet_expectation(alpha):
+        """
+        Expected value of log(theta) where theta is drawn from a Dirichlet distribution
+
+        Parameters
+        ----------
+        alpha : (M, N) array_like or (M,) array_like
+            Dirichlet parameter vector.
+            If (M, N), each row is treated as a separate parameter vector
+
+        Returns
+        -------
+        (M, N) array_like or (M,) array_like
+            log of expected values
+
+        """
+        if len(alpha.shape) == 1:
+            result = psi(alpha) - psi(np.sum(alpha))
+        else:
+            result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
+        return result.astype(alpha.dtype, copy=False)  # keep the same precision as input
 
 
 def qr_destroy(la):
@@ -1108,52 +1158,6 @@ def qr_destroy(la):
     assert info >= 0, "qr failed"
     assert q.flags.f_contiguous
     return q, r
-
-
-def logsumexp(x):
-    """
-    Log of sum of exponentials
-
-    Parameters
-    ----------
-    x : array_like
-        Input data
-
-    Returns
-    -------
-    float
-        log of sum of exponentials of elements in `x`
-
-    Notes
-    -----
-        for performance, does not support NaNs or > 1d arrays like
-        scipy.special.logsumexp()
-
-    """
-
-    x_max = np.max(x)
-    x = np.log(np.sum(np.exp(x - x_max)))
-    x += x_max
-
-    return x
-
-
-def mean_absolute_difference(a, b):
-    """
-    Mean absolute difference between two arrays
-
-    Parameters
-    ----------
-    a : (M,) array_like of float32
-    b : (M,) array_like of float32
-
-    Returns
-    -------
-    float
-        mean(abs(a - b))
-
-    """
-    return np.mean(np.abs(a - b))
 
 
 class MmWriter(object):

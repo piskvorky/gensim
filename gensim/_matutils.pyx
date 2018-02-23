@@ -13,6 +13,8 @@ from cython.parallel import prange
 
 def mean_absolute_difference(a, b):
     """
+    mean_absolute_difference(a, b)
+
     Mean absolute difference between two arrays
 
     Parameters
@@ -27,7 +29,7 @@ def mean_absolute_difference(a, b):
     
     """
 
-    if (a.shape != b.shape):
+    if a.shape != b.shape:
         raise ValueError("a and b must have same shape")
 
     if a.dtype == np.float64:
@@ -41,7 +43,9 @@ def mean_absolute_difference(a, b):
 
 def logsumexp(x):
     """
-    Log of sum of exponentials for 2d array
+    logsumexp(x)
+
+    Log of sum of exponentials
     
     Parameters
     ----------
@@ -51,7 +55,12 @@ def logsumexp(x):
     -------
     float
         log of sum of exponentials of elements in `x`
- 
+
+    Notes
+    -----
+        for performance, does not support NaNs or > 1d arrays like
+        scipy.special.logsumexp()
+
     """
 
     if x.dtype == np.float64:
@@ -62,14 +71,41 @@ def logsumexp(x):
         return _logsumexp_2d[float](x.astype(np.float32))
 
 
+def dirichlet_expectation(alpha):
+    """
+    dirichlet_expectation(alpha)
+
+    Expected value of log(theta) where theta is drawn from a Dirichlet distribution
+
+    Parameters
+    ----------
+    alpha : (M, N) array_like or (M,) array_like
+        Dirichlet parameter vector.
+        If (M, N), each row is treated as a separate parameter vector
+
+    Returns
+    -------
+    (M, N) array_like or (M,) array_like
+        log of expected values
+
+    """
+
+    if alpha.ndim == 2:
+        return dirichlet_expectation_2d(alpha)
+    else:
+        return dirichlet_expectation_1d(alpha)
+
+
 def dirichlet_expectation_2d(alpha):
     """
+    dirichlet_expectation_2d(alpha)
+
     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
-    
+
     Parameters
     ----------
     alpha : (M, N) array_like
-        Dirichlet parameter vector.  
+        Dirichlet parameter vector.
         Each row is treated as a separate parameter vector
 
     Returns
@@ -78,7 +114,7 @@ def dirichlet_expectation_2d(alpha):
         log of expected values
 
     """
-    
+
     if alpha.dtype == np.float64:
         out = np.zeros(alpha.shape, dtype=alpha.dtype)
         _dirichlet_expectation_2d[double](alpha, out)
@@ -95,6 +131,8 @@ def dirichlet_expectation_2d(alpha):
 
 def dirichlet_expectation_1d(alpha):
     """
+    dirichlet_expectation_1d(alpha)
+
     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
     
     Parameters
@@ -125,6 +163,8 @@ def dirichlet_expectation_1d(alpha):
 
 def digamma(DTYPE_t x):
     """
+    digamma(x):
+
     Digamma function for positive floats
 
     Parameters

@@ -7,19 +7,88 @@
 import logging
 import unittest
 import numpy as np
-
-try:
-    import gensim.models.ldamodel_inner as mli
-except ImportError:
-    raise unittest.SkipTest("Test requires compiled cython version of ldamodel_inner, which is not available")
+from scipy.special import psi  # gamma function utils
 
 import gensim.matutils as matutils
+
+
+# we'll define known, good (slow) version of functions here
+# and compare results from these functions vs. cython ones
+def logsumexp(x):
+    """
+    Log of sum of exponentials
+
+    Parameters
+    ----------
+    x : array_like
+        Input data
+
+    Returns
+    -------
+    float
+        log of sum of exponentials of elements in `x`
+
+    Notes
+    -----
+        for performance, does not support NaNs or > 1d arrays like
+        scipy.special.logsumexp()
+
+    """
+
+    x_max = np.max(x)
+    x = np.log(np.sum(np.exp(x - x_max)))
+    x += x_max
+
+    return x
+
+
+def mean_absolute_difference(a, b):
+    """
+    Mean absolute difference between two arrays
+
+    Parameters
+    ----------
+    a : (M,) array_like of float32
+    b : (M,) array_like of float32
+
+    Returns
+    -------
+    float
+        mean(abs(a - b))
+
+    """
+    return np.mean(np.abs(a - b))
+
+
+def dirichlet_expectation(alpha):
+    """For a vector :math:`\\theta \sim Dir(\\alpha)`, compute :math:`E[log \\theta]`.
+
+    Parameters
+    ----------
+    alpha : numpy.ndarray
+        Input vector or matrix.
+
+    Returns
+    -------
+    numpy.ndarray:
+        :math:`E[log \\theta]`
+
+    """
+    if len(alpha.shape) == 1:
+        result = psi(alpha) - psi(np.sum(alpha))
+    else:
+        result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
+    return result.astype(alpha.dtype, copy=False)  # keep the same precision as input
+
+
+dirichlet_expectation_1d = dirichlet_expectation
+dirichlet_expectation_2d = dirichlet_expectation
 
 
 class TestLdaModelInner(unittest.TestCase):
     def setUp(self):
         self.random_state = np.random.RandomState()
-        self.num_runs = 10  # test functions with *num_runs* random inputs
+        self.num_runs = 100  # test functions with *num_runs* random inputs
         self.num_topics = 100
 
     def testLogSumExp(self):
@@ -30,8 +99,8 @@ class TestLdaModelInner(unittest.TestCase):
             for i in range(self.num_runs):
                 input = rs.uniform(-1000, 1000, size=(self.num_topics, 1))
 
-                known_good = matutils.logsumexp(input)
-                test_values = mli.logsumexp(input)
+                known_good = logsumexp(input)
+                test_values = matutils.logsumexp(input)
 
                 msg = "logsumexp failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
@@ -45,8 +114,8 @@ class TestLdaModelInner(unittest.TestCase):
                 input1 = rs.uniform(-10000, 10000, size=(self.num_topics,))
                 input2 = rs.uniform(-10000, 10000, size=(self.num_topics,))
 
-                known_good = matutils.mean_absolute_difference(input1, input2)
-                test_values = mli.mean_absolute_difference(input1, input2)
+                known_good = mean_absolute_difference(input1, input2)
+                test_values = matutils.mean_absolute_difference(input1, input2)
 
                 msg = "mean_absolute_difference failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
@@ -59,16 +128,16 @@ class TestLdaModelInner(unittest.TestCase):
             for i in range(self.num_runs):
                 # 1 dimensional case
                 input_1d = rs.uniform(.01, 10000, size=(self.num_topics,))
-                known_good = matutils.dirichlet_expectation(input_1d)
-                test_values = mli.dirichlet_expectation_1d(input_1d)
+                known_good = dirichlet_expectation(input_1d)
+                test_values = matutils.dirichlet_expectation_1d(input_1d)
 
                 msg = "dirichlet_expectation_1d failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
 
                 # 2 dimensional case
                 input_2d = rs.uniform(.01, 10000, size=(1, self.num_topics,))
-                known_good = matutils.dirichlet_expectation(input_2d)
-                test_values = mli.dirichlet_expectation_2d(input_2d)
+                known_good = dirichlet_expectation(input_2d)
+                test_values = matutils.dirichlet_expectation_2d(input_2d)
 
                 msg = "dirichlet_expectation_2d failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
