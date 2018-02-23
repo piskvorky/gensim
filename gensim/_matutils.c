@@ -1952,8 +1952,6 @@ static PyObject *contiguous = 0;
 static PyObject *indirect_contiguous = 0;
 static int __pyx_memoryview_thread_locks_used;
 static PyThread_type_lock __pyx_memoryview_thread_locks[8];
-static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float); /*proto*/
-static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(double); /*proto*/
 static float __pyx_fuse_0__pyx_f_6gensim_9_matutils__mean_absolute_difference(__Pyx_memviewslice, __Pyx_memviewslice); /*proto*/
 static double __pyx_fuse_1__pyx_f_6gensim_9_matutils__mean_absolute_difference(__Pyx_memviewslice, __Pyx_memviewslice); /*proto*/
 static float __pyx_fuse_0__pyx_f_6gensim_9_matutils__logsumexp_2d(__Pyx_memviewslice); /*proto*/
@@ -1962,6 +1960,8 @@ static void __pyx_fuse_0__pyx_f_6gensim_9_matutils__dirichlet_expectation_1d(__P
 static void __pyx_fuse_1__pyx_f_6gensim_9_matutils__dirichlet_expectation_1d(__Pyx_memviewslice, __Pyx_memviewslice); /*proto*/
 static void __pyx_fuse_0__pyx_f_6gensim_9_matutils__dirichlet_expectation_2d(__Pyx_memviewslice, __Pyx_memviewslice); /*proto*/
 static void __pyx_fuse_1__pyx_f_6gensim_9_matutils__dirichlet_expectation_2d(__Pyx_memviewslice, __Pyx_memviewslice); /*proto*/
+static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float); /*proto*/
+static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(double); /*proto*/
 static struct __pyx_array_obj *__pyx_array_new(PyObject *, Py_ssize_t, char *, char *, char *); /*proto*/
 static void *__pyx_align_pointer(void *, size_t); /*proto*/
 static PyObject *__pyx_memoryview_new(PyObject *, int, int, __Pyx_TypeInfo *); /*proto*/
@@ -2001,9 +2001,9 @@ int __pyx_module_is_main_gensim___matutils = 0;
 
 /* Implementation of 'gensim._matutils' */
 static PyObject *__pyx_builtin_ValueError;
+static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_TypeError;
 static PyObject *__pyx_builtin_zip;
-static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_RuntimeError;
 static PyObject *__pyx_builtin_ImportError;
 static PyObject *__pyx_builtin_MemoryError;
@@ -2324,13 +2324,13 @@ static PyObject *__pyx_codeobj__41;
  * 
  * 
  * def mean_absolute_difference(a, b):             # <<<<<<<<<<<<<<
- *     """
- *     mean_absolute_difference(a, b)
+ *     """Mean absolute difference between two arrays, using :func:`~gensim._matutils._mean_absolute_difference`.
+ * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6gensim_9_matutils_1mean_absolute_difference(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_6gensim_9_matutils_mean_absolute_difference[] = "mean_absolute_difference(a, b)\n\n    mean_absolute_difference(a, b)\n\n    Mean absolute difference between two arrays\n\n    Parameters\n    ----------\n    a : (M,) array_like\n    b : (M,) array_like\n\n    Returns\n    -------\n    float\n        mean(abs(a - b))\n\n    ";
+static char __pyx_doc_6gensim_9_matutils_mean_absolute_difference[] = "mean_absolute_difference(a, b)\nMean absolute difference between two arrays, using :func:`~gensim._matutils._mean_absolute_difference`.\n\n    Parameters\n    ----------\n    a : numpy.ndarray\n        Input 1d array, supports float16, float32 and float64.\n    b : numpy.ndarray\n        Input 1d array, supports float16, float32 and float64.\n\n    Returns\n    -------\n    float\n        mean(abs(a - b)).\n\n    ";
 static PyMethodDef __pyx_mdef_6gensim_9_matutils_1mean_absolute_difference = {"mean_absolute_difference", (PyCFunction)__pyx_pw_6gensim_9_matutils_1mean_absolute_difference, METH_VARARGS|METH_KEYWORDS, __pyx_doc_6gensim_9_matutils_mean_absolute_difference};
 static PyObject *__pyx_pw_6gensim_9_matutils_1mean_absolute_difference(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_a = 0;
@@ -2403,68 +2403,68 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
   PyObject *__pyx_t_10 = NULL;
   __Pyx_RefNannySetupContext("mean_absolute_difference", 0);
 
-  /* "gensim/_matutils.pyx":32
- *     """
+  /* "gensim/_matutils.pyx":30
  * 
+ *     """
  *     if a.shape != b.shape:             # <<<<<<<<<<<<<<
  *         raise ValueError("a and b must have same shape")
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_shape); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_shape); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 30, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_b, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_b, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 30, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyObject_RichCompare(__pyx_t_1, __pyx_t_2, Py_NE); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_t_3 = PyObject_RichCompare(__pyx_t_1, __pyx_t_2, Py_NE); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 30, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 30, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":33
- * 
+    /* "gensim/_matutils.pyx":31
+ *     """
  *     if a.shape != b.shape:
  *         raise ValueError("a and b must have same shape")             # <<<<<<<<<<<<<<
  * 
  *     if a.dtype == np.float64:
  */
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 33, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 31, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_Raise(__pyx_t_3, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __PYX_ERR(0, 33, __pyx_L1_error)
+    __PYX_ERR(0, 31, __pyx_L1_error)
 
-    /* "gensim/_matutils.pyx":32
- *     """
+    /* "gensim/_matutils.pyx":30
  * 
+ *     """
  *     if a.shape != b.shape:             # <<<<<<<<<<<<<<
  *         raise ValueError("a and b must have same shape")
  * 
  */
   }
 
-  /* "gensim/_matutils.pyx":35
+  /* "gensim/_matutils.pyx":33
  *         raise ValueError("a and b must have same shape")
  * 
  *     if a.dtype == np.float64:             # <<<<<<<<<<<<<<
  *         return _mean_absolute_difference[double](a, b)
  *     elif a.dtype == np.float32:
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 35, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 33, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 35, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 33, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 35, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 33, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_t_3, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 35, __pyx_L1_error)
+  __pyx_t_2 = PyObject_RichCompare(__pyx_t_3, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 33, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 35, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 33, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":36
+    /* "gensim/_matutils.pyx":34
  * 
  *     if a.dtype == np.float64:
  *         return _mean_absolute_difference[double](a, b)             # <<<<<<<<<<<<<<
@@ -2473,10 +2473,10 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
  */
     __Pyx_XDECREF(__pyx_r);
     __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_a);
-    if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 36, __pyx_L1_error)
+    if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 34, __pyx_L1_error)
     __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_b);
-    if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 36, __pyx_L1_error)
-    __pyx_t_2 = PyFloat_FromDouble(__pyx_fuse_1__pyx_f_6gensim_9_matutils__mean_absolute_difference(__pyx_t_5, __pyx_t_6)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
+    if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_2 = PyFloat_FromDouble(__pyx_fuse_1__pyx_f_6gensim_9_matutils__mean_absolute_difference(__pyx_t_5, __pyx_t_6)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __PYX_XDEC_MEMVIEW(&__pyx_t_5, 1);
     __pyx_t_5.memview = NULL;
@@ -2488,7 +2488,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
     __pyx_t_2 = 0;
     goto __pyx_L0;
 
-    /* "gensim/_matutils.pyx":35
+    /* "gensim/_matutils.pyx":33
  *         raise ValueError("a and b must have same shape")
  * 
  *     if a.dtype == np.float64:             # <<<<<<<<<<<<<<
@@ -2497,28 +2497,28 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
  */
   }
 
-  /* "gensim/_matutils.pyx":37
+  /* "gensim/_matutils.pyx":35
  *     if a.dtype == np.float64:
  *         return _mean_absolute_difference[double](a, b)
  *     elif a.dtype == np.float32:             # <<<<<<<<<<<<<<
  *         return _mean_absolute_difference[float](a, b)
  *     elif a.dtype == np.float16:
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 35, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 35, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float32); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float32); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 35, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyObject_RichCompare(__pyx_t_2, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_1 = PyObject_RichCompare(__pyx_t_2, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 35, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 35, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":38
+    /* "gensim/_matutils.pyx":36
  *         return _mean_absolute_difference[double](a, b)
  *     elif a.dtype == np.float32:
  *         return _mean_absolute_difference[float](a, b)             # <<<<<<<<<<<<<<
@@ -2527,10 +2527,10 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
  */
     __Pyx_XDECREF(__pyx_r);
     __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_ds_float(__pyx_v_a);
-    if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 38, __pyx_L1_error)
+    if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 36, __pyx_L1_error)
     __pyx_t_8 = __Pyx_PyObject_to_MemoryviewSlice_ds_float(__pyx_v_b);
-    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 38, __pyx_L1_error)
-    __pyx_t_1 = PyFloat_FromDouble(__pyx_fuse_0__pyx_f_6gensim_9_matutils__mean_absolute_difference(__pyx_t_7, __pyx_t_8)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 38, __pyx_L1_error)
+    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 36, __pyx_L1_error)
+    __pyx_t_1 = PyFloat_FromDouble(__pyx_fuse_0__pyx_f_6gensim_9_matutils__mean_absolute_difference(__pyx_t_7, __pyx_t_8)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 36, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __PYX_XDEC_MEMVIEW(&__pyx_t_7, 1);
     __pyx_t_7.memview = NULL;
@@ -2542,7 +2542,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "gensim/_matutils.pyx":37
+    /* "gensim/_matutils.pyx":35
  *     if a.dtype == np.float64:
  *         return _mean_absolute_difference[double](a, b)
  *     elif a.dtype == np.float32:             # <<<<<<<<<<<<<<
@@ -2551,28 +2551,28 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
  */
   }
 
-  /* "gensim/_matutils.pyx":39
+  /* "gensim/_matutils.pyx":37
  *     elif a.dtype == np.float32:
  *         return _mean_absolute_difference[float](a, b)
  *     elif a.dtype == np.float16:             # <<<<<<<<<<<<<<
  *         return _mean_absolute_difference[float](a.astype(np.float32), b.astype(np.float32))
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 39, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 37, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 39, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 37, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float16); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 39, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float16); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 37, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyObject_RichCompare(__pyx_t_1, __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 39, __pyx_L1_error)
+  __pyx_t_3 = PyObject_RichCompare(__pyx_t_1, __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 37, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 39, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 37, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":40
+    /* "gensim/_matutils.pyx":38
  *         return _mean_absolute_difference[float](a, b)
  *     elif a.dtype == np.float16:
  *         return _mean_absolute_difference[float](a.astype(np.float32), b.astype(np.float32))             # <<<<<<<<<<<<<<
@@ -2580,11 +2580,11 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 40, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 40, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float32); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 40, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float32); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_t_1 = NULL;
@@ -2598,14 +2598,14 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
       }
     }
     if (!__pyx_t_1) {
-      __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_9); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 40, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_9); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 38, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       __Pyx_GOTREF(__pyx_t_3);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_1, __pyx_t_9};
-        __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 40, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 38, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
@@ -2614,33 +2614,33 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_1, __pyx_t_9};
-        __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 40, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 38, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       } else
       #endif
       {
-        __pyx_t_10 = PyTuple_New(1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 40, __pyx_L1_error)
+        __pyx_t_10 = PyTuple_New(1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 38, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_GIVEREF(__pyx_t_1); PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_1); __pyx_t_1 = NULL;
         __Pyx_GIVEREF(__pyx_t_9);
         PyTuple_SET_ITEM(__pyx_t_10, 0+1, __pyx_t_9);
         __pyx_t_9 = 0;
-        __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_10, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 40, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_10, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 38, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       }
     }
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_t_8 = __Pyx_PyObject_to_MemoryviewSlice_ds_float(__pyx_t_3);
-    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 40, __pyx_L1_error)
+    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_b, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 40, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_b, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_10 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 40, __pyx_L1_error)
+    __pyx_t_10 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_n_s_float32); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 40, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_n_s_float32); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
     __pyx_t_10 = NULL;
@@ -2654,14 +2654,14 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
       }
     }
     if (!__pyx_t_10) {
-      __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_9); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 40, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_9); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 38, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       __Pyx_GOTREF(__pyx_t_3);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_10, __pyx_t_9};
-        __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 40, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 38, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_10); __pyx_t_10 = 0;
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
@@ -2670,29 +2670,29 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_10, __pyx_t_9};
-        __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 40, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 38, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_10); __pyx_t_10 = 0;
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       } else
       #endif
       {
-        __pyx_t_1 = PyTuple_New(1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 40, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_New(1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 38, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_GIVEREF(__pyx_t_10); PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_10); __pyx_t_10 = NULL;
         __Pyx_GIVEREF(__pyx_t_9);
         PyTuple_SET_ITEM(__pyx_t_1, 0+1, __pyx_t_9);
         __pyx_t_9 = 0;
-        __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 40, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 38, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       }
     }
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_ds_float(__pyx_t_3);
-    if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 40, __pyx_L1_error)
+    if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyFloat_FromDouble(__pyx_fuse_0__pyx_f_6gensim_9_matutils__mean_absolute_difference(__pyx_t_8, __pyx_t_7)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 40, __pyx_L1_error)
+    __pyx_t_3 = PyFloat_FromDouble(__pyx_fuse_0__pyx_f_6gensim_9_matutils__mean_absolute_difference(__pyx_t_8, __pyx_t_7)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __PYX_XDEC_MEMVIEW(&__pyx_t_8, 1);
     __pyx_t_8.memview = NULL;
@@ -2704,7 +2704,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "gensim/_matutils.pyx":39
+    /* "gensim/_matutils.pyx":37
  *     elif a.dtype == np.float32:
  *         return _mean_absolute_difference[float](a, b)
  *     elif a.dtype == np.float16:             # <<<<<<<<<<<<<<
@@ -2717,8 +2717,8 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
  * 
  * 
  * def mean_absolute_difference(a, b):             # <<<<<<<<<<<<<<
- *     """
- *     mean_absolute_difference(a, b)
+ *     """Mean absolute difference between two arrays, using :func:`~gensim._matutils._mean_absolute_difference`.
+ * 
  */
 
   /* function exit code */
@@ -2742,17 +2742,211 @@ static PyObject *__pyx_pf_6gensim_9_matutils_mean_absolute_difference(CYTHON_UNU
   return __pyx_r;
 }
 
-/* "gensim/_matutils.pyx":43
+/* "gensim/_matutils.pyx":44
+ * @cython.wraparound(False)
+ * @cython.cdivision(True)
+ * cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:             # <<<<<<<<<<<<<<
+ *     """Mean absolute difference between two arrays.
+ * 
+ */
+
+static float __pyx_fuse_0__pyx_f_6gensim_9_matutils__mean_absolute_difference(__Pyx_memviewslice __pyx_v_a, __Pyx_memviewslice __pyx_v_b) {
+  float __pyx_v_result;
+  size_t __pyx_v_i;
+  size_t __pyx_v_I;
+  size_t __pyx_v_N;
+  float __pyx_r;
+  size_t __pyx_t_1;
+  size_t __pyx_t_2;
+  size_t __pyx_t_3;
+  size_t __pyx_t_4;
+
+  /* "gensim/_matutils.pyx":61
+ *     """
+ * 
+ *     cdef DTYPE_t result = 0.0             # <<<<<<<<<<<<<<
+ *     cdef size_t i
+ *     cdef size_t j
+ */
+  __pyx_v_result = 0.0;
+
+  /* "gensim/_matutils.pyx":65
+ *     cdef size_t j
+ * 
+ *     cdef size_t I = a.shape[0]             # <<<<<<<<<<<<<<
+ *     cdef size_t N = I
+ * 
+ */
+  __pyx_v_I = (__pyx_v_a.shape[0]);
+
+  /* "gensim/_matutils.pyx":66
+ * 
+ *     cdef size_t I = a.shape[0]
+ *     cdef size_t N = I             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+  __pyx_v_N = __pyx_v_I;
+
+  /* "gensim/_matutils.pyx":68
+ *     cdef size_t N = I
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         result += fabs(a[i] - b[i])
+ *     result /= N
+ */
+  __pyx_t_1 = __pyx_v_I;
+  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
+    __pyx_v_i = __pyx_t_2;
+
+    /* "gensim/_matutils.pyx":69
+ * 
+ *     for i in range(I):
+ *         result += fabs(a[i] - b[i])             # <<<<<<<<<<<<<<
+ *     result /= N
+ * 
+ */
+    __pyx_t_3 = __pyx_v_i;
+    __pyx_t_4 = __pyx_v_i;
+    __pyx_v_result = (__pyx_v_result + fabs(((*((float *) ( /* dim=0 */ (__pyx_v_a.data + __pyx_t_3 * __pyx_v_a.strides[0]) ))) - (*((float *) ( /* dim=0 */ (__pyx_v_b.data + __pyx_t_4 * __pyx_v_b.strides[0]) ))))));
+  }
+
+  /* "gensim/_matutils.pyx":70
+ *     for i in range(I):
+ *         result += fabs(a[i] - b[i])
+ *     result /= N             # <<<<<<<<<<<<<<
+ * 
+ *     return result
+ */
+  __pyx_v_result = (__pyx_v_result / __pyx_v_N);
+
+  /* "gensim/_matutils.pyx":72
+ *     result /= N
+ * 
+ *     return result             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __pyx_r = __pyx_v_result;
+  goto __pyx_L0;
+
+  /* "gensim/_matutils.pyx":44
+ * @cython.wraparound(False)
+ * @cython.cdivision(True)
+ * cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:             # <<<<<<<<<<<<<<
+ *     """Mean absolute difference between two arrays.
+ * 
+ */
+
+  /* function exit code */
+  __pyx_L0:;
+  return __pyx_r;
+}
+
+static double __pyx_fuse_1__pyx_f_6gensim_9_matutils__mean_absolute_difference(__Pyx_memviewslice __pyx_v_a, __Pyx_memviewslice __pyx_v_b) {
+  double __pyx_v_result;
+  size_t __pyx_v_i;
+  size_t __pyx_v_I;
+  size_t __pyx_v_N;
+  double __pyx_r;
+  size_t __pyx_t_1;
+  size_t __pyx_t_2;
+  size_t __pyx_t_3;
+  size_t __pyx_t_4;
+
+  /* "gensim/_matutils.pyx":61
+ *     """
+ * 
+ *     cdef DTYPE_t result = 0.0             # <<<<<<<<<<<<<<
+ *     cdef size_t i
+ *     cdef size_t j
+ */
+  __pyx_v_result = 0.0;
+
+  /* "gensim/_matutils.pyx":65
+ *     cdef size_t j
+ * 
+ *     cdef size_t I = a.shape[0]             # <<<<<<<<<<<<<<
+ *     cdef size_t N = I
+ * 
+ */
+  __pyx_v_I = (__pyx_v_a.shape[0]);
+
+  /* "gensim/_matutils.pyx":66
+ * 
+ *     cdef size_t I = a.shape[0]
+ *     cdef size_t N = I             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+  __pyx_v_N = __pyx_v_I;
+
+  /* "gensim/_matutils.pyx":68
+ *     cdef size_t N = I
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         result += fabs(a[i] - b[i])
+ *     result /= N
+ */
+  __pyx_t_1 = __pyx_v_I;
+  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
+    __pyx_v_i = __pyx_t_2;
+
+    /* "gensim/_matutils.pyx":69
+ * 
+ *     for i in range(I):
+ *         result += fabs(a[i] - b[i])             # <<<<<<<<<<<<<<
+ *     result /= N
+ * 
+ */
+    __pyx_t_3 = __pyx_v_i;
+    __pyx_t_4 = __pyx_v_i;
+    __pyx_v_result = (__pyx_v_result + fabs(((*((double *) ( /* dim=0 */ (__pyx_v_a.data + __pyx_t_3 * __pyx_v_a.strides[0]) ))) - (*((double *) ( /* dim=0 */ (__pyx_v_b.data + __pyx_t_4 * __pyx_v_b.strides[0]) ))))));
+  }
+
+  /* "gensim/_matutils.pyx":70
+ *     for i in range(I):
+ *         result += fabs(a[i] - b[i])
+ *     result /= N             # <<<<<<<<<<<<<<
+ * 
+ *     return result
+ */
+  __pyx_v_result = (__pyx_v_result / __pyx_v_N);
+
+  /* "gensim/_matutils.pyx":72
+ *     result /= N
+ * 
+ *     return result             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __pyx_r = __pyx_v_result;
+  goto __pyx_L0;
+
+  /* "gensim/_matutils.pyx":44
+ * @cython.wraparound(False)
+ * @cython.cdivision(True)
+ * cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:             # <<<<<<<<<<<<<<
+ *     """Mean absolute difference between two arrays.
+ * 
+ */
+
+  /* function exit code */
+  __pyx_L0:;
+  return __pyx_r;
+}
+
+/* "gensim/_matutils.pyx":75
  * 
  * 
  * def logsumexp(x):             # <<<<<<<<<<<<<<
- *     """
- *     logsumexp(x)
+ *     """Log of sum of exponentials, using :func:`~gensim._matutils._logsumexp_2d`.
+ * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6gensim_9_matutils_3logsumexp(PyObject *__pyx_self, PyObject *__pyx_v_x); /*proto*/
-static char __pyx_doc_6gensim_9_matutils_2logsumexp[] = "logsumexp(x)\n\n    logsumexp(x)\n\n    Log of sum of exponentials\n\n    Parameters\n    ----------\n    x : (M, N) array_like\n\n    Returns\n    -------\n    float\n        log of sum of exponentials of elements in `x`\n\n    Notes\n    -----\n        for performance, does not support NaNs or > 1d arrays like\n        scipy.special.logsumexp()\n\n    ";
+static char __pyx_doc_6gensim_9_matutils_2logsumexp[] = "logsumexp(x)\nLog of sum of exponentials, using :func:`~gensim._matutils._logsumexp_2d`.\n\n    Parameters\n    ----------\n    x : numpy.ndarray\n        Input 2d matrix, supports float16, float32 and float64.\n\n    Returns\n    -------\n    float\n        log of sum of exponentials of elements in `x`.\n\n    Warnings\n    --------\n    By performance reasons, doesn't support NaNs or 1d, 3d, etc arrays like scipy.special.logsumexp.\n\n    ";
 static PyMethodDef __pyx_mdef_6gensim_9_matutils_3logsumexp = {"logsumexp", (PyCFunction)__pyx_pw_6gensim_9_matutils_3logsumexp, METH_O, __pyx_doc_6gensim_9_matutils_2logsumexp};
 static PyObject *__pyx_pw_6gensim_9_matutils_3logsumexp(PyObject *__pyx_self, PyObject *__pyx_v_x) {
   PyObject *__pyx_r = 0;
@@ -2778,28 +2972,28 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
   PyObject *__pyx_t_8 = NULL;
   __Pyx_RefNannySetupContext("logsumexp", 0);
 
-  /* "gensim/_matutils.pyx":65
+  /* "gensim/_matutils.pyx":94
  *     """
  * 
  *     if x.dtype == np.float64:             # <<<<<<<<<<<<<<
  *         return _logsumexp_2d[double](x)
  *     elif x.dtype == np.float32:
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 94, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 94, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 94, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 94, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 94, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":66
+    /* "gensim/_matutils.pyx":95
  * 
  *     if x.dtype == np.float64:
  *         return _logsumexp_2d[double](x)             # <<<<<<<<<<<<<<
@@ -2808,8 +3002,8 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
  */
     __Pyx_XDECREF(__pyx_r);
     __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(__pyx_v_x);
-    if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 66, __pyx_L1_error)
-    __pyx_t_2 = PyFloat_FromDouble(__pyx_fuse_1__pyx_f_6gensim_9_matutils__logsumexp_2d(__pyx_t_5)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 66, __pyx_L1_error)
+    if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 95, __pyx_L1_error)
+    __pyx_t_2 = PyFloat_FromDouble(__pyx_fuse_1__pyx_f_6gensim_9_matutils__logsumexp_2d(__pyx_t_5)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 95, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __PYX_XDEC_MEMVIEW(&__pyx_t_5, 1);
     __pyx_t_5.memview = NULL;
@@ -2818,7 +3012,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
     __pyx_t_2 = 0;
     goto __pyx_L0;
 
-    /* "gensim/_matutils.pyx":65
+    /* "gensim/_matutils.pyx":94
  *     """
  * 
  *     if x.dtype == np.float64:             # <<<<<<<<<<<<<<
@@ -2827,28 +3021,28 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
  */
   }
 
-  /* "gensim/_matutils.pyx":67
+  /* "gensim/_matutils.pyx":96
  *     if x.dtype == np.float64:
  *         return _logsumexp_2d[double](x)
  *     elif x.dtype == np.float32:             # <<<<<<<<<<<<<<
  *         return _logsumexp_2d[float](x)
  *     elif x.dtype == np.float16:
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 67, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 96, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 67, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 96, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 67, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 96, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyObject_RichCompare(__pyx_t_2, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 67, __pyx_L1_error)
+  __pyx_t_3 = PyObject_RichCompare(__pyx_t_2, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 96, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 67, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 96, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":68
+    /* "gensim/_matutils.pyx":97
  *         return _logsumexp_2d[double](x)
  *     elif x.dtype == np.float32:
  *         return _logsumexp_2d[float](x)             # <<<<<<<<<<<<<<
@@ -2857,8 +3051,8 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
  */
     __Pyx_XDECREF(__pyx_r);
     __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(__pyx_v_x);
-    if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 68, __pyx_L1_error)
-    __pyx_t_3 = PyFloat_FromDouble(__pyx_fuse_0__pyx_f_6gensim_9_matutils__logsumexp_2d(__pyx_t_6)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 68, __pyx_L1_error)
+    if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 97, __pyx_L1_error)
+    __pyx_t_3 = PyFloat_FromDouble(__pyx_fuse_0__pyx_f_6gensim_9_matutils__logsumexp_2d(__pyx_t_6)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 97, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __PYX_XDEC_MEMVIEW(&__pyx_t_6, 1);
     __pyx_t_6.memview = NULL;
@@ -2867,7 +3061,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "gensim/_matutils.pyx":67
+    /* "gensim/_matutils.pyx":96
  *     if x.dtype == np.float64:
  *         return _logsumexp_2d[double](x)
  *     elif x.dtype == np.float32:             # <<<<<<<<<<<<<<
@@ -2876,28 +3070,28 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
  */
   }
 
-  /* "gensim/_matutils.pyx":69
+  /* "gensim/_matutils.pyx":98
  *     elif x.dtype == np.float32:
  *         return _logsumexp_2d[float](x)
  *     elif x.dtype == np.float16:             # <<<<<<<<<<<<<<
  *         return _logsumexp_2d[float](x.astype(np.float32))
  * 
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 98, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float16); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float16); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 98, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyObject_RichCompare(__pyx_t_3, __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __pyx_t_1 = PyObject_RichCompare(__pyx_t_3, __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 98, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":70
+    /* "gensim/_matutils.pyx":99
  *         return _logsumexp_2d[float](x)
  *     elif x.dtype == np.float16:
  *         return _logsumexp_2d[float](x.astype(np.float32))             # <<<<<<<<<<<<<<
@@ -2905,11 +3099,11 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 70, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 99, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 70, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 99, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 70, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 99, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_3 = NULL;
@@ -2923,14 +3117,14 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
       }
     }
     if (!__pyx_t_3) {
-      __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 70, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       __Pyx_GOTREF(__pyx_t_1);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_3, __pyx_t_7};
-        __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 70, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
@@ -2939,29 +3133,29 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_3, __pyx_t_7};
-        __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 70, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       } else
       #endif
       {
-        __pyx_t_8 = PyTuple_New(1+1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 70, __pyx_L1_error)
+        __pyx_t_8 = PyTuple_New(1+1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 99, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
         __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_3); __pyx_t_3 = NULL;
         __Pyx_GIVEREF(__pyx_t_7);
         PyTuple_SET_ITEM(__pyx_t_8, 0+1, __pyx_t_7);
         __pyx_t_7 = 0;
-        __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 70, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       }
     }
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(__pyx_t_1);
-    if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 70, __pyx_L1_error)
+    if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 99, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyFloat_FromDouble(__pyx_fuse_0__pyx_f_6gensim_9_matutils__logsumexp_2d(__pyx_t_6)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 70, __pyx_L1_error)
+    __pyx_t_1 = PyFloat_FromDouble(__pyx_fuse_0__pyx_f_6gensim_9_matutils__logsumexp_2d(__pyx_t_6)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __PYX_XDEC_MEMVIEW(&__pyx_t_6, 1);
     __pyx_t_6.memview = NULL;
@@ -2970,7 +3164,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "gensim/_matutils.pyx":69
+    /* "gensim/_matutils.pyx":98
  *     elif x.dtype == np.float32:
  *         return _logsumexp_2d[float](x)
  *     elif x.dtype == np.float16:             # <<<<<<<<<<<<<<
@@ -2979,12 +3173,12 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
  */
   }
 
-  /* "gensim/_matutils.pyx":43
+  /* "gensim/_matutils.pyx":75
  * 
  * 
  * def logsumexp(x):             # <<<<<<<<<<<<<<
- *     """
- *     logsumexp(x)
+ *     """Log of sum of exponentials, using :func:`~gensim._matutils._logsumexp_2d`.
+ * 
  */
 
   /* function exit code */
@@ -3006,17 +3200,391 @@ static PyObject *__pyx_pf_6gensim_9_matutils_2logsumexp(CYTHON_UNUSED PyObject *
   return __pyx_r;
 }
 
-/* "gensim/_matutils.pyx":73
+/* "gensim/_matutils.pyx":105
+ * @cython.wraparound(False)
+ * @cython.cdivision(True)
+ * cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:             # <<<<<<<<<<<<<<
+ *     """Log of sum of exponentials.
+ * 
+ */
+
+static float __pyx_fuse_0__pyx_f_6gensim_9_matutils__logsumexp_2d(__Pyx_memviewslice __pyx_v_data) {
+  float __pyx_v_max_val;
+  float __pyx_v_result;
+  size_t __pyx_v_i;
+  size_t __pyx_v_j;
+  size_t __pyx_v_I;
+  size_t __pyx_v_J;
+  float __pyx_r;
+  Py_ssize_t __pyx_t_1;
+  Py_ssize_t __pyx_t_2;
+  size_t __pyx_t_3;
+  size_t __pyx_t_4;
+  size_t __pyx_t_5;
+  size_t __pyx_t_6;
+  size_t __pyx_t_7;
+  size_t __pyx_t_8;
+  int __pyx_t_9;
+  size_t __pyx_t_10;
+  size_t __pyx_t_11;
+  size_t __pyx_t_12;
+  size_t __pyx_t_13;
+
+  /* "gensim/_matutils.pyx":120
+ *     """
+ * 
+ *     cdef DTYPE_t max_val = data[0, 0]             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t result = 0.0
+ *     cdef size_t i
+ */
+  __pyx_t_1 = 0;
+  __pyx_t_2 = 0;
+  __pyx_v_max_val = (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_1 * __pyx_v_data.strides[0]) ) + __pyx_t_2 * __pyx_v_data.strides[1]) )));
+
+  /* "gensim/_matutils.pyx":121
+ * 
+ *     cdef DTYPE_t max_val = data[0, 0]
+ *     cdef DTYPE_t result = 0.0             # <<<<<<<<<<<<<<
+ *     cdef size_t i
+ *     cdef size_t j
+ */
+  __pyx_v_result = 0.0;
+
+  /* "gensim/_matutils.pyx":125
+ *     cdef size_t j
+ * 
+ *     cdef size_t I = data.shape[0]             # <<<<<<<<<<<<<<
+ *     cdef size_t J = data.shape[1]
+ * 
+ */
+  __pyx_v_I = (__pyx_v_data.shape[0]);
+
+  /* "gensim/_matutils.pyx":126
+ * 
+ *     cdef size_t I = data.shape[0]
+ *     cdef size_t J = data.shape[1]             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+  __pyx_v_J = (__pyx_v_data.shape[1]);
+
+  /* "gensim/_matutils.pyx":128
+ *     cdef size_t J = data.shape[1]
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         for j in range(J):
+ *             if data[i, j] > max_val:
+ */
+  __pyx_t_3 = __pyx_v_I;
+  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+    __pyx_v_i = __pyx_t_4;
+
+    /* "gensim/_matutils.pyx":129
+ * 
+ *     for i in range(I):
+ *         for j in range(J):             # <<<<<<<<<<<<<<
+ *             if data[i, j] > max_val:
+ *                 max_val = data[i, j]
+ */
+    __pyx_t_5 = __pyx_v_J;
+    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
+      __pyx_v_j = __pyx_t_6;
+
+      /* "gensim/_matutils.pyx":130
+ *     for i in range(I):
+ *         for j in range(J):
+ *             if data[i, j] > max_val:             # <<<<<<<<<<<<<<
+ *                 max_val = data[i, j]
+ * 
+ */
+      __pyx_t_7 = __pyx_v_i;
+      __pyx_t_8 = __pyx_v_j;
+      __pyx_t_9 = (((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_7 * __pyx_v_data.strides[0]) ) + __pyx_t_8 * __pyx_v_data.strides[1]) ))) > __pyx_v_max_val) != 0);
+      if (__pyx_t_9) {
+
+        /* "gensim/_matutils.pyx":131
+ *         for j in range(J):
+ *             if data[i, j] > max_val:
+ *                 max_val = data[i, j]             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+        __pyx_t_10 = __pyx_v_i;
+        __pyx_t_11 = __pyx_v_j;
+        __pyx_v_max_val = (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_10 * __pyx_v_data.strides[0]) ) + __pyx_t_11 * __pyx_v_data.strides[1]) )));
+
+        /* "gensim/_matutils.pyx":130
+ *     for i in range(I):
+ *         for j in range(J):
+ *             if data[i, j] > max_val:             # <<<<<<<<<<<<<<
+ *                 max_val = data[i, j]
+ * 
+ */
+      }
+    }
+  }
+
+  /* "gensim/_matutils.pyx":133
+ *                 max_val = data[i, j]
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         for j in range(J):
+ *             result += exp(data[i, j] - max_val)
+ */
+  __pyx_t_3 = __pyx_v_I;
+  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+    __pyx_v_i = __pyx_t_4;
+
+    /* "gensim/_matutils.pyx":134
+ * 
+ *     for i in range(I):
+ *         for j in range(J):             # <<<<<<<<<<<<<<
+ *             result += exp(data[i, j] - max_val)
+ * 
+ */
+    __pyx_t_5 = __pyx_v_J;
+    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
+      __pyx_v_j = __pyx_t_6;
+
+      /* "gensim/_matutils.pyx":135
+ *     for i in range(I):
+ *         for j in range(J):
+ *             result += exp(data[i, j] - max_val)             # <<<<<<<<<<<<<<
+ * 
+ *     result = log(result) + max_val
+ */
+      __pyx_t_12 = __pyx_v_i;
+      __pyx_t_13 = __pyx_v_j;
+      __pyx_v_result = (__pyx_v_result + exp(((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_12 * __pyx_v_data.strides[0]) ) + __pyx_t_13 * __pyx_v_data.strides[1]) ))) - __pyx_v_max_val)));
+    }
+  }
+
+  /* "gensim/_matutils.pyx":137
+ *             result += exp(data[i, j] - max_val)
+ * 
+ *     result = log(result) + max_val             # <<<<<<<<<<<<<<
+ * 
+ *     return result
+ */
+  __pyx_v_result = (log(__pyx_v_result) + __pyx_v_max_val);
+
+  /* "gensim/_matutils.pyx":139
+ *     result = log(result) + max_val
+ * 
+ *     return result             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __pyx_r = __pyx_v_result;
+  goto __pyx_L0;
+
+  /* "gensim/_matutils.pyx":105
+ * @cython.wraparound(False)
+ * @cython.cdivision(True)
+ * cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:             # <<<<<<<<<<<<<<
+ *     """Log of sum of exponentials.
+ * 
+ */
+
+  /* function exit code */
+  __pyx_L0:;
+  return __pyx_r;
+}
+
+static double __pyx_fuse_1__pyx_f_6gensim_9_matutils__logsumexp_2d(__Pyx_memviewslice __pyx_v_data) {
+  double __pyx_v_max_val;
+  double __pyx_v_result;
+  size_t __pyx_v_i;
+  size_t __pyx_v_j;
+  size_t __pyx_v_I;
+  size_t __pyx_v_J;
+  double __pyx_r;
+  Py_ssize_t __pyx_t_1;
+  Py_ssize_t __pyx_t_2;
+  size_t __pyx_t_3;
+  size_t __pyx_t_4;
+  size_t __pyx_t_5;
+  size_t __pyx_t_6;
+  size_t __pyx_t_7;
+  size_t __pyx_t_8;
+  int __pyx_t_9;
+  size_t __pyx_t_10;
+  size_t __pyx_t_11;
+  size_t __pyx_t_12;
+  size_t __pyx_t_13;
+
+  /* "gensim/_matutils.pyx":120
+ *     """
+ * 
+ *     cdef DTYPE_t max_val = data[0, 0]             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t result = 0.0
+ *     cdef size_t i
+ */
+  __pyx_t_1 = 0;
+  __pyx_t_2 = 0;
+  __pyx_v_max_val = (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_1 * __pyx_v_data.strides[0]) ) + __pyx_t_2 * __pyx_v_data.strides[1]) )));
+
+  /* "gensim/_matutils.pyx":121
+ * 
+ *     cdef DTYPE_t max_val = data[0, 0]
+ *     cdef DTYPE_t result = 0.0             # <<<<<<<<<<<<<<
+ *     cdef size_t i
+ *     cdef size_t j
+ */
+  __pyx_v_result = 0.0;
+
+  /* "gensim/_matutils.pyx":125
+ *     cdef size_t j
+ * 
+ *     cdef size_t I = data.shape[0]             # <<<<<<<<<<<<<<
+ *     cdef size_t J = data.shape[1]
+ * 
+ */
+  __pyx_v_I = (__pyx_v_data.shape[0]);
+
+  /* "gensim/_matutils.pyx":126
+ * 
+ *     cdef size_t I = data.shape[0]
+ *     cdef size_t J = data.shape[1]             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+  __pyx_v_J = (__pyx_v_data.shape[1]);
+
+  /* "gensim/_matutils.pyx":128
+ *     cdef size_t J = data.shape[1]
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         for j in range(J):
+ *             if data[i, j] > max_val:
+ */
+  __pyx_t_3 = __pyx_v_I;
+  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+    __pyx_v_i = __pyx_t_4;
+
+    /* "gensim/_matutils.pyx":129
+ * 
+ *     for i in range(I):
+ *         for j in range(J):             # <<<<<<<<<<<<<<
+ *             if data[i, j] > max_val:
+ *                 max_val = data[i, j]
+ */
+    __pyx_t_5 = __pyx_v_J;
+    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
+      __pyx_v_j = __pyx_t_6;
+
+      /* "gensim/_matutils.pyx":130
+ *     for i in range(I):
+ *         for j in range(J):
+ *             if data[i, j] > max_val:             # <<<<<<<<<<<<<<
+ *                 max_val = data[i, j]
+ * 
+ */
+      __pyx_t_7 = __pyx_v_i;
+      __pyx_t_8 = __pyx_v_j;
+      __pyx_t_9 = (((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_7 * __pyx_v_data.strides[0]) ) + __pyx_t_8 * __pyx_v_data.strides[1]) ))) > __pyx_v_max_val) != 0);
+      if (__pyx_t_9) {
+
+        /* "gensim/_matutils.pyx":131
+ *         for j in range(J):
+ *             if data[i, j] > max_val:
+ *                 max_val = data[i, j]             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+        __pyx_t_10 = __pyx_v_i;
+        __pyx_t_11 = __pyx_v_j;
+        __pyx_v_max_val = (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_10 * __pyx_v_data.strides[0]) ) + __pyx_t_11 * __pyx_v_data.strides[1]) )));
+
+        /* "gensim/_matutils.pyx":130
+ *     for i in range(I):
+ *         for j in range(J):
+ *             if data[i, j] > max_val:             # <<<<<<<<<<<<<<
+ *                 max_val = data[i, j]
+ * 
+ */
+      }
+    }
+  }
+
+  /* "gensim/_matutils.pyx":133
+ *                 max_val = data[i, j]
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         for j in range(J):
+ *             result += exp(data[i, j] - max_val)
+ */
+  __pyx_t_3 = __pyx_v_I;
+  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+    __pyx_v_i = __pyx_t_4;
+
+    /* "gensim/_matutils.pyx":134
+ * 
+ *     for i in range(I):
+ *         for j in range(J):             # <<<<<<<<<<<<<<
+ *             result += exp(data[i, j] - max_val)
+ * 
+ */
+    __pyx_t_5 = __pyx_v_J;
+    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
+      __pyx_v_j = __pyx_t_6;
+
+      /* "gensim/_matutils.pyx":135
+ *     for i in range(I):
+ *         for j in range(J):
+ *             result += exp(data[i, j] - max_val)             # <<<<<<<<<<<<<<
+ * 
+ *     result = log(result) + max_val
+ */
+      __pyx_t_12 = __pyx_v_i;
+      __pyx_t_13 = __pyx_v_j;
+      __pyx_v_result = (__pyx_v_result + exp(((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_12 * __pyx_v_data.strides[0]) ) + __pyx_t_13 * __pyx_v_data.strides[1]) ))) - __pyx_v_max_val)));
+    }
+  }
+
+  /* "gensim/_matutils.pyx":137
+ *             result += exp(data[i, j] - max_val)
+ * 
+ *     result = log(result) + max_val             # <<<<<<<<<<<<<<
+ * 
+ *     return result
+ */
+  __pyx_v_result = (log(__pyx_v_result) + __pyx_v_max_val);
+
+  /* "gensim/_matutils.pyx":139
+ *     result = log(result) + max_val
+ * 
+ *     return result             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __pyx_r = __pyx_v_result;
+  goto __pyx_L0;
+
+  /* "gensim/_matutils.pyx":105
+ * @cython.wraparound(False)
+ * @cython.cdivision(True)
+ * cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:             # <<<<<<<<<<<<<<
+ *     """Log of sum of exponentials.
+ * 
+ */
+
+  /* function exit code */
+  __pyx_L0:;
+  return __pyx_r;
+}
+
+/* "gensim/_matutils.pyx":142
  * 
  * 
  * def dirichlet_expectation(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils.dirichlet_expectation_1d` or :func:`~gensim._matutils.dirichlet_expectation_2d`.
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6gensim_9_matutils_5dirichlet_expectation(PyObject *__pyx_self, PyObject *__pyx_v_alpha); /*proto*/
-static char __pyx_doc_6gensim_9_matutils_4dirichlet_expectation[] = "dirichlet_expectation(alpha)\n\n    dirichlet_expectation(alpha)\n\n    Expected value of log(theta) where theta is drawn from a Dirichlet distribution\n\n    Parameters\n    ----------\n    alpha : (M, N) array_like or (M,) array_like\n        Dirichlet parameter vector.\n        If (M, N), each row is treated as a separate parameter vector\n\n    Returns\n    -------\n    (M, N) array_like or (M,) array_like\n        log of expected values\n\n    ";
+static char __pyx_doc_6gensim_9_matutils_4dirichlet_expectation[] = "dirichlet_expectation(alpha)\nExpected value of log(theta) where theta is drawn from a Dirichlet distribution.\n    Using :func:`~gensim._matutils.dirichlet_expectation_1d` or :func:`~gensim._matutils.dirichlet_expectation_2d`.\n\n    Parameters\n    ----------\n    alpha : numpy.ndarray\n        Dirichlet parameter 2d matrix or 1d vector, if 2d - each row is treated as a separate parameter vector,\n        supports float16, float32 and float64.\n\n    Returns\n    -------\n    numpy.ndarray\n        Log of expected values, dimension same as `alpha.ndim`.\n\n    ";
 static PyMethodDef __pyx_mdef_6gensim_9_matutils_5dirichlet_expectation = {"dirichlet_expectation", (PyCFunction)__pyx_pw_6gensim_9_matutils_5dirichlet_expectation, METH_O, __pyx_doc_6gensim_9_matutils_4dirichlet_expectation};
 static PyObject *__pyx_pw_6gensim_9_matutils_5dirichlet_expectation(PyObject *__pyx_self, PyObject *__pyx_v_alpha) {
   PyObject *__pyx_r = 0;
@@ -3039,31 +3607,31 @@ static PyObject *__pyx_pf_6gensim_9_matutils_4dirichlet_expectation(CYTHON_UNUSE
   PyObject *__pyx_t_5 = NULL;
   __Pyx_RefNannySetupContext("dirichlet_expectation", 0);
 
-  /* "gensim/_matutils.pyx":92
- *     """
+  /* "gensim/_matutils.pyx":158
  * 
+ *     """
  *     if alpha.ndim == 2:             # <<<<<<<<<<<<<<
  *         return dirichlet_expectation_2d(alpha)
  *     else:
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_ndim); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 92, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_ndim); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 158, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_1, __pyx_int_2, 2, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 92, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_1, __pyx_int_2, 2, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 158, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 92, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 158, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_3) {
 
-    /* "gensim/_matutils.pyx":93
- * 
+    /* "gensim/_matutils.pyx":159
+ *     """
  *     if alpha.ndim == 2:
  *         return dirichlet_expectation_2d(alpha)             # <<<<<<<<<<<<<<
  *     else:
  *         return dirichlet_expectation_1d(alpha)
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_dirichlet_expectation_2d); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 93, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_dirichlet_expectation_2d); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 159, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_4 = NULL;
     if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
@@ -3076,13 +3644,13 @@ static PyObject *__pyx_pf_6gensim_9_matutils_4dirichlet_expectation(CYTHON_UNUSE
       }
     }
     if (!__pyx_t_4) {
-      __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_alpha); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 93, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_alpha); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 159, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_1)) {
         PyObject *__pyx_temp[2] = {__pyx_t_4, __pyx_v_alpha};
-        __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 93, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 159, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
         __Pyx_GOTREF(__pyx_t_2);
       } else
@@ -3090,19 +3658,19 @@ static PyObject *__pyx_pf_6gensim_9_matutils_4dirichlet_expectation(CYTHON_UNUSE
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_1)) {
         PyObject *__pyx_temp[2] = {__pyx_t_4, __pyx_v_alpha};
-        __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 93, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 159, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
         __Pyx_GOTREF(__pyx_t_2);
       } else
       #endif
       {
-        __pyx_t_5 = PyTuple_New(1+1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 93, __pyx_L1_error)
+        __pyx_t_5 = PyTuple_New(1+1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 159, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
         __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_4); __pyx_t_4 = NULL;
         __Pyx_INCREF(__pyx_v_alpha);
         __Pyx_GIVEREF(__pyx_v_alpha);
         PyTuple_SET_ITEM(__pyx_t_5, 0+1, __pyx_v_alpha);
-        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_5, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 93, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_5, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 159, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       }
@@ -3112,16 +3680,16 @@ static PyObject *__pyx_pf_6gensim_9_matutils_4dirichlet_expectation(CYTHON_UNUSE
     __pyx_t_2 = 0;
     goto __pyx_L0;
 
-    /* "gensim/_matutils.pyx":92
- *     """
+    /* "gensim/_matutils.pyx":158
  * 
+ *     """
  *     if alpha.ndim == 2:             # <<<<<<<<<<<<<<
  *         return dirichlet_expectation_2d(alpha)
  *     else:
  */
   }
 
-  /* "gensim/_matutils.pyx":95
+  /* "gensim/_matutils.pyx":161
  *         return dirichlet_expectation_2d(alpha)
  *     else:
  *         return dirichlet_expectation_1d(alpha)             # <<<<<<<<<<<<<<
@@ -3130,7 +3698,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_4dirichlet_expectation(CYTHON_UNUSE
  */
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_dirichlet_expectation_1d); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 95, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_dirichlet_expectation_1d); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 161, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_5 = NULL;
     if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
@@ -3143,13 +3711,13 @@ static PyObject *__pyx_pf_6gensim_9_matutils_4dirichlet_expectation(CYTHON_UNUSE
       }
     }
     if (!__pyx_t_5) {
-      __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_alpha); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 95, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_alpha); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 161, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_1)) {
         PyObject *__pyx_temp[2] = {__pyx_t_5, __pyx_v_alpha};
-        __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 95, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 161, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
         __Pyx_GOTREF(__pyx_t_2);
       } else
@@ -3157,19 +3725,19 @@ static PyObject *__pyx_pf_6gensim_9_matutils_4dirichlet_expectation(CYTHON_UNUSE
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_1)) {
         PyObject *__pyx_temp[2] = {__pyx_t_5, __pyx_v_alpha};
-        __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 95, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 161, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
         __Pyx_GOTREF(__pyx_t_2);
       } else
       #endif
       {
-        __pyx_t_4 = PyTuple_New(1+1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 95, __pyx_L1_error)
+        __pyx_t_4 = PyTuple_New(1+1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 161, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_5); __pyx_t_5 = NULL;
         __Pyx_INCREF(__pyx_v_alpha);
         __Pyx_GIVEREF(__pyx_v_alpha);
         PyTuple_SET_ITEM(__pyx_t_4, 0+1, __pyx_v_alpha);
-        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_4, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 95, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_4, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 161, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       }
@@ -3180,12 +3748,12 @@ static PyObject *__pyx_pf_6gensim_9_matutils_4dirichlet_expectation(CYTHON_UNUSE
     goto __pyx_L0;
   }
 
-  /* "gensim/_matutils.pyx":73
+  /* "gensim/_matutils.pyx":142
  * 
  * 
  * def dirichlet_expectation(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils.dirichlet_expectation_1d` or :func:`~gensim._matutils.dirichlet_expectation_2d`.
  */
 
   /* function exit code */
@@ -3202,17 +3770,17 @@ static PyObject *__pyx_pf_6gensim_9_matutils_4dirichlet_expectation(CYTHON_UNUSE
   return __pyx_r;
 }
 
-/* "gensim/_matutils.pyx":98
+/* "gensim/_matutils.pyx":164
  * 
  * 
  * def dirichlet_expectation_2d(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation_2d(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils._dirichlet_expectation_2d`.
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6gensim_9_matutils_7dirichlet_expectation_2d(PyObject *__pyx_self, PyObject *__pyx_v_alpha); /*proto*/
-static char __pyx_doc_6gensim_9_matutils_6dirichlet_expectation_2d[] = "dirichlet_expectation_2d(alpha)\n\n    dirichlet_expectation_2d(alpha)\n\n    Expected value of log(theta) where theta is drawn from a Dirichlet distribution\n\n    Parameters\n    ----------\n    alpha : (M, N) array_like\n        Dirichlet parameter vector.\n        Each row is treated as a separate parameter vector\n\n    Returns\n    -------\n    (M, N) array_like\n        log of expected values\n\n    ";
+static char __pyx_doc_6gensim_9_matutils_6dirichlet_expectation_2d[] = "dirichlet_expectation_2d(alpha)\nExpected value of log(theta) where theta is drawn from a Dirichlet distribution.\n    Using :func:`~gensim._matutils._dirichlet_expectation_2d`.\n\n    Parameters\n    ----------\n    alpha : numpy.ndarray\n        Dirichlet parameter 2d matrix, each row is treated as a separate parameter vector,\n        supports float16, float32 and float64.\n\n    Returns\n    -------\n    numpy.ndarray\n        Log of expected values, 2d matrix.\n\n    ";
 static PyMethodDef __pyx_mdef_6gensim_9_matutils_7dirichlet_expectation_2d = {"dirichlet_expectation_2d", (PyCFunction)__pyx_pw_6gensim_9_matutils_7dirichlet_expectation_2d, METH_O, __pyx_doc_6gensim_9_matutils_6dirichlet_expectation_2d};
 static PyObject *__pyx_pw_6gensim_9_matutils_7dirichlet_expectation_2d(PyObject *__pyx_self, PyObject *__pyx_v_alpha) {
   PyObject *__pyx_r = 0;
@@ -3241,53 +3809,53 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
   PyObject *__pyx_t_10 = NULL;
   __Pyx_RefNannySetupContext("dirichlet_expectation_2d", 0);
 
-  /* "gensim/_matutils.pyx":117
- *     """
+  /* "gensim/_matutils.pyx":180
  * 
+ *     """
  *     if alpha.dtype == np.float64:             # <<<<<<<<<<<<<<
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_2d[double](alpha, out)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 180, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 180, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 180, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 180, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 180, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":118
- * 
+    /* "gensim/_matutils.pyx":181
+ *     """
  *     if alpha.dtype == np.float64:
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)             # <<<<<<<<<<<<<<
  *         _dirichlet_expectation_2d[double](alpha, out)
  *     elif alpha.dtype == np.float32:
  */
-    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 118, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 181, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 118, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 181, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 118, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 181, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 118, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 181, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_GIVEREF(__pyx_t_2);
     PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_2);
     __pyx_t_2 = 0;
-    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 118, __pyx_L1_error)
+    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 181, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 118, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 181, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 181, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 118, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 181, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -3295,7 +3863,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
     __pyx_v_out = __pyx_t_5;
     __pyx_t_5 = 0;
 
-    /* "gensim/_matutils.pyx":119
+    /* "gensim/_matutils.pyx":182
  *     if alpha.dtype == np.float64:
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_2d[double](alpha, out)             # <<<<<<<<<<<<<<
@@ -3303,9 +3871,9 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  */
     __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(__pyx_v_alpha);
-    if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 119, __pyx_L1_error)
+    if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 182, __pyx_L1_error)
     __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(__pyx_v_out);
-    if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 119, __pyx_L1_error)
+    if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 182, __pyx_L1_error)
     __pyx_fuse_1__pyx_f_6gensim_9_matutils__dirichlet_expectation_2d(__pyx_t_6, __pyx_t_7);
     __PYX_XDEC_MEMVIEW(&__pyx_t_6, 1);
     __pyx_t_6.memview = NULL;
@@ -3314,9 +3882,9 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
     __pyx_t_7.memview = NULL;
     __pyx_t_7.data = NULL;
 
-    /* "gensim/_matutils.pyx":117
- *     """
+    /* "gensim/_matutils.pyx":180
  * 
+ *     """
  *     if alpha.dtype == np.float64:             # <<<<<<<<<<<<<<
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_2d[double](alpha, out)
@@ -3324,53 +3892,53 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
     goto __pyx_L3;
   }
 
-  /* "gensim/_matutils.pyx":120
+  /* "gensim/_matutils.pyx":183
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_2d[double](alpha, out)
  *     elif alpha.dtype == np.float32:             # <<<<<<<<<<<<<<
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_2d[float](alpha, out)
  */
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 120, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 183, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 120, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 183, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float32); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 120, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float32); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 183, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_t_5, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 120, __pyx_L1_error)
+  __pyx_t_2 = PyObject_RichCompare(__pyx_t_5, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 183, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 120, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 183, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":121
+    /* "gensim/_matutils.pyx":184
  *         _dirichlet_expectation_2d[double](alpha, out)
  *     elif alpha.dtype == np.float32:
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)             # <<<<<<<<<<<<<<
  *         _dirichlet_expectation_2d[float](alpha, out)
  *     elif alpha.dtype == np.float16:
  */
-    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_GIVEREF(__pyx_t_2);
     PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_2);
     __pyx_t_2 = 0;
-    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_3) < 0) __PYX_ERR(0, 121, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_3) < 0) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_5, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_5, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3378,7 +3946,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
     __pyx_v_out = __pyx_t_3;
     __pyx_t_3 = 0;
 
-    /* "gensim/_matutils.pyx":122
+    /* "gensim/_matutils.pyx":185
  *     elif alpha.dtype == np.float32:
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_2d[float](alpha, out)             # <<<<<<<<<<<<<<
@@ -3386,9 +3954,9 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
  *         out = np.zeros(alpha.shape, dtype=np.float32)
  */
     __pyx_t_8 = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(__pyx_v_alpha);
-    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 122, __pyx_L1_error)
+    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 185, __pyx_L1_error)
     __pyx_t_9 = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(__pyx_v_out);
-    if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(0, 122, __pyx_L1_error)
+    if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(0, 185, __pyx_L1_error)
     __pyx_fuse_0__pyx_f_6gensim_9_matutils__dirichlet_expectation_2d(__pyx_t_8, __pyx_t_9);
     __PYX_XDEC_MEMVIEW(&__pyx_t_8, 1);
     __pyx_t_8.memview = NULL;
@@ -3397,7 +3965,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
     __pyx_t_9.memview = NULL;
     __pyx_t_9.data = NULL;
 
-    /* "gensim/_matutils.pyx":120
+    /* "gensim/_matutils.pyx":183
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_2d[double](alpha, out)
  *     elif alpha.dtype == np.float32:             # <<<<<<<<<<<<<<
@@ -3407,56 +3975,56 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
     goto __pyx_L3;
   }
 
-  /* "gensim/_matutils.pyx":123
+  /* "gensim/_matutils.pyx":186
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_2d[float](alpha, out)
  *     elif alpha.dtype == np.float16:             # <<<<<<<<<<<<<<
  *         out = np.zeros(alpha.shape, dtype=np.float32)
  *         _dirichlet_expectation_2d[float](alpha.astype(np.float32), out)
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 186, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 186, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float16); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float16); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 186, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_t_3, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_2 = PyObject_RichCompare(__pyx_t_3, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 186, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 186, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":124
+    /* "gensim/_matutils.pyx":187
  *         _dirichlet_expectation_2d[float](alpha, out)
  *     elif alpha.dtype == np.float16:
  *         out = np.zeros(alpha.shape, dtype=np.float32)             # <<<<<<<<<<<<<<
  *         _dirichlet_expectation_2d[float](alpha.astype(np.float32), out)
  *         out = out.astype(np.float16)
  */
-    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_GIVEREF(__pyx_t_2);
     PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_2);
     __pyx_t_2 = 0;
-    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float32); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float32); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_10) < 0) __PYX_ERR(0, 124, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_10) < 0) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -3464,18 +4032,18 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
     __pyx_v_out = __pyx_t_10;
     __pyx_t_10 = 0;
 
-    /* "gensim/_matutils.pyx":125
+    /* "gensim/_matutils.pyx":188
  *     elif alpha.dtype == np.float16:
  *         out = np.zeros(alpha.shape, dtype=np.float32)
  *         _dirichlet_expectation_2d[float](alpha.astype(np.float32), out)             # <<<<<<<<<<<<<<
  *         out = out.astype(np.float16)
  * 
  */
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 125, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 188, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 125, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 188, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 125, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 188, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_3 = NULL;
@@ -3489,14 +4057,14 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
       }
     }
     if (!__pyx_t_3) {
-      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 125, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 188, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_10);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_3, __pyx_t_5};
-        __pyx_t_10 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 188, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3505,30 +4073,30 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_3, __pyx_t_5};
-        __pyx_t_10 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 188, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       } else
       #endif
       {
-        __pyx_t_1 = PyTuple_New(1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_New(1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 188, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_3); __pyx_t_3 = NULL;
         __Pyx_GIVEREF(__pyx_t_5);
         PyTuple_SET_ITEM(__pyx_t_1, 0+1, __pyx_t_5);
         __pyx_t_5 = 0;
-        __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, NULL); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, NULL); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 188, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       }
     }
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_t_9 = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(__pyx_t_10);
-    if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(0, 125, __pyx_L1_error)
+    if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(0, 188, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
     __pyx_t_8 = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(__pyx_v_out);
-    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 125, __pyx_L1_error)
+    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 188, __pyx_L1_error)
     __pyx_fuse_0__pyx_f_6gensim_9_matutils__dirichlet_expectation_2d(__pyx_t_9, __pyx_t_8);
     __PYX_XDEC_MEMVIEW(&__pyx_t_9, 1);
     __pyx_t_9.memview = NULL;
@@ -3537,18 +4105,18 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
     __pyx_t_8.memview = NULL;
     __pyx_t_8.data = NULL;
 
-    /* "gensim/_matutils.pyx":126
+    /* "gensim/_matutils.pyx":189
  *         out = np.zeros(alpha.shape, dtype=np.float32)
  *         _dirichlet_expectation_2d[float](alpha.astype(np.float32), out)
  *         out = out.astype(np.float16)             # <<<<<<<<<<<<<<
  * 
  *     return out
  */
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_out, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_out, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 189, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 189, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float16); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float16); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 189, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_t_1 = NULL;
@@ -3562,14 +4130,14 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
       }
     }
     if (!__pyx_t_1) {
-      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 126, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 189, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_10);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_1, __pyx_t_5};
-        __pyx_t_10 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 189, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3578,20 +4146,20 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_1, __pyx_t_5};
-        __pyx_t_10 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 189, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       } else
       #endif
       {
-        __pyx_t_3 = PyTuple_New(1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_3 = PyTuple_New(1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 189, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_GIVEREF(__pyx_t_1); PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1); __pyx_t_1 = NULL;
         __Pyx_GIVEREF(__pyx_t_5);
         PyTuple_SET_ITEM(__pyx_t_3, 0+1, __pyx_t_5);
         __pyx_t_5 = 0;
-        __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, NULL); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, NULL); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 189, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       }
@@ -3600,7 +4168,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
     __Pyx_DECREF_SET(__pyx_v_out, __pyx_t_10);
     __pyx_t_10 = 0;
 
-    /* "gensim/_matutils.pyx":123
+    /* "gensim/_matutils.pyx":186
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_2d[float](alpha, out)
  *     elif alpha.dtype == np.float16:             # <<<<<<<<<<<<<<
@@ -3610,7 +4178,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
   }
   __pyx_L3:;
 
-  /* "gensim/_matutils.pyx":128
+  /* "gensim/_matutils.pyx":191
  *         out = out.astype(np.float16)
  * 
  *     return out             # <<<<<<<<<<<<<<
@@ -3618,17 +4186,17 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  if (unlikely(!__pyx_v_out)) { __Pyx_RaiseUnboundLocalError("out"); __PYX_ERR(0, 128, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_out)) { __Pyx_RaiseUnboundLocalError("out"); __PYX_ERR(0, 191, __pyx_L1_error) }
   __Pyx_INCREF(__pyx_v_out);
   __pyx_r = __pyx_v_out;
   goto __pyx_L0;
 
-  /* "gensim/_matutils.pyx":98
+  /* "gensim/_matutils.pyx":164
  * 
  * 
  * def dirichlet_expectation_2d(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation_2d(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils._dirichlet_expectation_2d`.
  */
 
   /* function exit code */
@@ -3651,17 +4219,17 @@ static PyObject *__pyx_pf_6gensim_9_matutils_6dirichlet_expectation_2d(CYTHON_UN
   return __pyx_r;
 }
 
-/* "gensim/_matutils.pyx":131
+/* "gensim/_matutils.pyx":194
  * 
  * 
  * def dirichlet_expectation_1d(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation_1d(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils._dirichlet_expectation_1d`.
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6gensim_9_matutils_9dirichlet_expectation_1d(PyObject *__pyx_self, PyObject *__pyx_v_alpha); /*proto*/
-static char __pyx_doc_6gensim_9_matutils_8dirichlet_expectation_1d[] = "dirichlet_expectation_1d(alpha)\n\n    dirichlet_expectation_1d(alpha)\n\n    Expected value of log(theta) where theta is drawn from a Dirichlet distribution\n\n    Parameters\n    ----------\n    alpha : (M,) array_like\n        Dirichlet parameter vector.\n\n    Returns\n    -------\n    (M, ) array_like\n        log of expected values\n\n    ";
+static char __pyx_doc_6gensim_9_matutils_8dirichlet_expectation_1d[] = "dirichlet_expectation_1d(alpha)\nExpected value of log(theta) where theta is drawn from a Dirichlet distribution.\n    Using :func:`~gensim._matutils._dirichlet_expectation_1d`.\n\n    Parameters\n    ----------\n    alpha : numpy.ndarray\n        Dirichlet parameter 1d vector, supports float16, float32 and float64.\n\n    Returns\n    -------\n    numpy.ndarray\n        Log of expected values, 1d vector.\n\n    ";
 static PyMethodDef __pyx_mdef_6gensim_9_matutils_9dirichlet_expectation_1d = {"dirichlet_expectation_1d", (PyCFunction)__pyx_pw_6gensim_9_matutils_9dirichlet_expectation_1d, METH_O, __pyx_doc_6gensim_9_matutils_8dirichlet_expectation_1d};
 static PyObject *__pyx_pw_6gensim_9_matutils_9dirichlet_expectation_1d(PyObject *__pyx_self, PyObject *__pyx_v_alpha) {
   PyObject *__pyx_r = 0;
@@ -3690,53 +4258,53 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
   PyObject *__pyx_t_10 = NULL;
   __Pyx_RefNannySetupContext("dirichlet_expectation_1d", 0);
 
-  /* "gensim/_matutils.pyx":149
- *     """
+  /* "gensim/_matutils.pyx":209
  * 
+ *     """
  *     if alpha.dtype == np.float64:             # <<<<<<<<<<<<<<
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_1d[double](alpha, out)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 209, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 209, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 209, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 209, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 209, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":150
- * 
+    /* "gensim/_matutils.pyx":210
+ *     """
  *     if alpha.dtype == np.float64:
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)             # <<<<<<<<<<<<<<
  *         _dirichlet_expectation_1d[double](alpha, out)
  *     elif alpha.dtype == np.float32:
  */
-    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 150, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 210, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 150, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 210, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 150, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 210, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 150, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 210, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_GIVEREF(__pyx_t_2);
     PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_2);
     __pyx_t_2 = 0;
-    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 150, __pyx_L1_error)
+    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 210, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 150, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 210, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 150, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 210, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 150, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 210, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -3744,7 +4312,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
     __pyx_v_out = __pyx_t_5;
     __pyx_t_5 = 0;
 
-    /* "gensim/_matutils.pyx":151
+    /* "gensim/_matutils.pyx":211
  *     if alpha.dtype == np.float64:
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_1d[double](alpha, out)             # <<<<<<<<<<<<<<
@@ -3752,9 +4320,9 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  */
     __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_alpha);
-    if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 151, __pyx_L1_error)
+    if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 211, __pyx_L1_error)
     __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_out);
-    if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 151, __pyx_L1_error)
+    if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 211, __pyx_L1_error)
     __pyx_fuse_1__pyx_f_6gensim_9_matutils__dirichlet_expectation_1d(__pyx_t_6, __pyx_t_7);
     __PYX_XDEC_MEMVIEW(&__pyx_t_6, 1);
     __pyx_t_6.memview = NULL;
@@ -3763,9 +4331,9 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
     __pyx_t_7.memview = NULL;
     __pyx_t_7.data = NULL;
 
-    /* "gensim/_matutils.pyx":149
- *     """
+    /* "gensim/_matutils.pyx":209
  * 
+ *     """
  *     if alpha.dtype == np.float64:             # <<<<<<<<<<<<<<
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_1d[double](alpha, out)
@@ -3773,53 +4341,53 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
     goto __pyx_L3;
   }
 
-  /* "gensim/_matutils.pyx":152
+  /* "gensim/_matutils.pyx":212
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_1d[double](alpha, out)
  *     elif alpha.dtype == np.float32:             # <<<<<<<<<<<<<<
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_1d[float](alpha, out)
  */
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 212, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 212, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float32); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float32); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 212, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_t_5, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_t_2 = PyObject_RichCompare(__pyx_t_5, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 212, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 212, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":153
+    /* "gensim/_matutils.pyx":213
  *         _dirichlet_expectation_1d[double](alpha, out)
  *     elif alpha.dtype == np.float32:
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)             # <<<<<<<<<<<<<<
  *         _dirichlet_expectation_1d[float](alpha, out)
  *     elif alpha.dtype == np.float16:
  */
-    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 153, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 153, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 153, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 153, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_GIVEREF(__pyx_t_2);
     PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_2);
     __pyx_t_2 = 0;
-    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 153, __pyx_L1_error)
+    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 153, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_3) < 0) __PYX_ERR(0, 153, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_3) < 0) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_5, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 153, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_5, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3827,7 +4395,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
     __pyx_v_out = __pyx_t_3;
     __pyx_t_3 = 0;
 
-    /* "gensim/_matutils.pyx":154
+    /* "gensim/_matutils.pyx":214
  *     elif alpha.dtype == np.float32:
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_1d[float](alpha, out)             # <<<<<<<<<<<<<<
@@ -3835,9 +4403,9 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
  *         out = np.zeros(alpha.shape, dtype=np.float32)
  */
     __pyx_t_8 = __Pyx_PyObject_to_MemoryviewSlice_ds_float(__pyx_v_alpha);
-    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 154, __pyx_L1_error)
+    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 214, __pyx_L1_error)
     __pyx_t_9 = __Pyx_PyObject_to_MemoryviewSlice_ds_float(__pyx_v_out);
-    if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(0, 154, __pyx_L1_error)
+    if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(0, 214, __pyx_L1_error)
     __pyx_fuse_0__pyx_f_6gensim_9_matutils__dirichlet_expectation_1d(__pyx_t_8, __pyx_t_9);
     __PYX_XDEC_MEMVIEW(&__pyx_t_8, 1);
     __pyx_t_8.memview = NULL;
@@ -3846,7 +4414,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
     __pyx_t_9.memview = NULL;
     __pyx_t_9.data = NULL;
 
-    /* "gensim/_matutils.pyx":152
+    /* "gensim/_matutils.pyx":212
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_1d[double](alpha, out)
  *     elif alpha.dtype == np.float32:             # <<<<<<<<<<<<<<
@@ -3856,56 +4424,56 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
     goto __pyx_L3;
   }
 
-  /* "gensim/_matutils.pyx":155
+  /* "gensim/_matutils.pyx":215
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_1d[float](alpha, out)
  *     elif alpha.dtype == np.float16:             # <<<<<<<<<<<<<<
  *         out = np.zeros(alpha.shape, dtype=np.float32)
  *         _dirichlet_expectation_1d[float](alpha.astype(np.float32), out)
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 155, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 215, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 155, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 215, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float16); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 155, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float16); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 215, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_t_3, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 155, __pyx_L1_error)
+  __pyx_t_2 = PyObject_RichCompare(__pyx_t_3, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 215, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 155, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 215, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_4) {
 
-    /* "gensim/_matutils.pyx":156
+    /* "gensim/_matutils.pyx":216
  *         _dirichlet_expectation_1d[float](alpha, out)
  *     elif alpha.dtype == np.float16:
  *         out = np.zeros(alpha.shape, dtype=np.float32)             # <<<<<<<<<<<<<<
  *         _dirichlet_expectation_1d[float](alpha.astype(np.float32), out)
  *         out = out.astype(np.float16)
  */
-    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 156, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 156, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 156, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 156, __pyx_L1_error)
+    __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_GIVEREF(__pyx_t_2);
     PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_2);
     __pyx_t_2 = 0;
-    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 156, __pyx_L1_error)
+    __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 156, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float32); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 156, __pyx_L1_error)
+    __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float32); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_10) < 0) __PYX_ERR(0, 156, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_10) < 0) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 156, __pyx_L1_error)
+    __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -3913,18 +4481,18 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
     __pyx_v_out = __pyx_t_10;
     __pyx_t_10 = 0;
 
-    /* "gensim/_matutils.pyx":157
+    /* "gensim/_matutils.pyx":217
  *     elif alpha.dtype == np.float16:
  *         out = np.zeros(alpha.shape, dtype=np.float32)
  *         _dirichlet_expectation_1d[float](alpha.astype(np.float32), out)             # <<<<<<<<<<<<<<
  *         out = out.astype(np.float16)
  * 
  */
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 157, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_alpha, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 217, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 157, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 217, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 157, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 217, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_3 = NULL;
@@ -3938,14 +4506,14 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
       }
     }
     if (!__pyx_t_3) {
-      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 157, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 217, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_10);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_3, __pyx_t_5};
-        __pyx_t_10 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 157, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 217, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3954,30 +4522,30 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_3, __pyx_t_5};
-        __pyx_t_10 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 157, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 217, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       } else
       #endif
       {
-        __pyx_t_1 = PyTuple_New(1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 157, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_New(1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 217, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_3); __pyx_t_3 = NULL;
         __Pyx_GIVEREF(__pyx_t_5);
         PyTuple_SET_ITEM(__pyx_t_1, 0+1, __pyx_t_5);
         __pyx_t_5 = 0;
-        __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, NULL); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 157, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, NULL); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 217, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       }
     }
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_t_9 = __Pyx_PyObject_to_MemoryviewSlice_ds_float(__pyx_t_10);
-    if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(0, 157, __pyx_L1_error)
+    if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(0, 217, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
     __pyx_t_8 = __Pyx_PyObject_to_MemoryviewSlice_ds_float(__pyx_v_out);
-    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 157, __pyx_L1_error)
+    if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 217, __pyx_L1_error)
     __pyx_fuse_0__pyx_f_6gensim_9_matutils__dirichlet_expectation_1d(__pyx_t_9, __pyx_t_8);
     __PYX_XDEC_MEMVIEW(&__pyx_t_9, 1);
     __pyx_t_9.memview = NULL;
@@ -3986,18 +4554,18 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
     __pyx_t_8.memview = NULL;
     __pyx_t_8.data = NULL;
 
-    /* "gensim/_matutils.pyx":158
+    /* "gensim/_matutils.pyx":218
  *         out = np.zeros(alpha.shape, dtype=np.float32)
  *         _dirichlet_expectation_1d[float](alpha.astype(np.float32), out)
  *         out = out.astype(np.float16)             # <<<<<<<<<<<<<<
  * 
  *     return out
  */
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_out, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 158, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_out, __pyx_n_s_astype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 218, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 158, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 218, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float16); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 158, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float16); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 218, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_t_1 = NULL;
@@ -4011,14 +4579,14 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
       }
     }
     if (!__pyx_t_1) {
-      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 158, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 218, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_10);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_1, __pyx_t_5};
-        __pyx_t_10 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 158, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 218, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -4027,20 +4595,20 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
         PyObject *__pyx_temp[2] = {__pyx_t_1, __pyx_t_5};
-        __pyx_t_10 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 158, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 218, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       } else
       #endif
       {
-        __pyx_t_3 = PyTuple_New(1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 158, __pyx_L1_error)
+        __pyx_t_3 = PyTuple_New(1+1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 218, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_GIVEREF(__pyx_t_1); PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1); __pyx_t_1 = NULL;
         __Pyx_GIVEREF(__pyx_t_5);
         PyTuple_SET_ITEM(__pyx_t_3, 0+1, __pyx_t_5);
         __pyx_t_5 = 0;
-        __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, NULL); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 158, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, NULL); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 218, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       }
@@ -4049,7 +4617,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
     __Pyx_DECREF_SET(__pyx_v_out, __pyx_t_10);
     __pyx_t_10 = 0;
 
-    /* "gensim/_matutils.pyx":155
+    /* "gensim/_matutils.pyx":215
  *         out = np.zeros(alpha.shape, dtype=alpha.dtype)
  *         _dirichlet_expectation_1d[float](alpha, out)
  *     elif alpha.dtype == np.float16:             # <<<<<<<<<<<<<<
@@ -4059,7 +4627,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
   }
   __pyx_L3:;
 
-  /* "gensim/_matutils.pyx":160
+  /* "gensim/_matutils.pyx":220
  *         out = out.astype(np.float16)
  * 
  *     return out             # <<<<<<<<<<<<<<
@@ -4067,17 +4635,17 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  if (unlikely(!__pyx_v_out)) { __Pyx_RaiseUnboundLocalError("out"); __PYX_ERR(0, 160, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_out)) { __Pyx_RaiseUnboundLocalError("out"); __PYX_ERR(0, 220, __pyx_L1_error) }
   __Pyx_INCREF(__pyx_v_out);
   __pyx_r = __pyx_v_out;
   goto __pyx_L0;
 
-  /* "gensim/_matutils.pyx":131
+  /* "gensim/_matutils.pyx":194
  * 
  * 
  * def dirichlet_expectation_1d(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation_1d(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils._dirichlet_expectation_1d`.
  */
 
   /* function exit code */
@@ -4100,17 +4668,525 @@ static PyObject *__pyx_pf_6gensim_9_matutils_8dirichlet_expectation_1d(CYTHON_UN
   return __pyx_r;
 }
 
-/* "gensim/_matutils.pyx":163
+/* "gensim/_matutils.pyx":225
+ * @cython.boundscheck(False)
+ * @cython.wraparound(False)
+ * cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:             # <<<<<<<<<<<<<<
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ * 
+ */
+
+static void __pyx_fuse_0__pyx_f_6gensim_9_matutils__dirichlet_expectation_1d(__Pyx_memviewslice __pyx_v_alpha, __Pyx_memviewslice __pyx_v_out) {
+  float __pyx_v_sum_alpha;
+  float __pyx_v_psi_sum_alpha;
+  size_t __pyx_v_i;
+  size_t __pyx_v_I;
+  size_t __pyx_t_1;
+  size_t __pyx_t_2;
+  size_t __pyx_t_3;
+  size_t __pyx_t_4;
+  size_t __pyx_t_5;
+
+  /* "gensim/_matutils.pyx":237
+ * 
+ *     """
+ *     cdef DTYPE_t sum_alpha = 0.0             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t psi_sum_alpha = 0.0
+ *     cdef size_t i
+ */
+  __pyx_v_sum_alpha = 0.0;
+
+  /* "gensim/_matutils.pyx":238
+ *     """
+ *     cdef DTYPE_t sum_alpha = 0.0
+ *     cdef DTYPE_t psi_sum_alpha = 0.0             # <<<<<<<<<<<<<<
+ *     cdef size_t i
+ *     cdef size_t I = alpha.shape[0]
+ */
+  __pyx_v_psi_sum_alpha = 0.0;
+
+  /* "gensim/_matutils.pyx":240
+ *     cdef DTYPE_t psi_sum_alpha = 0.0
+ *     cdef size_t i
+ *     cdef size_t I = alpha.shape[0]             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+  __pyx_v_I = (__pyx_v_alpha.shape[0]);
+
+  /* "gensim/_matutils.pyx":242
+ *     cdef size_t I = alpha.shape[0]
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         sum_alpha += alpha[i]
+ * 
+ */
+  __pyx_t_1 = __pyx_v_I;
+  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
+    __pyx_v_i = __pyx_t_2;
+
+    /* "gensim/_matutils.pyx":243
+ * 
+ *     for i in range(I):
+ *         sum_alpha += alpha[i]             # <<<<<<<<<<<<<<
+ * 
+ *     psi_sum_alpha = _digamma(sum_alpha)
+ */
+    __pyx_t_3 = __pyx_v_i;
+    __pyx_v_sum_alpha = (__pyx_v_sum_alpha + (*((float *) ( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_3 * __pyx_v_alpha.strides[0]) ))));
+  }
+
+  /* "gensim/_matutils.pyx":245
+ *         sum_alpha += alpha[i]
+ * 
+ *     psi_sum_alpha = _digamma(sum_alpha)             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+  __pyx_v_psi_sum_alpha = __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(__pyx_v_sum_alpha);
+
+  /* "gensim/_matutils.pyx":247
+ *     psi_sum_alpha = _digamma(sum_alpha)
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         out[i] = _digamma(alpha[i]) - psi_sum_alpha
+ * 
+ */
+  __pyx_t_1 = __pyx_v_I;
+  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
+    __pyx_v_i = __pyx_t_2;
+
+    /* "gensim/_matutils.pyx":248
+ * 
+ *     for i in range(I):
+ *         out[i] = _digamma(alpha[i]) - psi_sum_alpha             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __pyx_t_4 = __pyx_v_i;
+    __pyx_t_5 = __pyx_v_i;
+    *((float *) ( /* dim=0 */ (__pyx_v_out.data + __pyx_t_5 * __pyx_v_out.strides[0]) )) = (__pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma((*((float *) ( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_4 * __pyx_v_alpha.strides[0]) )))) - __pyx_v_psi_sum_alpha);
+  }
+
+  /* "gensim/_matutils.pyx":225
+ * @cython.boundscheck(False)
+ * @cython.wraparound(False)
+ * cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:             # <<<<<<<<<<<<<<
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ * 
+ */
+
+  /* function exit code */
+}
+
+static void __pyx_fuse_1__pyx_f_6gensim_9_matutils__dirichlet_expectation_1d(__Pyx_memviewslice __pyx_v_alpha, __Pyx_memviewslice __pyx_v_out) {
+  double __pyx_v_sum_alpha;
+  double __pyx_v_psi_sum_alpha;
+  size_t __pyx_v_i;
+  size_t __pyx_v_I;
+  size_t __pyx_t_1;
+  size_t __pyx_t_2;
+  size_t __pyx_t_3;
+  size_t __pyx_t_4;
+  size_t __pyx_t_5;
+
+  /* "gensim/_matutils.pyx":237
+ * 
+ *     """
+ *     cdef DTYPE_t sum_alpha = 0.0             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t psi_sum_alpha = 0.0
+ *     cdef size_t i
+ */
+  __pyx_v_sum_alpha = 0.0;
+
+  /* "gensim/_matutils.pyx":238
+ *     """
+ *     cdef DTYPE_t sum_alpha = 0.0
+ *     cdef DTYPE_t psi_sum_alpha = 0.0             # <<<<<<<<<<<<<<
+ *     cdef size_t i
+ *     cdef size_t I = alpha.shape[0]
+ */
+  __pyx_v_psi_sum_alpha = 0.0;
+
+  /* "gensim/_matutils.pyx":240
+ *     cdef DTYPE_t psi_sum_alpha = 0.0
+ *     cdef size_t i
+ *     cdef size_t I = alpha.shape[0]             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+  __pyx_v_I = (__pyx_v_alpha.shape[0]);
+
+  /* "gensim/_matutils.pyx":242
+ *     cdef size_t I = alpha.shape[0]
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         sum_alpha += alpha[i]
+ * 
+ */
+  __pyx_t_1 = __pyx_v_I;
+  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
+    __pyx_v_i = __pyx_t_2;
+
+    /* "gensim/_matutils.pyx":243
+ * 
+ *     for i in range(I):
+ *         sum_alpha += alpha[i]             # <<<<<<<<<<<<<<
+ * 
+ *     psi_sum_alpha = _digamma(sum_alpha)
+ */
+    __pyx_t_3 = __pyx_v_i;
+    __pyx_v_sum_alpha = (__pyx_v_sum_alpha + (*((double *) ( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_3 * __pyx_v_alpha.strides[0]) ))));
+  }
+
+  /* "gensim/_matutils.pyx":245
+ *         sum_alpha += alpha[i]
+ * 
+ *     psi_sum_alpha = _digamma(sum_alpha)             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+  __pyx_v_psi_sum_alpha = __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(__pyx_v_sum_alpha);
+
+  /* "gensim/_matutils.pyx":247
+ *     psi_sum_alpha = _digamma(sum_alpha)
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         out[i] = _digamma(alpha[i]) - psi_sum_alpha
+ * 
+ */
+  __pyx_t_1 = __pyx_v_I;
+  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
+    __pyx_v_i = __pyx_t_2;
+
+    /* "gensim/_matutils.pyx":248
+ * 
+ *     for i in range(I):
+ *         out[i] = _digamma(alpha[i]) - psi_sum_alpha             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __pyx_t_4 = __pyx_v_i;
+    __pyx_t_5 = __pyx_v_i;
+    *((double *) ( /* dim=0 */ (__pyx_v_out.data + __pyx_t_5 * __pyx_v_out.strides[0]) )) = (__pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma((*((double *) ( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_4 * __pyx_v_alpha.strides[0]) )))) - __pyx_v_psi_sum_alpha);
+  }
+
+  /* "gensim/_matutils.pyx":225
+ * @cython.boundscheck(False)
+ * @cython.wraparound(False)
+ * cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:             # <<<<<<<<<<<<<<
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ * 
+ */
+
+  /* function exit code */
+}
+
+/* "gensim/_matutils.pyx":253
+ * @cython.boundscheck(False)
+ * @cython.wraparound(False)
+ * cdef void _dirichlet_expectation_2d(DTYPE_t[:, :] alpha, DTYPE_t[:, :] out) nogil:             # <<<<<<<<<<<<<<
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ * 
+ */
+
+static void __pyx_fuse_0__pyx_f_6gensim_9_matutils__dirichlet_expectation_2d(__Pyx_memviewslice __pyx_v_alpha, __Pyx_memviewslice __pyx_v_out) {
+  float __pyx_v_sum_alpha;
+  float __pyx_v_psi_sum_alpha;
+  size_t __pyx_v_i;
+  size_t __pyx_v_j;
+  size_t __pyx_v_I;
+  size_t __pyx_v_J;
+  size_t __pyx_t_1;
+  size_t __pyx_t_2;
+  size_t __pyx_t_3;
+  size_t __pyx_t_4;
+  size_t __pyx_t_5;
+  size_t __pyx_t_6;
+  size_t __pyx_t_7;
+  size_t __pyx_t_8;
+  size_t __pyx_t_9;
+  size_t __pyx_t_10;
+
+  /* "gensim/_matutils.pyx":265
+ * 
+ *     """
+ *     cdef DTYPE_t sum_alpha = 0.0             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t psi_sum_alpha = 0.0
+ *     cdef size_t i, j
+ */
+  __pyx_v_sum_alpha = 0.0;
+
+  /* "gensim/_matutils.pyx":266
+ *     """
+ *     cdef DTYPE_t sum_alpha = 0.0
+ *     cdef DTYPE_t psi_sum_alpha = 0.0             # <<<<<<<<<<<<<<
+ *     cdef size_t i, j
+ *     cdef size_t I = alpha.shape[0]
+ */
+  __pyx_v_psi_sum_alpha = 0.0;
+
+  /* "gensim/_matutils.pyx":268
+ *     cdef DTYPE_t psi_sum_alpha = 0.0
+ *     cdef size_t i, j
+ *     cdef size_t I = alpha.shape[0]             # <<<<<<<<<<<<<<
+ *     cdef size_t J = alpha.shape[1]
+ * 
+ */
+  __pyx_v_I = (__pyx_v_alpha.shape[0]);
+
+  /* "gensim/_matutils.pyx":269
+ *     cdef size_t i, j
+ *     cdef size_t I = alpha.shape[0]
+ *     cdef size_t J = alpha.shape[1]             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+  __pyx_v_J = (__pyx_v_alpha.shape[1]);
+
+  /* "gensim/_matutils.pyx":271
+ *     cdef size_t J = alpha.shape[1]
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         sum_alpha = 0.0
+ *         for j in range(J):
+ */
+  __pyx_t_1 = __pyx_v_I;
+  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
+    __pyx_v_i = __pyx_t_2;
+
+    /* "gensim/_matutils.pyx":272
+ * 
+ *     for i in range(I):
+ *         sum_alpha = 0.0             # <<<<<<<<<<<<<<
+ *         for j in range(J):
+ *             sum_alpha += alpha[i, j]
+ */
+    __pyx_v_sum_alpha = 0.0;
+
+    /* "gensim/_matutils.pyx":273
+ *     for i in range(I):
+ *         sum_alpha = 0.0
+ *         for j in range(J):             # <<<<<<<<<<<<<<
+ *             sum_alpha += alpha[i, j]
+ * 
+ */
+    __pyx_t_3 = __pyx_v_J;
+    for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+      __pyx_v_j = __pyx_t_4;
+
+      /* "gensim/_matutils.pyx":274
+ *         sum_alpha = 0.0
+ *         for j in range(J):
+ *             sum_alpha += alpha[i, j]             # <<<<<<<<<<<<<<
+ * 
+ *         psi_sum_alpha = _digamma(sum_alpha)
+ */
+      __pyx_t_5 = __pyx_v_i;
+      __pyx_t_6 = __pyx_v_j;
+      __pyx_v_sum_alpha = (__pyx_v_sum_alpha + (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_5 * __pyx_v_alpha.strides[0]) ) + __pyx_t_6 * __pyx_v_alpha.strides[1]) ))));
+    }
+
+    /* "gensim/_matutils.pyx":276
+ *             sum_alpha += alpha[i, j]
+ * 
+ *         psi_sum_alpha = _digamma(sum_alpha)             # <<<<<<<<<<<<<<
+ * 
+ *         for j in range(J):
+ */
+    __pyx_v_psi_sum_alpha = __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(__pyx_v_sum_alpha);
+
+    /* "gensim/_matutils.pyx":278
+ *         psi_sum_alpha = _digamma(sum_alpha)
+ * 
+ *         for j in range(J):             # <<<<<<<<<<<<<<
+ *             out[i, j] = _digamma(alpha[i, j]) - psi_sum_alpha
+ * 
+ */
+    __pyx_t_3 = __pyx_v_J;
+    for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+      __pyx_v_j = __pyx_t_4;
+
+      /* "gensim/_matutils.pyx":279
+ * 
+ *         for j in range(J):
+ *             out[i, j] = _digamma(alpha[i, j]) - psi_sum_alpha             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+      __pyx_t_7 = __pyx_v_i;
+      __pyx_t_8 = __pyx_v_j;
+      __pyx_t_9 = __pyx_v_i;
+      __pyx_t_10 = __pyx_v_j;
+      *((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_out.data + __pyx_t_9 * __pyx_v_out.strides[0]) ) + __pyx_t_10 * __pyx_v_out.strides[1]) )) = (__pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_7 * __pyx_v_alpha.strides[0]) ) + __pyx_t_8 * __pyx_v_alpha.strides[1]) )))) - __pyx_v_psi_sum_alpha);
+    }
+  }
+
+  /* "gensim/_matutils.pyx":253
+ * @cython.boundscheck(False)
+ * @cython.wraparound(False)
+ * cdef void _dirichlet_expectation_2d(DTYPE_t[:, :] alpha, DTYPE_t[:, :] out) nogil:             # <<<<<<<<<<<<<<
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ * 
+ */
+
+  /* function exit code */
+}
+
+static void __pyx_fuse_1__pyx_f_6gensim_9_matutils__dirichlet_expectation_2d(__Pyx_memviewslice __pyx_v_alpha, __Pyx_memviewslice __pyx_v_out) {
+  double __pyx_v_sum_alpha;
+  double __pyx_v_psi_sum_alpha;
+  size_t __pyx_v_i;
+  size_t __pyx_v_j;
+  size_t __pyx_v_I;
+  size_t __pyx_v_J;
+  size_t __pyx_t_1;
+  size_t __pyx_t_2;
+  size_t __pyx_t_3;
+  size_t __pyx_t_4;
+  size_t __pyx_t_5;
+  size_t __pyx_t_6;
+  size_t __pyx_t_7;
+  size_t __pyx_t_8;
+  size_t __pyx_t_9;
+  size_t __pyx_t_10;
+
+  /* "gensim/_matutils.pyx":265
+ * 
+ *     """
+ *     cdef DTYPE_t sum_alpha = 0.0             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t psi_sum_alpha = 0.0
+ *     cdef size_t i, j
+ */
+  __pyx_v_sum_alpha = 0.0;
+
+  /* "gensim/_matutils.pyx":266
+ *     """
+ *     cdef DTYPE_t sum_alpha = 0.0
+ *     cdef DTYPE_t psi_sum_alpha = 0.0             # <<<<<<<<<<<<<<
+ *     cdef size_t i, j
+ *     cdef size_t I = alpha.shape[0]
+ */
+  __pyx_v_psi_sum_alpha = 0.0;
+
+  /* "gensim/_matutils.pyx":268
+ *     cdef DTYPE_t psi_sum_alpha = 0.0
+ *     cdef size_t i, j
+ *     cdef size_t I = alpha.shape[0]             # <<<<<<<<<<<<<<
+ *     cdef size_t J = alpha.shape[1]
+ * 
+ */
+  __pyx_v_I = (__pyx_v_alpha.shape[0]);
+
+  /* "gensim/_matutils.pyx":269
+ *     cdef size_t i, j
+ *     cdef size_t I = alpha.shape[0]
+ *     cdef size_t J = alpha.shape[1]             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(I):
+ */
+  __pyx_v_J = (__pyx_v_alpha.shape[1]);
+
+  /* "gensim/_matutils.pyx":271
+ *     cdef size_t J = alpha.shape[1]
+ * 
+ *     for i in range(I):             # <<<<<<<<<<<<<<
+ *         sum_alpha = 0.0
+ *         for j in range(J):
+ */
+  __pyx_t_1 = __pyx_v_I;
+  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
+    __pyx_v_i = __pyx_t_2;
+
+    /* "gensim/_matutils.pyx":272
+ * 
+ *     for i in range(I):
+ *         sum_alpha = 0.0             # <<<<<<<<<<<<<<
+ *         for j in range(J):
+ *             sum_alpha += alpha[i, j]
+ */
+    __pyx_v_sum_alpha = 0.0;
+
+    /* "gensim/_matutils.pyx":273
+ *     for i in range(I):
+ *         sum_alpha = 0.0
+ *         for j in range(J):             # <<<<<<<<<<<<<<
+ *             sum_alpha += alpha[i, j]
+ * 
+ */
+    __pyx_t_3 = __pyx_v_J;
+    for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+      __pyx_v_j = __pyx_t_4;
+
+      /* "gensim/_matutils.pyx":274
+ *         sum_alpha = 0.0
+ *         for j in range(J):
+ *             sum_alpha += alpha[i, j]             # <<<<<<<<<<<<<<
+ * 
+ *         psi_sum_alpha = _digamma(sum_alpha)
+ */
+      __pyx_t_5 = __pyx_v_i;
+      __pyx_t_6 = __pyx_v_j;
+      __pyx_v_sum_alpha = (__pyx_v_sum_alpha + (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_5 * __pyx_v_alpha.strides[0]) ) + __pyx_t_6 * __pyx_v_alpha.strides[1]) ))));
+    }
+
+    /* "gensim/_matutils.pyx":276
+ *             sum_alpha += alpha[i, j]
+ * 
+ *         psi_sum_alpha = _digamma(sum_alpha)             # <<<<<<<<<<<<<<
+ * 
+ *         for j in range(J):
+ */
+    __pyx_v_psi_sum_alpha = __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(__pyx_v_sum_alpha);
+
+    /* "gensim/_matutils.pyx":278
+ *         psi_sum_alpha = _digamma(sum_alpha)
+ * 
+ *         for j in range(J):             # <<<<<<<<<<<<<<
+ *             out[i, j] = _digamma(alpha[i, j]) - psi_sum_alpha
+ * 
+ */
+    __pyx_t_3 = __pyx_v_J;
+    for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+      __pyx_v_j = __pyx_t_4;
+
+      /* "gensim/_matutils.pyx":279
+ * 
+ *         for j in range(J):
+ *             out[i, j] = _digamma(alpha[i, j]) - psi_sum_alpha             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+      __pyx_t_7 = __pyx_v_i;
+      __pyx_t_8 = __pyx_v_j;
+      __pyx_t_9 = __pyx_v_i;
+      __pyx_t_10 = __pyx_v_j;
+      *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_out.data + __pyx_t_9 * __pyx_v_out.strides[0]) ) + __pyx_t_10 * __pyx_v_out.strides[1]) )) = (__pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_7 * __pyx_v_alpha.strides[0]) ) + __pyx_t_8 * __pyx_v_alpha.strides[1]) )))) - __pyx_v_psi_sum_alpha);
+    }
+  }
+
+  /* "gensim/_matutils.pyx":253
+ * @cython.boundscheck(False)
+ * @cython.wraparound(False)
+ * cdef void _dirichlet_expectation_2d(DTYPE_t[:, :] alpha, DTYPE_t[:, :] out) nogil:             # <<<<<<<<<<<<<<
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ * 
+ */
+
+  /* function exit code */
+}
+
+/* "gensim/_matutils.pyx":282
  * 
  * 
  * def digamma(DTYPE_t x):             # <<<<<<<<<<<<<<
- *     """
- *     digamma(x):
+ *     """Digamma function for positive floats, using :func:`~gensim._matutils._digamma`.
+ * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6gensim_9_matutils_11digamma(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_6gensim_9_matutils_10digamma[] = "digamma(signatures, args, kwargs, defaults)\n\n    digamma(x):\n\n    Digamma function for positive floats\n\n    Parameters\n    ----------\n    x : float\n\n    Returns\n    -------\n    digamma : float\n\n    ";
+static char __pyx_doc_6gensim_9_matutils_10digamma[] = "digamma(signatures, args, kwargs, defaults)\nDigamma function for positive floats, using :func:`~gensim._matutils._digamma`.\n\n    Parameters\n    ----------\n    x : float\n        Positive value.\n\n    Returns\n    -------\n    float\n        Digamma(x).\n\n    ";
 static PyMethodDef __pyx_mdef_6gensim_9_matutils_11digamma = {"digamma", (PyCFunction)__pyx_pw_6gensim_9_matutils_11digamma, METH_VARARGS|METH_KEYWORDS, __pyx_doc_6gensim_9_matutils_10digamma};
 static PyObject *__pyx_pw_6gensim_9_matutils_11digamma(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_signatures = 0;
@@ -4142,21 +5218,21 @@ static PyObject *__pyx_pw_6gensim_9_matutils_11digamma(PyObject *__pyx_self, PyO
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_args)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 1); __PYX_ERR(0, 163, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 1); __PYX_ERR(0, 282, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_kwargs)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 2); __PYX_ERR(0, 163, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 2); __PYX_ERR(0, 282, __pyx_L3_error)
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_defaults)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 3); __PYX_ERR(0, 163, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 3); __PYX_ERR(0, 282, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__pyx_fused_cpdef") < 0)) __PYX_ERR(0, 163, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__pyx_fused_cpdef") < 0)) __PYX_ERR(0, 282, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -4173,7 +5249,7 @@ static PyObject *__pyx_pw_6gensim_9_matutils_11digamma(PyObject *__pyx_self, PyO
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 163, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 282, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim._matutils.__pyx_fused_cpdef", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4214,7 +5290,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
   int __pyx_t_16;
   __Pyx_RefNannySetupContext("digamma", 0);
   __Pyx_INCREF(__pyx_v_kwargs);
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(Py_None);
   __Pyx_GIVEREF(Py_None);
@@ -4224,23 +5300,23 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
   __pyx_t_2 = (__pyx_v_kwargs == Py_None);
   __pyx_t_3 = (__pyx_t_2 != 0);
   if (__pyx_t_3) {
-    __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF_SET(__pyx_v_kwargs, __pyx_t_1);
     __pyx_t_1 = 0;
   }
   if (unlikely(__pyx_v_args == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 163, __pyx_L1_error)
+    __PYX_ERR(0, 282, __pyx_L1_error)
   }
-  __pyx_t_4 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_4 == -1)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_4 == -1)) __PYX_ERR(0, 282, __pyx_L1_error)
   __pyx_t_3 = ((0 < __pyx_t_4) != 0);
   if (__pyx_t_3) {
     if (unlikely(__pyx_v_args == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 163, __pyx_L1_error)
+      __PYX_ERR(0, 282, __pyx_L1_error)
     }
-    __pyx_t_1 = __Pyx_GetItemInt_Tuple(((PyObject*)__pyx_v_args), 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetItemInt_Tuple(((PyObject*)__pyx_v_args), 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_v_arg = __pyx_t_1;
     __pyx_t_1 = 0;
@@ -4248,16 +5324,16 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
   }
   if (unlikely(__pyx_v_kwargs == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 163, __pyx_L1_error)
+    __PYX_ERR(0, 282, __pyx_L1_error)
   }
-  __pyx_t_3 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_x, ((PyObject*)__pyx_v_kwargs), Py_EQ)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_3 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_x, ((PyObject*)__pyx_v_kwargs), Py_EQ)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 282, __pyx_L1_error)
   __pyx_t_2 = (__pyx_t_3 != 0);
   if (__pyx_t_2) {
     if (unlikely(__pyx_v_kwargs == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 163, __pyx_L1_error)
+      __PYX_ERR(0, 282, __pyx_L1_error)
     }
-    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_kwargs), __pyx_n_s_x); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_kwargs), __pyx_n_s_x); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_v_arg = __pyx_t_1;
     __pyx_t_1 = 0;
@@ -4266,48 +5342,48 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
   /*else*/ {
     if (unlikely(__pyx_v_args == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-      __PYX_ERR(0, 163, __pyx_L1_error)
+      __PYX_ERR(0, 282, __pyx_L1_error)
     }
-    __pyx_t_4 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_4 == -1)) __PYX_ERR(0, 163, __pyx_L1_error)
-    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_4 == -1)) __PYX_ERR(0, 282, __pyx_L1_error)
+    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_5 = __Pyx_PyString_Format(__pyx_kp_s_Expected_at_least_d_arguments, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyString_Format(__pyx_kp_s_Expected_at_least_d_arguments, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_GIVEREF(__pyx_t_5);
     PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_5);
     __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_t_1, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_t_1, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_Raise(__pyx_t_5, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __PYX_ERR(0, 163, __pyx_L1_error)
+    __PYX_ERR(0, 282, __pyx_L1_error)
   }
   __pyx_L4:;
   while (1) {
     __pyx_t_2 = PyFloat_Check(__pyx_v_arg); 
     __pyx_t_3 = (__pyx_t_2 != 0);
     if (__pyx_t_3) {
-      if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 1) < 0)) __PYX_ERR(0, 163, __pyx_L1_error)
+      if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 1) < 0)) __PYX_ERR(0, 282, __pyx_L1_error)
       goto __pyx_L6_break;
     }
-    if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, Py_None, long, 1, __Pyx_PyInt_From_long, 1, 0, 1) < 0)) __PYX_ERR(0, 163, __pyx_L1_error)
+    if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, Py_None, long, 1, __Pyx_PyInt_From_long, 1, 0, 1) < 0)) __PYX_ERR(0, 282, __pyx_L1_error)
     goto __pyx_L6_break;
   }
   __pyx_L6_break:;
-  __pyx_t_5 = PyList_New(0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_5 = PyList_New(0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __pyx_v_candidates = ((PyObject*)__pyx_t_5);
   __pyx_t_5 = 0;
   __pyx_t_4 = 0;
   if (unlikely(__pyx_v_signatures == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 163, __pyx_L1_error)
+    __PYX_ERR(0, 282, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_dict_iterator(((PyObject*)__pyx_v_signatures), 1, ((PyObject *)NULL), (&__pyx_t_6), (&__pyx_t_7)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_dict_iterator(((PyObject*)__pyx_v_signatures), 1, ((PyObject *)NULL), (&__pyx_t_6), (&__pyx_t_7)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_5);
   __pyx_t_5 = __pyx_t_1;
@@ -4315,23 +5391,23 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
   while (1) {
     __pyx_t_8 = __Pyx_dict_iter_next(__pyx_t_5, __pyx_t_6, &__pyx_t_4, &__pyx_t_1, NULL, NULL, __pyx_t_7);
     if (unlikely(__pyx_t_8 == 0)) break;
-    if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_sig, __pyx_t_1);
     __pyx_t_1 = 0;
     __pyx_v_match_found = 0;
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_sig, __pyx_n_s_strip); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_sig, __pyx_n_s_strip); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_split); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_split); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_GIVEREF(__pyx_t_9);
     PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_9);
@@ -4339,16 +5415,16 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
     __Pyx_GIVEREF(__pyx_v_dest_sig);
     PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_v_dest_sig);
     __pyx_t_9 = 0;
-    __pyx_t_9 = __Pyx_PyObject_Call(__pyx_builtin_zip, __pyx_t_1, NULL); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_Call(__pyx_builtin_zip, __pyx_t_1, NULL); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (likely(PyList_CheckExact(__pyx_t_9)) || PyTuple_CheckExact(__pyx_t_9)) {
       __pyx_t_1 = __pyx_t_9; __Pyx_INCREF(__pyx_t_1); __pyx_t_10 = 0;
       __pyx_t_11 = NULL;
     } else {
-      __pyx_t_10 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_t_9); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+      __pyx_t_10 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_t_9); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_11 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 163, __pyx_L1_error)
+      __pyx_t_11 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 282, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     for (;;) {
@@ -4356,17 +5432,17 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
         if (likely(PyList_CheckExact(__pyx_t_1))) {
           if (__pyx_t_10 >= PyList_GET_SIZE(__pyx_t_1)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_9 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_10); __Pyx_INCREF(__pyx_t_9); __pyx_t_10++; if (unlikely(0 < 0)) __PYX_ERR(0, 163, __pyx_L1_error)
+          __pyx_t_9 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_10); __Pyx_INCREF(__pyx_t_9); __pyx_t_10++; if (unlikely(0 < 0)) __PYX_ERR(0, 282, __pyx_L1_error)
           #else
-          __pyx_t_9 = PySequence_ITEM(__pyx_t_1, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
+          __pyx_t_9 = PySequence_ITEM(__pyx_t_1, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 282, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_9);
           #endif
         } else {
           if (__pyx_t_10 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_9 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_10); __Pyx_INCREF(__pyx_t_9); __pyx_t_10++; if (unlikely(0 < 0)) __PYX_ERR(0, 163, __pyx_L1_error)
+          __pyx_t_9 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_10); __Pyx_INCREF(__pyx_t_9); __pyx_t_10++; if (unlikely(0 < 0)) __PYX_ERR(0, 282, __pyx_L1_error)
           #else
-          __pyx_t_9 = PySequence_ITEM(__pyx_t_1, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
+          __pyx_t_9 = PySequence_ITEM(__pyx_t_1, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 282, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_9);
           #endif
         }
@@ -4376,7 +5452,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(0, 163, __pyx_L1_error)
+            else __PYX_ERR(0, 282, __pyx_L1_error)
           }
           break;
         }
@@ -4392,7 +5468,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
         if (unlikely(size != 2)) {
           if (size > 2) __Pyx_RaiseTooManyValuesError(2);
           else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-          __PYX_ERR(0, 163, __pyx_L1_error)
+          __PYX_ERR(0, 282, __pyx_L1_error)
         }
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
         if (likely(PyTuple_CheckExact(sequence))) {
@@ -4405,15 +5481,15 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
         __Pyx_INCREF(__pyx_t_12);
         __Pyx_INCREF(__pyx_t_13);
         #else
-        __pyx_t_12 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 163, __pyx_L1_error)
+        __pyx_t_12 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 282, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
-        __pyx_t_13 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 163, __pyx_L1_error)
+        __pyx_t_13 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 282, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_13);
         #endif
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       } else {
         Py_ssize_t index = -1;
-        __pyx_t_14 = PyObject_GetIter(__pyx_t_9); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 163, __pyx_L1_error)
+        __pyx_t_14 = PyObject_GetIter(__pyx_t_9); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 282, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_14);
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
         __pyx_t_15 = Py_TYPE(__pyx_t_14)->tp_iternext;
@@ -4421,7 +5497,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
         __Pyx_GOTREF(__pyx_t_12);
         index = 1; __pyx_t_13 = __pyx_t_15(__pyx_t_14); if (unlikely(!__pyx_t_13)) goto __pyx_L12_unpacking_failed;
         __Pyx_GOTREF(__pyx_t_13);
-        if (__Pyx_IternextUnpackEndCheck(__pyx_t_15(__pyx_t_14), 2) < 0) __PYX_ERR(0, 163, __pyx_L1_error)
+        if (__Pyx_IternextUnpackEndCheck(__pyx_t_15(__pyx_t_14), 2) < 0) __PYX_ERR(0, 282, __pyx_L1_error)
         __pyx_t_15 = NULL;
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
         goto __pyx_L13_unpacking_done;
@@ -4429,7 +5505,7 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
         __pyx_t_15 = NULL;
         if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-        __PYX_ERR(0, 163, __pyx_L1_error)
+        __PYX_ERR(0, 282, __pyx_L1_error)
         __pyx_L13_unpacking_done:;
       }
       __Pyx_XDECREF_SET(__pyx_v_src_type, __pyx_t_12);
@@ -4439,8 +5515,8 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
       __pyx_t_3 = (__pyx_v_dst_type != Py_None);
       __pyx_t_2 = (__pyx_t_3 != 0);
       if (__pyx_t_2) {
-        __pyx_t_9 = PyObject_RichCompare(__pyx_v_src_type, __pyx_v_dst_type, Py_EQ); __Pyx_XGOTREF(__pyx_t_9); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
-        __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_9); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 163, __pyx_L1_error)
+        __pyx_t_9 = PyObject_RichCompare(__pyx_v_src_type, __pyx_v_dst_type, Py_EQ); __Pyx_XGOTREF(__pyx_t_9); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 282, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_9); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 282, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
         if (__pyx_t_2) {
           __pyx_v_match_found = 1;
@@ -4457,37 +5533,37 @@ static PyObject *__pyx_pf_6gensim_9_matutils_10digamma(CYTHON_UNUSED PyObject *_
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_t_2 = (__pyx_v_match_found != 0);
     if (__pyx_t_2) {
-      __pyx_t_16 = __Pyx_PyList_Append(__pyx_v_candidates, __pyx_v_sig); if (unlikely(__pyx_t_16 == -1)) __PYX_ERR(0, 163, __pyx_L1_error)
+      __pyx_t_16 = __Pyx_PyList_Append(__pyx_v_candidates, __pyx_v_sig); if (unlikely(__pyx_t_16 == -1)) __PYX_ERR(0, 282, __pyx_L1_error)
     }
   }
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_t_2 = (__pyx_v_candidates != Py_None) && (PyList_GET_SIZE(__pyx_v_candidates) != 0);
   __pyx_t_3 = ((!__pyx_t_2) != 0);
   if (__pyx_t_3) {
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_Raise(__pyx_t_5, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __PYX_ERR(0, 163, __pyx_L1_error)
+    __PYX_ERR(0, 282, __pyx_L1_error)
   }
-  __pyx_t_6 = PyList_GET_SIZE(__pyx_v_candidates); if (unlikely(__pyx_t_6 == -1)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_6 = PyList_GET_SIZE(__pyx_v_candidates); if (unlikely(__pyx_t_6 == -1)) __PYX_ERR(0, 282, __pyx_L1_error)
   __pyx_t_3 = ((__pyx_t_6 > 1) != 0);
   if (__pyx_t_3) {
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_Raise(__pyx_t_5, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __PYX_ERR(0, 163, __pyx_L1_error)
+    __PYX_ERR(0, 282, __pyx_L1_error)
   }
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
     if (unlikely(__pyx_v_signatures == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 163, __pyx_L1_error)
+      __PYX_ERR(0, 282, __pyx_L1_error)
     }
-    __pyx_t_5 = __Pyx_GetItemInt_List(__pyx_v_candidates, 0, long, 1, __Pyx_PyInt_From_long, 1, 0, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_GetItemInt_List(__pyx_v_candidates, 0, long, 1, __Pyx_PyInt_From_long, 1, 0, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_signatures), __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_signatures), __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __pyx_r = __pyx_t_1;
@@ -4527,7 +5603,7 @@ static PyObject *__pyx_fuse_0__pyx_pw_6gensim_9_matutils_13digamma(PyObject *__p
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("digamma (wrapper)", 0);
   assert(__pyx_arg_x); {
-    __pyx_v_x = __pyx_PyFloat_AsFloat(__pyx_arg_x); if (unlikely((__pyx_v_x == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 163, __pyx_L3_error)
+    __pyx_v_x = __pyx_PyFloat_AsFloat(__pyx_arg_x); if (unlikely((__pyx_v_x == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 282, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -4548,26 +5624,26 @@ static PyObject *__pyx_pf_6gensim_9_matutils_12digamma(CYTHON_UNUSED PyObject *_
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__pyx_fuse_0digamma", 0);
 
-  /* "gensim/_matutils.pyx":179
- *     """
+  /* "gensim/_matutils.pyx":296
  * 
+ *     """
  *     return _digamma(x)             # <<<<<<<<<<<<<<
  * 
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(__pyx_v_x)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(__pyx_v_x)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 296, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "gensim/_matutils.pyx":163
+  /* "gensim/_matutils.pyx":282
  * 
  * 
  * def digamma(DTYPE_t x):             # <<<<<<<<<<<<<<
- *     """
- *     digamma(x):
+ *     """Digamma function for positive floats, using :func:`~gensim._matutils._digamma`.
+ * 
  */
 
   /* function exit code */
@@ -4590,7 +5666,7 @@ static PyObject *__pyx_fuse_1__pyx_pw_6gensim_9_matutils_15digamma(PyObject *__p
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("digamma (wrapper)", 0);
   assert(__pyx_arg_x); {
-    __pyx_v_x = __pyx_PyFloat_AsDouble(__pyx_arg_x); if (unlikely((__pyx_v_x == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 163, __pyx_L3_error)
+    __pyx_v_x = __pyx_PyFloat_AsDouble(__pyx_arg_x); if (unlikely((__pyx_v_x == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 282, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -4611,26 +5687,26 @@ static PyObject *__pyx_pf_6gensim_9_matutils_14digamma(CYTHON_UNUSED PyObject *_
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__pyx_fuse_1digamma", 0);
 
-  /* "gensim/_matutils.pyx":179
- *     """
+  /* "gensim/_matutils.pyx":296
  * 
+ *     """
  *     return _digamma(x)             # <<<<<<<<<<<<<<
  * 
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(__pyx_v_x)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(__pyx_v_x)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 296, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "gensim/_matutils.pyx":163
+  /* "gensim/_matutils.pyx":282
  * 
  * 
  * def digamma(DTYPE_t x):             # <<<<<<<<<<<<<<
- *     """
- *     digamma(x):
+ *     """Digamma function for positive floats, using :func:`~gensim._matutils._digamma`.
+ * 
  */
 
   /* function exit code */
@@ -4644,12 +5720,12 @@ static PyObject *__pyx_pf_6gensim_9_matutils_14digamma(CYTHON_UNUSED PyObject *_
   return __pyx_r;
 }
 
-/* "gensim/_matutils.pyx":183
+/* "gensim/_matutils.pyx":300
  * 
  * @cython.cdivision(True)
- * cdef inline DTYPE_t _digamma (DTYPE_t x,) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Digamma over positive floats only
+ * cdef inline DTYPE_t _digamma(DTYPE_t x,) nogil:             # <<<<<<<<<<<<<<
+ *     """Digamma function for positive floats.
+ * 
  */
 
 static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float __pyx_v_x) {
@@ -4661,17 +5737,17 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
   float __pyx_r;
   int __pyx_t_1;
 
-  /* "gensim/_matutils.pyx":205
- *     """
+  /* "gensim/_matutils.pyx":329
  * 
+ *     """
  *     cdef DTYPE_t c = 8.5;             # <<<<<<<<<<<<<<
  *     cdef DTYPE_t euler_mascheroni = 0.57721566490153286060;
  *     cdef DTYPE_t r;
  */
   __pyx_v_c = 8.5;
 
-  /* "gensim/_matutils.pyx":206
- * 
+  /* "gensim/_matutils.pyx":330
+ *     """
  *     cdef DTYPE_t c = 8.5;
  *     cdef DTYPE_t euler_mascheroni = 0.57721566490153286060;             # <<<<<<<<<<<<<<
  *     cdef DTYPE_t r;
@@ -4679,7 +5755,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
  */
   __pyx_v_euler_mascheroni = 0.57721566490153286060;
 
-  /* "gensim/_matutils.pyx":211
+  /* "gensim/_matutils.pyx":335
  *     cdef DTYPE_t x2;
  * 
  *     if ( x <= 0.000001 ):             # <<<<<<<<<<<<<<
@@ -4689,7 +5765,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
   __pyx_t_1 = ((__pyx_v_x <= 0.000001) != 0);
   if (__pyx_t_1) {
 
-    /* "gensim/_matutils.pyx":212
+    /* "gensim/_matutils.pyx":336
  * 
  *     if ( x <= 0.000001 ):
  *         value = - euler_mascheroni - 1.0 / x + 1.6449340668482264365 * x;             # <<<<<<<<<<<<<<
@@ -4698,7 +5774,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
  */
     __pyx_v_value = (((-__pyx_v_euler_mascheroni) - (1.0 / ((double)__pyx_v_x))) + (1.6449340668482264365 * __pyx_v_x));
 
-    /* "gensim/_matutils.pyx":213
+    /* "gensim/_matutils.pyx":337
  *     if ( x <= 0.000001 ):
  *         value = - euler_mascheroni - 1.0 / x + 1.6449340668482264365 * x;
  *         return value;             # <<<<<<<<<<<<<<
@@ -4708,7 +5784,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
     __pyx_r = __pyx_v_value;
     goto __pyx_L0;
 
-    /* "gensim/_matutils.pyx":211
+    /* "gensim/_matutils.pyx":335
  *     cdef DTYPE_t x2;
  * 
  *     if ( x <= 0.000001 ):             # <<<<<<<<<<<<<<
@@ -4717,7 +5793,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
  */
   }
 
-  /* "gensim/_matutils.pyx":216
+  /* "gensim/_matutils.pyx":340
  * 
  *     # Reduce to DIGAMA(X + N).
  *     value = 0.0;             # <<<<<<<<<<<<<<
@@ -4726,7 +5802,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
  */
   __pyx_v_value = 0.0;
 
-  /* "gensim/_matutils.pyx":217
+  /* "gensim/_matutils.pyx":341
  *     # Reduce to DIGAMA(X + N).
  *     value = 0.0;
  *     x2 = x;             # <<<<<<<<<<<<<<
@@ -4735,7 +5811,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
  */
   __pyx_v_x2 = __pyx_v_x;
 
-  /* "gensim/_matutils.pyx":218
+  /* "gensim/_matutils.pyx":342
  *     value = 0.0;
  *     x2 = x;
  *     while ( x2 < c ):             # <<<<<<<<<<<<<<
@@ -4746,7 +5822,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
     __pyx_t_1 = ((__pyx_v_x2 < __pyx_v_c) != 0);
     if (!__pyx_t_1) break;
 
-    /* "gensim/_matutils.pyx":219
+    /* "gensim/_matutils.pyx":343
  *     x2 = x;
  *     while ( x2 < c ):
  *         value = value - 1.0 / x2;             # <<<<<<<<<<<<<<
@@ -4755,7 +5831,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
  */
     __pyx_v_value = (__pyx_v_value - (1.0 / ((double)__pyx_v_x2)));
 
-    /* "gensim/_matutils.pyx":220
+    /* "gensim/_matutils.pyx":344
  *     while ( x2 < c ):
  *         value = value - 1.0 / x2;
  *         x2 = x2 + 1.0;             # <<<<<<<<<<<<<<
@@ -4765,7 +5841,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
     __pyx_v_x2 = (__pyx_v_x2 + 1.0);
   }
 
-  /* "gensim/_matutils.pyx":223
+  /* "gensim/_matutils.pyx":347
  * 
  *     # Use Stirling's (actually de Moivre's) expansion.
  *     r = 1.0 / x2;             # <<<<<<<<<<<<<<
@@ -4774,7 +5850,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
  */
   __pyx_v_r = (1.0 / ((double)__pyx_v_x2));
 
-  /* "gensim/_matutils.pyx":224
+  /* "gensim/_matutils.pyx":348
  *     # Use Stirling's (actually de Moivre's) expansion.
  *     r = 1.0 / x2;
  *     value = value + log ( x2 ) - 0.5 * r;             # <<<<<<<<<<<<<<
@@ -4783,7 +5859,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
  */
   __pyx_v_value = ((__pyx_v_value + log(__pyx_v_x2)) - (0.5 * __pyx_v_r));
 
-  /* "gensim/_matutils.pyx":226
+  /* "gensim/_matutils.pyx":350
  *     value = value + log ( x2 ) - 0.5 * r;
  * 
  *     r = r * r;             # <<<<<<<<<<<<<<
@@ -4792,7 +5868,7 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
  */
   __pyx_v_r = (__pyx_v_r * __pyx_v_r);
 
-  /* "gensim/_matutils.pyx":229
+  /* "gensim/_matutils.pyx":353
  * 
  *     value = value \
  *         - r * ( 1.0 / 12.0  \             # <<<<<<<<<<<<<<
@@ -4801,22 +5877,20 @@ static CYTHON_INLINE float __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(float
  */
   __pyx_v_value = (__pyx_v_value - (__pyx_v_r * ((1.0 / 12.0) - (__pyx_v_r * ((1.0 / 120.0) - (__pyx_v_r * ((1.0 / 252.0) - (__pyx_v_r * ((1.0 / 240.0) - (__pyx_v_r * (1.0 / 132.0)))))))))));
 
-  /* "gensim/_matutils.pyx":235
+  /* "gensim/_matutils.pyx":359
  *         - r * ( 1.0 / 132.0 ) ) ) ) )
  * 
  *     return value;             # <<<<<<<<<<<<<<
- * 
- * 
  */
   __pyx_r = __pyx_v_value;
   goto __pyx_L0;
 
-  /* "gensim/_matutils.pyx":183
+  /* "gensim/_matutils.pyx":300
  * 
  * @cython.cdivision(True)
- * cdef inline DTYPE_t _digamma (DTYPE_t x,) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Digamma over positive floats only
+ * cdef inline DTYPE_t _digamma(DTYPE_t x,) nogil:             # <<<<<<<<<<<<<<
+ *     """Digamma function for positive floats.
+ * 
  */
 
   /* function exit code */
@@ -4833,17 +5907,17 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
   double __pyx_r;
   int __pyx_t_1;
 
-  /* "gensim/_matutils.pyx":205
- *     """
+  /* "gensim/_matutils.pyx":329
  * 
+ *     """
  *     cdef DTYPE_t c = 8.5;             # <<<<<<<<<<<<<<
  *     cdef DTYPE_t euler_mascheroni = 0.57721566490153286060;
  *     cdef DTYPE_t r;
  */
   __pyx_v_c = 8.5;
 
-  /* "gensim/_matutils.pyx":206
- * 
+  /* "gensim/_matutils.pyx":330
+ *     """
  *     cdef DTYPE_t c = 8.5;
  *     cdef DTYPE_t euler_mascheroni = 0.57721566490153286060;             # <<<<<<<<<<<<<<
  *     cdef DTYPE_t r;
@@ -4851,7 +5925,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
  */
   __pyx_v_euler_mascheroni = 0.57721566490153286060;
 
-  /* "gensim/_matutils.pyx":211
+  /* "gensim/_matutils.pyx":335
  *     cdef DTYPE_t x2;
  * 
  *     if ( x <= 0.000001 ):             # <<<<<<<<<<<<<<
@@ -4861,7 +5935,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
   __pyx_t_1 = ((__pyx_v_x <= 0.000001) != 0);
   if (__pyx_t_1) {
 
-    /* "gensim/_matutils.pyx":212
+    /* "gensim/_matutils.pyx":336
  * 
  *     if ( x <= 0.000001 ):
  *         value = - euler_mascheroni - 1.0 / x + 1.6449340668482264365 * x;             # <<<<<<<<<<<<<<
@@ -4870,7 +5944,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
  */
     __pyx_v_value = (((-__pyx_v_euler_mascheroni) - (1.0 / __pyx_v_x)) + (1.6449340668482264365 * __pyx_v_x));
 
-    /* "gensim/_matutils.pyx":213
+    /* "gensim/_matutils.pyx":337
  *     if ( x <= 0.000001 ):
  *         value = - euler_mascheroni - 1.0 / x + 1.6449340668482264365 * x;
  *         return value;             # <<<<<<<<<<<<<<
@@ -4880,7 +5954,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
     __pyx_r = __pyx_v_value;
     goto __pyx_L0;
 
-    /* "gensim/_matutils.pyx":211
+    /* "gensim/_matutils.pyx":335
  *     cdef DTYPE_t x2;
  * 
  *     if ( x <= 0.000001 ):             # <<<<<<<<<<<<<<
@@ -4889,7 +5963,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
  */
   }
 
-  /* "gensim/_matutils.pyx":216
+  /* "gensim/_matutils.pyx":340
  * 
  *     # Reduce to DIGAMA(X + N).
  *     value = 0.0;             # <<<<<<<<<<<<<<
@@ -4898,7 +5972,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
  */
   __pyx_v_value = 0.0;
 
-  /* "gensim/_matutils.pyx":217
+  /* "gensim/_matutils.pyx":341
  *     # Reduce to DIGAMA(X + N).
  *     value = 0.0;
  *     x2 = x;             # <<<<<<<<<<<<<<
@@ -4907,7 +5981,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
  */
   __pyx_v_x2 = __pyx_v_x;
 
-  /* "gensim/_matutils.pyx":218
+  /* "gensim/_matutils.pyx":342
  *     value = 0.0;
  *     x2 = x;
  *     while ( x2 < c ):             # <<<<<<<<<<<<<<
@@ -4918,7 +5992,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
     __pyx_t_1 = ((__pyx_v_x2 < __pyx_v_c) != 0);
     if (!__pyx_t_1) break;
 
-    /* "gensim/_matutils.pyx":219
+    /* "gensim/_matutils.pyx":343
  *     x2 = x;
  *     while ( x2 < c ):
  *         value = value - 1.0 / x2;             # <<<<<<<<<<<<<<
@@ -4927,7 +6001,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
  */
     __pyx_v_value = (__pyx_v_value - (1.0 / __pyx_v_x2));
 
-    /* "gensim/_matutils.pyx":220
+    /* "gensim/_matutils.pyx":344
  *     while ( x2 < c ):
  *         value = value - 1.0 / x2;
  *         x2 = x2 + 1.0;             # <<<<<<<<<<<<<<
@@ -4937,7 +6011,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
     __pyx_v_x2 = (__pyx_v_x2 + 1.0);
   }
 
-  /* "gensim/_matutils.pyx":223
+  /* "gensim/_matutils.pyx":347
  * 
  *     # Use Stirling's (actually de Moivre's) expansion.
  *     r = 1.0 / x2;             # <<<<<<<<<<<<<<
@@ -4946,7 +6020,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
  */
   __pyx_v_r = (1.0 / __pyx_v_x2);
 
-  /* "gensim/_matutils.pyx":224
+  /* "gensim/_matutils.pyx":348
  *     # Use Stirling's (actually de Moivre's) expansion.
  *     r = 1.0 / x2;
  *     value = value + log ( x2 ) - 0.5 * r;             # <<<<<<<<<<<<<<
@@ -4955,7 +6029,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
  */
   __pyx_v_value = ((__pyx_v_value + log(__pyx_v_x2)) - (0.5 * __pyx_v_r));
 
-  /* "gensim/_matutils.pyx":226
+  /* "gensim/_matutils.pyx":350
  *     value = value + log ( x2 ) - 0.5 * r;
  * 
  *     r = r * r;             # <<<<<<<<<<<<<<
@@ -4964,7 +6038,7 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
  */
   __pyx_v_r = (__pyx_v_r * __pyx_v_r);
 
-  /* "gensim/_matutils.pyx":229
+  /* "gensim/_matutils.pyx":353
  * 
  *     value = value \
  *         - r * ( 1.0 / 12.0  \             # <<<<<<<<<<<<<<
@@ -4973,1097 +6047,25 @@ static CYTHON_INLINE double __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(doub
  */
   __pyx_v_value = (__pyx_v_value - (__pyx_v_r * ((1.0 / 12.0) - (__pyx_v_r * ((1.0 / 120.0) - (__pyx_v_r * ((1.0 / 252.0) - (__pyx_v_r * ((1.0 / 240.0) - (__pyx_v_r * (1.0 / 132.0)))))))))));
 
-  /* "gensim/_matutils.pyx":235
+  /* "gensim/_matutils.pyx":359
  *         - r * ( 1.0 / 132.0 ) ) ) ) )
  * 
  *     return value;             # <<<<<<<<<<<<<<
- * 
- * 
  */
   __pyx_r = __pyx_v_value;
   goto __pyx_L0;
 
-  /* "gensim/_matutils.pyx":183
+  /* "gensim/_matutils.pyx":300
  * 
  * @cython.cdivision(True)
- * cdef inline DTYPE_t _digamma (DTYPE_t x,) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Digamma over positive floats only
+ * cdef inline DTYPE_t _digamma(DTYPE_t x,) nogil:             # <<<<<<<<<<<<<<
+ *     """Digamma function for positive floats.
+ * 
  */
 
   /* function exit code */
   __pyx_L0:;
   return __pyx_r;
-}
-
-/* "gensim/_matutils.pyx":241
- * @cython.wraparound(False)
- * @cython.cdivision(True)
- * cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Mean absolute difference between two arrays
- */
-
-static float __pyx_fuse_0__pyx_f_6gensim_9_matutils__mean_absolute_difference(__Pyx_memviewslice __pyx_v_a, __Pyx_memviewslice __pyx_v_b) {
-  float __pyx_v_result;
-  size_t __pyx_v_i;
-  size_t __pyx_v_I;
-  size_t __pyx_v_N;
-  float __pyx_r;
-  size_t __pyx_t_1;
-  size_t __pyx_t_2;
-  size_t __pyx_t_3;
-  size_t __pyx_t_4;
-
-  /* "gensim/_matutils.pyx":257
- *     """
- * 
- *     cdef DTYPE_t result = 0.0             # <<<<<<<<<<<<<<
- *     cdef size_t i
- *     cdef size_t j
- */
-  __pyx_v_result = 0.0;
-
-  /* "gensim/_matutils.pyx":261
- *     cdef size_t j
- * 
- *     cdef size_t I = a.shape[0]             # <<<<<<<<<<<<<<
- *     cdef size_t N = I
- * 
- */
-  __pyx_v_I = (__pyx_v_a.shape[0]);
-
-  /* "gensim/_matutils.pyx":262
- * 
- *     cdef size_t I = a.shape[0]
- *     cdef size_t N = I             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-  __pyx_v_N = __pyx_v_I;
-
-  /* "gensim/_matutils.pyx":264
- *     cdef size_t N = I
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         result += fabs(a[i] - b[i])
- *     result /= N
- */
-  __pyx_t_1 = __pyx_v_I;
-  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
-    __pyx_v_i = __pyx_t_2;
-
-    /* "gensim/_matutils.pyx":265
- * 
- *     for i in range(I):
- *         result += fabs(a[i] - b[i])             # <<<<<<<<<<<<<<
- *     result /= N
- * 
- */
-    __pyx_t_3 = __pyx_v_i;
-    __pyx_t_4 = __pyx_v_i;
-    __pyx_v_result = (__pyx_v_result + fabs(((*((float *) ( /* dim=0 */ (__pyx_v_a.data + __pyx_t_3 * __pyx_v_a.strides[0]) ))) - (*((float *) ( /* dim=0 */ (__pyx_v_b.data + __pyx_t_4 * __pyx_v_b.strides[0]) ))))));
-  }
-
-  /* "gensim/_matutils.pyx":266
- *     for i in range(I):
- *         result += fabs(a[i] - b[i])
- *     result /= N             # <<<<<<<<<<<<<<
- * 
- *     return result
- */
-  __pyx_v_result = (__pyx_v_result / __pyx_v_N);
-
-  /* "gensim/_matutils.pyx":268
- *     result /= N
- * 
- *     return result             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __pyx_r = __pyx_v_result;
-  goto __pyx_L0;
-
-  /* "gensim/_matutils.pyx":241
- * @cython.wraparound(False)
- * @cython.cdivision(True)
- * cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Mean absolute difference between two arrays
- */
-
-  /* function exit code */
-  __pyx_L0:;
-  return __pyx_r;
-}
-
-static double __pyx_fuse_1__pyx_f_6gensim_9_matutils__mean_absolute_difference(__Pyx_memviewslice __pyx_v_a, __Pyx_memviewslice __pyx_v_b) {
-  double __pyx_v_result;
-  size_t __pyx_v_i;
-  size_t __pyx_v_I;
-  size_t __pyx_v_N;
-  double __pyx_r;
-  size_t __pyx_t_1;
-  size_t __pyx_t_2;
-  size_t __pyx_t_3;
-  size_t __pyx_t_4;
-
-  /* "gensim/_matutils.pyx":257
- *     """
- * 
- *     cdef DTYPE_t result = 0.0             # <<<<<<<<<<<<<<
- *     cdef size_t i
- *     cdef size_t j
- */
-  __pyx_v_result = 0.0;
-
-  /* "gensim/_matutils.pyx":261
- *     cdef size_t j
- * 
- *     cdef size_t I = a.shape[0]             # <<<<<<<<<<<<<<
- *     cdef size_t N = I
- * 
- */
-  __pyx_v_I = (__pyx_v_a.shape[0]);
-
-  /* "gensim/_matutils.pyx":262
- * 
- *     cdef size_t I = a.shape[0]
- *     cdef size_t N = I             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-  __pyx_v_N = __pyx_v_I;
-
-  /* "gensim/_matutils.pyx":264
- *     cdef size_t N = I
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         result += fabs(a[i] - b[i])
- *     result /= N
- */
-  __pyx_t_1 = __pyx_v_I;
-  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
-    __pyx_v_i = __pyx_t_2;
-
-    /* "gensim/_matutils.pyx":265
- * 
- *     for i in range(I):
- *         result += fabs(a[i] - b[i])             # <<<<<<<<<<<<<<
- *     result /= N
- * 
- */
-    __pyx_t_3 = __pyx_v_i;
-    __pyx_t_4 = __pyx_v_i;
-    __pyx_v_result = (__pyx_v_result + fabs(((*((double *) ( /* dim=0 */ (__pyx_v_a.data + __pyx_t_3 * __pyx_v_a.strides[0]) ))) - (*((double *) ( /* dim=0 */ (__pyx_v_b.data + __pyx_t_4 * __pyx_v_b.strides[0]) ))))));
-  }
-
-  /* "gensim/_matutils.pyx":266
- *     for i in range(I):
- *         result += fabs(a[i] - b[i])
- *     result /= N             # <<<<<<<<<<<<<<
- * 
- *     return result
- */
-  __pyx_v_result = (__pyx_v_result / __pyx_v_N);
-
-  /* "gensim/_matutils.pyx":268
- *     result /= N
- * 
- *     return result             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __pyx_r = __pyx_v_result;
-  goto __pyx_L0;
-
-  /* "gensim/_matutils.pyx":241
- * @cython.wraparound(False)
- * @cython.cdivision(True)
- * cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Mean absolute difference between two arrays
- */
-
-  /* function exit code */
-  __pyx_L0:;
-  return __pyx_r;
-}
-
-/* "gensim/_matutils.pyx":274
- * @cython.wraparound(False)
- * @cython.cdivision(True)
- * cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Log of sum of exponentials for 2d array
- */
-
-static float __pyx_fuse_0__pyx_f_6gensim_9_matutils__logsumexp_2d(__Pyx_memviewslice __pyx_v_data) {
-  float __pyx_v_max_val;
-  float __pyx_v_result;
-  size_t __pyx_v_i;
-  size_t __pyx_v_j;
-  size_t __pyx_v_I;
-  size_t __pyx_v_J;
-  float __pyx_r;
-  Py_ssize_t __pyx_t_1;
-  Py_ssize_t __pyx_t_2;
-  size_t __pyx_t_3;
-  size_t __pyx_t_4;
-  size_t __pyx_t_5;
-  size_t __pyx_t_6;
-  size_t __pyx_t_7;
-  size_t __pyx_t_8;
-  int __pyx_t_9;
-  size_t __pyx_t_10;
-  size_t __pyx_t_11;
-  size_t __pyx_t_12;
-  size_t __pyx_t_13;
-
-  /* "gensim/_matutils.pyx":289
- *     """
- * 
- *     cdef DTYPE_t max_val = data[0, 0]             # <<<<<<<<<<<<<<
- *     cdef DTYPE_t result = 0.0
- *     cdef size_t i
- */
-  __pyx_t_1 = 0;
-  __pyx_t_2 = 0;
-  __pyx_v_max_val = (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_1 * __pyx_v_data.strides[0]) ) + __pyx_t_2 * __pyx_v_data.strides[1]) )));
-
-  /* "gensim/_matutils.pyx":290
- * 
- *     cdef DTYPE_t max_val = data[0, 0]
- *     cdef DTYPE_t result = 0.0             # <<<<<<<<<<<<<<
- *     cdef size_t i
- *     cdef size_t j
- */
-  __pyx_v_result = 0.0;
-
-  /* "gensim/_matutils.pyx":294
- *     cdef size_t j
- * 
- *     cdef size_t I = data.shape[0]             # <<<<<<<<<<<<<<
- *     cdef size_t J = data.shape[1]
- * 
- */
-  __pyx_v_I = (__pyx_v_data.shape[0]);
-
-  /* "gensim/_matutils.pyx":295
- * 
- *     cdef size_t I = data.shape[0]
- *     cdef size_t J = data.shape[1]             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-  __pyx_v_J = (__pyx_v_data.shape[1]);
-
-  /* "gensim/_matutils.pyx":297
- *     cdef size_t J = data.shape[1]
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         for j in range(J):
- *             if data[i, j] > max_val:
- */
-  __pyx_t_3 = __pyx_v_I;
-  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-    __pyx_v_i = __pyx_t_4;
-
-    /* "gensim/_matutils.pyx":298
- * 
- *     for i in range(I):
- *         for j in range(J):             # <<<<<<<<<<<<<<
- *             if data[i, j] > max_val:
- *                 max_val = data[i, j]
- */
-    __pyx_t_5 = __pyx_v_J;
-    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-      __pyx_v_j = __pyx_t_6;
-
-      /* "gensim/_matutils.pyx":299
- *     for i in range(I):
- *         for j in range(J):
- *             if data[i, j] > max_val:             # <<<<<<<<<<<<<<
- *                 max_val = data[i, j]
- * 
- */
-      __pyx_t_7 = __pyx_v_i;
-      __pyx_t_8 = __pyx_v_j;
-      __pyx_t_9 = (((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_7 * __pyx_v_data.strides[0]) ) + __pyx_t_8 * __pyx_v_data.strides[1]) ))) > __pyx_v_max_val) != 0);
-      if (__pyx_t_9) {
-
-        /* "gensim/_matutils.pyx":300
- *         for j in range(J):
- *             if data[i, j] > max_val:
- *                 max_val = data[i, j]             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-        __pyx_t_10 = __pyx_v_i;
-        __pyx_t_11 = __pyx_v_j;
-        __pyx_v_max_val = (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_10 * __pyx_v_data.strides[0]) ) + __pyx_t_11 * __pyx_v_data.strides[1]) )));
-
-        /* "gensim/_matutils.pyx":299
- *     for i in range(I):
- *         for j in range(J):
- *             if data[i, j] > max_val:             # <<<<<<<<<<<<<<
- *                 max_val = data[i, j]
- * 
- */
-      }
-    }
-  }
-
-  /* "gensim/_matutils.pyx":302
- *                 max_val = data[i, j]
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         for j in range(J):
- *             result += exp(data[i, j] - max_val)
- */
-  __pyx_t_3 = __pyx_v_I;
-  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-    __pyx_v_i = __pyx_t_4;
-
-    /* "gensim/_matutils.pyx":303
- * 
- *     for i in range(I):
- *         for j in range(J):             # <<<<<<<<<<<<<<
- *             result += exp(data[i, j] - max_val)
- * 
- */
-    __pyx_t_5 = __pyx_v_J;
-    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-      __pyx_v_j = __pyx_t_6;
-
-      /* "gensim/_matutils.pyx":304
- *     for i in range(I):
- *         for j in range(J):
- *             result += exp(data[i, j] - max_val)             # <<<<<<<<<<<<<<
- * 
- *     result = log(result) + max_val
- */
-      __pyx_t_12 = __pyx_v_i;
-      __pyx_t_13 = __pyx_v_j;
-      __pyx_v_result = (__pyx_v_result + exp(((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_12 * __pyx_v_data.strides[0]) ) + __pyx_t_13 * __pyx_v_data.strides[1]) ))) - __pyx_v_max_val)));
-    }
-  }
-
-  /* "gensim/_matutils.pyx":306
- *             result += exp(data[i, j] - max_val)
- * 
- *     result = log(result) + max_val             # <<<<<<<<<<<<<<
- * 
- *     return result
- */
-  __pyx_v_result = (log(__pyx_v_result) + __pyx_v_max_val);
-
-  /* "gensim/_matutils.pyx":308
- *     result = log(result) + max_val
- * 
- *     return result             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __pyx_r = __pyx_v_result;
-  goto __pyx_L0;
-
-  /* "gensim/_matutils.pyx":274
- * @cython.wraparound(False)
- * @cython.cdivision(True)
- * cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Log of sum of exponentials for 2d array
- */
-
-  /* function exit code */
-  __pyx_L0:;
-  return __pyx_r;
-}
-
-static double __pyx_fuse_1__pyx_f_6gensim_9_matutils__logsumexp_2d(__Pyx_memviewslice __pyx_v_data) {
-  double __pyx_v_max_val;
-  double __pyx_v_result;
-  size_t __pyx_v_i;
-  size_t __pyx_v_j;
-  size_t __pyx_v_I;
-  size_t __pyx_v_J;
-  double __pyx_r;
-  Py_ssize_t __pyx_t_1;
-  Py_ssize_t __pyx_t_2;
-  size_t __pyx_t_3;
-  size_t __pyx_t_4;
-  size_t __pyx_t_5;
-  size_t __pyx_t_6;
-  size_t __pyx_t_7;
-  size_t __pyx_t_8;
-  int __pyx_t_9;
-  size_t __pyx_t_10;
-  size_t __pyx_t_11;
-  size_t __pyx_t_12;
-  size_t __pyx_t_13;
-
-  /* "gensim/_matutils.pyx":289
- *     """
- * 
- *     cdef DTYPE_t max_val = data[0, 0]             # <<<<<<<<<<<<<<
- *     cdef DTYPE_t result = 0.0
- *     cdef size_t i
- */
-  __pyx_t_1 = 0;
-  __pyx_t_2 = 0;
-  __pyx_v_max_val = (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_1 * __pyx_v_data.strides[0]) ) + __pyx_t_2 * __pyx_v_data.strides[1]) )));
-
-  /* "gensim/_matutils.pyx":290
- * 
- *     cdef DTYPE_t max_val = data[0, 0]
- *     cdef DTYPE_t result = 0.0             # <<<<<<<<<<<<<<
- *     cdef size_t i
- *     cdef size_t j
- */
-  __pyx_v_result = 0.0;
-
-  /* "gensim/_matutils.pyx":294
- *     cdef size_t j
- * 
- *     cdef size_t I = data.shape[0]             # <<<<<<<<<<<<<<
- *     cdef size_t J = data.shape[1]
- * 
- */
-  __pyx_v_I = (__pyx_v_data.shape[0]);
-
-  /* "gensim/_matutils.pyx":295
- * 
- *     cdef size_t I = data.shape[0]
- *     cdef size_t J = data.shape[1]             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-  __pyx_v_J = (__pyx_v_data.shape[1]);
-
-  /* "gensim/_matutils.pyx":297
- *     cdef size_t J = data.shape[1]
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         for j in range(J):
- *             if data[i, j] > max_val:
- */
-  __pyx_t_3 = __pyx_v_I;
-  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-    __pyx_v_i = __pyx_t_4;
-
-    /* "gensim/_matutils.pyx":298
- * 
- *     for i in range(I):
- *         for j in range(J):             # <<<<<<<<<<<<<<
- *             if data[i, j] > max_val:
- *                 max_val = data[i, j]
- */
-    __pyx_t_5 = __pyx_v_J;
-    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-      __pyx_v_j = __pyx_t_6;
-
-      /* "gensim/_matutils.pyx":299
- *     for i in range(I):
- *         for j in range(J):
- *             if data[i, j] > max_val:             # <<<<<<<<<<<<<<
- *                 max_val = data[i, j]
- * 
- */
-      __pyx_t_7 = __pyx_v_i;
-      __pyx_t_8 = __pyx_v_j;
-      __pyx_t_9 = (((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_7 * __pyx_v_data.strides[0]) ) + __pyx_t_8 * __pyx_v_data.strides[1]) ))) > __pyx_v_max_val) != 0);
-      if (__pyx_t_9) {
-
-        /* "gensim/_matutils.pyx":300
- *         for j in range(J):
- *             if data[i, j] > max_val:
- *                 max_val = data[i, j]             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-        __pyx_t_10 = __pyx_v_i;
-        __pyx_t_11 = __pyx_v_j;
-        __pyx_v_max_val = (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_10 * __pyx_v_data.strides[0]) ) + __pyx_t_11 * __pyx_v_data.strides[1]) )));
-
-        /* "gensim/_matutils.pyx":299
- *     for i in range(I):
- *         for j in range(J):
- *             if data[i, j] > max_val:             # <<<<<<<<<<<<<<
- *                 max_val = data[i, j]
- * 
- */
-      }
-    }
-  }
-
-  /* "gensim/_matutils.pyx":302
- *                 max_val = data[i, j]
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         for j in range(J):
- *             result += exp(data[i, j] - max_val)
- */
-  __pyx_t_3 = __pyx_v_I;
-  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-    __pyx_v_i = __pyx_t_4;
-
-    /* "gensim/_matutils.pyx":303
- * 
- *     for i in range(I):
- *         for j in range(J):             # <<<<<<<<<<<<<<
- *             result += exp(data[i, j] - max_val)
- * 
- */
-    __pyx_t_5 = __pyx_v_J;
-    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-      __pyx_v_j = __pyx_t_6;
-
-      /* "gensim/_matutils.pyx":304
- *     for i in range(I):
- *         for j in range(J):
- *             result += exp(data[i, j] - max_val)             # <<<<<<<<<<<<<<
- * 
- *     result = log(result) + max_val
- */
-      __pyx_t_12 = __pyx_v_i;
-      __pyx_t_13 = __pyx_v_j;
-      __pyx_v_result = (__pyx_v_result + exp(((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_12 * __pyx_v_data.strides[0]) ) + __pyx_t_13 * __pyx_v_data.strides[1]) ))) - __pyx_v_max_val)));
-    }
-  }
-
-  /* "gensim/_matutils.pyx":306
- *             result += exp(data[i, j] - max_val)
- * 
- *     result = log(result) + max_val             # <<<<<<<<<<<<<<
- * 
- *     return result
- */
-  __pyx_v_result = (log(__pyx_v_result) + __pyx_v_max_val);
-
-  /* "gensim/_matutils.pyx":308
- *     result = log(result) + max_val
- * 
- *     return result             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __pyx_r = __pyx_v_result;
-  goto __pyx_L0;
-
-  /* "gensim/_matutils.pyx":274
- * @cython.wraparound(False)
- * @cython.cdivision(True)
- * cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Log of sum of exponentials for 2d array
- */
-
-  /* function exit code */
-  __pyx_L0:;
-  return __pyx_r;
-}
-
-/* "gensim/_matutils.pyx":313
- * @cython.boundscheck(False)
- * @cython.wraparound(False)
- * cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
- */
-
-static void __pyx_fuse_0__pyx_f_6gensim_9_matutils__dirichlet_expectation_1d(__Pyx_memviewslice __pyx_v_alpha, __Pyx_memviewslice __pyx_v_out) {
-  float __pyx_v_sum_alpha;
-  float __pyx_v_psi_sum_alpha;
-  size_t __pyx_v_i;
-  size_t __pyx_v_I;
-  size_t __pyx_t_1;
-  size_t __pyx_t_2;
-  size_t __pyx_t_3;
-  size_t __pyx_t_4;
-  size_t __pyx_t_5;
-
-  /* "gensim/_matutils.pyx":327
- *     """
- * 
- *     cdef DTYPE_t sum_alpha = 0.0             # <<<<<<<<<<<<<<
- *     cdef DTYPE_t psi_sum_alpha = 0.0
- *     cdef size_t i
- */
-  __pyx_v_sum_alpha = 0.0;
-
-  /* "gensim/_matutils.pyx":328
- * 
- *     cdef DTYPE_t sum_alpha = 0.0
- *     cdef DTYPE_t psi_sum_alpha = 0.0             # <<<<<<<<<<<<<<
- *     cdef size_t i
- *     cdef size_t I = alpha.shape[0]
- */
-  __pyx_v_psi_sum_alpha = 0.0;
-
-  /* "gensim/_matutils.pyx":330
- *     cdef DTYPE_t psi_sum_alpha = 0.0
- *     cdef size_t i
- *     cdef size_t I = alpha.shape[0]             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-  __pyx_v_I = (__pyx_v_alpha.shape[0]);
-
-  /* "gensim/_matutils.pyx":332
- *     cdef size_t I = alpha.shape[0]
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         sum_alpha += alpha[i]
- * 
- */
-  __pyx_t_1 = __pyx_v_I;
-  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
-    __pyx_v_i = __pyx_t_2;
-
-    /* "gensim/_matutils.pyx":333
- * 
- *     for i in range(I):
- *         sum_alpha += alpha[i]             # <<<<<<<<<<<<<<
- * 
- *     psi_sum_alpha = _digamma(sum_alpha)
- */
-    __pyx_t_3 = __pyx_v_i;
-    __pyx_v_sum_alpha = (__pyx_v_sum_alpha + (*((float *) ( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_3 * __pyx_v_alpha.strides[0]) ))));
-  }
-
-  /* "gensim/_matutils.pyx":335
- *         sum_alpha += alpha[i]
- * 
- *     psi_sum_alpha = _digamma(sum_alpha)             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-  __pyx_v_psi_sum_alpha = __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(__pyx_v_sum_alpha);
-
-  /* "gensim/_matutils.pyx":337
- *     psi_sum_alpha = _digamma(sum_alpha)
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         out[i] = _digamma(alpha[i]) - psi_sum_alpha
- * 
- */
-  __pyx_t_1 = __pyx_v_I;
-  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
-    __pyx_v_i = __pyx_t_2;
-
-    /* "gensim/_matutils.pyx":338
- * 
- *     for i in range(I):
- *         out[i] = _digamma(alpha[i]) - psi_sum_alpha             # <<<<<<<<<<<<<<
- * 
- * 
- */
-    __pyx_t_4 = __pyx_v_i;
-    __pyx_t_5 = __pyx_v_i;
-    *((float *) ( /* dim=0 */ (__pyx_v_out.data + __pyx_t_5 * __pyx_v_out.strides[0]) )) = (__pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma((*((float *) ( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_4 * __pyx_v_alpha.strides[0]) )))) - __pyx_v_psi_sum_alpha);
-  }
-
-  /* "gensim/_matutils.pyx":313
- * @cython.boundscheck(False)
- * @cython.wraparound(False)
- * cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
- */
-
-  /* function exit code */
-}
-
-static void __pyx_fuse_1__pyx_f_6gensim_9_matutils__dirichlet_expectation_1d(__Pyx_memviewslice __pyx_v_alpha, __Pyx_memviewslice __pyx_v_out) {
-  double __pyx_v_sum_alpha;
-  double __pyx_v_psi_sum_alpha;
-  size_t __pyx_v_i;
-  size_t __pyx_v_I;
-  size_t __pyx_t_1;
-  size_t __pyx_t_2;
-  size_t __pyx_t_3;
-  size_t __pyx_t_4;
-  size_t __pyx_t_5;
-
-  /* "gensim/_matutils.pyx":327
- *     """
- * 
- *     cdef DTYPE_t sum_alpha = 0.0             # <<<<<<<<<<<<<<
- *     cdef DTYPE_t psi_sum_alpha = 0.0
- *     cdef size_t i
- */
-  __pyx_v_sum_alpha = 0.0;
-
-  /* "gensim/_matutils.pyx":328
- * 
- *     cdef DTYPE_t sum_alpha = 0.0
- *     cdef DTYPE_t psi_sum_alpha = 0.0             # <<<<<<<<<<<<<<
- *     cdef size_t i
- *     cdef size_t I = alpha.shape[0]
- */
-  __pyx_v_psi_sum_alpha = 0.0;
-
-  /* "gensim/_matutils.pyx":330
- *     cdef DTYPE_t psi_sum_alpha = 0.0
- *     cdef size_t i
- *     cdef size_t I = alpha.shape[0]             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-  __pyx_v_I = (__pyx_v_alpha.shape[0]);
-
-  /* "gensim/_matutils.pyx":332
- *     cdef size_t I = alpha.shape[0]
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         sum_alpha += alpha[i]
- * 
- */
-  __pyx_t_1 = __pyx_v_I;
-  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
-    __pyx_v_i = __pyx_t_2;
-
-    /* "gensim/_matutils.pyx":333
- * 
- *     for i in range(I):
- *         sum_alpha += alpha[i]             # <<<<<<<<<<<<<<
- * 
- *     psi_sum_alpha = _digamma(sum_alpha)
- */
-    __pyx_t_3 = __pyx_v_i;
-    __pyx_v_sum_alpha = (__pyx_v_sum_alpha + (*((double *) ( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_3 * __pyx_v_alpha.strides[0]) ))));
-  }
-
-  /* "gensim/_matutils.pyx":335
- *         sum_alpha += alpha[i]
- * 
- *     psi_sum_alpha = _digamma(sum_alpha)             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-  __pyx_v_psi_sum_alpha = __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(__pyx_v_sum_alpha);
-
-  /* "gensim/_matutils.pyx":337
- *     psi_sum_alpha = _digamma(sum_alpha)
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         out[i] = _digamma(alpha[i]) - psi_sum_alpha
- * 
- */
-  __pyx_t_1 = __pyx_v_I;
-  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
-    __pyx_v_i = __pyx_t_2;
-
-    /* "gensim/_matutils.pyx":338
- * 
- *     for i in range(I):
- *         out[i] = _digamma(alpha[i]) - psi_sum_alpha             # <<<<<<<<<<<<<<
- * 
- * 
- */
-    __pyx_t_4 = __pyx_v_i;
-    __pyx_t_5 = __pyx_v_i;
-    *((double *) ( /* dim=0 */ (__pyx_v_out.data + __pyx_t_5 * __pyx_v_out.strides[0]) )) = (__pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma((*((double *) ( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_4 * __pyx_v_alpha.strides[0]) )))) - __pyx_v_psi_sum_alpha);
-  }
-
-  /* "gensim/_matutils.pyx":313
- * @cython.boundscheck(False)
- * @cython.wraparound(False)
- * cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
- */
-
-  /* function exit code */
-}
-
-/* "gensim/_matutils.pyx":343
- * @cython.boundscheck(False)
- * @cython.wraparound(False)
- * cdef void _dirichlet_expectation_2d(DTYPE_t[:, :] alpha, DTYPE_t[:, :] out) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
- */
-
-static void __pyx_fuse_0__pyx_f_6gensim_9_matutils__dirichlet_expectation_2d(__Pyx_memviewslice __pyx_v_alpha, __Pyx_memviewslice __pyx_v_out) {
-  float __pyx_v_sum_alpha;
-  float __pyx_v_psi_sum_alpha;
-  size_t __pyx_v_i;
-  size_t __pyx_v_j;
-  size_t __pyx_v_I;
-  size_t __pyx_v_J;
-  size_t __pyx_t_1;
-  size_t __pyx_t_2;
-  size_t __pyx_t_3;
-  size_t __pyx_t_4;
-  size_t __pyx_t_5;
-  size_t __pyx_t_6;
-  size_t __pyx_t_7;
-  size_t __pyx_t_8;
-  size_t __pyx_t_9;
-  size_t __pyx_t_10;
-
-  /* "gensim/_matutils.pyx":358
- *     """
- * 
- *     cdef DTYPE_t sum_alpha = 0.0             # <<<<<<<<<<<<<<
- *     cdef DTYPE_t psi_sum_alpha = 0.0
- *     cdef size_t i, j
- */
-  __pyx_v_sum_alpha = 0.0;
-
-  /* "gensim/_matutils.pyx":359
- * 
- *     cdef DTYPE_t sum_alpha = 0.0
- *     cdef DTYPE_t psi_sum_alpha = 0.0             # <<<<<<<<<<<<<<
- *     cdef size_t i, j
- *     cdef size_t I = alpha.shape[0]
- */
-  __pyx_v_psi_sum_alpha = 0.0;
-
-  /* "gensim/_matutils.pyx":361
- *     cdef DTYPE_t psi_sum_alpha = 0.0
- *     cdef size_t i, j
- *     cdef size_t I = alpha.shape[0]             # <<<<<<<<<<<<<<
- *     cdef size_t J = alpha.shape[1]
- * 
- */
-  __pyx_v_I = (__pyx_v_alpha.shape[0]);
-
-  /* "gensim/_matutils.pyx":362
- *     cdef size_t i, j
- *     cdef size_t I = alpha.shape[0]
- *     cdef size_t J = alpha.shape[1]             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-  __pyx_v_J = (__pyx_v_alpha.shape[1]);
-
-  /* "gensim/_matutils.pyx":364
- *     cdef size_t J = alpha.shape[1]
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         sum_alpha = 0.0
- *         for j in range(J):
- */
-  __pyx_t_1 = __pyx_v_I;
-  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
-    __pyx_v_i = __pyx_t_2;
-
-    /* "gensim/_matutils.pyx":365
- * 
- *     for i in range(I):
- *         sum_alpha = 0.0             # <<<<<<<<<<<<<<
- *         for j in range(J):
- *             sum_alpha += alpha[i, j]
- */
-    __pyx_v_sum_alpha = 0.0;
-
-    /* "gensim/_matutils.pyx":366
- *     for i in range(I):
- *         sum_alpha = 0.0
- *         for j in range(J):             # <<<<<<<<<<<<<<
- *             sum_alpha += alpha[i, j]
- * 
- */
-    __pyx_t_3 = __pyx_v_J;
-    for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-      __pyx_v_j = __pyx_t_4;
-
-      /* "gensim/_matutils.pyx":367
- *         sum_alpha = 0.0
- *         for j in range(J):
- *             sum_alpha += alpha[i, j]             # <<<<<<<<<<<<<<
- * 
- *         psi_sum_alpha = _digamma(sum_alpha)
- */
-      __pyx_t_5 = __pyx_v_i;
-      __pyx_t_6 = __pyx_v_j;
-      __pyx_v_sum_alpha = (__pyx_v_sum_alpha + (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_5 * __pyx_v_alpha.strides[0]) ) + __pyx_t_6 * __pyx_v_alpha.strides[1]) ))));
-    }
-
-    /* "gensim/_matutils.pyx":369
- *             sum_alpha += alpha[i, j]
- * 
- *         psi_sum_alpha = _digamma(sum_alpha)             # <<<<<<<<<<<<<<
- * 
- *         for j in range(J):
- */
-    __pyx_v_psi_sum_alpha = __pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma(__pyx_v_sum_alpha);
-
-    /* "gensim/_matutils.pyx":371
- *         psi_sum_alpha = _digamma(sum_alpha)
- * 
- *         for j in range(J):             # <<<<<<<<<<<<<<
- *             out[i, j] = _digamma(alpha[i, j]) - psi_sum_alpha
- */
-    __pyx_t_3 = __pyx_v_J;
-    for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-      __pyx_v_j = __pyx_t_4;
-
-      /* "gensim/_matutils.pyx":372
- * 
- *         for j in range(J):
- *             out[i, j] = _digamma(alpha[i, j]) - psi_sum_alpha             # <<<<<<<<<<<<<<
- */
-      __pyx_t_7 = __pyx_v_i;
-      __pyx_t_8 = __pyx_v_j;
-      __pyx_t_9 = __pyx_v_i;
-      __pyx_t_10 = __pyx_v_j;
-      *((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_out.data + __pyx_t_9 * __pyx_v_out.strides[0]) ) + __pyx_t_10 * __pyx_v_out.strides[1]) )) = (__pyx_fuse_0__pyx_f_6gensim_9_matutils__digamma((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_7 * __pyx_v_alpha.strides[0]) ) + __pyx_t_8 * __pyx_v_alpha.strides[1]) )))) - __pyx_v_psi_sum_alpha);
-    }
-  }
-
-  /* "gensim/_matutils.pyx":343
- * @cython.boundscheck(False)
- * @cython.wraparound(False)
- * cdef void _dirichlet_expectation_2d(DTYPE_t[:, :] alpha, DTYPE_t[:, :] out) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
- */
-
-  /* function exit code */
-}
-
-static void __pyx_fuse_1__pyx_f_6gensim_9_matutils__dirichlet_expectation_2d(__Pyx_memviewslice __pyx_v_alpha, __Pyx_memviewslice __pyx_v_out) {
-  double __pyx_v_sum_alpha;
-  double __pyx_v_psi_sum_alpha;
-  size_t __pyx_v_i;
-  size_t __pyx_v_j;
-  size_t __pyx_v_I;
-  size_t __pyx_v_J;
-  size_t __pyx_t_1;
-  size_t __pyx_t_2;
-  size_t __pyx_t_3;
-  size_t __pyx_t_4;
-  size_t __pyx_t_5;
-  size_t __pyx_t_6;
-  size_t __pyx_t_7;
-  size_t __pyx_t_8;
-  size_t __pyx_t_9;
-  size_t __pyx_t_10;
-
-  /* "gensim/_matutils.pyx":358
- *     """
- * 
- *     cdef DTYPE_t sum_alpha = 0.0             # <<<<<<<<<<<<<<
- *     cdef DTYPE_t psi_sum_alpha = 0.0
- *     cdef size_t i, j
- */
-  __pyx_v_sum_alpha = 0.0;
-
-  /* "gensim/_matutils.pyx":359
- * 
- *     cdef DTYPE_t sum_alpha = 0.0
- *     cdef DTYPE_t psi_sum_alpha = 0.0             # <<<<<<<<<<<<<<
- *     cdef size_t i, j
- *     cdef size_t I = alpha.shape[0]
- */
-  __pyx_v_psi_sum_alpha = 0.0;
-
-  /* "gensim/_matutils.pyx":361
- *     cdef DTYPE_t psi_sum_alpha = 0.0
- *     cdef size_t i, j
- *     cdef size_t I = alpha.shape[0]             # <<<<<<<<<<<<<<
- *     cdef size_t J = alpha.shape[1]
- * 
- */
-  __pyx_v_I = (__pyx_v_alpha.shape[0]);
-
-  /* "gensim/_matutils.pyx":362
- *     cdef size_t i, j
- *     cdef size_t I = alpha.shape[0]
- *     cdef size_t J = alpha.shape[1]             # <<<<<<<<<<<<<<
- * 
- *     for i in range(I):
- */
-  __pyx_v_J = (__pyx_v_alpha.shape[1]);
-
-  /* "gensim/_matutils.pyx":364
- *     cdef size_t J = alpha.shape[1]
- * 
- *     for i in range(I):             # <<<<<<<<<<<<<<
- *         sum_alpha = 0.0
- *         for j in range(J):
- */
-  __pyx_t_1 = __pyx_v_I;
-  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
-    __pyx_v_i = __pyx_t_2;
-
-    /* "gensim/_matutils.pyx":365
- * 
- *     for i in range(I):
- *         sum_alpha = 0.0             # <<<<<<<<<<<<<<
- *         for j in range(J):
- *             sum_alpha += alpha[i, j]
- */
-    __pyx_v_sum_alpha = 0.0;
-
-    /* "gensim/_matutils.pyx":366
- *     for i in range(I):
- *         sum_alpha = 0.0
- *         for j in range(J):             # <<<<<<<<<<<<<<
- *             sum_alpha += alpha[i, j]
- * 
- */
-    __pyx_t_3 = __pyx_v_J;
-    for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-      __pyx_v_j = __pyx_t_4;
-
-      /* "gensim/_matutils.pyx":367
- *         sum_alpha = 0.0
- *         for j in range(J):
- *             sum_alpha += alpha[i, j]             # <<<<<<<<<<<<<<
- * 
- *         psi_sum_alpha = _digamma(sum_alpha)
- */
-      __pyx_t_5 = __pyx_v_i;
-      __pyx_t_6 = __pyx_v_j;
-      __pyx_v_sum_alpha = (__pyx_v_sum_alpha + (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_5 * __pyx_v_alpha.strides[0]) ) + __pyx_t_6 * __pyx_v_alpha.strides[1]) ))));
-    }
-
-    /* "gensim/_matutils.pyx":369
- *             sum_alpha += alpha[i, j]
- * 
- *         psi_sum_alpha = _digamma(sum_alpha)             # <<<<<<<<<<<<<<
- * 
- *         for j in range(J):
- */
-    __pyx_v_psi_sum_alpha = __pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma(__pyx_v_sum_alpha);
-
-    /* "gensim/_matutils.pyx":371
- *         psi_sum_alpha = _digamma(sum_alpha)
- * 
- *         for j in range(J):             # <<<<<<<<<<<<<<
- *             out[i, j] = _digamma(alpha[i, j]) - psi_sum_alpha
- */
-    __pyx_t_3 = __pyx_v_J;
-    for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-      __pyx_v_j = __pyx_t_4;
-
-      /* "gensim/_matutils.pyx":372
- * 
- *         for j in range(J):
- *             out[i, j] = _digamma(alpha[i, j]) - psi_sum_alpha             # <<<<<<<<<<<<<<
- */
-      __pyx_t_7 = __pyx_v_i;
-      __pyx_t_8 = __pyx_v_j;
-      __pyx_t_9 = __pyx_v_i;
-      __pyx_t_10 = __pyx_v_j;
-      *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_out.data + __pyx_t_9 * __pyx_v_out.strides[0]) ) + __pyx_t_10 * __pyx_v_out.strides[1]) )) = (__pyx_fuse_1__pyx_f_6gensim_9_matutils__digamma((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_alpha.data + __pyx_t_7 * __pyx_v_alpha.strides[0]) ) + __pyx_t_8 * __pyx_v_alpha.strides[1]) )))) - __pyx_v_psi_sum_alpha);
-    }
-  }
-
-  /* "gensim/_matutils.pyx":343
- * @cython.boundscheck(False)
- * @cython.wraparound(False)
- * cdef void _dirichlet_expectation_2d(DTYPE_t[:, :] alpha, DTYPE_t[:, :] out) nogil:             # <<<<<<<<<<<<<<
- *     """
- *     Expected value of log(theta) where theta is drawn from a Dirichlet distribution
- */
-
-  /* function exit code */
 }
 
 /* "../../../../../../usr/lib/python2.7/dist-packages/Cython/Includes/numpy/__init__.pxd":197
@@ -21033,10 +21035,10 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(0, 33, __pyx_L1_error)
-  __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(0, 163, __pyx_L1_error)
-  __pyx_builtin_zip = __Pyx_GetBuiltinName(__pyx_n_s_zip); if (!__pyx_builtin_zip) __PYX_ERR(0, 163, __pyx_L1_error)
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 264, __pyx_L1_error)
+  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(0, 31, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 68, __pyx_L1_error)
+  __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(0, 282, __pyx_L1_error)
+  __pyx_builtin_zip = __Pyx_GetBuiltinName(__pyx_n_s_zip); if (!__pyx_builtin_zip) __PYX_ERR(0, 282, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(1, 799, __pyx_L1_error)
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 989, __pyx_L1_error)
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(2, 146, __pyx_L1_error)
@@ -21053,34 +21055,34 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "gensim/_matutils.pyx":33
- * 
+  /* "gensim/_matutils.pyx":31
+ *     """
  *     if a.shape != b.shape:
  *         raise ValueError("a and b must have same shape")             # <<<<<<<<<<<<<<
  * 
  *     if a.dtype == np.float64:
  */
-  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_a_and_b_must_have_same_shape); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 33, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_a_and_b_must_have_same_shape); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 31, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "gensim/_matutils.pyx":163
+  /* "gensim/_matutils.pyx":282
  * 
  * 
  * def digamma(DTYPE_t x):             # <<<<<<<<<<<<<<
- *     """
- *     digamma(x):
+ *     """Digamma function for positive floats, using :func:`~gensim._matutils._digamma`.
+ * 
  */
-  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_kp_s__2); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_kp_s__2); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
-  __pyx_tuple__5 = PyTuple_Pack(1, __pyx_kp_s__4); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_tuple__5 = PyTuple_Pack(1, __pyx_kp_s__4); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
-  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_s_No_matching_signature_found); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_s_No_matching_signature_found); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__6);
   __Pyx_GIVEREF(__pyx_tuple__6);
-  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_s_Function_call_with_ambiguous_arg); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_s_Function_call_with_ambiguous_arg); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
 
@@ -21331,73 +21333,73 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  * 
  * def mean_absolute_difference(a, b):             # <<<<<<<<<<<<<<
- *     """
- *     mean_absolute_difference(a, b)
+ *     """Mean absolute difference between two arrays, using :func:`~gensim._matutils._mean_absolute_difference`.
+ * 
  */
   __pyx_tuple__30 = PyTuple_Pack(2, __pyx_n_s_a, __pyx_n_s_b); if (unlikely(!__pyx_tuple__30)) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__30);
   __Pyx_GIVEREF(__pyx_tuple__30);
   __pyx_codeobj__31 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__30, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim__matutils_pyx, __pyx_n_s_mean_absolute_difference, 14, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__31)) __PYX_ERR(0, 14, __pyx_L1_error)
 
-  /* "gensim/_matutils.pyx":43
+  /* "gensim/_matutils.pyx":75
  * 
  * 
  * def logsumexp(x):             # <<<<<<<<<<<<<<
- *     """
- *     logsumexp(x)
+ *     """Log of sum of exponentials, using :func:`~gensim._matutils._logsumexp_2d`.
+ * 
  */
-  __pyx_tuple__32 = PyTuple_Pack(1, __pyx_n_s_x); if (unlikely(!__pyx_tuple__32)) __PYX_ERR(0, 43, __pyx_L1_error)
+  __pyx_tuple__32 = PyTuple_Pack(1, __pyx_n_s_x); if (unlikely(!__pyx_tuple__32)) __PYX_ERR(0, 75, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__32);
   __Pyx_GIVEREF(__pyx_tuple__32);
-  __pyx_codeobj__33 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__32, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim__matutils_pyx, __pyx_n_s_logsumexp, 43, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__33)) __PYX_ERR(0, 43, __pyx_L1_error)
+  __pyx_codeobj__33 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__32, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim__matutils_pyx, __pyx_n_s_logsumexp, 75, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__33)) __PYX_ERR(0, 75, __pyx_L1_error)
 
-  /* "gensim/_matutils.pyx":73
+  /* "gensim/_matutils.pyx":142
  * 
  * 
  * def dirichlet_expectation(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils.dirichlet_expectation_1d` or :func:`~gensim._matutils.dirichlet_expectation_2d`.
  */
-  __pyx_tuple__34 = PyTuple_Pack(1, __pyx_n_s_alpha); if (unlikely(!__pyx_tuple__34)) __PYX_ERR(0, 73, __pyx_L1_error)
+  __pyx_tuple__34 = PyTuple_Pack(1, __pyx_n_s_alpha); if (unlikely(!__pyx_tuple__34)) __PYX_ERR(0, 142, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__34);
   __Pyx_GIVEREF(__pyx_tuple__34);
-  __pyx_codeobj__35 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__34, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim__matutils_pyx, __pyx_n_s_dirichlet_expectation, 73, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__35)) __PYX_ERR(0, 73, __pyx_L1_error)
+  __pyx_codeobj__35 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__34, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim__matutils_pyx, __pyx_n_s_dirichlet_expectation, 142, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__35)) __PYX_ERR(0, 142, __pyx_L1_error)
 
-  /* "gensim/_matutils.pyx":98
+  /* "gensim/_matutils.pyx":164
  * 
  * 
  * def dirichlet_expectation_2d(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation_2d(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils._dirichlet_expectation_2d`.
  */
-  __pyx_tuple__36 = PyTuple_Pack(2, __pyx_n_s_alpha, __pyx_n_s_out); if (unlikely(!__pyx_tuple__36)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __pyx_tuple__36 = PyTuple_Pack(2, __pyx_n_s_alpha, __pyx_n_s_out); if (unlikely(!__pyx_tuple__36)) __PYX_ERR(0, 164, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__36);
   __Pyx_GIVEREF(__pyx_tuple__36);
-  __pyx_codeobj__37 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__36, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim__matutils_pyx, __pyx_n_s_dirichlet_expectation_2d, 98, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__37)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __pyx_codeobj__37 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__36, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim__matutils_pyx, __pyx_n_s_dirichlet_expectation_2d, 164, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__37)) __PYX_ERR(0, 164, __pyx_L1_error)
 
-  /* "gensim/_matutils.pyx":131
+  /* "gensim/_matutils.pyx":194
  * 
  * 
  * def dirichlet_expectation_1d(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation_1d(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils._dirichlet_expectation_1d`.
  */
-  __pyx_tuple__38 = PyTuple_Pack(2, __pyx_n_s_alpha, __pyx_n_s_out); if (unlikely(!__pyx_tuple__38)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_tuple__38 = PyTuple_Pack(2, __pyx_n_s_alpha, __pyx_n_s_out); if (unlikely(!__pyx_tuple__38)) __PYX_ERR(0, 194, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__38);
   __Pyx_GIVEREF(__pyx_tuple__38);
-  __pyx_codeobj__39 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__38, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim__matutils_pyx, __pyx_n_s_dirichlet_expectation_1d, 131, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__39)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_codeobj__39 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__38, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim__matutils_pyx, __pyx_n_s_dirichlet_expectation_1d, 194, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__39)) __PYX_ERR(0, 194, __pyx_L1_error)
 
-  /* "gensim/_matutils.pyx":163
+  /* "gensim/_matutils.pyx":282
  * 
  * 
  * def digamma(DTYPE_t x):             # <<<<<<<<<<<<<<
- *     """
- *     digamma(x):
+ *     """Digamma function for positive floats, using :func:`~gensim._matutils._digamma`.
+ * 
  */
-  __pyx_tuple__40 = PyTuple_Pack(2, __pyx_n_s_x, __pyx_n_s_x); if (unlikely(!__pyx_tuple__40)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_tuple__40 = PyTuple_Pack(2, __pyx_n_s_x, __pyx_n_s_x); if (unlikely(!__pyx_tuple__40)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__40);
   __Pyx_GIVEREF(__pyx_tuple__40);
-  __pyx_codeobj__41 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__40, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim__matutils_pyx, __pyx_n_s_digamma, 163, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__41)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_codeobj__41 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__40, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim__matutils_pyx, __pyx_n_s_digamma, 282, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__41)) __PYX_ERR(0, 282, __pyx_L1_error)
 
   /* "View.MemoryView":282
  *         return self.name
@@ -21636,87 +21638,87 @@ PyMODINIT_FUNC PyInit__matutils(void)
  * 
  * 
  * def mean_absolute_difference(a, b):             # <<<<<<<<<<<<<<
- *     """
- *     mean_absolute_difference(a, b)
+ *     """Mean absolute difference between two arrays, using :func:`~gensim._matutils._mean_absolute_difference`.
+ * 
  */
   __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_9_matutils_1mean_absolute_difference, NULL, __pyx_n_s_gensim__matutils); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_mean_absolute_difference, __pyx_t_1) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/_matutils.pyx":43
+  /* "gensim/_matutils.pyx":75
  * 
  * 
  * def logsumexp(x):             # <<<<<<<<<<<<<<
- *     """
- *     logsumexp(x)
+ *     """Log of sum of exponentials, using :func:`~gensim._matutils._logsumexp_2d`.
+ * 
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_9_matutils_3logsumexp, NULL, __pyx_n_s_gensim__matutils); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 43, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_9_matutils_3logsumexp, NULL, __pyx_n_s_gensim__matutils); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 75, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_logsumexp, __pyx_t_1) < 0) __PYX_ERR(0, 43, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_logsumexp, __pyx_t_1) < 0) __PYX_ERR(0, 75, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/_matutils.pyx":73
+  /* "gensim/_matutils.pyx":142
  * 
  * 
  * def dirichlet_expectation(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils.dirichlet_expectation_1d` or :func:`~gensim._matutils.dirichlet_expectation_2d`.
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_9_matutils_5dirichlet_expectation, NULL, __pyx_n_s_gensim__matutils); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 73, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_9_matutils_5dirichlet_expectation, NULL, __pyx_n_s_gensim__matutils); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 142, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_dirichlet_expectation, __pyx_t_1) < 0) __PYX_ERR(0, 73, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_dirichlet_expectation, __pyx_t_1) < 0) __PYX_ERR(0, 142, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/_matutils.pyx":98
+  /* "gensim/_matutils.pyx":164
  * 
  * 
  * def dirichlet_expectation_2d(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation_2d(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils._dirichlet_expectation_2d`.
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_9_matutils_7dirichlet_expectation_2d, NULL, __pyx_n_s_gensim__matutils); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_9_matutils_7dirichlet_expectation_2d, NULL, __pyx_n_s_gensim__matutils); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 164, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_dirichlet_expectation_2d, __pyx_t_1) < 0) __PYX_ERR(0, 98, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_dirichlet_expectation_2d, __pyx_t_1) < 0) __PYX_ERR(0, 164, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/_matutils.pyx":131
+  /* "gensim/_matutils.pyx":194
  * 
  * 
  * def dirichlet_expectation_1d(alpha):             # <<<<<<<<<<<<<<
- *     """
- *     dirichlet_expectation_1d(alpha)
+ *     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+ *     Using :func:`~gensim._matutils._dirichlet_expectation_1d`.
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_9_matutils_9dirichlet_expectation_1d, NULL, __pyx_n_s_gensim__matutils); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_9_matutils_9dirichlet_expectation_1d, NULL, __pyx_n_s_gensim__matutils); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 194, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_dirichlet_expectation_1d, __pyx_t_1) < 0) __PYX_ERR(0, 131, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_dirichlet_expectation_1d, __pyx_t_1) < 0) __PYX_ERR(0, 194, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/_matutils.pyx":163
+  /* "gensim/_matutils.pyx":282
  * 
  * 
  * def digamma(DTYPE_t x):             # <<<<<<<<<<<<<<
- *     """
- *     digamma(x):
+ *     """Digamma function for positive floats, using :func:`~gensim._matutils._digamma`.
+ * 
  */
-  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_FusedFunction_NewEx(&__pyx_fuse_0__pyx_mdef_6gensim_9_matutils_13digamma, 0, __pyx_n_s_digamma, NULL, __pyx_n_s_gensim__matutils, __pyx_d, ((PyObject *)__pyx_codeobj__41)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_2 = __pyx_FusedFunction_NewEx(&__pyx_fuse_0__pyx_mdef_6gensim_9_matutils_13digamma, 0, __pyx_n_s_digamma, NULL, __pyx_n_s_gensim__matutils, __pyx_d, ((PyObject *)__pyx_codeobj__41)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_2, __pyx_empty_tuple);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_float, __pyx_t_2) < 0) __PYX_ERR(0, 163, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_float, __pyx_t_2) < 0) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __pyx_FusedFunction_NewEx(&__pyx_fuse_1__pyx_mdef_6gensim_9_matutils_15digamma, 0, __pyx_n_s_digamma, NULL, __pyx_n_s_gensim__matutils, __pyx_d, ((PyObject *)__pyx_codeobj__41)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_2 = __pyx_FusedFunction_NewEx(&__pyx_fuse_1__pyx_mdef_6gensim_9_matutils_15digamma, 0, __pyx_n_s_digamma, NULL, __pyx_n_s_gensim__matutils, __pyx_d, ((PyObject *)__pyx_codeobj__41)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_2, __pyx_empty_tuple);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_double, __pyx_t_2) < 0) __PYX_ERR(0, 163, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_double, __pyx_t_2) < 0) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __pyx_FusedFunction_NewEx(&__pyx_mdef_6gensim_9_matutils_11digamma, 0, __pyx_n_s_digamma, NULL, __pyx_n_s_gensim__matutils, __pyx_d, ((PyObject *)__pyx_codeobj__41)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_2 = __pyx_FusedFunction_NewEx(&__pyx_mdef_6gensim_9_matutils_11digamma, 0, __pyx_n_s_digamma, NULL, __pyx_n_s_gensim__matutils, __pyx_d, ((PyObject *)__pyx_codeobj__41)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_2, __pyx_empty_tuple);
   ((__pyx_FusedFunctionObject *) __pyx_t_2)->__signatures__ = __pyx_t_1;
   __Pyx_GIVEREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_digamma, __pyx_t_2) < 0) __PYX_ERR(0, 163, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_digamma, __pyx_t_2) < 0) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "gensim/_matutils.pyx":1
@@ -25460,6 +25462,28 @@ __pyx_capsule_create(void *p, CYTHON_UNUSED const char *sig)
     return cobj;
 }
 
+/* CIntFromPyVerify */
+                  #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
+    __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 0)
+#define __PYX_VERIFY_RETURN_INT_EXC(target_type, func_type, func_value)\
+    __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 1)
+#define __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, exc)\
+    {\
+        func_type value = func_value;\
+        if (sizeof(target_type) < sizeof(func_type)) {\
+            if (unlikely(value != (func_type) (target_type) value)) {\
+                func_type zero = 0;\
+                if (exc && unlikely(value == (func_type)-1 && PyErr_Occurred()))\
+                    return (target_type) -1;\
+                if (is_unsigned && unlikely(value < zero))\
+                    goto raise_neg_overflow;\
+                else\
+                    goto raise_overflow;\
+            }\
+        }\
+        return (target_type) value;\
+    }
+
 /* CIntToPy */
                   static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
     const long neg_one = (long) -1, const_zero = (long) 0;
@@ -25490,28 +25514,6 @@ __pyx_capsule_create(void *p, CYTHON_UNUSED const char *sig)
                                      little, !is_unsigned);
     }
 }
-
-/* CIntFromPyVerify */
-                  #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
-    __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 0)
-#define __PYX_VERIFY_RETURN_INT_EXC(target_type, func_type, func_value)\
-    __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 1)
-#define __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, exc)\
-    {\
-        func_type value = func_value;\
-        if (sizeof(target_type) < sizeof(func_type)) {\
-            if (unlikely(value != (func_type) (target_type) value)) {\
-                func_type zero = 0;\
-                if (exc && unlikely(value == (func_type)-1 && PyErr_Occurred()))\
-                    return (target_type) -1;\
-                if (is_unsigned && unlikely(value < zero))\
-                    goto raise_neg_overflow;\
-                else\
-                    goto raise_overflow;\
-            }\
-        }\
-        return (target_type) value;\
-    }
 
 /* Declarations */
                   #if CYTHON_CCOMPLEX
