@@ -42,7 +42,9 @@ from six.moves import xrange
 from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
-from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jensen_shannon
+from gensim.matutils import (kullback_leibler, hellinger, jaccard_distance,
+                             jensen_shannon, dirichlet_expectation,
+                             logsumexp, mean_absolute_difference)
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
 
@@ -54,27 +56,6 @@ DTYPE_TO_EPS = {
     np.float32: 1e-35,
     np.float64: 1e-100,
 }
-
-try:
-    # try to load fast, cythonized code if possible
-    from gensim.models.ldamodel_inner import (dirichlet_expectation_1d,
-                                              dirichlet_expectation_2d,
-                                              logsumexp,
-                                              mean_absolute_difference)
-    FAST_VERSION = 1
-    logger.info('Fast version of {} is being used'.format(__name__))
-
-except ImportError:
-    # else fall back to python/numpy
-    from gensim.matutils import (dirichlet_expectation,
-                                 logsumexp,
-                                 mean_absolute_difference)
-
-    dirichlet_expectation_1d = dirichlet_expectation
-    dirichlet_expectation_2d = dirichlet_expectation
-
-    FAST_VERSION = -1
-    logger.warning('Slow version of {} is being used'.format(__name__))
 
 
 def update_dir_prior(prior, N, logphat, rho):
@@ -188,7 +169,7 @@ class LdaState(utils.SaveLoad):
         return self.eta + self.sstats
 
     def get_Elogbeta(self):
-        return dirichlet_expectation_2d(self.get_lambda())
+        return dirichlet_expectation(self.get_lambda())
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
@@ -379,7 +360,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Initialize the variational distribution q(beta|lambda)
         self.state = LdaState(self.eta, (self.num_topics, self.num_terms), dtype=self.dtype)
         self.state.sstats[...] = self.random_state.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
-        self.expElogbeta = np.exp(dirichlet_expectation_2d(self.state.sstats))
+        self.expElogbeta = np.exp(dirichlet_expectation(self.state.sstats))
 
         # Check that we haven't accidentally fall back to np.float64
         assert self.eta.dtype == self.dtype
@@ -472,7 +453,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
         gamma = self.random_state.gamma(100., 1. / 100., (len(chunk), self.num_topics)).astype(self.dtype, copy=False)
-        Elogtheta = dirichlet_expectation_2d(gamma)
+        Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = np.exp(Elogtheta)
 
         assert Elogtheta.dtype == self.dtype
@@ -513,7 +494,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 # Substituting the value of the optimal phi back into
                 # the update for gamma gives this update. Cf. Lee&Seung 2001.
                 gammad = self.alpha + expElogthetad * np.dot(cts / phinorm, expElogbetad.T)
-                Elogthetad = dirichlet_expectation_1d(gammad)
+                Elogthetad = dirichlet_expectation(gammad)
                 expElogthetad = np.exp(Elogthetad)
                 phinorm = np.dot(expElogthetad, expElogbetad) + eps
                 # If gamma hasn't changed much, we're done.
@@ -562,7 +543,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         topic weights `alpha` given the last `gammat`.
         """
         N = float(len(gammat))
-        logphat = sum(dirichlet_expectation_1d(gamma) for gamma in gammat) / N
+        logphat = sum(dirichlet_expectation(gamma) for gamma in gammat) / N
         assert logphat.dtype == self.dtype
 
         self.alpha = update_dir_prior(self.alpha, N, logphat, rho)
@@ -577,7 +558,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         word weights `eta` given the last `lambdat`.
         """
         N = float(lambdat.shape[0])
-        logphat = (sum(dirichlet_expectation_1d(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
+        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
         assert logphat.dtype == self.dtype
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
@@ -828,7 +809,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         score = 0.0
         _lambda = self.state.get_lambda()
-        Elogbeta = dirichlet_expectation_2d(_lambda)
+        Elogbeta = dirichlet_expectation(_lambda)
 
         for d, doc in enumerate(corpus):  # stream the input doc-by-doc, in case it's too large to fit in RAM
             if d % self.chunksize == 0:
@@ -837,7 +818,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 gammad, _ = self.inference([doc])
             else:
                 gammad = gamma[d]
-            Elogthetad = dirichlet_expectation_2d(gammad)
+            Elogthetad = dirichlet_expectation(gammad)
 
             assert gammad.dtype == self.dtype
             assert Elogthetad.dtype == self.dtype
