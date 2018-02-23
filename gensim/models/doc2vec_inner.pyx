@@ -229,7 +229,7 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
                         word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int sample = (model.sample != 0)
+    cdef int sample = (model.vocabulary.sample != 0)
     cdef int _train_words = train_words
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
@@ -241,7 +241,7 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
     cdef REAL_t *_doctag_locks
     cdef REAL_t *_work
     cdef REAL_t _alpha = alpha
-    cdef int size = model.layer1_size
+    cdef int size = model.trainables.layer1_size
 
     cdef int codelens[MAX_DOCUMENT_LEN]
     cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
@@ -268,31 +268,31 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.wv.syn0
+       word_vectors = model.wv.vectors
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
-       doctag_vectors = model.docvecs.doctag_syn0
+       doctag_vectors = model.docvecs.vectors_docs
     _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
-       word_locks = model.syn0_lockf
+       word_locks = model.trainables.vectors_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
     if doctag_locks is None:
-       doctag_locks = model.docvecs.doctag_syn0_lockf
+       doctag_locks = model.trainables.vectors_docs_lockf
     _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
-        cum_table_len = len(model.cum_table)
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
-       work = zeros(model.layer1_size, dtype=REAL)
+       work = zeros(model.trainables.layer1_size, dtype=REAL)
     _work = <REAL_t *>np.PyArray_DATA(work)
 
     vlookup = model.wv.vocab
@@ -365,7 +365,7 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
                       word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int sample = (model.sample != 0)
+    cdef int sample = (model.vocabulary.sample != 0)
     cdef int _learn_doctags = learn_doctags
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
@@ -379,7 +379,7 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
     cdef REAL_t *_work
     cdef REAL_t *_neu1
     cdef REAL_t _alpha = alpha
-    cdef int size = model.layer1_size
+    cdef int size = model.trainables.layer1_size
 
     cdef int codelens[MAX_DOCUMENT_LEN]
     cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
@@ -403,36 +403,37 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
     cdef unsigned long long cum_table_len
     cdef unsigned long long next_random
 
+
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.wv.syn0
+        word_vectors = model.wv.vectors
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
-       doctag_vectors = model.docvecs.doctag_syn0
+        doctag_vectors = model.docvecs.vectors_docs
     _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
-       word_locks = model.syn0_lockf
+        word_locks = model.trainables.vectors_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
     if doctag_locks is None:
-       doctag_locks = model.docvecs.doctag_syn0_lockf
+        doctag_locks = model.trainables.vectors_docs_lockf
     _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
-        cum_table_len = len(model.cum_table)
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
-       work = zeros(model.layer1_size, dtype=REAL)
+       work = zeros(model.trainables.layer1_size, dtype=REAL)
     _work = <REAL_t *>np.PyArray_DATA(work)
     if neu1 is None:
-       neu1 = zeros(model.layer1_size, dtype=REAL)
+       neu1 = zeros(model.trainables.layer1_size, dtype=REAL)
     _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
 
     vlookup = model.wv.vocab
@@ -522,7 +523,7 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
                              word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int sample = (model.sample != 0)
+    cdef int sample = (model.vocabulary.sample != 0)
     cdef int _learn_doctags = learn_doctags
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
@@ -534,8 +535,8 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
     cdef REAL_t *_work
     cdef REAL_t *_neu1
     cdef REAL_t _alpha = alpha
-    cdef int layer1_size = model.layer1_size
-    cdef int vector_size = model.vector_size
+    cdef int layer1_size = model.trainables.layer1_size
+    cdef int vector_size = model.docvecs.vector_size
 
     cdef int codelens[MAX_DOCUMENT_LEN]
     cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
@@ -567,34 +568,34 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.wv.syn0
+       word_vectors = model.wv.vectors
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
-       doctag_vectors = model.docvecs.doctag_syn0
+       doctag_vectors = model.docvecs.vectors_docs
     _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
-       word_locks = model.syn0_lockf
+       word_locks = model.trainables.vectors_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
     if doctag_locks is None:
-       doctag_locks = model.docvecs.doctag_syn0_lockf
+       doctag_locks = model.trainables.vectors_docs_lockf
     _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
-        cum_table_len = len(model.cum_table)
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
-       work = zeros(model.layer1_size, dtype=REAL)
+       work = zeros(model.trainables.layer1_size, dtype=REAL)
     _work = <REAL_t *>np.PyArray_DATA(work)
     if neu1 is None:
-       neu1 = zeros(model.layer1_size, dtype=REAL)
+       neu1 = zeros(model.trainables.layer1_size, dtype=REAL)
     _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
 
     vlookup = model.wv.vocab

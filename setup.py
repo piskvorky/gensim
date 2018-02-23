@@ -244,7 +244,7 @@ linux_testenv = win_testenv + [
 
 setup(
     name='gensim',
-    version='3.2.0',
+    version='3.3.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -255,12 +255,13 @@ setup(
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
             include_dirs=[model_dir]),
+        Extension('gensim.corpora._mmreader',
+            sources=['./gensim/corpora/_mmreader.c']),
         Extension('gensim.models.fasttext_inner',
             sources=['./gensim/models/fasttext_inner.c'],
             include_dirs=[model_dir]),
         Extension('gensim.models.ldamodel_inner',
-            sources=['./gensim/models/ldamodel_inner.c'],
-            include_dirs=[model_dir]),
+            sources=['./gensim/models/ldamodel_inner.c']),
     ],
     cmdclass=cmdclass,
     packages=find_packages(),
@@ -270,6 +271,8 @@ setup(
 
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
+    
+    license='LGPLv2.1',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
         'LSA, LSI, Latent Dirichlet Allocation, LDA, '
@@ -309,7 +312,7 @@ setup(
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern'],
+        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern', 'sphinxcontrib.programoutput'],
     },
 
     include_package_data=True,

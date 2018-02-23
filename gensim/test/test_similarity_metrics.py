@@ -13,7 +13,7 @@ import logging
 import unittest
 
 from gensim import matutils
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, csc_matrix
 import numpy as np
 import math
 from gensim.corpora.mmcorpus import MmCorpus
@@ -81,7 +81,6 @@ class TestHellinger(unittest.TestCase):
         self.model = self.class_(common_corpus, id2word=common_dictionary, num_topics=2, passes=100)
 
     def test_inputs(self):
-
         # checking empty inputs
         vec_1 = []
         vec_2 = []
@@ -104,13 +103,21 @@ class TestHellinger(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test_distributions(self):
-
-        # checking bag of words as inputs
+        # checking different length bag of words as inputs
         vec_1 = [(2, 0.1), (3, 0.4), (4, 0.1), (5, 0.1), (1, 0.1), (7, 0.2)]
         vec_2 = [(1, 0.1), (3, 0.8), (4, 0.1)]
         result = matutils.hellinger(vec_1, vec_2)
-        expected = 0.185241936534
+        expected = 0.484060507634
         self.assertAlmostEqual(expected, result)
+
+        # checking symmetrical bag of words inputs return same distance
+        vec_1 = [(2, 0.1), (3, 0.4), (4, 0.1), (5, 0.1), (1, 0.1), (7, 0.2)]
+        vec_2 = [(1, 0.1), (3, 0.8), (4, 0.1), (8, 0.1), (10, 0.8), (9, 0.1)]
+        result = matutils.hellinger(vec_1, vec_2)
+        result_symmetric = matutils.hellinger(vec_2, vec_1)
+        expected = 0.856921568786
+        self.assertAlmostEqual(expected, result)
+        self.assertAlmostEqual(expected, result_symmetric)
 
         # checking ndarray, csr_matrix as inputs
         vec_1 = np.array([[1, 0.3], [0, 0.4], [2, 0.3]])
@@ -166,7 +173,6 @@ class TestKL(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test_distributions(self):
-
         # checking bag of words as inputs
         vec_1 = [(2, 0.1), (3, 0.4), (4, 0.1), (5, 0.1), (1, 0.1), (7, 0.2)]
         vec_2 = [(1, 0.1), (3, 0.8), (4, 0.1)]
@@ -206,14 +212,12 @@ class TestKL(unittest.TestCase):
 
 class TestJaccard(unittest.TestCase):
     def test_inputs(self):
-
         # all empty inputs will give a divide by zero exception
         vec_1 = []
         vec_2 = []
         self.assertRaises(ZeroDivisionError, matutils.jaccard, vec_1, vec_2)
 
     def test_distributions(self):
-
         # checking bag of words as inputs
         vec_1 = [(2, 1), (3, 4), (4, 1), (5, 1), (1, 1), (7, 2)]
         vec_2 = [(1, 1), (3, 8), (4, 1)]
@@ -233,6 +237,36 @@ class TestJaccard(unittest.TestCase):
         vec_2 = [4, 3, 2, 5]
         result = matutils.jaccard(vec_1, vec_2)
         expected = 1 - 0.333333333333
+        self.assertAlmostEqual(expected, result)
+
+
+class TestSoftCosineSimilarity(unittest.TestCase):
+    def test_inputs(self):
+        # checking empty inputs
+        vec_1 = []
+        vec_2 = []
+        similarity_matrix = csc_matrix((0, 0))
+        result = matutils.softcossim(vec_1, vec_2, similarity_matrix)
+        expected = 0.0
+        self.assertEqual(expected, result)
+
+        # checking CSR term similarity matrix format
+        similarity_matrix = csr_matrix((0, 0))
+        result = matutils.softcossim(vec_1, vec_2, similarity_matrix)
+        expected = 0.0
+        self.assertEqual(expected, result)
+
+        # checking unknown term similarity matrix format
+        with self.assertRaises(ValueError):
+            matutils.softcossim(vec_1, vec_2, np.matrix([]))
+
+    def test_distributions(self):
+        # checking bag of words as inputs
+        vec_1 = [(0, 1.0), (2, 1.0)]  # hello world
+        vec_2 = [(1, 1.0), (2, 1.0)]  # hi world
+        similarity_matrix = csc_matrix([[1, 0.5, 0], [0.5, 1, 0], [0, 0, 1]])
+        result = matutils.softcossim(vec_1, vec_2, similarity_matrix)
+        expected = 0.75
         self.assertAlmostEqual(expected, result)
 
 
