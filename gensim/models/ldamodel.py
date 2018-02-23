@@ -28,8 +28,6 @@ The algorithm:
 .. [1] http://www.cs.princeton.edu/~mdhoffma
 
 """
-
-
 import logging
 import numbers
 import os
@@ -42,9 +40,10 @@ from six.moves import xrange
 from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
-from gensim.matutils import (kullback_leibler, hellinger, jaccard_distance,
-                             jensen_shannon, dirichlet_expectation,
-                             logsumexp, mean_absolute_difference)
+from gensim.matutils import (
+    kullback_leibler, hellinger, jaccard_distance, jensen_shannon,
+    dirichlet_expectation, logsumexp, mean_absolute_difference
+)
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
 

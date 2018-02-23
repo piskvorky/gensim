@@ -1098,6 +1098,7 @@ except ImportError:
 
     def dirichlet_expectation(alpha):
         """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
+
         Parameters
         ----------
         alpha : numpy.ndarray
