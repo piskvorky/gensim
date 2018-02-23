@@ -964,16 +964,15 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 class WmdSimilarity(interfaces.SimilarityABC):
     """Compute negative WMD similarity against a corpus of documents by storing the index matrix in memory.
 
-    Notes
-    -----
+
     See :class:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors` for more information.
-    # See Tutorial Notebook for more examples:
-    `<https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`
+    Also, tutorial `notebook
+    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`_ for more examples.
 
     When using this code, please consider citing the following papers:
     `Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching"
     <http://www.cs.huji.ac.il/~werman/Papers/ECCV2008.pdf>`_, `Ofir Pele and Michael Werman, "Fast and robust earth
-    mover's distances" <http://www.cs.huji.ac.il/~werman/Papers/ICCV2009.pdf>`_, "Matt Kusner et al. "From Word
+    mover's distances" <http://www.cs.huji.ac.il/~werman/Papers/ICCV2009.pdf>`_, `"Matt Kusner et al. "From Word
     Embeddings To Document Distances" <http://proceedings.mlr.press/v37/kusnerb15.pdf>`_.
 
     Example
@@ -1124,7 +1123,8 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         dtype : numpy.dtype, optional
             Data type of internal matrix.
         maintain_sparsity : bool, optional
-            if True - will return sparse arr from :meth:`~gensim.similarities.docsim.SparseSimilarity.get_similarities`.
+            if True - will return sparse arr from
+            :meth:`~gensim.similarities.docsim.SparseMatrixSimilarity.get_similarities`.
 
         """
 
