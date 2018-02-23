@@ -141,7 +141,7 @@ def file_or_filename(input):
 
 @contextmanager
 def open_file(input):
-    """ Generates 'with' like behaviour except closing the file object
+    """Provide "with-like" behaviour except closing the file object.
 
     Parameters
     ----------
@@ -150,8 +150,8 @@ def open_file(input):
 
     Yields
     -------
-    str
-        lines from the given file-like object or a new file-like object from the given filename.
+    file
+        File-like object based on input (or input if this already file-like).
 
     """
     mgr = file_or_filename(input)
