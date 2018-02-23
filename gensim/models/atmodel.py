@@ -940,7 +940,11 @@ class AuthorTopicModel(LdaModel):
         """
         # TODO: how should this function look like for get_new_author_topics?
         def rho():
+<<<<<<< Updated upstream
             return pow(self.offset + 1 + 1, -self.decay)
+=======
+            return pow(self.offset + 1, -self.decay)
+>>>>>>> Stashed changes
 
         # Wrap in fuction to avoid code duplication.
         def rollback_new_author_chages():
