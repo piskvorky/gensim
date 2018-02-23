@@ -82,10 +82,10 @@ except ImportError:
 
 
 class Shard(utils.SaveLoad):
-    """A proxy class that represents a single shard instance within :class:`~gensim.similarity.docsim.Similarity` index.
+    """A proxy that represents a single shard instance within :class:`~gensim.similarity.docsim.Similarity` index.
 
-    Basically just wraps (Sparse)MatrixSimilarity so that it mmaps from disk on
-    request (query).
+    Basically just wraps :class:`~gensim.similarities.docsim.MatrixSimilarity`,
+    :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`, etc, so that it mmaps from disk on request (query).
 
     """
 
@@ -95,7 +95,8 @@ class Shard(utils.SaveLoad):
         ----------
         fname : str
             Path to top-level directory (file) to traverse for corpus documents.
-        index : TODO What is this?
+        index : :class:`~gensim.interfaces.SimilarityABC`
+            Index object.
 
         """
         self.dirname, self.fname = os.path.split(fname)
@@ -106,19 +107,29 @@ class Shard(utils.SaveLoad):
         self.index = self.get_index()
 
     def fullname(self):
-        """Get full path to shard instance.
+        """Get full path to shard file.
 
         Return
         ------
         str
             Path to shard instance.
+
         """
         return os.path.join(self.dirname, self.fname)
 
     def __len__(self):
+        """Get length."""
         return self.length
 
     def __getstate__(self):
+        """Special handler for pickle.
+
+        Returns
+        -------
+        dict
+            Object that contains state of current instance without `index`.
+
+        """
         result = self.__dict__.copy()
         # (S)MS objects must be loaded via load() because of mmap (simple pickle.load won't do)
         if 'index' in result:
@@ -129,14 +140,21 @@ class Shard(utils.SaveLoad):
         return "%s Shard(%i documents in %s)" % (self.cls.__name__, len(self), self.fullname())
 
     def get_index(self):
-        """Load index from shard instance path. TODO: Better check it out."""
+        """Load & get index.
+
+        Returns
+        -------
+        :class:`~gensim.interfaces.SimilarityABC`
+            Index instance.
+
+        """
         if not hasattr(self, 'index'):
             logger.debug("mmaping index from %s", self.fullname())
             self.index = self.cls.load(self.fullname(), mmap='r')
         return self.index
 
     def get_document_id(self, pos):
-        """Return index vector at position `pos`.
+        """Get index vector at position `pos`.
 
         Parameters
         ----------
@@ -160,6 +178,21 @@ class Shard(utils.SaveLoad):
         return self.get_index().index[pos]
 
     def __getitem__(self, query):
+        """Get similarities of document (or corpus) `query` to all documents in the corpus.
+
+        Parameters
+        ----------
+        query : {iterable of list of (int, number) , list of (int, number))}
+            Document or corpus.
+
+        Returns
+        -------
+        :class:`~numpy.ndarray`
+            Similarities of document/corpus if index is :class:`~gensim.similarities.docsim.MatrixSimilarity` **or**
+        :class:`~scipy.sparse.csr_matrix`
+            for case if index is :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`.
+
+        """
         index = self.get_index()
         try:
             index.num_best = self.num_best
