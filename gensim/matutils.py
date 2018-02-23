@@ -1051,29 +1051,27 @@ def jaccard_distance(set1, set2):
 
 try:
     # try to load fast, cythonized code if possible
-    from gensim._matutils import (logsumexp, mean_absolute_difference,
-                                  dirichlet_expectation)
+    from gensim._matutils import logsumexp, mean_absolute_difference, dirichlet_expectation
+
 except ImportError:
     def logsumexp(x):
-        """
-        Log of sum of exponentials
+        """Log of sum of exponentials.
 
         Parameters
         ----------
-        x : (M, N) array_like
+        x : numpy.ndarray
+            Input 2d matrix.
 
         Returns
         -------
         float
-            log of sum of exponentials of elements in `x`
+            log of sum of exponentials of elements in `x`.
 
-        Notes
-        -----
-            for performance, does not support NaNs or > 1d arrays like
-            scipy.special.logsumexp()
+        Warnings
+        --------
+        By performance reasons, doesn't support NaNs or 1d, 3d, etc arrays like :func:`scipy.special.logsumexp`.
 
         """
-
         x_max = np.max(x)
         x = np.log(np.sum(np.exp(x - x_max)))
         x += x_max
@@ -1081,36 +1079,34 @@ except ImportError:
         return x
 
     def mean_absolute_difference(a, b):
-        """
-        Mean absolute difference between two arrays
+        """Mean absolute difference between two arrays.
 
         Parameters
         ----------
-        a : (M,) array_like of float32
-        b : (M,) array_like of float32
+        a : numpy.ndarray
+            Input 1d array.
+        b : numpy.ndarray
+            Input 1d array.
 
         Returns
         -------
         float
-            mean(abs(a - b))
+            mean(abs(a - b)).
 
         """
         return np.mean(np.abs(a - b))
 
     def dirichlet_expectation(alpha):
-        """
-        Expected value of log(theta) where theta is drawn from a Dirichlet distribution
-
+        """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
         Parameters
         ----------
-        alpha : (M, N) array_like or (M,) array_like
-            Dirichlet parameter vector.
-            If (M, N), each row is treated as a separate parameter vector
+        alpha : numpy.ndarray
+            Dirichlet parameter 2d matrix or 1d vector, if 2d - each row is treated as a separate parameter vector.
 
         Returns
         -------
-        (M, N) array_like or (M,) array_like
-            log of expected values
+        numpy.ndarray
+            Log of expected values, dimension same as `alpha.ndim`.
 
         """
         if len(alpha.shape) == 1:

@@ -87,7 +87,7 @@ def logsumexp(x):
 
     Warnings
     --------
-    By performance reasons, doesn't support NaNs or 1d, 3d, etc arrays like scipy.special.logsumexp.
+    By performance reasons, doesn't support NaNs or 1d, 3d, etc arrays like :func:`scipy.special.logsumexp`.
 
     """
 

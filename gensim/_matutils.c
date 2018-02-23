@@ -2946,7 +2946,7 @@ static double __pyx_fuse_1__pyx_f_6gensim_9_matutils__mean_absolute_difference(_
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6gensim_9_matutils_3logsumexp(PyObject *__pyx_self, PyObject *__pyx_v_x); /*proto*/
-static char __pyx_doc_6gensim_9_matutils_2logsumexp[] = "logsumexp(x)\nLog of sum of exponentials, using :func:`~gensim._matutils._logsumexp_2d`.\n\n    Parameters\n    ----------\n    x : numpy.ndarray\n        Input 2d matrix, supports float16, float32 and float64.\n\n    Returns\n    -------\n    float\n        log of sum of exponentials of elements in `x`.\n\n    Warnings\n    --------\n    By performance reasons, doesn't support NaNs or 1d, 3d, etc arrays like scipy.special.logsumexp.\n\n    ";
+static char __pyx_doc_6gensim_9_matutils_2logsumexp[] = "logsumexp(x)\nLog of sum of exponentials, using :func:`~gensim._matutils._logsumexp_2d`.\n\n    Parameters\n    ----------\n    x : numpy.ndarray\n        Input 2d matrix, supports float16, float32 and float64.\n\n    Returns\n    -------\n    float\n        log of sum of exponentials of elements in `x`.\n\n    Warnings\n    --------\n    By performance reasons, doesn't support NaNs or 1d, 3d, etc arrays like :func:`scipy.special.logsumexp`.\n\n    ";
 static PyMethodDef __pyx_mdef_6gensim_9_matutils_3logsumexp = {"logsumexp", (PyCFunction)__pyx_pw_6gensim_9_matutils_3logsumexp, METH_O, __pyx_doc_6gensim_9_matutils_2logsumexp};
 static PyObject *__pyx_pw_6gensim_9_matutils_3logsumexp(PyObject *__pyx_self, PyObject *__pyx_v_x) {
   PyObject *__pyx_r = 0;
