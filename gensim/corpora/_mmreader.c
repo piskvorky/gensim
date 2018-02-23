@@ -1329,6 +1329,7 @@ static const char __pyx_k_pyx_type[] = "__pyx_type";
 static const char __pyx_k_setstate[] = "__setstate__";
 static const char __pyx_k_enumerate[] = "enumerate";
 static const char __pyx_k_getLogger[] = "getLogger";
+static const char __pyx_k_open_file[] = "open_file";
 static const char __pyx_k_pyx_state[] = "__pyx_state";
 static const char __pyx_k_reduce_ex[] = "__reduce_ex__";
 static const char __pyx_k_six_moves[] = "six.moves";
@@ -1400,6 +1401,7 @@ static PyObject *__pyx_kp_s_matrix_columns_must_come_in_asce;
 static PyObject *__pyx_kp_s_matrixmarket_matrix_coordinate;
 static PyObject *__pyx_n_s_name;
 static PyObject *__pyx_n_s_new;
+static PyObject *__pyx_n_s_open_file;
 static PyObject *__pyx_n_s_pickle;
 static PyObject *__pyx_n_s_pyx_PickleError;
 static PyObject *__pyx_n_s_pyx_checksum;
@@ -1766,7 +1768,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
  *         """
  *         logger.info("initializing cython corpus reader from %s", input)             # <<<<<<<<<<<<<<
  *         self.input, self.transposed = input, transposed
- *         with utils.file_or_filename(self.input) as lines:
+ *         with utils.open_file(self.input) as lines:
  */
   __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_logger); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 58, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -1824,7 +1826,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
  *         """
  *         logger.info("initializing cython corpus reader from %s", input)
  *         self.input, self.transposed = input, transposed             # <<<<<<<<<<<<<<
- *         with utils.file_or_filename(self.input) as lines:
+ *         with utils.open_file(self.input) as lines:
  *             try:
  */
   __pyx_t_1 = __pyx_v_input;
@@ -1840,14 +1842,14 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
   /* "gensim/corpora/_mmreader.pyx":60
  *         logger.info("initializing cython corpus reader from %s", input)
  *         self.input, self.transposed = input, transposed
- *         with utils.file_or_filename(self.input) as lines:             # <<<<<<<<<<<<<<
+ *         with utils.open_file(self.input) as lines:             # <<<<<<<<<<<<<<
  *             try:
  *                 header = utils.to_unicode(next(lines)).strip()
  */
   /*with:*/ {
     __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_utils); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 60, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_file_or_filename); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 60, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_open_file); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 60, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_3 = NULL;
@@ -1932,7 +1934,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
 
           /* "gensim/corpora/_mmreader.pyx":61
  *         self.input, self.transposed = input, transposed
- *         with utils.file_or_filename(self.input) as lines:
+ *         with utils.open_file(self.input) as lines:
  *             try:             # <<<<<<<<<<<<<<
  *                 header = utils.to_unicode(next(lines)).strip()
  *                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
@@ -1947,7 +1949,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
             /*try:*/ {
 
               /* "gensim/corpora/_mmreader.pyx":62
- *         with utils.file_or_filename(self.input) as lines:
+ *         with utils.open_file(self.input) as lines:
  *             try:
  *                 header = utils.to_unicode(next(lines)).strip()             # <<<<<<<<<<<<<<
  *                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
@@ -2125,7 +2127,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
 
               /* "gensim/corpora/_mmreader.pyx":61
  *         self.input, self.transposed = input, transposed
- *         with utils.file_or_filename(self.input) as lines:
+ *         with utils.open_file(self.input) as lines:
  *             try:             # <<<<<<<<<<<<<<
  *                 header = utils.to_unicode(next(lines)).strip()
  *                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
@@ -2160,7 +2162,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
 
             /* "gensim/corpora/_mmreader.pyx":61
  *         self.input, self.transposed = input, transposed
- *         with utils.file_or_filename(self.input) as lines:
+ *         with utils.open_file(self.input) as lines:
  *             try:             # <<<<<<<<<<<<<<
  *                 header = utils.to_unicode(next(lines)).strip()
  *                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
@@ -2466,7 +2468,7 @@ static int __pyx_pf_6gensim_7corpora_9_mmreader_8MmReader___init__(struct __pyx_
           /* "gensim/corpora/_mmreader.pyx":60
  *         logger.info("initializing cython corpus reader from %s", input)
  *         self.input, self.transposed = input, transposed
- *         with utils.file_or_filename(self.input) as lines:             # <<<<<<<<<<<<<<
+ *         with utils.open_file(self.input) as lines:             # <<<<<<<<<<<<<<
  *             try:
  *                 header = utils.to_unicode(next(lines)).strip()
  */
@@ -6553,6 +6555,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_matrixmarket_matrix_coordinate, __pyx_k_matrixmarket_matrix_coordinate, sizeof(__pyx_k_matrixmarket_matrix_coordinate), 0, 0, 1, 0},
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
   {&__pyx_n_s_new, __pyx_k_new, sizeof(__pyx_k_new), 0, 0, 1, 1},
+  {&__pyx_n_s_open_file, __pyx_k_open_file, sizeof(__pyx_k_open_file), 0, 0, 1, 1},
   {&__pyx_n_s_pickle, __pyx_k_pickle, sizeof(__pyx_k_pickle), 0, 0, 1, 1},
   {&__pyx_n_s_pyx_PickleError, __pyx_k_pyx_PickleError, sizeof(__pyx_k_pyx_PickleError), 0, 0, 1, 1},
   {&__pyx_n_s_pyx_checksum, __pyx_k_pyx_checksum, sizeof(__pyx_k_pyx_checksum), 0, 0, 1, 1},
@@ -6624,7 +6627,7 @@ static int __Pyx_InitCachedConstants(void) {
   /* "gensim/corpora/_mmreader.pyx":60
  *         logger.info("initializing cython corpus reader from %s", input)
  *         self.input, self.transposed = input, transposed
- *         with utils.file_or_filename(self.input) as lines:             # <<<<<<<<<<<<<<
+ *         with utils.open_file(self.input) as lines:             # <<<<<<<<<<<<<<
  *             try:
  *                 header = utils.to_unicode(next(lines)).strip()
  */

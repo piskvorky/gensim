@@ -57,7 +57,7 @@ cdef class MmReader(object):
         """
         logger.info("initializing cython corpus reader from %s", input)
         self.input, self.transposed = input, transposed
-        with utils.file_or_filename(self.input) as lines:
+        with utils.open_file(self.input) as lines:
             try:
                 header = utils.to_unicode(next(lines)).strip()
                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
