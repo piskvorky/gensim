@@ -796,6 +796,327 @@ var LDAvis = function(to_select, data_or_file_name) {
 		}
 
 
+		//////////////////////////////////////////////////////////////////////////////
+
+		// function to update topic/word plot when a doc is selected
+		// the circle argument should be the appropriate circle element
+		function doc_on(circle) {
+			if (circle == null) return null;
+
+			// grab data bound to this element
+			var d = circle.__data__;
+			var doc_index = d.index;
+
+			// change opacity and fill of the selected circle
+			circle.style.opacity = highlight_opacity;
+			circle.style.fill = color2;
+
+
+			// word interactions
+
+			// grab the word-plot data for this doc only:
+			var dat1 = doc_word_info.filter(function(d) {
+				return d.Doc == doc_index;
+			});
+
+			var w = dat1.length; // number of words for this doc
+
+			// freq depicted using color intensity rather than radius  (T = total vocab)
+			var word_radius = [];
+			for (var i = 0; i < W; ++i) {
+				word_radius[i] = 0;
+			}
+			for (i = 0; i < w; i++) {
+				word_radius[dat1[i].Word-1] = dat1[i].Freq;
+			}
+
+			// Change color of bubbles according to the doc's distribution over words
+			d3.selectAll(to_select + " .worddot")
+				.data(word_radius)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleCond(d));
+					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			// re-bind mdsData so we can handle multiple selection
+			d3.selectAll(to_select + " .worddot")
+				.data(wordMdsData);
+
+
+			// topic interactions
+
+			var dat2 = doc_topic_info.filter(function(d) {
+				return d.Doc == doc_index;
+			});
+
+			var t = dat2.length; // number of topics for this doc
+
+			var topic_radius = [];
+			for (var i = 0; i < T; ++i) {
+				topic_radius[i] = 0;
+			}
+			for (i = 0; i < t; i++) {
+				topic_radius[dat2[i].Topic-1] = dat2[i].Freq;
+			}
+
+			// Change color of bubbles according to the doc's distribution over topics
+			d3.selectAll(to_select + " .topicdot")
+				.data(topic_radius)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleCond(d));
+					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			// re-bind mdsData so we can handle multiple selection
+			d3.selectAll(to_select + " .topicdot")
+				.data(topicMdsData);
+
+		}
+
+		// function to update doc/word plot when a topic is selected
+		// the circle argument should be the appropriate circle element
+		function topic_on(circle) {
+			if (circle == null) return null;
+
+			// grab data bound to this element
+			var d = circle.__data__;
+			var topic_index = d.index;
+
+			// change opacity and fill of the selected circle
+			circle.style.opacity = highlight_opacity;
+			circle.style.fill = color2;
+
+			// doc interactions
+
+			// grab the doc-plot data for this topic only:
+			var dat1 = topic_doc_info.filter(function(d) {
+				return d.Topic == topic_index;
+			});
+
+			var dd = dat1.length; // number of docs for this topic
+
+			// freq depicted using color intensity rather than radius  (T = total vocab)
+			var doc_radius = [];
+			for (var i = 0; i < D; ++i) {
+				doc_radius[i] = 0;
+			}
+			for (i = 0; i < dd; i++) {
+				doc_radius[dat1[i].Doc-1] = dat1[i].Freq;
+			}
+
+			d3.selectAll(to_select + " .docdot")
+				.data(doc_radius)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleCond(d));
+					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			// re-bind mdsData so we can handle multiple selection
+			d3.selectAll(to_select + " .docdot")
+				.data(docMdsData);
+
+
+			// word interactions
+
+			var dat2 = topic_word_info.filter(function(d) {
+				return d.Topic == topic_index;
+			});
+
+			var w = dat2.length; // number of words for this topic
+
+			var word_radius = [];
+			for (var i = 0; i < T; ++i) {
+				word_radius[i] = 0;
+			}
+			for (i = 0; i < w; i++) {
+				word_radius[dat2[i].Word-1] = dat2[i].Freq;
+			}
+
+			// Change color of bubbles according to the topic's distribution over word
+			d3.selectAll(to_select + " .worddot")
+				.data(word_radius)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleCond(d));
+					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			// re-bind mdsData so we can handle multiple selection
+			d3.selectAll(to_select + " .worddot")
+				.data(wordMdsData);
+
+		}
+
+
+		// function to update doc/topic plot when a word is selected
+		// the circle argument should be the appropriate circle element
+		function word_on(circle) {
+			if (circle == null) return null;
+
+			// grab data bound to this element
+			var d = circle.__data__;
+			var word_index = d.index;
+
+			// change opacity and fill of the selected circle
+			circle.style.opacity = highlight_opacity;
+			circle.style.fill = color2;
+
+			// doc interactions
+
+			// grab the doc-plot data for this word only:
+			var dat1 = word_doc_info.filter(function(d) {
+				return d.Word == word_index;
+			});
+			
+
+			var dd = dat1.length; // number of docs for this word
+
+			// freq depicted using color intensity rather than radius  (T = total vocab)
+			var doc_radius = [];
+			for (var i = 0; i < D; ++i) {
+				doc_radius[i] = 0;
+			}
+			for (i = 0; i < dd; i++) {
+				// add 1 to escape circle disappearence case when Freq is 0
+				doc_radius[dat1[i].Doc-1] = dat1[i].Freq;
+			}
+
+
+			// Change color of bubbles according to the word's distribution over docs
+
+			d3.selectAll(to_select + " .docdot")
+				.data(doc_radius)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleCond(d));
+					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			// re-bind mdsData so we can handle multiple selection
+			d3.selectAll(to_select + " .docdot")
+				.data(docMdsData);
+
+			// topic interactions
+			// grab the topic-plot data for this word only:
+			var dat2 = word_topic_info.filter(function(d) {
+				return d.Word == word_index;
+			});
+
+			var t = dat2.length; // number of topics for this word
+
+			var topic_radius = [];
+			for (var i = 0; i < T; ++i) {
+				topic_radius[i] = 0;
+			}
+			for (i = 0; i < t; i++) {
+				topic_radius[dat2[i].Topic-1] = dat2[i].Freq;
+			}
+
+			// Change color of bubbles according to the doc's distribution over topics]
+			d3.selectAll(to_select + " .topicdot")
+				.data(topic_radius)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleCond(d));
+					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			// re-bind mdsData so we can handle multiple selection
+			d3.selectAll(to_select + " .topicdot")
+				.data(topicMdsData);
+
+		}
+
+		function doc_off(circle) {
+			if (circle == null) return circle;
+			// go back to original opacity/fill
+			circle.style.opacity = base_opacity;
+			circle.style.fill = color1;
+
+			d3.selectAll(to_select + " .topicdot")
+				.data(topicMdsData)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleMargin(+d.Freq));
+					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			d3.selectAll(to_select + " .worddot")
+				.data(wordMdsData)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleMargin(+d.Freq));
+					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			// // Change sizes of topic numbers:
+			// d3.selectAll(to_select + " .txt")
+			//     .transition()
+			//     .style("font-size", "11px");
+
+		}
+
+		function topic_off(circle) {
+			if (circle == null) return circle;
+			// go back to original opacity/fill
+			circle.style.opacity = base_opacity;
+			circle.style.fill = color1;
+
+			d3.selectAll(to_select + " .docdot")
+				.data(docMdsData)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleMargin(+d.Freq));
+					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			d3.selectAll(to_select + " .worddot")
+				.data(wordMdsData)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleMargin(+d.Freq));
+					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			// // Change sizes of topic numbers:
+			// d3.selectAll(to_select + " .txt")
+			//     .transition()
+			//     .style("font-size", "11px");
+
+		}
+
+		function word_off(circle) {
+			if (circle == null) return circle;
+			// go back to original opacity/fill
+			circle.style.opacity = base_opacity;
+			circle.style.fill = color1;
+
+			d3.selectAll(to_select + " .docdot")
+				.data(docMdsData)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleMargin(+d.Freq));
+					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			d3.selectAll(to_select + " .topicdot")
+				.data(topicMdsData)
+				.transition()
+				.attr("r", function(d) {
+					//return (rScaleMargin(+d.Freq));
+					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+				});
+
+			// // Change sizes of topic numbers:
+			// d3.selectAll(to_select + " .txt")
+			//     .transition()
+			//     .style("font-size", "11px");
+
+		}
+
 		// serialize the visualization state using fragment identifiers -- http://en.wikipedia.org/wiki/Fragment_identifier
 		// location.hash holds the address information
 
