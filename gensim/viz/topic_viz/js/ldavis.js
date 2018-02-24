@@ -225,6 +225,27 @@ var LDAvis = function(to_select, data_or_file_name) {
 				var doc_to_show = document.getElementById(docID + vis_state.doc);
 				var doc_to_show_data = doc_to_show.__data__;
 
+				var dic_text_div = docs_text_tooltip.append("g")
+				.attr("transform", "translate(0, 0)")
+				// docs_text_tooltip.append("div")
+				.text(doc_to_show_data.doc_texts)
+				// .style("position", "fixed")
+				.style("left", "8px")
+				.style("padding", "5px")
+				.style("width", 1*mdswidth + "px")
+				.style("height", mdsheight)
+				// .style("top", margin.top + 20 + "px")
+				// .style("z-index", "100")
+				.style("background", "white")
+				.style("border-radius", "10px")
+				.style("overflow-y", "scroll")
+				.style("font-family", "sans-serif")
+				.style("-webkit-scrollbar-track","background: none;")
+				.style("-webkit-scrollbar", "width: 10px;")
+				.style("-webkit-scrollbar", "height: 10px;")
+				.style("-webkit-scrollbar-thumb", "background: #ccc;")
+				.style("-webkit-scrollbar-thumb", "border-radius: 5px;");
+				// .style("visibility", "visible");
 
 				docs_text_tooltip.transition()
 				.duration(500)
@@ -376,6 +397,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 					.range([mdsheight, 0])
 					.domain([word_yrange[0] - word_ypad * word_ydiff, word_yrange[1] + word_ypad * word_ydiff]);
 		}
+
 
 
 		// dynamically create the doc/topic/word input forms at the top of the page
