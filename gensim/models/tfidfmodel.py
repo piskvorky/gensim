@@ -27,7 +27,7 @@ def resolve_weights(smartirs):
         Information Retrieval System, a mnemonic scheme for denoting tf-idf weighting
         variants in the vector space model. The mnemonic for representing a combination
         of weights takes the form ddd, where the letters represents the term weighting of the document vector.
-        for more information visit [1].
+        for more information visit `SMART_Information_Retrieval_System <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`.
 
     Returns
     -------
