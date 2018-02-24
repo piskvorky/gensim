@@ -31,7 +31,9 @@ Integrate with sklearn Pipelines:
 
     >>> # Fit our pipeline to some corpus
     >>> corpus = [id2word.doc2bow(i.split()) for i in data.data]
-    >>> fitted_pipeline = pipe.fit(corpus, data.target)
+
+    >>> # How well does our pipeline perform on the training set?
+    >>> score = pipe.fit(corpus, data.target).score(corpus, data.target)
 
 """
 
