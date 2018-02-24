@@ -1543,7 +1543,7 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None
 
 
 def has_pattern():
-    """Check that `pattern` [5] package already installed.
+    """Check if `pattern <https://github.com/clips/pattern>` package is already installed.
 
     Returns
     -------
@@ -1564,7 +1564,7 @@ def has_pattern():
 
 def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
               stopwords=frozenset(), min_length=2, max_length=15):
-    """Use the English lemmatizer from `pattern` [5] to extract UTF8-encoded tokens in
+    """Use the English lemmatizer from `pattern <https://github.com/clips/pattern>` to extract UTF8-encoded tokens in
     their base form=lemma, e.g. "are, is, being" -> "be" etc.
     This is a smarter version of stemming, taking word context into account.
 

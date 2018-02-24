@@ -323,7 +323,7 @@ def _build_hasheable_corpus(corpus):
 
 def summarize_corpus(corpus, ratio=0.2):
     """Get a list of the most important documents of a corpus using a
-    variation of the TextRank algorithm [1].
+    variation of the `TextRank algorithm<https://arxiv.org/abs/1602.03606>`.
 
     Used as helper for summarize :func:`~gensim.summarization.summarizer.summarizer`
 

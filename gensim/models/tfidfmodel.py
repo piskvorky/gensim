@@ -272,7 +272,7 @@ class TfidfModel(interfaces.TransformationABC):
                 * `n` - none,
                 * `c` - cosine.
 
-            For more information visit [1].
+            For more information visit `<https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`.
 
         """
 
