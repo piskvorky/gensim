@@ -219,6 +219,17 @@ var LDAvis = function(to_select, data_or_file_name) {
 				state_save(true);
 			});
 
+		d3.select("#" + docShow)
+			.on("click", function() {
+
+				var doc_to_show = document.getElementById(docID + vis_state.doc);
+				var doc_to_show_data = doc_to_show.__data__;
+
+
+				docs_text_tooltip.transition()
+				.duration(500)
+				.style("visibility", "visible");
+		});
 
 		d3.select("#" + topicID)
 			.on("keyup", function() {
@@ -542,6 +553,12 @@ var LDAvis = function(to_select, data_or_file_name) {
 			}
 			if (typeof vis_state.word === 'string') {
 				word_off(document.getElementById(wordID + vis_state.word));
+			}
+
+			if (docs_text_tooltip.visibility !== 'hidden') {
+				docs_text_tooltip.transition()
+				.duration(500)
+				.style("visibility", "hidden");
 			}
 
 			document.getElementById(docID).value = vis_state.doc = 0;
