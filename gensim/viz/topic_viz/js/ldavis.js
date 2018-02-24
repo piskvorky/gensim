@@ -499,6 +499,13 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.data(docMdsData)
 				.enter();
 
+		var docs_tooltip = d3.select("body")
+		    .append("div")
+		    .style("position", "absolute")
+		    .style("z-index", "10")
+		    .style("visibility", "hidden")
+		    .attr("stroke", "black")
+	    	.text("docs_tooltip");
 
 		// draw circles
 		docpoints.append("circle")
@@ -628,6 +635,14 @@ var LDAvis = function(to_select, data_or_file_name) {
 		var wordpoints = word_plot.selectAll("wordpoints")
 				.data(wordMdsData)
 				.enter();
+
+		var words_tooltip = d3.select("body")
+		    .append("div")
+		    .style("position", "absolute")
+		    .style("z-index", "10")
+		    .style("visibility", "hidden")
+		    .attr("stroke", "black")
+	    	.text("words_tooltip");
 
 		// draw circles
 		wordpoints.append("circle")
