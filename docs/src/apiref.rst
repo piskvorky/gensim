@@ -480,3 +480,30 @@ Functions
     jaccard_distance
     dirichlet_expectation
     qr_destroy
+
+.. _c_matutils_ref:
+
+:mod:`gensim._matutils`: C Matutils
+===================================
+
+.. automodule:: gensim._matutils
+    :no-members:
+    :no-inherited-members:
+
+Classes
+-------
+.. currentmodule:: gensim._matutils
+
+.. autosummary::
+    :toctree: generated/
+    :template: class.rst
+
+Functions
+---------
+.. currentmodule:: gensim._matutils
+
+.. autosummary::
+    :toctree: generated/
+    :template: function.rst
+
+    mean_absolute_difference
