@@ -521,6 +521,34 @@ var LDAvis = function(to_select, data_or_file_name) {
 		}
 
 
+		function state_url() {
+			return location.origin + location.pathname + "#doc=" + vis_state.doc +
+				"&topic=" + vis_state.topic + "&word=" + vis_state.word;
+		}
+
+		function state_save(replace) {
+			if (replace)
+				history.replaceState(vis_state, "Query", state_url());
+			else
+				history.pushState(vis_state, "Query", state_url());
+		}
+
+		function state_reset() {
+			if (vis_state.doc > 0) {
+				doc_off(document.getElementById(docID + vis_state.doc));
+			}
+			if (vis_state.topic > 0) {
+				topic_off(document.getElementById(topicID + vis_state.topic));
+			}
+			if (typeof vis_state.word === 'string') {
+				word_off(document.getElementById(wordID + vis_state.word));
+			}
+
+			document.getElementById(docID).value = vis_state.doc = 0;
+			document.getElementById(topicID).value = vis_state.topic = 0;
+			document.getElementById(wordID).value = vis_state.word = 0;
+			state_save(true);
+		}
 
 	}
 
