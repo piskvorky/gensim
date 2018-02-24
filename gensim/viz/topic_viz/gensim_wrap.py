@@ -1,6 +1,4 @@
 """
-LDAvis Gensim
-===============
 Helper functions to visualize LDA models trained by Gensim
 """
 
