@@ -398,6 +398,288 @@ var LDAvis = function(to_select, data_or_file_name) {
 					.domain([word_yrange[0] - word_ypad * word_ydiff, word_yrange[1] + word_ypad * word_ydiff]);
 		}
 
+		// Create new svg element (that will contain everything):
+		var svg = d3.select(to_select).append("svg")
+				.attr("width", 3 * (mdswidth + margin.left) + margin.right)
+				.attr("height", mdsheight + 2 * margin.top + margin.bottom + 2 * rMax);
+
+		var docs_text_tooltip = d3.select("body")
+			.append("g")
+		    .style("position", "absolute")
+		    .attr("transform", "translate(0, 0)")
+		    // .style("z-index", "100")
+		    // .style("overflow-y", "scroll")
+		    .style("visibility", "hidden")
+		    .style("background-color", "#5bb0ff");
+		    // .attr("stroke", "black")
+	    	// .text("docs_text_tooltip");
+
+		// Add a group for the doc plot
+		var doc_plot = svg.append("g")
+				.attr("id", docPanelID)
+				.attr("class", "docpoints")
+				.attr("transform", "translate(0, 0)");
+
+		// Create line element b/w doc and topic plot
+		var doc_topic_partition = svg.append("line")
+       			.attr("x1", 1*mdswidth + 10 + "px")
+       			.attr("x2", 1*mdswidth + 10 + "px")
+       			.attr("y1", 20)
+       			.attr("y2", mdsheight)
+       			.attr("stroke", "black");
+
+		// Create a group for the topic plot
+		var topic_plot = svg.append("g")
+				.attr("id", topicPanelID)
+				.attr("class", "topicpoints")
+				// .attr("align","center")
+				.attr("transform", "translate(" + (1*mdswidth + 20) + ", 0)");
+
+		// Create line element b/w doc and topic plot
+		var word_topic_partition = svg.append("line")
+       			.attr("x1", 2*mdswidth + margin.left + "px")
+       			.attr("x2", 2*mdswidth + margin.left + "px")
+       			.attr("y1", 20)
+       			.attr("y2", mdsheight)
+       			.attr("stroke", "black");
+
+		// Add a group for the word plot
+		var word_plot = svg.append("g")
+				.attr("id", wordPanelID)
+				.attr("class", "wordpoints")
+				// .attr("align","right")
+				.attr("transform", "translate(" + (2 * mdswidth + 1 * margin.left) + ", 0)");
+
+
+		// Clicking on the doc_plot should clear the selection
+		doc_plot
+			.append("rect")
+			.attr("x", 0)
+			.attr("y", 0)
+			.attr("height", mdsheight)
+			.attr("width", mdswidth)
+			.style("fill", color1)
+			.attr("opacity", 0)
+			.on("click", function() {
+				state_reset();
+				state_save(true);
+			});
+
+		// Clicking on the topic_plot should clear the selection
+		topic_plot
+			.append("rect")
+			.attr("x", 0)
+			.attr("y", 0)
+			.attr("height", mdsheight)
+			.attr("width", mdswidth)
+			.style("fill", color1)
+			.attr("opacity", 0)
+			.on("click", function() {
+				state_reset();
+				state_save(true);
+			});
+
+		// Clicking on the word_plot should clear the selection
+		word_plot
+			.append("rect")
+			.attr("x", 0)
+			.attr("y", 0)
+			.attr("height", mdsheight)
+			.attr("width", mdswidth)
+			.style("fill", color1)
+			.attr("opacity", 0)
+			.on("click", function() {
+				state_reset();
+				state_save(true);
+			});        
+
+
+		// bind mdsData to the points in the doc panel:
+		var docpoints = doc_plot.selectAll("docpoints")
+				.data(docMdsData)
+				.enter();
+
+
+		// draw circles
+		docpoints.append("circle")
+			.attr("class", "docdot")
+			.style("opacity", function(d) {
+				return ((d.Freq/10)*0.2);
+			})
+			.style("fill", color1)
+			.attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*D))
+			.attr("cx", function(d) {
+				return (doc_xScale(+d.x));
+			})
+			.attr("cy", function(d) {
+				return (doc_yScale(+d.y));
+			})
+			.attr("stroke", "black")
+			.attr("id", function(d) {
+				return (docID + d.docs);
+			})
+			.text(function(d) {
+				return d.docs;
+			})
+			.on("mouseover", function(d) {
+				docs_tooltip.text(d.docs); 
+				docs_tooltip.style("visibility", "visible");
+				var old_doc = docID + vis_state.doc;
+				if (vis_state.topic > 0){
+					doc_topic_on()
+				}
+				if (vis_state.doc > 0 && old_doc!= this.id) {
+					doc_off(document.getElementById(old_doc));
+				}
+				doc_on(this);
+			})
+			.on("click", function(d) {
+				// prevent click event defined on the div container from firing
+				// http://bl.ocks.org/jasondavies/3186840
+				// d3.event.stopPropagation();
+
+				var old_doc = docID + vis_state.doc;
+				if (vis_state.doc > 0 && old_doc != this.id) {
+					doc_off(document.getElementById(old_doc));
+				}
+				// make sure doc input box value and fragment reflects clicked selection
+				document.getElementById(docID).value = vis_state.doc = d.docs;
+				state_save(true);
+				doc_on(this);
+
+			})
+			.on("mousemove", function(){
+				docs_tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+			})
+			.on("mouseout", function(d) {
+				docs_tooltip.style("visibility", "hidden");
+				if (vis_state.doc != d.docs) doc_off(this);
+				if (vis_state.doc > 0) doc_on(document.getElementById(docID + vis_state.doc));
+			});
+
+		// bind mdsData to the points in the topic panel:
+		var topicpoints = topic_plot.selectAll("topicpoints")
+				.data(topicMdsData)
+				.enter();
+
+		// text to indicate topic
+		topicpoints.append("text")
+			.attr("class", "topic_txt")
+			.attr("x", function(d) {
+				return (topic_xScale(+d.x));
+			})
+			.attr("y", function(d) {
+				return (topic_yScale(+d.y) + 4);
+			})
+			.attr("stroke", "black")
+			.attr("opacity", 1)
+			.style("text-anchor", "middle")
+			.style("font-size", "11px")
+			.style("fontWeight", 100)
+			.text(function(d) {
+				return d.topics;
+			});
+
+		// draw circles
+		topicpoints.append("circle")
+			.attr("class", "topicdot")
+			.style("opacity", function(d) {
+				return ((d.Freq/10)*0.2);
+			})
+			.style("fill", color1)
+			.attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*T))
+			.attr("cx", function(d) {
+				return (topic_xScale(+d.x));
+			})
+			.attr("cy", function(d) {
+				return (topic_yScale(+d.y));
+			})
+			.attr("stroke", "black")
+			.attr("id", function(d) {
+				return (topicID + d.topics);
+			})
+			.on("mouseover", function(d) {
+				var old_topic = topicID + vis_state.topic;
+				// actually not greater than zero
+				if (vis_state.topic > 0 && old_topic!= this.id) {
+					topic_off(document.getElementById(old_topic));
+				}
+				topic_on(this);
+			})
+			.on("click", function(d) {
+				// prevent click event defined on the div container from firing
+				// http://bl.ocks.org/jasondavies/3186840
+				d3.event.stopPropagation();
+				var old_topic = topicID + vis_state.topic;
+				if (vis_state.topic > 0 && old_topic != this.id) {
+					topic_off(document.getElementById(old_topic));
+				}
+				// make sure topic input box value and fragment reflects clicked selection
+				document.getElementById(topicID).value = vis_state.topic = d.topics;
+				state_save(true);
+				topic_on(this);
+			})
+			.on("mouseout", function(d) {
+				if (vis_state.topic != d.topics) topic_off(this);
+				if (vis_state.topic > 0) topic_on(document.getElementById(topicID + vis_state.topic));
+			});
+
+		// bind mdsData to the points in the word panel:
+		var wordpoints = word_plot.selectAll("wordpoints")
+				.data(wordMdsData)
+				.enter();
+
+		// draw circles
+		wordpoints.append("circle")
+			.attr("class", "worddot")
+			.style("opacity", function(d) {
+				return ((d.Freq/10)*0.2);
+			})
+			.style("fill", color1)
+			.attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*W))
+			.attr("cx", function(d) {
+				return (word_xScale(+d.x));
+			})
+			.attr("cy", function(d) {
+				return (word_yScale(+d.y));
+			})
+			.attr("stroke", "black")
+			.attr("id", function(d) {
+				return (wordID + d.vocab);
+			})
+			.text(function(d) {
+				return d.vocab;
+			})
+			.on("mouseover", function(d) {
+				words_tooltip.text(d.vocab); 
+				words_tooltip.style("visibility", "visible");
+				var old_word = wordID + vis_state.word;
+				if (typeof vis_state.word === 'string' && old_word!= this.id) {
+					word_off(document.getElementById(old_word));
+				}
+				word_on(this);
+			})
+			.on("click", function(d) {
+				// prevent click event defined on the div container from firing
+				// http://bl.ocks.org/jasondavies/3186840
+				// d3.event.stopPropagation();
+				var old_word = wordID + vis_state.word;
+				if (typeof vis_state.word === 'string' && old_word!= this.id) {
+					word_off(document.getElementById(old_word));
+				}
+				// make sure word input box value and fragment reflects clicked selection
+				document.getElementById(wordID).value = vis_state.word = d.vocab;
+				state_save(true);
+				word_on(this);
+			})
+			.on("mousemove", function(){
+				return words_tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+			})
+			.on("mouseout", function(d) {
+				words_tooltip.style("visibility", "hidden");
+				if (vis_state.word != d.vocab) word_off(this);
+				if (typeof vis_state.word === 'string') word_on(document.getElementById(wordID + vis_state.word));
+			});
 
 
 		// dynamically create the doc/topic/word input forms at the top of the page
