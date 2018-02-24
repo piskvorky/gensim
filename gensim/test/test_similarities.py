@@ -16,6 +16,7 @@ import os
 import numpy
 import scipy
 
+from smart_open import smart_open
 from gensim.corpora import Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
@@ -542,7 +543,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
                 self.fn = fn
 
             def __iter__(self):
-                with open(self.fn) as infile:
+                with smart_open(self.fn, 'r', encoding="cp1251") as infile:
                     for line in infile:
                         yield line.lower().strip().split()
 
