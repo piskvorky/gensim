@@ -1,0 +1,33 @@
+/* Taken from https://github.com/cpsievert/LDAvis */
+/* Copyright 2013, AT&T Intellectual Property */
+/* MIT Licence */
+
+path {
+  fill: none;
+  stroke: none;
+}
+
+.xaxis .tick.major {
+    fill: black;
+    stroke: black;
+    stroke-width: 0.1;
+    opacity: 0.7;
+}
+
+.slideraxis {
+    fill: black;
+    stroke: black;
+    stroke-width: 0.4;
+    opacity: 1;
+}
+
+text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+
+/* IPython Notebook CSS to allow visualization to fit */
+/* I'm open to a better way of accomplishing this goal... */
+.container { width:1350px !important; }
+/* This is for nbviewer's benefit since the above wasn't enough... */
+.output_area { width:1450px !important; }
