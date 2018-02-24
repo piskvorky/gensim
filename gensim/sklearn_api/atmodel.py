@@ -54,7 +54,8 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
                  alpha='symmetric', eta='symmetric', update_every=1, eval_every=10,
                  gamma_threshold=0.001, serialized=False, serialization_path=None,
                  minimum_probability=0.01, random_state=None):
-        """
+        """Sklearn wrapper for Author-Topic model.
+
         Parameters
         ----------
         num_topics : int, optional

@@ -5,9 +5,22 @@
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Scikit learn interface for gensim for easy use of gensim with scikit-learn
-Follows scikit-learn API conventions
+"""Scikit learn interface for :class:`~gensim.models.rpmodel.RpModel`.
+
+Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
+
+Examples
+--------
+
+    >>> from gensim.sklearn_api.rpmodel import RpTransformer
+    >>> from gensim.test.utils import common_dictionary, common_corpus
+    >>>
+    >>> # Initialize and fit the model.
+    >>> model = RpTransformer(id2word=common_dictionary).fit(common_corpus)
+    >>>
+    >>> # Use the trained model to transform a document.
+    >>> result = model.transform(common_corpus[3])
+
 """
 
 import numpy as np
@@ -19,34 +32,58 @@ from gensim import matutils
 
 
 class RpTransformer(TransformerMixin, BaseEstimator):
-    """
-    Base RP module
-    """
+    """Base Word2Vec module.
 
+        Wraps :class:`~gensim.models.rpmodel.RpModel`.
+        For more information on the inner workings please take a look at
+        the original class.
+
+    """
     def __init__(self, id2word=None, num_topics=300):
-        """
-        Sklearn wrapper for RP model. See gensim.models.RpModel for parameter details.
+        """Sklearn wrapper for Random Projections model.
+
+        Parameters
+        ----------
+        id2word : {dict of (int, str), :class:`~gensim.corpora.dictionary.Dictionary`}, optional
+            Mapping `token_id` -> `token`, will be determined from corpus if `id2word == None`.
+        num_topics : int, optional
+            Number of topics.
+
         """
         self.gensim_model = None
         self.id2word = id2word
         self.num_topics = num_topics
 
     def fit(self, X, y=None):
-        """
-        Fit the model according to the given training data.
-        Calls gensim.models.RpModel
+        """Fit the model according to the given training data.
+
+        Parameters
+        ----------
+        X : iterable of iterable of (int, int)
+            Input corpus in BOW format.
+
+        Returns
+        -------
+        :class:`~gensim.sklearn_api.rpmodel.RpTransformer`
+            The trained model.
+
         """
         self.gensim_model = models.RpModel(corpus=X, id2word=self.id2word, num_topics=self.num_topics)
         return self
 
     def transform(self, docs):
-        """
-        Take documents/corpus as input.
-        Return RP representation of the input documents/corpus.
-        The input `docs` can correspond to multiple documents like
-        [[(0, 1.0), (1, 1.0), (2, 1.0)],
-        [(0, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (7, 1.0)]]
-        or a single document like : [(0, 1.0), (1, 1.0), (2, 1.0)]
+        """Find the topic probabilities for each author.
+
+        Parameters
+        ----------
+        docs : iterable of iterable of (int, int)
+            Documents to be transformed in BOW format.
+
+        Returns
+        -------
+        np.ndarray of shape (`len(docs)`, num_topics)
+            RP representation for each input document.
+
         """
         if self.gensim_model is None:
             raise NotFittedError(
