@@ -13,7 +13,7 @@ from past.builtins import xrange
 from . import prepare as vis_prepare
 
 
-def _extract_data(topic_model, corpus, dictionary, doc_topic_dists=None):
+def _extract_data(topic_model, corpus, dictionary, texts=None, doc_topic_dists=None):
    import gensim
 
    if not gensim.matutils.ismatrix(corpus):
@@ -80,10 +80,12 @@ def _extract_data(topic_model, corpus, dictionary, doc_topic_dists=None):
 
    assert topic_term_dists.shape[0] == doc_topic_dists.shape[1]
 
+   # convert tokenised texts of documents to list of strings
+   texts = [' '.join(doc) for doc in texts]
 
    return {'doc_topic_dists': doc_topic_dists, 'doc_word_dists': doc_word_dists, 'topic_word_dists': topic_term_dists,
-           'word_topic_dists': term_topic_dists, 'doc_tag': range(1, doc_topic_dists.shape[0]+1),
-           'doc_lengths': doc_lengths}
+           'word_topic_dists': term_topic_dists, 'doc_tag': range(1, doc_topic_dists.shape[0]+1), 'doc_texts': texts,
+           'doc_lengths': doc_lengths, 'vocab': vocab}
 
 def prepare(topic_model, corpus, dictionary, texts=None, doc_topic_dist=None, **kwargs):
     """Transforms the Gensim TopicModel and related corpus and dictionary into
