@@ -123,3 +123,52 @@ def _word_coordinates(mds, word_topic_dists, vocab, word_proportion):
 	mds_df = pd.DataFrame({'x': mds_res[:,0], 'y': mds_res[:,1], 'vocab': vocab, 'Freq': word_proportion * 100}, index=range(1, K+1))
 	mds_df.reset_index(level=0, inplace=True)
 	return mds_df
+
+
+def prepare(doc_topic_dists, doc_word_dists, topic_word_dists, word_topic_dists, 
+			doc_tag, doc_texts, doc_lengths, vocab, mds=js_PCoA):
+	"""Transforms the topic model distributions and related corpus data into
+	the data structures needed for the visualization.
+	"""
+	# parse mds
+	if isinstance(mds, basestring):
+		mds = mds.lower()
+		if mds == 'pcoa':
+			mds = js_PCoA
+		elif mds in ('mmds', 'tsne'):
+			if sklearn_present:
+				mds_opts = {'mmds': js_MMDS, 'tsne': js_TSNE}
+				mds = mds_opts[mds]
+			else:
+				logging.warning('sklearn not present, switch to PCoA')
+				mds = js_PCoA
+		else:
+			logging.warning('Unknown mds `%s`, switch to PCoA' % mds)
+			mds = js_PCoA
+
+	topic_freq = np.dot(doc_topic_dists.T, doc_lengths)
+	topic_proportion = topic_freq / topic_freq.sum()
+
+	word_freq = np.dot(topic_word_dists.T, topic_freq)
+	word_proportion = word_freq / word_freq.sum()
+
+	word_doc_dists = doc_word_dists.T
+	topic_doc_dists = doc_topic_dists.T
+
+	doc_coordinates = _doc_coordinates(mds, doc_topic_dists, doc_tag, doc_texts)
+	topic_coordinates = _topic_coordinates(mds, topic_word_dists, topic_proportion)
+	word_coordinates = _word_coordinates(mds, word_topic_dists, vocab, word_proportion)
+
+	return PreparedData(doc_coordinates, topic_coordinates, word_coordinates)
+
+
+class PreparedData(namedtuple('PreparedData', ['doc_coordinates', 'topic_coordinates', 'word_coordinates', 'doc_topic_info', 'doc_word_info', 
+											   'topic_doc_info', 'topic_word_info', 'word_doc_info', 'word_topic_info'])):
+	def to_dict(self):
+		return {'doc_mds': self.doc_coordinates.to_dict(orient='list'),
+			   'topic_mds': self.topic_coordinates.to_dict(orient='list'),
+			   'word_mds': self.word_coordinates.to_dict(orient='list')
+			   }
+
+	def to_json(self):
+		return json.dumps(self.to_dict(), cls=NumPyEncoder)	
