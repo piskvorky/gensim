@@ -125,6 +125,15 @@ def _word_coordinates(mds, word_topic_dists, vocab, word_proportion):
 	return mds_df
 
 
+def _info(dists, fst, scnd):
+	dists = dists / dists.sum()
+	dists = np.array(dists)
+	pd_data = pd.DataFrame(dists, index=range(1, dists.shape[0]+1), columns=range(1, dists.shape[1]+1))
+	pd_data = pd_data.stack().reset_index().rename(columns={'level_0':fst,'level_1':scnd, 0:'Freq'})
+
+	return pd_data
+
+
 def prepare(doc_topic_dists, doc_word_dists, topic_word_dists, word_topic_dists, 
 			doc_tag, doc_texts, doc_lengths, vocab, mds=js_PCoA):
 	"""Transforms the topic model distributions and related corpus data into
@@ -155,11 +164,18 @@ def prepare(doc_topic_dists, doc_word_dists, topic_word_dists, word_topic_dists,
 	word_doc_dists = doc_word_dists.T
 	topic_doc_dists = doc_topic_dists.T
 
+	doc_topic_info = _info(doc_topic_dists, 'Doc', 'Topic')
+	doc_word_info = _info(doc_word_dists, 'Doc', 'Word')
+	topic_doc_info = _info(topic_doc_dists, 'Topic', 'Doc')
+	topic_word_info = _info(topic_word_dists, 'Topic', 'Word')
+	word_doc_info = _info(word_doc_dists, 'Word', 'Doc')
+	word_topic_info = _info(word_topic_dists, 'Word', 'Topic')
+
 	doc_coordinates = _doc_coordinates(mds, doc_topic_dists, doc_tag, doc_texts)
 	topic_coordinates = _topic_coordinates(mds, topic_word_dists, topic_proportion)
 	word_coordinates = _word_coordinates(mds, word_topic_dists, vocab, word_proportion)
 
-	return PreparedData(doc_coordinates, topic_coordinates, word_coordinates)
+	return PreparedData(doc_coordinates, topic_coordinates, word_coordinates, doc_topic_info, doc_word_info, topic_doc_info, topic_word_info, word_doc_info, word_topic_info)
 
 
 class PreparedData(namedtuple('PreparedData', ['doc_coordinates', 'topic_coordinates', 'word_coordinates', 'doc_topic_info', 'doc_word_info', 
@@ -167,7 +183,13 @@ class PreparedData(namedtuple('PreparedData', ['doc_coordinates', 'topic_coordin
 	def to_dict(self):
 		return {'doc_mds': self.doc_coordinates.to_dict(orient='list'),
 			   'topic_mds': self.topic_coordinates.to_dict(orient='list'),
-			   'word_mds': self.word_coordinates.to_dict(orient='list')
+			   'word_mds': self.word_coordinates.to_dict(orient='list'),
+			   'doc_topic.info': self.doc_topic_info.to_dict(orient='list'),
+			   'doc_word.info': self.doc_word_info.to_dict(orient='list'),
+			   'topic_doc.info': self.topic_doc_info.to_dict(orient='list'),
+			   'topic_word.info': self.topic_word_info.to_dict(orient='list'),
+			   'word_doc.info': self.word_doc_info.to_dict(orient='list'),
+			   'word_topic.info': self.word_topic_info.to_dict(orient='list')
 			   }
 
 	def to_json(self):
