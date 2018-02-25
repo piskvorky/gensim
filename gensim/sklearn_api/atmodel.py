@@ -17,7 +17,7 @@ Examples
     >>>
     >>> # Pass a mapping from authors to the documents they contributed to.
     >>> author2doc = {'john': [0, 1, 2, 3, 4, 5, 6], 'jane': [2, 3, 4, 5, 6, 7, 8], 'jack': [0, 2, 4, 6, 8]}
-
+    >>>
     >>> # Lets use the model to discover 2 different topics.
     >>> model = AuthorTopicTransformer(id2word=common_dictionary, author2doc=author2doc, num_topics=2, passes=100)
     >>>
@@ -35,7 +35,7 @@ from gensim import matutils
 
 
 class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
-    """Base Word2Vec module.
+    """Base Author Topic module.
 
     Wraps :class:`~gensim.models.atmodel.AuthorTopicModel`.
     For more information on the inner workings please take a look at
@@ -43,9 +43,7 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
 
     References
     ----------
-    .. [1] Matthew D. Hoffman, David M. Blei, Francis Bach, "Online Learning for Latent Dirichlet Allocation",
-           NIPS'10 Proceedings of the 23rd International Conference on Neural Information Processing Systems -
-           Volume 1 Pages 856-864, https://www.di.ens.fr/~fbach/mdhnips2010.pdf
+    .. [1] Osen-Zvi et. al 2004, https://mimno.infosci.cornell.edu/info6150/readings/398.pdf.
 
     """
 
