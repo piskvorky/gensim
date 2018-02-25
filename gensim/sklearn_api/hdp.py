@@ -31,7 +31,7 @@ from gensim import matutils
 
 
 class HdpTransformer(TransformerMixin, BaseEstimator):
-    """Base Word2Vec module.
+    """Base HDP module.
 
     Wraps :class:`~gensim.models.hdpmodel.HdpModel.
     For more information on the inner workings please take a look at
@@ -46,11 +46,11 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
 
     def __init__(self, id2word, max_chunks=None, max_time=None, chunksize=256, kappa=1.0, tau=64.0, K=15, T=150,
                  alpha=1, gamma=1, eta=0.01, scale=1.0, var_converge=0.0001, outputdir=None, random_state=None):
-        """
-        Sklearn api for HDP model. See gensim.models.HdpModel for parameter details.
+        """Sklearn api for HDP model.
 
-
-        id2word : :class:`~gensim.corpora.dictionary.Dictionary`
+        Parameters
+        ----------
+        id2word : {dict of (int, str), :class:`~gensim.corpora.dictionary.Dictionary`}
             Mapping between a words ID and the word itself in the vocabulary.
         max_chunks : int, optional
             Upper bound on how many chunks to process.It wraps around corpus beginning in another corpus pass,
