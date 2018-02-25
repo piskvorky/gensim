@@ -4,9 +4,9 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Module for calculating topic coherence in python. This is the implementation of
+"""Module for calculating topic coherence in python. This is the implementation of
 the four stage topic coherence pipeline from the paper [1]_.
+
 The four stage pipeline is basically:
 
     Segmentation -> Probability Estimation -> Confirmation Measure -> Aggregation.
@@ -84,21 +84,23 @@ class CoherenceModel(interfaces.TransformationABC):
 
     The main methods are:
 
-    1. constructor, which initializes the four stage pipeline by accepting a coherence measure,
-    2. the ``get_coherence()`` method, which returns the topic coherence.
+    1. Constructor, which initializes the four stage pipeline by accepting a coherence measure,
+    2. The :meth:`~gensim.models.coherencemodel.get_coherence` method, which returns the topic coherence.
 
     Pipeline phases can also be executed individually. Methods for doing this are:
 
-    1. `segment_topics()`, which performs segmentation of the given topics into their comparison sets.
-    2. `estimate_probabilities()`, which accumulates word occurrence stats from the given corpus or texts.
-        The output of this is also cached on the `CoherenceModel`, so calling this method can be used as
-        a precomputation step for the next phase.
-    3. `get_coherence_per_topic()`, which uses the segmented topics and estimated probabilities to compute
-        the coherence of each topic. This output can be used to rank topics in order of most coherent to
-        least. Such a ranking is useful if the intended use case of a topic model is document exploration
+    1. :meth:`~gensim.models.coherencemodel.CoherenceModel.segment_topics`,
+        which performs segmentation of the given topics into their comparison sets.
+    2. :meth:`~gensim.models.coherencemodel.CoherenceModel.estimate_probabilities`,
+        which accumulates word occurrence stats from the given corpus or texts.
+        The output of this is also cached on the :class:`~gensim.models.coherencemodel.CoherenceModel`,
+        so calling this method can be used as a precomputation step for the next phase.
+    3. :meth:`~gensim.models.coherencemodel.CoherenceModel.get_coherence_per_topic`, which uses the segmented topics and estimated
+        probabilities to compute the coherence of each topic. This output can be used to rank topics in order of most
+        coherent to least. Such a ranking is useful if the intended use case of a topic model is document exploration
         by a human. It is also useful for filtering out incoherent topics (keep top-n from ranked list).
-    4. `aggregate_measures(topic_coherences)`, which uses the pipeline's aggregation method to compute
-        the overall coherence from the topic coherences.
+    4. :meth:`~gensim.models.coherencemodel.CoherenceModel.aggregate_measures`,
+        which uses the pipeline's aggregation method to compute the overall coherence from the topic coherences.
 
     One way of using this feature is through providing a trained topic model. A dictionary has to be explicitly
     provided if the model does not contain a dictionary already::
@@ -110,7 +112,8 @@ class CoherenceModel(interfaces.TransformationABC):
 
         topics = [['human', 'computer', 'system', 'interface'],
                   ['graph', 'minors', 'trees', 'eps']]
-        cm = CoherenceModel(topics=topics, corpus=corpus, dictionary=dictionary, coherence='u_mass') # note that a dictionary has to be provided.
+        # note that a dictionary has to be provided.
+        cm = CoherenceModel(topics=topics, corpus=corpus, dictionary=dictionary, coherence='u_mass')
         cm.get_coherence()
 
     Model persistency is achieved via its load/save methods.
@@ -142,8 +145,8 @@ class CoherenceModel(interfaces.TransformationABC):
             corpus : Gensim document corpus.
             dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present,
                 this is not needed. If both are provided, dictionary will be used.
-            window_size : Is the size of the window to be used for coherence measures using boolean sliding window as their
-                probability estimator. For 'u_mass' this doesn't matter.
+            window_size : Is the size of the window to be used for coherence measures using boolean sliding window
+                as their probability estimator. For 'u_mass' this doesn't matter.
                 If left 'None' the default window sizes are used which are:
 
                     'c_v' : 110
@@ -215,7 +218,7 @@ class CoherenceModel(interfaces.TransformationABC):
         self._topics = None
         self.topics = topics
 
-        self.processes = processes if processes > 1 else max(1, mp.cpu_count() - 1)
+        self.processes = processes if processes >= 1 else max(1, mp.cpu_count() - 1)
 
     @classmethod
     def for_models(cls, models, dictionary, topn=20, **kwargs):
