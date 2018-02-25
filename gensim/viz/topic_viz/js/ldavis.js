@@ -226,7 +226,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 				var doc_to_show_data = doc_to_show.__data__;
 
 				var dic_text_div = docs_text_tooltip.append("g")
-				.attr("transform", "translate(0, 0)")
+				.attr("x", 0)
+				.attr("y", 0)
 				// docs_text_tooltip.append("div")
 				.text(doc_to_show_data.doc_texts)
 				// .style("position", "fixed")
@@ -321,19 +322,19 @@ var LDAvis = function(to_select, data_or_file_name) {
 			doc_ypad = 0.05;
 
 		if (doc_xdiff > doc_ydiff) {
-			var doc_xScale = d3.scale.linear()
+			var doc_xScale = d3.scaleLinear()
 					.range([0, mdswidth])
 					.domain([doc_xrange[0] - doc_xpad * doc_xdiff, doc_xrange[1] + doc_xpad * doc_xdiff]);
 
-			var doc_yScale = d3.scale.linear()
+			var doc_yScale = d3.scaleLinear()
 					.range([mdsheight, 0])
 					.domain([doc_yrange[0] - 0.5*(doc_xdiff - doc_ydiff) - doc_ypad*doc_xdiff, doc_yrange[1] + 0.5*(doc_xdiff - doc_ydiff) + doc_ypad*doc_xdiff]);
 		} else {
-			var doc_xScale = d3.scale.linear()
+			var doc_xScale = d3.scaleLinear()
 					.range([0, mdswidth])
 					.domain([doc_xrange[0] - 0.5*(doc_ydiff - doc_xdiff) - doc_xpad*doc_ydiff, doc_xrange[1] + 0.5*(doc_ydiff - doc_xdiff) + doc_xpad*doc_ydiff]);
 
-			var doc_yScale = d3.scale.linear()
+			var doc_yScale = d3.scaleLinear()
 					.range([mdsheight, 0])
 					.domain([doc_yrange[0] - doc_ypad * doc_ydiff, doc_yrange[1] + doc_ypad * doc_ydiff]);
 		}
@@ -351,19 +352,19 @@ var LDAvis = function(to_select, data_or_file_name) {
 			topic_ypad = 0.05;
 
 		if (topic_xdiff > topic_ydiff) {
-			var topic_xScale = d3.scale.linear()
+			var topic_xScale = d3.scaleLinear()
 					.range([0, mdswidth])
 					.domain([topic_xrange[0] - topic_xpad * topic_xdiff, topic_xrange[1] + topic_xpad * topic_xdiff]);
 
-			var topic_yScale = d3.scale.linear()
+			var topic_yScale = d3.scaleLinear()
 					.range([mdsheight, 0])
 					.domain([topic_yrange[0] - 0.5*(topic_xdiff - topic_ydiff) - topic_ypad*topic_xdiff, topic_yrange[1] + 0.5*(topic_xdiff - topic_ydiff) + topic_ypad*topic_xdiff]);
 		} else {
-			var topic_xScale = d3.scale.linear()
+			var topic_xScale = d3.scaleLinear()
 					.range([0, mdswidth])
 					.domain([topic_xrange[0] - 0.5*(topic_ydiff - topic_xdiff) - topic_xpad*topic_ydiff, topic_xrange[1] + 0.5*(topic_ydiff - topic_xdiff) + topic_xpad*topic_ydiff]);
 
-			var topic_yScale = d3.scale.linear()
+			var topic_yScale = d3.scaleLinear()
 					.range([mdsheight, 0])
 					.domain([topic_yrange[0] - topic_ypad * topic_ydiff, topic_yrange[1] + topic_ypad * topic_ydiff]);
 		}
@@ -381,19 +382,19 @@ var LDAvis = function(to_select, data_or_file_name) {
 			word_ypad = 0.05;
 
 		if (word_xdiff > word_ydiff) {
-			var word_xScale = d3.scale.linear()
+			var word_xScale = d3.scaleLinear()
 					.range([0, mdswidth])
 					.domain([word_xrange[0] - word_xpad * word_xdiff, word_xrange[1] + word_xpad * word_xdiff]);
 
-			var word_yScale = d3.scale.linear()
+			var word_yScale = d3.scaleLinear()
 					.range([mdsheight, 0])
 					.domain([word_yrange[0] - 0.5*(word_xdiff - word_ydiff) - word_ypad*word_xdiff, word_yrange[1] + 0.5*(word_xdiff - word_ydiff) + word_ypad*word_xdiff]);
 		} else {
-			var word_xScale = d3.scale.linear()
+			var word_xScale = d3.scaleLinear()
 					.range([0, mdswidth])
 					.domain([word_xrange[0] - 0.5*(word_ydiff - word_xdiff) - word_xpad*word_ydiff, word_xrange[1] + 0.5*(word_ydiff - word_xdiff) + word_xpad*word_ydiff]);
 
-			var word_yScale = d3.scale.linear()
+			var word_yScale = d3.scaleLinear()
 					.range([mdsheight, 0])
 					.domain([word_yrange[0] - word_ypad * word_ydiff, word_yrange[1] + word_ypad * word_ydiff]);
 		}
@@ -456,14 +457,18 @@ var LDAvis = function(to_select, data_or_file_name) {
 			.append("rect")
 			.attr("x", 0)
 			.attr("y", 0)
+			.style("fill", "none")
+			.attr("pointer-events", "all")
 			.attr("height", mdsheight)
 			.attr("width", mdswidth)
-			.style("fill", color1)
-			.attr("opacity", 0)
+			// .attr("opacity", 0)
 			.on("click", function() {
 				state_reset();
 				state_save(true);
-			});
+			})
+			.call(d3.zoom()
+        		.scaleExtent([1, 28])
+        		.on("zoom", zoom));
 
 		// Clicking on the topic_plot should clear the selection
 		topic_plot
@@ -495,21 +500,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 		// bind mdsData to the points in the doc panel:
-		var docpoints = doc_plot.selectAll("docpoints")
+		var docpoints = doc_plot.selectAll("circle")
 				.data(docMdsData)
-				.enter();
-
-		var docs_tooltip = d3.select("body")
-		    .append("div")
-		    .style("position", "absolute")
-		    .style("z-index", "10")
-		    .style("visibility", "hidden")
-		    .attr("stroke", "black")
-	    	.text("docs_tooltip");
-
-		// draw circles
-		docpoints.append("circle")
-			.attr("class", "docdot")
+				.enter()
+				.append("circle")
+				.attr("class", "docdot")
 			.style("opacity", function(d) {
 				return ((d.Freq/10)*0.2);
 			})
@@ -525,6 +520,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 			.attr("id", function(d) {
 				return (docID + d.docs);
 			})
+			.attr("transform", transform(d3.zoomIdentity))
 			.text(function(d) {
 				return d.docs;
 			})
@@ -562,7 +558,88 @@ var LDAvis = function(to_select, data_or_file_name) {
 				docs_tooltip.style("visibility", "hidden");
 				if (vis_state.doc != d.docs) doc_off(this);
 				if (vis_state.doc > 0) doc_on(document.getElementById(docID + vis_state.doc));
-			});
+			});;
+
+		var docs_tooltip = d3.select("body")
+		    .append("div")
+		    .style("position", "absolute")
+		    .style("z-index", "10")
+		    .style("visibility", "hidden")
+		    .attr("stroke", "black")
+	    	.text("docs_tooltip");
+
+		// draw circles
+		// docpoints.append("circle")
+			// .attr("class", "docdot")
+			// .style("opacity", function(d) {
+			// 	return ((d.Freq/10)*0.2);
+			// })
+			// .style("fill", color1)
+			// .attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*D))
+			// .attr("cx", function(d) {
+			// 	return (doc_xScale(+d.x));
+			// })
+			// .attr("cy", function(d) {
+			// 	return (doc_yScale(+d.y));
+			// })
+			// .attr("stroke", "black")
+			// .attr("id", function(d) {
+			// 	return (docID + d.docs);
+			// })
+			// .attr("transform", transform(d3.zoomIdentity))
+			// .text(function(d) {
+			// 	return d.docs;
+			// })
+			// .on("mouseover", function(d) {
+			// 	docs_tooltip.text(d.docs); 
+			// 	docs_tooltip.style("visibility", "visible");
+			// 	var old_doc = docID + vis_state.doc;
+			// 	if (vis_state.topic > 0){
+			// 		doc_topic_on()
+			// 	}
+			// 	if (vis_state.doc > 0 && old_doc!= this.id) {
+			// 		doc_off(document.getElementById(old_doc));
+			// 	}
+			// 	doc_on(this);
+			// })
+			// .on("click", function(d) {
+			// 	// prevent click event defined on the div container from firing
+			// 	// http://bl.ocks.org/jasondavies/3186840
+			// 	// d3.event.stopPropagation();
+
+			// 	var old_doc = docID + vis_state.doc;
+			// 	if (vis_state.doc > 0 && old_doc != this.id) {
+			// 		doc_off(document.getElementById(old_doc));
+			// 	}
+			// 	// make sure doc input box value and fragment reflects clicked selection
+			// 	document.getElementById(docID).value = vis_state.doc = d.docs;
+			// 	state_save(true);
+			// 	doc_on(this);
+
+			// })
+			// .on("mousemove", function(){
+			// 	docs_tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+			// })
+			// .on("mouseout", function(d) {
+			// 	docs_tooltip.style("visibility", "hidden");
+			// 	if (vis_state.doc != d.docs) doc_off(this);
+			// 	if (vis_state.doc > 0) doc_on(document.getElementById(docID + vis_state.doc));
+			// });
+
+		function zoom() {
+		  // console.log("docpoints", docpoints);
+		  // console.log("docpoints type", typeof docpoints);
+		  console.log("transform bug 2", d3.event.transform);
+		  docpoints.attr("transform", transform(d3.event.transform));
+		}
+
+		function transform(t) {
+		  return function(d) {
+		  	console.log("transform bug 0", t);
+		  	console.log("transform bug 1", d);
+		    return "translate(" + t.apply([+d.x, +d.y]) + ")";
+		  };
+		}
 
 		// bind mdsData to the points in the topic panel:
 		var topicpoints = topic_plot.selectAll("topicpoints")
