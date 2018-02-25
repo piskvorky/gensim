@@ -39,11 +39,7 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
 
     Wraps :class:`~gensim.models.atmodel.AuthorTopicModel`.
     For more information on the inner workings please take a look at
-    the original class. The model's internal workings are heavily based on _[1].
-
-    References
-    ----------
-    .. [1] Osen-Zvi et. al 2004, https://mimno.infosci.cornell.edu/info6150/readings/398.pdf.
+    the original class.
 
     """
 
@@ -76,10 +72,9 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
             of the EM algorithm.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
-            when each new document is examined. Corresponds to Kappa from [1]_.
+            when each new document is examined.
         offset : float, optional
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
-            Corresponds to Tau_0 from [1]_.
         alpha : {np.array, str}, optional
             Can be set to an 1D array of length equal to the number of expected topics that expresses
             our a-priori belief for the each topics' probability.
