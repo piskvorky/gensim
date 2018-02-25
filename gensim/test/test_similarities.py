@@ -543,7 +543,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
                 self.fn = fn
 
             def __iter__(self):
-                with smart_open(self.fn, 'r', encoding="cp1251") as infile:
+                with smart_open(self.fn, 'r', encoding="latin_1") as infile:
                     for line in infile:
                         yield line.lower().strip().split()
 
