@@ -347,7 +347,7 @@ def summarize_corpus(corpus, ratio=0.2):
 
     References
     ----------
-    .. [1] Federico Barrios, Federico L´opez, Luis Argerich, Rosita Wachenchauzer (2016).
+    .. [] Federico Barrios, Federico L´opez, Luis Argerich, Rosita Wachenchauzer (2016).
        Variations of the Similarity Function of TextRank for Automated Summarization,
        https://arxiv.org/abs/1602.03606
 
