@@ -27,7 +27,7 @@ class TestSent2VecModel(unittest.TestCase):
         self.s2v_path = os.path.join('gensim/models', 'sent2vec')
 
     def test_training(self):
-        model = Sent2Vec(size=5, min_count=1, negative=5, seed=42, workers=2)
+        model = Sent2Vec(size=5, min_count=1, negative=5, seed=42, workers=1)
         model.build_vocab(sentences)
 
         model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
@@ -37,7 +37,7 @@ class TestSent2VecModel(unittest.TestCase):
         self.assertEqual(model.wi.shape, (model.vocabulary.size + model.bucket, model.vector_size))
 
         # build vocab and train in one step; must be the same as above
-        model2 = Sent2Vec(sentences, size=5, min_count=1, negative=5, seed=42, workers=2)
+        model2 = Sent2Vec(sentences, size=5, min_count=1, negative=5, seed=42, workers=1)
         self.models_equal(model, model2)
 
     def models_equal(self, model, model2):
