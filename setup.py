@@ -266,7 +266,7 @@ setup(
             sources=['./gensim/models/sent2vec_inner.cpp'],
             include_dirs=[model_dir],
             language="c++",
-            extra_compile_args=['-std=c++14'])
+            extra_compile_args=['-std=c++11', '/EHsc'])
     ],
     cmdclass=cmdclass,
     packages=find_packages(),
