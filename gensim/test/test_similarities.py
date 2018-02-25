@@ -16,13 +16,13 @@ import os
 import numpy
 import scipy
 
+from smart_open import smart_open
 from gensim.corpora import Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
 from gensim.models import KeyedVectors
-from gensim.models.wrappers import fasttext
 from gensim import matutils, similarities
-from gensim.models import Word2Vec
+from gensim.models import Word2Vec, FastText
 from gensim.test.utils import (datapath, get_tmpfile,
     common_texts as texts, common_dictionary as dictionary, common_corpus as corpus)
 
@@ -431,9 +431,9 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
         sims = index[query]
         for i, chunk in enumerate(sims):
             expected = i
-            self.assertEquals(expected, chunk[0][0])
+            self.assertAlmostEquals(expected, chunk[0][0], places=2)
             expected = 1.0
-            self.assertEquals(expected, chunk[0][1])
+            self.assertAlmostEquals(expected, chunk[0][1], places=2)
 
     def testIter(self):
         # Override testIter.
@@ -538,12 +538,16 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertLoadedIndexEqual(index, model)
 
     def testFastText(self):
-        ft_home = os.environ.get('FT_HOME', None)
-        ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
-        if not ft_path:
-            return
-        corpus_file = datapath('lee.cor')
-        model = fasttext.FastText.train(ft_path, corpus_file)
+        class LeeReader(object):
+            def __init__(self, fn):
+                self.fn = fn
+
+            def __iter__(self):
+                with smart_open(self.fn, 'r', encoding="latin_1") as infile:
+                    for line in infile:
+                        yield line.lower().strip().split()
+
+        model = FastText(LeeReader(datapath('lee.cor')))
         model.init_sims()
         index = self.indexer(model, 10)
 
@@ -575,7 +579,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         word, similarity = approx_neighbors[0]
 
         self.assertEqual(word, label)
-        self.assertEqual(similarity, 1.0)
+        self.assertAlmostEqual(similarity, 1.0, places=2)
 
     def assertApproxNeighborsMatchExact(self, model, wv, index):
         vector = wv.syn0norm[0]
@@ -628,7 +632,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         doc, similarity = approx_neighbors[0]
 
         self.assertEqual(doc, 0)
-        self.assertEqual(similarity, 1.0)
+        self.assertAlmostEqual(similarity, 1.0, places=2)
 
     def testApproxNeighborsMatchExact(self):
         approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)

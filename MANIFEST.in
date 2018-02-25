@@ -16,3 +16,5 @@ include gensim/corpora/_mmreader.c
 include gensim/corpora/_mmreader.pyx
 include gensim/models/sent2vec_inner.cpp
 include gensim/models/sent2vec_inner.pyx
+include gensim/_matutils.c
+include gensim/_matutils.pyx
