@@ -27,7 +27,7 @@ class TestSent2VecModel(unittest.TestCase):
         self.s2v_path = os.path.join('gensim/models', 'sent2vec')
 
     def test_training(self):
-        model = Sent2Vec(size=5, min_count=1, negative=5, seed=42, workers=1)
+        model = Sent2Vec(size=5, min_count=1, negative=5, seed=42, workers=2, max_vocab_size=100)
         model.build_vocab(sentences)
 
         model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
@@ -37,7 +37,7 @@ class TestSent2VecModel(unittest.TestCase):
         self.assertEqual(model.wi.shape, (model.vocabulary.size + model.bucket, model.vector_size))
 
         # build vocab and train in one step; must be the same as above
-        model2 = Sent2Vec(sentences, size=5, min_count=1, negative=5, seed=42, workers=1)
+        model2 = Sent2Vec(sentences, size=5, min_count=1, negative=5, seed=42, workers=1, max_vocab_size=100)
         self.models_equal(model, model2)
 
     def models_equal(self, model, model2):
@@ -49,13 +49,13 @@ class TestSent2VecModel(unittest.TestCase):
 
     def test_persistence(self):
         tmpf = get_tmpfile('gensim_sent2vec.tst')
-        model = Sent2Vec(sentences, size=5, min_count=0, seed=42, negative=5, workers=1)
+        model = Sent2Vec(sentences, size=5, min_count=0, seed=42, negative=5, workers=1, max_vocab_size=100)
         model.save(tmpf)
         loaded_model = Sent2Vec.load(tmpf)
         self.models_equal(model, loaded_model)
 
     def test_online_learning(self):
-        model = Sent2Vec(sentences, size=5, min_count=1, seed=42, negative=5, workers=1)
+        model = Sent2Vec(sentences, size=5, min_count=1, seed=42, negative=5, workers=1, max_vocab_size=100)
         self.assertTrue(model.vocabulary.size, 12)
         self.assertTrue(model.vocabulary.words[model.vocabulary.word2int[model.vocabulary.find('graph')]].count, 3)
         model.build_vocab(new_sentences, update=True)  # update vocab
@@ -65,7 +65,7 @@ class TestSent2VecModel(unittest.TestCase):
 
     def test_online_learning_after_save(self):
         tmpf = get_tmpfile('gensim_sent2vec.tst')
-        model = Sent2Vec(sentences, size=5, min_count=0, seed=42, negative=5, workers=1)
+        model = Sent2Vec(sentences, size=5, min_count=0, seed=42, negative=5, workers=1, max_vocab_size=100)
         model.save(tmpf)
         model = Sent2Vec.load(tmpf)
         self.assertTrue(model.vocabulary.size, 12)
@@ -74,8 +74,8 @@ class TestSent2VecModel(unittest.TestCase):
         self.assertEqual(model.vocabulary.size, 14)
 
     def test_sent2vec_for_document(self):
-        model1 = Sent2Vec(sentences, size=5, min_count=0, seed=42, negative=5, workers=2)
-        model2 = Sent2Vec(sentences, size=5, min_count=0, seed=42, negative=5, workers=2)
+        model1 = Sent2Vec(sentences, size=5, min_count=0, seed=42, negative=5, workers=1, max_vocab_size=100)
+        model2 = Sent2Vec(sentences, size=5, min_count=0, seed=42, negative=5, workers=1, max_vocab_size=100)
         for sentence in test_sentences:
             sent_vec1 = model1[sentence]
             sent_vec2 = model2[sentence]

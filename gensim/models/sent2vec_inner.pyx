@@ -4,7 +4,7 @@
 # cython: cdivision=True
 # coding: utf-8
 # distutils : language = c++
-# distutils : extra_compile_args = -std=c++11
+# distutils : extra_compile_args = -std=c++14
 
 import cython
 import numpy as np

@@ -11,7 +11,7 @@
         "extra_compile_args": [
             "-ffast-math", 
             "-O2", 
-            "-std=c++11", 
+            "-std=c++14", 
             "-stdlib=libc++", 
             "-mmacosx-version-min=10.7"
         ], 
