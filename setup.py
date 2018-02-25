@@ -265,7 +265,8 @@ setup(
         Extension('gensim.models.sent2vec_inner',
             sources=['./gensim/models/sent2vec_inner.cpp'],
             include_dirs=[model_dir],
-            language="c++")
+            language="c++",
+            extra_compile_args=["-std=c++11"])
     ],
     cmdclass=cmdclass,
     packages=find_packages(),
