@@ -266,7 +266,7 @@ setup(
             include_dirs=[model_dir],
             language="c++",
             libraries=["m"],
-            extra_compile_args = ['-ffast-math', '-O2', '-std=c++11', '-stdlib=libc++'])
+            extra_compile_args = ['-ffast-math', '-O2', '-std=c++11'])
     ],
     cmdclass=cmdclass,
     packages=find_packages(),
