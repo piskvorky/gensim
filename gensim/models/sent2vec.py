@@ -190,7 +190,7 @@ class Sent2VecVocab(object):
 
         """
         min_threshold = 1
-        for sentence in sentences:
+        for sentence_no, sentence in enumerate(sentences):
             for word in sentence:
                 self.add(word)
                 if self.ntokens % 1000000 == 0:
@@ -204,6 +204,7 @@ class Sent2VecVocab(object):
         logger.info("Read %.2f M words", self.ntokens / 1000000)
         if self.size == 0:
             raise RuntimeError("Empty vocabulary. Try a smaller min_count value.")
+        return sentence_no + 1
 
     def threshold(self, t):
         """Remove words from vocabulary having count lower than `t`.
@@ -645,7 +646,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         """
         if not update:
             logger.info("Creating dictionary...")
-            self.vocabulary.read(sentences=sentences, min_count=self.min_count)
+            self.corpus_count = self.vocabulary.read(sentences=sentences, min_count=self.min_count)
             logger.info("Dictionary created, dictionary size: %i, tokens read: %i",
                         self.vocabulary.size, self.vocabulary.ntokens)
             counts = [entry.count for entry in self.vocabulary.words]
@@ -662,7 +663,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
                     "First build the vocabulary of your model with a corpus "
                     "before doing an online update.")
             prev_dict_size = self.vocabulary.size
-            self.vocabulary.read(sentences=sentences, min_count=self.min_count)
+            self.corpus_count = self.vocabulary.read(sentences=sentences, min_count=self.min_count)
             logger.info("Dictionary updated, dictionary size: %i, tokens read: %i",
                         self.vocabulary.size, self.vocabulary.ntokens)
             counts = [entry.count for entry in self.vocabulary.words]
@@ -673,7 +674,6 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             self.wi = np.append(self.wi, new_wi, axis=0)
             self.wo = np.append(self.wo, new_wo, axis=0)
             self._init_table_negatives(counts=counts, update=update)
-        self.corpus_count += len(sentences)
 
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
