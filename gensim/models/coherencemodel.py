@@ -5,7 +5,8 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """Module for calculating topic coherence in python. This is the implementation of
-the four stage topic coherence pipeline from the paper [1]_.
+the four stage topic coherence pipeline from the paper `Michael Roeder, Andreas Both and Alexander Hinneburg.
+Exploring the space of topic coherence measures. <http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf>`_
 
 The four stage pipeline is basically:
 
@@ -13,9 +14,6 @@ The four stage pipeline is basically:
 
 Implementation of this pipeline allows for the user to in essence "make" a
 coherence measure of his/her choice by choosing a method in each of the pipelines.
-
-.. [1] Michael Roeder, Andreas Both and Alexander Hinneburg. Exploring the space of topic
-  coherence measures. http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf.
 """
 
 import logging
@@ -122,48 +120,39 @@ class CoherenceModel(interfaces.TransformationABC):
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
                  window_size=None, keyed_vectors=None, coherence='c_v', topn=20, processes=-1):
         """
-        Args:
-            model : Pre-trained topic model. Should be provided if topics is not provided.
-                Currently supports LdaModel, LdaMallet wrapper and LdaVowpalWabbit wrapper. Use 'topics'
-                parameter to plug in an as yet unsupported model.
-            topics : List of tokenized topics. If this is preferred over model, dictionary should be provided.
-                eg::
-
-                    topics = [['human', 'machine', 'computer', 'interface'],
-                               ['graph', 'trees', 'binary', 'widths']]
-
-            texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator,
-                eg::
-
-                    texts = [['system', 'human', 'system', 'eps'],
-                             ['user', 'response', 'time'],
-                             ['trees'],
-                             ['graph', 'trees'],
-                             ['graph', 'minors', 'trees'],
-                             ['graph', 'minors', 'survey']]
-
-            corpus : Gensim document corpus.
-            dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present,
-                this is not needed. If both are provided, dictionary will be used.
-            window_size : Is the size of the window to be used for coherence measures using boolean sliding window
-                as their probability estimator. For 'u_mass' this doesn't matter.
-                If left 'None' the default window sizes are used which are:
-
-                    'c_v' : 110
-                    'c_uci' : 10
-                    'c_npmi' : 10
-
-            coherence : Coherence measure to be used. Supported values are:
-                'u_mass'
-                'c_v'
-                'c_uci' also popularly known as c_pmi
-                'c_npmi'
-                For 'u_mass' corpus should be provided. If texts is provided, it will be converted
-                to corpus using the dictionary. For 'c_v', 'c_uci' and 'c_npmi' texts should be provided.
-                Corpus is not needed.
-            topn : Integer corresponding to the number of top words to be extracted from each topic.
-            processes : number of processes to use for probability estimation phase; any value
-                less than 1 will be interpreted to mean num_cpus - 1; default is -1.
+        Parameters
+        ----------
+        model : {:class:`~gensim.models.ldamodel.LdaModel`, :class:`~gensim.models.ldamulticore.LdaMulticore`}, optional
+            Pre-trained topic model. Should be provided if topics is not provided.
+            Currently supports :class:`~gensim.models.ldamodel.LdaModel`,
+            :class:`~gensim.models.ldamulticore.LdaMulticore`,
+            :class:`~gensim.models.wrappers.ldamallet.LdaMallet` wrapper and
+            :class:`~gensim.models.wrappers.ldavowpalwabbit.LdaVowpalWabbit` wrapper.
+            Use 'topics' parameter to plug in an as yet unsupported model.
+        topics : list of list of unicode str, optional
+            List of tokenized topics. If this is preferred over model, dictionary should be provided.
+        texts : list of list of unicode str, optional
+            Tokenized texts. Needed for coherence models that use sliding window based probability estimator,
+        corpus : iterable of list of (int, number), optional
+            Gensim document corpus.
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
+            Gensim dictionary mapping of id word to create corpus. If model.id2word is present,
+            this is not needed. If both are provided, dictionary will be used.
+        window_size : int, optional
+            Is the size of the window to be used for coherence measures using boolean sliding window
+            as their probability estimator. For 'u_mass' this doesn't matter.
+            If left 'None' the default window sizes are used which are: 'c_v' : 110, 'c_uci' : 10, 'c_npmi' : 10.
+        coherence : {'u_mass', 'c_v', 'c_uci', 'c_npmi'}, optional
+            Coherence measure to be used. Supported values are desccribed in type field. 'c_uci' also popularly
+            known as `c_pmi`. For 'u_mass' corpus should be provided. If texts is provided, it will be converted
+            to corpus using the dictionary. For 'c_v', 'c_uci' and 'c_npmi' texts should be provided.
+            Corpus is not needed.
+        topn : int, optional
+            Integer corresponding to the number of top words to be extracted from each topic.
+        processes : int, optional
+            Number of processes to use for probability estimation phase; any value
+            less than 1 will be interpreted to mean num_cpus - 1; default is -1.
+            
         """
         if model is None and topics is None:
             raise ValueError("One of model or topics has to be provided.")
@@ -218,15 +207,25 @@ class CoherenceModel(interfaces.TransformationABC):
         self._topics = None
         self.topics = topics
 
-        self.processes = processes if processes >= 1 else max(1, mp.cpu_count() - 1)
+        self.processes = processes if processes > 1 else max(1, mp.cpu_count() - 1)
 
     @classmethod
     def for_models(cls, models, dictionary, topn=20, **kwargs):
         """Initialize a CoherenceModel with estimated probabilities for all of the given models.
 
-        Args:
-            models (list): List of models to evalaute coherence of; the only requirement is
-                that each has a `get_topics` methods.
+        Parameters
+        ----------
+        models : list of :class:`~gensim.models.ldamodel.LdaModel`
+            List of models to evaluate coherence of; the only requirement is that each has a `get_topics` methods.
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
+            Gensim dictionary mapping of id word.
+        topn : int, optional
+            TODO: gonna check it later
+
+        Return
+        ------
+        :class:`~gensim.models.coherencemodel.CoherenceModel`
+            CoherenceModel with estimated probabilities for all of the given models.
         """
         topics = [cls.top_topics_as_word_lists(model, dictionary, topn) for model in models]
         kwargs['dictionary'] = dictionary
@@ -249,10 +248,17 @@ class CoherenceModel(interfaces.TransformationABC):
     def for_topics(cls, topics_as_topn_terms, **kwargs):
         """Initialize a CoherenceModel with estimated probabilities for all of the given topics.
 
-        Args:
-            topics_as_topn_terms (list of lists): Each element in the top-level list should be
-                the list of topics for a model. The topics for the model should be a list of
-                top-N words, one per topic.
+        Parameters
+        ----------
+        topics_as_topn_terms : list of list of str
+            Each element in the top-level list should be the list of topics for a model.
+            The topics for the model should be a list of top-N words, one per topic.
+
+        Return
+        ------
+        :class:`~gensim.models.coherencemodel.CoherenceModel`
+            CoherenceModel with estimated probabilities for all of the given models.
+
         """
         if not topics_as_topn_terms:
             raise ValueError("len(topics) must be > 0.")
