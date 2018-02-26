@@ -938,7 +938,6 @@ class AuthorTopicModel(LdaModel):
             Topic distribution for the given `corpus`.
 
         """
-        # TODO: how should this function look like for get_new_author_topics?
         def rho():
             return pow(self.offset + 1 + 1, -self.decay)
 
@@ -985,14 +984,9 @@ class AuthorTopicModel(LdaModel):
                 corpus, self.author2doc, self.doc2author, rho(),
                 collect_sstats=False, chunk_doc_idx=corpus_doc_idx
             )
-        except ValueError as e:
-            # Something went wrong! Rollback temporary changes in object and log
+            new_author_topics = self.get_author_topics(new_author_name, minimum_probability)
+        finally:
             rollback_new_author_chages()
-            logging.exception(e)
-            return
-
-        new_author_topics = self.get_author_topics(new_author_name, minimum_probability)
-        rollback_new_author_chages()
         return new_author_topics
 
     def get_author_topics(self, author_name, minimum_probability=None):
