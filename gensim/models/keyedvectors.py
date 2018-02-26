@@ -996,23 +996,27 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                         a, b, sim = [word for word in line.split(delimiter)]
                     sim = float(sim)
                 except (ValueError, TypeError):
-                    logger.info('skipping invalid line #%d in %s', line_no, pairs)
+                    logger.info('Skipping invalid line #%d in %s', line_no, pairs)
                     continue
                 if a not in ok_vocab or b not in ok_vocab:
                     oov += 1
                     if dummy4unknown:
+                        logger.debug('Zero similarity for line #%d with OOV words: %s', line_no, line.strip())
                         similarity_model.append(0.0)
                         similarity_gold.append(sim)
                         continue
                     else:
-                        logger.debug('skipping line #%d with OOV words: %s', line_no, line.strip())
+                        logger.debug('Skipping line #%d with OOV words: %s', line_no, line.strip())
                         continue
                 similarity_gold.append(sim)  # Similarity from the dataset
                 similarity_model.append(self.similarity(a, b))  # Similarity from the model
         self.vocab = original_vocab
         spearman = stats.spearmanr(similarity_gold, similarity_model)
         pearson = stats.pearsonr(similarity_gold, similarity_model)
-        oov_ratio = float(oov) / (len(similarity_gold) + oov) * 100
+        if dummy4unknown:
+            oov_ratio = float(oov) / len(similarity_gold) * 100
+        else:
+            oov_ratio = float(oov) / (len(similarity_gold) + oov) * 100
 
         logger.debug('Pearson correlation coefficient against %s: %f with p-value %f', pairs, pearson[0], pearson[1])
         logger.debug(
