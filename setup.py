@@ -13,7 +13,6 @@ sudo python ./setup.py install
 import os
 import sys
 import warnings
-
 import ez_setup
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
@@ -196,7 +195,7 @@ When `citing gensim in academic papers and theses <https://scholar.google.cz/cit
 
   @inproceedings{rehurek_lrec,
         title = {{Software Framework for Topic Modelling with Large Corpora}},
-        author = {Radim {\v R}eh{\r u}{\v r}ek and Petr Sojka},
+        author = {Radim {\\v R}eh{\\r u}{\\v r}ek and Petr Sojka},
         booktitle = {{Proceedings of the LREC 2010 Workshop on New
              Challenges for NLP Frameworks}},
         pages = {45--50},
@@ -224,20 +223,28 @@ Copyright (c) 2009-now Radim Rehurek
 
 """
 
+distributed_env = ['Pyro4 >= 4.27']
 
-test_env = [
-    'testfixtures',
-    'Morfessor == 2.0.2a4',
-    'scikit-learn',
+win_testenv = [
+    'pytest',
+    'pytest-rerunfailures',
+    'mock',
+    'cython',
     'pyemd',
+    'testfixtures',
+    'scikit-learn',
+    'Morfessor==2.0.2a4',
+]
+
+linux_testenv = win_testenv + [
     'annoy',
-    'tensorflow >= 1.1.0',
+    'tensorflow <= 1.3.0',
     'keras >= 2.0.4',
 ]
 
 setup(
     name='gensim',
-    version='3.0.1',
+    version='3.3.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -247,7 +254,14 @@ setup(
             include_dirs=[model_dir]),
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
-            include_dirs=[model_dir])
+            include_dirs=[model_dir]),
+        Extension('gensim.corpora._mmreader',
+            sources=['./gensim/corpora/_mmreader.c']),
+        Extension('gensim.models.fasttext_inner',
+            sources=['./gensim/models/fasttext_inner.c'],
+            include_dirs=[model_dir]),
+        Extension('gensim._matutils',
+            sources=['./gensim/_matutils.c']),
     ],
     cmdclass=cmdclass,
     packages=find_packages(),
@@ -257,6 +271,8 @@ setup(
 
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
+    
+    license='LGPLv2.1',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
         'LSA, LSI, Latent Dirichlet Allocation, LDA, '
@@ -291,11 +307,12 @@ setup(
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
     ],
-    tests_require=test_env,
+    tests_require=linux_testenv,
     extras_require={
-        'distributed': ['Pyro4 >= 4.27'],
-        'test': test_env,
-        'docs': test_env + ['Pyro4 >= 4.27', 'sphinx', 'sphinxcontrib-napoleon', 'annoy'],
+        'distributed': distributed_env,
+        'test-win': win_testenv,
+        'test': linux_testenv,
+        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern', 'sphinxcontrib.programoutput'],
     },
 
     include_package_data=True,

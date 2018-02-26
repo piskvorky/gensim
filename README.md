@@ -3,11 +3,12 @@ gensim – Topic Modelling in Python
 
 [![Build Status](https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop)](https://travis-ci.org/RaRe-Technologies/gensim)
 [![GitHub release](https://img.shields.io/github/release/rare-technologies/gensim.svg?maxAge=3600)](https://github.com/RaRe-Technologies/gensim/releases)
+[![Conda-forge Build](https://anaconda.org/conda-forge/gensim/badges/version.svg)](https://anaconda.org/conda-forge/gensim)
 [![Wheel](https://img.shields.io/pypi/wheel/gensim.svg)](https://pypi.python.org/pypi/gensim)
 [![DOI](https://zenodo.org/badge/DOI/10.13140/2.1.2393.1847.svg)](https://doi.org/10.13140/2.1.2393.1847)
-[![Mailing List](https://img.shields.io/badge/-Mailing%20List-lightgrey.svg)](https://groups.google.com/forum/#!forum/gensim)
+[![Mailing List](https://img.shields.io/badge/-Mailing%20List-brightgreen.svg)](https://groups.google.com/forum/#!forum/gensim)
 [![Gitter](https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-09a3d5.svg)](https://gitter.im/RaRe-Technologies/gensim)
-[![Follow](https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow)](https://twitter.com/gensim_py)
+[![Follow](https://img.shields.io/twitter/follow/gensim_py.svg?style=social&label=Follow)](https://twitter.com/gensim_py)
 
 
 
@@ -122,25 +123,25 @@ Adopters
 
 | Name                                   | Logo                                                                                                                           | URL                                                                                              | Description                                                                                                                                                                                                           |
 |----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|                                                                                                                         
-| RaRe Technologies                            | <img src="http://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png" width="100"> | [rare-technologies.com](http://rare-technologies.com)                                                           | Machine learning & NLP consulting and training. Creators and maintainers of Gensim. |
-| Mindseye                            | <img src="http://www.mindseyesolutions.com/wp-content/uploads/2015/12/Mindseye_logo_website.jpg" width="100">                                                  | [mindseye.com](http://www.mindseyesolutions.com/)                                                           | Similarities in legal documents                                                    | 
-| Talentpair                            | ![Talentpair](https://avatars3.githubusercontent.com/u/8418395?v=3&s=100)                                                 | [talentpair.com](http://talentpair.com)                                                           | Data science driving high-touch recruiting                                                    | 
-| Tailwind          | <img src="http://blog.tailwindapp.com/wp-content/uploads/2013/10/Tailwind-Square-Logo-Blue-White-300x300.png" width="100"> | [Tailwindapp.com](https://www.tailwindapp.com/)| Post interesting and relevant content to Pinterest              |
-| Issuu          | <img src="https://static.isu.pub/fe/issuu-brandpages/s3/155/press/assets/brand_package_zip/issuu%20logos/png/issuu-logo-stacked-colour.png" width="100"> | [Issuu.com](https://issuu.com/)| Gensim’s LDA module lies at the very core of the analysis we perform on each uploaded publication to figure out what it’s all about.
-| Sports Authority        | <img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Sports_Authority_logo2011.jpg" width="100"> | [sportsauthority.com](https://en.wikipedia.org/wiki/Sports_Authority)| Text mining of customer surveys and social media sources |
-| Search Metrics        | <img src="http://www.searchmetrics.com/wp-content/uploads/Logo_searchmetrics_Webversion.png" width="100"> | [searchmetrics.com](http://www.searchmetrics.com/)| Gensim word2vec used for entity disambiguation in Search Engine Optimisation
-| Cisco Security        | <img src="https://supportforums.cisco.com/sites/default/files/legacy/1/6/1/2161-CiscoSystems.gif" width="100"> | [cisco.com](http://www.cisco.com/c/en/us/products/security/index.html)|  Large-scale fraud detection
-|  12K Research         | <img src="https://static1.squarespace.com/static/548d6f40e4b0fb61d7b8f40b/t/57310800b09f95e472ba5dd1/1462831123953/12k-logo.png" width="100"> | [12k.co](https://12k.co/)|   Document similarity analysis on media articles
-|  National Institutes of Health         | <img src="https://www.nih.gov/sites/default/files/styles/featured_media_breakpoint-large/public/about-nih/2012-logo.png" width="100"> | [github/NIHOPA](https://github.com/NIHOPA/pipeline_word2vec)|   Processing grants and publications with word2vec
-|  Codeq LLC         | <img src="https://codeq.com/wp-content/themes/codeq/assets/img/logo.svg" width="100"> | [codeq.com](https://codeq.com)|   Document classification with word2vec
-| Mass Cognition     | <img src="http://static1.squarespace.com/static/5637b16ee4b050255657c537/t/56a683bf9cadb6bf86a0ea13/1461016648294/?format=1500w" width="100"> | [masscognition.com](http://www.masscognition.com/)                                  | Topic analysis service for consumer text data and general text data |
-| Stillwater Supercomputing     | <img src="http://www.stillwater-sc.com/img/stillwater-logo.png" width="100"> | [stillwater-sc.com](http://www.stillwater-sc.com/)                                  | Document comprehension and association with word2vec |
-| Channel 4     | <img src="http://www.channel4.com/static/info/images/lib/c4logo_2015_info_corporate.jpg" width="100"> | [channel4.com](http://www.channel4.com/)                                  | Recommendation engine |
-| Amazon     |  <img src="http://g-ec2.images-amazon.com/images/G/01/social/api-share/amazon_logo_500500._V323939215_.png" width="100"> | [amazon.com](http://www.amazon.com/)                                  |  Document similarity|
-| SiteGround Hosting     |  <img src="https://www.siteground.com/img/knox/logos/siteground.png" width="100"> | [siteground.com](https://www.siteground.com/)                                  | An ensemble search engine which uses different embeddings models and similarities, including word2vec, WMD, and LDA. |
-| Juju  | <img src="https://d5k1a84rm5hwo.cloudfront.net/img/juju_home_logo.png" width="100">   | [www.juju.com](http://www.juju.com/) | Provide non-obvious related job suggestions. |
-| NLPub | <img src="https://nlpub.org/images/thumb/a/aa/NLPub.svg/240px-NLPub.svg.png" width="100"> | [nlpub.org](https://nlpub.org/) | Distributional semantic models including word2vec. |
-|Capital One | <img src="https://s3.amazonaws.com/fjds/member/original/1245173/C1_Core_NG_RGB_R_%281%29.PNG?1456169388"  width="200"> | [www.capitalone.com](https://www.capitalone.com/) | Topic modeling for customer complaints exploration. |
+| RaRe Technologies                            | ![rare](docs/src/readme_images/rare.png) | [rare-technologies.com](http://rare-technologies.com)                                                           | Machine learning & NLP consulting and training. Creators and maintainers of Gensim. |
+| Mindseye                            | ![mindseye](docs/src/readme_images/mindseye.png) | [mindseye.com](http://www.mindseyesolutions.com/)                                                           | Similarities in legal documents                                                    | 
+| Talentpair                            | ![talent-pair](docs/src/readme_images/talent-pair.png) | [talentpair.com](http://talentpair.com)                                                           | Data science driving high-touch recruiting                                                    | 
+| Tailwind          | ![tailwind](docs/src/readme_images/tailwind.png)| [Tailwindapp.com](https://www.tailwindapp.com/)| Post interesting and relevant content to Pinterest              |
+| Issuu          | ![issuu](docs/src/readme_images/issuu.png) | [Issuu.com](https://issuu.com/)| Gensim’s LDA module lies at the very core of the analysis we perform on each uploaded publication to figure out what it’s all about.
+| Sports Authority        |               ![sports-authority](docs/src/readme_images/sports-authority.png)               | [sportsauthority.com](https://en.wikipedia.org/wiki/Sports_Authority)| Text mining of customer surveys and social media sources |
+| Search Metrics        | ![search-metrics](docs/src/readme_images/search-metrics.png) | [searchmetrics.com](http://www.searchmetrics.com/)| Gensim word2vec used for entity disambiguation in Search Engine Optimisation
+| Cisco Security        | ![cisco](docs/src/readme_images/cisco.png) | [cisco.com](http://www.cisco.com/c/en/us/products/security/index.html)|  Large-scale fraud detection
+|  12K Research         | ![12k](docs/src/readme_images/12k.png)| [12k.co](https://12k.co/)|   Document similarity analysis on media articles
+|  National Institutes of Health         | ![nih](docs/src/readme_images/nih.png) | [github/NIHOPA](https://github.com/NIHOPA/pipeline_word2vec)|   Processing grants and publications with word2vec
+|  Codeq LLC         | ![codeq](docs/src/readme_images/codeq.png) | [codeq.com](https://codeq.com)|   Document classification with word2vec
+| Mass Cognition     | ![mass-cognition](docs/src/readme_images/mass-cognition.png) | [masscognition.com](http://www.masscognition.com/)                                  | Topic analysis service for consumer text data and general text data |
+| Stillwater Supercomputing     | ![stillwater](docs/src/readme_images/stillwater.png) | [stillwater-sc.com](http://www.stillwater-sc.com/)                                  | Document comprehension and association with word2vec |
+| Channel 4     | ![channel4](docs/src/readme_images/channel4.png) | [channel4.com](http://www.channel4.com/)                                  | Recommendation engine |
+| Amazon     |  ![amazon](docs/src/readme_images/amazon.png) | [amazon.com](http://www.amazon.com/)                                  |  Document similarity|
+| SiteGround Hosting     |  ![siteground](docs/src/readme_images/siteground.png) | [siteground.com](https://www.siteground.com/)                                  | An ensemble search engine which uses different embeddings models and similarities, including word2vec, WMD, and LDA. |
+| Juju  | ![juju](docs/src/readme_images/juju.png) | [www.juju.com](http://www.juju.com/) | Provide non-obvious related job suggestions. |
+| NLPub | ![nlpub](docs/src/readme_images/nlpub.png) | [nlpub.org](https://nlpub.org/) | Distributional semantic models including word2vec. |
+|Capital One | ![capitalone](docs/src/readme_images/capitalone.png) | [www.capitalone.com](https://www.capitalone.com/) | Topic modeling for customer complaints exploration. |
 
 -------
 

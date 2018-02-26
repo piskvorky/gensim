@@ -15,6 +15,7 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
+from gensim.models import doc2vec
 
 
 class D2VTransformer(TransformerMixin, BaseEstimator):
@@ -63,8 +64,12 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         Fit the model according to the given training data.
         Calls gensim.models.Doc2Vec
         """
+        if isinstance(X[0], doc2vec.TaggedDocument):
+            d2v_sentences = X
+        else:
+            d2v_sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(X)]
         self.gensim_model = models.Doc2Vec(
-            documents=X, dm_mean=self.dm_mean, dm=self.dm,
+            documents=d2v_sentences, dm_mean=self.dm_mean, dm=self.dm,
             dbow_words=self.dbow_words, dm_concat=self.dm_concat, dm_tag_count=self.dm_tag_count,
             docvecs=self.docvecs, docvecs_mapfile=self.docvecs_mapfile, comment=self.comment,
             trim_rule=self.trim_rule, size=self.size, alpha=self.alpha, window=self.window,
@@ -78,7 +83,9 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
     def transform(self, docs):
         """
         Return the vector representations for the input documents.
-        The input `docs` should be a list of lists like : [ ['calculus', 'mathematical'], ['geometry', 'operations', 'curves'] ]
+        The input `docs` should be a list of lists like
+        [['calculus', 'mathematical'],
+        ['geometry', 'operations', 'curves']]
         or a single document like : ['calculus', 'mathematical']
         """
         if self.gensim_model is None:
@@ -87,12 +94,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             )
 
         # The input as array of array
-        check = lambda x: [x] if isinstance(x[0], string_types) else x
-        docs = check(docs)
-        X = [[] for _ in range(0, len(docs))]
-
-        for k, v in enumerate(docs):
-            doc_vec = self.gensim_model.infer_vector(v)
-            X[k] = doc_vec
-
-        return np.reshape(np.array(X), (len(docs), self.gensim_model.vector_size))
+        if isinstance(docs[0], string_types):
+            docs = [docs]
+        vectors = [self.gensim_model.infer_vector(doc) for doc in docs]
+        return np.reshape(np.array(vectors), (len(docs), self.gensim_model.vector_size))

@@ -4,17 +4,14 @@
 # Copyright (C) 2017 Anmol Gulati <anmol01gulati@gmail.com>
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 
-"""
-Python wrapper around word representation learning from Varembed models, a library for efficient learning of word representations
-and sentence classification [1].
+"""Python wrapper around `Varembed model <https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings>`_.
+Original paper:`"Morphological Priors for Probabilistic Neural Word Embeddings" <http://arxiv.org/pdf/1608.01056.pdf>`_.
 
-This module allows ability to obtain word vectors for out-of-vocabulary words, for the Varembed model[2].
+Notes
+-----
+* This module allows ability to obtain word vectors for out-of-vocabulary words, for the Varembed model.
+* The wrapped model can not be updated with new documents for online training.
 
-The wrapped model can not be updated with new documents for online training.
-
-.. [1] https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings
-
-.. [2] http://arxiv.org/pdf/1608.01056.pdf
 """
 
 import logging
@@ -28,26 +25,34 @@ logger = logging.getLogger(__name__)
 
 
 class VarEmbed(KeyedVectors):
-    """
-    Class for word vectors using Varembed models. Contains methods to load a varembed model and implements
-    functionality like `most_similar`, `similarity` by extracting vectors into numpy matrix.
-    Refer to [Varembed]https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings for
-    implementation of Varembed models.
-    """
+    """Python wrapper using `Varembed <https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings>`_.
 
+    Warnings
+    --------
+    This is **only** python wrapper for `Varembed <https://github.com/rguthrie3/MorphologicalPriorsForWordEmbeddings>`_,
+    this allows to load pre-trained models only.
+
+    """
     def __init__(self):
         self.vector_size = 0
         self.vocab_size = 0
 
     @classmethod
     def load_varembed_format(cls, vectors, morfessor_model=None):
-        """
-        Load the word vectors into matrix from the varembed output vector files.
-        Using morphemes requires Python 2.7 version or above.
+        """Load the word vectors into matrix from the varembed output vector files.
 
-        'vectors' is the pickle file containing the word vectors.
-        'morfessor_model' is the path to the trained morfessor model.
-        'use_morphemes' False(default) use of morpheme embeddings in output.
+        Parameters
+        ----------
+        vectors : dict
+            Pickle file containing the word vectors.
+        morfessor_model : str, optional
+            Path to the trained morfessor model.
+
+        Returns
+        -------
+        :class:`~gensim.models.wrappers.varembed.VarEmbed`
+            Ready to use instance.
+
         """
         result = cls()
         if vectors is None:
@@ -72,7 +77,16 @@ class VarEmbed(KeyedVectors):
         return result
 
     def load_word_embeddings(self, word_embeddings, word_to_ix):
-        """ Loads the word embeddings """
+        """Loads the word embeddings.
+
+        Parameters
+        ----------
+        word_embeddings : numpy.ndarray
+            Matrix with word-embeddings.
+        word_to_ix : dict of (str, int)
+            Mapping word to index.
+
+        """
         logger.info("Loading the vocabulary")
         self.vocab = {}
         self.index2word = []
@@ -92,8 +106,17 @@ class VarEmbed(KeyedVectors):
         logger.info("Loaded matrix of %d size and %d dimensions", self.vocab_size, self.vector_size)
 
     def add_morphemes_to_embeddings(self, morfessor_model, morpho_embeddings, morpho_to_ix):
-        """ Method to include morpheme embeddings into varembed vectors
-            Allowed only in Python versions 2.7 and above.
+        """Include morpheme embeddings into vectors.
+
+        Parameters
+        ----------
+        morfessor_model : :class:`morfessor.baseline.BaselineModel`
+            Morfessor model.
+        morpho_embeddings : dict
+            Pickle file containing morpheme embeddings.
+        morpho_to_ix : dict
+            Mapping morpheme to index.
+
         """
         for word in self.vocab:
             morpheme_embedding = np.array(

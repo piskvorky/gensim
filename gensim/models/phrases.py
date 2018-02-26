@@ -20,7 +20,8 @@ you'd train the detector with:
 
 >>> phrases = Phrases(sentence_stream)
 
-and then create a performant Phraser object to transform any sentence (list of token strings) using the standard gensim syntax:
+and then create a performant Phraser object to transform any sentence (list of token strings)
+using the standard gensim syntax:
 
 >>> bigram = Phraser(phrases)
 >>> sent = [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there']
@@ -52,6 +53,22 @@ two tokens (e.g. `new_york_times`):
 >>> print(trigram[bigram[sent]])
 [u'the', u'new_york_times', u'is', u'a', u'newspaper']
 
+The common_terms parameter add a way to give special treatment to common terms (aka stop words)
+such that their presence between two words
+won't prevent bigram detection.
+It allows to detect expressions like "bank of america" or "eye of the beholder".
+
+>>> common_terms = ["of", "with", "without", "and", "or", "the", "a"]
+>>> ct_phrases = Phrases(sentence_stream, common_terms=common_terms)
+
+The phraser will of course inherit the common_terms from Phrases.
+
+>>> ct_bigram = Phraser(ct_phrases)
+>>> sent = [u'the', u'mayor', u'shows', u'his', u'lack', u'of', u'interest']
+>>> print(bigram[sent])
+[u'the', u'mayor', u'shows', u'his', u'lack_of_interest']
+
+
 .. [1] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean.
        Distributed Representations of Words and Phrases and their Compositionality.
        In Proceedings of NIPS, 2013.
@@ -63,17 +80,23 @@ import os
 import logging
 import warnings
 from collections import defaultdict
+import functools as ft
 import itertools as it
 from math import log
-from inspect import getargspec
 import pickle
 import six
 
-from six import iteritems, string_types, next
+from six import iteritems, string_types, PY2, next
 
 from gensim import utils, interfaces
 
+if PY2:
+    from inspect import getargspec
+else:
+    from inspect import getfullargspec as getargspec
+
 logger = logging.getLogger(__name__)
+
 
 def _is_single(obj):
     """
@@ -85,6 +108,7 @@ def _is_single(obj):
     is a corpus if it is an iterable of documents.
     """
     obj_iter = iter(obj)
+    temp_iter = obj_iter
     try:
         peek = next(obj_iter)
         obj_iter = it.chain([peek], obj_iter)
@@ -94,12 +118,114 @@ def _is_single(obj):
     if isinstance(peek, string_types):
         # It's a document, return the iterator
         return True, obj_iter
+    if temp_iter == obj:
+        # Checking for iterator to the object
+        return False, obj_iter
     else:
         # If the first item isn't a string, assume obj is a corpus
-        return False, obj_iter
+        return False, obj
 
 
-class Phrases(interfaces.TransformationABC):
+class SentenceAnalyzer(object):
+
+    def score_item(self, worda, wordb, components, scorer):
+        vocab = self.vocab
+        if worda in vocab and wordb in vocab:
+            bigram = self.delimiter.join(components)
+            if bigram in vocab:
+                return scorer(
+                    worda_count=float(vocab[worda]),
+                    wordb_count=float(vocab[wordb]),
+                    bigram_count=float(vocab[bigram]))
+        return -1
+
+    def analyze_sentence(self, sentence, threshold, common_terms, scorer):
+        """Analyze a sentence
+
+        `sentence` a token list representing the sentence to be analyzed.
+
+        `threshold` the minimum score for a bigram to be taken into account
+
+        `common_terms` the list of common terms, they have a special treatment
+
+        `scorer` the scorer function, as given to Phrases
+        """
+        s = [utils.any2utf8(w) for w in sentence]
+        last_uncommon = None
+        in_between = []
+        # adding None is a trick that helps getting an automatic happy ending
+        # has it won't be a common_word, nor score
+        for word in s + [None]:
+            is_common = word in common_terms
+            if not is_common and last_uncommon:
+                chain = [last_uncommon] + in_between + [word]
+                # test between last_uncommon
+                score = self.score_item(
+                    worda=last_uncommon,
+                    wordb=word,
+                    components=chain,
+                    scorer=scorer,
+                )
+                if score > threshold:
+                    yield (chain, score)
+                    last_uncommon = None
+                    in_between = []
+                else:
+                    # release words individually
+                    for w in it.chain([last_uncommon], in_between):
+                        yield (w, None)
+                    in_between = []
+                    last_uncommon = word
+            elif not is_common:
+                last_uncommon = word
+            else:  # common term
+                if last_uncommon:
+                    # wait for uncommon resolution
+                    in_between.append(word)
+                else:
+                    yield (word, None)
+
+
+class PhrasesTransformation(interfaces.TransformationABC):
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """
+        Load a previously saved Phrases/Phraser class. Handles backwards compatibility from
+            older Phrases/Phraser versions which did not support  pluggable scoring functions.
+            Otherwise, relies on utils.load
+        """
+
+        model = super(PhrasesTransformation, cls).load(*args, **kwargs)
+        # update older models
+        # if no scoring parameter, use default scoring
+        if not hasattr(model, 'scoring'):
+            logger.info('older version of %s loaded without scoring function', cls.__name__)
+            logger.info('setting pluggable scoring method to original_scorer for compatibility')
+            model.scoring = original_scorer
+        # if there is a scoring parameter, and it's a text value, load the proper scoring function
+        if hasattr(model, 'scoring'):
+            if isinstance(model.scoring, six.string_types):
+                if model.scoring == 'default':
+                    logger.info('older version of %s loaded with "default" scoring parameter', cls.__name__)
+                    logger.info('setting scoring method to original_scorer pluggable scoring method for compatibility')
+                    model.scoring = original_scorer
+                elif model.scoring == 'npmi':
+                    logger.info('older version of %s loaded with "npmi" scoring parameter', cls.__name__)
+                    logger.info('setting scoring method to npmi_scorer pluggable scoring method for compatibility')
+                    model.scoring = npmi_scorer
+                else:
+                    raise ValueError(
+                        'failed to load %s model with unknown scoring setting %s' % (cls.__name__, model.scoring))
+        # if there is non common_terms attribute, initialize
+        if not hasattr(model, "common_terms"):
+            logger.info('older version of %s loaded without common_terms attribute', cls.__name__)
+            logger.info('setting common_terms to empty set')
+            model.common_terms = frozenset()
+        return model
+
+
+class Phrases(SentenceAnalyzer, PhrasesTransformation):
     """
     Detect phrases, based on collected collocation counts. Adjacent words that appear
     together more frequently than expected are joined together with the `_` character.
@@ -109,8 +235,9 @@ class Phrases(interfaces.TransformationABC):
 
     """
 
-    def __init__(self, sentences=None, min_count=5, threshold=10.0, max_vocab_size=40000000,
-                 delimiter=b'_', progress_per=10000, scoring='default'):
+    def __init__(self, sentences=None, min_count=5, threshold=10.0,
+                 max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
+                 scoring='default', common_terms=frozenset()):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -168,6 +295,8 @@ class Phrases(interfaces.TransformationABC):
         A scoring function without any of these parameters (even if the parameters are not used) will
         raise a ValueError on initialization of the Phrases class. The scoring function must be picklable.
 
+        `common_terms` is an optionnal list of "stop words" that won't affect frequency count
+        of expressions containing them.
         """
         if min_count <= 0:
             raise ValueError("min_count should be at least 1")
@@ -189,7 +318,9 @@ class Phrases(interfaces.TransformationABC):
             else:
                 raise ValueError('unknown scoring method string %s specified' % (scoring))
 
-        scoring_parameters = ['worda_count', 'wordb_count', 'bigram_count', 'len_vocab', 'min_count', 'corpus_word_count']
+        scoring_parameters = [
+            'worda_count', 'wordb_count', 'bigram_count', 'len_vocab', 'min_count', 'corpus_word_count'
+        ]
         if callable(scoring):
             if all(parameter in getargspec(scoring)[0] for parameter in scoring_parameters):
                 self.scoring = scoring
@@ -204,6 +335,7 @@ class Phrases(interfaces.TransformationABC):
         self.delimiter = delimiter
         self.progress_per = progress_per
         self.corpus_word_count = 0
+        self.common_terms = frozenset(utils.any2utf8(w) for w in common_terms)
 
         # ensure picklability of custom scorer
         try:
@@ -218,6 +350,19 @@ class Phrases(interfaces.TransformationABC):
         if sentences is not None:
             self.add_vocab(sentences)
 
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """
+        Load a previously saved Phrases class. Handles backwards compatibility from
+            older Phrases versions which did not support  pluggable scoring functions.
+        """
+        model = super(Phrases, cls).load(*args, **kwargs)
+        if not hasattr(model, 'corpus_word_count'):
+            logger.info('older version of %s loaded without corpus_word_count', cls.__name__)
+            logger.info('Setting it to 0, do not use it in your scoring function.')
+            model.corpus_word_count = 0
+        return model
+
     def __str__(self):
         """Get short string representation of this phrase detector."""
         return "%s<%i vocab, min_count=%s, threshold=%s, max_vocab_size=%s>" % (
@@ -226,7 +371,8 @@ class Phrases(interfaces.TransformationABC):
         )
 
     @staticmethod
-    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
+    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000,
+                    common_terms=frozenset()):
         """Collect unigram/bigram counts from the `sentences` iterable."""
         sentence_no = -1
         total_words = 0
@@ -237,17 +383,21 @@ class Phrases(interfaces.TransformationABC):
             if sentence_no % progress_per == 0:
                 logger.info(
                     "PROGRESS: at sentence #%i, processed %i words and %i word types",
-                    sentence_no, total_words, len(vocab)
+                    sentence_no, total_words, len(vocab),
                 )
-            sentence = [utils.any2utf8(w) for w in sentence]
-            for bigram in zip(sentence, sentence[1:]):
-                vocab[bigram[0]] += 1
-                vocab[delimiter.join(bigram)] += 1
-                total_words += 1
-
-            if sentence:  # add last word skipped by previous loop
-                word = sentence[-1]
-                vocab[word] += 1
+            s = [utils.any2utf8(w) for w in sentence]
+            last_uncommon = None
+            in_between = []
+            for word in s:
+                if word not in common_terms:
+                    vocab[word] += 1
+                    if last_uncommon is not None:
+                        components = it.chain([last_uncommon], in_between, [word])
+                        vocab[delimiter.join(components)] += 1
+                    last_uncommon = word
+                    in_between = []
+                elif last_uncommon is not None:
+                    in_between.append(word)
                 total_words += 1
 
             if len(vocab) > max_vocab_size:
@@ -270,7 +420,8 @@ class Phrases(interfaces.TransformationABC):
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab, total_words = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
+        min_reduce, vocab, total_words = self.learn_vocab(
+            sentences, self.max_vocab_size, self.delimiter, self.progress_per, self.common_terms)
 
         self.corpus_word_count += total_words
         if len(self.vocab) > 0:
@@ -300,41 +451,26 @@ class Phrases(interfaces.TransformationABC):
 
             then you can debug the threshold with generated tsv
         """
-
-        vocab = self.vocab
-        threshold = self.threshold
-        delimiter = self.delimiter  # delimiter used for lookup
-        min_count = self.min_count
-        scorer = self.scoring
-        # made floats for scoring function
-        len_vocab = float(len(vocab))
-        scorer_min_count = float(min_count)
-        corpus_word_count = float(self.corpus_word_count)
-
+        analyze_sentence = ft.partial(
+            self.analyze_sentence,
+            threshold=self.threshold,
+            common_terms=self.common_terms,
+            scorer=ft.partial(
+                self.scoring,
+                len_vocab=float(len(self.vocab)),
+                min_count=float(self.min_count),
+                corpus_word_count=float(self.corpus_word_count),
+            ),
+        )
         for sentence in sentences:
-            s = [utils.any2utf8(w) for w in sentence]
-            last_bigram = False
-
-            for word_a, word_b in zip(s, s[1:]):
-                # last bigram check was moved here to save a few CPU cycles
-                if word_a in vocab and word_b in vocab and not last_bigram:
-                    bigram_word = delimiter.join((word_a, word_b))
-                    if bigram_word in vocab:
-                        count_a = float(vocab[word_a])
-                        count_b = float(vocab[word_b])
-                        count_ab = float(vocab[bigram_word])
-                        # scoring MUST have all these parameters, even if they are not used
-                        score = scorer(worda_count=count_a, wordb_count=count_b, bigram_count=count_ab, len_vocab=len_vocab, min_count=scorer_min_count, corpus_word_count=corpus_word_count)
-                        # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
-                        #     bigram_word, count_ab, scorer_min_count, count_a, count_ab, len_vocab, score)
-                        if score > threshold and count_ab >= min_count:
-                            if as_tuples:
-                                yield ((word_a, word_b), score)
-                            else:
-                                yield (out_delimiter.join((word_a, word_b)), score)
-                            last_bigram = True
-                            continue
-                last_bigram = False
+            bigrams = analyze_sentence(sentence)
+            # keeps only not None scores
+            filtered = ((words, score) for words, score in bigrams if score is not None)
+            for words, score in filtered:
+                if as_tuples:
+                    yield (tuple(words), score)
+                else:
+                    yield (out_delimiter.join(words), score)
 
     def __getitem__(self, sentence):
         """
@@ -357,15 +493,7 @@ class Phrases(interfaces.TransformationABC):
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
 
-        vocab = self.vocab
-        threshold = self.threshold
         delimiter = self.delimiter  # delimiter used for lookup
-        min_count = self.min_count
-        scorer = self.scoring
-        # made floats for scoring function
-        len_vocab = float(len(vocab))
-        scorer_min_count = float(min_count)
-        corpus_word_count = float(self.corpus_word_count)
 
         is_single, sentence = _is_single(sentence)
         if not is_single:
@@ -373,72 +501,25 @@ class Phrases(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        s, new_s = [utils.any2utf8(w) for w in sentence], []
-        last_bigram = False
-        vocab = self.vocab
-
-        for word_a, word_b in zip(s, s[1:]):
-            # last bigram check was moved here to save a few CPU cycles
-            if word_a in vocab and word_b in vocab and not last_bigram:
-                bigram_word = delimiter.join((word_a, word_b))
-                if bigram_word in vocab:
-                    count_a = float(vocab[word_a])
-                    count_b = float(vocab[word_b])
-                    count_ab = float(vocab[bigram_word])
-                    # scoring MUST have all these parameters, even if they are not used
-                    score = scorer(worda_count=count_a, wordb_count=count_b, bigram_count=count_ab, len_vocab=len_vocab, min_count=scorer_min_count, corpus_word_count=corpus_word_count)
-                    # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
-                    #     bigram_word, count_ab, scorer_min_count, count_a, count_ab, len_vocab, score)
-                    if score > threshold and count_ab >= min_count:
-                        new_s.append(bigram_word)
-                        last_bigram = True
-                        continue
-
-            if not last_bigram:
-                new_s.append(word_a)
-            last_bigram = False
-
-        if s:  # add last word skipped by previous loop
-            last_token = s[-1]
-            if not last_bigram:
-                new_s.append(last_token)
+        delimiter = self.delimiter
+        bigrams = self.analyze_sentence(
+            sentence,
+            threshold=self.threshold,
+            common_terms=self.common_terms,
+            scorer=ft.partial(
+                self.scoring,
+                len_vocab=float(len(self.vocab)),
+                min_count=float(self.min_count),
+                corpus_word_count=float(self.corpus_word_count),
+            ),
+        )
+        new_s = []
+        for words, score in bigrams:
+            if score is not None:
+                words = delimiter.join(words)
+            new_s.append(words)
 
         return [utils.to_unicode(w) for w in new_s]
-
-    @classmethod
-    def load(cls, *args, **kwargs):
-        """
-        Load a previously saved Phrases class. Handles backwards compatibility from older Phrases versions which did not support
-            pluggable scoring functions. Otherwise, relies on utils.load
-        """
-
-        # for python 2 and 3 compatibility. basestring is used to check if model.scoring is a string
-        try:
-            basestring
-        except NameError:
-            basestring = str
-
-        model = super(Phrases, cls).load(*args, **kwargs)
-        # update older models
-        # if no scoring parameter, use default scoring
-        if not hasattr(model, 'scoring'):
-            logger.info('older version of Phrases loaded without scoring function')
-            logger.info('setting pluggable scoring method to original_scorer for compatibility')
-            model.scoring = original_scorer
-        # if there is a scoring parameter, and it's a text value, load the proper scoring function
-        if hasattr(model, 'scoring'):
-            if isinstance(model.scoring, basestring):
-                if model.scoring == 'default':
-                    logger.info('older version of Phrases loaded with "default" scoring parameter')
-                    logger.info('setting scoring method to original_scorer pluggable scoring method for compatibility')
-                    model.scoring = original_scorer
-                elif model.scoring == 'npmi':
-                    logger.info('older version of Phrases loaded with "npmi" scoring parameter')
-                    logger.info('setting scoring method to npmi_scorer pluggable scoring method for compatibility')
-                    model.scoring = npmi_scorer
-                else:
-                    raise ValueError('failed to load Phrases model with unknown scoring setting %s' % (model.scoring))
-        return model
 
 
 # these two built-in scoring methods don't cast everything to float because the casting is done in the call
@@ -457,17 +538,24 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
     return log(pab / (pa * pb)) / -log(pab)
 
 
-def pseudocorpus(source_vocab, sep):
+def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
     """Feeds source_vocab's compound keys back to it, to discover phrases"""
     for k in source_vocab:
         if sep not in k:
             continue
         unigrams = k.split(sep)
         for i in range(1, len(unigrams)):
-            yield [sep.join(unigrams[:i]), sep.join(unigrams[i:])]
+            if unigrams[i - 1] not in common_terms:
+                # do not join common terms
+                cterms = list(it.takewhile(lambda w: w in common_terms, unigrams[i:]))
+                tail = unigrams[i + len(cterms):]
+                components = [sep.join(unigrams[:i])] + cterms
+                if tail:
+                    components.append(sep.join(tail))
+                yield components
 
 
-class Phraser(interfaces.TransformationABC):
+class Phraser(SentenceAnalyzer, PhrasesTransformation):
     """
     Minimal state & functionality to apply results of a Phrases model to tokens.
 
@@ -485,8 +573,9 @@ class Phraser(interfaces.TransformationABC):
         self.min_count = phrases_model.min_count
         self.delimiter = phrases_model.delimiter
         self.scoring = phrases_model.scoring
+        self.common_terms = phrases_model.common_terms
+        corpus = self.pseudocorpus(phrases_model)
         self.phrasegrams = {}
-        corpus = pseudocorpus(phrases_model.vocab, phrases_model.delimiter)
         logger.info('source_vocab length %i', len(phrases_model.vocab))
         count = 0
         for bigram, score in phrases_model.export_phrases(corpus, self.delimiter, as_tuples=True):
@@ -497,6 +586,18 @@ class Phraser(interfaces.TransformationABC):
             if not count % 50000:
                 logger.info('Phraser added %i phrasegrams', count)
         logger.info('Phraser built with %i %i phrasegrams', count, len(self.phrasegrams))
+
+    def pseudocorpus(self, phrases_model):
+        return pseudocorpus(phrases_model.vocab, phrases_model.delimiter,
+                            phrases_model.common_terms)
+
+    def score_item(self, worda, wordb, components, scorer):
+        """score is retained from original dataset
+        """
+        try:
+            return self.phrasegrams[tuple(components)][1]
+        except KeyError:
+            return -1
 
     def __getitem__(self, sentence):
         """
@@ -515,27 +616,17 @@ class Phraser(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        s, new_s = [utils.any2utf8(w) for w in sentence], []
-        last_bigram = False
-        phrasegrams = self.phrasegrams
         delimiter = self.delimiter
-        for word_a, word_b in zip(s, s[1:]):
-            bigram_tuple = (word_a, word_b)
-            if phrasegrams.get(bigram_tuple, (-1, -1))[1] > self.threshold and not last_bigram:
-                bigram_word = delimiter.join((word_a, word_b))
-                new_s.append(bigram_word)
-                last_bigram = True
-                continue
-
-            if not last_bigram:
-                new_s.append(word_a)
-            last_bigram = False
-
-        if s:  # add last word skipped by previous loop
-            last_token = s[-1]
-            if not last_bigram:
-                new_s.append(last_token)
-
+        bigrams = self.analyze_sentence(
+            sentence,
+            threshold=self.threshold,
+            common_terms=self.common_terms,
+            scorer=None)  # we will use our score_item function redefinition
+        new_s = []
+        for words, score in bigrams:
+            if score is not None:
+                words = delimiter.join(words)
+            new_s.append(words)
         return [utils.to_unicode(w) for w in new_s]
 
 
