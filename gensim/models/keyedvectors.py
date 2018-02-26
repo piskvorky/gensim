@@ -1535,6 +1535,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.vectors_vocab_norm = None
         self.vectors_ngrams = None
         self.vectors_ngrams_norm = None
+        self.buckets_word = None
         self.hash2index = {}
         self.min_n = min_n
         self.max_n = max_n

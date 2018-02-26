@@ -19,7 +19,6 @@ except ImportError:
     # in scipy > 0.15, fblas function has been removed
     import scipy.linalg.blas as fblas
 
-from _utils_any2vec import compute_ngrams, ft_hash
 from word2vec_inner cimport bisect_left, random_int32, \
      scopy, saxpy, sdot, dsdot, snrm2, sscal, \
      REAL_t, EXP_TABLE, \
@@ -317,11 +316,8 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                 continue
             indexes[effective_words] = word.index
 
-            subwords = [
-                model.wv.hash2index[ft_hash(subword) % model.bucket]
-                for subword in compute_ngrams(token, model.wv.min_n, model.wv.max_n)
-            ]
-            word_subwords = np.array([word.index] + subwords, dtype=np.uint32)
+            subwords = model.wv.buckets_word[word.index]
+            word_subwords = np.array((word.index,) + subwords, dtype=np.uint32)
             subwords_idx_len[effective_words] = <int>(len(subwords) + 1)
             subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)
             # ensures reference count of word_subwords doesn't reach 0
@@ -449,10 +445,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
                 continue
             indexes[effective_words] = word.index
 
-            subwords = [
-                model.wv.hash2index[ft_hash(subword) % model.bucket]
-                for subword in compute_ngrams(token, model.wv.min_n, model.wv.max_n)
-            ]
+            subwords = model.wv.buckets_word[word.index]
             word_subwords = np.array(subwords, dtype=np.uint32)
             subwords_idx_len[effective_words] = <int>len(subwords)
             subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)

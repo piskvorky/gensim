@@ -396,6 +396,7 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.vectors_norm = None
         self.wv.vectors_vocab_norm = None
         self.wv.vectors_ngrams_norm = None
+        self.wv.buckets_word = None
 
     def estimate_memory(self, vocab_size=None, report=None):
         vocab_size = vocab_size or len(self.wv.vocab)
@@ -774,10 +775,12 @@ class FastTextTrainables(Word2VecTrainables):
             self.vectors_ngrams_lockf = ones((self.bucket, wv.vector_size), dtype=REAL)
 
             wv.hash2index = {}
+            wv.buckets_word = {}
             ngram_indices = []
             new_hash_count = 0
             wv.num_ngram_vectors = 0
-            for word in wv.vocab.keys():
+            for word, vocab in wv.vocab.items():
+                buckets = []
                 for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
                     ngram_hash = _ft_hash(ngram) % self.bucket
                     if ngram_hash not in wv.hash2index:
@@ -785,6 +788,8 @@ class FastTextTrainables(Word2VecTrainables):
                         ngram_indices.append(ngram_hash)
                         wv.hash2index[ngram_hash] = new_hash_count
                         new_hash_count = new_hash_count + 1
+                    buckets.append(wv.hash2index[ngram_hash])
+                wv.buckets_word[vocab.index] = tuple(buckets)
 
             logger.info("Total number of ngrams is %d", wv.num_ngram_vectors)
 
@@ -792,15 +797,20 @@ class FastTextTrainables(Word2VecTrainables):
             self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
             self.reset_ngrams_weights(wv)
         else:
+            if not wv.buckets_word:
+                wv.buckets_word = {}
             new_hash_count = 0
             num_new_ngrams = 0
-            for word in wv.vocab.keys():
+            for word, vocab in wv.vocab.items():
+                buckets = []
                 for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
                     ngram_hash = _ft_hash(ngram) % self.bucket
                     if ngram_hash not in wv.hash2index:
                         wv.hash2index[ngram_hash] = new_hash_count + self.old_hash2index_len
                         new_hash_count = new_hash_count + 1
                         num_new_ngrams += 1
+                    buckets.append(wv.hash2index[ngram_hash])
+                wv.buckets_word[vocab.index] = tuple(buckets)
 
             wv.num_ngram_vectors += num_new_ngrams
             logger.info("Number of new ngrams is %d", num_new_ngrams)
