@@ -538,8 +538,6 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
 
-        self.assertEqual(len(model.wv.ngrams_word), 12)
-        self.assertEqual(len(model.wv.ngrams), 202)
         self.assertEqual(len(model.wv.hash2index), 202)
         self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
         self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
@@ -554,8 +552,6 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
 
-        self.assertEqual(len(model.wv.ngrams_word), 12)
-        self.assertEqual(len(model.wv.ngrams), 202)
         self.assertEqual(len(model.wv.hash2index), 202)
         self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
         self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
