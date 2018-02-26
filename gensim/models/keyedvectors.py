@@ -859,7 +859,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 section['section'], 100.0 * correct / (correct + incorrect), correct, correct + incorrect
             )
 
-    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, case_insensitive=True):
+    def accuracy(self, questions, restrict_vocab=300000, most_similar=most_similar, case_insensitive=True):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
@@ -898,17 +898,17 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 section = {'section': line.lstrip(': ').strip(), 'correct': [], 'incorrect': []}
             else:
                 if not section:
-                    raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
+                    raise ValueError("Missing section header before line #%i in %s" % (line_no, questions))
                 try:
                     if case_insensitive:
                         a, b, c, expected = [word.upper() for word in line.split()]
                     else:
                         a, b, c, expected = [word for word in line.split()]
                 except ValueError:
-                    logger.info("skipping invalid line #%i in %s", line_no, questions)
+                    logger.info("Skipping invalid line #%i in %s", line_no, questions)
                     continue
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
-                    logger.debug("skipping line #%i with OOV words: %s", line_no, line.strip())
+                    logger.debug("Skipping line #%i with OOV words: %s", line_no, line.strip())
                     continue
 
                 original_vocab = self.vocab
